@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Omni-Stack Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-blue: #3b82f6;
+            --neon-purple: #a855f7;
+            --neon-emerald: #10b981;
+            --neon-orange: #f97316;
+            --bg-dark: #020617;
+            --panel-bg: rgba(15, 23, 42, 0.6);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-dark);
+            color: #f1f5f9;
+            overflow: hidden; /* App-like feel */
+            height: 100vh;
+        }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        .glass {
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.5);
+        }
+
+        .scanline {
+            width: 100%;
+            height: 100px;
+            z-index: 10;
+            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(59, 130, 246, 0.05) 50%, rgba(0,0,0,0) 100%);
+            opacity: 0.1;
+            position: absolute;
+            bottom: 100%;
+            animation: scan 8s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes scan {
+            0% { bottom: 100%; }
+            100% { bottom: -100px; }
+        }
+
+        .status-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: .5; transform: scale(1.2); }
+        }
+
+        .terminal-line::before {
+            content: "> ";
+            color: var(--neon-blue);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+
+        .layer-btn.active {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--neon-blue);
+            color: white;
+        }
+
+        .node-hover:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.03);
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen overflow-hidden select-none">
+    <div class="scanline"></div>
+
+    <!-- Top Navigation Bar -->
+    <nav class="h-16 border-b border-white/5 flex items-center justify-between px-6 shrink-0 z-20 glass">
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center font-black text-white italic">O</div>
+                <div class="leading-tight">
+                    <h1 class="font-extrabold text-sm tracking-tighter uppercase">Omni-Stack</h1>
+                    <p class="text-[10px] text-slate-500 mono font-bold">COMMAND_CENTER_v4.2</p>
+                </div>
+            </div>
+            <div class="h-4 w-[1px] bg-white/10 mx-2"></div>
+            <div class="flex items-center gap-4 text-[10px] mono uppercase tracking-widest text-slate-400">
+                <div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 status-pulse"></span> VM: Tahoe</div>
+                <div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> AI: Sonnet</div>
+                <div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Mesh: Active</div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <div id="clock" class="mono text-xs font-bold text-slate-400">00:00:00</div>
+            <button class="bg-blue-600 hover:bg-blue-500 transition-colors px-4 py-1.5 rounded text-[10px] font-black uppercase tracking-widest">Deploy All</button>
+        </div>
+    </nav>
+
+    <!-- Main Workspace -->
+    <main class="flex-grow flex overflow-hidden">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 border-r border-white/5 p-4 flex flex-col gap-2 shrink-0 z-10 glass">
+            <div class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-2">Sub-Systems</div>
+            <button onclick="switchLayer('interface')" data-id="interface" class="layer-btn active w-full flex items-center gap-3 p-3 rounded-lg border border-transparent text-sm font-semibold transition-all hover:bg-white/5">
+                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                UTM Web Interface
+            </button>
+            <button onclick="switchLayer('agent')" data-id="agent" class="layer-btn w-full flex items-center gap-3 p-3 rounded-lg border border-transparent text-sm font-semibold transition-all hover:bg-white/5">
+                <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                AI Omni-Agent
+            </button>
+            <button onclick="switchLayer('pwa')" data-id="pwa" class="layer-btn w-full flex items-center gap-3 p-3 rounded-lg border border-transparent text-sm font-semibold transition-all hover:bg-white/5">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                Selftown PWA
+            </button>
+            <button onclick="switchLayer('connect')" data-id="connect" class="layer-btn w-full flex items-center gap-3 p-3 rounded-lg border border-transparent text-sm font-semibold transition-all hover:bg-white/5">
+                <svg class="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg>
+                Connectivity
+            </button>
+
+            <div class="mt-auto p-4 bg-blue-500/5 border border-blue-500/10 rounded-xl">
+                <h4 class="text-[10px] font-black uppercase text-blue-400 mb-2">Metrics // 15s Avg</h4>
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between text-[10px] mb-1"><span>CPU Usage</span><span>42%</span></div>
+                        <div class="w-full bg-white/10 h-1 rounded-full overflow-hidden">
+                            <div class="bg-blue-500 h-full w-[42%] transition-all duration-1000"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[10px] mb-1"><span>Mem Latency</span><span>14ms</span></div>
+                        <div class="w-full bg-white/10 h-1 rounded-full overflow-hidden">
+                            <div class="bg-purple-500 h-full w-[18%] transition-all duration-1000"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Dynamic Content Area -->
+        <section class="flex-grow flex flex-col p-6 overflow-y-auto custom-scrollbar gap-6">
+            
+            <!-- Context Header -->
+            <div id="layer-header" class="flex flex-col gap-1">
+                <h2 class="text-3xl font-black tracking-tight" id="active-title">UTM macOS Web Interface</h2>
+                <p class="text-slate-400 text-sm" id="active-desc">Managing Layer 01: Hypervisor instances and networking routing.</p>
+            </div>
+
+            <!-- View Container -->
+            <div id="layer-view" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Content injected via JS -->
+            </div>
+
+            <!-- System Logs (Mock Terminal) -->
+            <div class="mt-auto shrink-0 h-48 glass rounded-xl border border-white/5 flex flex-col overflow-hidden">
+                <div class="px-4 py-2 border-b border-white/5 flex justify-between items-center bg-white/5">
+                    <span class="text-[10px] font-black mono text-slate-500 uppercase tracking-widest">Real-time System Logs</span>
+                    <span class="text-[10px] mono text-blue-500">Live Feedback Enabled</span>
+                </div>
+                <div id="terminal" class="p-4 mono text-[11px] leading-relaxed text-slate-400 overflow-y-auto custom-scrollbar flex flex-col-reverse">
+                    <!-- Logs appear here -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const layers = {
+            interface: {
+                title: "UTM macOS Web Interface",
+                desc: "Virtualization and infrastructure layer for web-accessible macOS environments.",
+                nodes: [
+                    { name: "UTM macOS Tahoe", type: "VM Instance", status: "Online", icon: "Server" },
+                    { name: "VNC Integration", type: "RFB Protocol", status: "Enabled", icon: "Monitor" },
+                    { name: "Docker Compose", type: "Orchestrator", status: "Healthy", icon: "Box" },
+                    { name: "noVNC Browser", type: "Client Ingress", status: "Listening", icon: "Globe" },
+                    { name: "Nginx Proxy", type: "Traffic Router", status: "Secured", icon: "Shield" },
+                    { name: "Spaceship DNS", type: "Authority", status: "Propagated", icon: "Dns" }
+                ]
+            },
+            agent: {
+                title: "AI Omni-Agent Core",
+                desc: "Reasoning engine powered by Claude 3.5 and Desktop Control protocols.",
+                nodes: [
+                    { name: "Claude 3.5 Sonnet", type: "Orchestrator", status: "Idle", icon: "Brain" },
+                    { name: "Desktop Commander", type: "MCP Control", status: "Attached", icon: "Terminal" },
+                    { name: "Beeper Matrix", type: "Comms Bridge", status: "Synced", icon: "Message" },
+                    { name: "Grok Voice", type: "NLP Engine", status: "Ready", icon: "Mic" },
+                    { name: "macOS Shortcuts", type: "Automation", status: "Ready", icon: "Zap" },
+                    { name: "LaunchAgents", type: "Watchers", status: "Monitoring", icon: "Eye" }
+                ]
+            },
+            pwa: {
+                title: "Selftown PWA Strategy",
+                desc: "Strategic sovereign application deployment and link-install models.",
+                nodes: [
+                    { name: "App Store Killer", type: "Logic", status: "Active", icon: "Trash" },
+                    { name: "PWA Sovereign", type: "Execution", status: "Standalone", icon: "Box" },
+                    { name: "Link-Install", type: "Distribution", status: "Live", icon: "Link" },
+                    { name: "App Drawer", type: "UI Controller", status: "Rendering", icon: "Grid" }
+                ]
+            },
+            connect: {
+                title: "Remote Connectivity",
+                desc: "Global ingress, iCloud file triggers, and mobile-to-desktop SSH bridges.",
+                nodes: [
+                    { name: "Cloudflare Tunnel", type: "Ingress", status: "Protected", icon: "Tunnel" },
+                    { name: "HTTP MCP Bridge", type: "API Sync", status: "Bridge: On", icon: "Route" },
+                    { name: "iOS SSH Triggers", type: "Remote Trigger", status: "Auth'd", icon: "Phone" },
+                    { name: "iCloud Sync", type: "File Watcher", status: "Polling", icon: "Cloud" }
+                ]
+            }
+        };
+
+        function switchLayer(id) {
+            // Update UI
+            document.querySelectorAll('.layer-btn').forEach(btn => btn.classList.remove('active'));
+            
+            // Fix: Use data-id selector instead of event.currentTarget to handle window.onload
+            const activeBtn = document.querySelector(`.layer-btn[data-id="${id}"]`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            const layer = layers[id];
+            document.getElementById('active-title').innerText = layer.title;
+            document.getElementById('active-desc').innerText = layer.desc;
+
+            const container = document.getElementById('layer-view');
+            container.innerHTML = '';
+
+            layer.nodes.forEach(node => {
+                const card = document.createElement('div');
+                card.className = "glass p-5 rounded-xl border border-white/5 node-hover transition-all cursor-pointer group";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="text-[10px] mono font-bold text-slate-500 uppercase">${node.type}</div>
+                        <div class="flex items-center gap-1.5 text-[10px] font-black uppercase text-emerald-400">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 status-pulse"></span>
+                            ${node.status}
+                        </div>
+                    </div>
+                    <h4 class="font-bold text-lg mb-1 group-hover:text-blue-400 transition-colors">${node.name}</h4>
+                    <p class="text-[10px] text-slate-500 mono">UID: ${Math.random().toString(36).substr(2, 9).toUpperCase()}</p>
+                `;
+                container.appendChild(card);
+            });
+
+            log(`System navigated to: ${layer.title.toUpperCase()}`);
+        }
+
+        // Terminal Mock
+        const terminal = document.getElementById('terminal');
+        const logEntries = [
+            "Initializing UTM Virtualization services...",
+            "Establishing Tailscale mesh connection...",
+            "Claude 3.5 Sonnet Handshake: SUCCESS",
+            "Nginx Reverse Proxy: SSL certificate valid (Certbot)",
+            "Polling iCloud trigger directories...",
+            "Desktop Commander MCP listener attached to port 8080",
+            "Beeper Matrix Bridge: Session authenticated",
+            "System Readiness 100% - Waiting for user directive"
+        ];
+
+        function log(msg) {
+            const line = document.createElement('div');
+            line.className = "terminal-line mb-1 opacity-0 translate-x-[-5px] transition-all duration-300";
+            line.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            terminal.prepend(line);
+            setTimeout(() => {
+                line.classList.remove('opacity-0', 'translate-x-[-5px]');
+            }, 10);
+        }
+
+        // Initial logs
+        logEntries.forEach((entry, i) => {
+            setTimeout(() => log(entry), i * 400);
+        });
+
+        // Clock
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+        }, 1000);
+
+        // Bootstrap
+        window.onload = () => switchLayer('interface');
+    </script>
+</body>
+</html>
