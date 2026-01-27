@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xlrd.org | Executive Leverage Research Development</title>
+    <meta name="description" content="Open-source automation, AI, and digital systems designed to empower organizations. Transparent, accessible, and mission-driven.">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- Three.js Import Map -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: { background: '#000000', surface: '#0A0A0A' },
+                    fontFamily: { sans: ['Inter', 'sans-serif'], heading: ['Figtree', 'sans-serif'] },
+                    animation: { 
+                        'pulse-glow': 'pulseGlow 4s ease-in-out infinite',
+                        'spin-slow': 'spin 3s linear infinite',
+                        'chrome-shine': 'chromeShine 6s linear infinite',
+                    },
+                    keyframes: {
+                        'pulseGlow': { '0%, 100%': { opacity: '0.5' }, '50%': { opacity: '0.8' } },
+                        'chromeShine': { '0%': { backgroundPosition: '0% center' }, '100%': { backgroundPosition: '200% center' } }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* --- 3D CANVAS --- */
+        #gl-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: -1;
+            display: block;
+        }
+
+        /* --- SCROLL SECTIONS (The "Previous" Layout) --- */
+        .scroll-spacer {
+            height: 500vh; /* 5 Sections */
+            position: relative;
+            pointer-events: none;
+        }
+
+        .section-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.8s;
+            transform: translateY(40px);
+            overflow-y: auto; /* Allow internal scrolling if content is too tall */
+            padding: 20px 0;
+        }
+
+        .section-container.active {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        /* --- NAVIGATION --- */
+        nav {
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 50;
+            background: rgba(0, 0, 0, 0.2); backdrop-filter: blur(30px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .progress-bar {
+            position: fixed; right: 20px; top: 50%; transform: translateY(-50%);
+            display: flex; flex-direction: column; gap: 10px; z-index: 40;
+        }
+        .dot {
+            width: 8px; height: 8px; background: rgba(255,255,255,0.2);
+            border-radius: 50%; transition: all 0.3s; cursor: pointer;
+        }
+        .dot.active { background: #fff; box-shadow: 0 0 10px #fff; }
+
+        /* --- GLASS UI --- */
+        .glass-panel {
+            position: relative;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.2); 
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-panel::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.03), transparent);
+            transform: skewX(-25deg);
+            pointer-events: none;
+            animation: panelGlare 8s infinite ease-in-out;
+        }
+        @keyframes panelGlare { 0%, 40% { left: -100%; opacity: 0; } 50% { opacity: 1; } 60%, 100% { left: 200%; opacity: 0; } }
+        .glass-panel:hover {
+            border-color: rgba(255, 255, 255, 0.25);
+            background: rgba(25, 25, 25, 0.4);
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(255,255,255,0.05);
+        }
+
+        .glass-button {
+            position: relative; font-weight: 600; letter-spacing: 0.08em; color: #fff;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1.5px solid transparent; backdrop-filter: blur(30px); border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+            overflow: hidden; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+        }
+        .glass-button::before {
+            content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(138, 43, 226, 0.4) 25%, rgba(0, 191, 255, 0.4) 50%, rgba(255, 255, 255, 0.4) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+            opacity: 0.6; transition: opacity 0.5s ease; pointer-events: none;
+        }
+        .glass-button::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent); 
+            transform: skewX(-25deg);
+            pointer-events: none;
+            animation: panelGlare 8s infinite ease-in-out;
+        }
+        .glass-button:hover {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+            box-shadow: 0 12px 48px rgba(138, 43, 226, 0.3), 0 0 80px rgba(0, 191, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px) scale(1.02);
+        }
+        .glass-button:hover::before { opacity: 1; }
+        
+        .glow-text {
+            filter: drop-shadow(0 0 40px rgba(255, 255, 255, 0.2));
+            animation: glowPulse 3s ease-in-out infinite alternate;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.8), 0 0 10px rgba(100, 255, 200, 0.3);
+        }
+        .text-liquid-steel {
+            background-image: linear-gradient(180deg, #FFFFFF 0%, #E4E4E7 45%, #71717A 50%, #E4E4E7 55%, #FFFFFF 100%);
+            background-size: 200% auto;
+            color: white; 
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* --- PRELOADER --- */
+        #preloader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.8s;
+        }
+        #preloader.loaded { opacity: 0; visibility: hidden; }
+
+        .hidden { display: none !important; }
+        input::placeholder, textarea::placeholder { color: #6B7280; }
+        select { background-color: #000; color: white; }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        
+        /* Markdown Styles */
+        .markdown-prose h3 { font-size: 1.1em; font-weight: 700; color: white; margin-top: 0.5em; margin-bottom: 0.2em; }
+        .markdown-prose strong { color: #A5F3FC; font-weight: 700; }
+        .markdown-prose ul { list-style-type: disc; padding-left: 1.2em; margin: 0.5em 0; color: #d4d4d8; }
+        .markdown-prose p { margin-bottom: 0.5em; line-height: 1.4; }
+    </style>
+</head>
+<body class="antialiased selection:bg-white selection:text-black">
+
+    <!-- PRELOADER -->
+    <div id="preloader">
+        <div class="flex flex-col items-center">
+            <img src="https://res.cloudinary.com/dlqudkksg/image/upload/v1765457817/Photoroom_20251211_062921_ogfnfn.png" alt="Loading..." class="w-24 h-24 object-contain animate-pulse">
+            <div class="mt-4 w-32 h-1 bg-white/10 rounded-full overflow-hidden">
+                <div class="h-full bg-white animate-[infinite-scroll_2s_linear_infinite] w-full origin-left"></div>
+            </div>
+            <p class="mt-4 text-xs font-bold tracking-[0.3em] text-gray-500 uppercase">Initializing System</p>
+        </div>
+    </div>
+
+    <!-- 3D CANVAS -->
+    <canvas id="gl-canvas"></canvas>
+
+    <!-- NAVIGATION -->
+    <nav>
+        <div class="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
+            <a href="#" onclick="switchView('home'); return false;" class="flex items-center gap-3 group">
+                <img src="https://res.cloudinary.com/dlqudkksg/image/upload/v1765457817/Photoroom_20251211_062921_ogfnfn.png" alt="xlrd.org logo" class="w-10 h-10 object-contain transition-transform group-hover:scale-105">
+                <span class="font-heading font-bold text-xl tracking-tighter text-white">xlrd.org</span>
+            </a>
+            <div class="hidden md:flex items-center gap-2">
+                <button onclick="switchView('home')" class="px-4 py-2 text-xs font-bold text-gray-400 hover:text-white transition-colors uppercase tracking-widest">Home</button>
+                <button onclick="switchView('tools')" class="px-4 py-2 text-xs font-bold text-gray-400 hover:text-white transition-colors uppercase tracking-widest">Free Tools</button>
+                <button onclick="switchView('home', 'values')" class="px-4 py-2 text-xs font-bold text-gray-400 hover:text-white transition-colors uppercase tracking-widest">Values</button>
+                <button onclick="switchView('home', 'services')" class="px-4 py-2 text-xs font-bold text-gray-400 hover:text-white transition-colors uppercase tracking-widest">Services</button>
+                <button onclick="switchView('home', 'pricing')" class="px-4 py-2 glass-button text-xs uppercase tracking-widest">Contribute</button>
+            </div>
+            <!-- Mobile Toggle -->
+            <button id="mobile-menu-btn" class="md:hidden text-white p-2 glass-button"><i class="ph ph-list text-xl"></i></button>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="fixed inset-0 bg-black/95 z-40 hidden flex-col items-center justify-center gap-8">
+             <button onclick="switchView('home')" class="text-2xl font-bold text-white">Home</button>
+             <button onclick="switchView('tools')" class="text-2xl font-bold text-white">Tools</button>
+             <button onclick="switchView('home', 'pricing')" class="text-2xl font-bold text-white">Contribute</button>
+             <button id="close-mobile-menu" class="absolute top-6 right-6 text-white p-2"><i class="ph ph-x text-2xl"></i></button>
+        </div>
+    </nav>
+
+    <!-- SIDE DOTS -->
+    <div class="progress-bar">
+        <div class="dot active" onclick="scrollToSection(0)"></div>
+        <div class="dot" onclick="scrollToSection(1)"></div>
+        <div class="dot" onclick="scrollToSection(2)"></div>
+        <div class="dot" onclick="scrollToSection(3)"></div>
+        <div class="dot" onclick="scrollToSection(4)"></div>
+    </div>
+
+    <!-- CONTACT MODAL -->
+    <div id="contact-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="toggleContactModal()"></div>
+        <div class="relative w-full max-w-lg glass-panel p-8 md:p-10 rounded-[32px] shadow-2xl transform scale-100 transition-transform bg-[#0A0A0A]">
+            <button onclick="toggleContactModal()" class="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors">
+                <i class="ph ph-x text-2xl"></i>
+            </button>
+            <h3 class="text-3xl font-heading font-bold text-white mb-2">Start a Conversation</h3>
+            <p class="text-gray-400 mb-8 text-sm">For strategic consulting, retainers, or partnerships.</p>
+            <form onsubmit="event.preventDefault(); alert('Message simulated: Sent to info@xlrd.org'); toggleContactModal();" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Name</label>
+                    <input type="text" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30 transition-colors" placeholder="Jane Doe">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Email</label>
+                    <input type="email" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30 transition-colors" placeholder="jane@organization.org">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Inquiry</label>
+                    <textarea rows="3" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30 transition-colors" placeholder="Tell us about your mission..."></textarea>
+                </div>
+                <button type="submit" class="w-full py-4 glass-button font-bold text-white rounded-xl mt-4">Send Message</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- SECTION 0: HOME -->
+    <div id="section-0" class="section-container active">
+        <div class="max-w-7xl mx-auto px-6 w-full flex flex-col md:flex-row items-center">
+            <div class="md:w-1/2 z-10">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/20 bg-white/5 mb-6 backdrop-blur-md">
+                    <span class="relative flex h-2.5 w-2.5">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                    </span>
+                    <span class="text-[10px] font-bold tracking-[0.2em] text-white uppercase">System Online</span>
+                </div>
+                <h1 class="text-5xl md:text-8xl font-heading font-black text-white mb-6 leading-tight glow-text">
+                    Executive <br /><span class="text-liquid-steel">Leverage</span>
+                </h1>
+                <p class="text-lg text-gray-400 max-w-md mb-8 leading-relaxed">
+                    Open-source automation architectures designed for high-impact organizations. We build the systems that scale your mission.
+                </p>
+                <div class="flex gap-4">
+                    <button onclick="scrollToSection(4)" class="px-8 py-4 glass-button font-bold text-white flex items-center gap-2 group">
+                        <span class="shimmer"></span>
+                        Start Now <i class="ph-bold ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                    </button>
+                    <button onclick="scrollToSection(3)" class="px-8 py-4 glass-button font-bold text-white flex items-center gap-2 group">
+                        Free AI Tools <i class="ph-bold ph-sparkle"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="md:w-1/2 h-[50vh]"></div>
+        </div>
+    </div>
+
+    <!-- SECTION 1: DNA -->
+    <div id="section-1" class="section-container">
+        <div class="max-w-7xl mx-auto px-6 w-full flex flex-col md:flex-row-reverse items-center">
+            <div class="md:w-1/2 z-10 pl-0 md:pl-20">
+                <span class="text-gray-500 font-mono text-xs mb-4 block tracking-widest">/// CORE_VALUES</span>
+                <h2 class="text-4xl md:text-6xl font-bold text-white mb-8 glow-text">The Ophanim Standard</h2>
+                <div class="space-y-6">
+                    <div class="glass-panel p-6 cursor-default">
+                        <div class="flex items-center gap-4 mb-2">
+                            <i class="ph-duotone ph-eye text-2xl text-white"></i>
+                            <h3 class="font-bold text-xl text-white">All-Seeing Automation</h3>
+                        </div>
+                        <p class="text-sm text-gray-400">We build systems that monitor, execute, and report without human intervention.</p>
+                    </div>
+                    <div class="glass-panel p-6 cursor-default">
+                        <div class="flex items-center gap-4 mb-2">
+                            <i class="ph-duotone ph-code text-2xl text-white"></i>
+                            <h3 class="font-bold text-xl text-white">Open Source DNA</h3>
+                        </div>
+                        <p class="text-sm text-gray-400">Transparent code. No black boxes. You own the architecture we build.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="md:w-1/2"></div>
+        </div>
+    </div>
+
+    <!-- SECTION 2: SERVICES -->
+    <div id="section-2" class="section-container">
+        <div class="max-w-7xl mx-auto px-6 w-full">
+            <div class="text-center mb-12">
+                <span class="text-gray-500 font-mono text-xs mb-4 block tracking-widest">/// CAPABILITIES</span>
+                <h2 class="text-4xl md:text-6xl font-bold text-white glow-text">Operational Wings</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="glass-panel p-8 flex flex-col items-center text-center">
+                    <div class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-6 border border-white/10"><i class="ph-fill ph-gear-six text-3xl text-white"></i></div>
+                    <h3 class="text-xl font-bold text-white mb-3">Workflow Auto</h3>
+                    <p class="text-sm text-gray-400">n8n & Make.com architectures replacing entire departments.</p>
+                </div>
+                <div class="glass-panel p-8 flex flex-col items-center text-center">
+                    <div class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-6 border border-white/10"><i class="ph-fill ph-brain text-3xl text-white"></i></div>
+                    <h3 class="text-xl font-bold text-white mb-3">Cognitive AI</h3>
+                    <p class="text-sm text-gray-400">LLM agents trained on your specific organizational knowledge base.</p>
+                </div>
+                <div class="glass-panel p-8 flex flex-col items-center text-center">
+                    <div class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-6 border border-white/10"><i class="ph-fill ph-strategy text-3xl text-white"></i></div>
+                    <h3 class="text-xl font-bold text-white mb-3">Strategic Tech</h3>
+                    <p class="text-sm text-gray-400">CTO-level consulting to align technology with mission impact.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 3: TOOLS (Compact Grid) -->
+    <div id="section-3" class="section-container">
+        <div class="max-w-7xl mx-auto px-6 w-full">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-white mb-2 glow-text">Free AI Tools</h2>
+                <p class="text-gray-400 text-sm">Powered by Gemini. 100% Free.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                 <!-- Tool 1 -->
+                <div class="glass-panel p-6 relative">
+                    <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2"><i class="ph-fill ph-strategy"></i> Architect</h3>
+                    <p class="text-xs text-gray-400 mb-3">Design open-source automation strategies.</p>
+                    <textarea id="input-architect" rows="2" class="w-full bg-black/50 border border-white/10 rounded-lg p-2 text-white text-xs mb-3 focus:outline-none focus:border-white/30" placeholder="e.g. Sync Gmail to Sheets..."></textarea>
+                    <button id="btn-architect" class="w-full py-2 glass-button text-xs font-bold">Generate</button>
+                    <div id="loader-architect" class="hidden mt-2 text-center"><i class="ph-duotone ph-spinner-gap text-white animate-spin-slow"></i></div>
+                    <div id="result-architect" class="hidden mt-2 text-gray-300 text-xs markdown-prose max-h-32 overflow-y-auto"></div>
+                </div>
+
+                <!-- Tool 2 -->
+                <div class="glass-panel p-6 relative">
+                    <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2"><i class="ph-fill ph-chart-line-up"></i> ROI Projector</h3>
+                    <p class="text-xs text-gray-400 mb-3">Calculate the cost of inaction.</p>
+                    <textarea id="input-roi" rows="2" class="w-full bg-black/50 border border-white/10 rounded-lg p-2 text-white text-xs mb-3 focus:outline-none focus:border-white/30" placeholder="e.g. 10 hours/week manual data entry..."></textarea>
+                    <button id="btn-roi" class="w-full py-2 glass-button text-xs font-bold">Calculate</button>
+                    <div id="loader-roi" class="hidden mt-2 text-center"><i class="ph-duotone ph-spinner-gap text-white animate-spin-slow"></i></div>
+                    <div id="result-roi" class="hidden mt-2 text-gray-300 text-xs markdown-prose max-h-32 overflow-y-auto"></div>
+                </div>
+
+                 <!-- Tool 3 -->
+                <div class="glass-panel p-6 relative">
+                    <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2"><i class="ph-fill ph-pencil-simple-slash"></i> Grant Writer</h3>
+                    <p class="text-xs text-gray-400 mb-3">Draft compelling problem statements.</p>
+                    <textarea id="input-grant" rows="2" class="w-full bg-black/50 border border-white/10 rounded-lg p-2 text-white text-xs mb-3 focus:outline-none focus:border-white/30" placeholder="e.g. Coding classes for youth..."></textarea>
+                    <button id="btn-grant" class="w-full py-2 glass-button text-xs font-bold">Draft</button>
+                    <div id="loader-grant" class="hidden mt-2 text-center"><i class="ph-duotone ph-spinner-gap text-white animate-spin-slow"></i></div>
+                    <div id="result-grant" class="hidden mt-2 text-gray-300 text-xs markdown-prose max-h-32 overflow-y-auto"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 4: CONTRIBUTE & FOOTER -->
+    <div id="section-4" class="section-container">
+        <div class="max-w-5xl mx-auto px-6 w-full flex flex-col items-center gap-12">
+            <div class="w-full flex flex-col md:flex-row items-center gap-12">
+                <div class="md:w-1/2 order-2 md:order-1 w-full">
+                    <div class="glass-panel p-8">
+                        <h3 class="text-2xl font-bold text-white mb-6">Initiate Protocol</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center p-4 border border-white/10 rounded-lg hover:bg-white/5 cursor-pointer transition-colors" onclick="selectDonation(111)">
+                                <span class="text-gray-300 font-mono">Quick Consult</span><span class="text-white font-bold">$111.00</span>
+                            </div>
+                            <div class="flex justify-between items-center p-4 border border-white/10 rounded-lg hover:bg-white/5 cursor-pointer transition-colors" onclick="selectDonation(222)">
+                                <span class="text-gray-300 font-mono">Starter Build</span><span class="text-white font-bold">$222.00</span>
+                            </div>
+                            <div class="flex justify-between items-center p-4 border border-white/30 bg-white/5 rounded-lg hover:bg-white/10 cursor-pointer transition-colors" onclick="selectDonation(555)">
+                                <span class="text-white font-mono font-bold">Full Architecture</span><span class="text-white font-bold">$555.00</span>
+                            </div>
+                        </div>
+                        <div class="mt-6 space-y-4">
+                             <select id="donation-amount" class="w-full bg-black/50 border border-white/20 rounded-xl p-3 text-white focus:outline-none focus:border-white/50 transition-colors cursor-pointer">
+                                <option value="">Choose Contribution...</option>
+                                <!-- Populated via JS -->
+                            </select>
+                            <button id="donate-btn" class="w-full mt-2 py-4 glass-button font-bold text-white rounded-xl">
+                                <span class="shimmer"></span> Proceed to Payment
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="md:w-1/2 order-1 md:order-2 text-right">
+                    <h2 class="text-5xl md:text-7xl font-bold text-white mb-4 glow-text">Fuel the <br /><span class="text-liquid-steel">Engine</span></h2>
+                    <p class="text-gray-400">Your contribution powers open-source development.</p>
+                </div>
+            </div>
+            
+            <!-- FOOTER LINKS -->
+            <div class="w-full pt-10 border-t border-white/10 flex flex-col md:flex-row justify-between items-center text-gray-500 text-xs">
+                <p>&copy; 2025 xlrd.org | 501(c)(3) Nonprofit.</p>
+                <div class="flex gap-4 mt-2 md:mt-0">
+                    <a href="#" class="hover:text-white transition-colors">Privacy</a>
+                    <a href="#" class="hover:text-white transition-colors">Terms</a>
+                    <button onclick="toggleContactModal()" class="hover:text-white transition-colors">Contact</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCROLL SPACER -->
+    <div class="scroll-spacer"></div>
+
+    <!-- LOGIC -->
+    <script type="module">
+        import * as THREE from 'three';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+        // --- GLOBAL VARIABLES ---
+        let currentSection = 0;
+        let scrollProgress = 0;
+        
+        // --- DILATION STATE ---
+        let targetDilation = 0.0;
+        let currentDilation = 0.0;
+        const DILATION_SPEED = 0.008333; // 2 seconds
+
+        // --- 3D SCENE SETUP ---
+        const canvas = document.getElementById("gl-canvas");
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x000000, 0.05);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 0, 15);
+
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: false, alpha: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
+
+        // Post Processing (Bloom)
+        const composer = new EffectComposer(renderer);
+        const renderPass = new RenderPass(scene, camera);
+        composer.addPass(renderPass);
+
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+        bloomPass.threshold = 0.2;
+        bloomPass.strength = 1.0; 
+        bloomPass.radius = 0.5;
+        composer.addPass(bloomPass);
+
+        // --- MATERIALS & TEXTURES ---
+        const size = 512;
+        const data = new Uint8Array(size * size * 4);
+        for(let i=0; i<size*size*4; i+=4) {
+            const v = Math.floor(Math.random() * 255);
+            data[i] = v; data[i+1] = v; data[i+2] = v; data[i+3] = 255;
+        }
+        const noiseTexture = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
+        noiseTexture.needsUpdate = true;
+
+        const metalMat = new THREE.MeshStandardMaterial({
+            color: 0x222222,
+            roughness: 0.6,
+            metalness: 0.8,
+            bumpMap: noiseTexture,
+            bumpScale: 0.05
+        });
+
+        const eyeMat = new THREE.MeshBasicMaterial({ color: 0x00ff44 }); 
+
+        // --- OPHANIM GEOMETRY ---
+        const ophanimGroup = new THREE.Group();
+        scene.add(ophanimGroup);
+
+        const allEyes = []; 
+
+        function createRing(r, tube, eyeCount) {
+            const grp = new THREE.Group();
+            const geo = new THREE.TorusGeometry(r, tube, 32, 100);
+            const mesh = new THREE.Mesh(geo, metalMat);
+            grp.add(mesh);
+
+            const eyeGeo = new THREE.SphereGeometry(tube * 0.7, 16, 16);
+            const eyeInst = new THREE.InstancedMesh(eyeGeo, eyeMat, eyeCount);
+            const dummy = new THREE.Object3D();
+
+            for(let i=0; i<eyeCount; i++) {
+                const angle = (i/eyeCount) * Math.PI * 2;
+                const x = Math.cos(angle) * r;
+                const y = Math.sin(angle) * r;
+                dummy.position.set(x, y, 0);
+                dummy.lookAt(x*2, y*2, 0);
+                dummy.translateZ(tube * 0.75); 
+                dummy.updateMatrix();
+                eyeInst.setMatrixAt(i, dummy.matrix);
+                allEyes.push({
+                    mesh: eyeInst,
+                    index: i,
+                    baseScale: dummy.scale.clone(),
+                    dummy: dummy.clone(),
+                    blink: 0,
+                    speed: 0.1 + Math.random()*0.2
+                });
+            }
+            grp.add(eyeInst);
+            return grp;
+        }
+
+        const r1 = createRing(3.0, 0.35, 30);
+        const r2 = createRing(4.5, 0.45, 45);
+        const r3 = createRing(6.0, 0.35, 60);
+        ophanimGroup.add(r1);
+        ophanimGroup.add(r2);
+        ophanimGroup.add(r3);
+
+        // --- CENTRAL GOD EYE ---
+        const coreGeo = new THREE.SphereGeometry(1.5, 64, 64);
+        const coreMat = new THREE.ShaderMaterial({
+            uniforms: { uTime: {value:0}, uMouse: {value:new THREE.Vector2()}, uDilationFactor: {value:0} },
+            vertexShader: `
+                varying vec2 vUv;
+                varying vec3 vNormal;
+                void main() {
+                    vUv = uv;
+                    vNormal = normalize(normalMatrix * normal);
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform float uTime;
+                uniform vec2 uMouse; 
+                uniform float uDilationFactor;
+                varying vec2 vUv;
+                varying vec3 vNormal;
+                
+                float rand(vec2 n) { return fract(sin(dot(n, vec2(12.9898, 4.1414))) * 43758.5453); }
+                float noise(vec2 p) {
+                    vec2 ip = floor(p); vec2 u = fract(p);
+                    u = u*u*(3.0-2.0*u);
+                    float res = mix(mix(rand(ip), rand(ip+vec2(1.0,0.0)), u.x), mix(rand(ip+vec2(0.0,1.0)), rand(ip+vec2(1.0,1.0)), u.x), u.y);
+                    return res*res;
+                }
+
+                void main() {
+                    vec2 uv = vUv;
+                    // --- PUPIL POSITION (FIXED) ---
+                    vec2 staticOffset = vec2(-0.15, 0.0);
+                    vec2 sensitivity = vec2(0.3, 0.3);
+                    vec2 shiftedCenter = vec2(0.5, 0.5) + uMouse * sensitivity + staticOffset;
+                    float d = distance(uv, shiftedCenter);
+                    
+                    // --- PUPIL SIZE & DILATION (FIXED) ---
+                    float basePupil = 0.18; 
+                    float dilation = uDilationFactor * 0.07; 
+                    float pupil = basePupil + dilation + sin(uTime * 1.5)*0.03; 
+                    
+                    vec3 col = vec3(0.0);
+                    if (d > pupil) {
+                        float n = noise(uv * 25.0 - uTime * 0.5);
+                        float angle = atan(uv.y - shiftedCenter.y, uv.x - shiftedCenter.x);
+                        float fibers = sin(angle*40.0 + n*10.0);
+                        col = vec3(0.0, 0.8 + fibers*0.3, 0.1); 
+                        if (d > 0.48) col *= 0.1; 
+                    }
+                    float spec = pow(max(dot(vNormal, normalize(vec3(1.0, 1.0, 1.0))), 0.0), 40.0);
+                    col += spec * 0.8;
+                    gl_FragColor = vec4(col, 1.0);
+                }
+            `
+        });
+        const coreEye = new THREE.Mesh(coreGeo, coreMat);
+        ophanimGroup.add(coreEye);
+
+        // --- STARFIELD ---
+        const starGeo = new THREE.BufferGeometry();
+        const starCount = 3000;
+        const pos = new Float32Array(starCount * 3);
+        for(let i=0; i<starCount*3; i+=3) {
+            const r = 30 + Math.random() * 30; 
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            pos[i] = r * Math.sin(phi) * Math.cos(theta);
+            pos[i+1] = r * Math.sin(phi) * Math.sin(theta);
+            pos[i+2] = r * Math.cos(phi);
+        }
+        starGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        const starMat = new THREE.PointsMaterial({color: 0xffffff, size: 0.05, transparent: true, opacity: 0.6});
+        const starMesh = new THREE.Points(starGeo, starMat);
+        scene.add(starMesh);
+
+        // --- LIGHTS ---
+        const ambient = new THREE.AmbientLight(0xffffff, 0.1);
+        scene.add(ambient);
+        const keyLight = new THREE.DirectionalLight(0xffffff, 1.5);
+        keyLight.position.set(10, 10, 10);
+        scene.add(keyLight);
+        const rimLight = new THREE.DirectionalLight(0x00ff88, 1);
+        rimLight.position.set(-5, 5, -10);
+        scene.add(rimLight);
+
+        // --- INTERACTION LOGIC ---
+        let mouseX = 0, mouseY = 0;
+        let targetMouseX = 0, targetMouseY = 0;
+        
+        const isInteractive = (el) => {
+            if (!el) return false;
+            return el.tagName === 'A' || el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || 
+                   el.classList.contains('glass-button') || el.classList.contains('glass-panel') || 
+                   el.closest('a') !== null || el.closest('button') !== null;
+        }
+
+        document.addEventListener('mousemove', (e) => {
+            targetMouseX = (e.clientX / window.innerWidth) * 2 - 1;
+            targetMouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+            if (isInteractive(e.target)) targetDilation = 1.0;
+            else targetDilation = 0.0;
+        });
+        document.addEventListener('mouseleave', () => { targetDilation = 0.0; });
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 0 && isInteractive(e.touches[0].target)) targetDilation = 1.0;
+            else targetDilation = 0.0;
+        });
+        document.addEventListener('touchend', () => { targetDilation = 0.0; });
+
+        // --- ANIMATION LOOP ---
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const t = clock.getElapsedTime();
+            coreMat.uniforms.uTime.value = t;
+
+            // SCROLL INTERPOLATION (Restored Fixed-Section Logic)
+            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollRaw = window.scrollY / (maxScroll || 1); 
+            scrollProgress += (scrollRaw - scrollProgress) * 0.05;
+
+            // CAMERA NAVIGATION
+            const camRadius = 14 - Math.sin(scrollProgress * Math.PI) * 4; 
+            const camAngle = scrollProgress * Math.PI * 2 + 0.5;
+            const camHeight = (scrollProgress - 0.5) * 8;
+            camera.position.x = Math.sin(camAngle) * camRadius;
+            camera.position.z = Math.cos(camAngle) * camRadius;
+            camera.position.y = camHeight;
+            camera.lookAt(0, 0, 0);
+
+            // LOGO ANIMATION
+            r1.rotation.x = t * 0.2; r1.rotation.y = t * 0.1;
+            r2.rotation.y = t * 0.15 + 1; r2.rotation.z = t * 0.05;
+            r3.rotation.x = t * 0.1 + 2; r3.rotation.z = t * 0.1;
+
+            // EYE TRACKING
+            mouseX += (targetMouseX - mouseX) * 0.05;
+            mouseY += (targetMouseY - mouseY) * 0.05;
+            
+            // DILATION
+            const deltaDilation = targetDilation - currentDilation;
+            const step = DILATION_SPEED;
+            if (Math.abs(deltaDilation) > step) {
+                currentDilation += Math.sign(deltaDilation) * step;
+            } else {
+                currentDilation = targetDilation;
+            }
+
+            coreMat.uniforms.uMouse.value.set(mouseX, mouseY);
+            coreMat.uniforms.uDilationFactor.value = currentDilation;
+
+            // BLINKING
+            const updateSet = new Set();
+            allEyes.forEach(eye => {
+                if(eye.blink === 0 && Math.random() < 0.0015) eye.blink = 0.01;
+                if(eye.blink > 0) {
+                    eye.blink += eye.speed;
+                    if(eye.blink >= Math.PI) {
+                        eye.blink = 0;
+                        eye.dummy.scale.copy(eye.baseScale);
+                    } else {
+                        const s = 1 - Math.sin(eye.blink) * 0.9;
+                        eye.dummy.scale.set(eye.baseScale.x, eye.baseScale.y * s, eye.baseScale.z);
+                    }
+                    eye.dummy.updateMatrix();
+                    eye.mesh.setMatrixAt(eye.index, eye.dummy.matrix);
+                    updateSet.add(eye.mesh);
+                }
+            });
+            updateSet.forEach(m => m.instanceMatrix.needsUpdate = true);
+
+            // UI UPDATES (Restored Fixed-Section Logic)
+            const sectionIndex = Math.min(Math.floor(scrollProgress * 5 + 0.2), 4);
+            document.querySelectorAll('.section-container').forEach((el, i) => {
+                if(i === sectionIndex) el.classList.add('active');
+                else el.classList.remove('active');
+            });
+            document.querySelectorAll('.dot').forEach((el, i) => {
+                if(i === sectionIndex) el.classList.add('active');
+                else el.classList.remove('active');
+            });
+
+            composer.render();
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // --- NON-3D LOGIC (Helper Functions) ---
+
+        window.scrollToSection = (idx) => {
+            window.scrollTo({ top: idx * window.innerHeight, behavior: 'smooth' });
+        };
+        
+        window.selectDonation = (amt) => {
+            const btn = document.getElementById('donate-btn');
+            const select = document.getElementById('donation-amount');
+            
+            // Set value in select
+            if (select) select.value = amt;
+            
+            // Update button text
+            btn.innerHTML = `<span class="shimmer"></span> Pay $${amt} with PayPal`;
+        };
+
+        window.toggleContactModal = () => {
+            document.getElementById('contact-modal').classList.toggle('hidden');
+        };
+
+        window.onload = () => {
+            setTimeout(() => document.getElementById('preloader').classList.add('loaded'), 1000);
+            
+            // Populate donation options dynamically: $111 to $11,100
+            const select = document.getElementById('donation-amount');
+            if(select) {
+                // Clear existing, keep placeholder
+                select.innerHTML = '<option value="">Choose Contribution...</option>';
+                for(let i=1; i<=100; i++) {
+                    const val = i * 111;
+                    const option = document.createElement('option');
+                    option.value = val;
+                    option.textContent = `$${val.toLocaleString()}`;
+                    select.appendChild(option);
+                }
+            }
+        };
+
+        // --- GEMINI TOOLS LOGIC ---
+        const apiKey = ""; 
+
+        async function callGemini(prompt, systemPrompt, elementIdPrefix) {
+            const btn = document.getElementById(`btn-${elementIdPrefix}`);
+            const input = document.getElementById(`input-${elementIdPrefix}`);
+            const loader = document.getElementById(`loader-${elementIdPrefix}`);
+            const resultBox = document.getElementById(`result-${elementIdPrefix}`);
+            const resultText = document.getElementById(`text-${elementIdPrefix}`);
+
+            if (!input.value.trim()) return;
+
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+            loader.classList.remove('hidden');
+            resultBox.classList.add('hidden');
+
+            try {
+                // Mock API Call (Replace this with real fetch if API key is provided)
+                const mockResponses = {
+                    architect: "### Recommended Open-Source Architecture\n\n**1. Data Ingestion (ETL):** Utilize **n8n** for scheduling and orchestration. Create a webhook trigger that listens for new Gmail emails. Use **Airbyte** to connect Gmail to a central database.\n\n**2. Database Layer:** Store raw and structured data in **Supabase** (Postgres) for reliable, scalable storage and real-time query access.\n\n**3. Automation/Transform:** Use **Python** nodes within n8n, leveraging the Pandas library, to structure the donor data before inserting it into the final Google Sheet endpoint. This provides transparency and ownership.",
+                    roi: "### Financial Cost of Inaction\n\n**Assumptions:**\n* Average fully loaded salary/wage rate: $30/hour\n* Total manual hours/week: 20 hours (2 staff * 10 hours)\n\n**Annual Cost of Inaction (48 Weeks):**\n* $30/hour * 20 hours/week * 48 weeks = **$28,800 USD**\n\n**Projected ROI:** Automating this process provides a 100% cost recovery within 1 month. The annual value is significant and directly recoverable for mission-critical tasks.",
+                    grant: "### Project Narrative: Problem Statement\n\nIn Atlanta's rapidly evolving tech landscape, underprivileged youth face systemic barriers that prevent access to critical coding education. The disparity directly correlates with future economic inequality, limiting social mobility. Our program addresses this by offering specialized, accessible training, transforming educational outcomes and creating a direct pipeline to careers in technology, thereby strengthening the community's long-term economic stability."
+                };
+
+                const aiResponse = mockResponses[elementIdPrefix];
+                await new Promise(resolve => setTimeout(resolve, 1500)); 
+
+                resultText.innerHTML = marked.parse(aiResponse);
+                resultBox.classList.remove('hidden');
+            } catch (error) {
+                resultText.innerHTML = `<span class="text-red-400">Error: Service unavailable.</span>`;
+                resultBox.classList.remove('hidden');
+            } finally {
+                loader.classList.add('hidden');
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+            }
+        }
+
+        if(document.getElementById('btn-architect')) {
+            document.getElementById('btn-architect').addEventListener('click', () => {
+                callGemini(document.getElementById('input-architect').value, "", 'architect');
+            });
+        }
+        if(document.getElementById('btn-roi')) {
+            document.getElementById('btn-roi').addEventListener('click', () => {
+                callGemini(document.getElementById('input-roi').value, "", 'roi');
+            });
+        }
+        if(document.getElementById('btn-grant')) {
+            document.getElementById('btn-grant').addEventListener('click', () => {
+                callGemini(document.getElementById('input-grant').value, "", 'grant');
+            });
+        }
+        
+        // PayPal Redirect Main Listener
+        if(document.getElementById('donate-btn')) {
+            document.getElementById('donate-btn').addEventListener('click', () => {
+                const val = document.getElementById('donation-amount').value;
+                if(val) window.open(`https://www.paypal.com/donate/?business=4FHD7ZZ8DECCQ&no_recurring=0&currency_code=USD&amount=${val}`, '_blank');
+                else {
+                    const select = document.getElementById('donation-amount');
+                    select.style.borderColor = '#ff4444';
+                    setTimeout(() => select.style.borderColor = 'rgba(255,255,255,0.2)', 1000);
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>

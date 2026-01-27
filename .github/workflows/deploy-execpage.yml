@@ -1,0 +1,20 @@
+name: Deploy Execpage
+on:
+  push:
+    paths:
+      - 'execpage/**'
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./execpage
+          force_orphan: true
+          publish_branch: gh-pages
+          allow_empty_commit: true

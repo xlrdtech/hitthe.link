@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://sintra-web-builder-components.s3.eu-central-1.amazonaws.com/versions/20250918/components-20250918.js"></script>
+    <title>Self Exec | Automation Consulting &amp; ROI Systems</title>
+    <link rel="icon" href="https://cdn.sintra.ai/img/K-Ig1ULhYhKfpEhbJyaAkPr8_EzNjdpnLaeuQJ_lS2Y/g:ce/rs:fit:400:0:0/czM6Ly9zaW50cmEtYnJhaW5haS1tZWRpYS9rbm93bGVkZ2UtcHJvZmlsZXMvMDMzNWM5YWEtOGQ3YS00NDY0LWEzMzQtNTUzNzVjMDhhMDI0L2Fzc2V0cy80ZWUxZDkzNC00YjdhLTQxYzYtYTg2Zi01NjczYTVkNDhkMGMvU0VMX0xPR08uUE5H" type="image/png">
+    <!-- Preconnect to Google Fonts for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Conditional font loading based on design style -->
+    <!-- Lumen: Archivo + Inter -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link href="https://fonts.cdnfonts.com/css/roboto" rel="stylesheet" />
+    <script type="application/javascript">
+      const KNOWLEDGE_PROFILE_ID = "0335c9aa-8d7a-4464-a334-55375c08a024";
+
+      // Initialize Sintra Framework
+      // Note: In some preview environments, external scripts or API calls might be restricted.
+      const sintra = typeof SintraFramework !== 'undefined' 
+        ? new SintraFramework({
+            baseUrl: "https://alluring-encouragement-production.up.railway.app",
+            knowledgeProfileId: KNOWLEDGE_PROFILE_ID
+          })
+        : { 
+            // Mock fallback if script fails to load in preview
+            submitContactForm: async () => ({ ok: true }) 
+          };
+
+      // FAQ Toggle Functionality
+      document.addEventListener("DOMContentLoaded", function () {
+        const faqItems = document.querySelectorAll(".faq-item");
+
+        faqItems.forEach((item) => {
+          item.addEventListener("click", function () {
+            // Find the parent container that has the answer
+            const faqContainer = this.parentElement;
+            const answer = faqContainer.querySelector(".faq-answer");
+            const chevron = this.querySelector(".faq-chevron");
+
+            // Toggle answer visibility
+            if (answer) {
+              answer.classList.toggle("hidden");
+            }
+
+            // Toggle chevron rotation
+            if (chevron) {
+              chevron.classList.toggle("rotate-180");
+            }
+          });
+        });
+
+        // Contact form handling
+        const contactForm = document.getElementById("contact-form");
+        const contactSuccessOverlay = document.getElementById(
+          "contact-success-overlay"
+        );
+
+        if (contactForm && contactSuccessOverlay) {
+          contactForm.addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(contactForm);
+            const data = {
+              name: formData.get("name"),
+              email: formData.get("email"),
+              details: formData.get("message"),
+            };
+
+            try {
+              const response = await sintra.submitContactForm(data);
+              if (response.ok) {
+                // Show success overlay
+                contactSuccessOverlay.classList.remove("hidden");
+                contactForm.reset();
+
+                // Hide overlay after 3 seconds
+                setTimeout(() => {
+                  contactSuccessOverlay.classList.add("hidden");
+                }, 5000);
+              } else {
+                alert(
+                  "Sorry, there was an error sending your message. Please try again."
+                );
+              }
+            } catch (error) {
+              console.error(error);
+              alert(
+                "Sorry, there was an error sending your message. Please try again."
+              );
+            }
+          });
+        }
+
+        // Hero email form handling
+        const heroEmailForm = document.getElementById("hero-email-form");
+        const heroSuccessOverlay = document.getElementById(
+          "hero-success-overlay"
+        );
+
+        if (heroEmailForm && heroSuccessOverlay) {
+          heroEmailForm.addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(heroEmailForm);
+            const data = {
+              email: formData.get("email"),
+              details:
+                "This email was submitted through the hero section email form. The visitor did not provide their name or additional details.",
+            };
+
+            try {
+              const response = await sintra.submitContactForm(data);
+              if (response.ok) {
+                // Show success overlay
+                heroSuccessOverlay.classList.remove("hidden");
+                heroEmailForm.reset();
+
+                // Hide overlay after 3 seconds
+                setTimeout(() => {
+                  heroSuccessOverlay.classList.add("hidden");
+                }, 5000);
+              } else {
+                alert("Sorry, there was an error. Please try again.");
+              }
+            } catch (error) {
+              console.error(error);
+              alert("Sorry, there was an error. Please try again.");
+            }
+          });
+        }
+      });
+    </script>
+  </head>
+
+  <body>
+    <div
+      class="w-full font-['Inter'] [.lumen_&]:font-['Inter'] [.terra_&]:font-['Inter']"
+    >
+      <!-- Header -->
+      <header
+        class="px-4 md:px-8 py-2.5 lg:px-26 lg:py-4 bg-white [.lumen_&]:bg-black [.terra_&]:bg-[#e9e4df] flex flex-row items-start justify-between overflow-hidden"
+      >
+        <div
+          class="w-36 h-12 md:w-48 md:h-16 max-w-48 max-h-16 min-w-16 min-h-4 relative overflow-hidden flex items-center justify-start"
+        >
+          <img
+            class="max-h-full object-contain"
+            src="https://cdn.sintra.ai/img/K-Ig1ULhYhKfpEhbJyaAkPr8_EzNjdpnLaeuQJ_lS2Y/g:ce/rs:fit:400:0:0/czM6Ly9zaW50cmEtYnJhaW5haS1tZWRpYS9rbm93bGVkZ2UtcHJvZmlsZXMvMDMzNWM5YWEtOGQ3YS00NDY0LWEzMzQtNTUzNzVjMDhhMDI0L2Fzc2V0cy80ZWUxZDkzNC00YjdhLTQxYzYtYTg2Zi01NjczYTVkNDhkMGMvU0VMX0xPR08uUE5H"
+          />
+        </div>
+
+        <a
+          href="#contact"
+          class="px-5 py-2.5 bg-black [.lumen_&]:bg-lime-400 [.terra_&]:bg-[#623f35] rounded-full outline outline-1 outline-black [.lumen_&]:outline-lime-400 [.terra_&]:outline-[#623f35] hover:bg-black/90 [.lumen_&]:hover:bg-lime-500 [.terra_&]:hover:bg-[#623f35]/90 focus:bg-black [.lumen_&]:focus:bg-lime-400 [.terra_&]:focus:bg-[#623f35] focus:outline-gray-400 focus:outline-4 focus:outline-offset-2 transition-colors duration-200 scroll-smooth text-white [.lumen_&]:text-black text-base font-semibold"
+          >Contact Us</a
+        >
+      </header>
+
+      <!-- Hero Section -->
+      <section
+        class="px-4 md:px-8 lg:py-16 py-12 lg:px-26 bg-white [.lumen_&]:bg-black [.terra_&]:bg-[#e9e4df] overflow-hidden"
+      >
+        <div
+          class="w-full max-w-7xl mx-auto flex flex-col md:flex-row justify-center md:justify-between items-start md:items-center gap-4 md:gap-8 lg:gap-16"
+        >
+          <div
+            class="w-full md:w-1/2 md:flex-shrink-0 flex flex-col justify-start md:justify-center items-stretch gap-6 flex-1"
+          >
+            <div
+              class="justify-start text-black [.lumen_&]:text-white text-4 text-[40px] lg:text-6xl font-medium [.lumen_&]:font-['Archivo'] [.terra_&]:font-['Domine'] [.terra_&]:font-normal leading-[48px] lg:leading-[72px] tracking-[-2%]"
+            >
+              Unlock Automation &amp; Compounding Results
+            </div>
+            <div
+              class="justify-start text-neutral-700 [.lumen_&]:text-neutral-300 text-base font-normal"
+            >
+              Self Exec delivers industry-disrupting automation, AI, and
+              consulting. Save time, eliminate manual work, and compound your
+              business results—zero overhead, measurable impact, and complete
+              time freedom.
+            </div>
+            <form
+              id="hero-email-form"
+              class="flex flex-col justify-start items-start gap-2.5 group relative"
+            >
+              <!-- Success Overlay -->
+              <div
+                id="hero-success-overlay"
+                class="hidden absolute inset-0 bg-neutral-100 [.lumen_&]:bg-neutral-800 [.terra_&]:bg-white rounded-full flex justify-center items-center gap-3 px-6 py-2.5 z-10"
+              >
+                <div class="size-6 relative flex-shrink-0">
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M7.5 12L10.5 15L16.5 9M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z"
+                      stroke="#12B76A"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+                <div
+                  class="text-black [.lumen_&]:text-white text-base font-medium"
+                >
+                  Message received!
+                </div>
+              </div>
+
+              <div
+                class="self-stretch bg-neutral-100 [.lumen_&]:bg-neutral-800 [.terra_&]:bg-white rounded-full flex flex-col justify-start items-start focus-within:outline outline-black [.lumen_&]:outline-neutral-600 [.terra_&]:outline-neutral-200 outline-offset-[-1px]"
+              >
+                <div
+                  class="self-stretch pl-6 pr-2.5 py-2.5 inline-flex justify-start items-center gap-2"
+                >
+                  <input
+                    class="flex-1 bg-transparent border-none outline-none justify-start text-black [.lumen_&]:text-white text-base font-normal leading-normal placeholder:text-neutral-400 [.lumen_&]:placeholder:text-neutral-500"
+                    type="email"
+                    name="email"
+                    placeholder="Your email"
+                    required
+                  />
+                  <button
+                    type="submit"
+                    class="size-11 px-5 py-2.5 bg-black/50 [.lumen_&]:bg-lime-400/50 [.terra_&]:bg-[#623f35]/50 hover:bg-black/55 [.lumen_&]:hover:bg-lime-500/55 [.terra_&]:hover:bg-[#623f35]/55 focus:bg-black [.lumen_&]:focus:bg-lime-400 [.terra_&]:focus:bg-[#623f35] focus:outline-gray-400 focus:outline-4 focus:outline-offset-2 cursor-pointer rounded-full flex justify-center items-center gap-2 group-valid:bg-black [.lumen_&]:group-valid:bg-lime-400 [.terra_&]:group-valid:bg-[#623f35] group-invalid:bg-gray-400 [.lumen_&]:group-invalid:bg-lime-400/50 [.terra_&]:group-invalid:bg-[#623f35]/50 group-invalid:cursor-not-allowed transition-colors duration-200"
+                  >
+                    <span
+                      class="text-white [.lumen_&]:text-black text-lg font-bold"
+                      >→</span
+                    >
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+          <video
+            class="w-full md:w-1/2 rounded-xl flex-1 object-cover min-w-1 aspect-square"
+            autoplay
+            loop
+            muted
+            playsinline
+          >
+            <source
+              src="https://cdn.sintra.ai/x/brain/knowledge-profiles/0335c9aa-8d7a-4464-a334-55375c08a024/assets/084ff694-2fb1-4a7a-b1c9-e60de96103fe/grok-video-26e559c9-a1e3-44b9-8463-057cd57520d7.mp4?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jZG4uc2ludHJhLmFpL3gvYnJhaW4va25vd2xlZGdlLXByb2ZpbGVzLzAzMzVjOWFhLThkN2EtNDQ2NC1hMzM0LTU1Mzc1YzA4YTAyNC9hc3NldHMvMDg0ZmY2OTQtMmZiMS00YTdhLWIxYzktZTYwZGU5NjEwM2ZlL2dyb2stdmlkZW8tMjZlNTU5YzktYTFlMy00NGI5LTg0NjMtMDU3Y2Q1NzUyMGQ3Lm1wNCIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2NzQ2NTk5Mn19fV19&Signature=JPRyQSgJheIlmm2bxLqfHe8FYFiPZu1gwg1uHfEM/wjTi1/H/EgCA2i3QeA9PDjzwMpbANz/kH4mZE0mVJDBeIpws5PC38j%2Byd%2BPaMl5dZoLoHxBZeGbftbWrr4ctmoArXKK%2BlSWKAhdwsMuO6bfh8wjhlnZt6oHs7BukRvxvoqbw8A6mV3Qqr32m3RiD%2BUecuCA0ghOEr2%2BSeRnNKiWFpGJ45GUDznBWBwx0gD8bFPF8L7xJ2K/mLix4P/HXCdQ37iiqgyhCFl8rMNjHcjsZ6QcYWatYQDs0pHkwp633YD94LF6F%2BL28TgQbtS6rbdYGYVyIpZpu9XkS7zx87ALUg%3D%3D&Key-Pair-Id=K2DN49D0IYEKIP"
+              type="video/mp4"
+            />
+          </video>
+        </div>
+      </section>
+
+      <!-- Mission Section -->
+      <section
+        class="px-4 md:px-8 py-12 lg:px-26 lg:py-16 bg-neutral-100 [.lumen_&]:bg-neutral-800 [.terra_&]:bg-white overflow-hidden"
+      >
+        <div
+          class="w-full max-w-7xl mx-auto flex flex-col justify-center items-center gap-10"
+        >
+          <div
+            class="w-full lg:w-[768px] mx-auto flex flex-col justify-center items-center gap-4"
+          >
+            <div
+              class="w-full lg:w-[768px] text-center justify-start text-neutral-500 [.lumen_&]:text-neutral-400 text-sm font-medium"
+            >
+              Our mission
+            </div>
+            <div
+              class="self-stretch text-center justify-start text-black [.lumen_&]:text-white text-2xl lg:text-4xl font-medium [.lumen_&]:font-['Archivo'] [.terra_&]:font-['Domine'] [.terra_&]:font-normal lg:leading-[44px] tracking-[-2%]"
+            >
+              Our mission is to get you paid to save time—every solution is
+              engineered for measurable outcomes.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Services Section -->
+      <section
+        class="px-4 md:px-8 py-12 lg:px-26 lg:py-16 bg-white [.lumen_&]:bg-black [.terra_&]:bg-[#e9e4df] overflow-hidden"
+      >
+        <div class="max-w-7xl mx-auto space-y-10">
+          <div
+            class="flex flex-col-reverse md:flex-row justify-center items-stretch md:items-center gap-8 lg:gap-16"
+          >
+            <video
+              class="rounded-xl flex-1 object-cover min-w-1 aspect-square"
+              autoplay
+              loop
+              muted
+              playsinline
+            >
+              <source
+                src="https://cdn.sintra.ai/x/brain/knowledge-profiles/0335c9aa-8d7a-4464-a334-55375c08a024/assets/c43f954d-2185-413d-ab16-259ca28f62b9/grok-video-da926fe3-0a2c-438b-a767-b2036e4f1f74.mp4?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jZG4uc2ludHJhLmFpL3gvYnJhaW4va25vd2xlZGdlLXByb2ZpbGVzLzAzMzVjOWFhLThkN2EtNDQ2NC1hMzM0LTU1Mzc1YzA4YTAyNC9hc3NldHMvYzQzZjk1NGQtMjE4NS00MTNkLWFiMTYtMjU5Y2EyOGY2MmI5L2dyb2stdmlkZW8tZGE5MjZmZTMtMGEyYy00MzhiLWE3NjctYjIwMzZlNGYxZjc0Lm1wNCIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2NzQ2NTk5Mn19fV19&Signature=EsRjMIQwXhissXkDZABR9giBqOQL72spIMB2p%2BdFuIIWhAwPcSHKsv1UmF1dtnruAjgctJ878FO0GXyWUhuhUKWYtyHpR8EBlmbkIew67Q9wrPzMUiCjfbViLLb1/g6JPKvc8n2FgWTfrTTbM1KaPpSZiTI8F3BN6qzXoVLjPPe7qSWlpnUmPr%2By7JhLy9qZbMWumSWZ0NNIz13Gkr88zcVHUuMSrVUTqJ5yv1WEaSCo6WoIaKUEficQbPHPHBUxbzwVHcbKP1uvtPpK9PW9PX8dxgdSrtO0S%2BIF%2Bmr5bmrut2MHEug31bpZ%2Bx9gWQXOyKL4qE2mORsYj3M1CBOCUA%3D%3D&Key-Pair-Id=K2DN49D0IYEKIP"
+                type="video/mp4"
+              />
+            </video>
+            <div
+              class="inline-flex flex-col justify-start md:justify-center items-stretch gap-6 flex-1"
+            >
+              <div
+                class="self-stretch flex flex-col justify-start items-start gap-6"
+              >
+                <div
+                  class="self-stretch flex flex-col justify-start items-start gap-4"
+                >
+                  <div
+                    class="self-stretch justify-start text-neutral-500 [.lumen_&]:text-neutral-400 text-sm font-medium"
+                  >
+                    Services
+                  </div>
+                  <div
+                    class="self-stretch justify-start text-black [.lumen_&]:text-white text-3xl lg:text-5xl font-medium [.lumen_&]:font-['Archivo'] [.terra_&]:font-['Domine'] [.terra_&]:font-normal lg:leading-[60px] tracking-[-2%]"
+                  >
+                    Automation &amp; AI Consulting, Zero Overhead
+                  </div>
+                </div>
+                <div
+                  class="self-stretch justify-start text-neutral-700 [.lumen_&]:text-neutral-300 text-base font-normal"
+                >
+                  From full-stack automation to SOP simplification, we design,
+                  deploy, and optimize systems that eliminate manual work and
+                  maximize your margins. Every project is priced using angel
+                  numbers, with transparent milestones and instant payout
+                  options.
+                </div>
+              </div>
+              <div class="hidden md:block">
+                <a
+                  href="#contact"
+                  class="px-5 py-2.5 rounded-full outline outline-1 outline-black [.lumen_&]:outline-lime-400 [.terra_&]:outline-[#623f35] bg-black [.lumen_&]:bg-lime-400 [.terra_&]:bg-[#623f35] hover:bg-black/90 [.lumen_&]:hover:bg-lime-500 [.terra_&]:hover:bg-[#623f35]/90 focus:bg-black [.lumen_&]:focus:bg-lime-400 [.terra_&]:focus:bg-[#623f35] focus:outline-gray-400 focus:outline-4 focus:outline-offset-2 transition-colors duration-200 scroll-smooth text-white [.lumen_&]:text-black text-base font-semibold block md:inline-block"
+                >
+                  Contact Us
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex flex-col md:flex-row items-stretch gap-8">
+              <div class="flex-1 space-y-4">
+                <div class="space-y-3">
+                  <div
+                    class="flex flex-row md:flex-col items-center md:items-start gap-2"
+                  >
+                    <div class="flex-0">
+                      <svg
+                        class="size-6 lg:size-8 [.lumen_&]:stroke-white"
+                        viewBox="0 0 32 32"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <g clip-path="url(#clip0_756_1929)">
+                          <path
+                            d="M16 5V27"
+                            stroke="black"
+                            class="[.lumen_&]:stroke-white [.terra_&]:stroke-[#623f35]"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <path
+                            d="M6 10L26 22"
+                            stroke="black"
+                            class="[.lumen_&]:stroke-white [.terra_&]:stroke-[#623f35]"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <path
+                            d="M6 22L26 10"
+                            stroke="black"
+                            class="[.lumen_&]:stroke-white [.terra_&]:stroke-[#623f35]"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                        </g>
+                        <defs>
+                          <clipPath id="clip0_756_1929">
+                            <rect width="32" height="32" fill="white" />
+                          </clipPath>
+                        </defs>
+                      </svg>
+                    </div>
+                    <div
+                      class="text-black [.lumen_&]:text-white text-lg lg:text-xl font-medium [.lumen_&]:font-['Archivo'] [.terra_&]:font-['Domine'] [.terra_&]:font-normal leading-[28px]"
+                    >
+                      G.O.D. SOP Stack Deployment
+                    </div>
+                  </div>
+                  <div
+                    class="text-neutral-700 [.lumen_&]:text-neutral-300 text-sm font-normal font-['Roboto'] leading-[21px]"
+                  >
+                    Implement the 27-tool, three-layer stack to automate
+                    Generate, Operate, and Distribute workflows. Docker-first,
+                    self-hosted, and vendor lock-in resistant.
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex-1 space-y-4">
+                <div class="space-y-3">
+                  <div
+                    class="flex flex-row md:flex-col items-center md:items-start gap-2"
+                  >
+                    <div class="flex-0">
+                      <svg
+                        class="size-6 lg:size-8 [.lumen_&]:stroke-white"
+                        viewBox="0 0 32 32"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <g clip-path="url(#clip0_756_1929)">
+                          <path
+                            d="M16 5V27"
+                            stroke="black"
+                            class="[.lumen_&]:stroke-white [.terra_&]:stroke-[#623f35]"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <path
+                            d="M6 10L26 22"
+                            stroke="black"
+                            class="[.lumen_&]:stroke-white [.terra_&]:stroke-[#623f35]"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <path
+                            d="M6 22L26 10"
+                            stroke="black"
+                            class="[.lumen_&]:stroke-white [.terra_&]:stroke-[#623f35]"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                        </g>
+                        <defs>
+                          <clipPath id="clip0_756_1929">
+                            <rect width="32" height="32" fill="white" />
+                          </clipPath>
+                        </defs>
+                      </svg>
+                    </div>
+                    <div
+                      class="text-black [.lumen_&]:text-white text-lg lg:text-xl font-medium [.lumen_&]:font-['Archivo'] [.terra_&]:font-['Domine'] [.terra_&]:font-normal leading-[28px]"
+                    >
+                      Elite Client Filter &amp; Qualification
+                    </div>
+                  </div>
+                  <div
+                    class="text-neutral-700 [.lumen_&]:text-neutral-300 text-sm font-normal font-['Roboto'] leading-[21px]"
+                  >
+                    Strict qualification ensures only high-value, decision-ready
+                    clients. No budget objections, no payment plans, 50% deposit
+                    required.
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex-1 space-y-4">
+                <div class="space-y-3">
+                  <div
+                    class="flex flex-row md:flex-col items-center md:items-start gap-2"
+                  >
+                    <div class="flex-0">
+                      <svg
+                        class="size-6 lg:size-8 [.lumen_&]:stroke-white"
+                        viewBox="0 0 32 32"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <g clip-path="url(#clip0_756_1929)">
+                          <path
+                            d="M16 5V27"
+                            stroke="black"
+                            class="[.lumen_&]:stroke-white [.terra_&]:stroke-[#623f35]"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <path
+                            d="M6 10L26 22"
+                            stroke="black"
+                            class="[.lumen_&]:stroke-white [.terra_&]:stroke-[#623f35]"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <path
+                            d="M6 22L26 10"
+                            stroke="black"
+                            class="[.lumen_&]:stroke-white [.terra_&]:stroke-[#623f35]"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                        </g>
+                        <defs>
+                          <clipPath id="clip0_756_1929">
+                            <rect width="32" height="32" fill="white" />
+                          </clipPath>
+                        </defs>
+                      </svg>
+                    </div>
+                    <div
+                      class="text-black [.lumen_&]:text-white text-lg lg:text-xl font-medium [.lumen_&]:font-['Archivo'] [.terra_&]:font-['Domine'] [.terra_&]:font-normal leading-[28px]"
+                    >
+                      Single-Page Site System
+                    </div>
+                  </div>
+                  <div
+                    class="text-neutral-700 [.lumen_&]:text-neutral-300 text-sm font-normal font-['Roboto'] leading-[21px]"
+                  >
+                    $5,555.55 all-in, $2,777.78 deposit, max $20 overhead.
+                    Design, deploy, and launch in under 7 hours—guaranteed
+                    quality and transparent process.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="md:hidden">
+            <a
+              href="#contact"
+              class="px-5 py-2.5 rounded-full outline outline-1 outline-black [.lumen_&]:outline-lime-400 [.terra_&]:outline-[#623f35] bg-black [.lumen_&]:bg-lime-400 [.terra_&]:bg-[#623f35] hover:bg-black/90 [.lumen_&]:hover:bg-lime-500 [.terra_&]:hover:bg-[#623f35]/90 focus:bg-black [.lumen_&]:focus:bg-lime-400 [.terra_&]:focus:bg-[#623f35] focus:outline-gray-400 focus:outline-4 focus:outline-offset-2 transition-colors duration-200 scroll-smooth text-white [.lumen_&]:text-black text-base font-semibold block md:inline-block"
+            >
+              Contact Us
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Benefits Section -->
+      <section
+        class="px-4 md:px-8 py-12 lg:px-26 lg:py-16 bg-neutral-100 [.lumen_&]:bg-neutral-800 [.terra_&]:bg-white flex flex-col justify-center items-start gap-8 lg:gap-10 overflow-hidden"
+      >
+        <div
+          class="w-full max-w-7xl mx-auto flex flex-col justify-center items-start gap-8 lg:gap-10"
+        >
+          <div
+            class="self-stretch w-full lg:w-[768px] flex flex-col justify-start items-start gap-4"
+          >
+            <div
+              class="self-stretch flex flex-col justify-start items-start gap-6"
+            >
+              <div
+                class="self-stretch flex flex-col justify-start items-start gap-4"
+              >
+                <div
+                  class="self-stretch justify-start text-neutral-500 [.lumen_&]:text-neutral-400 text-sm font-medium leading-tight"
+                >
+                  Benefits
+                </div>
+                <div
+                  class="self-stretch justify-start text-black [.lumen_&]:text-white text-3xl lg:text-5xl font-medium [.lumen_&]:font-['Archivo'] [.terra_&]:font-['Domine'] [.terra_&]:font-normal leading-9 lg:leading-[60px] tracking-[-2%]"
+                >
+                  Why Choose Self Exec?
+                </div>
+              </div>
+              <div
+                class="self-stretch justify-start text-neutral-700 [.lumen_&]:text-neutral-300 text-base font-normal"
+              >
+                We deliver measurable results—instant payout, total automation,
+                and solutions that free your time and compound your advantage.
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="self-stretch flex flex-col md:flex-row justify-start items-stretch md:items-start gap-3 lg:gap-8"
+          >
+            <div
+              class="flex-1 p-4 lg:p-6 bg-white [.lumen_&]:bg-neutral-700 [.terra_&]:bg-[#e9e4df] rounded-xl flex flex-col justify-start items-start gap-4"
+            >
+              <div class="w-6 h-6 lg:w-8 lg:h-8 relative">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="33"
+                  height="32"
+                  fill="none"
+                  viewBox="0 0 33 32"
+                >
+                  <g clip-path="url(#a)">
+                    <path
+                      stroke="#000"
+                      class="[.lumen_&]:stroke-lime-400 [.terra_&]:stroke-[#623f35]"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="m11.666 17 3 3 7-7"
+                    />
+                    <path
+                      stroke="#000"
+                      class="[.lumen_&]:stroke-lime-400 [.terra_&]:stroke-[#623f35]"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M16.666 28c6.628 0 12-5.373 12-12s-5.372-12-12-12c-6.627 0-12 5.373-12 12s5.373 12 12 12Z"
+                    />
+                  </g>
+                  <defs>
+                    <clipPath id="a">
+                      <path fill="#fff" d="M.667 0h32v32h-32z" />
+                    </clipPath>
+                  </defs>
+                </svg>
+              </div>
+              <div
+                class="self-stretch flex flex-col justify-start items-start gap-3"
+              >
+                <div
+                  class="self-stretch justify-start text-black [.lumen_&]:text-white text-lg lg:text-xl font-medium [.lumen_&]:font-['Archivo'] [.terra_&]:font-['Domine'] [.terra_&]:font-normal leading-7 lg:leading-loose tracking-[-2%]"
+                >
+                  Engineered for Results
+                </div>
+                <div
+                  class="self-stretch justify-start text-neutral-700 [.lumen_&]:text-neutral-300 text-sm font-normal font-['Roboto'] leading-tight"
+                >
+                  Every offer is built for maximum efficiency and outcome, so
+                  you see tangible improvements fast.
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="flex-1 p-4 lg:p-6 bg-white [.lumen_&]:bg-neutral-700 [.terra_&]:bg-[#e9e4df] rounded-xl flex flex-col justify-start items-start gap-4"
+            >
+              <div class="w-6 h-6 lg:w-8 lg:h-8 relative">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="33"
+                  height="32"
+                  fill="none"
+                  viewBox="0 0 33 32"
+                >
+                  <g clip-path="url(#a)">
+                    <path
+                      stroke="#000"
+                      class="[.lumen_&]:stroke-lime-400 [.terra_&]:stroke-[#623f35]"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="m11.666 17 3 3 7-7"
+                    />
+                    <path
+                      stroke="#000"
+                      class="[.lumen_&]:stroke-lime-400 [.terra_&]:stroke-[#623f35]"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M16.666 28c6.628 0 12-5.373 12-12s-5.372-12-12-12c-6.627 0-12 5.373-12 12s5.373 12 12 12Z"
+                    />
+                  </g>
+                  <defs>
+                    <clipPath id="a">
+                      <path fill="#fff" d="M.667 0h32v32h-32z" />
+                    </clipPath>
+                  </defs>
+                </svg>
+              </div>
+              <div
+                class="self-stretch flex flex-col justify-start items-start gap-3"
+              >
+                <div
+                  class="self-stretch justify-start text-black [.lumen_&]:text-white text-lg lg:text-xl font-medium [.lumen_&]:font-['Archivo'] [.terra_&]:font-['Domine'] [.terra_&]:font-normal leading-7 lg:leading-loose tracking-[-2%]"
+                >
+                  Zero Manual Work
+                </div>
+                <div
+                  class="self-stretch justify-start text-neutral-700 [.lumen_&]:text-neutral-300 text-sm font-normal font-['Roboto'] leading-tight"
+                >
+                  All solutions are designed for zero-human-in-the-loop. Set it,
+                  forget it, and scale.
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="flex-1 p-4 lg:p-6 bg-white [.lumen_&]:bg-neutral-700 [.terra_&]:bg-[#e9e4df] rounded-xl flex flex-col justify-start items-start gap-4"
+            >
+              <div class="w-6 h-6 lg:w-8 lg:h-8 relative">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="33"
+                  height="32"
+                  fill="none"
+                  viewBox="0 0 33 32"
+                >
+                  <g clip-path="url(#a)">
+                    <path
+                      stroke="#000"
+                      class="[.lumen_&]:stroke-lime-400 [.terra_&]:stroke-[#623f35]"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="m11.666 17 3 3 7-7"
+                    />
+                    <path
+                      stroke="#000"
+                      class="[.lumen_&]:stroke-lime-400 [.terra_&]:stroke-[#623f35]"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M16.666 28c6.628 0 12-5.373 12-12s-5.372-12-12-12c-6.627 0-12 5.373-12 12s5.373 12 12 12Z"
+                    />
+                  </g>
+                  <defs>
+                    <clipPath id="a">
+                      <path fill="#fff" d="M.667 0h32v32h-32z" />
+                    </clipPath>
+                  </defs>
+                </svg>
+              </div>
+              <div
+                class="self-stretch flex flex-col justify-start items-start gap-3"
+              >
+                <div
+                  class="self-stretch justify-start text-black [.lumen_&]:text-white text-lg lg:text-xl font-medium [.lumen_&]:font-['Archivo'] [.terra_&]:font-['Domine'] [.terra_&]:font-normal leading-7 lg:leading-loose tracking-[-2%]"
+                >
+                  Instant Payout &amp; Zero Overhead
+                </div>
+                <div
+                  class="self-stretch justify-start text-neutral-700 [.lumen_&]:text-neutral-300 text-sm font-normal font-['Roboto'] leading-tight"
+                >
+                  Get paid instantly, with transparent pricing and no hidden
+                  fees. Our model ensures high profit margins.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- About Us Section -->
+      <section
+        class="px-4 md:px-8 py-12 lg:px-26 lg:py-16 bg-white [.lumen_&]:bg-black [.terra_&]:bg-[#e9e4df] flex flex-col md:flex-row justify-center md:justify-start items-start gap-8 lg:gap-16 overflow-hidden"
+      >
+        <div
+          class="w-full max-w-7xl mx-auto flex flex-col md:flex-row justify-center md:justify-start items-start md:items-center gap-8 lg:gap-16"
+        >
+          <div
+            class="self-stretch w-full md:w-1/2 inline-flex flex-col justify-start md:justify-center items-stretch gap-6 flex-1"
+          >
+            <div class="flex flex-col justify-start items-start gap-6">
+              <div
+                class="self-stretch flex flex-col justify-start items-start gap-4"
+              >
+                <div
+                  class="self-stretch justify-start text-neutral-500 [.lumen_&]:text-neutral-400 text-sm font-medium leading-tight"
+                >
+                  About Us
+                </div>
+                <div
+                  class="self-stretch justify-start text-black [.lumen_&]:text-white text-3xl lg:text-5xl font-medium [.lumen_&]:font-['Archivo'] [.terra_&]:font-['Domine'] [.terra_&]:font-normal leading-9 lg:leading-[60px] tracking-[-2%]"
+                >
+                  Built by Industry Disruptors
+                </div>
+              </div>
+              <div
+                class="self-stretch justify-start text-neutral-700 [.lumen_&]:text-neutral-300 text-base font-normal"
+              >
+                Self Exec is led by East Allen—automation architect, creative
+                technologist, and CTO of L7S HERO. With 20+ years of experience,
+                we fuse discipline, creativity, and automation to build legacy
+                systems and permanent industry impact.
+              </div>
+            </div>
+            <div>
+              <a
+                href="#contact"
+                class="px-5 py-2.5 bg-black [.lumen_&]:bg-lime-400 [.terra_&]:bg-[#623f35] text-white [.lumen_&]:text-black rounded-full outline outline-1 outline-black [.lumen_&]:outline-lime-400 [.terra_&]:outline-[#623f35] flex justify-center items-center gap-2 hover:bg-black/90 [.lumen_&]:hover:bg-lime-500 [.terra_&]:hover:bg-[#623f35]/90 focus:bg-black [.lumen_&]:focus:bg-lime-400 [.terra_&]:focus:bg-[#623f35] focus:outline-gray-400 focus:outline-4 focus:outline-offset-2 transition-colors duration-200 scroll-smooth text-base font-semibold block md:inline-block"
+              >
+                Contact Us
+              </a>
+            </div>
+          </div>
+
+          <video
+            class="w-full lg:w-1/2 rounded-xl flex-1 object-cover min-w-1 aspect-square"
+            autoplay
+            loop
+            muted
+            playsinline
+          >
+            <source
+              src="https://cdn.sintra.ai/x/brain/knowledge-profiles/0335c9aa-8d7a-4464-a334-55375c08a024/assets/29ad3f1d-755d-4cd1-92fe-feb4df310927/grok-video-37b434b1-f0cd-4645-a222-ab174f328dfc.mp4?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jZG4uc2ludHJhLmFpL3gvYnJhaW4va25vd2xlZGdlLXByb2ZpbGVzLzAzMzVjOWFhLThkN2EtNDQ2NC1hMzM0LTU1Mzc1YzA4YTAyNC9hc3NldHMvMjlhZDNmMWQtNzU1ZC00Y2QxLTkyZmUtZmViNGRmMzEwOTI3L2dyb2stdmlkZW8tMzdiNDM0YjEtZjBjZC00NjQ1LWEyMjItYWIxNzRmMzI4ZGZjLm1wNCIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc2NzQ2NTk5Mn19fV19&Signature=D3gFml/OGu2hQ4n5f1XraQu7B47SF8FmtEpozepk22hC9FROyEApRE%2BlpKJmTz%2BzhnXkqrPdqu6zgsA7IlJbwA8QPHWeIbex0xdX9raF1DOcbafcEEHbaT9yfhfbwYlaYLCEPFgjxibgEw6kSCKlqjrVPU3nPDvnAw91xoItEkbBXxUtFQgMXxSvQZDE6U4YK3lGldGI4eXibCAoBp69BVmHqCxrII6/5Cepqv3bpzvmCL1HucCwhZ46vy3Z7FevcjoV7Wx6Upjl6ouBdfe2Aw2dVXjyLcknJd3TPfqDvgTd4AD5RxvDCHIMI4C%2B4YAl4pm%2Bkq3F81DjjqpXF9YmeA%3D%3D&Key-Pair-Id=K2DN49D0IYEKIP"
+              type="video/mp4"
+            />
+          </video>
+        </div>
+      </section>
+
+      <!-- Contact Section -->
+      <section
+        id="contact"
+        class="px-4 md:px-8 py-12 lg:px-26 lg:py-16 bg-neutral-100 [.lumen_&]:bg-neutral-800 [.terra_&]:bg-white flex flex-col lg:flex-row justify-start items-start gap-8 lg:gap-10 overflow-hidden"
+      >
+        <div
+          class="w-full max-w-7xl mx-auto flex flex-col lg:flex-row justify-start items-start gap-8 lg:gap-10"
+        >
+          <div
+            class="self-stretch w-full lg:w-1/2 inline-flex flex-col justify-start items-start gap-6 lg:gap-8"
+          >
+            <div
+              class="self-stretch flex flex-col justify-start items-start gap-4"
+            >
+              <div
+                class="self-stretch flex flex-col justify-start items-center gap-6"
+              >
+                <div
+                  class="self-stretch justify-start text-black [.lumen_&]:text-white text-3xl lg:text-5xl font-medium [.lumen_&]:font-['Archivo'] [.terra_&]:font-['Domine'] [.terra_&]:font-normal leading-9 lg:leading-[60px]"
+                >
+                  Contact Us
+                </div>
+                <div
+                  class="self-stretch justify-start text-neutral-700 [.lumen_&]:text-neutral-300 text-base font-normal"
+                >
+                  Ready to automate, scale, and disrupt your industry? Book a
+                  call or email for a custom proposal. All engagements require a
+                  50% deposit and guarantee measurable value.
+                </div>
+              </div>
+            </div>
+            <div class="flex flex-col justify-start items-start gap-4">
+              <div class="inline-flex justify-start items-start gap-4">
+                <div class="w-6 h-6 relative">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    class="w-full h-full"
+                  >
+                    <path
+                      stroke="#000"
+                      class="[.lumen_&]:stroke-lime-400 [.terra_&]:stroke-[#623f35]"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="m2 7 8.165 5.715c.661.463.992.695 1.351.784a2 2 0 0 0 .968 0c.36-.09.69-.32 1.351-.784L22 7M6.8 20h10.4c1.68 0 2.52 0 3.162-.327a3 3 0 0 0 1.311-1.311C22 17.72 22 16.88 22 15.2V8.8c0-1.68 0-2.52-.327-3.162a3 3 0 0 0-1.311-1.311C19.72 4 18.88 4 17.2 4H6.8c-1.68 0-2.52 0-3.162.327a3 3 0 0 0-1.311 1.311C2 6.28 2 7.12 2 8.8v6.4c0 1.68 0 2.52.327 3.162a3 3 0 0 0 1.311 1.311C4.28 20 5.12 20 6.8 20Z"
+                    />
+                  </svg>
+                </div>
+                <div
+                  class="justify-start text-black [.lumen_&]:text-white text-base font-normal font-['Roboto']"
+                >
+                  admin@selfexec.com
+                </div>
+              </div>
+
+              <div class="inline-flex justify-start items-start gap-4">
+                <div class="w-6 h-6 relative">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    class="w-full h-full"
+                  >
+                    <path
+                      stroke="#000"
+                      class="[.lumen_&]:stroke-lime-400 [.terra_&]:stroke-[#623f35]"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M8.38 8.853a14.605 14.605 0 0 0 2.847 4.01 14.605 14.605 0 0 0 4.01 2.846c.124.06.187.09.265.113.28.082.625.023.862-.147.067-.048.124-.105.239-.22.35-.349.524-.524.7-.638a2 2 0 0 1 2.18 0c.176.114.35.29.7.639l.195.195c.532.531.797.797.942 1.082a2 2 0 0 1 0 1.806c-.145.285-.41.55-.942 1.082l-.157.158c-.53.53-.795.794-1.155.997-.4.224-1.02.385-1.478.384-.413-.001-.695-.081-1.26-.241a19.038 19.038 0 0 1-8.283-4.874A19.038 19.038 0 0 1 3.17 7.761c-.16-.564-.24-.846-.241-1.26a3.377 3.377 0 0 1 .384-1.478c.202-.36.467-.624.997-1.154l.157-.158c.532-.531.798-.797 1.083-.941a2 2 0 0 1 1.805 0c.286.144.551.41 1.083.941l.195.195c.35.35.524.525.638.7a2 2 0 0 1 0 2.18c-.114.177-.289.351-.638.701a2.02 2.02 0 0 0-.22.238 1.05 1.05 0 0 0-.147.862c.023.08.053.142.113.266Z"
+                    />
+                  </svg>
+                </div>
+                <div
+                  class="justify-start text-black [.lumen_&]:text-white text-base font-normal font-['Roboto']"
+                >
+                  +1 (770) 999-9934
+                </div>
+              </div>
+
+              <div class="inline-flex justify-start items-start gap-4">
+                <div class="w-6 h-6 relative">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    class="w-full h-full"
+                  >
+                    <path
+                      stroke="#000"
+                      class="[.lumen_&]:stroke-lime-400 [.terra_&]:stroke-[#623f35]"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 22c1-5 8-5.582 8-12a8 8 0 1 0-16 0c0 6.418 7 7 8 12Z"
+                    />
+                    <path
+                      stroke="#000"
+                      class="[.lumen_&]:stroke-lime-400 [.terra_&]:stroke-[#623f35]"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                    />
+                  </svg>
+                </div>
+                <div
+                  class="justify-start text-black [.lumen_&]:text-white text-base font-normal font-['Roboto']"
+                >
+                  Remote Operations | Serving Clients Worldwide
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="self-stretch w-full lg:w-1/2 p-4 lg:p-6 bg-white [.lumen_&]:bg-black [.terra_&]:bg-white rounded-xl flex flex-col justify-start items-start gap-2.5 relative"
+          >
+            <!-- Success Overlay -->
+            <div
+              id="contact-success-overlay"
+              class="hidden absolute inset-0 bg-white [.lumen_&]:bg-black [.terra_&]:bg-white rounded-xl flex flex-col justify-center items-center gap-6 p-6 z-10"
+            >
+              <div class="size-12 relative">
+                <svg
+                  width="48"
+                  height="48"
+                  viewBox="0 0 48 48"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M15 24L21 30L33 18M44 24C44 35.0457 35.0457 44 24 44C12.9543 44 4 35.0457 4 24C4 12.9543 12.9543 4 24 4C35.0457 4 44 12.9543 44 24Z"
+                    stroke="#12B76A"
+                    stroke-width="4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </div>
+              <div class="flex flex-col justify-start items-center gap-4">
+                <div
+                  class="text-center text-black [.lumen_&]:text-white text-3xl lg:text-4xl font-medium [.lumen_&]:font-['Archivo'] [.terra_&]:font-['Domine'] [.terra_&]:font-normal leading-tight"
+                >
+                  Message received!
+                </div>
+                <div
+                  class="text-center text-neutral-700 [.lumen_&]:text-neutral-300 text-lg font-normal leading-relaxed"
+                >
+                  We'll get back to you soon.
+                </div>
+              </div>
+            </div>
+
+            <form
+              class="self-stretch flex flex-col justify-start items-start gap-4 lg:gap-6 w-full group"
+              id="contact-form"
+            >
+              <div class="self-stretch flex flex-col justify-start items-start">
+                <div
+                  class="self-stretch flex flex-col justify-start items-start gap-2"
+                >
+                  <label
+                    class="self-stretch justify-start text-neutral-700 [.lumen_&]:text-neutral-400 text-sm font-normal leading-tight"
+                    for="contact-name"
+                  >
+                    Name
+                  </label>
+                  <div
+                    class="self-stretch px-4 py-2.5 bg-neutral-100 [.lumen_&]:bg-neutral-800 [.terra_&]:bg-neutral-100 rounded-full inline-flex justify-start items-center gap-2 focus-within:outline outline-black [.lumen_&]:outline-neutral-600 [.terra_&]:outline-neutral-200 outline-offset-[-1px]"
+                  >
+                    <input
+                      class="flex-1 bg-transparent border-none outline-none justify-start text-black [.lumen_&]:text-white text-base font-normal placeholder:text-neutral-400 [.lumen_&]:placeholder:text-neutral-500"
+                      type="text"
+                      id="contact-name"
+                      name="name"
+                      placeholder="Your name"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+              <div
+                class="self-stretch flex flex-col justify-start items-start gap-2"
+              >
+                <label
+                  class="self-stretch justify-start text-neutral-700 [.lumen_&]:text-neutral-400 text-sm font-normal leading-tight"
+                  for="contact-email"
+                >
+                  Email
+                </label>
+                <div
+                  class="self-stretch px-4 py-2.5 bg-neutral-100 [.lumen_&]:bg-neutral-800 [.terra_&]:bg-neutral-100 rounded-full inline-flex justify-start items-center gap-2 focus-within:outline outline-black [.lumen_&]:outline-neutral-600 [.terra_&]:outline-neutral-200 outline-offset-[-1px]"
+                >
+                  <input
+                    class="flex-1 bg-transparent border-none outline-none justify-start text-black [.lumen_&]:text-white text-base font-normal placeholder:text-neutral-400 [.lumen_&]:placeholder:text-neutral-500"
+                    type="email"
+                    id="contact-email"
+                    name="email"
+                    placeholder="Your email"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="self-stretch flex flex-col justify-start items-start">
+                <div
+                  class="self-stretch flex flex-col justify-start items-start gap-2"
+                >
+                  <label
+                    class="self-stretch justify-start text-neutral-700 [.lumen_&]:text-neutral-400 text-sm font-normal leading-tight"
+                    for="contact-message"
+                  >
+                    Message
+                  </label>
+                  <div
+                    class="self-stretch px-4 py-2.5 bg-neutral-100 [.lumen_&]:bg-neutral-800 [.terra_&]:bg-neutral-100 rounded-lg inline-flex justify-start items-center gap-2 focus-within:outline outline-black [.lumen_&]:outline-neutral-600 [.terra_&]:outline-neutral-200 outline-offset-[-1px]"
+                  >
+                    <textarea
+                      class="flex-1 bg-transparent border-none outline-none justify-start text-black [.lumen_&]:text-white text-base font-normal resize-none placeholder:text-neutral-400 [.lumen_&]:placeholder:text-neutral-500"
+                      id="contact-message"
+                      name="message"
+                      placeholder="Type your message ..."
+                      rows="3"
+                      required
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="self-stretch inline-flex justify-start items-start">
+                <button
+                  type="submit"
+                  class="flex-1 px-5 py-2.5 bg-black/50 [.lumen_&]:bg-lime-400/50 [.terra_&]:bg-[#623f35]/50 hover:bg-black/55 [.lumen_&]:hover:bg-lime-500/55 [.terra_&]:hover:bg-[#623f35]/55 focus:bg-black [.lumen_&]:focus:bg-lime-400 [.terra_&]:focus:bg-[#623f35] focus:outline-gray-400 focus:outline-4 focus:outline-offset-2 rounded-full outline outline-1 outline-black [.lumen_&]:outline-lime-400 [.terra_&]:outline-[#623f35] flex justify-center items-center gap-2 group-valid:bg-black [.lumen_&]:group-valid:bg-lime-400 [.terra_&]:group-valid:bg-[#623f35] group-invalid:bg-gray-400 [.lumen_&]:group-invalid:bg-lime-400/50 [.terra_&]:group-invalid:bg-[#623f35]/50 group-invalid:outline-gray-400 [.lumen_&]:group-invalid:outline-transparent [.terra_&]:group-invalid:outline-transparent group-invalid:cursor-not-allowed transition-colors duration-200"
+                >
+                  <span
+                    class="justify-start text-white [.lumen_&]:text-black text-base font-semibold"
+                  >
+                    Submit
+                  </span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- FAQs Section -->
+      <section
+        class="px-4 md:px-8 py-16 bg-white [.lumen_&]:bg-black [.terra_&]:bg-[#e9e4df] flex flex-row justify-center items-center gap-12 overflow-hidden"
+      >
+        <div
+          class="w-full max-w-7xl mx-auto flex flex-row justify-center items-center gap-12"
+        >
+          <div
+            class="self-stretch w-full lg:w-[768px] flex flex-col justify-start items-center gap-8 lg:gap-10"
+          >
+            <div
+              class="self-stretch flex flex-col justify-start items-start gap-6"
+            >
+              <div
+                class="self-stretch text-center justify-start text-black [.lumen_&]:text-white text-3xl lg:text-5xl font-medium [.lumen_&]:font-['Archivo'] [.terra_&]:font-['Domine'] [.terra_&]:font-normal leading-9 lg:leading-[60px]"
+              >
+                FAQ
+              </div>
+              <div
+                class="self-stretch text-center justify-start text-neutral-800 [.lumen_&]:text-neutral-300 text-base font-normal"
+              >
+                Get answers about our automation, consulting, and site systems.
+                All pricing uses angel numbers and is structured for
+                transparency and results.
+              </div>
+            </div>
+            <div class="self-stretch flex-col justify-start items-start gap-4">
+              <div
+                class="self-stretch w-full lg:w-[768px] py-4 border-b border-neutral-200 [.lumen_&]:border-neutral-700 [.terra_&]:border-neutral-300"
+              >
+                <div
+                  class="self-stretch w-full inline-flex justify-start items-center cursor-pointer faq-item"
+                  data-index="0"
+                >
+                  <div
+                    class="flex-1 self-stretch flex justify-start items-center gap-6"
+                  >
+                    <div
+                      class="flex-1 inline-flex flex-col justify-center items-center gap-2"
+                    >
+                      <div
+                        class="text-center text-black [.lumen_&]:text-white text-lg lg:text-xl font-medium [.lumen_&]:font-['Archivo'] [.terra_&]:font-['Domine'] [.terra_&]:font-normal leading-relaxed lg:leading-7"
+                      >
+                        What is the minimum engagement for Self Exec?
+                      </div>
+                    </div>
+                    <div
+                      class="self-stretch flex justify-start items-start gap-2.5"
+                    >
+                      <div class="w-5 h-5 relative faq-icon">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="20"
+                          height="20"
+                          fill="none"
+                          viewBox="0 0 20 20"
+                          class="w-full h-full faq-chevron transition-transform duration-200"
+                        >
+                          <path
+                            stroke="#000"
+                            class="[.lumen_&]:stroke-white [.terra_&]:stroke-[#623f35]"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="1.667"
+                            d="m5 7.5 5 5 5-5"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="faq-answer hidden mt-4">
+                  <div
+                    class="text-center text-black [.lumen_&]:text-white text-base font-normal leading-normal space-y-2"
+                  >
+                    <p
+                      class="text-black [.lumen_&]:text-white text-base font-normal leading-normal"
+                    >
+                      $2,222.22 minimum. All projects require a 50% deposit,
+                      clear scope, and high-value potential. No payment plans.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="self-stretch w-full lg:w-[768px] py-4 border-b border-neutral-200 [.lumen_&]:border-neutral-700 [.terra_&]:border-neutral-300"
+              >
+                <div
+                  class="self-stretch w-full inline-flex justify-start items-center cursor-pointer faq-item"
+                  data-index="1"
+                >
+                  <div
+                    class="flex-1 self-stretch flex justify-start items-center gap-6"
+                  >
+                    <div
+                      class="flex-1 inline-flex flex-col justify-center items-center gap-2"
+                    >
+                      <div
+                        class="text-center text-black [.lumen_&]:text-white text-lg lg:text-xl font-medium [.lumen_&]:font-['Archivo'] [.terra_&]:font-['Domine'] [.terra_&]:font-normal leading-relaxed lg:leading-7"
+                      >
+                        How fast can you launch a new site or automation?
+                      </div>
+                    </div>
+                    <div
+                      class="self-stretch flex justify-start items-start gap-2.5"
+                    >
+                      <div class="w-5 h-5 relative faq-icon">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="20"
+                          height="20"
+                          fill="none"
+                          viewBox="0 0 20 20"
+                          class="w-full h-full faq-chevron transition-transform duration-200"
+                        >
+                          <path
+                            stroke="#000"
+                            class="[.lumen_&]:stroke-white [.terra_&]:stroke-[#623f35]"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="1.667"
+                            d="m5 7.5 5 5 5-5"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="faq-answer hidden mt-4">
+                  <div
+                    class="text-center text-black [.lumen_&]:text-white text-base font-normal leading-normal space-y-2"
+                  >
+                    <p
+                      class="text-black [.lumen_&]:text-white text-base font-normal leading-normal"
+                    >
+                      Single-page sites deploy in under 7 hours after deposit.
+                      Full-stack automation varies—typically 2–4 weeks for full
+                      G.O.D. SOP Stack.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="self-stretch w-full lg:w-[768px] py-4 border-b border-neutral-200 [.lumen_&]:border-neutral-700 [.terra_&]:border-neutral-300"
+              >
+                <div
+                  class="self-stretch w-full inline-flex justify-start items-center cursor-pointer faq-item"
+                  data-index="2"
+                >
+                  <div
+                    class="flex-1 self-stretch flex justify-start items-center gap-6"
+                  >
+                    <div
+                      class="flex-1 inline-flex flex-col justify-center items-center gap-2"
+                    >
+                      <div
+                        class="text-center text-black [.lumen_&]:text-white text-lg lg:text-xl font-medium [.lumen_&]:font-['Archivo'] [.terra_&]:font-['Domine'] [.terra_&]:font-normal leading-relaxed lg:leading-7"
+                      >
+                        How do you ensure measurable outcomes?
+                      </div>
+                    </div>
+                    <div
+                      class="self-stretch flex justify-start items-start gap-2.5"
+                    >
+                      <div class="w-5 h-5 relative faq-icon">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="20"
+                          height="20"
+                          fill="none"
+                          viewBox="0 0 20 20"
+                          class="w-full h-full faq-chevron transition-transform duration-200"
+                        >
+                          <path
+                            stroke="#000"
+                            class="[.lumen_&]:stroke-white [.terra_&]:stroke-[#623f35]"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="1.667"
+                            d="m5 7.5 5 5 5-5"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="faq-answer hidden mt-4">
+                  <div
+                    class="text-center text-black [.lumen_&]:text-white text-base font-normal leading-normal space-y-2"
+                  >
+                    <p
+                      class="text-black [.lumen_&]:text-white text-base font-normal leading-normal"
+                    >
+                      All solutions are engineered for clear, trackable
+                      improvements. We optimize and support every project to
+                      maximize value.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="self-stretch w-full lg:w-[768px] py-4 border-b border-neutral-200 [.lumen_&]:border-neutral-700 [.terra_&]:border-neutral-300"
+              >
+                <div
+                  class="self-stretch w-full inline-flex justify-start items-center cursor-pointer faq-item"
+                  data-index="3"
+                >
+                  <div
+                    class="flex-1 self-stretch flex justify-start items-center gap-6"
+                  >
+                    <div
+                      class="flex-1 inline-flex flex-col justify-center items-center gap-2"
+                    >
+                      <div
+                        class="text-center text-black [.lumen_&]:text-white text-lg lg:text-xl font-medium [.lumen_&]:font-['Archivo'] [.terra_&]:font-['Domine'] [.terra_&]:font-normal leading-relaxed lg:leading-7"
+                      >
+                        Do you work with any client?
+                      </div>
+                    </div>
+                    <div
+                      class="self-stretch flex justify-start items-start gap-2.5"
+                    >
+                      <div class="w-5 h-5 relative faq-icon">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="20"
+                          height="20"
+                          fill="none"
+                          viewBox="0 0 20 20"
+                          class="w-full h-full faq-chevron transition-transform duration-200"
+                        >
+                          <path
+                            stroke="#000"
+                            class="[.lumen_&]:stroke-white [.terra_&]:stroke-[#623f35]"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="1.667"
+                            d="m5 7.5 5 5 5-5"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="faq-answer hidden mt-4">
+                  <div
+                    class="text-center text-black [.lumen_&]:text-white text-base font-normal leading-normal space-y-2"
+                  >
+                    <p
+                      class="text-black [.lumen_&]:text-white text-base font-normal leading-normal"
+                    >
+                      No. We only accept projects with decision-ready leaders,
+                      clear scopes, and high-value potential. Instant
+                      disqualification for budget objections.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer
+        class="px-4 md:px-8 py-12 lg:px-26 lg:py-16 bg-black [.lumen_&]:bg-neutral-900 [.terra_&]:bg-black flex flex-col justify-center items-center gap-8 overflow-hidden"
+      >
+        <div
+          class="w-full max-w-7xl mx-auto flex flex-col justify-center items-center gap-8"
+        >
+          <div
+            class="self-stretch flex flex-col lg:flex-row justify-center lg:justify-center items-center gap-6"
+          >
+            <!-- Left side: Logo and Copyright stacked -->
+            <div class="flex flex-col justify-center items-center gap-6">
+              <!-- Logo (first on mobile, top left on desktop) -->
+
+              <div
+                class="w-36 h-12 md:w-48 md:h-16 max-w-48 max-h-16 min-w-16 min-h-4 relative overflow-hidden flex items-center justify-center"
+              >
+                <img
+                  class="max-h-full object-contain"
+                  src="https://cdn.sintra.ai/img/K-Ig1ULhYhKfpEhbJyaAkPr8_EzNjdpnLaeuQJ_lS2Y/g:ce/rs:fit:400:0:0/czM6Ly9zaW50cmEtYnJhaW5haS1tZWRpYS9rbm93bGVkZ2UtcHJvZmlsZXMvMDMzNWM5YWEtOGQ3YS00NDY0LWEzMzQtNTUzNzVjMDhhMDI0L2Fzc2V0cy80ZWUxZDkzNC00YjdhLTQxYzYtYTg2Zi01NjczYTVkNDhkMGMvU0VMX0xPR08uUE5H"
+                />
+              </div>
+
+              <!-- Copyright (second on mobile, below logo on desktop) -->
+              <div
+                class="justify-center text-white/50 text-xs font-normal leading-none"
+              >
+                2026 Self Exec. All right reserved.
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

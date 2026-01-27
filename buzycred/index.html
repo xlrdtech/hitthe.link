@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BuzyCred: Build Business Credit & Get Financing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: 'var(--color-brand)',
+                        accent: 'var(--color-accent)',
+                        background: 'var(--color-bg)',
+                        surface: 'var(--color-surface)',
+                    },
+                    borderRadius: {
+                        '4xl': '2.5rem',
+                        '5xl': '3.5rem',
+                    },
+                    boxShadow: {
+                        'glow': '0 0 40px -10px var(--color-brand)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            /* --- RANDOMIZABLE VARIABLES (Set via JS) --- */
+            --hue-brand: 210; 
+            --sat-brand: 100%;
+            
+            --hue-bg: 220; /* Dark mode background tint */
+
+            /* --- LIGHT MODE --- */
+            --color-brand: hsl(var(--hue-brand), var(--sat-brand), 45%);
+            --color-accent: hsl(var(--hue-brand), var(--sat-brand), 92%);
+            --color-bg: #F5F5F7;
+            --color-surface: rgba(255, 255, 255, 0.7);
+            --text-main: #1D1D1F;
+            --text-muted: #86868B;
+            --glass-border: rgba(255, 255, 255, 0.4);
+        }
+
+        /* --- DARK MODE --- */
+        .dark {
+            /* Brand is brighter in dark mode */
+            --color-brand: hsl(var(--hue-brand), var(--sat-brand), 60%);
+            --color-accent: hsl(var(--hue-brand), var(--sat-brand), 15%);
+            
+            /* Background uses the randomized hue but very dark/desaturated for readability */
+            --color-bg: hsl(var(--hue-bg), 40%, 6%);
+            
+            --color-surface: rgba(30, 30, 30, 0.6);
+            --text-main: #F5F5F7;
+            --text-muted: #A1A1A6;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body { 
+            background-color: var(--color-bg);
+            color: var(--text-main);
+            transition: background-color 1s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.5s ease;
+        }
+
+        /* iOS Spatial Glass */
+        .ios-glass {
+            background-color: var(--color-surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Smooth Scale Buttons */
+        .ios-btn {
+            transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.3s ease;
+        }
+        .ios-btn:active {
+            transform: scale(0.96);
+        }
+        
+        .section-title {
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--color-brand);
+            border-radius: 4px;
+        }
+
+        /* Mobile Menu Animation */
+        #mobile-menu {
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        #mobile-menu.open {
+            max-height: 500px;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-brand selection:text-white">
+
+    <!-- Floating Navigation -->
+    <header class="fixed top-4 left-0 right-0 z-50 px-4">
+        <div class="max-w-6xl mx-auto ios-glass rounded-full px-6 py-3 flex items-center justify-between transition-all duration-500">
+            <!-- Logo -->
+            <a href="#" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 rounded-full bg-brand flex items-center justify-center text-white shadow-glow transition-colors duration-500">
+                    <i class="fas fa-layer-group text-lg"></i>
+                </div>
+                <span class="text-xl font-bold tracking-tight group-hover:text-brand transition-colors">BuzyCred</span>
+            </a>
+
+            <!-- Desktop Menu -->
+            <nav class="hidden md:flex items-center space-x-1">
+                <a href="#process" class="px-4 py-2 rounded-full text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 transition-colors">How It Works</a>
+                <a href="#solutions" class="px-4 py-2 rounded-full text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 transition-colors">Solutions</a>
+                <a href="#pricing" class="px-4 py-2 rounded-full text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 transition-colors">Pricing</a>
+                <a href="#faq" class="px-4 py-2 rounded-full text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 transition-colors">FAQ</a>
+            </nav>
+
+            <!-- Tools & CTA -->
+            <div class="flex items-center gap-2">
+                <!-- Color Randomizer -->
+                <button onclick="randomizeTheme()" class="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/20 ios-btn transition-colors" title="Randomize Colors">
+                    <i class="fas fa-swatchbook text-sm"></i>
+                </button>
+
+                <!-- Dark Mode Toggle -->
+                <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/20 ios-btn transition-colors mr-2">
+                    <i class="fas fa-moon dark:hidden text-sm"></i>
+                    <i class="fas fa-sun hidden dark:block text-yellow-400 text-sm"></i>
+                </button>
+
+                <a href="#" class="hidden lg:inline-flex bg-brand text-white px-6 py-2.5 rounded-full text-sm font-semibold shadow-lg hover:brightness-110 ios-btn transition-colors duration-500">
+                    Client Login
+                </a>
+
+                <!-- Hamburger -->
+                <button onclick="toggleMobileMenu()" class="md:hidden w-10 h-10 flex items-center justify-center text-xl">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobile-menu" class="max-w-6xl mx-auto ios-glass rounded-3xl mt-2 px-6 py-4 flex flex-col gap-4 md:hidden">
+            <a href="#process" class="text-lg font-medium py-2 border-b border-white/10">How It Works</a>
+            <a href="#solutions" class="text-lg font-medium py-2 border-b border-white/10">Solutions</a>
+            <a href="#pricing" class="text-lg font-medium py-2 border-b border-white/10">Pricing</a>
+            <a href="#" class="bg-brand text-white text-center py-3 rounded-2xl font-bold mt-2">Login</a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <main class="pt-40 pb-20 px-4 relative overflow-hidden">
+        <!-- Abstract Background Blob -->
+        <div class="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[1000px] h-[1000px] bg-brand opacity-15 dark:opacity-20 rounded-full blur-[120px] pointer-events-none -z-10 transition-colors duration-1000"></div>
+
+        <div class="max-w-7xl mx-auto text-center">
+            
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent text-brand text-xs font-bold uppercase tracking-wider mb-8 border border-white/20 shadow-sm animate-pulse">
+                <span class="w-2 h-2 rounded-full bg-brand"></span>
+                Authorized White Label Partner
+            </div>
+
+            <h1 class="section-title text-5xl md:text-7xl lg:text-8xl font-bold mb-8">
+                Build Credit. <br />
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand to-purple-400">Get Funded.</span>
+            </h1>
+
+            <p class="text-xl md:text-2xl text-muted font-normal max-w-2xl mx-auto mb-12 leading-relaxed">
+                The all-in-one finance suite to help you get business credit for your EIN that’s not linked to your SSN.
+            </p>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="https://fundabilityscan.com" target="_blank" class="bg-brand text-white text-lg font-semibold px-8 py-4 rounded-full shadow-lg hover:shadow-glow hover:-translate-y-1 ios-btn min-w-[220px] transition-all duration-500">
+                    Check Fundability
+                </a>
+                <a href="#solutions" class="ios-glass text-main text-lg font-semibold px-8 py-4 rounded-full hover:bg-black/5 dark:hover:bg-white/10 ios-btn min-w-[220px]">
+                    Explore Solutions
+                </a>
+            </div>
+
+            <!-- Bento Grid Stats -->
+            <div class="mt-24 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                <div class="ios-glass p-8 rounded-4xl text-left relative overflow-hidden group">
+                    <h3 class="text-4xl font-bold mb-2">$50k+</h3>
+                    <p class="text-muted font-medium">Avg. Credit Access</p>
+                    <div class="absolute bottom-0 right-0 p-6 opacity-10 transform translate-x-4 translate-y-4">
+                        <i class="fas fa-coins text-8xl"></i>
+                    </div>
+                </div>
+                <div class="ios-glass p-8 rounded-4xl text-left relative overflow-hidden group">
+                    <h3 class="text-4xl font-bold mb-2">90 Days</h3>
+                    <p class="text-muted font-medium">To Tier 1 Credit</p>
+                    <div class="absolute bottom-0 right-0 p-6 opacity-10 transform translate-x-4 translate-y-4">
+                        <i class="fas fa-calendar-check text-8xl"></i>
+                    </div>
+                </div>
+                <div class="ios-glass p-8 rounded-4xl text-left relative overflow-hidden group">
+                    <h3 class="text-4xl font-bold mb-2">2,000+</h3>
+                    <p class="text-muted font-medium">Lenders Integrated</p>
+                    <div class="absolute bottom-0 right-0 p-6 opacity-10 transform translate-x-4 translate-y-4">
+                        <i class="fas fa-handshake text-8xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- The 7-Step Process (Credit Suite Model) -->
+    <section id="process" class="py-24 px-4 relative">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-20">
+                <h2 class="text-3xl md:text-5xl font-bold mb-6">The Proven 7-Step System</h2>
+                <p class="text-xl text-muted max-w-2xl mx-auto">We guide you through the exact compliance steps lenders require to get approved.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Step 1 -->
+                <div class="ios-glass p-8 rounded-4xl hover:bg-accent transition-colors duration-500 group">
+                    <div class="w-12 h-12 rounded-2xl bg-brand text-white flex items-center justify-center font-bold text-xl mb-6 shadow-lg group-hover:scale-110 transition-transform">1</div>
+                    <h3 class="text-xl font-bold mb-3">Fundability™ Foundation</h3>
+                    <p class="text-sm text-muted">We check your 125+ data points (Address, Phone, Entity) to ensure you aren't auto-declined.</p>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="ios-glass p-8 rounded-4xl hover:bg-accent transition-colors duration-500 group">
+                    <div class="w-12 h-12 rounded-2xl bg-brand text-white flex items-center justify-center font-bold text-xl mb-6 shadow-lg group-hover:scale-110 transition-transform">2</div>
+                    <h3 class="text-xl font-bold mb-3">Business Credit Reports</h3>
+                    <p class="text-sm text-muted">Setup and monitor your D&B, Experian, and Equifax commercial credit reports.</p>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="ios-glass p-8 rounded-4xl hover:bg-accent transition-colors duration-500 group">
+                    <div class="w-12 h-12 rounded-2xl bg-brand text-white flex items-center justify-center font-bold text-xl mb-6 shadow-lg group-hover:scale-110 transition-transform">3</div>
+                    <h3 class="text-xl font-bold mb-3">Tier 1: Vendor Credit</h3>
+                    <p class="text-sm text-muted">Get approved for Net-30 accounts with vendors who report trades without a personal guarantee.</p>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="ios-glass p-8 rounded-4xl hover:bg-accent transition-colors duration-500 group">
+                    <div class="w-12 h-12 rounded-2xl bg-brand text-white flex items-center justify-center font-bold text-xl mb-6 shadow-lg group-hover:scale-110 transition-transform">4</div>
+                    <h3 class="text-xl font-bold mb-3">Tier 2: Store Credit</h3>
+                    <p class="text-sm text-muted">Leverage your Tier 1 payment history to get store cards at major retailers (Amazon, Staples, etc.).</p>
+                </div>
+                
+                 <!-- Step 5 -->
+                 <div class="ios-glass p-8 rounded-4xl hover:bg-accent transition-colors duration-500 group">
+                    <div class="w-12 h-12 rounded-2xl bg-brand text-white flex items-center justify-center font-bold text-xl mb-6 shadow-lg group-hover:scale-110 transition-transform">5</div>
+                    <h3 class="text-xl font-bold mb-3">Tier 3: Fleet Credit</h3>
+                    <p class="text-sm text-muted">Access fuel cards and vehicle maintenance credit for your business fleet.</p>
+                </div>
+
+                 <!-- Step 6 -->
+                 <div class="ios-glass p-8 rounded-4xl hover:bg-accent transition-colors duration-500 group">
+                    <div class="w-12 h-12 rounded-2xl bg-brand text-white flex items-center justify-center font-bold text-xl mb-6 shadow-lg group-hover:scale-110 transition-transform">6</div>
+                    <h3 class="text-xl font-bold mb-3">Tier 4: Cash Credit</h3>
+                    <p class="text-sm text-muted">Unlock Visa and MasterCard accounts that you can use anywhere, not just specific stores.</p>
+                </div>
+
+                 <!-- Step 7 -->
+                 <div class="lg:col-span-2 ios-glass p-8 rounded-4xl bg-brand text-white relative overflow-hidden transition-colors duration-500">
+                    <div class="relative z-10">
+                        <div class="w-12 h-12 rounded-2xl bg-white text-brand flex items-center justify-center font-bold text-xl mb-6 shadow-lg">7</div>
+                        <h3 class="text-xl font-bold mb-3">SBA & Advanced Financing</h3>
+                        <p class="text-sm opacity-90">With a strong profile, we connect you to huge credit lines, SBA loans, and low-interest financing.</p>
+                    </div>
+                    <div class="absolute right-0 bottom-0 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl -mr-16 -mb-16"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solutions Detail -->
+    <section id="solutions" class="py-24 px-4 bg-black/5 dark:bg-white/5 transition-colors duration-500">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-4xl font-bold mb-16 text-center">Comprehensive Solutions</h2>
+            
+            <div class="grid md:grid-cols-2 gap-12 items-center mb-24">
+                <div class="order-2 md:order-1">
+                    <h3 class="text-3xl font-bold mb-4">Business Finance Suite</h3>
+                    <p class="text-muted text-lg mb-6 leading-relaxed">
+                        Our software is the industry standard. It walks you through every step of the building process, integrates with your credit reports to track progress, and auto-suggests the next vendors you qualify for.
+                    </p>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center gap-3"><i class="fas fa-check-circle text-brand"></i> <span>Real-time D&B Data Integration</span></li>
+                        <li class="flex items-center gap-3"><i class="fas fa-check-circle text-brand"></i> <span>Experience Coaching Team</span></li>
+                        <li class="flex items-center gap-3"><i class="fas fa-check-circle text-brand"></i> <span>24/7 Access to Funding Marketplace</span></li>
+                    </ul>
+                    <a href="#" class="text-brand font-bold hover:underline">Explore the Suite <i class="fas fa-arrow-right ml-1"></i></a>
+                </div>
+                <div class="order-1 md:order-2 ios-glass p-6 rounded-[3rem] rotate-2 hover:rotate-0 transition-transform duration-500">
+                    <!-- Abstract Dashboard UI -->
+                    <div class="bg-surface rounded-[2rem] p-6 shadow-inner border border-white/20 h-80 flex flex-col justify-between">
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="h-4 w-1/3 bg-gray-200 dark:bg-white/20 rounded-full"></div>
+                            <div class="h-8 w-8 bg-brand rounded-full"></div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="h-24 bg-accent rounded-2xl w-full"></div>
+                            <div class="flex gap-4">
+                                <div class="h-16 bg-gray-100 dark:bg-white/10 rounded-xl w-1/2"></div>
+                                <div class="h-16 bg-gray-100 dark:bg-white/10 rounded-xl w-1/2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing" class="py-24 px-4 relative overflow-hidden">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-4xl font-bold text-center mb-16">Simple Pricing</h2>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Basic -->
+                <div class="ios-glass p-8 rounded-4xl flex flex-col hover:-translate-y-2 transition-transform duration-300">
+                    <h3 class="text-xl font-bold text-muted mb-4">Launch</h3>
+                    <div class="text-4xl font-bold mb-6">$2,997</div>
+                    <p class="text-sm text-muted mb-8">Perfect for startups needing to establish initial vendor credit.</p>
+                    <ul class="space-y-4 mb-8 flex-1">
+                        <li class="flex items-center gap-3 text-sm"><i class="fas fa-check text-brand"></i> Finance Suite Access</li>
+                        <li class="flex items-center gap-3 text-sm"><i class="fas fa-check text-brand"></i> Compliance Check</li>
+                        <li class="flex items-center gap-3 text-sm"><i class="fas fa-check text-brand"></i> Tier 1 Vendors</li>
+                    </ul>
+                    <a href="#" class="w-full py-4 rounded-full border border-brand text-brand font-bold text-center hover:bg-brand hover:text-white transition-colors">Get Started</a>
+                </div>
+
+                <!-- Pro (Highlight) -->
+                <div class="p-1 rounded-4xl bg-gradient-to-b from-brand to-purple-500 shadow-2xl scale-105 z-10">
+                    <div class="bg-surface h-full w-full rounded-[2.3rem] p-8 flex flex-col ios-glass border-none">
+                        <div class="absolute top-0 left-1/2 -translate-x-1/2 bg-brand text-white text-xs font-bold px-3 py-1 rounded-b-lg">MOST POPULAR</div>
+                        <h3 class="text-xl font-bold text-brand mb-4 mt-2">Scale</h3>
+                        <div class="text-4xl font-bold mb-6">$3,997</div>
+                        <p class="text-sm text-muted mb-8">For businesses ready to access cash credit and loans.</p>
+                        <ul class="space-y-4 mb-8 flex-1">
+                            <li class="flex items-center gap-3 text-sm"><i class="fas fa-check text-brand"></i> Everything in Launch</li>
+                            <li class="flex items-center gap-3 text-sm"><i class="fas fa-check text-brand"></i> 12-Month Advisor Coaching</li>
+                            <li class="flex items-center gap-3 text-sm"><i class="fas fa-check text-brand"></i> Full Credit Building (Tiers 1-4)</li>
+                            <li class="flex items-center gap-3 text-sm"><i class="fas fa-check text-brand"></i> Loan Marketplace Access</li>
+                        </ul>
+                        <a href="#" class="w-full py-4 rounded-full bg-brand text-white font-bold text-center hover:brightness-110 shadow-lg transition-all">Get Funded</a>
+                    </div>
+                </div>
+
+                <!-- Enterprise -->
+                <div class="ios-glass p-8 rounded-4xl flex flex-col hover:-translate-y-2 transition-transform duration-300">
+                    <h3 class="text-xl font-bold text-muted mb-4">Enterprise</h3>
+                    <div class="text-4xl font-bold mb-6">Custom</div>
+                    <p class="text-sm text-muted mb-8">White label solutions for brokers and agencies.</p>
+                    <ul class="space-y-4 mb-8 flex-1">
+                        <li class="flex items-center gap-3 text-sm"><i class="fas fa-check text-brand"></i> White Label Portal</li>
+                        <li class="flex items-center gap-3 text-sm"><i class="fas fa-check text-brand"></i> Admin Dashboard</li>
+                        <li class="flex items-center gap-3 text-sm"><i class="fas fa-check text-brand"></i> Unlimited Clients</li>
+                    </ul>
+                    <a href="#" class="w-full py-4 rounded-full border border-brand text-brand font-bold text-center hover:bg-brand hover:text-white transition-colors">Contact Sales</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Success Stories -->
+    <section class="py-24 px-4 bg-black/5 dark:bg-white/5 transition-colors duration-500">
+        <div class="max-w-7xl mx-auto text-center">
+            <h2 class="text-4xl font-bold mb-16">Success Stories</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="ios-glass p-8 rounded-4xl text-left">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-12 h-12 bg-gray-300 rounded-full overflow-hidden">
+                            <!-- Placeholder Avatar -->
+                            <svg class="w-full h-full text-gray-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                        </div>
+                        <div>
+                            <div class="font-bold">Sarah Jenkins</div>
+                            <div class="text-xs text-muted">Retail Owner</div>
+                        </div>
+                    </div>
+                    <p class="text-sm text-muted leading-relaxed">"I was using my personal credit cards for inventory. BuzyCred helped me get $50k in vendor credit in just 4 months. My personal score went up 60 points!"</p>
+                </div>
+                <div class="ios-glass p-8 rounded-4xl text-left">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-12 h-12 bg-gray-300 rounded-full overflow-hidden">
+                            <svg class="w-full h-full text-gray-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                        </div>
+                        <div>
+                            <div class="font-bold">Marcus Thorne</div>
+                            <div class="text-xs text-muted">Trucking Co.</div>
+                        </div>
+                    </div>
+                    <p class="text-sm text-muted leading-relaxed">"Fleet cards were impossible to get. The finance suite showed me exactly which reporting agencies I needed to fix first. Now we have 5 trucks on credit."</p>
+                </div>
+                <div class="ios-glass p-8 rounded-4xl text-left">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-12 h-12 bg-gray-300 rounded-full overflow-hidden">
+                            <svg class="w-full h-full text-gray-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                        </div>
+                        <div>
+                            <div class="font-bold">Elena Rodriguez</div>
+                            <div class="text-xs text-muted">Real Estate Investor</div>
+                        </div>
+                    </div>
+                    <p class="text-sm text-muted leading-relaxed">"The cash credit tier is a game changer. I got access to revolving lines of credit that I use for rehab costs. Highly recommend the coaching."</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="py-24 px-4">
+        <div class="max-w-3xl mx-auto">
+            <h2 class="text-4xl font-bold text-center mb-16">Common Questions</h2>
+            
+            <div class="space-y-4">
+                <div class="ios-glass rounded-3xl p-6 cursor-pointer hover:bg-white/50 dark:hover:bg-white/5 transition-colors group">
+                    <h3 class="font-bold flex justify-between items-center">
+                        Does this require a Personal Guarantee (PG)?
+                        <i class="fas fa-plus text-brand text-sm group-hover:rotate-45 transition-transform"></i>
+                    </h3>
+                    <p class="text-sm text-muted mt-4 hidden group-hover:block transition-all">Our goal is to help you build credit that requires NO Personal Guarantee. However, some advanced cash loans may require one depending on the lender.</p>
+                </div>
+                <div class="ios-glass rounded-3xl p-6 cursor-pointer hover:bg-white/50 dark:hover:bg-white/5 transition-colors group">
+                    <h3 class="font-bold flex justify-between items-center">
+                        How long does it take?
+                        <i class="fas fa-plus text-brand text-sm group-hover:rotate-45 transition-transform"></i>
+                    </h3>
+                    <p class="text-sm text-muted mt-4 hidden group-hover:block transition-all">Typically, clients see their first vendor accounts reporting in 30-60 days. Access to cash credit usually happens around month 6-9 if you follow the steps.</p>
+                </div>
+                <div class="ios-glass rounded-3xl p-6 cursor-pointer hover:bg-white/50 dark:hover:bg-white/5 transition-colors group">
+                    <h3 class="font-bold flex justify-between items-center">
+                        Is this credit repair?
+                        <i class="fas fa-plus text-brand text-sm group-hover:rotate-45 transition-transform"></i>
+                    </h3>
+                    <p class="text-sm text-muted mt-4 hidden group-hover:block transition-all">No. This is Business Credit Building. We are building a brand new credit profile for your EIN that is separate from your personal SSN.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-24 px-4 relative">
+        <div class="max-w-5xl mx-auto bg-brand rounded-5xl p-12 md:p-20 text-center text-white relative overflow-hidden shadow-2xl transition-colors duration-500">
+            <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
+            
+            <h2 class="text-4xl md:text-5xl font-bold mb-8 relative z-10">Ready to get funded?</h2>
+            <p class="text-xl opacity-90 mb-12 max-w-2xl mx-auto relative z-10">Start your journey today. Check your Fundability for free and see where you stand.</p>
+            
+            <a href="https://fundabilityscan.com" class="inline-block bg-white text-brand px-10 py-5 rounded-full font-bold text-lg shadow-xl hover:scale-105 transition-transform ios-btn relative z-10">
+                Run Free Scan
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 px-6 border-t border-black/5 dark:border-white/5 mt-auto">
+        <div class="max-w-7xl mx-auto grid md:grid-cols-4 gap-8 mb-12">
+            <div class="col-span-1 md:col-span-2">
+                <div class="flex items-center gap-2 mb-4 font-bold text-xl">
+                    <i class="fas fa-layer-group text-brand"></i> BuzyCred
+                </div>
+                <p class="text-sm text-muted max-w-sm">Empowering business owners to separate their finances, build robust corporate credit profiles, and access the capital they need to grow.</p>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4">Company</h4>
+                <ul class="space-y-2 text-sm text-muted">
+                    <li><a href="#" class="hover:text-brand">About Us</a></li>
+                    <li><a href="#" class="hover:text-brand">Partners</a></li>
+                    <li><a href="#" class="hover:text-brand">Contact</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4">Legal</h4>
+                <ul class="space-y-2 text-sm text-muted">
+                    <li><a href="#" class="hover:text-brand">Privacy Policy</a></li>
+                    <li><a href="#" class="hover:text-brand">Terms of Service</a></li>
+                    <li><a href="#" class="hover:text-brand">Disclaimer</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto pt-8 border-t border-black/5 dark:border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-muted">
+            <div>&copy; 2025 BuzyCred. All Rights Reserved.</div>
+            <div class="flex gap-4">
+                <a href="#" class="hover:text-brand"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" class="hover:text-brand"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="hover:text-brand"><i class="fab fa-linkedin-in"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Logic -->
+    <script>
+        // 1. Mobile Menu
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('open');
+        }
+
+        // 2. Dark Mode Toggle
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+        // 3. Advanced Randomizer (Colors + Deep Backgrounds)
+        function randomizeTheme() {
+            const root = document.documentElement;
+
+            // Brand Color (0-360)
+            const randomBrandHue = Math.floor(Math.random() * 360);
+            
+            // Dark Mode Background Color (Deep & Rich)
+            // We restrict lightness in CSS to keep it dark, but vary the hue.
+            const randomBgHue = Math.floor(Math.random() * 360);
+
+            // Apply Variables
+            root.style.setProperty('--hue-brand', randomBrandHue);
+            root.style.setProperty('--hue-bg', randomBgHue);
+        }
+    </script>
+</body>
+</html>
