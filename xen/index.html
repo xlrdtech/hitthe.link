@@ -1106,10 +1106,34 @@ async function sendXenMsg(){
   reveals.forEach(el => observer.observe(el));
 
   // Form
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    document.getElementById('form-confirm').style.display = 'block';
-    document.getElementById('emailInput').value = '';
+    const form = e.target;
+    const email = document.getElementById('emailInput').value.trim();
+    if (!email) return;
+    const confirm = document.getElementById('form-confirm');
+    try {
+      // Send to Formspree (visible confirmation)
+      await fetch(form.action, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, source: 'hitthe.link/xen' })
+      });
+      // Mirror to Xen omnimind for firehose
+      try {
+        await fetch('https://xen.xlrd.org/api/web-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, source: 'hitthe.link/xen' })
+        });
+      } catch(_){}
+      confirm.textContent = 'Confirmed — check your inbox.';
+      confirm.style.display = 'block';
+      document.getElementById('emailInput').value = '';
+    } catch (err) {
+      confirm.textContent = 'Submit failed: ' + err.message;
+      confirm.style.display = 'block';
+    }
   }
 </script>
 </body>
