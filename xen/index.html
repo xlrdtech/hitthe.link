@@ -1003,22 +1003,54 @@ function addMsg(from,text){
   msgs.appendChild(el);
   msgs.scrollTop=msgs.scrollHeight;
 }
+function getXenLogin(){
+  let n=localStorage.getItem('xen_login_number');
+  if(!n){
+    n=(prompt('Phone number for this chat (10-digit US):')||'').replace(/\D/g,'');
+    if(n.length===10)n='+1'+n;
+    else if(n.length===11&&n[0]==='1')n='+'+n;
+    if(!/^\+1\d{10}$/.test(n))return null;
+    localStorage.setItem('xen_login_number',n);
+  }
+  return n;
+}
+async function pollXenReplies(sid,since){
+  if(!sid)return;
+  const deadline=Date.now()+30000;
+  let cursor=since;
+  while(Date.now()<deadline){
+    try{
+      const r=await fetch('https://xen.xlrd.org/api/web-chat/poll?sid='+encodeURIComponent(sid)+'&since='+cursor);
+      const d=await r.json();
+      if(d.replies&&d.replies.length){
+        for(const rep of d.replies){addMsg('xen',rep.text);if(rep.ts>cursor)cursor=rep.ts;}
+        return;
+      }
+    }catch(_){}
+    await new Promise(r=>setTimeout(r,1500));
+  }
+  addMsg('xen','(no reply within 30s)');
+}
 async function sendXenMsg(){
   const inp=document.getElementById('xen-input');
   const msg=inp.value.trim();
   if(!msg)return;
+  const login=getXenLogin();
+  if(!login){addMsg('xen','Login number required (US 10-digit). Tap input and try again.');return;}
   inp.value='';
   addMsg('user',msg);
   addMsg('xen','...');
+  let sid=localStorage.getItem('xen_sid')||'';
   try{
-    const r=await fetch('https://xen.xlrd.org/api/web-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})});
+    const r=await fetch('https://xen.xlrd.org/api/web-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,login_number:login,sessionId:sid||undefined})});
     const d=await r.json();
-    const msgs=document.getElementById('xen-messages');
-    msgs.lastChild.remove();
-    addMsg('xen',d.reply||"Message received. I'll follow up shortly.");
+    if(d.sessionId)localStorage.setItem('xen_sid',d.sessionId);
+    document.getElementById('xen-messages').lastChild.remove();
+    if(d.reply){addMsg('xen',d.reply);return;}
+    pollXenReplies(d.sessionId||sid,Date.now()-2000);
   }catch(e){
     document.getElementById('xen-messages').lastChild.remove();
-    addMsg('xen',"Message received. I'll follow up shortly.");
+    addMsg('xen','(network error: '+e.message+')');
   }
 }
 </script>
