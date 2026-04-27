@@ -1005,14 +1005,23 @@ function addMsg(from,text){
 }
 function getXenLogin(){
   let n=localStorage.getItem('xen_login_number');
-  if(!n){
-    n=(prompt('Phone number for this chat (10-digit US):')||'').replace(/\D/g,'');
-    if(n.length===10)n='+1'+n;
-    else if(n.length===11&&n[0]==='1')n='+'+n;
-    if(!/^\+1\d{10}$/.test(n))return null;
+  let name=localStorage.getItem('xen_login_name');
+  let email=localStorage.getItem('xen_login_email');
+  if(!n||!name||!email){
+    name=(prompt('Your name:')||'').trim();
+    if(!name)return null;
+    let raw=(prompt('Phone number (10-digit US):')||'').replace(/\D/g,'');
+    if(raw.length===10)n='+1'+raw;
+    else if(raw.length===11&&raw[0]==='1')n='+'+raw;
+    else n=null;
+    if(!n||!/^\+1\d{10}$/.test(n))return null;
+    email=(prompt('Your email:')||'').trim();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return null;
+    localStorage.setItem('xen_login_name',name);
     localStorage.setItem('xen_login_number',n);
+    localStorage.setItem('xen_login_email',email);
   }
-  return n;
+  return {number:n,name:name,email:email};
 }
 async function pollXenReplies(sid,since){
   if(!sid)return;
@@ -1036,13 +1045,13 @@ async function sendXenMsg(){
   const msg=inp.value.trim();
   if(!msg)return;
   const login=getXenLogin();
-  if(!login){addMsg('xen','Login number required (US 10-digit). Tap input and try again.');return;}
+  if(!login){addMsg('xen','Need name, US phone number, and email. Tap input and try again.');return;}
   inp.value='';
   addMsg('user',msg);
   addMsg('xen','...');
   let sid=localStorage.getItem('xen_sid')||'';
   try{
-    const r=await fetch('https://xen.xlrd.org/api/web-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,login_number:login,sessionId:sid||undefined})});
+    const r=await fetch('https://xen.xlrd.org/api/web-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,login_number:login.number,login_name:login.name,login_email:login.email,sessionId:sid||undefined})});
     const d=await r.json();
     if(d.sessionId)localStorage.setItem('xen_sid',d.sessionId);
     document.getElementById('xen-messages').lastChild.remove();
