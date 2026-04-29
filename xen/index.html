@@ -745,6 +745,172 @@
     .how { padding: 64px 24px; }
     .section-divider { padding: 0 24px; }
   }
+
+  /* === LIVE RECEIPTS === */
+  .receipts {
+    padding: 120px 80px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    background:
+      radial-gradient(ellipse 60vw 40vh at 80% 20%, rgba(240,165,0,.04), transparent 60%),
+      var(--bg);
+  }
+  .receipts-head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 24px;
+    margin-bottom: 56px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .receipts-overline {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 8px;
+  }
+  .receipts-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(40px, 6vw, 72px);
+    line-height: .92;
+    letter-spacing: -.02em;
+    color: var(--white);
+  }
+  .receipts-pulse {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .receipts-pulse::before {
+    content: ""; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    animation: receiptPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes receiptPulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.85); } }
+
+  .receipts-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 56px;
+  }
+  .receipt-tile {
+    background: var(--surface);
+    padding: 32px 28px;
+    display: flex; flex-direction: column; gap: 8px;
+    min-height: 160px;
+  }
+  .receipt-key {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .receipt-val {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 48px;
+    line-height: 1;
+    color: var(--amber);
+    font-feature-settings: "tnum";
+  }
+  .receipt-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: auto;
+    line-height: 1.5;
+  }
+
+  .receipts-cols {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 56px;
+  }
+  .receipts-col h3 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: .04em;
+    color: var(--white);
+    margin-bottom: 4px;
+  }
+  .receipts-col .col-overline {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 24px;
+  }
+  .uc-list, .test-list { list-style: none; }
+  .uc-list li {
+    display: grid;
+    grid-template-columns: 80px 1fr auto;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--white);
+    line-height: 1.45;
+  }
+  .uc-time { color: var(--muted); font-size: 10px; letter-spacing: .12em; }
+  .uc-tag {
+    color: var(--amber);
+    font-size: 10px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    align-self: center;
+  }
+  .test-list li {
+    padding: 18px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .test-quote {
+    font-family: 'Syne', sans-serif;
+    font-weight: 400;
+    font-style: italic;
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+  .test-quote::before { content: "" "; color: var(--amber); }
+  .test-quote::after  { content: " ""; color: var(--amber); }
+  .test-attr {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .test-attr .who { color: var(--amber); }
+
+  @media (max-width: 1000px) {
+    .receipts { padding: 80px 32px; }
+    .receipts-grid { grid-template-columns: repeat(2, 1fr); }
+    .receipts-cols { grid-template-columns: 1fr; gap: 40px; }
+    .receipts-head { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .receipts { padding: 56px 20px; }
+    .receipts-grid { grid-template-columns: 1fr; }
+    .receipt-val { font-size: 36px; }
+    .uc-list li { grid-template-columns: 60px 1fr; }
+    .uc-list .uc-tag { grid-column: 2; }
+  }
 </style>
 </head>
 <body>
@@ -954,6 +1120,55 @@
   </div>
 </section>
 
+<!-- LIVE RECEIPTS — task counter, auto scope, use cases, ambient testimonials -->
+<section class="receipts reveal" id="receipts">
+  <div class="receipts-head">
+    <div>
+      <div class="receipts-overline">Live receipts &middot; updated continuously</div>
+      <h2 class="receipts-title">Receipts.<br>Not promises.</h2>
+    </div>
+    <div class="receipts-pulse" id="receiptsPulse">streaming &middot; <span id="lastUpdated">—</span></div>
+  </div>
+
+  <div class="receipts-grid">
+    <div class="receipt-tile">
+      <div class="receipt-key">Tasks completed</div>
+      <div class="receipt-val" id="counterTasks">—</div>
+      <div class="receipt-sub" id="counterTasksSub">all-time, across every persona</div>
+    </div>
+    <div class="receipt-tile">
+      <div class="receipt-key">Today</div>
+      <div class="receipt-val" id="counterToday">—</div>
+      <div class="receipt-sub">tasks shipped in the last 24h</div>
+    </div>
+    <div class="receipt-tile">
+      <div class="receipt-key">Active scope</div>
+      <div class="receipt-val" id="scopeCount">—</div>
+      <div class="receipt-sub" id="scopeSub">surfaces &amp; services running right now</div>
+    </div>
+    <div class="receipt-tile">
+      <div class="receipt-key">Cost · monthly</div>
+      <div class="receipt-val" id="costStat">—</div>
+      <div class="receipt-sub" id="costSub">vs $800 industry avg per seat</div>
+    </div>
+  </div>
+
+  <div class="receipts-cols">
+    <div class="receipts-col">
+      <div class="col-overline">Auto use-case log</div>
+      <h3>What Xen actually did</h3>
+      <p style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin:8px 0 16px">No demo videos. Just a rolling log of real tasks completed today.</p>
+      <ul class="uc-list" id="ucList"></ul>
+    </div>
+    <div class="receipts-col">
+      <div class="col-overline">Ambient testimonials</div>
+      <h3>Captured in the wild</h3>
+      <p style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin:8px 0 16px">Lines pulled from live voice transcripts — operators describing the work in their own words.</p>
+      <ul class="test-list" id="testList"></ul>
+    </div>
+  </div>
+</section>
+
 <!-- CTA -->
 <section class="cta-section" id="access">
   <div class="cta-glow"></div>
@@ -1144,6 +1359,59 @@ async function sendXenMsg(){
       confirm.style.display = 'block';
     }
   }
+
+  // === LIVE RECEIPTS ===
+  // Pulls /xen/live.json — counters, scope, use cases, ambient testimonials.
+  // No innerHTML; pure DOM construction.
+  function fmtCount(n){ return (n||0).toLocaleString(); }
+  function relTime(iso){
+    if(!iso) return '';
+    const d = new Date(iso); const s = (Date.now() - d.getTime()) / 1000;
+    if(s < 60)   return Math.floor(s) + 's';
+    if(s < 3600) return Math.floor(s/60) + 'm';
+    if(s < 86400)return Math.floor(s/3600) + 'h';
+    return Math.floor(s/86400) + 'd';
+  }
+  function buildUseCaseRow(uc){
+    const li = document.createElement('li');
+    const t = document.createElement('div'); t.className = 'uc-time'; t.textContent = relTime(uc.ts) + ' ago';
+    const txt = document.createElement('div'); txt.textContent = uc.text || '';
+    const tag = document.createElement('div'); tag.className = 'uc-tag'; tag.textContent = uc.persona || 'XEN';
+    li.appendChild(t); li.appendChild(txt); li.appendChild(tag);
+    return li;
+  }
+  function buildTestimonial(tt){
+    const li = document.createElement('li');
+    const q = document.createElement('div'); q.className = 'test-quote'; q.textContent = tt.quote || '';
+    const a = document.createElement('div'); a.className = 'test-attr';
+    const who = document.createElement('span'); who.className = 'who'; who.textContent = tt.who || 'Operator';
+    a.appendChild(who);
+    a.appendChild(document.createTextNode(' · ' + (tt.context || '') + ' · ' + relTime(tt.ts) + ' ago'));
+    li.appendChild(q); li.appendChild(a);
+    return li;
+  }
+  async function loadReceipts(){
+    try {
+      const r = await fetch('/xen/live.json?t=' + Date.now());
+      if (!r.ok) return;
+      const d = await r.json();
+      document.getElementById('counterTasks').textContent  = fmtCount(d.tasks_total);
+      document.getElementById('counterToday').textContent  = fmtCount(d.tasks_today);
+      document.getElementById('scopeCount').textContent    = fmtCount(d.scope_count);
+      document.getElementById('costStat').textContent      = '$' + (d.cost_monthly || 0);
+      if (d.scope_summary) document.getElementById('scopeSub').textContent = d.scope_summary;
+      if (d.cost_subline)  document.getElementById('costSub').textContent  = d.cost_subline;
+      const ucList = document.getElementById('ucList');
+      ucList.replaceChildren();
+      (d.use_cases || []).slice(0, 8).forEach(uc => ucList.appendChild(buildUseCaseRow(uc)));
+      const tList = document.getElementById('testList');
+      tList.replaceChildren();
+      (d.testimonials || []).slice(0, 6).forEach(tt => tList.appendChild(buildTestimonial(tt)));
+      document.getElementById('lastUpdated').textContent = d.updated ? relTime(d.updated) + ' ago' : 'now';
+    } catch(e) { /* silent — page degrades gracefully */ }
+  }
+  loadReceipts();
+  setInterval(loadReceipts, 15000);
 </script>
 </body>
 </html>
