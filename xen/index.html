@@ -746,6 +746,137 @@
     .section-divider { padding: 0 24px; }
   }
 
+  /* === CAN-IT-DO SEARCH === */
+  .canit {
+    padding: 100px 80px 24px;
+    background: var(--bg);
+  }
+  .canit-wrap { max-width: 920px; margin: 0 auto; }
+  .canit-overline {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 12px;
+  }
+  .canit-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(40px, 6vw, 72px);
+    line-height: .92;
+    letter-spacing: -.02em;
+    color: var(--white);
+    margin-bottom: 28px;
+  }
+  .canit-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 32px;
+    max-width: 580px;
+    line-height: 1.6;
+  }
+  .canit-input-wrap {
+    position: relative;
+    border: 1px solid var(--amber-dim);
+    background: var(--surface);
+    margin-bottom: 24px;
+  }
+  .canit-input-wrap::before {
+    content: "?";
+    position: absolute;
+    left: 22px; top: 50%; transform: translateY(-50%);
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    color: var(--amber);
+    font-weight: 700;
+  }
+  .canit-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--white);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    padding: 22px 22px 22px 56px;
+    outline: none;
+  }
+  .canit-input::placeholder { color: var(--muted); }
+  .canit-results { display: flex; flex-direction: column; gap: 1px; background: var(--border); border: 1px solid var(--border); }
+  .canit-row {
+    background: var(--surface);
+    padding: 24px 28px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 18px;
+    align-items: start;
+    transition: background .15s ease;
+  }
+  .canit-row.zero { opacity: .55; }
+  .canit-row .name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+  .canit-row .recent-line {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.55;
+    margin-top: 6px;
+  }
+  .canit-row .recent-line a { color: var(--amber); text-decoration: none; border-bottom: 1px dotted var(--amber-dim); }
+  .canit-row .count {
+    text-align: right;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 36px;
+    line-height: 1;
+    color: var(--amber);
+    font-feature-settings: "tnum";
+  }
+  .canit-row .count-sub {
+    text-align: right;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .canit-empty {
+    padding: 40px 28px;
+    background: var(--surface);
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+  .canit-empty .empty-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+  .canit-empty .empty-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .canit-empty a { color: var(--amber); }
+
+  @media (max-width: 1000px) {
+    .canit { padding: 80px 32px 16px; }
+  }
+  @media (max-width: 560px) {
+    .canit { padding: 56px 20px 12px; }
+    .canit-input { font-size: 16px; padding: 18px 18px 18px 48px; }
+    .canit-row { grid-template-columns: 1fr; }
+    .canit-row .count, .canit-row .count-sub { text-align: left; }
+  }
+
   /* === LIVE RECEIPTS === */
   .receipts {
     padding: 120px 80px;
@@ -1120,6 +1251,19 @@
   </div>
 </section>
 
+<!-- CAN-IT-DO — friction-killer search. Prospect types use case → instant proof + count -->
+<section class="canit reveal" id="canit">
+  <div class="canit-wrap">
+    <div class="canit-overline">Can Xen do ___?</div>
+    <h2 class="canit-title">Type the use case.<br>See how many times we've done it.</h2>
+    <p class="canit-sub">No demos. No mock-ups. Every match below points to a real, timestamped task Xen completed — with the receipt link when one exists.</p>
+    <div class="canit-input-wrap">
+      <input class="canit-input" id="canitInput" type="text" placeholder="e.g. build a Pinterest mood board · screen inbound calls · ingest a 3-year archive" autocomplete="off">
+    </div>
+    <div class="canit-results" id="canitResults"></div>
+  </div>
+</section>
+
 <!-- LIVE RECEIPTS — task counter, auto scope, use cases, ambient testimonials -->
 <section class="receipts reveal" id="receipts">
   <div class="receipts-head">
@@ -1412,6 +1556,100 @@ async function sendXenMsg(){
   }
   loadReceipts();
   setInterval(loadReceipts, 15000);
+
+  // === CAN-IT-DO SEARCH ===
+  // Filters by_capability against the prospect's free-text query, ranks by
+  // synonym/name match + count, and renders proof rows.
+  let __caps = [];
+  function buildCanitRow(cap){
+    const row = document.createElement('div');
+    row.className = 'canit-row' + (cap.count === 0 ? ' zero' : '');
+
+    const left = document.createElement('div');
+    const name = document.createElement('div'); name.className = 'name'; name.textContent = cap.name;
+    left.appendChild(name);
+
+    if (cap.recent && cap.recent.length) {
+      const recent = cap.recent[0];
+      const line = document.createElement('div'); line.className = 'recent-line';
+      line.appendChild(document.createTextNode('Latest · ' + relTime(recent.ts) + ' ago · '));
+      if (recent.proof) {
+        const a = document.createElement('a'); a.href = recent.proof; a.target = '_blank'; a.rel = 'noopener'; a.textContent = recent.text;
+        line.appendChild(a);
+      } else {
+        line.appendChild(document.createTextNode(recent.text));
+      }
+      left.appendChild(line);
+    } else if (cap.count === 0) {
+      const line = document.createElement('div'); line.className = 'recent-line';
+      line.textContent = 'Not yet logged here — but Xen can. Tag info@xlrd.org for a demo.';
+      left.appendChild(line);
+    }
+
+    const right = document.createElement('div');
+    const num = document.createElement('div'); num.className = 'count'; num.textContent = cap.count.toLocaleString();
+    const sub = document.createElement('div'); sub.className = 'count-sub'; sub.textContent = cap.count === 1 ? '1 time' : 'times';
+    right.appendChild(num); right.appendChild(sub);
+
+    row.appendChild(left); row.appendChild(right);
+    return row;
+  }
+  function scoreCap(cap, q){
+    if (!q) return cap.count;
+    const tokens = q.toLowerCase().split(/\s+/).filter(Boolean);
+    let s = 0;
+    const hay = (cap.name + ' ' + (cap.synonyms || []).join(' ') + ' ' + cap.tag).toLowerCase();
+    tokens.forEach(t => { if (hay.includes(t)) s += 5; });
+    s += cap.count * 0.1;
+    return s;
+  }
+  function renderCanit(){
+    const q = document.getElementById('canitInput').value.trim();
+    const results = document.getElementById('canitResults');
+    results.replaceChildren();
+    let ranked = __caps.map(c => ({...c, _s: scoreCap(c, q)}));
+    if (q) ranked = ranked.filter(c => c._s > 1);
+    ranked.sort((a,b) => b._s - a._s);
+    const top = ranked.slice(0, 6);
+    if (!top.length) {
+      const empty = document.createElement('div'); empty.className = 'canit-empty';
+      const t = document.createElement('div'); t.className = 'empty-title'; t.textContent = 'Not in the log yet.';
+      const s = document.createElement('div'); s.className = 'empty-sub';
+      s.appendChild(document.createTextNode('That doesn’t mean Xen can’t — it means we haven’t logged it on this page. '));
+      const a = document.createElement('a'); a.href = 'mailto:info@xlrd.org?subject=Can%20Xen%20do...'; a.textContent = 'Email info@xlrd.org';
+      s.appendChild(a);
+      s.appendChild(document.createTextNode(' and we run it live.'));
+      empty.appendChild(t); empty.appendChild(s); results.appendChild(empty);
+      return;
+    }
+    top.forEach(c => results.appendChild(buildCanitRow(c)));
+  }
+  document.getElementById('canitInput').addEventListener('input', renderCanit);
+  // hook capability list into the receipts loader
+  const _origLoad = loadReceipts;
+  loadReceipts = async function(){
+    try {
+      const r = await fetch('/xen/live.json?t=' + Date.now());
+      if (!r.ok) return;
+      const d = await r.json();
+      document.getElementById('counterTasks').textContent  = fmtCount(d.tasks_total);
+      document.getElementById('counterToday').textContent  = fmtCount(d.tasks_today);
+      document.getElementById('scopeCount').textContent    = fmtCount(d.scope_count);
+      document.getElementById('costStat').textContent      = '$' + (d.cost_monthly || 0);
+      if (d.scope_summary) document.getElementById('scopeSub').textContent = d.scope_summary;
+      if (d.cost_subline)  document.getElementById('costSub').textContent  = d.cost_subline;
+      const ucList = document.getElementById('ucList');
+      ucList.replaceChildren();
+      (d.use_cases || []).slice(0, 8).forEach(uc => ucList.appendChild(buildUseCaseRow(uc)));
+      const tList = document.getElementById('testList');
+      tList.replaceChildren();
+      (d.testimonials || []).slice(0, 6).forEach(tt => tList.appendChild(buildTestimonial(tt)));
+      document.getElementById('lastUpdated').textContent = d.updated ? relTime(d.updated) + ' ago' : 'now';
+      __caps = d.by_capability || [];
+      renderCanit();
+    } catch(e) {}
+  };
+  loadReceipts();
 </script>
 </body>
 </html>
