@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Status — qi / L7S / Xen — for Ray</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--brand-red:#D60000;--brand-black:#000;--brand-white:#fff;--brand-gray:#f3f4f6}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Roboto',sans-serif;color:var(--brand-black);background:var(--brand-gray);min-height:100vh}
+header.l7-header{background:var(--brand-black);color:var(--brand-white);border-bottom:8px solid var(--brand-red);padding:24px 32px;display:flex;align-items:center;gap:20px}
+.l7-header img{height:48px}
+.l7-header .name{font-family:'Montserrat',sans-serif;font-weight:800;font-size:24px}
+.l7-header .name .accent{color:var(--brand-red)}
+.l7-header .tag{color:#cbd5e1;font-size:11px;letter-spacing:.06em;margin-top:4px;text-transform:uppercase}
+.subbar{background:#1a1a1a;color:var(--brand-white);padding:10px 32px;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.subbar .live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;margin-right:6px;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+main{max-width:980px;margin:0 auto;padding:32px}
+h1{font-family:'Montserrat',sans-serif;font-size:34px;margin:8px 0 4px;color:var(--brand-black);font-weight:800}
+h1 .for{color:#6b7280;font-weight:500;font-size:18px;display:block;margin-top:6px;letter-spacing:.04em;text-transform:uppercase}
+.meta{background:#fff;border-left:4px solid var(--brand-red);padding:14px 18px;margin:18px 0;font-size:13px;color:#374151;border-radius:4px}
+section.kept{background:#fff;border-radius:6px;padding:22px 26px;margin:18px 0;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+section.kept h2{background:var(--brand-red);color:var(--brand-white);font-family:'Montserrat',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:13px;padding:.5rem 1rem;margin:-22px -26px 16px;clip-path:polygon(0 0, 100% 0, 98% 100%, 0% 100%)}
+section.kept h3{font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;color:var(--brand-black);margin:18px 0 6px}
+section.kept p,section.kept li{font-size:13px;line-height:1.55;margin:6px 0;color:#1f2937}
+section.kept ul{padding-left:24px;margin:8px 0}
+.three-state{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
+.tile{padding:16px 18px;border-radius:6px;border:1px solid #e5e7eb}
+.tile.verified{background:linear-gradient(180deg,#ecfdf5 0%,#fff 100%);border-color:#10b981}
+.tile.shipped-unverified{background:linear-gradient(180deg,#fef3c7 0%,#fff 100%);border-color:#f59e0b}
+.tile.pending{background:linear-gradient(180deg,#f3f4f6 0%,#fff 100%);border-color:#9ca3af}
+.tile h4{font-family:'Montserrat',sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;color:#374151}
+.tile ul{list-style:none;padding:0}
+.tile li{font-size:12px;line-height:1.5;padding:3px 0}
+.tile .num{display:inline-block;background:var(--brand-black);color:var(--brand-white);width:18px;height:18px;border-radius:50%;text-align:center;font-size:10px;line-height:18px;margin-right:6px;font-family:'Montserrat',sans-serif;font-weight:700}
+.composition{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
+.comp{padding:14px;background:var(--brand-gray);border-left:3px solid var(--brand-red);border-radius:4px;font-size:12.5px}
+.comp strong{color:var(--brand-black);display:block;margin-bottom:4px;font-family:'Montserrat',sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+footer.l7-footer{background:var(--brand-black);color:var(--brand-white);border-top:6px solid var(--brand-red);padding:18px 32px;font-size:11px;display:flex;justify-content:space-between;align-items:center;margin-top:32px}
+footer .seal{color:#9ca3af;font-size:10px}
+.q{background:#fff7ed;border-left:4px solid var(--brand-red);padding:14px 18px;margin:14px 0;border-radius:4px;font-size:13px;color:#1f2937}
+.q strong{color:var(--brand-red);display:block;margin-bottom:4px;text-transform:uppercase;font-family:'Montserrat',sans-serif;font-size:11px;letter-spacing:.06em}
+@media (max-width:720px){.three-state{grid-template-columns:1fr}main{padding:18px}h1{font-size:26px}}
+</style>
+</head>
+<body>
+
+<header class="l7-header">
+  <img src="https://l7sinc.com/assets/L7S_Logo_350x280.png" alt="L7S Inc.">
+  <div>
+    <div class="name">L7S <span class="accent">Inc.</span> · <span style="font-weight:500">qi · Xen</span></div>
+    <div class="tag">L7 SOLUTIONS · The B.E.S.T.™ by Design · The H.E.R.O.™ by Demand</div>
+  </div>
+</header>
+
+<div class="subbar"><span class="live"></span>LIVE STATUS · UPDATED 2026-04-30</div>
+
+<main>
+
+<h1>In-Flight Status<span class="for">For Ray — qi's agent line</span></h1>
+
+<div class="meta">
+  Honest three-state snapshot. <strong>Verified</strong> = qi uses end-to-end. <strong>Shipped-unverified</strong> = code committed, untested. <strong>Pending</strong> = not started. No claims of maturity beyond what's true today.
+</div>
+
+<section class="kept">
+  <h2>Three-State Status</h2>
+
+  <div class="three-state">
+
+    <div class="tile verified">
+      <h4>✓ Verified end-to-end</h4>
+      <ul>
+        <li><span class="num">1</span>XenBrowser native Mac browser (Swift+WebKit, ~1100 lines BrowserViewController.swift)</li>
+        <li><span class="num">2</span>AutomationServer :9998 — HTTP API for Claude → XB control</li>
+        <li><span class="num">3</span>StreamServer :9999 + Cloudflare Tunnel → web.xlrd.org PWA</li>
+        <li><span class="num">4</span>xen.js gateway :4442 — SMS in/out + Beeper bridge</li>
+        <li><span class="num">5</span>omnimind :4441 — vision + health aggregator</li>
+        <li><span class="num">6</span>Beeper Desktop :2226 native API integration</li>
+        <li><span class="num">7</span>Voice + dual-SMS + vision per turn</li>
+        <li><span class="num">8</span>BBEdit conversation mirror — compaction-proof</li>
+        <li><span class="num">9</span>L7S Legal Engine PDF generator (l7s-md-to-pdf)</li>
+      </ul>
+    </div>
+
+    <div class="tile shipped-unverified">
+      <h4>~ Code-shipped, unverified</h4>
+      <ul>
+        <li>Mobile back/forward + tab-strip on web.xlrd.org PWA</li>
+        <li>xen-nblm CLI (local NotebookLM clone)</li>
+        <li>xen-activity-poll (continuous state poller)</li>
+        <li>Audio omnipresence framework (planned)</li>
+        <li>Shang-Tsung Otter (xen-otter, planned)</li>
+      </ul>
+    </div>
+
+    <div class="tile pending">
+      <h4>○ Pending / not built</h4>
+      <ul>
+        <li>AI sidecar panel in XB chrome (Comet equivalent)</li>
+        <li>⌘K command palette</li>
+        <li>ARIA accessibility infra</li>
+        <li>New-tab AI prompt page</li>
+        <li>Reading list / bookmarks UI</li>
+        <li>Cross-tab AI context</li>
+        <li>x_ → tech_ drive migration (~712G to move)</li>
+        <li>Exceptional-grade PDF SVG diagrams</li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+<section class="kept">
+  <h2>The Composition</h2>
+  <p>Closest comparable shapes Ray might recognize: Hermes Agent (brain/hand same shape but VPS-bound + OpenRouter-paid) and Comet (polished agentic browser but not phone-mirror-of-desktop).</p>
+  <div class="composition">
+    <div class="comp"><strong>Brain / Hand split</strong>Xen = brain. XenBrowser = hand. Brain commands hand via :9998 HTTP API.</div>
+    <div class="comp"><strong>Voice as primary</strong>Apple STT continuous → /voice-turn → unified pane. Voice fires WITH every tool call.</div>
+    <div class="comp"><strong>Phone = thin client of Mac</strong>web.xlrd.org PWA over Cloudflare Tunnel. qi's phone IS qi's Mac browser. No data on phone.</div>
+    <div class="comp"><strong>Zero paid runtime</strong>Local Apple STT, local WeasyPrint, local rclone Drive, native macOS APIs. No OpenRouter / no Twilio.</div>
+  </div>
+</section>
+
+<section class="kept">
+  <h2>Today's Specifics</h2>
+  <ul>
+    <li><strong>Italian USDT contract</strong> — €500K, close Tuesday 2026-05-05 post bank holiday. Luckie + Principal reviewing.</li>
+    <li><strong>Kraken Wallet SOP v3</strong> — delivered to Luckie via Drive (L7S Engine brand template, Principal-redacted, 4 pages dense, no splits, embedded fonts).</li>
+    <li><strong>B.A.T.M.A.N. Deal-Flow Intake form</strong> — same template, delivered alongside SOP.</li>
+    <li><strong>Activity-monitor poller</strong> shipped today (xen-activity-poll, 3s interval).</li>
+    <li><strong>x_ data drive</strong> at 89% (809G/931G); plan: rsync Users (634G) + Applications (78G) → tech_ (3.5T free), then drop Previous System (107G), clear x_.</li>
+  </ul>
+</section>
+
+<section class="kept">
+  <h2>For Ray</h2>
+  <div class="q">
+    <strong>What I want a second read on:</strong>
+    The "live mobile PWA = thin client of native Mac browser via tunneled stream" path. Has anyone shipped this exact shape? That's the part qi believes is most defensible. If you've seen it before, point me there.
+  </div>
+  <div class="q">
+    <strong>Standing offer:</strong>
+    qi/Xen reachable via voice or SMS at +1 (770) 765-2217 (also +1 (943) 253-6009), or via Beeper @xlrd00. The Xen line auto-answers (canon).
+  </div>
+</section>
+
+</main>
+
+<footer class="l7-footer">
+  <div>L7S Inc. · l7sinc.com · hero@l7sinc.com · +1 (833) 693-0777</div>
+  <div class="seal">© 2026 L7S Inc. — All rights reserved. Site for Ray.</div>
+</footer>
+
+</body>
+</html>
