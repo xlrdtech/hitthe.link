@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Ray's House of Fun — coding, gaming, languages, and curiosities. Curated learning trails by Ray de la Paz.">
+<meta name="author" content="Ray de la Paz">
+<title>Ray's House of Fun — v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0d12;
+  --bg-elev: #131722;
+  --surface: #1a1f2e;
+  --text: #e7eaf3;
+  --text-dim: #95a0b8;
+  --grad-1: #667eea;
+  --grad-2: #764ba2;
+  --grad-3: #f093fb;
+  --accent: #ffd166;
+  --code-bg: #0d1117;
+  --line: rgba(255,255,255,.07);
+}
+[data-theme="light"] {
+  --bg: #fafbff; --bg-elev: #fff; --surface: #f3f5fc;
+  --text: #14182a; --text-dim: #5b6480; --line: rgba(0,0,0,.06);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Space Grotesk',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh;overflow-x:hidden}
+
+/* Animated bg gradient */
+body::before{content:"";position:fixed;inset:0;background:radial-gradient(at 20% 0%, rgba(102,126,234,.15) 0%, transparent 40%),radial-gradient(at 80% 100%, rgba(118,75,162,.15) 0%, transparent 50%),radial-gradient(at 50% 50%, rgba(240,147,251,.08) 0%, transparent 60%);z-index:-1;animation:pulse 20s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.7}50%{opacity:1}}
+
+/* Theme toggle */
+.theme-toggle{position:fixed;top:1.25rem;right:1.25rem;z-index:50;background:var(--bg-elev);border:1px solid var(--line);border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.25rem;backdrop-filter:blur(12px);transition:transform .2s, border-color .2s}
+.theme-toggle:hover{transform:scale(1.1) rotate(15deg);border-color:var(--grad-1)}
+
+/* Hero */
+.hero{padding:8rem 1.5rem 5rem;text-align:center;position:relative}
+.hero h1{font-size:clamp(3rem,9vw,6rem);font-weight:700;letter-spacing:-.04em;line-height:.95;background:linear-gradient(120deg, var(--grad-1) 0%, var(--grad-3) 50%, var(--grad-2) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:1rem}
+.hero .tag{font-size:1.25rem;color:var(--text-dim);max-width:580px;margin:0 auto 2rem}
+.hero .by{display:inline-block;padding:.4rem 1rem;border:1px solid var(--line);border-radius:99px;font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--text-dim);letter-spacing:.05em}
+.hero .by .name{color:var(--accent);font-weight:600}
+
+/* Search */
+.search-wrap{max-width:680px;margin:2.5rem auto 0;padding:0 1rem}
+.search{width:100%;padding:1rem 1.5rem;background:var(--surface);border:1px solid var(--line);border-radius:14px;color:var(--text);font-family:inherit;font-size:1rem;transition:border-color .2s, transform .2s}
+.search:focus{outline:none;border-color:var(--grad-1);box-shadow:0 0 0 4px rgba(102,126,234,.1)}
+
+/* Container */
+.wrap{max-width:1200px;margin:0 auto;padding:3rem 1.5rem 6rem}
+
+/* Section */
+.section{margin:5rem 0}
+.section h2{font-size:clamp(1.5rem,3vw,2.25rem);font-weight:600;margin-bottom:.5rem;letter-spacing:-.02em;display:flex;align-items:center;gap:.75rem}
+.section h2 .icon{font-size:1.5em;display:inline-block;transform:translateY(2px)}
+.section .sub{color:var(--text-dim);font-size:1rem;margin-bottom:2rem}
+.section h3{font-size:1.15rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin:2.5rem 0 1.25rem;padding-bottom:.5rem;border-bottom:1px solid var(--line)}
+
+/* Card grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1.25rem 1.4rem;text-decoration:none;color:inherit;display:block;transition:transform .2s, border-color .2s, background .2s;position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg, var(--grad-1), var(--grad-3), var(--grad-2));opacity:0;transition:opacity .25s}
+.card:hover{transform:translateY(-4px);border-color:rgba(102,126,234,.4);background:var(--bg-elev)}
+.card:hover::before{opacity:1}
+.card h4{font-size:1.05rem;font-weight:600;margin-bottom:.4rem;letter-spacing:-.01em}
+.card .desc{color:var(--text-dim);font-size:.88rem;line-height:1.5}
+.card .arrow{position:absolute;top:1.25rem;right:1.4rem;color:var(--text-dim);transition:transform .2s, color .2s}
+.card:hover .arrow{transform:translate(2px,-2px);color:var(--grad-1)}
+.card .tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--accent);padding:.2rem .6rem;background:rgba(255,209,102,.08);border-radius:99px;margin-top:.7rem;letter-spacing:.04em}
+
+/* Footer */
+footer{padding:3rem 1.5rem;text-align:center;border-top:1px solid var(--line);color:var(--text-dim);font-size:.88rem}
+footer a{color:var(--grad-3);text-decoration:none}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce){body::before{animation:none}.card,.theme-toggle,.search{transition:none}}
+
+/* Mobile tweaks */
+@media (max-width:640px){.hero{padding:5rem 1.25rem 3rem}.hero h1{font-size:3.25rem}.section{margin:3.5rem 0}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" id="theme-toggle" aria-label="Toggle light/dark mode">🌙</button>
+
+<header class="hero">
+  <h1>Ray's House of Fun</h1>
+  <p class="tag">Learn how to solve a Rubik's cube, play an RPG, code, speak a new language — or some other fun thing.</p>
+  <div class="by">curated by <span class="name">Ray de la Paz</span></div>
+  <div class="search-wrap">
+    <input class="search" type="search" id="search" placeholder="Search 20+ courses…" aria-label="Search courses">
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="section" data-section="computer">
+    <h2><span class="icon">💻</span> Computer Topics</h2>
+    <p class="sub">Coding, infrastructure, and digital craft. Twelve curated tracks.</p>
+
+    <h3>Programming</h3>
+    <div class="grid">
+      <a class="card" href="https://rays-fullstack.netlify.app/" data-tags="fullstack web mern node react">
+        <h4>Fullstack <span class="arrow">→</span></h4>
+        <p class="desc">End-to-end web apps — frontend, backend, database. Deepest tutorial in the house.</p>
+        <span class="tag">19MB · most depth</span>
+      </a>
+      <a class="card" href="https://rays-python-course.netlify.app/" data-tags="python programming">
+        <h4>Python Course <span class="arrow">→</span></h4>
+        <p class="desc">Full Python journey — intro, intermediate, gamedev branches.</p>
+        <span class="tag">core track</span>
+      </a>
+      <a class="card" href="https://rays-python-intro.netlify.app/" data-tags="python beginner">
+        <h4>Python Intro <span class="arrow">→</span></h4>
+        <p class="desc">Day-one Python for absolute beginners.</p>
+      </a>
+      <a class="card" href="https://rays-python-intermediate.netlify.app/" data-tags="python intermediate">
+        <h4>Python Intermediate <span class="arrow">→</span></h4>
+        <p class="desc">Beyond the basics — modules, classes, idioms.</p>
+      </a>
+      <a class="card" href="https://rays-python-gamedev.netlify.app/" data-tags="python pygame games">
+        <h4>Python Game Dev <span class="arrow">→</span></h4>
+        <p class="desc">Build games in Python with pygame and friends.</p>
+      </a>
+      <a class="card" href="https://rays-js-course.netlify.app/" data-tags="javascript js">
+        <h4>JavaScript Course <span class="arrow">→</span></h4>
+        <p class="desc">Modern JS — ES6+, async, the runtime model.</p>
+      </a>
+      <a class="card" href="https://rays-htmljs.netlify.app/" data-tags="html javascript">
+        <h4>HTML + JS <span class="arrow">→</span></h4>
+        <p class="desc">Wire scripts to pages — DOM, events, fetch.</p>
+      </a>
+      <a class="card" href="https://rays-htmlcss.netlify.app/" data-tags="html css frontend">
+        <h4>HTML + CSS <span class="arrow">→</span></h4>
+        <p class="desc">Layout, typography, modern responsive design.</p>
+      </a>
+      <a class="card" href="https://rays-cpp-course.netlify.app/" data-tags="cpp c++">
+        <h4>C++ <span class="arrow">→</span></h4>
+        <p class="desc">Systems-level programming with the modern C++ standard.</p>
+      </a>
+      <a class="card" href="https://rays-php.netlify.app/" data-tags="php server">
+        <h4>PHP <span class="arrow">→</span></h4>
+        <p class="desc">Server-side PHP — request lifecycle, DB, MVC.</p>
+      </a>
+      <a class="card" href="https://rays-php-wordpress.netlify.app/" data-tags="php wordpress cms">
+        <h4>PHP + WordPress <span class="arrow">→</span></h4>
+        <p class="desc">Build, theme, and extend WordPress with PHP.</p>
+      </a>
+      <a class="card" href="https://rays-programming.netlify.app/" data-tags="programming theory">
+        <h4>Programming Foundations <span class="arrow">→</span></h4>
+        <p class="desc">Cross-cutting concepts that apply to any language.</p>
+      </a>
+    </div>
+
+    <h3>Infrastructure & Data</h3>
+    <div class="grid">
+      <a class="card" href="https://rays-linux.netlify.app/" data-tags="linux unix shell"><h4>Linux <span class="arrow">→</span></h4><p class="desc">Command line, files, processes, the everyday shell.</p></a>
+      <a class="card" href="https://rays-docker.netlify.app/" data-tags="docker containers devops"><h4>Docker <span class="arrow">→</span></h4><p class="desc">Containers — build, run, ship.</p></a>
+      <a class="card" href="https://rays-git-info.netlify.app/" data-tags="git version control"><h4>Git <span class="arrow">→</span></h4><p class="desc">Version control without the panic.</p></a>
+      <a class="card" href="https://rays-mysql.netlify.app/" data-tags="mysql sql database"><h4>MySQL <span class="arrow">→</span></h4><p class="desc">Relational databases — schema, queries, joins.</p></a>
+      <a class="card" href="https://rays-sql.netlify.app/" data-tags="sql mastery database"><h4>SQL Mastery <span class="arrow">→</span></h4><p class="desc">Beyond MySQL — universal SQL fluency.</p><span class="tag">flagship</span></a>
+      <a class="card" href="https://rays-ai-info.netlify.app/" data-tags="ai ml info"><h4>AI Info <span class="arrow">→</span></h4><p class="desc">What machine learning actually is, in plain words.</p></a>
+      <a class="card" href="https://rays-sdd-info.netlify.app/" data-tags="sdd software design"><h4>SDD Tutorial <span class="arrow">→</span></h4><p class="desc">Software design discipline — 9 lessons + progress tracking.</p><span class="tag">flagship</span></a>
+    </div>
+  </section>
+
+  <section class="section" data-section="other">
+    <h2><span class="icon">🎮</span> Other Topics in the House</h2>
+    <p class="sub">Gaming, languages, and curiosities — the original "Fun" of House of Fun.</p>
+    <div class="grid">
+      <a class="card" href="https://rays-home.netlify.app/bo7_s3_zombies_guide.html"><h4>Black Ops 7 S3 Zombies Guide <span class="arrow">→</span></h4><p class="desc">Strategy notes for the latest Zombies season.</p><span class="tag">gaming</span></a>
+      <a class="card" href="https://rays-home.netlify.app/juggling_guide.html"><h4>Juggling Guide <span class="arrow">→</span></h4><p class="desc">From three balls to fountains — a learning ladder.</p><span class="tag">curiosity</span></a>
+      <a class="card" href="https://rays-home.netlify.app/updates.html"><h4>Updates <span class="arrow">→</span></h4><p class="desc">What's new across the House — release notes.</p></a>
+      <a class="card" href="https://rays-home.netlify.app/contact.html"><h4>Contact Ray <span class="arrow">→</span></h4><p class="desc">Reach out, suggest a topic, submit a fix.</p></a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Ray's House of Fun · curated by Ray de la Paz · v2 redesign by Xen for qi · 2026-04-30
+  <div style="margin-top:.5rem"><a href="https://rays-home.netlify.app/">view original</a></div>
+</footer>
+
+<script>
+// Theme toggle
+const tt = document.getElementById('theme-toggle');
+const html = document.documentElement;
+function applyTheme(t){html.setAttribute('data-theme', t); localStorage.setItem('theme', t); tt.textContent = t === 'dark' ? '🌙' : '☀️';}
+const savedTheme = localStorage.getItem('theme') || 'dark';
+applyTheme(savedTheme);
+tt.addEventListener('click', () => applyTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+
+// Search filter
+const search = document.getElementById('search');
+search.addEventListener('input', (e) => {
+  const q = e.target.value.toLowerCase().trim();
+  document.querySelectorAll('.card').forEach(c => {
+    const text = (c.textContent + ' ' + (c.dataset.tags||'')).toLowerCase();
+    c.style.display = !q || text.includes(q) ? '' : 'none';
+  });
+});
+
+// Subtle stagger reveal on scroll
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      e.target.style.transition = `opacity .5s ${i*30}ms ease, transform .5s ${i*30}ms ease`;
+      e.target.style.opacity = '1';
+      e.target.style.transform = 'translateY(0)';
+      obs.unobserve(e.target);
+    }
+  });
+}, {threshold: 0.1});
+document.querySelectorAll('.card').forEach(c => {
+  c.style.opacity = '0';
+  c.style.transform = 'translateY(20px)';
+  obs.observe(c);
+});
+</script>
+
+</body>
+</html>
