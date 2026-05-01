@@ -1,499 +1,417 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en" class="scroll-smooth antialiased dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Self Exec | Enterprise Automation & Intelligent Systems</title>
-    <meta name="description" content="Self Exec delivers enterprise automation, AI integration, and intelligent systems. Zero overhead, measurable impact, complete time freedom. Get paid to save time.">
+    <title>hitthe.link — Portfolio Navigator</title>
+    <meta name="description" content="The full portfolio of work by East Allen — L7S, SEL, XLRD, and the experiments in between. One pane, every project.">
+    <meta name="robots" content="index,follow">
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="hitthe.link — Portfolio Navigator">
+    <meta property="og:description" content="Every project in one pane. L7S, SEL, XLRD, and experiments.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Manrope', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            navy: '#0F172A',
+                            slate: '#1E293B',
+                            accent: 'var(--theme-color)',
+                            gold: 'var(--theme-color)'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
+        :root {
+            --theme-color: #D4AF37;
+            --color-bg: #000000;
+            --text-header: #FFFFFF;
+            --text-body: #A1A1AA;
+            --glass-bg: rgba(10, 10, 10, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-highlight: rgba(255, 255, 255, 0.2);
+            --glass-shadow: rgba(0, 0, 0, 1);
+            --glass-blur: 30px;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0A0A0A;
-            color: #ffffff;
-        }
-
-        .gradient-text {
-            background: linear-gradient(90deg, #22d3ee, #9333ea);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .gradient-text-gold {
-            background: linear-gradient(90deg, #fde047, #ca8a04);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .btn-cyber {
+            font-family: 'Manrope', sans-serif;
+            background-color: var(--color-bg);
+            color: var(--text-body);
+            overflow-x: hidden;
             position: relative;
-            overflow: hidden;
+        }
+
+        .glow-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(150px);
+            opacity: 0.2;
+            z-index: -1;
+            pointer-events: none;
+            background: var(--theme-color);
+            animation: float 25s infinite alternate ease-in-out;
+            mix-blend-mode: screen;
+            will-change: transform;
+        }
+        .orb-1 { width: 70vw; height: 70vw; top: -25%; left: -20%; }
+        .orb-2 { width: 60vw; height: 60vw; bottom: -15%; right: -15%; animation-delay: -7s; background: #1E293B; }
+        .orb-3 { width: 40vw; height: 40vw; top: 40%; left: 50%; animation-delay: -14s; opacity: 0.12; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+            100% { transform: translate(8%, 8%) scale(1.1) rotate(5deg); }
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--glass-border);
+            box-shadow:
+                0 4px 24px -1px var(--glass-shadow),
+                inset 0 1px 0 0 var(--glass-highlight),
+                inset 1px 0 0 0 rgba(255, 255, 255, 0.03),
+                inset -1px 0 0 0 rgba(255, 255, 255, 0.03);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+        }
+        .glass-panel:hover {
+            transform: translateY(-3px);
+            box-shadow:
+                0 24px 60px -8px var(--glass-shadow),
+                inset 0 1px 0 0 var(--glass-highlight);
+            border-color: color-mix(in srgb, var(--theme-color) 45%, transparent);
+        }
+        .no-hover-effect:hover { transform: none; border-color: var(--glass-border); }
+
+        .btn-brand {
+            background: var(--theme-color);
+            color: #0F172A;
+            font-weight: 800;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 20px color-mix(in srgb, var(--theme-color) 30%, transparent);
+            display: inline-flex; align-items: center; justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn-brand:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px color-mix(in srgb, var(--theme-color) 50%, transparent);
+            filter: brightness(1.15);
+        }
+
+        .btn-ghost {
+            border: 1px solid var(--glass-border);
+            color: var(--text-header);
+            font-weight: 600;
+            background: rgba(255,255,255,0.02);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: inline-flex; align-items: center; justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn-ghost:hover {
+            border-color: var(--theme-color);
+            color: var(--theme-color);
+            transform: translateY(-2px);
+            background: color-mix(in srgb, var(--theme-color) 6%, transparent);
+        }
+
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.9s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        .gold-text {
+            background: linear-gradient(135deg, var(--theme-color) 0%, #FFFFFF 50%, var(--theme-color) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+
+        .chip {
+            display: inline-flex; align-items: center;
+            padding: 0.25rem 0.625rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            border: 1px solid color-mix(in srgb, var(--theme-color) 30%, transparent);
+            color: var(--theme-color);
+            background: color-mix(in srgb, var(--theme-color) 8%, transparent);
+        }
+
+        .card-arrow {
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            color: var(--theme-color);
+        }
+        .glass-panel:hover .card-arrow { transform: translate(4px, -4px); }
+
+        .filter-input {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
             transition: all 0.3s ease;
         }
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--theme-color);
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 0 24px color-mix(in srgb, var(--theme-color) 20%, transparent);
+        }
+        .filter-input::placeholder { color: rgba(255,255,255,0.35); }
 
-        .btn-cyber::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: rgba(255, 255, 255, 0.1);
-            transform: rotate(45deg) translateY(100%);
-            transition: all 0.5s ease;
+        .cat-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            color: var(--text-body);
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.02);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .cat-btn:hover { color: white; border-color: rgba(255,255,255,0.25); }
+        .cat-btn.active {
+            background: var(--theme-color);
+            color: #0F172A;
+            border-color: var(--theme-color);
+            box-shadow: 0 4px 16px color-mix(in srgb, var(--theme-color) 30%, transparent);
         }
 
-        .btn-cyber:hover::after {
-            transform: rotate(45deg) translateY(-100%);
-        }
-
-        .animate-glow {
-            animation: glow 3s infinite alternate;
-        }
-
-        @keyframes glow {
-            from { filter: drop-shadow(0 0 5px rgba(34, 211, 238, 0.5)); }
-            to { filter: drop-shadow(0 0 20px rgba(34, 211, 238, 0.8)); }
-        }
-
-        .reveal {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.8s ease-out;
-        }
-
-        .reveal.active {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .reveal-left {
-            opacity: 0;
-            transform: translateX(-50px);
-            transition: all 0.8s ease-out;
-        }
-
-        .reveal-left.active {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        .reveal-right {
-            opacity: 0;
-            transform: translateX(50px);
-            transition: all 0.8s ease-out;
-        }
-
-        .reveal-right.active {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        .faq-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-        }
-
-        .faq-item.active .faq-content {
-            max-height: 200px;
-        }
-
-        .faq-item.active .faq-icon {
-            transform: rotate(180deg);
-        }
-
-        .nav-glass {
-            background: rgba(10, 10, 10, 0.8);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(42, 42, 42, 1);
-        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--theme-color); border-radius: 10px; opacity: 0.5; }
     </style>
 </head>
-<body class="antialiased overflow-x-hidden">
+<body class="antialiased selection:bg-brand-gold/30">
 
-    <!-- Header Navigation -->
-    <header id="main-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-            <a href="#" class="flex items-center gap-3">
-                <img src="https://us.chat-img.sintra.ai/807c1317-1ece-4cd6-b4d7-bbc4fd5ac33e/aa5d5029-9e84-4c92-bdd2-77c22dd10e2d/Photoroom_20251229_203459.PNG" alt="Self Exec" class="h-10 w-10 object-contain">
-                <span class="text-white font-bold text-xl tracking-tight">SELF<span class="gradient-text">EXEC</span></span>
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+
+    <header class="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 pt-4">
+        <div class="max-w-7xl mx-auto glass-panel no-hover-effect rounded-full px-5 py-3 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-2.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-brand-gold shadow-[0_0_12px_var(--theme-color)]"></span>
+                <span class="text-white font-extrabold tracking-tight text-sm sm:text-base">hitthe<span class="text-brand-gold">.</span>link</span>
             </a>
-            
-            <nav class="hidden md:flex items-center gap-8">
-                <a href="#services" class="text-gray-300 hover:text-cyan-400 transition-colors text-sm font-medium">Services</a>
-                <a href="#about" class="text-gray-300 hover:text-cyan-400 transition-colors text-sm font-medium">About</a>
-                <a href="#contact" class="text-gray-300 hover:text-cyan-400 transition-colors text-sm font-medium">Contact</a>
-                <a href="#contact" class="btn-cyber px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-semibold rounded-full text-sm">Get Started</a>
+            <nav class="hidden md:flex items-center gap-6 text-sm">
+                <a href="#portfolio" class="text-zinc-300 hover:text-brand-gold transition-colors">Portfolio</a>
+                <a href="/execpage/" class="text-zinc-300 hover:text-brand-gold transition-colors">ExecPage</a>
+                <a href="/xlrd-org/" class="text-zinc-300 hover:text-brand-gold transition-colors">xlrd.org</a>
             </nav>
-
-            <button id="mobile-menu-btn" class="md:hidden text-white p-2">
-                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                </svg>
-            </button>
-        </div>
-
-        <!-- Mobile Menu Overlay -->
-        <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 right-0 bg-[#0A0A0A]/98 backdrop-blur-md border-b border-[#2A2A2A] transition-all">
-            <nav class="flex flex-col p-6 gap-4">
-                <a href="#services" class="mobile-link text-gray-300 hover:text-cyan-400 transition-colors font-medium py-2">Services</a>
-                <a href="#about" class="mobile-link text-gray-300 hover:text-cyan-400 transition-colors font-medium py-2">About</a>
-                <a href="#contact" class="mobile-link text-gray-300 hover:text-cyan-400 transition-colors font-medium py-2">Contact</a>
-                <a href="#contact" class="mobile-link btn-cyber px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-semibold rounded-full text-center mt-2">Get Started</a>
-            </nav>
+            <a href="#portfolio" class="btn-brand text-xs sm:text-sm rounded-full px-4 py-2">Browse</a>
         </div>
     </header>
 
-    <main>
-        <!-- Hero Section -->
-        <section class="relative min-h-screen flex items-center justify-center overflow-hidden">
-            <div class="absolute inset-0 z-0">
-                <!-- Video filters removed to restore original colors -->
-                <video id="hero-video" autoplay loop muted playsinline class="w-full h-full object-cover" poster="https://us.chat-img.sintra.ai/807c1317-1ece-4cd6-b4d7-bbc4fd5ac33e/aa5d5029-9e84-4c92-bdd2-77c22dd10e2d/Photoroom_20251229_203459.PNG">
-                    <source src="https://us.chat-img.sintra.ai/807c1317-1ece-4cd6-b4d7-bbc4fd5ac33e/dd844811-71c3-42e3-b5b8-343ec2c6fe93/riveo.MP4" type="video/mp4">
-                </video>
-                <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-slate-900/40 to-[#0A0A0A]"></div>
+    <main class="pt-32">
+        <section class="relative max-w-5xl mx-auto px-6 pt-12 pb-20 text-center">
+            <div class="reveal inline-flex items-center gap-2 chip mb-6">
+                <span class="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse"></span>
+                Portfolio Navigator
             </div>
-
-            <!-- Unmute Control -->
-            <button id="unmute-btn" class="absolute bottom-24 right-6 z-20 w-12 h-12 rounded-full bg-[#1A1A1A]/80 border border-cyan-500/30 flex items-center justify-center text-cyan-400 hover:bg-[#1A1A1A] hover:border-cyan-500/50 transition-all backdrop-blur-sm" aria-label="Toggle sound">
-                <svg id="mute-icon" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path>
-                </svg>
-            </button>
-
-            <div class="relative z-10 max-w-5xl mx-auto px-6 text-center py-32">
-                <p class="reveal text-cyan-400 text-sm md:text-base tracking-[0.3em] uppercase font-medium mb-6">Enterprise Automation & Intelligent Systems</p>
-                <h1 class="reveal text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">Get Paid to <span class="gradient-text">Save Time</span></h1>
-                <p class="reveal text-lg md:text-xl text-gray-300 max-w-3xl mx-auto mb-10 leading-relaxed">Self Exec delivers industry-disrupting automation, AI integration, and intelligent systems. Zero overhead, measurable impact, complete time freedom.</p>
-                <div class="reveal flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="#contact" class="btn-cyber px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-semibold rounded-full transition-all hover:shadow-lg hover:shadow-cyan-500/30">Start Your Project</a>
-                    <a href="#services" class="px-8 py-4 border border-cyan-500/50 text-cyan-400 font-semibold rounded-full transition-all hover:bg-cyan-500/10 hover:border-cyan-400">Explore Services</a>
-                </div>
-                
-                <!-- Scroll Indicator -->
-                <div class="reveal absolute bottom-10 left-1/2 -translate-x-1/2">
-                    <div class="w-6 h-10 border-2 border-cyan-500/50 rounded-full flex justify-center pt-2">
-                        <div class="w-1 h-3 bg-cyan-400 rounded-full animate-bounce"></div>
-                    </div>
-                </div>
+            <h1 class="reveal text-4xl sm:text-6xl md:text-7xl font-black text-white leading-[1.05] tracking-tight mb-6">
+                Every project,<br><span class="gold-text">one pane.</span>
+            </h1>
+            <p class="reveal text-zinc-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
+                The full body of work by East Allen — L7S, SEL, XLRD, and the experiments in between.
+                Search, filter, and dive in.
+            </p>
+            <div class="reveal flex flex-col sm:flex-row gap-3 justify-center">
+                <a href="#portfolio" class="btn-brand rounded-full px-8 py-4">Browse Projects</a>
+                <a href="/execpage/" class="btn-ghost rounded-full px-8 py-4">See ExecPage</a>
             </div>
         </section>
 
-        <!-- Mission Section -->
-        <section class="py-24 bg-[#0A0A0A] relative overflow-hidden">
-            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[150px]"></div>
-            <div class="max-w-5xl mx-auto px-6 text-center relative z-10">
-                <div class="reveal inline-block mb-8">
-                    <img src="https://us.chat-img.sintra.ai/807c1317-1ece-4cd6-b4d7-bbc4fd5ac33e/aa5d5029-9e84-4c92-bdd2-77c22dd10e2d/Photoroom_20251229_203459.PNG" alt="Self Exec Biometric" class="w-32 h-32 md:w-40 md:h-40 object-contain mx-auto animate-glow rounded-full">
+        <section id="portfolio" class="relative max-w-7xl mx-auto px-6 pb-32">
+            <div class="reveal glass-panel no-hover-effect rounded-3xl p-5 sm:p-6 mb-10">
+                <div class="flex flex-col gap-4">
+                    <div class="relative">
+                        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
+                        <input id="search" type="text" placeholder="Search projects, brands, ideas…" class="filter-input w-full rounded-2xl pl-12 pr-4 py-4 text-base">
+                    </div>
+                    <div id="categories" class="flex flex-wrap gap-2"></div>
                 </div>
-                <p class="reveal text-cyan-400 text-sm tracking-[0.2em] uppercase font-medium mb-4">Our Mission</p>
-                <h2 class="reveal text-2xl md:text-4xl lg:text-5xl font-bold text-white leading-tight">Every solution is engineered for <span class="gradient-text-gold">measurable outcomes</span></h2>
-                <p class="reveal text-gray-400 text-lg mt-6 max-w-2xl mx-auto">We build systems that compound your advantage. Zero manual work. Instant payout. Permanent industry impact.</p>
+                <div id="result-count" class="mt-4 text-xs uppercase tracking-[0.2em] text-zinc-500"></div>
             </div>
-        </section>
 
-        <!-- Services Section -->
-        <section id="services" class="py-24 bg-[#111111] relative overflow-hidden">
-            <div class="absolute top-20 right-0 w-[400px] h-[400px] bg-cyan-600/5 rounded-full blur-[120px]"></div>
-            <div class="absolute bottom-20 left-0 w-[400px] h-[400px] bg-purple-600/5 rounded-full blur-[120px]"></div>
-            <div class="max-w-7xl mx-auto px-6 relative z-10">
-                <div class="text-center mb-16">
-                    <p class="reveal text-cyan-400 text-sm tracking-[0.2em] uppercase font-medium mb-4">Services</p>
-                    <h2 class="reveal text-3xl md:text-5xl font-bold text-white mb-6">Automation & AI Consulting</h2>
-                    <p class="reveal text-gray-400 text-lg max-w-2xl mx-auto">From full-stack automation to SOP simplification, we design, deploy, and optimize systems that eliminate manual work and maximize your margins.</p>
-                </div>
-                
-                <div class="grid md:grid-cols-3 gap-8">
-                    <!-- Service 1 -->
-                    <div class="reveal group relative p-8 rounded-2xl bg-[#1A1A1A] border border-[#2A2A2A] hover:border-cyan-500/50 transition-all duration-500 hover:transform hover:-translate-y-2">
-                        <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-purple-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                        <div class="relative z-10">
-                            <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center text-cyan-400 mb-6 group-hover:scale-110 transition-transform duration-300">
-                                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"></path>
-                                </svg>
-                            </div>
-                            <h3 class="text-xl font-semibold text-white mb-4 group-hover:text-cyan-400 transition-colors">G.O.D. SOP Stack Deployment</h3>
-                            <p class="text-gray-400 leading-relaxed">27-tool, three-layer stack to automate Generate, Operate, and Distribute workflows. Docker-first, self-hosted, vendor lock-in resistant.</p>
-                        </div>
-                    </div>
-
-                    <!-- Service 2 -->
-                    <div class="reveal group relative p-8 rounded-2xl bg-[#1A1A1A] border border-[#2A2A2A] hover:border-cyan-500/50 transition-all duration-500 hover:transform hover:-translate-y-2">
-                        <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-purple-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                        <div class="relative z-10">
-                            <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center text-cyan-400 mb-6 group-hover:scale-110 transition-transform duration-300">
-                                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"></path>
-                                </svg>
-                            </div>
-                            <h3 class="text-xl font-semibold text-white mb-4 group-hover:text-cyan-400 transition-colors">Elite Client Filter & Qualification</h3>
-                            <p class="text-gray-400 leading-relaxed">Strict qualification ensures only high-value, decision-ready clients. No budget objections, no payment plans, 50% deposit required.</p>
-                        </div>
-                    </div>
-
-                    <!-- Service 3 -->
-                    <div class="reveal group relative p-8 rounded-2xl bg-[#1A1A1A] border border-[#2A2A2A] hover:border-cyan-500/50 transition-all duration-500 hover:transform hover:-translate-y-2">
-                        <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-purple-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                        <div class="relative z-10">
-                            <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center text-cyan-400 mb-6 group-hover:scale-110 transition-transform duration-300">
-                                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"></path>
-                                </svg>
-                            </div>
-                            <h3 class="text-xl font-semibold text-white mb-4 group-hover:text-cyan-400 transition-colors">Single-Page Site System</h3>
-                            <p class="text-gray-400 leading-relaxed">$5,555.55 all-in, $2,777.78 deposit, max $20 overhead. Design, deploy, and launch in under 7 hours.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Benefits Grid -->
-        <section class="py-24 bg-[#0A0A0A] relative overflow-hidden">
-            <div class="absolute inset-0 opacity-10">
-                <div class="absolute inset-0" style="background-image:linear-gradient(rgba(0,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,255,0.1) 1px, transparent 1px);background-size:50px 50px"></div>
-            </div>
-            <div class="max-w-7xl mx-auto px-6 relative z-10">
-                <div class="text-center mb-16">
-                    <p class="reveal text-purple-400 text-sm tracking-[0.2em] uppercase font-medium mb-4">Benefits</p>
-                    <h2 class="reveal text-3xl md:text-5xl font-bold text-white mb-6">Why Choose Self Exec?</h2>
-                    <p class="reveal text-gray-400 text-lg max-w-2xl mx-auto">We deliver measurable results: instant payout, total automation, and solutions that free your time.</p>
-                </div>
-                <div class="grid md:grid-cols-3 gap-8">
-                    <div class="reveal relative p-8 rounded-2xl bg-gradient-to-br from-[#1A1A1A] to-[#111111] border border-[#2A2A2A] overflow-hidden group">
-                        <div class="relative z-10 text-center">
-                            <span class="text-5xl font-bold gradient-text">500%</span>
-                            <p class="text-cyan-400 text-sm mt-1">ROI Target</p>
-                            <h3 class="text-xl font-semibold text-white mt-6 mb-4">Engineered for Results</h3>
-                            <p class="text-gray-400 leading-relaxed">Every offer is built for maximum efficiency and outcome.</p>
-                        </div>
-                    </div>
-                    <div class="reveal relative p-8 rounded-2xl bg-gradient-to-br from-[#1A1A1A] to-[#111111] border border-[#2A2A2A] overflow-hidden group">
-                        <div class="relative z-10 text-center">
-                            <span class="text-5xl font-bold gradient-text">0</span>
-                            <p class="text-cyan-400 text-sm mt-1">Manual Tasks</p>
-                            <h3 class="text-xl font-semibold text-white mt-6 mb-4">Zero Manual Work</h3>
-                            <p class="text-gray-400 leading-relaxed">All solutions are designed for zero-human-in-the-loop.</p>
-                        </div>
-                    </div>
-                    <div class="reveal relative p-8 rounded-2xl bg-gradient-to-br from-[#1A1A1A] to-[#111111] border border-[#2A2A2A] overflow-hidden group">
-                        <div class="relative z-10 text-center">
-                            <span class="text-5xl font-bold gradient-text">95%</span>
-                            <p class="text-cyan-400 text-sm mt-1">Profit Margin</p>
-                            <h3 class="text-xl font-semibold text-white mt-6 mb-4">Instant Payout</h3>
-                            <p class="text-gray-400 leading-relaxed">Get paid instantly, with transparent pricing models.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- About Section -->
-        <section id="about" class="py-24 bg-[#111111] relative overflow-hidden">
-            <div class="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[150px]"></div>
-            <div class="max-w-7xl mx-auto px-6 relative z-10">
-                <div class="flex flex-col lg:flex-row items-center gap-16">
-                    <div class="reveal-left w-full lg:w-1/2">
-                        <div class="relative">
-                            <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-purple-500/20 rounded-2xl blur-xl"></div>
-                            <video autoplay loop muted playsinline class="relative w-full rounded-2xl border border-[#2A2A2A]">
-                                <source src="https://us.chat-img.sintra.ai/807c1317-1ece-4cd6-b4d7-bbc4fd5ac33e/a06e0a4c-84a1-4264-a8ab-ee90c04d1f87/grok-video-dd564526-996c-45d6-bf23-596af69a1822.mp4" type="video/mp4">
-                            </video>
-                            <div class="absolute -bottom-6 -right-6 bg-[#1A1A1A] border border-cyan-500/30 rounded-xl p-4 shadow-2xl">
-                                <p class="text-cyan-400 text-sm font-medium">20+ Years Experience</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="reveal-right w-full lg:w-1/2">
-                        <p class="text-cyan-400 text-sm tracking-[0.2em] uppercase font-medium mb-4">About Us</p>
-                        <h2 class="text-3xl md:text-5xl font-bold text-white mb-6">Built by Industry <span class="gradient-text-gold">Disruptors</span></h2>
-                        <p class="text-gray-400 text-lg leading-relaxed mb-6">Self Exec is led by East Allen: automation architect, creative technologist, and CTO of L7S HERO.</p>
-                        <p class="text-gray-400 text-lg leading-relaxed mb-8">We fuse discipline, creativity, and automation to build legacy systems and permanent industry impact.</p>
-                        <a href="#contact" class="btn-cyber inline-block px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-semibold rounded-full">Work With Us</a>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- FAQ Section -->
-        <section class="py-24 bg-[#0A0A0A] relative overflow-hidden">
-            <div class="max-w-3xl mx-auto px-6 relative z-10">
-                <div class="text-center mb-16">
-                    <p class="reveal text-purple-400 text-sm tracking-[0.2em] uppercase font-medium mb-4">FAQ</p>
-                    <h2 class="reveal text-3xl md:text-5xl font-bold text-white mb-6">Common Questions</h2>
-                </div>
-                
-                <div class="space-y-4">
-                    <div class="reveal faq-item rounded-xl border border-[#2A2A2A] overflow-hidden bg-[#1A1A1A]">
-                        <button class="faq-toggle w-full flex justify-between items-center p-6 text-left hover:bg-[#1F1F1F] transition-colors">
-                            <span class="text-white font-medium pr-4">What is the minimum engagement for Self Exec?</span>
-                            <svg class="faq-icon w-5 h-5 text-cyan-400 flex-shrink-0 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div class="faq-content">
-                            <p class="p-6 pt-0 text-gray-400 leading-relaxed">$2,222.22 minimum. All projects require a 50% deposit, clear scope, and high-value potential. No payment plans.</p>
-                        </div>
-                    </div>
-
-                    <div class="reveal faq-item rounded-xl border border-[#2A2A2A] overflow-hidden bg-[#1A1A1A]">
-                        <button class="faq-toggle w-full flex justify-between items-center p-6 text-left hover:bg-[#1F1F1F] transition-colors">
-                            <span class="text-white font-medium pr-4">How fast can you launch a new site?</span>
-                            <svg class="faq-icon w-5 h-5 text-cyan-400 flex-shrink-0 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div class="faq-content">
-                            <p class="p-6 pt-0 text-gray-400 leading-relaxed">Single-page sites deploy in under 7 hours after deposit. Full automation stacks typically take 2 to 4 weeks.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Contact Section -->
-        <section id="contact" class="py-24 bg-[#111111] relative">
-            <div class="max-w-6xl mx-auto px-6 relative z-10">
-                <div class="text-center mb-16">
-                    <h2 class="reveal text-3xl md:text-5xl font-bold text-white mb-6">Start Your Project</h2>
-                    <p class="reveal text-gray-400 text-lg max-w-2xl mx-auto">Ready to automate and scale? All engagements require a 50% deposit.</p>
-                </div>
-                
-                <div class="flex flex-col lg:flex-row gap-12">
-                    <div class="reveal-left w-full lg:w-1/3 space-y-6">
-                        <div class="p-6 rounded-xl bg-[#1A1A1A] border border-[#2A2A2A]">
-                            <p class="text-gray-500 text-sm">Email</p>
-                            <a href="mailto:admin@xlrdtech.com" class="text-white hover:text-cyan-400 transition-colors">admin@xlrdtech.com</a>
-                        </div>
-                        <div class="p-6 rounded-xl bg-[#1A1A1A] border border-[#2A2A2A]">
-                            <p class="text-gray-500 text-sm">Phone</p>
-                            <span class="text-white">+1 (770) 771-1610</span>
-                        </div>
-                    </div>
-                    
-                    <div class="reveal-right w-full lg:w-2/3">
-                        <form id="contact-form" class="p-8 rounded-2xl bg-[#1A1A1A] border border-[#2A2A2A] space-y-6">
-                            <div class="grid md:grid-cols-2 gap-6">
-                                <input type="text" placeholder="Your Name" required class="w-full px-5 py-4 rounded-xl bg-[#111111] border border-[#2A2A2A] text-white focus:border-cyan-500 focus:outline-none">
-                                <input type="email" placeholder="Your Email" required class="w-full px-5 py-4 rounded-xl bg-[#111111] border border-[#2A2A2A] text-white focus:border-cyan-500 focus:outline-none">
-                            </div>
-                            <textarea placeholder="Tell us about your project..." rows="5" required class="w-full px-5 py-4 rounded-xl bg-[#111111] border border-[#2A2A2A] text-white focus:border-cyan-500 focus:outline-none"></textarea>
-                            <button type="submit" class="btn-cyber w-full px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-semibold rounded-xl">Send Message</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+            <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+            <div id="empty" class="hidden text-center py-20 text-zinc-500"><p class="text-lg">No projects match that search.</p></div>
         </section>
     </main>
 
-    <footer class="bg-[#0A0A0A] border-t border-[#2A2A2A] py-12">
-        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
-            <div class="flex flex-col items-center md:items-start gap-4">
-                <div class="flex items-center gap-3">
-                    <img src="https://us.chat-img.sintra.ai/807c1317-1ece-4cd6-b4d7-bbc4fd5ac33e/aa5d5029-9e84-4c92-bdd2-77c22dd10e2d/Photoroom_20251229_203459.PNG" alt="Self Exec" class="h-8 w-8 object-contain">
-                    <span class="text-white font-bold text-lg">SELF<span class="gradient-text">EXEC</span></span>
-                </div>
-                <p class="text-gray-500 text-xs">© 2026 Self Exec. All rights reserved.</p>
+    <footer class="border-t border-white/5 py-10 px-6 relative">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
+            <div class="flex items-center gap-2.5">
+                <span class="w-2 h-2 rounded-full bg-brand-gold"></span>
+                <span>© 2026 East Allen / hitthe.link. All rights reserved.</span>
             </div>
-            
-            <div class="flex items-center gap-8">
-                <a href="#services" class="text-gray-400 hover:text-cyan-400 transition-colors text-sm">Services</a>
-                <a href="#about" class="text-gray-400 hover:text-cyan-400 transition-colors text-sm">About</a>
-                <a href="#contact" class="text-gray-400 hover:text-cyan-400 transition-colors text-sm">Contact</a>
+            <div class="flex items-center gap-6">
+                <a href="/execpage/" class="hover:text-brand-gold transition-colors">ExecPage</a>
+                <a href="/xlrd-org/" class="hover:text-brand-gold transition-colors">xlrd.org</a>
+                <a href="/l7shero/" class="hover:text-brand-gold transition-colors">L7S Hero</a>
             </div>
         </div>
     </footer>
 
     <script>
-        // Header Scroll Effect
-        window.addEventListener('scroll', () => {
-            const header = document.getElementById('main-header');
-            if (window.scrollY > 50) {
-                header.classList.add('nav-glass');
-                header.classList.remove('bg-transparent');
-            } else {
-                header.classList.remove('nav-glass');
-                header.classList.add('bg-transparent');
-            }
+    const PROJECTS = [
+        { slug: '12step', title: 'C.A.R.E. Sales Assessment', desc: '12-Step call form for sales discovery and qualification.', cat: 'SEL' },
+        { slug: '222church', title: '222 Church', desc: 'A presence-based worship center rooted in Acts 2:42 and 2 Timothy 2:2.', cat: 'Faith' },
+        { slug: '26thTemple', title: '26th Temple', desc: 'Non-profit compliance & education.', cat: 'Faith' },
+        { slug: '8922', title: 'Numerology Dynamics', desc: 'The 9-22-8 paradigm explored.', cat: 'Experiments' },
+        { slug: 'abos', title: 'Automated Business Operation System', desc: 'Freedom calculator for the automated operator.', cat: 'SEL' },
+        { slug: 'agnostic', title: 'Agnostic', desc: 'Unbranded utility surface.', cat: 'Sites' },
+        { slug: 'allendale', title: 'Allendale Equine Services', desc: 'Premium horse boarding, riding lessons, and equine experiences in Palmetto, GA.', cat: 'Sites' },
+        { slug: 'autophone', title: 'AutoPhone', desc: 'Making your business phone work for you.', cat: 'SEL' },
+        { slug: 'barnlights', title: 'Barn Lights Payment Dashboard', desc: 'Payment dashboard for Barn Lights.', cat: 'Sites' },
+        { slug: 'buzycred', title: 'BuzyCred', desc: 'Build business credit & get financing.', cat: 'Sites' },
+        { slug: 'check-hero', title: 'L7CheckMark: HERO', desc: 'L7S checkmark verification surface.', cat: 'L7S' },
+        { slug: 'codepens', title: 'CodePens', desc: 'Sandbox of UI experiments and component sketches.', cat: 'Experiments' },
+        { slug: 'container', title: 'Container Hub v5.4', desc: 'Direct dial build — telephony container.', cat: 'SEL' },
+        { slug: 'costs', title: 'Cost Breakdown Dashboard', desc: 'Visualize project and operational cost structure.', cat: 'Tools' },
+        { slug: 'custom-er', title: 'Custom ER', desc: 'Emergency software response.', cat: 'SEL' },
+        { slug: 'dcl-demo', title: 'Terance × Designer Collab', desc: 'Designer collaboration demo.', cat: 'Experiments' },
+        { slug: 'dirtyhawks', title: 'Dirty Hawks Shooting Club', desc: 'The shooting department site.', cat: 'Sites' },
+        { slug: 'east-allen-growth-interface', title: "East Allen's Growth Interface", desc: 'Personal growth & operations dashboard.', cat: 'SEL' },
+        { slug: 'execpage', title: 'ExecPage', desc: 'Executive web presence in 7 days. $333 total. Book a $33 consultation.', cat: 'SEL' },
+        { slug: 'flcheats', title: 'FL Studio Ultimate Cheatsheet', desc: 'A power-user reference for FL Studio.', cat: 'Tools' },
+        { slug: 'ggv', title: 'Google Grok Voice UI', desc: 'Inline voice UI experiment.', cat: 'Experiments' },
+        { slug: 'god-sop-dashboard', title: 'G.O.D. SOP Dashboard', desc: 'Generate / Operate / Distribute SOP control plane.', cat: 'SOP' },
+        { slug: 'godsop', title: 'GodSOP', desc: 'G.O.D. SOP Dashboard, alt entry.', cat: 'SOP' },
+        { slug: 'gov', title: 'GGV', desc: 'Voice UI variant.', cat: 'Experiments' },
+        { slug: 'growth', title: "East Allen's Growth Interface", desc: 'Growth interface — alt route.', cat: 'SEL' },
+        { slug: 'l7s', title: 'L7S', desc: 'L7S brand hub.', cat: 'L7S' },
+        { slug: 'l7shero', title: 'L7S Hero', desc: 'Strategic business consulting, education, and matchmaking for entrepreneurs.', cat: 'L7S' },
+        { slug: 'nblmaudit', title: 'Notebook Archivist', desc: 'NotebookLM audit & archive surface.', cat: 'Tools' },
+        { slug: 'online-viewer-net', title: 'Online Viewer Net', desc: 'Multi-source online viewer.', cat: 'Tools' },
+        { slug: 'pbld', title: 'PBLD', desc: 'PBLD project surface.', cat: 'Experiments' },
+        { slug: 'pin-feed', title: 'Pinterest Feed', desc: 'Infinite topic swipe — Pinterest-style discovery.', cat: 'Experiments' },
+        { slug: 'psnl', title: 'PSNL', desc: 'Personal microsite.', cat: 'Sites' },
+        { slug: 'rays-home', title: "Ray's House of Fun", desc: 'Coding, gaming, languages, and curiosities. Curated learning trails by Ray de la Paz.', cat: 'Ray' },
+        { slug: 'sao', title: 'Semi-Auto Ops Command Deck V8.3', desc: 'Operations command surface.', cat: 'SEL' },
+        { slug: 'sao2', title: 'Semi-Auto Ops Command Deck', desc: 'Operations command surface, v2.', cat: 'SEL' },
+        { slug: 'selfexec', title: 'Self Exec', desc: 'Automation consulting & ROI systems.', cat: 'SEL' },
+        { slug: 'signing', title: 'Digital Forms Portal', desc: 'Signing & forms surface.', cat: 'Tools' },
+        { slug: 'slid', title: 'Video Gallery', desc: 'Slid video gallery.', cat: 'Tools' },
+        { slug: 'suno', title: 'Suno', desc: 'Suno-related surface.', cat: 'Experiments' },
+        { slug: 'template-io-mission-control', title: 'Template.io Mission Control', desc: 'Template.io control plane.', cat: 'Tools' },
+        { slug: 'uwi', title: 'Omni-Stack Command Center', desc: 'Unified command center across the stack.', cat: 'SEL' },
+        { slug: 'vectorgen', title: 'Pro Client-Side SVG Converter', desc: 'In-browser raster-to-SVG conversion.', cat: 'Tools' },
+        { slug: 'VVS', title: 'Variation Vault', desc: 'East Allen Studios — variation library.', cat: 'Experiments' },
+        { slug: 'wes', title: 'Wesley Allen Job Tracker', desc: 'Job search tracking dashboard.', cat: 'Tools' },
+        { slug: 'wip', title: 'Selfown OS — Alpha', desc: 'Work-in-progress operating shell.', cat: 'Experiments' },
+        { slug: 'xen', title: 'XEN', desc: "Tag it. It's there.", cat: 'XLRD' },
+        { slug: 'xlrd-org', title: 'xlrd.org', desc: 'Executive Leverage Research Development — open-source automation, AI, and digital systems.', cat: 'XLRD' }
+    ];
+
+    const CATEGORY_ORDER = ['All', 'SEL', 'L7S', 'XLRD', 'Ray', 'SOP', 'Sites', 'Faith', 'Tools', 'Experiments'];
+
+    const grid = document.getElementById('grid');
+    const search = document.getElementById('search');
+    const cats = document.getElementById('categories');
+    const empty = document.getElementById('empty');
+    const count = document.getElementById('result-count');
+
+    let activeCat = 'All';
+    let activeSearch = '';
+
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+
+    CATEGORY_ORDER.forEach(c => {
+        const btn = document.createElement('button');
+        btn.className = 'cat-btn' + (c === 'All' ? ' active' : '');
+        btn.textContent = c;
+        btn.dataset.cat = c;
+        btn.addEventListener('click', () => {
+            activeCat = c;
+            document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === c));
+            render();
         });
+        cats.appendChild(btn);
+    });
 
-        // Mobile Menu Toggle
-        const menuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-        menuBtn.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
+    function buildCard(p) {
+        const a = document.createElement('a');
+        a.href = '/' + p.slug + '/';
+        a.className = 'glass-panel rounded-3xl p-6 flex flex-col gap-4 group';
+
+        const top = document.createElement('div');
+        top.className = 'flex items-start justify-between gap-3';
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.textContent = p.cat;
+        top.appendChild(chip);
+
+        const svg = document.createElementNS(SVG_NS, 'svg');
+        svg.setAttribute('class', 'card-arrow w-5 h-5 flex-shrink-0');
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('stroke', 'currentColor');
+        const path = document.createElementNS(SVG_NS, 'path');
+        path.setAttribute('stroke-linecap', 'round');
+        path.setAttribute('stroke-linejoin', 'round');
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('d', 'M7 17L17 7M17 7H8M17 7V16');
+        svg.appendChild(path);
+        top.appendChild(svg);
+
+        const body = document.createElement('div');
+        const h3 = document.createElement('h3');
+        h3.className = 'text-white text-xl font-bold tracking-tight mb-2 group-hover:text-brand-gold transition-colors';
+        h3.textContent = p.title;
+        const desc = document.createElement('p');
+        desc.className = 'text-zinc-400 text-sm leading-relaxed';
+        desc.textContent = p.desc;
+        body.appendChild(h3);
+        body.appendChild(desc);
+
+        const slug = document.createElement('div');
+        slug.className = 'mt-auto pt-2 text-xs text-zinc-600 font-mono tracking-tight';
+        slug.textContent = '/' + p.slug + '/';
+
+        a.appendChild(top);
+        a.appendChild(body);
+        a.appendChild(slug);
+        return a;
+    }
+
+    function render() {
+        const q = activeSearch.trim().toLowerCase();
+        const filtered = PROJECTS.filter(p => {
+            const catMatch = activeCat === 'All' || p.cat === activeCat;
+            if (!catMatch) return false;
+            if (!q) return true;
+            return p.title.toLowerCase().includes(q)
+                || p.slug.toLowerCase().includes(q)
+                || p.desc.toLowerCase().includes(q)
+                || p.cat.toLowerCase().includes(q);
         });
+        grid.replaceChildren(...filtered.map(buildCard));
+        empty.classList.toggle('hidden', filtered.length > 0);
+        count.textContent = filtered.length + ' of ' + PROJECTS.length + ' projects';
+    }
 
-        // Close mobile menu on link click
-        document.querySelectorAll('.mobile-link').forEach(link => {
-            link.addEventListener('click', () => {
-                mobileMenu.classList.add('hidden');
-            });
-        });
+    search.addEventListener('input', e => { activeSearch = e.target.value; render(); });
+    render();
 
-        // Hero Video Unmute Logic
-        const video = document.getElementById('hero-video');
-        const unmuteBtn = document.getElementById('unmute-btn');
-        const muteIcon = document.getElementById('mute-icon');
-
-        unmuteBtn.addEventListener('click', () => {
-            if (video.muted) {
-                video.muted = false;
-                muteIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>`;
-            } else {
-                video.muted = true;
-                muteIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path>`;
-            }
-        });
-
-        // Reveal Animations on Scroll
-        const observerOptions = {
-            threshold: 0.1
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.reveal, .reveal-left, .reveal-right').forEach(el => observer.observe(el));
-
-        // FAQ Accordion
-        document.querySelectorAll('.faq-toggle').forEach(button => {
-            button.addEventListener('click', () => {
-                const item = button.parentElement;
-                const isActive = item.classList.contains('active');
-                
-                // Close all others
-                document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
-                
-                if (!isActive) {
-                    item.classList.add('active');
-                }
-            });
-        });
-
-        // Form Submission (Mock)
-        document.getElementById('contact-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button');
-            const originalText = btn.innerText;
-            btn.innerText = "Message Sent!";
-            btn.style.opacity = "0.7";
-            e.target.reset();
-            setTimeout(() => {
-                btn.innerText = originalText;
-                btn.style.opacity = "1";
-            }, 3000);
-        });
+    const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('active'); });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
     </script>
 </body>
 </html>
