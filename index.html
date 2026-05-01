@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth antialiased dark">
+<html lang="en" class="scroll-smooth antialiased dark" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -38,6 +38,9 @@
     <style>
         :root {
             --theme-color: #D4AF37;
+            --glass-blur: 30px;
+        }
+        :root[data-theme="dark"] {
             --color-bg: #000000;
             --text-header: #FFFFFF;
             --text-body: #A1A1AA;
@@ -45,7 +48,33 @@
             --glass-border: rgba(255, 255, 255, 0.15);
             --glass-highlight: rgba(255, 255, 255, 0.2);
             --glass-shadow: rgba(0, 0, 0, 1);
-            --glass-blur: 30px;
+            --filter-bg: rgba(255, 255, 255, 0.03);
+            --filter-bg-focus: rgba(255, 255, 255, 0.06);
+            --filter-border: rgba(255, 255, 255, 0.1);
+            --placeholder: rgba(255,255,255,0.35);
+            --catbtn-bg: rgba(255,255,255,0.02);
+            --catbtn-border: rgba(255,255,255,0.1);
+            --catbtn-hover-border: rgba(255,255,255,0.25);
+            --orb-opacity: 0.2;
+            --orb2-bg: #1E293B;
+        }
+        :root[data-theme="light"] {
+            --color-bg: #F5F5F4;
+            --text-header: #0A0A0A;
+            --text-body: #3F3F46;
+            --glass-bg: rgba(255, 255, 255, 0.65);
+            --glass-border: rgba(0, 0, 0, 0.12);
+            --glass-highlight: rgba(255, 255, 255, 0.6);
+            --glass-shadow: rgba(0, 0, 0, 0.12);
+            --filter-bg: rgba(0, 0, 0, 0.03);
+            --filter-bg-focus: rgba(0, 0, 0, 0.05);
+            --filter-border: rgba(0, 0, 0, 0.12);
+            --placeholder: rgba(0,0,0,0.4);
+            --catbtn-bg: rgba(0,0,0,0.02);
+            --catbtn-border: rgba(0,0,0,0.1);
+            --catbtn-hover-border: rgba(0,0,0,0.25);
+            --orb-opacity: 0.35;
+            --orb2-bg: #CBD5E1;
         }
 
         body {
@@ -60,7 +89,7 @@
             position: fixed;
             border-radius: 50%;
             filter: blur(150px);
-            opacity: 0.2;
+            opacity: var(--orb-opacity);
             z-index: -1;
             pointer-events: none;
             background: var(--theme-color);
@@ -69,8 +98,8 @@
             will-change: transform;
         }
         .orb-1 { width: 70vw; height: 70vw; top: -25%; left: -20%; }
-        .orb-2 { width: 60vw; height: 60vw; bottom: -15%; right: -15%; animation-delay: -7s; background: #1E293B; }
-        .orb-3 { width: 40vw; height: 40vw; top: 40%; left: 50%; animation-delay: -14s; opacity: 0.12; }
+        .orb-2 { width: 60vw; height: 60vw; bottom: -15%; right: -15%; animation-delay: -7s; background: var(--orb2-bg); }
+        .orb-3 { width: 40vw; height: 40vw; top: 40%; left: 50%; animation-delay: -14s; opacity: calc(var(--orb-opacity) * 0.6); }
 
         @keyframes float {
             0% { transform: translate(0, 0) scale(1) rotate(0deg); }
@@ -157,18 +186,18 @@
         .glass-panel:hover .card-arrow { transform: translate(4px, -4px); }
 
         .filter-input {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
+            background: var(--filter-bg);
+            border: 1px solid var(--filter-border);
+            color: var(--text-header);
             transition: all 0.3s ease;
         }
         .filter-input:focus {
             outline: none;
             border-color: var(--theme-color);
-            background: rgba(255, 255, 255, 0.06);
+            background: var(--filter-bg-focus);
             box-shadow: 0 0 24px color-mix(in srgb, var(--theme-color) 20%, transparent);
         }
-        .filter-input::placeholder { color: rgba(255,255,255,0.35); }
+        .filter-input::placeholder { color: var(--placeholder); }
 
         .cat-btn {
             padding: 0.5rem 1rem;
@@ -177,18 +206,34 @@
             font-weight: 600;
             letter-spacing: 0.02em;
             color: var(--text-body);
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--catbtn-border);
+            background: var(--catbtn-bg);
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             cursor: pointer;
             white-space: nowrap;
         }
-        .cat-btn:hover { color: white; border-color: rgba(255,255,255,0.25); }
+        .cat-btn:hover { color: var(--text-header); border-color: var(--catbtn-hover-border); }
         .cat-btn.active {
             background: var(--theme-color);
             color: #0F172A;
             border-color: var(--theme-color);
             box-shadow: 0 4px 16px color-mix(in srgb, var(--theme-color) 30%, transparent);
+        }
+
+        /* Light-mode overrides for hard-coded Tailwind text classes */
+        :root[data-theme="light"] .text-white,
+        :root[data-theme="light"] h1.text-white,
+        :root[data-theme="light"] h3.text-white { color: var(--text-header) !important; }
+        :root[data-theme="light"] .text-zinc-300,
+        :root[data-theme="light"] .text-zinc-400 { color: var(--text-body) !important; }
+        :root[data-theme="light"] .text-zinc-500,
+        :root[data-theme="light"] .text-zinc-600 { color: #71717A !important; }
+        :root[data-theme="light"] .border-white\/5,
+        :root[data-theme="light"] .border-white\/10 { border-color: var(--glass-border) !important; }
+        :root[data-theme="light"] .bg-white\/5 { background-color: rgba(0,0,0,0.04) !important; }
+        :root[data-theme="light"] .gold-text {
+            background: linear-gradient(135deg, var(--theme-color) 0%, #1f2937 50%, var(--theme-color) 100%);
+            -webkit-background-clip: text; background-clip: text;
         }
 
         ::-webkit-scrollbar { width: 6px; }
@@ -213,9 +258,71 @@
                 <a href="/execpage/" class="text-zinc-300 hover:text-brand-gold transition-colors">ExecPage</a>
                 <a href="/xlrd-org/" class="text-zinc-300 hover:text-brand-gold transition-colors">xlrd.org</a>
             </nav>
-            <a href="#portfolio" class="btn-brand text-xs sm:text-sm rounded-full px-4 py-2">Browse</a>
+            <div class="flex items-center gap-2">
+                <button onclick="toggleMode()" title="Toggle light/dark mode" aria-label="Toggle light/dark mode"
+                    class="p-2 rounded-full border border-white/10 bg-white/5 text-zinc-300 hover:text-brand-gold hover:border-brand-gold transition-colors">
+                    <svg id="mode-icon" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- moon by default; replaced with sun in light mode -->
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                </button>
+                <button onclick="randomizeTheme()" title="Randomize theme color" aria-label="Randomize theme color"
+                    class="p-2 rounded-full border border-white/10 bg-white/5 text-zinc-300 hover:text-brand-gold hover:border-brand-gold transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="3"/>
+                        <circle cx="8.5" cy="8.5" r="1.1" fill="currentColor"/>
+                        <circle cx="15.5" cy="8.5" r="1.1" fill="currentColor"/>
+                        <circle cx="12" cy="12" r="1.1" fill="currentColor"/>
+                        <circle cx="8.5" cy="15.5" r="1.1" fill="currentColor"/>
+                        <circle cx="15.5" cy="15.5" r="1.1" fill="currentColor"/>
+                    </svg>
+                </button>
+                <a href="#portfolio" class="btn-brand text-xs sm:text-sm rounded-full px-4 py-2">Browse</a>
+            </div>
         </div>
     </header>
+
+    <script>
+        function hslToHex(h, s, l) {
+            l /= 100;
+            const a = s * Math.min(l, 1 - l) / 100;
+            const f = n => {
+                const k = (n + h / 30) % 12;
+                const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+                return Math.round(255 * color).toString(16).padStart(2, '0');
+            };
+            return `#${f(0)}${f(8)}${f(4)}`;
+        }
+        window.randomizeTheme = function() {
+            const hue = Math.floor(Math.random() * 360);
+            document.documentElement.style.setProperty('--theme-color', hslToHex(hue, 100, 50));
+        };
+
+        // Light/dark mode (independent of randomizer)
+        (function bootMode(){
+            const saved = (localStorage.getItem('theme') === 'light') ? 'light' : 'dark';
+            document.documentElement.dataset.theme = saved;
+            document.documentElement.classList.toggle('dark', saved === 'dark');
+        })();
+        function setModeIcon(mode){
+            const el = document.getElementById('mode-icon');
+            if (!el) return;
+            if (mode === 'light') {
+                // sun icon
+                el.innerHTML = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>';
+            } else {
+                el.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+            }
+        }
+        window.toggleMode = function(){
+            const next = (document.documentElement.dataset.theme === 'dark') ? 'light' : 'dark';
+            document.documentElement.dataset.theme = next;
+            document.documentElement.classList.toggle('dark', next === 'dark');
+            localStorage.setItem('theme', next);
+            setModeIcon(next);
+        };
+        setModeIcon(document.documentElement.dataset.theme);
+    </script>
 
     <main class="pt-32">
         <section class="relative max-w-5xl mx-auto px-6 pt-12 pb-20 text-center">
@@ -226,10 +333,6 @@
             <h1 class="reveal text-4xl sm:text-6xl md:text-7xl font-black text-white leading-[1.05] tracking-tight mb-6">
                 Every project,<br><span class="gold-text">one pane.</span>
             </h1>
-            <p class="reveal text-zinc-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
-                The full body of work by East Allen — L7S, SEL, XLRD, and the experiments in between.
-                Search, filter, and dive in.
-            </p>
             <div class="reveal flex flex-col sm:flex-row gap-3 justify-center">
                 <a href="#portfolio" class="btn-brand rounded-full px-8 py-4">Browse Projects</a>
                 <a href="/execpage/" class="btn-ghost rounded-full px-8 py-4">See ExecPage</a>
