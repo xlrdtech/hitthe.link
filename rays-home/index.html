@@ -87,13 +87,13 @@
   --path-bg:rgba(255,255,255,.04);
 }
 :root[data-theme="light"]{
-  --color-bg:#F5F5F4;
-  --text-header:#0A0A0A;
-  --text-body:#3F3F46;
-  --glass-bg:rgba(255,255,255,0.7);
-  --glass-border:rgba(0,0,0,0.12);
-  --glass-highlight:rgba(255,255,255,0.7);
-  --glass-shadow:rgba(0,0,0,0.1);
+  --color-bg:#E2E8F0;
+  --text-header:#020617;
+  --text-body:#1F2937;
+  --glass-bg:rgba(255,255,255,0.55);
+  --glass-border:rgba(0,0,0,0.18);
+  --glass-highlight:rgba(255,255,255,0.85);
+  --glass-shadow:rgba(15,23,42,0.18);
   --orb-opacity:0.35;
   --orb2-bg:#CBD5E1;
   --orb2-opacity:0.5;
@@ -217,8 +217,30 @@ body{
   font-weight:800;letter-spacing:-.04em;line-height:.98;
   color:var(--text-header);
   margin:0 0 1.25rem;
+  background:linear-gradient(180deg,var(--text-header) 0%,var(--text-header) 45%,color-mix(in srgb,var(--text-header) 70%,#888) 55%,var(--text-header) 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  text-shadow:0 1px 0 color-mix(in srgb,var(--text-header) 35%,transparent),0 0 30px color-mix(in srgb,var(--theme-color) 25%,transparent);
+  filter:drop-shadow(0 2px 4px color-mix(in srgb,var(--text-header) 25%,transparent));
 }
-.hero h1 .accent{color:var(--theme-color)}
+:root[data-theme="light"] .hero h1{
+  background:linear-gradient(180deg,#020617 0%,#1e293b 45%,#475569 60%,#0f172a 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  text-shadow:0 1px 0 rgba(255,255,255,.55),0 2px 6px rgba(15,23,42,.25);
+}
+.hero h1 .accent{
+  color:var(--theme-color);background:none;-webkit-text-fill-color:var(--theme-color);
+  text-shadow:0 0 24px color-mix(in srgb,var(--theme-color) 50%,transparent),0 1px 2px rgba(0,0,0,.45);
+}
+.section h2{
+  background:linear-gradient(180deg,var(--text-header) 0%,var(--text-header) 50%,color-mix(in srgb,var(--text-header) 60%,#999) 65%,var(--text-header) 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 1px 2px color-mix(in srgb,var(--text-header) 20%,transparent));
+}
+:root[data-theme="light"] .section h2{
+  background:linear-gradient(180deg,#020617 0%,#1e293b 55%,#475569 70%,#0f172a 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  text-shadow:0 1px 0 rgba(255,255,255,.5);
+}
 .hero .tag{
   font-size:clamp(1rem,1.6vw,1.25rem);
   color:var(--text-body);
