@@ -848,10 +848,30 @@ document.querySelectorAll('.card').forEach(c=>{c.style.opacity='0';c.style.trans
   const head=document.getElementById('tutor-head');
   const tog=document.getElementById('tutor-toggle');
   const widget=document.getElementById('tutor');
+  // Render markdown-style links as <a> elements via DOM (no innerHTML, no XSS).
+  function renderInto(node,text){
+    while(node.firstChild)node.removeChild(node.firstChild);
+    const linkRe=/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+    String(text||'').split('\n').forEach((ln,i)=>{
+      if(i>0)node.appendChild(document.createElement('br'));
+      const matches=Array.from(ln.matchAll(linkRe));
+      let cursor=0;
+      matches.forEach(m=>{
+        if(m.index>cursor)node.appendChild(document.createTextNode(ln.slice(cursor,m.index)));
+        const a=document.createElement('a');
+        a.href=m[2];a.target='_blank';a.rel='noopener';
+        a.style.color='var(--theme-color)';a.style.textDecoration='underline';
+        a.textContent=m[1];
+        node.appendChild(a);
+        cursor=m.index+m[0].length;
+      });
+      if(cursor<ln.length)node.appendChild(document.createTextNode(ln.slice(cursor)));
+    });
+  }
   function bubble(who,text){
     const b=document.createElement('div');
     b.style.cssText='padding:.45rem .65rem;border-radius:10px;max-width:90%;'+(who==='you'?'align-self:flex-end;background:color-mix(in srgb,var(--theme-color) 22%,transparent);color:var(--text-header)':'align-self:flex-start;background:rgba(0,0,0,.06);color:var(--text-body)');
-    b.textContent=text;log.appendChild(b);log.scrollTop=log.scrollHeight;return b;
+    renderInto(b,text);log.appendChild(b);log.scrollTop=log.scrollHeight;return b;
   }
   bubble('tutor','Ask me about any course on this page.');
   form.addEventListener('submit',async e=>{
@@ -862,7 +882,7 @@ document.querySelectorAll('.card').forEach(c=>{c.style.opacity='0';c.style.trans
     try{
       const r=await fetch(TUTOR_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q:text})});
       const j=await r.json();
-      pending.textContent=j.answer||j.error||'tutor offline';
+      renderInto(pending,j.answer||j.error||'tutor offline');
     }catch(err){pending.textContent='tutor offline ('+err.message+')'}
   });
   let collapsed=false;
