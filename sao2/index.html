@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SEMI-AUTO OPS // COMMAND DECK</title>
+  <script>
+    (function(){try{if(window.navigator&&window.navigator.mediaDevices){const o=window.navigator.mediaDevices.getUserMedia;if(o){Object.defineProperty(window.navigator.mediaDevices,'getUserMedia',{value:o.bind(window.navigator.mediaDevices),writable:true,configurable:true});}}}catch(e){console.warn("L7S_SHIM_FAILURE",e);}})();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { 'l7x-green': '#00FF41', 'l7x-red': '#FF3131', 'l7x-blue': '#00D1FF', 'l7x-amber': '#FFB000' },
+          fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+          keyframes: {
+            scan: { 'from': { transform: 'translateY(-100%)' }, 'to': { transform: 'translateY(100%)' } },
+            fadeInUp: { '0%': { opacity: '0', transform: 'translateY(2rem)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+            fadeInRight: { '0%': { opacity: '0', transform: 'translateX(-10px)' }, '100%': { opacity: '1', transform: 'translateX(0)' } }
+          },
+          animation: { 'scan': 'scan 8s linear infinite', 'fade-in-up': 'fadeInUp 1s ease-out forwards', 'fade-in-right': 'fadeInRight 0.3s ease-out forwards' }
+        }
+      }
+    }
+  </script>
+  <style>
+    html { scroll-behavior: smooth; overflow-x: hidden; width: 100%; }
+    body { background-color: #050505; color: #d4d4d8; overflow-x: hidden; width: 100%; margin: 0; padding: 0; }
+    ::selection { background-color: #00FF41; color: black; }
+    
+    /* STRICT WORD WRAPPING - NO LETTER SPLITTING */
+    * { 
+      box-sizing: border-box; 
+      word-break: normal !important; 
+      overflow-wrap: break-word !important; 
+      word-wrap: break-word !important;
+      hyphens: none !important;
+    }
+
+    input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; background: #00FF41; cursor: pointer; border-radius: 0; box-shadow: 0 0 10px #00FF41; margin-top: -6px; }
+    input[type=range]::-moz-range-thumb { height: 16px; width: 16px; background: #00FF41; cursor: pointer; border-radius: 0; box-shadow: 0 0 10px #00FF41; border: none; }
+    input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #27272a; cursor: pointer; }
+    input[type=range]::-moz-range-track { width: 100%; height: 4px; background: #27272a; cursor: pointer; }
+    
+    .fluid-h1 { 
+      font-size: clamp(2.5rem, 9.5vw, 15rem); 
+      line-height: 0.85;
+      letter-spacing: -0.04em;
+    }
+    
+    .tactical-modal-blur {
+      backdrop-filter: blur(20px) saturate(180%);
+      background-color: rgba(0, 0, 0, 0.85);
+    }
+  </style>
+  <script type="importmap">{ "imports": { "react": "https://esm.sh/react@18.2.0", "react-dom/client": "https://esm.sh/react-dom@18.2.0/client", "lucide-react": "https://esm.sh/lucide-react@0.330.0" } }</script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-type="module">
+    import React, { useState, useMemo, useEffect, useRef } from 'react';
+    import { createRoot } from 'react-dom/client';
+    import { Crosshair, Brain, Zap, Lock, Timer, TrendingUp, ChevronRight, CheckCircle2, Flame, Eye, Database, Terminal, ArrowDown, Circle, Briefcase, ShieldAlert, X, Volume2 } from 'lucide-react';
+    
+    const LINKS = { 
+      CALENDLY: "https://cal.com/selfexec", 
+      STRIPE_TIER_1: "https://www.paypal.com/donate/?business=4FHD7ZZ8DECCQ&no_recurring=0&currency_code=USD&amount=1111", 
+      STRIPE_TIER_2: "https://www.paypal.com/donate/?business=4FHD7ZZ8DECCQ&no_recurring=0&currency_code=USD&amount=3333", 
+      STRIPE_TIER_3: "https://www.paypal.com/donate/?business=4FHD7ZZ8DECCQ&no_recurring=0&currency_code=USD&amount=7777" 
+    };
+    
+    // --- INTEL ASSETS ---
+    const VIDEO_BRIEFING = "https://s3.eu-central-1.amazonaws.com/up.raindrop.io/raindrop/files/160/096/529/8/users_44f9ff31_c5ac_440b_8c2b_ff37701bc42a_generated_1a56b31c_becb_4285_9ef3_43bffe2b8157_genera.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZWICFKR63FWKB3SN%2F20260213%2Feu-central-1%2Fs3%2Faws4_request&X-Amz-Date=20260213T043722Z&X-Amz-Expires=1800&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEBwaDGV1LWNlbnRyYWwtMSJIMEYCIQDtGe%2B5fiJleH1xLxlF8L0zBzUSrFYT%2BGHFtlH0mkIaswIhAONU%2BP6mh7ftRFmZkvigGF%2BBZ6X%2BHxAje%2Fj3jAjEtky9KoEECOX%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQABoMNjY2MjYxMzQ1NDA1IgyGiUSzyf4mJfuc%2BeYq1QMXfWmS01dr1GN9N0Mvlt0ejnPJUDB64XZW3IOwDQHL8uE4wZcs5bf1rrWkYXNMC6%2F%2FnklOUbvKhcqZdYZZhiCbU18YywIM9WOaxgWRQaHVm9rJwJif0nWqBosj73OlzAuieHNbYYZNeEA59Yf4LrFVw%2Fz2QU3ikWEFzape%2BLjlN7OElOfditNd1g5Zuc%2FPuPzVHKzl6%2BhdqGWRizcB03QrIrgmXiisBsJRvVnWpy%2FzgVWbqC0KGPTrRyTXwERTfWrf18oezmySJ5AaHqBBkAJMSDAOjULlCYwUkutzLRX%2Fza6z354p74YU0AERbqfHhXqGFntTw5lxioaz5nmQ2pbCYbEBW5Fe%2BiDuSVCp68jnKfAsqxjp5hESx%2BLTWnKHumdzX52a2arW96KDlX5MJp2SAULVFESE5eq%2BWHUAJdsLg0jJ%2BrPg8obPAD0emoF3%2BNS%2BHN6E63jxbsXu%2BoTqc3W3FoOOUiRYRVYx2lTbCPMDq16MEAWeG35HZGsbnjcI5TNY4lu6joW69NiosS2TBEXF2F4J2rbXbN8R0TInCo0n2fxSDSTDd5LTAfyRvjF0yeeRigonnK0GCvgclrEFgmossnAuvghzQ71NhwkzEy8EWF3DB%2BufMOvCuswGOqQBJNHEUWaNMjFDqoH%2FuwNOv4GzR24njeZc2vmG6hyJwHHgwKP0rq8o3cT7TAWdpmUrTFKlkwBN1ebfFYlwCicx7HNjoJB14ULak%2Bv0WKMTgBmXGXuplZfNG799qt9K%2Bkxrhy3ce3E3W7mtqttjB0OWja1tS%2BzExLdhHcENynt2uYq7Kj12QIL%2BCgBkSO5UpqRWFVfVyvw7CH9EM676S4Z2Zyblg3U%3D&X-Amz-Signature=38bf460764bf13e083047c27b9f25783b173a015f46dbe7927e6a2dfbf0ddbb3&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject";
+    
+    const VIDEO_SCHEMATIC = "https://s3.eu-central-1.amazonaws.com/up.raindrop.io/raindrop/files/160/096/556/7/users_44f9ff31_c5ac_440b_8c2b_ff37701bc42a_generated_93591810_e49b_4cb4_aa60_fa6ce2ef234f_genera.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZWICFKR6YCS7ZJQN%2F20260213%2Feu-central-1%2Fs3%2Faws4_request&X-Amz-Date=20260213T044032Z&X-Amz-Expires=1800&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEBoaDGV1LWNlbnRyYWwtMSJIMEYCIQCs2Kt7pYAJ6ZOZNuIGCQsEzWmHj8j6YV7k7K3lFX5hHwIhALOqoclq7TvaCDw%2FZXsOiZp2zfKrLLZ9HpSe8P6WgIQXKoEECOP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQABoMNjY2MjYxMzQ1NDA1IgxKGtPlkj5rNTXinwMq1QO%2BGJ2gADjAITaV2CWeKVZiIGs6M5jqHiLr2FSETULPmzWVia%2B%2F6dy%2B7pF2xTrH1hPIaxK5u0LKfNSNIYIOVkXngQIAQ%2FhH43%2BxoovxlbUNLnAwXPgtAVhkun7pjM7UlU3OyqHvRpbLKXlXuP1Vex41FBARKmGDGHuFaojLHAaCq7p5qxbY0r7%2Fg0pN9z4PVDKqzGLpmMIP5I4RFQuWNAvOq2QrdED52DmLf%2BWdfGIrqx8IPdc%2B57w8h6V9L8IJ6TcZ6pklKacFErCir6r9DQm40iEXMqEgVtawqYn8OFNz4CJ1DyyHdwxuhA1PdU%2Ba7%2BFrG6YP4d0nPrGcaVwX0U1J3Xv1AkpSkvh1l%2BjBayXchEjc7nl6eV9ADn28qF4d63Mq6wxDLhmCJnqzG3xqrAzNcbc4fjr31bxaGzXZ3jfAKdNrxCUvn7q63zguY0tbvMgJ2qbzRVzMQh10KLNLO0s0n5KOrEeDixOnJWOeaJZrA3kaVDGbK%2FDHvLVI%2Fg7DMcqjgXe1rSt7judI5deyu%2FoVHueQwso8Xw5GEZAyq%2FAL27asmBalxrMMclRtS6Ne3jRQvxxA6nQUSm2esDZrydgy1OWnSWoA6IwquVDECjrDBkzLi7JwMLuDuswGOqQBoZ0OJmS1Mb0sfnlgtUnTKwfpnhtFk%2BWTJCVFnwuFXwO4xP8RKxn2mj5A4YjclRH9f%2Bbj1hiQh5Atp1%2BPPaPwtUxZd32hQUpVfq9awLl79a%2FwXsPIF520TIj7zN%2FsscK5blI8kZ9nhkHCHhVY05axZEJoawtQYks%2FW2K5a%2BgEsNHJ7Zb2okePQ7C73gB%2FjUGWQc3Afw6XHgx8FtZuoH8bSuvWb60%3D&X-Amz-Signature=88b344f9ab93e87fa206cee9b426c6607b68fe3ef9b0774a47725766d4915e06&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject";
+    
+    const VIDEO_OPTICS = "https://s3.eu-central-1.amazonaws.com/up.raindrop.io/raindrop/files/160/096/572/2/users_44f9ff31_c5ac_440b_8c2b_ff37701bc42a_generated_55c837c8_af53_4830_aeb4_38fecf4b5b66_genera.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZWICFKR6ZZCMSFQM%2F20260213%2Feu-central-1%2Fs3%2Faws4_request&X-Amz-Date=20260213T044031Z&X-Amz-Expires=1800&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEBoaDGV1LWNlbnRyYWwtMSJIMEYCIQDNJ9ZJQNuVc4YNWmpykfLOB%2BIMqt1Cb3GngGNBNTjiDQIhAKc7UMK%2Fo83GbDa%2BKWC6kWvc6CzDhrGqC5EsC%2Fvg%2BucjKoEECOP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQABoMNjY2MjYxMzQ1NDA1Igye0MIlCGTdyAo%2FxSkq1QOkywGRrpaUaAHUYZ65Lmrh2ABaHxC%2BVbqDKROrgg5zWHWyj9NtZgUJanGrPaFOr5YsFDhJn2jxUejN1OYpaFVRtB7HvMeKHOeCem%2FjM3SM%2B3Ki4HE9u5CTTYtpJMgUPlY5esQ00D8XvBIEX4HYgmK9kBq8cEoW0OiH6Y92E6qTX1NCD%2BJOr5LfW0m%2B2vUdTlDnVAOUS%2FkDWx%2Bq2EyUUzH4mjG%2BSqOsbhssB0XoW2iCiGOcl7Gx4KB1gjrKyB9emPDdv4S5vovldZ7zuB696maWfaNeBdYoGQmZSOmq5KHPfqQ%2BYF9hpX1gFy9G8aM3Z7WqjX2CmTvh7jbWyZeRl%2B49WdU0fCMm13Jfw0b6WavBqAN3jNRvHjyzvL3v6ETbxgL5%2FLORq%2BYl8pdldn1oY0yhs0WeKL3so1PnVasoeoBzbW3Sy9as888LVNJS%2FdmAA%2BpSQIEBm1LnjZ74bFqkpvGXNLEfUJGtYOU5WgoNDZPMt2SxWdK6llIJJwh6j7oaQy6OjMr2WV7VsX4q0q%2B1uO0j9Xwd5qa6PBik%2FIE8%2Bg2TqQ3ihEFR2y2Y%2BgjLpWhGdC8zsCVSFlToCUPWup7Ms2%2Fn7sCECy%2F3lTbxnxXHrwlwQXnW2CBOMOuHuswGOqQBZCP9JX%2BwJ9IYR%2F878Z%2Bw0NrKxjxdEN4SCX94pCv%2FvWMy2jHPNtE7p91OvL0BEv5%2FkmgWMv1oG8Z%2F%2B%2BVVlSFKEke06nrlnUC7W3tvSrQ6wqYF1U7nZ%2FqhcMyXY3amhIYR3ekyXP%2BhHtBzaIuUYz%2FeZ3EyDdf8GMmiBGzggXDPBJF1Y%2B7PM7GmT0XUdxznlvkR4lpglP1T1GmCb88rOzETSYTnTKw%3D&X-Amz-Signature=ddc1834a970c5785398bd3b2f2429f097a7a8270630966e467425a9c5fc8dc8e&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject";
+
+    const openLink = (url) => { if (!url || url.includes("YOUR_LINK")) { alert("L7S SYSTEM ALERT: Hardpoint configuration required."); } else { window.open(url, '_blank'); } };
+
+    const AutoplayModal = () => {
+      const [isVisible, setIsVisible] = useState(false);
+      const [isInitialized, setIsInitialized] = useState(false);
+      const videoRef = useRef(null);
+
+      useEffect(() => {
+        const timer = setTimeout(() => setIsVisible(true), 1500);
+        return () => clearTimeout(timer);
+      }, []);
+
+      useEffect(() => {
+        if (isInitialized && videoRef.current) {
+          videoRef.current.play().catch(e => console.log("Autoplay blocked:", e));
+        }
+      }, [isInitialized]);
+
+      if (!isVisible) return null;
+
+      return (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 md:p-10 tactical-modal-blur animate-in fade-in duration-500">
+          <div className="relative w-full max-w-5xl bg-black border-2 border-l7x-green shadow-[0_0_100px_rgba(0,255,65,0.4)] overflow-hidden">
+            <div className="bg-zinc-900 px-6 py-3 flex justify-between items-center border-b border-zinc-800">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-l7x-green animate-pulse" />
+                <span className="text-[10px] font-mono font-black text-l7x-green uppercase tracking-[0.4em]">Intelligence_Override_Protocol</span>
+              </div>
+              <button onClick={() => setIsVisible(false)} className="text-zinc-500 hover:text-l7x-red transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="relative aspect-video bg-zinc-950">
+              {!isInitialized ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center space-y-8 p-10 text-center">
+                  <Lock size={64} className="text-l7x-green opacity-20" />
+                  <div className="space-y-4">
+                    <h3 className="text-3xl font-black text-white uppercase italic italic tracking-tighter">Encrypted Link Found</h3>
+                    <p className="text-zinc-500 font-mono text-xs uppercase tracking-widest">Manual Authorization Required to Satisfy Browser Security Protocols</p>
+                  </div>
+                  <button 
+                    onClick={() => setIsInitialized(true)} 
+                    className="group bg-l7x-green text-black px-12 py-5 font-black uppercase text-sm tracking-[0.5em] hover:bg-white transition-all flex items-center gap-4"
+                  >
+                    <Volume2 size={20} className="animate-pulse" /> Initialize Comms
+                  </button>
+                </div>
+              ) : (
+                <video 
+                  ref={videoRef}
+                  className="w-full h-full object-cover" 
+                  controls 
+                  src={VIDEO_BRIEFING}
+                  autoPlay
+                  playsInline
+                >
+                  Your system does not support tactical video playback.
+                </video>
+              )}
+            </div>
+            
+            <div className="bg-zinc-900 p-4 border-t border-zinc-800 flex justify-between items-center">
+              <div className="text-[8px] font-mono text-zinc-600 uppercase tracking-widest italic">Signal Integrity: Validated</div>
+              <button onClick={() => setIsVisible(false)} className="text-[10px] font-mono text-zinc-400 hover:text-white uppercase font-black underline decoration-l7x-green">Skip Uplink</button>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const CornerBrackets = ({ color = '#00FF41', size = 'w-12 h-12' }) => (
+      <>
+        <div className={`absolute top-0 left-0 ${size} border-t-4 border-l-4 opacity-40`} style={{ borderColor: color }} /><div className={`absolute top-0 right-0 ${size} border-t-4 border-r-4 opacity-40`} style={{ borderColor: color }} /><div className={`absolute bottom-0 left-0 ${size} border-b-4 border-l-4 opacity-40`} style={{ borderColor: color }} /><div className={`absolute bottom-0 right-0 ${size} border-b-4 border-r-4 opacity-40`} style={{ borderColor: color }} />
+      </>
+    );
+    const SegmentedBar = ({ progress, color = '#00FF41' }) => (
+      <div className="flex gap-[3px] h-3 w-full mt-4 bg-black/50 p-[2px] border border-zinc-800">
+        {[...Array(20)].map((_, i) => <div key={i} className="h-full flex-1 transition-all duration-700" style={{ backgroundColor: (i / 20) * 100 < progress ? color : '#111', boxShadow: (i / 20) * 100 < progress ? `0 0 15px ${color}` : 'none', opacity: (i / 20) * 100 < progress ? 1 : 0.05 }} />)}
+      </div>
+    );
+    const DataLine = ({ label, value, color = '#00FF41' }) => (
+      <div className="flex justify-between items-center py-4 border-b border-zinc-800/50 group px-2 text-center">
+        <span className="text-xs font-mono text-zinc-500 uppercase tracking-widest group-hover:text-zinc-300 transition-colors">{label}</span><span className="text-sm font-bold font-mono" style={{ color }}>{value}</span>
+      </div>
+    );
+    const SectionHeading = ({ number, title, subtitle, color = "#00FF41" }) => (
+      <div className="mb-16 px-4 w-full max-w-6xl mx-auto flex flex-col items-center">
+        <div className="flex items-center gap-6 mb-8 w-full"><div className="h-px flex-1 bg-zinc-800" /><div className="font-mono text-sm font-black px-6 py-2 border border-zinc-800 text-center" style={{ color }}>MODULE_{number}</div><div className="h-px flex-1 bg-zinc-800" /></div>
+        <h2 className="text-[clamp(2.5rem,9.5vw,15rem)] font-black text-white uppercase italic tracking-tighter text-center leading-[0.85] mb-6">{title}</h2>
+        <p className="text-center text-zinc-500 font-mono text-xs uppercase tracking-[0.4em]">{subtitle}</p>
+      </div>
+    );
+
+    function App() {
+      const [requests, setRequests] = useState(10);
+      const [rate, setRate] = useState(200);
+      const [scrollProgress, setScrollProgress] = useState(0);
+      useEffect(() => {
+        const handleScroll = () => { const t = document.documentElement.scrollHeight - window.innerHeight; setScrollProgress((window.scrollY / t) * 100); };
+        window.addEventListener('scroll', handleScroll); return () => window.removeEventListener('scroll', handleScroll);
+      }, []);
+      const stats = useMemo(() => {
+        const d = (requests * 17) / 60; const w = d * 5 * rate;
+        return { daily: d.toFixed(1), weekly: Math.round(w).toLocaleString(), yearly: Math.round(w * 50).toLocaleString() };
+      }, [requests, rate]);
+      const scrollTo = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+
+      return (
+        <div className="bg-[#050505] text-zinc-300 font-sans min-h-screen relative overflow-x-hidden flex flex-col items-center w-full">
+          <AutoplayModal />
+          
+          <div className="fixed top-0 left-0 right-0 z-[500] bg-black/95 backdrop-blur-2xl border-b border-[#222]">
+            <div className="h-1 bg-zinc-900 w-full overflow-hidden"><div className="h-full bg-[#00FF41] transition-all duration-300 shadow-[0_0_20px_#00FF41]" style={{ width: `${scrollProgress}%` }} /></div>
+            <div className="px-6 py-5 flex items-center justify-between">
+              <div className="flex items-center gap-4"><div className="w-12 h-12 border-2 border-[#00FF41] flex items-center justify-center font-black text-[#00FF41] text-xl">SA</div><div className="hidden sm:block"><div className="text-xs font-mono text-[#00FF41] font-black uppercase">Semi-Auto Ops</div></div></div>
+              <div className="flex items-center gap-8"><div className="hidden lg:flex items-center gap-6 text-[10px] font-mono font-bold text-zinc-500"><span className="flex items-center gap-2"><Circle size={8} fill="#00FF41" className="animate-pulse" /> GRID_ACTIVE</span></div><button onClick={() => scrollTo('armory')} className="bg-[#00FF41] text-black px-8 py-3 text-xs font-black uppercase tracking-[0.2em] hover:bg-white transition-all shadow-[0_0_25px_rgba(0,255,65,0.4)] rounded-sm">Start Build</button></div>
+            </div>
+          </div>
+
+          <section className="relative pt-80 pb-48 px-6 min-h-screen w-full flex flex-col items-center text-center overflow-hidden">
+            <div className="absolute inset-0 z-0"><img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/edeec545-6af0-4ef2-be03-2e4572011b28.jpeg" className="w-full h-full object-cover opacity-20 filter grayscale scale-110" alt="BG"/><div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black" /></div>
+            <div className="relative z-10 w-full max-w-full space-y-16 animate-fade-in-up px-4 flex flex-col items-center">
+              <div className="inline-flex items-center gap-4 bg-[#FF3131]/15 border border-[#FF3131]/40 px-8 py-3 text-[#FF3131] text-xs font-mono font-black uppercase tracking-[0.5em] rounded-sm"><ShieldAlert size={20} /> Profit Leakage Protocol</div>
+              <h1 className="fluid-h1 font-black text-white uppercase italic drop-shadow-[0_10px_40px_rgba(0,0,0,0.8)] max-w-full mx-auto text-center">
+                Weaponize Your<br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-b from-[#00FF41] to-[#008F24]">Workflow!</span>
+              </h1>
+              <p className="text-2xl md:text-4xl text-zinc-400 max-w-4xl mx-auto leading-relaxed font-medium italic">You are losing <span className="text-white font-black underline decoration-l7x-green">14 hours a week</span> switching apps. System recovery required.</p>
+              <div className="pt-20"><button onClick={() => scrollTo('briefing')} className="group flex flex-col items-center gap-6 text-[#00FF41] font-mono text-sm font-black uppercase tracking-[0.4em] hover:text-white transition-all"><span>Execute Briefing</span><ArrowDown size={32} className="animate-bounce" /></button></div>
+            </div>
+          </section>
+
+          <section id="briefing" className="relative z-10 py-64 px-0 bg-zinc-950 w-full flex flex-col items-center border-y border-zinc-800">
+            <SectionHeading number="00" title="Strategic Intel" subtitle="Intelligence Briefing // V2.0" />
+            <div className="w-full relative group max-w-7xl px-4 aspect-video">
+              <CornerBrackets color="#00FF41" />
+              <video 
+                className="w-full h-full object-cover grayscale-[0.2] hover:grayscale-0 transition-all duration-700 shadow-2xl rounded-sm" 
+                controls 
+                src={VIDEO_BRIEFING}
+                poster="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/83e450a6-c1e7-4318-a4e7-c1d4b84d0fdf.jpeg"
+              >
+                Your system does not support video playback.
+              </video>
+            </div>
+          </section>
+
+          <section id="autopsy" className="relative z-10 py-64 px-0 bg-black w-full flex flex-col items-center">
+            <SectionHeading number="01" title="The Wasted Cycle" subtitle="Loss Diagnostic // V.ALPHA" />
+            <div className="w-full px-6 max-w-4xl space-y-16 text-center flex flex-col items-center">
+              <h3 className="text-5xl font-black text-white uppercase italic">The Hidden Tax</h3>
+              <p className="text-2xl text-zinc-400 leading-relaxed italic max-w-3xl">Context switching is the silent engine of failure. We call this <span className="text-[#FF3131] font-bold underline">The App-Switching Trap</span>.</p>
+              <div className="flex flex-col gap-10 w-full">
+                <div className="bg-zinc-950 border border-zinc-800 p-16 relative flex flex-col items-center text-center"><Flame className="text-[#FF3131] mb-6" size={64} /><div className="text-8xl font-black text-white mb-4 tracking-tighter">40%</div><div className="text-xs font-mono text-zinc-500 uppercase font-black tracking-widest text-center">Daily Bandwidth Loss</div></div>
+                <div className="bg-zinc-950 border border-zinc-800 p-16 relative flex flex-col items-center text-center"><TrendingUp className="text-[#FF3131] mb-6" size={64} /><div className="text-8xl font-black text-white mb-4 tracking-tighter">18+</div><div className="text-xs font-mono text-zinc-500 uppercase font-black tracking-widest text-center">Switches Per Session</div></div>
+              </div>
+              <div className="w-full bg-zinc-900/50 border border-zinc-800 p-12 md:p-24 relative rounded-xl text-left shadow-3xl">
+                <CornerBrackets color="#FF3131" /><div className="mb-20 text-center"><h4 className="text-4xl md:text-6xl font-black text-white uppercase italic tracking-tighter">Loss Terminal</h4></div>
+                <div className="space-y-24 mb-24 max-w-3xl mx-auto">
+                  <div className="space-y-8"><div className="flex justify-between items-end text-white font-mono font-black text-4xl"><span>Inquiries</span><span>{requests}</span></div><input type="range" min="1" max="100" value={requests} onChange={(e)=>setRequests(parseInt(e.target.value))} /><SegmentedBar progress={(requests/100)*100} color="#FF3131" /></div>
+                  <div className="space-y-8"><div className="flex justify-between items-end text-white font-mono font-black text-4xl"><span>Rate ($)</span><span>${rate}</span></div><input type="range" min="50" max="2000" step="50" value={rate} onChange={(e)=>setRate(parseInt(e.target.value))} /><SegmentedBar progress={(rate/2000)*100} color="#FF3131" /></div>
+                </div>
+                <div className="pt-20 border-t border-zinc-800 text-center"><div className="text-xs font-mono text-[#FF3131] uppercase font-black mb-4">Monthly Capital Leakage</div><div className="text-[clamp(4rem,15vw,10rem)] font-black text-[#FF3131] tracking-tighter">${stats.weekly}</div></div>
+              </div>
+            </div>
+          </section>
+
+          <section id="schematic" className="relative z-10 py-64 px-0 bg-zinc-950 w-full flex flex-col items-center">
+            <SectionHeading number="02" title="The Architecture" subtitle="System Schematic // V4.2 Locked" />
+            <div className="relative w-full">
+              <video className="w-full h-auto object-cover opacity-50 border-y border-zinc-800" autoPlay loop muted playsInline><source src={VIDEO_SCHEMATIC} type="video/mp4" /></video>
+              <div className="absolute inset-0 flex items-center justify-center p-6"><div className="bg-black/80 backdrop-blur-3xl border-2 border-[#00FF41]/60 p-12 text-center max-w-2xl shadow-3xl"><div className="text-4xl md:text-6xl font-black text-white uppercase italic leading-[0.9] mb-8">Autonomous Infrastructure</div><p className="text-sm text-zinc-500 font-mono uppercase tracking-widest italic">The system captures, orients, and executes. You only provide the 'CHECK' command.</p></div></div>
+            </div>
+            <div className="flex flex-col gap-10 w-full px-6 max-w-5xl mx-auto mt-24">
+              {[ { i: Eye, n: "OMNI-OBSERVE", d: "Local searchable ledger of UI actions and transcripts." }, { i: Crosshair, n: "UNIFIED FEED", d: "High-intensity signals aggregated in one view." }, { i: Brain, n: "NEURAL LOGIC", d: "AI background prep for all communications." }, { i: Zap, n: "SEMI-AUTO TRIGGER", d: "One-click deployment chain." } ].map((m, i) => (
+                <div key={i} className="bg-zinc-900 border border-zinc-800 p-16 flex flex-col items-center text-center hover:border-l7x-green/30 transition-all"><m.i className="text-[#00FF41] mb-8" size={56} /><h4 className="text-white font-black uppercase text-4xl mb-4 italic tracking-tighter">{m.n}</h4><p className="text-zinc-500 text-lg leading-relaxed font-mono italic">{m.d}</p></div>
+              ))}
+            </div>
+          </section>
+
+          <section className="relative z-10 py-48 px-0 bg-black w-full flex flex-col items-center">
+            <div className="relative w-full mb-32"><img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b07e2892-22cd-4323-acad-0e7a5058cea6.jpeg" className="w-full h-auto object-cover border-y border-zinc-800" alt="MAG"/><div className="absolute bottom-10 right-10 bg-black/90 border-2 border-l7x-green p-12 shadow-3xl backdrop-blur-xl"><div className="text-white font-black text-3xl uppercase italic tracking-tighter">11 Native Integrations</div></div></div>
+            <div className="relative w-full mb-32">
+              <video className="w-full h-auto object-cover border-y border-zinc-800" autoPlay loop muted playsInline><source src={VIDEO_OPTICS} type="video/mp4" /></video>
+              <CornerBrackets color="#00D1FF" />
+            </div>
+            <div className="relative w-full"><img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/8bf30c8e-1471-4605-bffd-10e849346430.jpeg" className="w-full h-auto object-cover border-y border-zinc-800" alt="TRIG"/><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/80 border-2 border-l7x-red p-12 backdrop-blur-xl shadow-2xl"><div className="text-l7x-green text-4xl font-black font-mono animate-pulse">_ TYPE 'CHECK'</div></div></div>
+          </section>
+
+          <section id="armory" className="relative z-10 py-72 px-6 bg-zinc-950 w-full flex flex-col items-center overflow-hidden">
+            <SectionHeading number="06" title="Loadout Selector" subtitle="Initialize Deployment Package" />
+            <div className="flex flex-col gap-24 w-full max-w-4xl">
+              <div className="bg-black/90 border-2 border-zinc-800 p-16 relative flex flex-col items-center text-center rounded-xl hover:border-l7x-green/20 transition-all"><CornerBrackets color="#444" /><h3 className="text-5xl font-black text-white uppercase italic mb-6 tracking-tighter">Speedrun</h3><div className="text-8xl font-black text-white mb-10 tracking-tighter">$1,111</div><button onClick={() => openLink(LINKS.STRIPE_TIER_1)} className="w-full py-8 border-2 border-zinc-800 text-white font-black uppercase hover:bg-white hover:text-black transition-all italic tracking-[0.2em]">Initiate Deployment</button></div>
+              <div className="bg-zinc-900 border-4 border-[#00FF41] p-20 relative flex flex-col items-center text-center shadow-[0_0_120px_rgba(0,255,65,0.2)] rounded-2xl group transform scale-105 z-20"><div className="absolute top-0 left-0 w-full h-2 bg-l7x-green shadow-[0_0_30px_#00FF41]" /><h3 className="text-6xl font-black text-white uppercase italic mb-6 tracking-tighter">Workflow Fix</h3><div className="text-9xl font-black text-[#00FF41] mb-12 tracking-tighter drop-shadow-[0_0_10px_rgba(0,255,65,0.3)]">$3,333</div><button onClick={() => openLink(LINKS.STRIPE_TIER_2)} className="w-full py-10 bg-[#00FF41] text-black font-black uppercase hover:bg-white transition-all italic tracking-[0.2em] shadow-xl">Lock In Protocol</button></div>
+              <div className="bg-black/90 border-2 border-zinc-800 p-16 relative flex flex-col items-center text-center rounded-xl hover:border-l7x-amber/20 transition-all"><CornerBrackets color="#FFB000" /><h3 className="text-5xl font-black text-white uppercase italic mb-6 text-[#FFB000] tracking-tighter">Ops Tailor</h3><div className="text-8xl font-black text-[#FFB000] mb-10 tracking-tighter">$7,777</div><button onClick={() => openLink(LINKS.STRIPE_TIER_3)} className="w-full py-8 border-2 border-zinc-800 text-[#FFB000] font-black uppercase hover:bg-[#FFB000] hover:text-black transition-all italic tracking-[0.2em]">Custom Build Request</button></div>
+            </div>
+            <div className="w-full bg-black border border-zinc-800 p-24 mt-48 text-center flex flex-col items-center max-w-6xl rounded-2xl shadow-3xl"><Database size={80} className="text-[#00FF41] mb-10 opacity-30 animate-pulse" /><h4 className="text-4xl md:text-6xl font-black text-white uppercase italic mb-8 tracking-tighter">Architecture Audit</h4><div className="text-7xl font-black text-white mb-12 tracking-tighter">$333</div><button onClick={() => openLink(LINKS.CALENDLY)} className="bg-white text-black px-20 py-8 font-black text-xl uppercase hover:bg-[#00FF41] transition-all italic shadow-2xl tracking-[0.2em]">Book Tactics Chat</button></div>
+          </section>
+          
+          <footer className="fixed bottom-0 left-0 right-0 z-[500] bg-black/95 border-t border-zinc-900 px-6 py-3 flex items-center justify-between text-[10px] font-mono text-zinc-600 uppercase tracking-[0.3em]">
+            <div className="flex gap-10 items-center"><span className="text-[#00FF41] font-black flex items-center gap-3"><Circle size={8} fill="#00FF41" className="animate-pulse" /> SYSTEM_STABLE</span></div>
+            <div className="flex gap-10 items-center text-zinc-700 italic text-right"><span className="hidden sm:inline">V9.4.2_S // </span><span className="text-zinc-500 font-black uppercase tracking-widest">{new Date().toLocaleTimeString()}</span></div>
+          </footer>
+          <div className="fixed inset-0 pointer-events-none z-[1000] opacity-[0.04] bg-[url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/EDEEC545-6AF0-4EF2-BE03-2E4572011B28.jpeg')] bg-repeat mix-blend-overlay" />
+          <div className="fixed inset-0 pointer-events-none z-[1001] opacity-[0.06] overflow-hidden"><div className="w-full h-full animate-[scan_10s_linear_infinite] bg-[linear-gradient(to_bottom,transparent_50%,#00FF41_50%)] bg-[length:100%_6px]" /></div>
+        </div>
+      );
+    }
+    const root = createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
