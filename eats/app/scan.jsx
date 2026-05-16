@@ -213,14 +213,17 @@ function ScanSheet({ open, onClose, onSave }) {
 
         {/* Result */}
         {mode === "paste" && result && (
-          <ScanResult result={result} name={name} onSave={save} onRescan={() => { setResult(null); setText(""); setName(""); }} />
+          <ScanResult result={result} name={name} text={text} onSave={save} onRescan={() => { setResult(null); setText(""); setName(""); }} />
         )}
       </div>
     </div>
   );
 }
 
-function ScanResult({ result, name, onSave, onRescan }) {
+function ScanResult({ result, name, text, onSave, onRescan }) {
+  const perplexityHref = `https://www.perplexity.ai/?q=${encodeURIComponent(
+    `Evaluate this ingredient list for health risk and chronic-illness concerns: ${text || result.flags.map(f => f.ingredient.name).join(", ")}. Rate each ingredient and list red flags.`
+  )}`;
   const tone = result.score >= 70 ? "green" : result.score >= 50 ? "yellow" : "red";
   const verdict =
     tone === "green" ? "Clean enough." :
@@ -277,6 +280,9 @@ function ScanResult({ result, name, onSave, onRescan }) {
         <button className="ee-btn ee-btn-primary ee-btn-block" onClick={onSave}>
           <Icon.check size={14} /> Save & see swaps
         </button>
+        <a className="ee-btn ee-btn-ghost ee-btn-block" href={perplexityHref} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
+          <Icon.sparkle size={14} /> Verify with Perplexity
+        </a>
         <button className="ee-btn ee-btn-ghost ee-btn-block" onClick={onRescan}>
           Decode another
         </button>
