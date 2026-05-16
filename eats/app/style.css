@@ -1039,3 +1039,74 @@ body { display: flex; align-items: center; justify-content: center; padding: 28p
     inset 0 0 0 1px oklch(from var(--gold) l c h / 0.7),
     var(--shadow-glow);
 }
+
+/* ─────────────────────────────────────────────────────── */
+/* FULL-PAGE OVERRIDE - app is a real website not iOS mock */
+/* qi 2026-05-15 22-27 EST                                 */
+/* ─────────────────────────────────────────────────────── */
+html, body {
+  background: var(--bg, #000);
+  display: block;
+  padding: 0;
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.ee-root {
+  display: block;
+  min-height: 100vh;
+  height: auto;
+  justify-content: stretch;
+  gap: 0;
+}
+
+.ee-app-shell-fullpage {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+  overflow: visible;
+  font-family: var(--font-sans);
+}
+
+.ee-app-shell-fullpage .ee-scroll {
+  position: static;
+  overflow: visible;
+  -webkit-overflow-scrolling: auto;
+  scrollbar-width: auto;
+  padding-bottom: 120px;
+}
+.ee-app-shell-fullpage .ee-scroll::-webkit-scrollbar { display: revert; }
+
+.ee-app-shell-fullpage .ee-tabs {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+}
+
+.ee-app-shell-fullpage .ee-sheet-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+}
+
+.ee-stage,
+.ee-caption,
+.ee-spacer-status { display: none !important; }
+
+@media (max-width: 640px) {
+  .ee-app-shell-fullpage { max-width: 100vw; padding: 0 4px; }
+}
+
+@media (min-width: 641px) {
+  .ee-app-shell-fullpage {
+    border-left: 1px solid var(--border-soft);
+    border-right: 1px solid var(--border-soft);
+  }
+}

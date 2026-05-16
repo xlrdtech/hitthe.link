@@ -69,33 +69,13 @@ function App() {
            "--density": densityScale,
            "--font-serif": fontMap[t.typeface] || fontMap.Fraunces,
          }}>
-      {/* iOS Device Frame */}
-      <div className="ee-stage">
-        <IOSDevice width={402} height={874} dark={dark}>
-          <div className="ee-app-shell">
-            {/* status bar takes ~60px - app content starts below */}
-            <div className="ee-spacer-status" />
-            <div className="ee-scroll" key={tab}>
-              {screen}
-            </div>
-            {/* Floating tab bar */}
-            <TabBar tab={tab} onTab={setTab} onScan={() => setScanOpen(true)} />
-            {/* Scan sheet */}
-            <ScanSheet open={scanOpen} onClose={() => setScanOpen(false)} onSave={onSaveScan} />
-          </div>
-        </IOSDevice>
-      </div>
-
-      {/* Caption (visible outside frame) */}
-      <div className="ee-caption">
-        <div className="ee-caption-l">
-          <div className="ee-caption-eyebrow">Electric EATS™ · Essential AI Tracking System</div>
-          <div className="ee-caption-title">{tabTitle(tab)}</div>
+      {/* Full-page app shell (no iOS chrome) */}
+      <div className="ee-app-shell ee-app-shell-fullpage">
+        <div className="ee-scroll" key={tab}>
+          {screen}
         </div>
-        <div className="ee-caption-r">
-          <div className="ee-caption-eyebrow">Food AI Hackathon</div>
-          <div className="ee-caption-title">ATL · 2026-05-15</div>
-        </div>
+        <TabBar tab={tab} onTab={setTab} onScan={() => setScanOpen(true)} />
+        <ScanSheet open={scanOpen} onClose={() => setScanOpen(false)} onSave={onSaveScan} />
       </div>
 
       {/* Tweaks panel */}
