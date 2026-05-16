@@ -1,10 +1,28 @@
 // screen-home.jsx — Home dashboard (overhauled)
 
 function HomeScreen({ onScan, onTab, gold }) {
-  // "Today's score" — average of recent scans (last 3 days demo)
-  const todayScore = Math.round(
-    RECENT_SCANS.slice(0, 3).reduce((a, s) => a + s.score, 0) / 3
-  );
+  // Live scans from localStorage, fallback to seed
+  const [scans, setScans] = React.useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("ee.scans") || "[]");
+      return stored.length > 0 ? stored : RECENT_SCANS;
+    } catch (e) { return RECENT_SCANS; }
+  });
+
+  React.useEffect(() => {
+    const onScanSaved = () => {
+      try {
+        const stored = JSON.parse(localStorage.getItem("ee.scans") || "[]");
+        if (stored.length > 0) setScans(stored);
+      } catch (e) {}
+    };
+    window.addEventListener("ee:scan-saved", onScanSaved);
+    return () => window.removeEventListener("ee:scan-saved", onScanSaved);
+  }, []);
+
+  const todayScore = scans.length > 0
+    ? Math.round(scans.slice(0, 3).reduce((a, s) => a + s.score, 0) / Math.min(3, scans.length))
+    : 0;
   const last7 = SCORE_HISTORY.slice(-7).reduce((a, b) => a + b, 0) / 7;
   const prev7 = SCORE_HISTORY.slice(0, 7).reduce((a, b) => a + b, 0) / 7;
   const delta = Math.round(last7 - prev7);
@@ -122,10 +140,10 @@ function HomeScreen({ onScan, onTab, gold }) {
             <Kicker>Recent</Kicker>
             <h3 className="ee-h3">Decoded this week</h3>
           </div>
-          <Kicker>{RECENT_SCANS.length} · 7D</Kicker>
+          <Kicker>{scans.length} · 7D</Kicker>
         </div>
         <div className="ee-recent">
-          {RECENT_SCANS.slice(0, 4).map((s, i) => <RecentRow key={i} s={s} />)}
+          {scans.slice(0, 4).map((s, i) => <RecentRow key={i} s={s} />)}
         </div>
       </section>
 

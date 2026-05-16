@@ -31,7 +31,21 @@ function ScanSheet({ open, onClose, onSave }) {
 
   const save = () => {
     if (!result) return;
-    onSave({ name: name || "Scanned product", brand: "", score: result.score });
+    const entry = {
+      name: name || "Scanned product",
+      brand: "",
+      score: result.score,
+      when: new Date().toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }),
+      flag: result.score >= 70 ? "green" : result.score >= 50 ? "yellow" : "red",
+      ts: Date.now()
+    };
+    try {
+      const stored = JSON.parse(localStorage.getItem("ee.scans") || "[]");
+      stored.unshift(entry);
+      localStorage.setItem("ee.scans", JSON.stringify(stored.slice(0, 50)));
+      window.dispatchEvent(new CustomEvent("ee:scan-saved", { detail: entry }));
+    } catch (e) {}
+    onSave(entry);
     onClose();
   };
 
@@ -73,12 +87,12 @@ function ScanSheet({ open, onClose, onSave }) {
               <div className="ee-cam-scanline" />
               <div className="ee-cam-hint">Align the ingredient panel</div>
             </div>
-            <button className="ee-btn ee-btn-primary" style={{ marginTop: 16 }} onClick={() => { setMode("paste"); useSample(); }}>
-              <Icon.bolt size={14} /> Demo scan a label
+            <button className="ee-btn ee-btn-primary" style={{ marginTop: 16 }} onClick={() => setMode("paste")}>
+              <Icon.bolt size={14} /> Paste ingredients to decode
             </button>
-            <button className="ee-link" style={{ marginTop: 10 }} onClick={() => setMode("paste")}>
-              or paste text instead
-            </button>
+            <div className="ee-link" style={{ marginTop: 10, opacity: 0.7 }}>
+              Camera input lands in v1.1 - paste works now
+            </div>
           </div>
         )}
 
@@ -97,7 +111,7 @@ function ScanSheet({ open, onClose, onSave }) {
             <div className="ee-field">
               <div className="ee-field-h">
                 <label>Ingredients</label>
-                <button className="ee-link" onClick={useSample}>Use sample</button>
+                <button className="ee-link" onClick={useSample} title="Load an example label to try it">Try an example</button>
               </div>
               <textarea
                 rows={6}
