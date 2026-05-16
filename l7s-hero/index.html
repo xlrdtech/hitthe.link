@@ -1,125 +1,284 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth antialiased dark">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>L7S Hero — Seven Superpowers for the People Who Run the Show</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L7S Hero | Seven Superpowers for the People Who Run the Show</title>
+<meta name="description" content="League of Seven Superheroes. Credit, Cashflow, Setup, Funding, Crypto, Counsel-Coverage, Currency. Built for FOODIES who run the show.">
+<meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large">
+<link rel="canonical" href="https://hitthe.link/l7s-hero/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="L7S Hero | Seven Superpowers">
+<meta property="og:description" content="Seven specialist forces in your corner. Built for FOODIES.">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      fontFamily: { sans: ['Manrope', 'sans-serif'] },
+      colors: {
+        brand: {
+          gold: 'var(--theme-color)',
+          ink: '#0F172A'
+        }
+      }
+    }
+  }
+}
+</script>
+
 <style>
-*{box-sizing:border-box;margin:0;padding:0;overflow-wrap:break-word;word-break:normal;hyphens:none;-webkit-font-smoothing:antialiased}
-body{font-family:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",sans-serif;background:#070a14;color:#fff;line-height:1.6;min-height:100vh}
-.bg{position:fixed;inset:0;background:radial-gradient(ellipse at top,#1a0e2a 0%,#070a14 50%,#070a14 100%);z-index:-1}
-.wrap{max-width:1100px;margin:0 auto;padding:48px 24px 72px}
+:root {
+  --theme-color: #D4AF37;
+  --color-bg: #000000;
+  --text-header: #FFFFFF;
+  --text-body: #A1A1AA;
+  --glass-bg: rgba(10,10,10,0.6);
+  --glass-border: rgba(255,255,255,0.15);
+  --glass-highlight: rgba(255,255,255,0.2);
+  --glass-shadow: rgba(0,0,0,1);
+  --glass-blur: 30px;
+}
+*{box-sizing:border-box;overflow-wrap:break-word;word-break:normal;hyphens:none}
+html,body{background:var(--color-bg);color:var(--text-body);font-family:'Manrope',sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{overflow-x:hidden;position:relative;min-height:100vh}
 
-/* HERO */
-.hero{text-align:center;margin-bottom:64px}
-.badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.3em;color:#ffd700;text-transform:uppercase;padding:8px 18px;border:1px solid rgba(255,215,0,.4);border-radius:32px;margin-bottom:24px}
-.hero h1{font-size:clamp(34px,6vw,58px);font-weight:900;letter-spacing:-.025em;line-height:1.05;margin-bottom:18px}
-.hero h1 .accent{background:linear-gradient(135deg,#ffd700 0%,#ff8a4c 50%,#a78bfa 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero .lede{color:#cdd6e3;font-size:clamp(16px,2vw,20px);font-weight:500;max-width:720px;margin:0 auto 28px;line-height:1.55}
-.hero .cta{display:inline-block;background:linear-gradient(135deg,#ffd700,#ff8a4c);color:#070a14;font-weight:700;padding:16px 36px;border-radius:14px;font-size:17px;text-decoration:none;transition:transform .15s,filter .15s;box-shadow:0 8px 32px rgba(255,138,76,.3)}
-.hero .cta:hover{transform:translateY(-2px);filter:brightness(1.08)}
+.glow-orb{position:fixed;border-radius:50%;filter:blur(150px);opacity:.22;z-index:-1;pointer-events:none;background:var(--theme-color);animation:float 25s infinite alternate ease-in-out;mix-blend-mode:screen;will-change:transform}
+.orb-1{width:70vw;height:70vw;top:-25%;left:-20%}
+.orb-2{width:55vw;height:55vw;bottom:-15%;right:-15%;animation-delay:-9s;background:#6366f1;opacity:.16}
+.orb-3{width:40vw;height:40vw;top:45%;left:30%;animation-delay:-14s;background:#a78bfa;opacity:.12}
+@keyframes float{0%{transform:translate(0,0) scale(1) rotate(0deg)}100%{transform:translate(8%,8%) scale(1.1) rotate(5deg)}}
 
-/* PROBLEM */
-.section{margin:72px 0;padding:32px;background:rgba(20,15,30,.6);border:1px solid rgba(255,255,255,.06);border-radius:20px;backdrop-filter:blur(8px)}
-.section h2{font-size:clamp(22px,3vw,32px);font-weight:800;letter-spacing:-.015em;margin-bottom:18px;color:#fff}
-.section h2 .accent{color:#ff8a4c}
-.section p{color:#a8b3c5;font-size:16px;margin-bottom:12px}
-.section .strong{color:#fff;font-weight:600}
-.who-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:18px}
-.who-grid .tag{padding:8px 12px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.18);border-radius:8px;font-size:13px;color:#ffeaa0;text-align:center;font-weight:600}
+.grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.035;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")}
 
-/* HEROES GRID */
-.heroes h2{text-align:center;margin-bottom:8px}
-.heroes .sub{text-align:center;color:#8b96a8;margin-bottom:36px;font-size:15px}
-.heroes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
-.hero-card{background:rgba(20,24,33,.7);border:1px solid rgba(125,211,252,.15);border-radius:16px;padding:24px;position:relative;overflow:hidden;transition:transform .15s,border-color .15s}
-.hero-card:hover{transform:translateY(-3px);border-color:rgba(255,215,0,.4)}
-.hero-card .num{position:absolute;top:16px;right:18px;font-size:48px;font-weight:900;color:rgba(255,215,0,.08);line-height:1}
-.hero-card .icon{font-size:32px;margin-bottom:12px;display:block}
-.hero-card h3{font-size:18px;font-weight:700;color:#fff;margin-bottom:6px}
-.hero-card .tagline{color:#ffd700;font-size:13px;font-weight:600;letter-spacing:.04em;margin-bottom:12px;text-transform:uppercase}
-.hero-card p{color:#a8b3c5;font-size:14px;line-height:1.55}
+.glass-panel{background:var(--glass-bg);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));border:1px solid var(--glass-border);box-shadow:0 4px 24px -1px var(--glass-shadow),inset 0 1px 0 0 var(--glass-highlight),inset 1px 0 0 0 rgba(255,255,255,.03),inset -1px 0 0 0 rgba(255,255,255,.03);transition:transform .4s cubic-bezier(.16,1,.3,1),box-shadow .4s ease,border-color .4s ease}
+.glass-panel:hover{transform:translateY(-2px);box-shadow:0 20px 50px -5px var(--glass-shadow),inset 0 1px 0 0 var(--glass-highlight);border-color:var(--glass-highlight)}
+.no-hover:hover{transform:none}
 
-/* OUTCOMES */
-.outcomes{margin:72px 0;text-align:center}
-.outcomes h2{margin-bottom:32px}
-.outcomes-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:32px}
-.outcome{padding:24px 16px;background:linear-gradient(135deg,rgba(125,211,252,.08),rgba(167,139,250,.08));border:1px solid rgba(167,139,250,.2);border-radius:14px}
-.outcome .stat{font-size:36px;font-weight:900;background:linear-gradient(135deg,#7dd3fc,#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:6px}
-.outcome .label{color:#cdd6e3;font-size:14px;font-weight:600}
+.shine-card{position:relative;overflow:hidden}
+.shine-card::after{content:'';position:absolute;inset:0;background:linear-gradient(120deg,transparent 30%,rgba(212,175,55,.08) 50%,transparent 70%);transform:translateX(-100%);transition:transform .9s ease;pointer-events:none}
+.shine-card:hover::after{transform:translateX(100%)}
 
-/* FINAL CTA */
-.final{margin:72px 0 0;padding:48px 32px;background:linear-gradient(135deg,rgba(255,215,0,.1) 0%,rgba(255,138,76,.06) 50%,rgba(167,139,250,.08) 100%);border:1px solid rgba(255,215,0,.25);border-radius:24px;text-align:center}
-.final h2{font-size:clamp(24px,3.5vw,36px);margin-bottom:12px}
-.final p{color:#cdd6e3;font-size:17px;margin-bottom:24px;max-width:580px;margin-left:auto;margin-right:auto}
-.final .cta{display:inline-block;background:#fff;color:#070a14;font-weight:700;padding:18px 42px;border-radius:14px;font-size:18px;text-decoration:none}
-.final .cta:hover{filter:brightness(.95)}
+.gold-text{background:linear-gradient(135deg,#fff 0%,#D4AF37 50%,#fff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;background-size:200% 200%;animation:shimmer 6s ease infinite}
+@keyframes shimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
 
-footer{margin-top:64px;text-align:center;color:#5b6478;font-size:12px}
-footer .brand{color:#ffd700;font-weight:700;letter-spacing:.18em;margin-bottom:6px}
+.gold-border{border:1px solid color-mix(in srgb,var(--theme-color) 35%,transparent)}
+.gold-soft-bg{background:color-mix(in srgb,var(--theme-color) 8%,transparent)}
+
+.btn-primary{background:linear-gradient(135deg,var(--theme-color) 0%,#B8941F 100%);color:#0F172A;font-weight:700;letter-spacing:.01em;border-radius:14px;padding:16px 36px;font-size:16px;transition:all .25s ease;display:inline-flex;align-items:center;gap:8px;box-shadow:0 8px 28px -8px rgba(212,175,55,.5)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 36px -8px rgba(212,175,55,.65);filter:brightness(1.05)}
+
+.btn-ghost{background:transparent;color:#fff;font-weight:600;border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:16px 28px;font-size:15px;transition:all .25s ease;display:inline-flex;align-items:center;gap:8px}
+.btn-ghost:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.35)}
+
+.hero-eyebrow{font-size:11px;font-weight:700;letter-spacing:.32em;color:var(--theme-color);text-transform:uppercase}
+.hero-h1{font-weight:800;letter-spacing:-.025em;line-height:1.02;font-size:clamp(40px,7vw,76px);color:#fff}
+.section-title{font-weight:800;letter-spacing:-.02em;line-height:1.1;font-size:clamp(28px,4vw,42px);color:#fff}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.22em;color:var(--theme-color);text-transform:uppercase;margin-bottom:14px}
+.lede{color:#cdd6e3;font-size:clamp(16px,2vw,19px);line-height:1.55;max-width:680px}
+
+.hero-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--theme-color) 14%,transparent);border:1px solid color-mix(in srgb,var(--theme-color) 25%,transparent);color:var(--theme-color);margin-bottom:18px}
+.hero-icon svg{width:24px;height:24px;stroke-width:1.75}
+
+.num-chip{position:absolute;top:18px;right:20px;font-size:54px;font-weight:900;color:rgba(255,255,255,.04);letter-spacing:-.04em;line-height:1;font-family:'Manrope',sans-serif}
+
+.tag-pill{display:inline-flex;align-items:center;padding:7px 13px;border-radius:24px;font-size:12px;font-weight:600;color:#ffeaa0;background:color-mix(in srgb,var(--theme-color) 10%,transparent);border:1px solid color-mix(in srgb,var(--theme-color) 22%,transparent);letter-spacing:.02em}
+
+.outcome-stat{font-size:clamp(38px,5vw,52px);font-weight:900;line-height:1;letter-spacing:-.02em;background:linear-gradient(135deg,#fff 0%,#D4AF37 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+a{color:inherit;text-decoration:none}
+a.link-gold{color:var(--theme-color);text-decoration:underline;text-underline-offset:3px;text-decoration-color:color-mix(in srgb,var(--theme-color) 50%,transparent)}
+a.link-gold:hover{text-decoration-color:var(--theme-color)}
+
+/* Reveal-on-scroll */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
+.reveal.in{opacity:1;transform:translateY(0)}
 </style>
 </head>
 <body>
-<div class="bg"></div>
-<div class="wrap">
+<div class="glow-orb orb-1"></div>
+<div class="glow-orb orb-2"></div>
+<div class="glow-orb orb-3"></div>
+<div class="grain"></div>
 
-  <section class="hero">
-    <div class="badge">League of Seven Superheroes</div>
-    <h1>Seven Powers<br><span class="accent">for the people who run the show.</span></h1>
-    <p class="lede">Credit. Cashflow. Setup. Funding. Crypto. Counsel &amp; Coverage. Currency. The seven forces every founder, owner, and operator needs working in their corner.</p>
-    <a class="cta" href="#heroes">Meet the Seven &rarr;</a>
-  </section>
+<div class="relative max-w-6xl mx-auto px-6 md:px-8">
 
-  <section class="section">
-    <h2>You're <span class="accent">running the show.</span> Who's running interference?</h2>
-    <p>You wake up wearing a dozen hats and end the day with a list longer than you started. The credit limits, the cashflow gaps, the LLC paperwork, the funding rounds, the crypto opportunities, the legal exposure, the currency moves &mdash; you're tracking it all alone.</p>
-    <p class="strong">L7S Hero is the seven-power team that has your back so you can focus on the work only you can do.</p>
-    <div class="who-grid">
-      <div class="tag">Founders</div>
-      <div class="tag">Owners</div>
-      <div class="tag">Operators</div>
-      <div class="tag">Directors</div>
-      <div class="tag">Incorporated</div>
-      <div class="tag">Executives</div>
-      <div class="tag">Self-employed</div>
+<!-- NAV -->
+<nav class="pt-8 pb-4">
+  <div class="glass-panel no-hover rounded-2xl px-5 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg flex items-center justify-center gold-soft-bg gold-border">
+        <i data-lucide="shield-check" class="w-4 h-4" style="color:var(--theme-color)"></i>
+      </div>
+      <span class="font-bold text-white tracking-tight">L7S Hero</span>
+      <span class="hidden md:inline text-xs text-zinc-500 ml-2">League of Seven Superheroes</span>
     </div>
-  </section>
+    <a href="#heroes" class="text-sm text-zinc-300 hover:text-white transition">The Seven &rarr;</a>
+  </div>
+</nav>
 
-  <section class="heroes" id="heroes">
-    <h2>The Seven <span style="background:linear-gradient(135deg,#ffd700,#ff8a4c);-webkit-background-clip:text;background-clip:text;color:transparent">Superheroes</span></h2>
-    <p class="sub">Each one a specialist. Together, an unstoppable team.</p>
-    <div class="heroes-grid">
-      <div class="hero-card"><span class="num">1</span><span class="icon">&#128176;</span><h3>Credit</h3><div class="tagline">Build it. Use it. Grow it.</div><p>Personal &amp; business credit lines that scale with your ambition &mdash; no more begging banks.</p></div>
-      <div class="hero-card"><span class="num">2</span><span class="icon">&#128181;</span><h3>Cashflow</h3><div class="tagline">Steady the engine.</div><p>Track every dollar in &amp; out. Plug the leaks. Forecast the runway. Sleep at night.</p></div>
-      <div class="hero-card"><span class="num">3</span><span class="icon">&#127970;</span><h3>Setup</h3><div class="tagline">LLC, Corp, structure, paperwork.</div><p>Get your entity right from day one. Tax-smart. Protection-first. No surprises.</p></div>
-      <div class="hero-card"><span class="num">4</span><span class="icon">&#128640;</span><h3>Funding</h3><div class="tagline">Capital when you need it.</div><p>Grants, loans, investors, lines of credit. We open the doors others knock at.</p></div>
-      <div class="hero-card"><span class="num">5</span><span class="icon">&#128302;</span><h3>Crypto</h3><div class="tagline">Master the new economy.</div><p>Wallets, exchanges, taxes, opportunities. The digital asset side, demystified.</p></div>
-      <div class="hero-card"><span class="num">6</span><span class="icon">&#9876;&#65039;</span><h3>Counsel &amp; Coverage</h3><div class="tagline">Legal shield, insurance armor.</div><p>Contracts reviewed. Policies in place. Lawsuits prevented before they happen.</p></div>
-      <div class="hero-card"><span class="num">7</span><span class="icon">&#128200;</span><h3>Currency Trading</h3><div class="tagline">Markets that move while you sleep.</div><p>Forex strategies, position sizing, automated systems. Make money work overnight.</p></div>
+<!-- HERO -->
+<section class="pt-16 md:pt-24 pb-20 text-center reveal">
+  <div class="hero-eyebrow mb-5">League of Seven Superheroes</div>
+  <h1 class="hero-h1 mb-6">
+    Seven Superpowers<br>for the people who <span class="gold-text">run the show.</span>
+  </h1>
+  <p class="lede mx-auto mb-10">
+    Credit. Cashflow. Setup. Funding. Crypto. Counsel &amp; Coverage. Currency. Seven specialist forces working in parallel so you can focus on the work only you can do.
+  </p>
+  <div class="flex flex-wrap items-center justify-center gap-3">
+    <a href="#heroes" class="btn-primary">Meet The Seven <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+    <a href="mailto:hero@l7sinc.com?subject=Bring%20The%20Seven" class="btn-ghost">Bring them in</a>
+  </div>
+  <div class="flex flex-wrap justify-center gap-2 mt-12 max-w-3xl mx-auto">
+    <span class="tag-pill">Founders</span>
+    <span class="tag-pill">Owners</span>
+    <span class="tag-pill">Operators</span>
+    <span class="tag-pill">Directors</span>
+    <span class="tag-pill">Incorporated</span>
+    <span class="tag-pill">Executives</span>
+    <span class="tag-pill">Self-employed</span>
+  </div>
+  <p class="mt-4 text-xs text-zinc-500 tracking-widest uppercase">F&middot;O&middot;O&middot;D&middot;I&middot;E&middot;S</p>
+</section>
+
+<!-- THE PROBLEM -->
+<section class="py-12 reveal">
+  <div class="glass-panel no-hover rounded-2xl p-8 md:p-12">
+    <div class="eyebrow">The Problem</div>
+    <h2 class="section-title mb-5">You're running the show.<br>Who's running interference?</h2>
+    <p class="lede mb-4">You wake up wearing a dozen hats and end the day with a list longer than you started. Credit limits, cashflow gaps, LLC paperwork, funding rounds, crypto opportunities, legal exposure, currency moves &mdash; tracking it all alone is the bottleneck.</p>
+    <p class="text-white font-semibold text-lg">L7S Hero is the seven-power team that has your back so you can focus on the work only you can do.</p>
+  </div>
+</section>
+
+<!-- HEROES -->
+<section id="heroes" class="py-16 reveal">
+  <div class="text-center mb-14">
+    <div class="eyebrow">The Seven</div>
+    <h2 class="section-title mb-4">Each one a <span class="gold-text">specialist</span>.<br>Together, an unstoppable team.</h2>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+    <div class="glass-panel shine-card rounded-2xl p-7 relative">
+      <span class="num-chip">1</span>
+      <div class="hero-icon"><i data-lucide="banknote"></i></div>
+      <h3 class="text-white font-bold text-xl mb-2">Credit</h3>
+      <div class="eyebrow mb-3" style="margin-bottom:10px">Build it. Use it. Grow it.</div>
+      <p class="text-zinc-400 text-sm leading-relaxed">Personal &amp; business credit lines that scale with your ambition. No more begging banks.</p>
     </div>
-  </section>
 
-  <section class="outcomes">
-    <h2>What changes when the seven are <span style="color:#ffd700">in your corner</span></h2>
-    <div class="outcomes-grid">
-      <div class="outcome"><div class="stat">10x</div><div class="label">Faster decisions, fewer regrets</div></div>
-      <div class="outcome"><div class="stat">0</div><div class="label">Dropped balls across all seven lanes</div></div>
-      <div class="outcome"><div class="stat">7</div><div class="label">Specialists working in parallel</div></div>
-      <div class="outcome"><div class="stat">1</div><div class="label">Front door for every question</div></div>
+    <div class="glass-panel shine-card rounded-2xl p-7 relative">
+      <span class="num-chip">2</span>
+      <div class="hero-icon"><i data-lucide="waves"></i></div>
+      <h3 class="text-white font-bold text-xl mb-2">Cashflow</h3>
+      <div class="eyebrow mb-3" style="margin-bottom:10px">Steady the engine.</div>
+      <p class="text-zinc-400 text-sm leading-relaxed">Track every dollar in &amp; out. Plug the leaks. Forecast the runway. Sleep at night.</p>
     </div>
-  </section>
 
-  <section class="final">
-    <h2>Your move.</h2>
-    <p>Stop running the show alone. The League is open for FOODIES who are ready to operate with seven superpowers behind them.</p>
-    <a class="cta" href="mailto:hero@l7sinc.com?subject=Bring%20the%20Seven">Bring the Seven &rarr;</a>
-  </section>
+    <div class="glass-panel shine-card rounded-2xl p-7 relative">
+      <span class="num-chip">3</span>
+      <div class="hero-icon"><i data-lucide="building-2"></i></div>
+      <h3 class="text-white font-bold text-xl mb-2">Setup</h3>
+      <div class="eyebrow mb-3" style="margin-bottom:10px">LLC, Corp, structure.</div>
+      <p class="text-zinc-400 text-sm leading-relaxed">Entity right from day one. Tax-smart. Protection-first. No surprises.</p>
+    </div>
 
-  <footer>
-    <div class="brand">L7S &middot; LEAGUE OF SEVEN SUPERHEROES</div>
-    <div>hitthe.link/l7s-hero &middot; hero@l7sinc.com</div>
-  </footer>
+    <div class="glass-panel shine-card rounded-2xl p-7 relative">
+      <span class="num-chip">4</span>
+      <div class="hero-icon"><i data-lucide="rocket"></i></div>
+      <h3 class="text-white font-bold text-xl mb-2">Funding</h3>
+      <div class="eyebrow mb-3" style="margin-bottom:10px">Capital when you need it.</div>
+      <p class="text-zinc-400 text-sm leading-relaxed">Grants, loans, investors, lines of credit. We open doors others knock at.</p>
+    </div>
+
+    <div class="glass-panel shine-card rounded-2xl p-7 relative">
+      <span class="num-chip">5</span>
+      <div class="hero-icon"><i data-lucide="bitcoin"></i></div>
+      <h3 class="text-white font-bold text-xl mb-2">Crypto</h3>
+      <div class="eyebrow mb-3" style="margin-bottom:10px">Master the new economy.</div>
+      <p class="text-zinc-400 text-sm leading-relaxed">Wallets, exchanges, taxes, opportunities. The digital asset side demystified.</p>
+    </div>
+
+    <div class="glass-panel shine-card rounded-2xl p-7 relative">
+      <span class="num-chip">6</span>
+      <div class="hero-icon"><i data-lucide="shield"></i></div>
+      <h3 class="text-white font-bold text-xl mb-2">Counsel &amp; Coverage</h3>
+      <div class="eyebrow mb-3" style="margin-bottom:10px">Legal shield, insurance armor.</div>
+      <p class="text-zinc-400 text-sm leading-relaxed">Contracts reviewed. Policies in place. Lawsuits prevented before they happen.</p>
+    </div>
+
+    <div class="glass-panel shine-card rounded-2xl p-7 relative md:col-span-2 lg:col-span-1">
+      <span class="num-chip">7</span>
+      <div class="hero-icon"><i data-lucide="trending-up"></i></div>
+      <h3 class="text-white font-bold text-xl mb-2">Currency Trading</h3>
+      <div class="eyebrow mb-3" style="margin-bottom:10px">Markets that move while you sleep.</div>
+      <p class="text-zinc-400 text-sm leading-relaxed">Forex strategies, position sizing, automated systems. Make money work overnight.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- OUTCOMES -->
+<section class="py-16 reveal">
+  <div class="text-center mb-12">
+    <div class="eyebrow">The Difference</div>
+    <h2 class="section-title">What changes when the seven are <span class="gold-text">in your corner</span></h2>
+  </div>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="glass-panel rounded-2xl p-7 text-center">
+      <div class="outcome-stat">10x</div>
+      <p class="text-zinc-400 text-sm mt-3">Faster decisions, fewer regrets</p>
+    </div>
+    <div class="glass-panel rounded-2xl p-7 text-center">
+      <div class="outcome-stat">0</div>
+      <p class="text-zinc-400 text-sm mt-3">Dropped balls across seven lanes</p>
+    </div>
+    <div class="glass-panel rounded-2xl p-7 text-center">
+      <div class="outcome-stat">7</div>
+      <p class="text-zinc-400 text-sm mt-3">Specialists working in parallel</p>
+    </div>
+    <div class="glass-panel rounded-2xl p-7 text-center">
+      <div class="outcome-stat">1</div>
+      <p class="text-zinc-400 text-sm mt-3">Front door for every question</p>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="py-20 reveal">
+  <div class="glass-panel no-hover gold-border rounded-3xl p-10 md:p-16 text-center" style="background:linear-gradient(135deg,rgba(212,175,55,.08) 0%,rgba(10,10,10,.6) 50%,rgba(99,102,241,.06) 100%)">
+    <div class="eyebrow">Your Move</div>
+    <h2 class="section-title mb-5">Stop running the show <span class="gold-text">alone</span>.</h2>
+    <p class="lede mx-auto mb-9">The League is open for FOODIES ready to operate with seven superpowers behind them.</p>
+    <a href="mailto:hero@l7sinc.com?subject=Bring%20The%20Seven" class="btn-primary">Bring The Seven <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+    <p class="mt-6 text-zinc-500 text-sm">or email <a class="link-gold" href="mailto:hero@l7sinc.com">hero@l7sinc.com</a></p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="py-10 text-center">
+  <div class="text-xs tracking-[0.22em] uppercase text-zinc-500 mb-1" style="color:var(--theme-color);font-weight:700">L7S &middot; League of Seven Superheroes</div>
+  <div class="text-xs text-zinc-600">hitthe.link/l7s-hero &middot; <a class="link-gold" href="mailto:hero@l7sinc.com">hero@l7sinc.com</a></div>
+</footer>
 
 </div>
+
+<script>
+lucide.createIcons();
+// Reveal-on-scroll
+const io=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+
 </body>
 </html>
