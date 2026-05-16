@@ -161,6 +161,59 @@ function render(filter){
 q.placeholder="Search "+COURSES.length+" courses...";
 q.addEventListener("input",function(e){render(e.target.value);});
 render("");
+
+const TUTOR_URL="https://xen.xlrd.org/api/tutor";
+const tq=document.getElementById("tq");
+const tgo=document.getElementById("tgo");
+const tans=document.getElementById("tutorAnswer");
+function pushText(parent,s){
+  const parts=s.split("\n");
+  for(let i=0;i<parts.length;i++){
+    if(parts[i])parent.appendChild(document.createTextNode(parts[i]));
+    if(i<parts.length-1)parent.appendChild(document.createElement("br"));
+  }
+}
+function renderAnswer(md){
+  while(tans.firstChild)tans.removeChild(tans.firstChild);
+  const panel=document.createElement("div");
+  panel.className="panel";
+  const text=md||"";
+  const linkRe=/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+  const matches=Array.from(text.matchAll(linkRe));
+  let last=0;
+  for(const m of matches){
+    if(m.index>last)pushText(panel,text.slice(last,m.index));
+    const a=document.createElement("a");
+    a.href=m[2];
+    a.target="_blank";
+    a.rel="noopener";
+    a.textContent=m[1];
+    panel.appendChild(a);
+    last=m.index+m[0].length;
+  }
+  if(last<text.length)pushText(panel,text.slice(last));
+  tans.appendChild(panel);
+}
+async function ask(){
+  const text=(tq.value||"").trim();
+  if(!text)return;
+  tgo.disabled=true;
+  while(tans.firstChild)tans.removeChild(tans.firstChild);
+  const loading=document.createElement("div");
+  loading.className="panel";
+  loading.textContent="Thinking...";
+  tans.appendChild(loading);
+  try{
+    const r=await fetch(TUTOR_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({q:text})});
+    const j=await r.json();
+    renderAnswer(j.answer||j.error||"tutor offline");
+  }catch(err){
+    renderAnswer("Tutor unreachable. Try the course search above.");
+  }
+  tgo.disabled=false;
+}
+tgo.addEventListener("click",ask);
+tq.addEventListener("keydown",function(e){if(e.key==="Enter")ask();});
 </script>
 </body>
 </html>
