@@ -29,7 +29,16 @@ function StatsScreen({ gold, scans }) {
             <div className="ee-mark-sub">{scans} scans · 14d window</div>
           </span>
         </div>
-        <button className="ee-icon-btn" aria-label="More"><Icon.filter size={14} /></button>
+        <button className="ee-icon-btn" aria-label="Export stats" title="Copy 14-day stats summary"
+          onClick={() => {
+            try {
+              const stored = JSON.parse(localStorage.getItem("ee.scans") || "[]");
+              const avg = stored.length ? Math.round(stored.reduce((a, s) => a + (s.score || 0), 0) / stored.length) : 0;
+              const summary = `Electric EATS - 14-day stats\nScans: ${stored.length}\nAvg clean score: ${avg}/100\nLast scan: ${stored[0]?.name || "n/a"} (${stored[0]?.score || 0})\nhitthe.link/e`;
+              navigator.clipboard.writeText(summary);
+              alert("Stats summary copied to clipboard.");
+            } catch (e) { alert("Could not copy stats."); }
+          }}><Icon.filter size={14} /></button>
       </header>
 
       {/* HERO */}

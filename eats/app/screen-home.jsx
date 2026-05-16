@@ -48,7 +48,8 @@ function HomeScreen({ onScan, onTab, gold }) {
             </span>
           </div>
         </div>
-        <button className="ee-icon-btn" aria-label="Profile">
+        <button className="ee-icon-btn" aria-label="Profile" title="Electric EATS team"
+          onClick={() => alert("Electric EATS — built by East Allen (SelfExec), Luckie Goggins (L7S Inc), Adonis Durden (Golden 33). hitthe.link/e")}>
           <span className="ee-avatar">AD</span>
         </button>
       </header>

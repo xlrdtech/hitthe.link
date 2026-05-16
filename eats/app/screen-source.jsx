@@ -21,7 +21,8 @@ function SourceScreen({ gold }) {
             <div className="ee-mark-sub">Where to actually buy it</div>
           </span>
         </div>
-        <button className="ee-icon-btn" aria-label="Filter"><Icon.filter size={14} /></button>
+        <button className="ee-icon-btn" aria-label="Filter by type" title="Filter by store type"
+          onClick={() => document.querySelector(".ee-cat-scroll")?.scrollIntoView({ behavior: "smooth", block: "center" })}><Icon.filter size={14} /></button>
       </header>
 
       {/* Search row */}

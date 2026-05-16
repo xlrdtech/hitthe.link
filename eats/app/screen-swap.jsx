@@ -15,7 +15,8 @@ function SwapScreen({ category, setCategory, gold }) {
             <div className="ee-mark-sub">Same craving · cleaner score</div>
           </span>
         </div>
-        <button className="ee-icon-btn" aria-label="Filter"><Icon.filter size={14} /></button>
+        <button className="ee-icon-btn" aria-label="Filter categories" title="Browse all categories"
+          onClick={() => document.querySelector(".ee-cat-scroll")?.scrollIntoView({ behavior: "smooth", block: "center" })}><Icon.filter size={14} /></button>
       </header>
 
       {/* CATEGORY FILTER (scrollable) */}
@@ -126,7 +127,18 @@ function SwapCard({ s, expanded, onToggle, gold }) {
             </div>
           </div>
 
-          <button className="ee-btn ee-btn-primary ee-btn-block" style={{ marginTop: 14 }}>
+          <button className="ee-btn ee-btn-primary ee-btn-block" style={{ marginTop: 14 }}
+            onClick={() => {
+              try {
+                const list = JSON.parse(localStorage.getItem("ee.grocery") || "[]");
+                if (!list.includes(swap.toName)) {
+                  list.push(swap.toName);
+                  localStorage.setItem("ee.grocery", JSON.stringify(list));
+                }
+                window.dispatchEvent(new CustomEvent("ee:grocery-added", { detail: swap.toName }));
+                alert("Added " + swap.toName + " to grocery list.");
+              } catch (e) {}
+            }}>
             <Icon.cart size={14} /> Add to grocery
           </button>
         </div>
