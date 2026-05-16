@@ -4,15 +4,86 @@ function ScanSheet({ open, onClose, onSave }) {
   const [name, setName] = React.useState("");
   const [text, setText] = React.useState("");
   const [result, setResult] = React.useState(null);
-  const [mode, setMode] = React.useState("paste"); // paste | camera
+  const [mode, setMode] = React.useState("paste");
   const [analyzing, setAnalyzing] = React.useState(false);
+  const [ocrProgress, setOcrProgress] = React.useState(0);
+  const [camError, setCamError] = React.useState("");
+  const videoRef = React.useRef(null);
+  const streamRef = React.useRef(null);
+  const canvasRef = React.useRef(null);
 
-  // Reset when opening
   React.useEffect(() => {
     if (open) {
       setName(""); setText(""); setResult(null); setMode("paste");
+      setOcrProgress(0); setCamError("");
     }
+    return () => stopCamera();
   }, [open]);
+
+  React.useEffect(() => {
+    if (mode === "camera" && open) startCamera();
+    else stopCamera();
+    return () => stopCamera();
+  }, [mode, open]);
+
+  const startCamera = async () => {
+    setCamError("");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(() => {});
+      }
+    } catch (err) {
+      setCamError(err && err.name === "NotAllowedError" ? "Camera permission denied. Use Paste text below." : "Camera unavailable: " + (err && err.message));
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+  };
+
+  const capture = async () => {
+    if (!videoRef.current || !streamRef.current) return;
+    const v = videoRef.current;
+    const canvas = canvasRef.current || document.createElement("canvas");
+    canvas.width = v.videoWidth || 1280;
+    canvas.height = v.videoHeight || 720;
+    canvas.getContext("2d").drawImage(v, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL("image/png");
+    stopCamera();
+    setAnalyzing(true);
+    setOcrProgress(5);
+    try {
+      if (!window.Tesseract) {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = "https://unpkg.com/tesseract.js@5/dist/tesseract.min.js";
+          s.onload = resolve; s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+      const { data: { text: ocrText } } = await window.Tesseract.recognize(dataUrl, "eng", {
+        logger: (m) => { if (m.status === "recognizing text") setOcrProgress(Math.round(m.progress * 100)); }
+      });
+      setText(ocrText || "");
+      setMode("paste");
+      if ((ocrText || "").trim()) setResult(analyzeIngredients(ocrText));
+    } catch (err) {
+      setCamError("OCR failed: " + (err && err.message));
+      setMode("paste");
+    } finally {
+      setAnalyzing(false);
+      setOcrProgress(0);
+    }
+  };
 
   const onAnalyze = () => {
     if (!text.trim()) return;
@@ -76,23 +147,33 @@ function ScanSheet({ open, onClose, onSave }) {
           </button>
         </div>
 
-        {/* Camera placeholder */}
+        {/* Camera live capture */}
         {mode === "camera" && (
           <div className="ee-cam">
-            <div className="ee-cam-frame">
+            <div className="ee-cam-frame" style={{ position: "relative", overflow: "hidden" }}>
+              <video ref={videoRef} playsInline muted autoPlay
+                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} />
               <span className="ee-cam-corner tl" />
               <span className="ee-cam-corner tr" />
               <span className="ee-cam-corner bl" />
               <span className="ee-cam-corner br" />
               <div className="ee-cam-scanline" />
-              <div className="ee-cam-hint">Align the ingredient panel</div>
+              <div className="ee-cam-hint">{analyzing ? `Reading label... ${ocrProgress}%` : "Align the ingredient panel"}</div>
             </div>
-            <button className="ee-btn ee-btn-primary" style={{ marginTop: 16 }} onClick={() => setMode("paste")}>
-              <Icon.bolt size={14} /> Paste ingredients to decode
+            <canvas ref={canvasRef} style={{ display: "none" }} />
+            {camError && (
+              <div className="ee-allergens" style={{ marginTop: 14 }}>
+                <Icon.alert size={13} />
+                <em>Camera</em>
+                <span>{camError}</span>
+              </div>
+            )}
+            <button className="ee-btn ee-btn-primary" style={{ marginTop: 16 }} onClick={capture} disabled={!!camError || analyzing}>
+              {analyzing ? <><span className="ee-spinner" /> OCR {ocrProgress}%</> : <><Icon.bolt size={14} /> Capture + Decode</>}
             </button>
-            <div className="ee-link" style={{ marginTop: 10, opacity: 0.7 }}>
-              Camera input lands in v1.1 - paste works now
-            </div>
+            <button className="ee-link" style={{ marginTop: 10 }} onClick={() => setMode("paste")}>
+              or paste text instead
+            </button>
           </div>
         )}
 
