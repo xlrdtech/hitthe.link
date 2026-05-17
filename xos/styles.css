@@ -3717,3 +3717,152 @@ html, body { overscroll-behavior-y: none; }
 
 /* Hide the old top-popup toast since notifications now project on the glass */
 .os.os-fullscreen .notif-host { display: none; }
+
+
+/* qi 2026-05-17 8672 follow-ups: URL editable + 3D stack restored + phone proportions */
+
+/* Editable URL field */
+.os.os-fullscreen .wv-url-form {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.os.os-fullscreen .wv-url-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--text-bright);
+  font: var(--fs-tiny) / 1 var(--f-mono);
+  letter-spacing: 0.02em;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+.os.os-fullscreen .wv-url-input::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+.os.os-fullscreen .wv-url-input:focus {
+  background: rgba(0, 220, 130, 0.06);
+  color: var(--accent);
+}
+
+/* 3D Tab Stack toggle button in strip */
+.os.os-fullscreen .wv-stack-toggle {
+  flex-shrink: 0;
+  margin-left: auto;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-size: var(--fs-mid);
+  padding: 4px 10px;
+  min-height: 36px;
+  min-width: 36px;
+  cursor: pointer;
+  transition: 0.12s;
+}
+.os.os-fullscreen .wv-stack-toggle:hover {
+  color: var(--accent);
+  border-color: var(--accent-dim);
+}
+
+/* Vertical 3D tab stack view - restored from pre-be00356 design */
+.os.os-fullscreen .wv-tabs-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px var(--pad-md) 80px;
+  perspective: 1200px;
+  perspective-origin: 50% 0;
+  overflow-y: auto;
+  height: 100%;
+}
+.os.os-fullscreen .wv-tabs-view .tab-card {
+  position: relative;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  transform-origin: 50% 0;
+  transform: rotateX(8deg) translateZ(0) translateY(0);
+  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+              box-shadow 0.22s,
+              border-color 0.22s;
+  box-shadow:
+    0 8px 16px rgba(0, 0, 0, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+}
+.os.os-fullscreen .wv-tabs-view .tab-card:hover {
+  transform: rotateX(2deg) translateZ(20px) translateY(-4px);
+  border-color: var(--accent-dim);
+  box-shadow:
+    0 16px 28px rgba(0, 0, 0, 0.55),
+    0 4px 8px rgba(0, 0, 0, 0.4),
+    0 0 0 1px var(--accent-dim),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+.os.os-fullscreen .wv-tabs-view .tab-card.new {
+  background: transparent;
+  border: 1px dashed var(--border-bright);
+  text-align: center;
+  color: var(--text-dim);
+  transform: none;
+  box-shadow: none;
+}
+.os.os-fullscreen .wv-tabs-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  font-family: var(--f-serif);
+  font-style: italic;
+}
+
+/* === PHONE PROPORTION DISCIPLINE === qi 2026-05-17 8672:
+   "the call button and stuff became too close to the dial number you need.
+   It needs a perfect proportion of space, like the margins or whatever you call it.
+   So get a skill for that." */
+.os.os-fullscreen .phone .dial-area {
+  padding: clamp(20px, 3vh + 4px, 36px) var(--pad-md) clamp(14px, 2vh, 22px);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: clamp(12px, 2vh, 22px);
+}
+.os.os-fullscreen .phone .dial-display {
+  margin-bottom: clamp(10px, 1.6vh, 18px);
+  padding: 0 var(--pad-sm);
+  min-height: clamp(40px, 5vh, 56px);
+  line-height: 1.15;
+}
+.os.os-fullscreen .phone .keypad,
+.os.os-fullscreen .phone .dial-grid,
+.os.os-fullscreen .phone .digits {
+  margin-top: clamp(12px, 2vh, 24px);
+  margin-bottom: clamp(20px, 3vh, 32px);  /* breathing room before call action */
+  gap: clamp(10px, 1.6vw + 4px, 18px);
+  padding: 0 var(--pad-md);
+}
+.os.os-fullscreen .phone .call-btn,
+.os.os-fullscreen .phone .dial-call,
+.os.os-fullscreen .phone .call-action,
+.os.os-fullscreen .phone a[href^="tel:"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: clamp(20px, 3vh, 36px) auto clamp(16px, 2.5vh, 28px);
+  min-height: clamp(56px, 7vh, 72px);
+  min-width: clamp(56px, 7vh, 72px);
+  padding: 0 clamp(20px, 3vw, 32px);
+  border-radius: 999px;
+}
+.os.os-fullscreen .phone-tabs {
+  margin-top: clamp(14px, 2vh, 24px);
+  padding: 0 var(--pad-md) clamp(10px, 1.6vh, 18px);
+  gap: clamp(8px, 1vw + 2px, 14px);
+}

@@ -744,7 +744,12 @@ function OpenedAppPage({ app }) {
   );
 }
 
-function BrowserPane({ openTabs, activeTabId, setActiveTabId, onCloseTab, onCloseAll }) {
+function BrowserPane({ openTabs, activeTabId, setActiveTabId, onCloseTab, onCloseAll, onOpenUrl }) {
+  /* qi 2026-05-17 8672 follow-ups:
+     - URL field must be editable, type-to-navigate
+     - Vertical 3D tab stack restored as toggleable view (tap badge to expand) */
+  const [stackOpen, setStackOpen] = useState(false);
+  const [urlDraft, setUrlDraft] = useState("");
   /* qi 2026-05-17 8672:
      - Tabs are real web apps/links from app drawer or clicked links, NOT threads
      - Threads open in main browser pane only when a link is clicked
@@ -792,25 +797,69 @@ function BrowserPane({ openTabs, activeTabId, setActiveTabId, onCloseTab, onClos
                 </div>
               );
             })}
+            <button
+              className="wv-stack-toggle"
+              aria-label="Toggle vertical 3D tab stack"
+              onClick={() => setStackOpen((s) => !s)}
+            >▦</button>
           </div>
         )}
 
-        {/* URL bar - only when at least one tab is open */}
+        {/* URL bar - only when at least one tab is open. EDITABLE. */}
         {showChrome && (
           <div className="wv-urlbar">
             <div className="wv-action" onClick={() => onCloseTab(activeTabId)} aria-label="Close tab">✕</div>
-            <div className="wv-url">
+            <form
+              className="wv-url-form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const raw = (urlDraft || "").trim();
+                if (!raw) return;
+                if (onOpenUrl) onOpenUrl(raw);
+                setUrlDraft("");
+              }}
+            >
               <span className="lock">⌬</span>
-              <span className="scheme">{parts.scheme}</span>
-              <span className="host">{parts.host}</span>
-              <span className="path">{parts.path}</span>
-            </div>
+              <input
+                className="wv-url-input"
+                type="text"
+                value={urlDraft || (activeTab ? (activeTab.url || "") : "")}
+                onChange={(e) => setUrlDraft(e.target.value)}
+                onFocus={(e) => setUrlDraft(activeTab ? (activeTab.url || "") : "")}
+                placeholder="type or paste a URL..."
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                inputMode="url"
+              />
+            </form>
             <div className="wv-action" onClick={() => { if (activeTab && activeTab.url) window.open(activeTab.url, "xen-app-" + activeTabId, "noopener"); }} aria-label="Reopen">↻</div>
           </div>
         )}
 
         <div className="wv-page-host">
-          {activeTab ? (
+          {stackOpen ? (
+            /* qi 2026-05-17 8672: restored vertical 3D tab stack - tap a card to activate */
+            <div className="wv-tabs-view">
+              {openTabs.length === 0 && (
+                <div className="wv-tabs-empty">no open tabs</div>
+              )}
+              {openTabs.map((t) => {
+                const k = tabKey(t);
+                return (
+                  <TabCard
+                    key={k}
+                    tab={{ ...t, id: k, kind: t.fromLink ? "thread" : "site", title: t.name || t.host, body: t.url }}
+                    onClose={() => onCloseTab(k)}
+                    onOpen={() => { setActiveTabId(k); setStackOpen(false); }}
+                  />
+                );
+              })}
+              <div className="tab-card new" onClick={() => setStackOpen(false)}>
+                <span className="plus">+</span> back to page
+              </div>
+            </div>
+          ) : activeTab ? (
             <OpenedAppPage app={activeTab} />
           ) : null}
           {false && (
@@ -1476,7 +1525,7 @@ function App() {
 
           <div className="panes" ref={panesRef}>
             <div className="pane"><OmniboxPane voice={t.voice} onNewEvent={handleNewEvent} onOpenLink={openLink} /></div>
-            <div className="pane"><BrowserPane openTabs={openTabs} activeTabId={activeTabId} setActiveTabId={setActiveTabId} onCloseTab={closeTab} onCloseAll={closeAllTabs} /></div>
+            <div className="pane"><BrowserPane openTabs={openTabs} activeTabId={activeTabId} setActiveTabId={setActiveTabId} onCloseTab={closeTab} onCloseAll={closeAllTabs} onOpenUrl={(raw) => { const u = /^https?:\/\//i.test(raw) ? raw : ("https://" + raw); try { const host = new URL(u).host; openLink({ id: u, url: u, name: host, host }); } catch (_) { openLink({ id: u, url: u, name: raw, host: raw }); } }} /></div>
             <div className="pane"><PhonePane /></div>
           </div>
 
