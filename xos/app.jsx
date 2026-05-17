@@ -208,7 +208,46 @@ function fmtRelative(secAgo) {
   return Math.floor(secAgo / 86400) + "d";
 }
 
-function MirrorCard({ ev, fresh, onReply }) {
+/* Linkify body text: turn http(s)://... and bare domains into clickable spans
+   that route to the browser pane via onOpenLink (canon-iframes-banned uses
+   window.open under the hood). qi 2026-05-17 8672: threads open in main
+   browser pane only when a link is clicked. */
+function linkifyBody(body, onOpenLink) {
+  if (!body) return null;
+  const RE = /(https?:\/\/[^\s<>"]+|\b[a-z0-9-]+\.[a-z]{2,}(?:\/[^\s<>"]*)?)/gi;
+  const matches = body.matchAll(RE);
+  const out = [];
+  let last = 0;
+  let i = 0;
+  for (const m of matches) {
+    if (m.index > last) out.push(body.slice(last, m.index));
+    const raw = m[0];
+    const url = raw.startsWith("http") ? raw : "https://" + raw;
+    out.push(
+      <a
+        key={"l" + (i++)}
+        className="mc-link"
+        href={url}
+        onClick={(e) => {
+          e.preventDefault();
+          if (onOpenLink) {
+            try {
+              const host = new URL(url).host;
+              onOpenLink({ id: url, url, name: host, host });
+            } catch (_) {
+              onOpenLink({ id: url, url, name: url, host: url });
+            }
+          }
+        }}
+      >{raw}</a>
+    );
+    last = m.index + raw.length;
+  }
+  if (last < body.length) out.push(body.slice(last));
+  return out;
+}
+
+function MirrorCard({ ev, fresh, onReply, onOpenLink }) {
   const [open, setOpen] = useState(false);
   const [val, setVal] = useState("");
   const time = new Date(Date.now() + (ev.ts || 0) * 1000);
@@ -232,7 +271,7 @@ function MirrorCard({ ev, fresh, onReply }) {
           <><b>{ev.sender}</b> → East</>
         )}
       </div>
-      <div className="body">{ev.body}</div>
+      <div className="body">{linkifyBody(ev.body, onOpenLink)}</div>
       {!isOut && !open && (
         <button className="reply" onClick={() => setOpen(true)}>reply</button>
       )}
@@ -270,7 +309,7 @@ function MirrorCard({ ev, fresh, onReply }) {
   );
 }
 
-function OmniboxPane({ voice, onNewEvent }) {
+function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
   const [q, setQ] = useState("");
   const [unread, setUnread] = useState(false);
   const [platform, setPlatform] = useState("all");
@@ -448,7 +487,7 @@ function OmniboxPane({ voice, onNewEvent }) {
               {sseState === "live" ? "awaiting signals…" : sseState + "…"}
             </div>
           ) : (
-            shown.map((e) => <MirrorCard key={e.id} ev={e} fresh={e.fresh} onReply={handleReply} />)
+            shown.map((e) => <MirrorCard key={e.id} ev={e} fresh={e.fresh} onReply={handleReply} onOpenLink={onOpenLink} />)
           )}
         </div>
       </div>
@@ -1317,7 +1356,7 @@ function App() {
           <NotificationToast notif={notif} />
 
           <div className="panes" ref={panesRef}>
-            <div className="pane"><OmniboxPane voice={t.voice} onNewEvent={handleNewEvent} /></div>
+            <div className="pane"><OmniboxPane voice={t.voice} onNewEvent={handleNewEvent} onOpenLink={openLink} /></div>
             <div className="pane"><BrowserPane openTabs={openTabs} activeTabId={activeTabId} setActiveTabId={setActiveTabId} onCloseTab={closeTab} onCloseAll={closeAllTabs} /></div>
             <div className="pane"><PhonePane /></div>
           </div>
