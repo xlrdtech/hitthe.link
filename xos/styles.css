@@ -3632,3 +3632,88 @@ html, body { overscroll-behavior-y: none; }
 
 /* Hide any leftover button children if showDock toggled */
 .os.os-fullscreen .dock.dock-swipe .dock-btn { display: none; }
+
+
+/* qi 2026-05-17 8672 follow-up: "it isn't swiping"
+   Dock was blocking horizontal pane swipes. Solution: dock is visual-only
+   (pointer-events:none), with a single .dock-hit element at the top capturing
+   tap + vertical swipe-up. Horizontal drags pass through to .panes underneath. */
+.os.os-fullscreen .dock.dock-swipe { pointer-events: none; }
+.os.os-fullscreen .dock.dock-swipe .dock-handle,
+.os.os-fullscreen .dock.dock-swipe .dock-sheen,
+.os.os-fullscreen .dock.dock-swipe .dock-edge-light { pointer-events: none; }
+.os.os-fullscreen .dock.dock-swipe .dock-hit {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: clamp(160px, 40vw, 240px);
+  height: 44px;
+  pointer-events: auto;
+  cursor: pointer;
+  background: transparent;
+  -webkit-tap-highlight-color: transparent;
+}
+.os.os-fullscreen .dock.dock-swipe .dock-hit:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -4px;
+  border-radius: 12px;
+}
+
+/* DOCK NOTIFICATION TICKER — digital typing projection over the glass */
+.os.os-fullscreen .dock-notif-ticker {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 6px);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--f-mono);
+  font-size: clamp(9px, 0.9vw + 7px, 12px);
+  letter-spacing: 0.03em;
+  color: rgba(220, 240, 230, 0.78);
+  text-shadow:
+    0 0 6px rgba(0, 220, 130, 0.35),
+    0 0 12px rgba(0, 220, 130, 0.18),
+    0 1px 1px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: opacity 0.6s ease;
+  opacity: 1;
+}
+.os.os-fullscreen .dock-notif-ticker.fading { opacity: 0; }
+.os.os-fullscreen .dock-notif-ticker .dotglow {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent), 0 0 12px var(--accent-dim);
+  flex-shrink: 0;
+}
+.os.os-fullscreen .dock-notif-ticker .text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+.os.os-fullscreen .dock-notif-ticker .caret {
+  color: var(--accent);
+  animation: dock-notif-blink 0.85s steps(1) infinite;
+  text-shadow: 0 0 4px var(--accent);
+}
+@keyframes dock-notif-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+/* Source-color tint based on data-src */
+.os.os-fullscreen .dock-notif-ticker[data-src="email"] .dotglow,
+.os.os-fullscreen .dock-notif-ticker[data-src="email"] .text { color: #f9c47a; }
+.os.os-fullscreen .dock-notif-ticker[data-src="beside"] .dotglow,
+.os.os-fullscreen .dock-notif-ticker[data-src="beside"] .text { color: #7afff5; }
+.os.os-fullscreen .dock-notif-ticker[data-src="whatsapp"] .dotglow,
+.os.os-fullscreen .dock-notif-ticker[data-src="whatsapp"] .text { color: #5fe49b; }
+
+/* Hide the old top-popup toast since notifications now project on the glass */
+.os.os-fullscreen .notif-host { display: none; }

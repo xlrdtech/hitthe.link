@@ -1266,6 +1266,39 @@ function AppDrawer({ open, onClose, apps, onAdd, onOpen }) {
   );
 }
 
+/* qi 2026-05-17 8672: digital-typing notification ticker projected onto the
+   glass swipe dock. Replaces the top-popup toast. Types character by character,
+   pauses at full text, then fades. */
+function DockNotifTicker({ notif }) {
+  const [shown, setShown] = useState("");
+  const [phase, setPhase] = useState("typing");
+  useEffect(() => {
+    if (!notif) { setShown(""); setPhase("typing"); return; }
+    setShown("");
+    setPhase("typing");
+    const fullText = ((notif.sender || notif.recipient || notif.src || "xen") + ": " + (notif.body || "")).slice(0, 120);
+    let i = 0;
+    const typeId = setInterval(() => {
+      i += 1;
+      setShown(fullText.slice(0, i));
+      if (i >= fullText.length) {
+        clearInterval(typeId);
+        setPhase("settled");
+        setTimeout(() => setPhase("fading"), 3200);
+      }
+    }, 28);
+    return () => { clearInterval(typeId); };
+  }, [notif]);
+  if (!notif) return null;
+  return (
+    <span className={"dock-notif-ticker " + phase} data-src={notif.src}>
+      <span className="dotglow" aria-hidden="true" />
+      <span className="text">{shown}</span>
+      {phase === "typing" && <span className="caret">▎</span>}
+    </span>
+  );
+}
+
 function NotificationToast({ notif, onDismiss }) {
   if (!notif) return null;
   const srcColors = {
@@ -1462,30 +1495,38 @@ function App() {
 
           {t.showDock && (
             /* qi 2026-05-17 8672: hyper-realistic glass swipe layer.
-               No icons - the bar IS the navigation. Tap or swipe-up = open drawer.
-               Pane switching happens via horizontal swipe (scroll-snap, already wired). */
-            <div
-              className="dock dock-swipe"
-              role="button"
-              tabIndex={0}
-              aria-label="Open app drawer"
-              onClick={() => setDrawerOpen(true)}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setDrawerOpen(true); }}
-              onTouchStart={(e) => {
-                const t0 = e.touches[0];
-                const startY = t0.clientY;
-                const handler = (ev) => {
-                  const t1 = ev.changedTouches[0];
-                  const dy = startY - t1.clientY;
-                  if (dy > 24) setDrawerOpen(true);
-                  document.removeEventListener("touchend", handler);
-                };
-                document.addEventListener("touchend", handler, { once: true });
-              }}
-            >
+               qi follow-up "it isn't swiping" - dock was intercepting horizontal
+               pane swipes. Fix: the visual dock has pointer-events:none so finger
+               drags pass through to the .panes scroll-snap below. Only the
+               .dock-hit element has pointer-events:auto - it sits at the top of
+               the dock (around the handle) as a 44px-tall touch target, and its
+               handlers check |dy|>|dx| to ignore horizontal motion entirely. */
+            <div className="dock dock-swipe">
               <span className="dock-handle" aria-hidden="true" />
               <span className="dock-sheen" aria-hidden="true" />
               <span className="dock-edge-light" aria-hidden="true" />
+              <DockNotifTicker notif={notif} />
+              <div
+                className="dock-hit"
+                role="button"
+                tabIndex={0}
+                aria-label="Open app drawer"
+                onClick={() => setDrawerOpen(true)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setDrawerOpen(true); }}
+                onTouchStart={(e) => {
+                  const t0 = e.touches[0];
+                  const startX = t0.clientX;
+                  const startY = t0.clientY;
+                  const handler = (ev) => {
+                    const t1 = ev.changedTouches[0];
+                    const dx = Math.abs(t1.clientX - startX);
+                    const dy = startY - t1.clientY;
+                    if (dy > 24 && dy > dx) setDrawerOpen(true);
+                    document.removeEventListener("touchend", handler);
+                  };
+                  document.addEventListener("touchend", handler, { once: true });
+                }}
+              />
             </div>
           )}
         </div>
