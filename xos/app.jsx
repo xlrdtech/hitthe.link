@@ -656,95 +656,75 @@ function OpenedAppPage({ app }) {
   );
 }
 
-function BrowserPane({ openedApp, onCloseApp, liveEvents }) {
-  const [tabsOpen, setTabsOpen] = useState(true);
-  const [closed, setClosed] = useState({});
-  /* derive thread tabs from unique chatIDs in live event stream */
-  const liveTabs = useMemo(() => {
-    const seen = new Map();
-    (liveEvents || []).forEach((ev) => {
-      const key = ev.chatID || (ev.src + ":" + (ev.sender || ev.recipient || ""));
-      if (!key || seen.has(key) || closed[key]) return;
-      seen.set(key, {
-        kind: ev.src,
-        id: key,
-        title: (ev.sender || ev.recipient || ev.src) + " · " + ev.src,
-        body: ev.body,
-        sender: ev.sender,
-        recipient: ev.recipient,
-        url: null /* most thread chatIDs aren't directly URL-resolvable */
-      });
-    });
-    return Array.from(seen.values()).slice(0, 12);
-  }, [liveEvents, closed]);
-  const tabs = liveTabs;
-  const closeTab = (id) => setClosed((prev) => ({ ...prev, [id]: true }));
+function BrowserPane({ openTabs, activeTabId, setActiveTabId, onCloseTab, onCloseAll }) {
+  /* qi 2026-05-17 8672:
+     - Tabs are real web apps/links from app drawer or clicked links, NOT threads
+     - Threads open in main browser pane only when a link is clicked
+     - Tab strip shows ONLY when 2+ tabs are open (single tab = no strip)
+     - Zero tabs = clean empty middle pane, no browser chrome at all */
+  const tabKey = (a) => (a && (a.id || a.url || a.host || a.name)) || "";
+  const tabCount = openTabs.length;
+  const activeTab = openTabs.find((t) => tabKey(t) === activeTabId);
+  const showStrip = tabCount >= 2;
+  const showChrome = tabCount >= 1;
 
-  const parts = openedApp
-    ? urlParts(openedApp.url)
-    : { scheme: "", host: "xen.xlrd.org", path: " · " + tabs.length + " live threads" };
+  if (tabCount === 0) {
+    /* clean middle pane - no chrome, no URL bar, no tabs. Just the OS pane. */
+    return <div className="webview-empty" />;
+  }
+
+  const parts = activeTab ? urlParts(activeTab.url || "") : { scheme: "", host: "", path: "" };
 
   return (
     <>
       <div className="kicker-bar">
-        <div className="kicker chrome">{openedApp ? openedApp.name : `WebView · ${tabs.length} threads`}</div>
+        <div className="kicker chrome">{activeTab ? (activeTab.name || activeTab.host || "loaded") : ""}</div>
         <div className="badge">
           <span className="led" />
-          <span>{tabsOpen ? "tab stack" : (openedApp ? "loaded" : "secure · http/3")}</span>
+          <span>{tabCount} {tabCount === 1 ? "tab" : "tabs"}</span>
         </div>
       </div>
 
       <div className="webview-wrap">
-        {/* URL bar (Safari-flavored) */}
-        <div className="wv-urlbar">
-          <div className="wv-action" onClick={openedApp ? onCloseApp : undefined}>{openedApp ? "✕" : "‹"}</div>
-          <div className="wv-action">›</div>
-          <div className="wv-url">
-            <span className="lock">⌬</span>
-            <span className="scheme">{parts.scheme}</span>
-            <span className="host">{parts.host}</span>
-            <span className="path">{parts.path}</span>
-          </div>
-          <div className="wv-action">↻</div>
-          <button
-            className={"wv-tabs-toggle" + (tabsOpen ? " active" : "")}
-            onClick={() => setTabsOpen((o) => !o)}
-            aria-label="Open tab stack"
-          >
-            <span className="tb-icon" />
-          </button>
-        </div>
-
-        {/* either the rendered page OR the vertical tab stack */}
-        <div className="wv-page-host">
-          {tabsOpen ? (
-            <div className="wv-tabs-view">
-              {tabs.length === 0 && (
-                <div style={{
-                  fontFamily: "var(--f-serif)",
-                  fontStyle: "italic",
-                  fontSize: 16,
-                  color: "var(--text-muted)",
-                  textAlign: "center",
-                  padding: "40px 20px"
-                }}>
-                  no live threads yet…
+        {showStrip && (
+          <div className="wv-tab-strip">
+            {openTabs.map((t) => {
+              const k = tabKey(t);
+              return (
+                <div
+                  key={k}
+                  className={"wv-tab-chip" + (k === activeTabId ? " active" : "")}
+                  onClick={() => setActiveTabId(k)}
+                >
+                  <span className="wv-tab-name">{t.name || t.host || "tab"}</span>
+                  <span
+                    className="wv-tab-x"
+                    onClick={(e) => { e.stopPropagation(); onCloseTab(k); }}
+                  >✕</span>
                 </div>
-              )}
-              {tabs.map((tab) => (
-                <TabCard key={tab.id} tab={tab} onClose={() => closeTab(tab.id)} />
-              ))}
-              <div className="tab-card new" onClick={() => setTabsOpen(false)}>
-                <span className="plus">+</span> new tab
-              </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* URL bar - only when at least one tab is open */}
+        {showChrome && (
+          <div className="wv-urlbar">
+            <div className="wv-action" onClick={() => onCloseTab(activeTabId)} aria-label="Close tab">✕</div>
+            <div className="wv-url">
+              <span className="lock">⌬</span>
+              <span className="scheme">{parts.scheme}</span>
+              <span className="host">{parts.host}</span>
+              <span className="path">{parts.path}</span>
             </div>
-          ) : openedApp ? (
-            <OpenedAppPage app={openedApp} />
-          ) : (
-            <div className="wv-page" style={{ padding: "40px 24px", textAlign: "center", color: "var(--text-muted)", fontFamily: "var(--f-serif)", fontStyle: "italic" }}>
-              tap the tab stack to see live threads
-            </div>
-          )}
+            <div className="wv-action" onClick={() => { if (activeTab && activeTab.url) window.open(activeTab.url, "xen-app-" + activeTabId, "noopener"); }} aria-label="Reopen">↻</div>
+          </div>
+        )}
+
+        <div className="wv-page-host">
+          {activeTab ? (
+            <OpenedAppPage app={activeTab} />
+          ) : null}
           {false && (
             <div className="wv-page" style={{ display: "none" }}>
               <div className="wp-bar">
@@ -1239,7 +1219,11 @@ function App() {
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [apps, setApps] = useState(DEFAULT_APPS);
-  const [openedApp, setOpenedApp] = useState(null);
+  /* qi 2026-05-17 8672: tabs are real web apps/links from app drawer, not threads.
+     Threads open in the main browser pane only when a link is clicked.
+     Tab strip appears only when 2+ tabs are open. */
+  const [openTabs, setOpenTabs] = useState([]);
+  const [activeTabId, setActiveTabId] = useState(null);
   const [notif, setNotif] = useState(null);
   const [liveEvents, setLiveEvents] = useState([]);
   const notifTimer = useRef(null);
@@ -1281,16 +1265,31 @@ function App() {
   };
 
   const addApp = (app) => setApps((prev) => [...prev, app]);
+  const tabKey = (a) => (a && (a.id || a.url || a.host || a.name)) || "";
   const openApp = (app) => {
-    /* canon-iframes-banned: external apps open in a named window so repeat clicks reuse it */
+    /* canon-iframes-banned: external apps open in named window so repeat clicks reuse it */
     if (app && app.url) {
-      window.open(app.url, "xen-app-" + (app.id || app.host || "default"), "noopener");
+      window.open(app.url, "xen-app-" + tabKey(app), "noopener");
     }
-    setOpenedApp(app);
+    const k = tabKey(app);
+    setOpenTabs((prev) => prev.some((t) => tabKey(t) === k) ? prev : [...prev, app]);
+    setActiveTabId(k);
     setDrawerOpen(false);
     goto(1);
   };
-  const closeApp = () => setOpenedApp(null);
+  const closeTab = (k) => {
+    setOpenTabs((prev) => {
+      const next = prev.filter((t) => tabKey(t) !== k);
+      if (activeTabId === k) {
+        setActiveTabId(next.length ? tabKey(next[next.length - 1]) : null);
+      }
+      return next;
+    });
+  };
+  const closeAllTabs = () => { setOpenTabs([]); setActiveTabId(null); };
+  /* openLink: invoked from MMM thread/link clicks - same flow as openApp but
+     tagged so we know it came from a link not the drawer. Still ends up as a tab. */
+  const openLink = (link) => openApp({ ...link, fromLink: true });
   const isConnected = t.connection === "connected";
 
   return (
@@ -1319,7 +1318,7 @@ function App() {
 
           <div className="panes" ref={panesRef}>
             <div className="pane"><OmniboxPane voice={t.voice} onNewEvent={handleNewEvent} /></div>
-            <div className="pane"><BrowserPane openedApp={openedApp} onCloseApp={closeApp} liveEvents={liveEvents} /></div>
+            <div className="pane"><BrowserPane openTabs={openTabs} activeTabId={activeTabId} setActiveTabId={setActiveTabId} onCloseTab={closeTab} onCloseAll={closeAllTabs} /></div>
             <div className="pane"><PhonePane /></div>
           </div>
 
