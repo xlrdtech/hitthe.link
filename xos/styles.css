@@ -3027,3 +3027,14 @@ body {
   text-transform: uppercase;
   color: var(--text-muted);
 }
+
+/* =========================================================
+   qi 2026-05-17 8672: "The OS only. No background."
+   Demos are blasphemy. Fullscreen, no iPhone frame.
+   ========================================================= */
+html, body, #root { height: 100%; width: 100%; margin: 0; padding: 0; background: var(--bg) !important; overflow: hidden; }
+.stage.stage-fullscreen { position: fixed; inset: 0; display: block; background: var(--bg); padding: 0; }
+.os.os-fullscreen { position: fixed; inset: 0; width: 100vw; height: 100vh; max-width: none; max-height: none; border-radius: 0; overflow: hidden; background: var(--bg); }
+.os.os-fullscreen > * { max-width: 100%; }
+.stage.stage-fullscreen::before, .stage.stage-fullscreen::after,
+.os.os-fullscreen::before, .os.os-fullscreen::after { display: none !important; }

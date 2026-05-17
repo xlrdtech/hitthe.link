@@ -1294,9 +1294,9 @@ function App() {
   const isConnected = t.connection === "connected";
 
   return (
-    <div className="stage">
-      <IOSDevice width={402} height={874} dark={true} time={t.iosTime}>
-        <div className="os">
+    <div className="stage stage-fullscreen">
+      {/* qi 2026-05-17 8672: "The OS only. No background. This is not a demo. Demos are blasphemy" - iOS device frame stripped, panels render fullscreen */}
+      <div className="os os-fullscreen">
           {/* xen status row */}
           <div className="xen-status">
             <div className="left">
@@ -1350,7 +1350,7 @@ function App() {
             </div>
           )}
         </div>
-      </IOSDevice>
+
 
       <TweaksPanel title="Tweaks">
         <TweakSection label="System" />
