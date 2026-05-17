@@ -1461,16 +1461,31 @@ function App() {
           />
 
           {t.showDock && (
-            <div className="dock">
-              <button className={"dock-btn" + (paneIdx === 0 ? " active" : "")} onClick={() => goto(0)}>
-                <span className="glyph">›</span><span>omni</span>
-              </button>
-              <button className={"dock-btn" + (paneIdx === 1 ? " active" : "")} onClick={() => goto(1)}>
-                <span className="glyph">≣</span><span>browse</span>
-              </button>
-              <button className={"dock-btn" + (paneIdx === 2 ? " active" : "")} onClick={() => goto(2)}>
-                <span className="glyph">☏</span><span>phone</span>
-              </button>
+            /* qi 2026-05-17 8672: hyper-realistic glass swipe layer.
+               No icons - the bar IS the navigation. Tap or swipe-up = open drawer.
+               Pane switching happens via horizontal swipe (scroll-snap, already wired). */
+            <div
+              className="dock dock-swipe"
+              role="button"
+              tabIndex={0}
+              aria-label="Open app drawer"
+              onClick={() => setDrawerOpen(true)}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setDrawerOpen(true); }}
+              onTouchStart={(e) => {
+                const t0 = e.touches[0];
+                const startY = t0.clientY;
+                const handler = (ev) => {
+                  const t1 = ev.changedTouches[0];
+                  const dy = startY - t1.clientY;
+                  if (dy > 24) setDrawerOpen(true);
+                  document.removeEventListener("touchend", handler);
+                };
+                document.addEventListener("touchend", handler, { once: true });
+              }}
+            >
+              <span className="dock-handle" aria-hidden="true" />
+              <span className="dock-sheen" aria-hidden="true" />
+              <span className="dock-edge-light" aria-hidden="true" />
             </div>
           )}
         </div>

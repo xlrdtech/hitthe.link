@@ -3502,3 +3502,133 @@ html.xos-locked, body.xos-locked { overflow: hidden; }
 
 /* 11. Universal: lock html/body to prevent overscroll bounce eating dock */
 html, body { overscroll-behavior-y: none; }
+
+
+/* =========================================================
+   qi 2026-05-17 8672: hyper-realistic glass swipe dock
+   - No icons, no buttons inside. The bar IS navigation.
+   - Tap or swipe-up = open app drawer
+   - Pane switch = horizontal swipe (scroll-snap, already wired)
+   - White handle bar lives near the top of the dock zone (where icons were)
+   ========================================================= */
+
+/* Override the previous dock styling entirely for swipe variant */
+.os.os-fullscreen .dock.dock-swipe {
+  display: block;
+  cursor: pointer;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--dock-h, 60px) + env(safe-area-inset-bottom, 0px));
+  padding: 0;
+  z-index: 6;
+
+  /* Hyper-realistic frosted glass:
+     - Deep multi-layer backdrop blur for depth
+     - Subtle vertical gradient from translucent to slightly tinted
+     - Inner light highlight at top edge (refraction)
+     - Inner shadow at bottom for grounding
+     - Radial sheen highlight off-center for "real glass" feel */
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 60%),
+    linear-gradient(
+      to bottom,
+      rgba(20, 28, 24, 0.42) 0%,
+      rgba(10, 14, 12, 0.62) 50%,
+      rgba(6, 10, 8, 0.78) 100%
+    );
+  backdrop-filter: blur(40px) saturate(220%) brightness(1.05);
+  -webkit-backdrop-filter: blur(40px) saturate(220%) brightness(1.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 -8px 24px rgba(0, 0, 0, 0.45);
+
+  transition: backdrop-filter 0.18s ease, background 0.18s ease;
+}
+
+/* Pseudo: drag/press feedback - glass densifies under finger */
+.os.os-fullscreen .dock.dock-swipe:active {
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0) 60%),
+    linear-gradient(
+      to bottom,
+      rgba(20, 28, 24, 0.55) 0%,
+      rgba(10, 14, 12, 0.75) 50%,
+      rgba(6, 10, 8, 0.88) 100%
+    );
+  backdrop-filter: blur(48px) saturate(240%) brightness(1.1);
+  -webkit-backdrop-filter: blur(48px) saturate(240%) brightness(1.1);
+}
+
+.os.os-fullscreen .dock.dock-swipe:hover {
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 60%),
+    linear-gradient(
+      to bottom,
+      rgba(22, 30, 26, 0.48) 0%,
+      rgba(12, 16, 14, 0.68) 50%,
+      rgba(8, 12, 10, 0.82) 100%
+    );
+}
+
+.os.os-fullscreen .dock.dock-swipe:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -4px;
+}
+
+/* The white handle bar - lives in the "icon area" spot (top of dock zone),
+   shaped like iOS home-indicator but slightly wider, with realistic glow. */
+.os.os-fullscreen .dock.dock-swipe .dock-handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(120px, 28vw, 180px);
+  height: 5px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(240, 240, 245, 0.85) 50%,
+    rgba(220, 220, 230, 0.7) 100%
+  );
+  box-shadow:
+    0 0 6px rgba(255, 255, 255, 0.5),
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+}
+
+/* Top-edge refraction highlight - 1px catching light from above */
+.os.os-fullscreen .dock.dock-swipe .dock-sheen {
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  pointer-events: none;
+}
+
+/* Side-edge light catch — subtle vertical glints at the dock corners */
+.os.os-fullscreen .dock.dock-swipe .dock-edge-light {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  right: 0;
+  background:
+    linear-gradient(to right, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 8%, rgba(255,255,255,0) 92%, rgba(255,255,255,0.06) 100%);
+  pointer-events: none;
+}
+
+/* Hide any leftover button children if showDock toggled */
+.os.os-fullscreen .dock.dock-swipe .dock-btn { display: none; }
