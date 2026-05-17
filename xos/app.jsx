@@ -319,38 +319,63 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
   const onNewEventRef = useRef(onNewEvent);
   onNewEventRef.current = onNewEvent;
 
-  /* live SSE feed from xen.xlrd.org/events — canon-no-demos */
+  /* live SSE feed from xen.xlrd.org/events — canon-no-demos
+     qi 2026-05-17 8672: "firehose isn't stay connected. It can never drop."
+     Reconnect with exponential backoff capped at 8s. Never give up. */
   useEffect(() => {
     let es;
     let counter = 0;
     let cancelled = false;
-    try {
-      es = new EventSource(SSE_URL);
-      es.onopen = () => { if (!cancelled) setSseState("live"); };
-      es.onerror = () => { if (!cancelled) setSseState("reconnecting"); };
-      es.onmessage = (msg) => {
-        if (cancelled) return;
-        let raw;
-        try { raw = JSON.parse(msg.data); } catch (e) { return; }
-        if (!raw || raw.event === "connected" || !raw.body) return;
-        const next = { ...normalizeLiveEvent(raw, counter++), fresh: true, unread: true };
-        setEvents((prev) => {
-          // de-dupe by chatID+body+absTs
-          if (prev.some((p) => p._absTs === next._absTs && p.body === next.body && p.sender === next.sender)) {
-            return prev;
-          }
-          return [next, ...prev].slice(0, 60);
-        });
-        setCount((c) => c + 1);
-        if (onNewEventRef.current) onNewEventRef.current(next);
-        setTimeout(() => {
-          setEvents((prev) => prev.map((x) => (x.id === next.id ? { ...x, fresh: false } : x)));
-        }, 900);
-      };
-    } catch (e) {
-      setSseState("error");
-    }
-    return () => { cancelled = true; if (es) es.close(); };
+    let retryDelay = 500;
+    let retryTimer = null;
+    const connect = () => {
+      if (cancelled) return;
+      try {
+        es = new EventSource(SSE_URL);
+        es.onopen = () => {
+          if (cancelled) return;
+          retryDelay = 500;
+          setSseState("live");
+        };
+        es.onerror = () => {
+          if (cancelled) return;
+          setSseState("reconnecting");
+          try { es && es.close(); } catch (_) {}
+          if (retryTimer) clearTimeout(retryTimer);
+          retryTimer = setTimeout(connect, retryDelay);
+          retryDelay = Math.min(retryDelay * 2, 8000);
+        };
+        es.onmessage = (msg) => {
+          if (cancelled) return;
+          let raw;
+          try { raw = JSON.parse(msg.data); } catch (e) { return; }
+          if (!raw || raw.event === "connected" || !raw.body) return;
+          const next = { ...normalizeLiveEvent(raw, counter++), fresh: true, unread: true };
+          setEvents((prev) => {
+            if (prev.some((p) => p._absTs === next._absTs && p.body === next.body && p.sender === next.sender)) {
+              return prev;
+            }
+            return [next, ...prev].slice(0, 60);
+          });
+          setCount((c) => c + 1);
+          if (onNewEventRef.current) onNewEventRef.current(next);
+          setTimeout(() => {
+            setEvents((prev) => prev.map((x) => (x.id === next.id ? { ...x, fresh: false } : x)));
+          }, 900);
+        };
+      } catch (e) {
+        setSseState("reconnecting");
+        if (retryTimer) clearTimeout(retryTimer);
+        retryTimer = setTimeout(connect, retryDelay);
+        retryDelay = Math.min(retryDelay * 2, 8000);
+      }
+    };
+    connect();
+    return () => {
+      cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
+      if (es) try { es.close(); } catch (_) {}
+    };
   }, []);
 
   const handleReply = (ev, text) => {
@@ -1128,15 +1153,33 @@ function parseAppFromUrl(raw) {
       url,
       host,
       glyph: (main[0] || "?").toUpperCase(),
-      name: host
+      name: main.charAt(0).toUpperCase() + main.slice(1),
+      /* qi 2026-05-17 8672: auto-favicon from URL host. Google S2 is reliable + zero-auth. */
+      iconUrl: "https://www.google.com/s2/favicons?domain=" + encodeURIComponent(host) + "&sz=128"
     };
   } catch (e) { return null; }
 }
 
 function WebAppIcon({ app, adding, onOpen }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  /* qi 2026-05-17 8672: 3D iOS app icon - rounded square, gradient sheen, depth shadow.
+     Fall back to glyph letter only if favicon fetch fails. */
   return (
     <button className="web-app" onClick={() => onOpen && onOpen(app)} type="button">
-      <div className={"icon" + (adding ? " adding" : "")}>{app.glyph}</div>
+      <div className={"icon ios3d" + (adding ? " adding" : "")}>
+        {app.iconUrl && !imgFailed ? (
+          <img
+            src={app.iconUrl}
+            alt={app.name}
+            className="ios3d-img"
+            onError={() => setImgFailed(true)}
+            draggable={false}
+          />
+        ) : (
+          <span className="ios3d-glyph">{app.glyph}</span>
+        )}
+        <span className="ios3d-sheen" aria-hidden="true" />
+      </div>
       <div className="nm">{app.name}</div>
     </button>
   );
@@ -1199,7 +1242,7 @@ function AppDrawer({ open, onClose, apps, onAdd, onOpen }) {
   );
 }
 
-function NotificationToast({ notif }) {
+function NotificationToast({ notif, onDismiss }) {
   if (!notif) return null;
   const srcColors = {
     email:     "#d97757",
@@ -1243,6 +1286,12 @@ function NotificationToast({ notif }) {
           <div className="notif-text">{notif.body}</div>
         </div>
         <div className="notif-time">now</div>
+        {/* qi 2026-05-17 8672: "notifications need to be dismissible" */}
+        <button
+          className="notif-dismiss"
+          aria-label="Dismiss notification"
+          onClick={(e) => { e.stopPropagation(); if (onDismiss) onDismiss(); }}
+        >✕</button>
       </div>
     </div>
   );
@@ -1257,7 +1306,20 @@ function App() {
   const [paneIdx, setPaneIdx] = useState(t.startPane ?? 1);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [apps, setApps] = useState(DEFAULT_APPS);
+  /* qi 2026-05-17 8672: apps must persist across reload. localStorage with safe fallback. */
+  const [apps, setApps] = useState(() => {
+    try {
+      const stored = localStorage.getItem("xos.apps.v1");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length) return parsed;
+      }
+    } catch (_) {}
+    return DEFAULT_APPS;
+  });
+  useEffect(() => {
+    try { localStorage.setItem("xos.apps.v1", JSON.stringify(apps)); } catch (_) {}
+  }, [apps]);
   /* qi 2026-05-17 8672: tabs are real web apps/links from app drawer, not threads.
      Threads open in the main browser pane only when a link is clicked.
      Tab strip appears only when 2+ tabs are open. */
@@ -1353,7 +1415,7 @@ function App() {
           </div>
 
           {/* notification toast */}
-          <NotificationToast notif={notif} />
+          <NotificationToast notif={notif} onDismiss={() => { if (notifTimer.current) clearTimeout(notifTimer.current); setNotif(null); }} />
 
           <div className="panes" ref={panesRef}>
             <div className="pane"><OmniboxPane voice={t.voice} onNewEvent={handleNewEvent} onOpenLink={openLink} /></div>
