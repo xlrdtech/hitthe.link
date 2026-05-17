@@ -255,6 +255,18 @@ function MirrorCard({ ev, fresh, onReply, onOpenLink }) {
   const when = `${pad(time.getHours())}:${pad(time.getMinutes())}`;
   const sec = pad(time.getSeconds());
   const isOut = ev.dir === "out";
+  /* qi 2026-05-17 8672 follow-up: chatID-keyed thread routing.
+     If the card has a chatID (Beeper / SMS thread), clicking the whole "who"
+     line opens it as a tab in the browser pane via a synthetic thread URL.
+     Falls back gracefully when chatID is absent - just no-op click. */
+  const threadKey = ev.chatID || ev.threadId || null;
+  const openAsTab = () => {
+    if (!onOpenLink) return;
+    if (!threadKey) return;
+    const url = `https://xen.xlrd.org/thread/${encodeURIComponent(threadKey)}`;
+    const label = (ev.sender || ev.recipient || ev.src || "thread");
+    onOpenLink({ id: threadKey, url, name: label, host: ev.src || "thread" });
+  };
   return (
     <article className={"mcard" + (fresh ? " fresh" : "")} data-src={ev.src}>
       <div className="meta-row">
@@ -263,8 +275,20 @@ function MirrorCard({ ev, fresh, onReply, onOpenLink }) {
         <span className={"mpill dir " + (isOut ? "out" : "")}>
           {isOut ? `out · ${ev.recipient}` : "in"}
         </span>
+        {threadKey && (
+          <span
+            className="mpill thread-open"
+            title="Open thread in browser pane"
+            onClick={openAsTab}
+            style={{ cursor: "pointer" }}
+          >open ↗</span>
+        )}
       </div>
-      <div className="who">
+      <div
+        className={"who" + (threadKey ? " clickable" : "")}
+        onClick={threadKey ? openAsTab : undefined}
+        style={threadKey ? { cursor: "pointer" } : null}
+      >
         {isOut ? (
           <><b>East</b> → {ev.recipient}</>
         ) : (
