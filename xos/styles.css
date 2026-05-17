@@ -3065,3 +3065,42 @@ html, body, #root { height: 100%; width: 100%; margin: 0; padding: 0; background
 .web-app .icon.ios3d .ios3d-sheen { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.04) 40%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.1) 100%); border-radius: 14px; }
 .web-app .icon.ios3d.adding { animation: ios3d-pulse 0.6s ease; }
 @keyframes ios3d-pulse { 0% { transform: scale(0.9); } 50% { transform: scale(1.08); box-shadow: 0 0 0 4px var(--accent-faint), 0 4px 10px rgba(0,0,0,0.55); } 100% { transform: scale(1); } }
+
+
+/* qi 2026-05-17 8672: "That top banner is too low causing overlaps and a scrolling issue"
+   Fullscreen-mode positioning fix - collapse the 78px iOS-frame top clearance
+   and the 58px bottom dock clearance since neither exists outside the IOSDevice wrapper. */
+.os.os-fullscreen .xen-status {
+  top: 0;
+  height: 26px;
+  padding: 0 14px;
+  font-size: 10px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--border);
+  pointer-events: auto;
+}
+.os.os-fullscreen .panes {
+  inset: 26px 0 0;  /* clear only the xen-status strip, no bottom dock */
+}
+.os.os-fullscreen .pane {
+  height: 100%;
+  overflow-y: auto;
+}
+/* kicker-bar inside fullscreen pane stays sticky at top: 0 of pane,
+   which now sits right below the xen-status strip - no overlap */
+.os.os-fullscreen .kicker-bar {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background: var(--bg);
+}
+/* hide any dock/home-indicator artifacts the iOS frame might have rendered */
+.os.os-fullscreen .ios-dock,
+.os.os-fullscreen .home-indicator,
+.os.os-fullscreen .ios-statusbar {
+  display: none !important;
+}
+/* prevent horizontal page scroll - lock body/root */
+html.xos-locked, body.xos-locked { overflow: hidden; }
