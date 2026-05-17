@@ -3104,3 +3104,83 @@ html, body, #root { height: 100%; width: 100%; margin: 0; padding: 0; background
 }
 /* prevent horizontal page scroll - lock body/root */
 html.xos-locked, body.xos-locked { overflow: hidden; }
+
+
+/* qi 2026-05-17 8672: bottom nav matches iOS Safari layout so web apps inside
+   the WebView panel feel seamless with the host shell. Glass toolbar with
+   backdrop blur, rounded top corners, safe-area-inset-bottom respect, larger
+   tap targets. The 3-pane switcher stays but rendered in Safari visual lang. */
+.os.os-fullscreen .panes {
+  inset: 26px 0 calc(60px + env(safe-area-inset-bottom, 0px)) 0;
+}
+.os.os-fullscreen .dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(60px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  gap: 0;
+  background: rgba(8, 12, 10, 0.72);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.04) inset;
+  z-index: 6;
+}
+.os.os-fullscreen .dock-btn {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 0 6px;
+  background: transparent;
+  border: 0;
+  color: var(--text-dim);
+  font: 10px/1 var(--f-mono);
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: color 0.12s, transform 0.06s;
+  position: relative;
+}
+.os.os-fullscreen .dock-btn .glyph {
+  font: 400 24px/1 var(--f-mono);
+  display: block;
+  color: var(--text);
+  text-shadow: 0 0 8px transparent;
+  transition: color 0.18s, text-shadow 0.18s;
+}
+.os.os-fullscreen .dock-btn:hover .glyph { color: var(--text-bright); }
+.os.os-fullscreen .dock-btn:active { transform: scale(0.94); }
+.os.os-fullscreen .dock-btn.active { color: var(--accent); }
+.os.os-fullscreen .dock-btn.active .glyph { color: var(--accent); text-shadow: 0 0 10px var(--accent-dim); }
+.os.os-fullscreen .dock-btn.active::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 0 0 2px 2px;
+  box-shadow: 0 0 6px var(--accent-dim);
+}
+
+/* iOS safe-area painted continuation - the dock background extends below the
+   visible area to cover the home-indicator gesture zone */
+.os.os-fullscreen .dock::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: env(safe-area-inset-bottom, 0px);
+  background: rgba(8, 12, 10, 0.72);
+  pointer-events: none;
+}
