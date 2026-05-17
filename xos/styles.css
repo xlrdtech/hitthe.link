@@ -3247,3 +3247,258 @@ html.xos-locked, body.xos-locked { overflow: hidden; }
 .mpill.thread-open:hover { background: var(--accent-dim); color: var(--bg); }
 .who.clickable { transition: color 0.12s; }
 .who.clickable:hover { color: var(--text-bright); }
+
+
+/* =========================================================
+   qi 2026-05-17 8672 ULTRATHINK: dialpad scrolls + UI perfect at every resolution
+   ========================================================= */
+
+/* 1. REVERT phone-no-scroll lock from ecc9469.
+      Dialpad + tabs + caller list scroll as one column. */
+.os.os-fullscreen .pane:has(.phone) { overflow: hidden auto; }
+.os.os-fullscreen .phone { height: auto; max-height: none; overflow: visible; }
+.os.os-fullscreen .phone-body { overflow: visible; }
+.os.os-fullscreen .phone .dial-area {
+  position: static;
+  flex-shrink: 0;
+}
+.os.os-fullscreen .phone .caller-list,
+.os.os-fullscreen .phone .recents-list,
+.os.os-fullscreen .phone .contacts-list,
+.os.os-fullscreen .phone .phone-list {
+  overflow: visible;
+  flex: 0 1 auto;
+}
+
+/* 2. Fluid type + spacing scale. Every fixed pixel becomes a clamp() so
+      the UI looks crisp from iPhone SE 320px up through desktop 1920px+.
+      Lower bound = small phone min, upper bound = desktop max, middle = vw-based. */
+.os.os-fullscreen {
+  --fs-tiny:  clamp(9px,  0.7vw + 7px,  12px);
+  --fs-base:  clamp(12px, 0.9vw + 9px,  16px);
+  --fs-mid:   clamp(14px, 1.1vw + 10px, 19px);
+  --fs-lg:    clamp(18px, 1.6vw + 12px, 26px);
+  --fs-xl:    clamp(22px, 2.4vw + 14px, 36px);
+  --fs-hero:  clamp(28px, 3.6vw + 16px, 56px);
+  --pad-xs:   clamp(4px,  0.4vw + 2px,  8px);
+  --pad-sm:   clamp(8px,  0.8vw + 4px,  14px);
+  --pad-md:   clamp(12px, 1.2vw + 6px,  22px);
+  --pad-lg:   clamp(18px, 2vw   + 10px, 36px);
+  --gap-sm:   clamp(4px,  0.6vw + 2px,  10px);
+  --gap-md:   clamp(8px,  1vw   + 4px,  18px);
+  --radius:   clamp(8px,  0.8vw + 4px,  16px);
+  --icon-sm:  clamp(16px, 1.4vw + 10px, 24px);
+  --icon-md:  clamp(22px, 2vw   + 14px, 36px);
+  --icon-lg:  clamp(48px, 5vw   + 24px, 84px);
+  --dock-h:   clamp(56px, 6vh + 8px,    78px);
+  --status-h: clamp(24px, 2.6vh + 4px,  34px);
+}
+
+/* 3. Dynamic viewport height for iOS Safari URL-bar collapse.
+      Stage uses dvh when supported, vh fallback otherwise. */
+.os.os-fullscreen { height: 100vh; }
+@supports (height: 100dvh) {
+  .os.os-fullscreen { height: 100dvh; }
+  html, body, #root { height: 100dvh; }
+}
+
+/* 4. Recalibrate the status strip + panes inset + dock to fluid units. */
+.os.os-fullscreen .xen-status {
+  height: var(--status-h);
+  padding: 0 var(--pad-sm);
+  font-size: var(--fs-tiny);
+}
+.os.os-fullscreen .panes {
+  inset: var(--status-h) 0 calc(var(--dock-h) + env(safe-area-inset-bottom, 0px)) 0;
+}
+.os.os-fullscreen .dock {
+  height: calc(var(--dock-h) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.os.os-fullscreen .dock-btn {
+  min-height: 44px;
+  font-size: var(--fs-tiny);
+  padding: var(--pad-xs) 0;
+}
+.os.os-fullscreen .dock-btn .glyph {
+  font-size: var(--icon-md);
+}
+
+/* 5. Phone pane fluid layout — dialpad grid + caller list inherit clamp. */
+.os.os-fullscreen .phone {
+  padding: 0;
+}
+.os.os-fullscreen .phone .dial-area {
+  padding: var(--pad-md) var(--pad-sm) var(--pad-xs);
+}
+.os.os-fullscreen .phone .dial-display {
+  font-size: var(--fs-xl);
+  letter-spacing: 0.04em;
+  word-break: break-all;
+}
+.os.os-fullscreen .phone .dial-label {
+  font-size: var(--fs-tiny);
+}
+/* Dialpad number grid - 3 columns, fluid gap, square buttons with min tap target */
+.os.os-fullscreen .phone .keypad,
+.os.os-fullscreen .phone .dial-grid,
+.os.os-fullscreen .phone .digits {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--gap-md);
+  padding: var(--pad-sm) var(--pad-md);
+}
+.os.os-fullscreen .phone .keypad button,
+.os.os-fullscreen .phone .dial-grid button,
+.os.os-fullscreen .phone .digit-btn {
+  aspect-ratio: 1 / 1;
+  min-height: 44px;
+  min-width: 44px;
+  font-size: var(--fs-lg);
+}
+.os.os-fullscreen .phone .phone-tabs button {
+  min-height: 44px;
+  font-size: var(--fs-base);
+  padding: var(--pad-xs) var(--pad-sm);
+}
+
+/* 6. Omni / MMM pane fluid - mirror cards + filters scale */
+.os.os-fullscreen .kicker-bar {
+  height: clamp(40px, 4vh + 16px, 56px);
+  padding: 0 var(--pad-sm);
+  font-size: var(--fs-base);
+}
+.os.os-fullscreen .kicker.chrome,
+.os.os-fullscreen .badge {
+  font-size: var(--fs-tiny);
+}
+.os.os-fullscreen .mcard {
+  padding: var(--pad-sm) var(--pad-md);
+  font-size: var(--fs-base);
+  gap: var(--gap-sm);
+}
+.os.os-fullscreen .mcard .body {
+  font-size: var(--fs-base);
+  line-height: 1.45;
+}
+.os.os-fullscreen .mfilter {
+  min-height: 36px;
+  padding: var(--pad-xs) var(--pad-sm);
+  font-size: var(--fs-tiny);
+}
+.os.os-fullscreen .mirror-feed { padding: var(--pad-sm); gap: var(--gap-sm); }
+
+/* 7. Drawer + app icons fluid */
+.os.os-fullscreen .app-drawer { padding: var(--pad-md); }
+.os.os-fullscreen .drawer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: var(--gap-md);
+  padding: var(--pad-sm);
+}
+.os.os-fullscreen .web-app .icon.ios3d {
+  width: var(--icon-lg);
+  height: var(--icon-lg);
+  border-radius: clamp(10px, 1vw + 6px, 18px);
+}
+.os.os-fullscreen .web-app .nm {
+  font-size: var(--fs-tiny);
+  max-width: var(--icon-lg);
+}
+
+/* 8. WebView tab strip fluid */
+.os.os-fullscreen .wv-tab-strip { padding: var(--pad-xs) var(--pad-sm) 0; gap: var(--gap-sm); }
+.os.os-fullscreen .wv-tab-chip {
+  padding: var(--pad-xs) var(--pad-sm);
+  font-size: var(--fs-tiny);
+  max-width: clamp(120px, 18vw, 240px);
+  min-height: 36px;
+}
+.os.os-fullscreen .wv-urlbar {
+  padding: var(--pad-xs) var(--pad-sm);
+  font-size: var(--fs-tiny);
+}
+
+/* 9. Notification toast positioning + size scale */
+.os.os-fullscreen .notif-host {
+  top: calc(var(--status-h) + var(--pad-sm));
+  padding: 0 var(--pad-sm);
+}
+.os.os-fullscreen .notif {
+  padding: var(--pad-sm) var(--pad-md);
+  font-size: var(--fs-base);
+  gap: var(--gap-sm);
+  border-radius: var(--radius);
+}
+.os.os-fullscreen .notif-text { font-size: var(--fs-tiny); }
+.os.os-fullscreen .notif-dismiss { min-width: 32px; min-height: 32px; font-size: var(--fs-base); }
+
+/* 10. Breakpoint refinements — beyond clamp, optimize at specific viewports */
+
+/* Small phones 320-374px (iPhone SE etc) - tightest spacing, smaller dialpad */
+@media (max-width: 374px) {
+  .os.os-fullscreen {
+    --pad-md: 10px;
+    --gap-md: 6px;
+  }
+  .os.os-fullscreen .phone .keypad,
+  .os.os-fullscreen .phone .dial-grid,
+  .os.os-fullscreen .phone .digits { gap: 8px; padding: 8px; }
+}
+
+/* Standard phone 375-430px (iPhone 15 etc) - default, no override */
+
+/* Tablet 768px+ - more generous padding, wider gutters */
+@media (min-width: 768px) {
+  .os.os-fullscreen {
+    --pad-md: 22px;
+    --gap-md: 16px;
+  }
+  .os.os-fullscreen .mirror-feed { max-width: 720px; margin: 0 auto; }
+  .os.os-fullscreen .phone .dial-area,
+  .os.os-fullscreen .phone .keypad { max-width: 480px; margin: 0 auto; }
+}
+
+/* Desktop 1280px+ - center the phone-shaped column, side gutters dim */
+@media (min-width: 1280px) {
+  .os.os-fullscreen .panes {
+    max-width: 1100px;
+    margin: 0 auto;
+    left: 0;
+    right: 0;
+  }
+  .os.os-fullscreen .dock {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+}
+
+/* Landscape phone (height < 500px) - compress vertical, smaller dock */
+@media (orientation: landscape) and (max-height: 500px) {
+  .os.os-fullscreen {
+    --dock-h: 48px;
+    --status-h: 22px;
+  }
+  .os.os-fullscreen .phone .dial-display { font-size: var(--fs-mid); }
+  .os.os-fullscreen .phone .keypad button,
+  .os.os-fullscreen .phone .dial-grid button { min-height: 36px; }
+}
+
+/* High-density displays - sharpen borders */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .os.os-fullscreen .kicker-bar,
+  .os.os-fullscreen .xen-status,
+  .os.os-fullscreen .dock {
+    border-width: 0.5px;
+  }
+}
+
+/* Reduced motion respect */
+@media (prefers-reduced-motion: reduce) {
+  .os.os-fullscreen .dock-btn { transition: none; }
+  .os.os-fullscreen .web-app .icon.ios3d.adding { animation: none; }
+  .os.os-fullscreen .xen-status .dot { animation: none; }
+}
+
+/* 11. Universal: lock html/body to prevent overscroll bounce eating dock */
+html, body { overscroll-behavior-y: none; }
