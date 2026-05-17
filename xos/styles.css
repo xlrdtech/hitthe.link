@@ -3184,3 +3184,49 @@ html.xos-locked, body.xos-locked { overflow: hidden; }
   background: rgba(8, 12, 10, 0.72);
   pointer-events: none;
 }
+
+
+/* qi 2026-05-17 8672: "the phone panel should not scroll at all"
+   Phone pane locked to viewport. Outer .pane never scrolls. Caller/contact
+   list inside its own bounded region scrolls if overflow, but pane itself
+   stays put. Dial UI always anchored. */
+.os.os-fullscreen .pane:has(.phone) {
+  overflow: hidden;
+}
+.os.os-fullscreen .phone {
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+.os.os-fullscreen .phone-body {
+  overflow: hidden;
+}
+.os.os-fullscreen .phone-tabs {
+  flex-shrink: 0;
+}
+/* The only scrollable region inside Phone is the recents/contacts list itself,
+   never the whole panel. Tail-scroll only, scrollbars hidden, no bounce. */
+.os.os-fullscreen .phone .caller-list,
+.os.os-fullscreen .phone .recents-list,
+.os.os-fullscreen .phone .contacts-list,
+.os.os-fullscreen .phone .phone-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  overscroll-behavior: contain;
+}
+.os.os-fullscreen .phone .caller-list::-webkit-scrollbar,
+.os.os-fullscreen .phone .recents-list::-webkit-scrollbar,
+.os.os-fullscreen .phone .contacts-list::-webkit-scrollbar,
+.os.os-fullscreen .phone .phone-list::-webkit-scrollbar { display: none; }
+/* dial area + tabs always pinned, never scroll out of view */
+.os.os-fullscreen .phone .dial-area {
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--bg);
+}
