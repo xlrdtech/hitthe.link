@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Self Exec · $111 Menu · One Unit At A Time</title>
+<meta name="description" content="Self Exec — every unit, $111 each. AI receptionist, speed-build sites, automation, branding, music ops, voice agents. One unit at a time.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=JetBrains+Mono:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#000; --ink:#070707; --ash:#101214; --dim:#1c1f23;
+    --teal:#00d9c0; --teal-glow:rgba(0,217,192,0.55); --teal-deep:#006d60;
+    --acid:#c9ff45; --gold:#d4af37; --gold-pale:#f4e3a1;
+    --pearl:#f4f4f5; --bone:#dde0e3; --buff:#a4a8ad;
+    --dust:#5a5d62;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  ::selection{background:var(--acid);color:var(--void)}
+  html,body{background:var(--void);color:var(--pearl);font-family:'JetBrains Mono',monospace;font-weight:400;-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh;line-height:1.5}
+  body{background:radial-gradient(ellipse 1200px 600px at 50% 0%, rgba(0,217,192,0.15), transparent 60%),radial-gradient(ellipse 800px 400px at 15% 100%, rgba(212,175,55,0.06), transparent 70%),var(--void)}
+  .grain{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0.6;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2'/><feColorMatrix values='0 0 0 0 0   0 0 0 0 0.85   0 0 0 0 0.75   0 0 0 0.08 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")}
+
+  main{position:relative;z-index:10;max-width:1080px;margin:0 auto;padding:32px 24px}
+
+  .masthead{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;padding-bottom:22px;border-bottom:1px solid rgba(0,217,192,0.25);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;color:var(--teal)}
+  .masthead .seal{color:var(--acid)}
+  .masthead .label{text-align:center;font-family:'Cinzel',serif;font-weight:800;color:var(--pearl);letter-spacing:0.5em;font-size:13px}
+  .masthead .meta{color:var(--buff);text-align:right}
+
+  .hero{padding:80px 0 40px;text-align:center}
+  .hero .kicker{font-family:'Instrument Serif',serif;font-style:italic;font-size:clamp(16px,2vw,22px);color:var(--teal);letter-spacing:0.06em;margin-bottom:24px}
+  .hero h1{font-family:'Cinzel',serif;font-weight:800;font-size:clamp(72px,14vw,200px);line-height:0.9;letter-spacing:-0.01em;background:linear-gradient(180deg,var(--pearl) 0%,var(--teal) 50%,var(--teal-deep) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 4px 60px rgba(0,217,192,0.3);margin-bottom:14px}
+  .hero h1 .dollar{color:var(--acid);font-style:italic;-webkit-background-clip:initial;background-clip:initial;background:none;text-shadow:0 0 30px rgba(201,255,69,0.5)}
+  .hero h2{font-family:'Instrument Serif',serif;font-style:italic;font-size:clamp(20px,2.6vw,30px);color:var(--gold-pale);letter-spacing:0.02em;margin-top:14px}
+  .hero h2 em{color:var(--acid)}
+  .hero .law{margin-top:24px;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.4em;color:var(--buff);text-transform:uppercase}
+  .hero .law span{color:var(--teal)}
+
+  .pricetag{display:inline-block;margin:20px auto;padding:14px 36px;background:transparent;border:2px solid var(--acid);font-family:'Cinzel',serif;font-weight:800;font-size:22px;letter-spacing:0.18em;color:var(--acid);text-transform:uppercase;text-shadow:0 0 18px rgba(201,255,69,0.5);box-shadow:0 0 40px rgba(201,255,69,0.18),inset 0 0 20px rgba(201,255,69,0.08)}
+
+  .bucket{margin:48px 0;border-top:1px solid rgba(0,217,192,0.18)}
+  .bucket-header{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:18px;padding:18px 0 14px;border-bottom:1px solid rgba(0,217,192,0.1)}
+  .bucket-header .num{font-family:'Cinzel',serif;font-weight:800;font-size:38px;color:var(--teal);text-shadow:0 0 18px var(--teal-glow);min-width:56px}
+  .bucket-header .name{font-family:'Cinzel',serif;font-weight:600;font-size:clamp(18px,2.4vw,26px);letter-spacing:0.18em;text-transform:uppercase;color:var(--pearl)}
+  .bucket-header .count{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.3em;color:var(--gold-pale);text-transform:uppercase}
+
+  .units{margin:0}
+  .unit{display:grid;grid-template-columns:60px 1fr auto;align-items:baseline;gap:18px;padding:14px 4px;border-bottom:1px solid rgba(0,217,192,0.06)}
+  .unit:hover{background:rgba(0,217,192,0.03)}
+  .unit .id{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.15em;color:var(--dust);font-weight:500}
+  .unit .what{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--bone);line-height:1.4}
+  .unit .what strong{color:var(--pearl);font-weight:700}
+  .unit .what em{color:var(--teal);font-style:normal;font-family:'Instrument Serif',serif;font-style:italic;font-size:15px}
+  .unit .price{font-family:'Cinzel',serif;font-weight:800;color:var(--acid);font-size:14px;letter-spacing:0.05em;text-shadow:0 0 12px rgba(201,255,69,0.3);white-space:nowrap}
+  .unit .price::before{content:'$';opacity:0.7;margin-right:1px}
+
+  .ruleline{padding:32px;margin:60px -24px 0;text-align:center;background:linear-gradient(180deg,rgba(0,217,192,0.06),rgba(0,0,0,0.4));border-top:1px solid rgba(0,217,192,0.2);border-bottom:1px solid rgba(0,217,192,0.2)}
+  .ruleline p{font-family:'Instrument Serif',serif;font-style:italic;font-size:clamp(18px,2.4vw,28px);color:var(--gold-pale);line-height:1.4;max-width:760px;margin:0 auto}
+  .ruleline p em{color:var(--acid);font-style:italic}
+
+  .cta{padding:60px 0;text-align:center}
+  .cta h2{font-family:'Cinzel',serif;font-weight:800;font-size:clamp(28px,4.5vw,52px);color:var(--pearl);margin-bottom:24px;letter-spacing:-0.005em}
+  .cta h2 em{font-family:'Instrument Serif',serif;font-weight:400;font-style:italic;color:var(--teal)}
+  .cta-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:32px}
+  .cta-row a{display:inline-flex;align-items:center;gap:10px;padding:16px 30px;background:transparent;color:var(--pearl);text-decoration:none;border:1px solid rgba(0,217,192,0.5);border-radius:2px;font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:0.22em;text-transform:uppercase;font-weight:600;transition:all 0.2s}
+  .cta-row a:hover{background:rgba(0,217,192,0.08);border-color:var(--teal);transform:translateY(-1px)}
+  .cta-row a.primary{background:linear-gradient(135deg,var(--acid) 0%,var(--teal) 100%);color:var(--void);border-color:transparent;font-weight:700;box-shadow:0 6px 28px rgba(201,255,69,0.4)}
+  .cta-row a.primary:hover{box-shadow:0 8px 36px rgba(201,255,69,0.6)}
+
+  footer{padding:48px 0 32px;text-align:center;border-top:1px solid rgba(0,217,192,0.18);margin-top:60px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.4em;text-transform:uppercase;color:var(--dust)}
+  footer .tag{display:block;margin-bottom:14px;font-family:'Instrument Serif',serif;font-style:italic;font-size:14px;color:var(--gold-pale);letter-spacing:0.04em;text-transform:none}
+  footer a{color:var(--teal);text-decoration:none}
+
+  @media (max-width:680px){
+    .masthead{grid-template-columns:1fr;gap:4px;text-align:center}
+    .masthead .meta{text-align:center}
+    .unit{grid-template-columns:40px 1fr auto;gap:10px}
+    .unit .id{font-size:11px}
+  }
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+
+<main>
+
+<div class="masthead">
+  <div class="seal">◆  $111 · UNIT MENU  ◆</div>
+  <div class="label">SELF · EXEC</div>
+  <div class="meta">ONE UNIT AT A TIME</div>
+</div>
+
+<section class="hero">
+  <div class="kicker">No bundles. No retainers. No timelines that drift.</div>
+  <h1>One unit. <span class="dollar">$111</span>.</h1>
+  <h2>Every Self Exec deliverable, <em>priced flat</em>.</h2>
+  <div class="pricetag">$111 / unit</div>
+  <div class="law"><span>◆</span> AUTOMATE  OR  DIE <span>◆</span> WE GET PAID TO SAVE TIME <span>◆</span></div>
+</section>
+
+<!-- =========================================================
+     FRONT LINE
+     ========================================================= -->
+<section class="bucket">
+  <div class="bucket-header">
+    <div class="num">01</div>
+    <div class="name">Front Line · Receptionist</div>
+    <div class="count">5 units</div>
+  </div>
+  <div class="units">
+    <div class="unit"><div class="id">F-01</div><div class="what"><strong>AI voice receptionist line</strong> — <em>your number, your persona, your script, 24/7 answer</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">F-02</div><div class="what"><strong>Custom voice persona</strong> — <em>name, tone, opening line, escalation rules</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">F-03</div><div class="what"><strong>Inbound capture → CRM</strong> — <em>every call transcribed, named, routed to a lead file</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">F-04</div><div class="what"><strong>After-hours flow</strong> — <em>night/weekend behavior, callback windows, on-call routing</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">F-05</div><div class="what"><strong>Caller-to-text bridge</strong> — <em>caller leaves a message, you read it in SMS within 60 seconds</em></div><div class="price">111</div></div>
+  </div>
+</section>
+
+<!-- =========================================================
+     WEB · PAGES · HOSTING
+     ========================================================= -->
+<section class="bucket">
+  <div class="bucket-header">
+    <div class="num">02</div>
+    <div class="name">Web · Pages · Hosting</div>
+    <div class="count">10 units</div>
+  </div>
+  <div class="units">
+    <div class="unit"><div class="id">W-01</div><div class="what"><strong>Speed-build landing page</strong> — <em>single-page, deployed in ~2 hours, like the Diamond Cut / MB drops</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">W-02</div><div class="what"><strong>Custom domain + tunnel</strong> — <em>DNS, SSL, Cloudflare ingress, your subdomain live</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">W-03</div><div class="what"><strong>Logo + brand asset placement</strong> — <em>swap your logo, color from logo, retina-ready</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">W-04</div><div class="what"><strong>SEO + OG metadata pass</strong> — <em>title, description, social cards, schema</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">W-05</div><div class="what"><strong>Newsletter capture form</strong> — <em>email-in, list wired to your provider</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">W-06</div><div class="what"><strong>Booking widget embed</strong> — <em>calendar slot picker tied to your phone/email</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">W-07</div><div class="what"><strong>Press kit / EPK page</strong> — <em>bio, photos, tracks, tech rider, links, downloadable</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">W-08</div><div class="what"><strong>Music streaming strip</strong> — <em>Spotify + Apple + DistroKid hyperfollow on one page</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">W-09</div><div class="what"><strong>Mobile responsiveness audit</strong> — <em>iPhone / Android / iPad ironed flat</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">W-10</div><div class="what"><strong>Color/aesthetic pivot</strong> — <em>swap palette across whole page (like pink→blue on MB)</em></div><div class="price">111</div></div>
+  </div>
+</section>
+
+<!-- =========================================================
+     BRAND · IDENTITY
+     ========================================================= -->
+<section class="bucket">
+  <div class="bucket-header">
+    <div class="num">03</div>
+    <div class="name">Brand · Identity</div>
+    <div class="count">6 units</div>
+  </div>
+  <div class="units">
+    <div class="unit"><div class="id">B-01</div><div class="what"><strong>Logo concept (1 brief)</strong> — <em>monogram, wordmark, or seal, your call</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">B-02</div><div class="what"><strong>Color palette + type system</strong> — <em>5 colors, 2 fonts, usage rules</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">B-03</div><div class="what"><strong>Social banner pack</strong> — <em>IG, FB, X, YouTube — sized + delivered</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">B-04</div><div class="what"><strong>Avatar / profile photo prep</strong> — <em>background out, color correct, square + circular</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">B-05</div><div class="what"><strong>One-pager (HTML + PDF)</strong> — <em>elevator pitch, services, contact, printable</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">B-06</div><div class="what"><strong>Single artwork / cover art</strong> — <em>3:3 + 16:9 + 9:16 sizes for the same piece</em></div><div class="price">111</div></div>
+  </div>
+</section>
+
+<!-- =========================================================
+     COMMS · EMAIL · SMS · CALENDAR
+     ========================================================= -->
+<section class="bucket">
+  <div class="bucket-header">
+    <div class="num">04</div>
+    <div class="name">Comms · Email · SMS · Calendar</div>
+    <div class="count">7 units</div>
+  </div>
+  <div class="units">
+    <div class="unit"><div class="id">C-01</div><div class="what"><strong>Email auto-reply flow</strong> — <em>1 trigger → 1 templated response, routed</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">C-02</div><div class="what"><strong>SMS auto-reply flow</strong> — <em>same shape, SMS-side</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">C-03</div><div class="what"><strong>Dual-fire lead routing</strong> — <em>one inbound creates email + SMS + calendar event at once</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">C-04</div><div class="what"><strong>Inbox triage pack</strong> — <em>5 rules, labels, auto-archive, priority lifts</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">C-05</div><div class="what"><strong>Daily digest summary</strong> — <em>your inbox in 5 bullets, every morning, via email or SMS</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">C-06</div><div class="what"><strong>Follow-up sequence</strong> — <em>3-touch outreach: day 0, day 3, day 7</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">C-07</div><div class="what"><strong>Voice-to-text intake</strong> — <em>you talk, it turns into structured text in your CRM</em></div><div class="price">111</div></div>
+  </div>
+</section>
+
+<!-- =========================================================
+     AUTOMATION · INTEGRATIONS
+     ========================================================= -->
+<section class="bucket">
+  <div class="bucket-header">
+    <div class="num">05</div>
+    <div class="name">Automation · Integrations</div>
+    <div class="count">6 units</div>
+  </div>
+  <div class="units">
+    <div class="unit"><div class="id">A-01</div><div class="what"><strong>Cross-app webhook bridge</strong> — <em>1 hook connecting 2 apps (Stripe→Asana, Calendly→Notion, etc.)</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">A-02</div><div class="what"><strong>Calendar auto-create from inbound</strong> — <em>"book me Wed 7pm" → event lands in Spark/Google Cal</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">A-03</div><div class="what"><strong>Cron / scheduled job</strong> — <em>1 recurring task, daily/weekly, your spec</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">A-04</div><div class="what"><strong>Webhook receiver endpoint</strong> — <em>your URL accepts POSTs and routes to action</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">A-05</div><div class="what"><strong>Form-to-everywhere</strong> — <em>1 form posts to email + SMS + sheet + CRM at once</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">A-06</div><div class="what"><strong>Spreadsheet pipeline</strong> — <em>Sheet → enrichment → outbound, automated</em></div><div class="price">111</div></div>
+  </div>
+</section>
+
+<!-- =========================================================
+     AI AGENTS · VOICE · POSSESSION
+     ========================================================= -->
+<section class="bucket">
+  <div class="bucket-header">
+    <div class="num">06</div>
+    <div class="name">AI Agents · Voice · Possession</div>
+    <div class="count">7 units</div>
+  </div>
+  <div class="units">
+    <div class="unit"><div class="id">X-01</div><div class="what"><strong>Custom AI assistant skill</strong> — <em>1 capability bolted onto your Claude/ChatGPT</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">X-02</div><div class="what"><strong>Claude Code hook script</strong> — <em>1 lifecycle event (Stop, PostToolUse, etc.) wired to your behavior</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">X-03</div><div class="what"><strong>MCP server install + wire-up</strong> — <em>1 server, registered, scoped, ready</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">X-04</div><div class="what"><strong>Voice Gate page (STT page)</strong> — <em>talk to your stack from any browser, anywhere</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">X-05</div><div class="what"><strong>Siri Possession shortcut</strong> — <em>iOS shortcut that runs your stack hands-free</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">X-06</div><div class="what"><strong>Local LLM swap (Ollama)</strong> — <em>install + register one local model for sovereignty</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">X-07</div><div class="what"><strong>KB ingestion (1 source)</strong> — <em>repo, folder, drive, or site → searchable memory</em></div><div class="price">111</div></div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SOCIAL · CONTENT
+     ========================================================= -->
+<section class="bucket">
+  <div class="bucket-header">
+    <div class="num">07</div>
+    <div class="name">Social · Content</div>
+    <div class="count">5 units</div>
+  </div>
+  <div class="units">
+    <div class="unit"><div class="id">S-01</div><div class="what"><strong>Social post pack (5 posts)</strong> — <em>copy + image direction, drop-ready</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">S-02</div><div class="what"><strong>Caption + hashtag set</strong> — <em>10 captions, 30 hashtags, tone-matched</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">S-03</div><div class="what"><strong>Cross-platform schedule (1 platform)</strong> — <em>2 weeks queued, auto-post, tracked</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">S-04</div><div class="what"><strong>Bio + Linktree pass</strong> — <em>rewrite + reorder for conversion</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">S-05</div><div class="what"><strong>Auto-DM responder</strong> — <em>1 platform, 1 trigger phrase, 1 response chain</em></div><div class="price">111</div></div>
+  </div>
+</section>
+
+<!-- =========================================================
+     MUSIC · PRODUCTION
+     ========================================================= -->
+<section class="bucket">
+  <div class="bucket-header">
+    <div class="num">08</div>
+    <div class="name">Music · Production</div>
+    <div class="count">5 units</div>
+  </div>
+  <div class="units">
+    <div class="unit"><div class="id">M-01</div><div class="what"><strong>Track mastering pass</strong> — <em>1 song, loudness + EQ + spatial polish</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">M-02</div><div class="what"><strong>Mix revision</strong> — <em>1 song, 1 round of changes from your notes</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">M-03</div><div class="what"><strong>Beat selection + arrangement</strong> — <em>3 beats curated to your direction + map</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">M-04</div><div class="what"><strong>DistroKid wire-up</strong> — <em>release set up, metadata, art, scheduled drop</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">M-05</div><div class="what"><strong>Hyperfollow / smart link</strong> — <em>1 link that opens in Spotify/Apple/Amazon/Tidal</em></div><div class="price">111</div></div>
+  </div>
+</section>
+
+<!-- =========================================================
+     OPS · CRM · DOCS
+     ========================================================= -->
+<section class="bucket">
+  <div class="bucket-header">
+    <div class="num">09</div>
+    <div class="name">Ops · CRM · Docs</div>
+    <div class="count">6 units</div>
+  </div>
+  <div class="units">
+    <div class="unit"><div class="id">O-01</div><div class="what"><strong>Lead capture sheet</strong> — <em>structured intake form → contact record</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">O-02</div><div class="what"><strong>Onboarding doc scaffold</strong> — <em>welcome → intake → kickoff, your tone</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">O-03</div><div class="what"><strong>Booking pipeline (kanban)</strong> — <em>lead → qualified → booked → done, on a board</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">O-04</div><div class="what"><strong>Invoice template (your brand)</strong> — <em>reusable, fillable, sendable</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">O-05</div><div class="what"><strong>Contract template</strong> — <em>service agreement skeleton, ready for fill</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">O-06</div><div class="what"><strong>Quote → invoice flow</strong> — <em>send a quote, on accept it auto-bills</em></div><div class="price">111</div></div>
+  </div>
+</section>
+
+<!-- =========================================================
+     INFRA · BUILD · DEPLOY
+     ========================================================= -->
+<section class="bucket">
+  <div class="bucket-header">
+    <div class="num">10</div>
+    <div class="name">Infra · Build · Deploy</div>
+    <div class="count">5 units</div>
+  </div>
+  <div class="units">
+    <div class="unit"><div class="id">I-01</div><div class="what"><strong>Cloudflare tunnel hostname</strong> — <em>add 1 subdomain to your tunnel</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">I-02</div><div class="what"><strong>GitHub Pages repo wire-up</strong> — <em>repo created, branch pushed, custom domain bound</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">I-03</div><div class="what"><strong>FastAPI/Express service boot</strong> — <em>1 backend, dockered, started, tunneled</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">I-04</div><div class="what"><strong>File explorer surface</strong> — <em>1 drive folder → public/private URL</em></div><div class="price">111</div></div>
+    <div class="unit"><div class="id">I-05</div><div class="what"><strong>Backup snapshot rule</strong> — <em>1 folder mirrored to remote on schedule</em></div><div class="price">111</div></div>
+  </div>
+</section>
+
+<section class="ruleline">
+  <p>Sixty-two units. Every one of them <em>$111</em>. No surprises, no scope creep, no clocking hours — <em>one unit at a time</em> until you're handling more than you can carry.</p>
+</section>
+
+<section class="cta">
+  <h2>Pick one. <em>Or pick ten.</em></h2>
+  <div class="cta-row">
+    <a class="primary" href="tel:+14702341117">◆  Call Self Exec</a>
+    <a href="mailto:east@xlrd.org?subject=Unit%20order">✉  Email the Order</a>
+    <a href="https://hitthe.link/aua/">Manifesto →</a>
+    <a href="https://hitthe.link/endpoints/">Catalog →</a>
+  </div>
+</section>
+
+<footer>
+  <span class="tag">"Automate or die. We get paid to save time."</span>
+  ◆ Self Exec · $111 / unit · East Allen · east@xlrd.org · <a href="https://hitthe.link/aua/">hitthe.link</a> ◆
+</footer>
+
+</main>
+
+</body>
+</html>
