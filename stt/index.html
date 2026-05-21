@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>STT · VEI · Xen Voice Ingress</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Cormorant+Garamond:ital,wght@0,300;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void:        #000000;
+    --pitch:       #050706;
+    --abyss:       #0a0d0c;
+    --ash:         #15181a;
+    --emerald:     #00d97a;
+    --emerald-deep:#006d3f;
+    --emerald-glow: rgba(0, 217, 122, 0.55);
+    --gold:        #d4af37;
+    --gold-pale:   #f4e3a1;
+    --silver:      #c8cbcd;
+    --pearl:       #efebd8;
+    --bone:        #d8d2c2;
+    --dust:        #4a4a4a;
+    --rust:        #ff4a3d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  ::selection { background: var(--emerald); color: var(--void); }
+  html, body {
+    background: var(--void);
+    color: var(--pearl);
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+  /* atmospheric layers */
+  .geometry {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    opacity: 0.16;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600'><g fill='none' stroke='%2300d97a' stroke-width='0.5' opacity='0.4'><circle cx='300' cy='300' r='80'/><circle cx='300' cy='220' r='80'/><circle cx='300' cy='380' r='80'/><circle cx='230' cy='260' r='80'/><circle cx='370' cy='260' r='80'/><circle cx='230' cy='340' r='80'/><circle cx='370' cy='340' r='80'/><circle cx='300' cy='300' r='160'/></g></svg>");
+    background-size: 800px 800px; background-position: center; background-repeat: repeat;
+  }
+  .vignette {
+    position: fixed; inset: 0; pointer-events: none; z-index: 1;
+    background:
+      radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.85) 100%),
+      radial-gradient(ellipse 600px 300px at 50% 40%, rgba(0,109,63,0.18), transparent 70%);
+  }
+  main { position: relative; z-index: 10; max-width: 920px; margin: 0 auto; padding: 32px 24px; min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* ── Masthead ───────────────────────────────────────────────────────── */
+  .masthead {
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(212,175,55,0.18);
+    display: grid; grid-template-columns: auto 1fr auto;
+    gap: 16px; align-items: center;
+    font-family: 'Cinzel', serif;
+    font-size: 10px; letter-spacing: 0.4em; text-transform: uppercase;
+    color: var(--gold-pale);
+  }
+  .masthead .seal { color: var(--emerald); }
+  .masthead .name { text-align: center; font-weight: 800; letter-spacing: 0.5em; color: var(--pearl); }
+  .masthead .meta { color: var(--silver); }
+
+  /* ── Title ──────────────────────────────────────────────────────────── */
+  .title { padding: 40px 0 24px; text-align: center; }
+  .title h1 {
+    font-family: 'Cinzel', serif;
+    font-weight: 800;
+    font-size: clamp(40px, 7vw, 88px);
+    letter-spacing: 0.05em;
+    color: var(--emerald);
+    text-shadow: 0 0 32px var(--emerald-glow), 0 2px 0 rgba(212,175,55,0.3);
+    margin-bottom: 8px;
+    line-height: 1;
+  }
+  .title h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(15px, 1.8vw, 21px);
+    color: var(--gold-pale);
+    letter-spacing: 0.12em;
+  }
+
+  /* ── Listening orb ──────────────────────────────────────────────────── */
+  .orb-wrap {
+    flex: 1;
+    display: grid; place-items: center;
+    padding: 40px 0;
+    position: relative;
+  }
+  .orb {
+    position: relative;
+    width: min(70vw, 320px);
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 38% 32%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.35) 7%, transparent 16%),
+      radial-gradient(circle at 50% 50%, var(--void) 12%, rgba(0,109,63,0.25) 22%, var(--emerald-deep) 40%, var(--emerald) 50%, var(--emerald-deep) 62%, rgba(0,0,0,0.6) 86%, var(--abyss) 100%);
+    box-shadow:
+      inset 0 0 60px rgba(0,109,63,0.7),
+      inset 0 -12px 30px rgba(0,0,0,0.8),
+      0 0 60px rgba(0,217,122,0.25),
+      0 0 200px rgba(0,217,122,0.15);
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s;
+    cursor: pointer;
+    user-select: none;
+  }
+  .orb::after {
+    content: '';
+    position: absolute;
+    inset: 28%;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--void) 0%, #001a0c 60%, transparent 100%);
+    box-shadow: 0 0 30px rgba(0,0,0,0.9);
+  }
+  .orb.listening {
+    animation: orb-pulse 1.4s ease-in-out infinite alternate;
+    box-shadow:
+      inset 0 0 80px rgba(0,109,63,0.9),
+      inset 0 -12px 30px rgba(0,0,0,0.8),
+      0 0 120px rgba(0,217,122,0.6),
+      0 0 320px rgba(0,217,122,0.35);
+  }
+  .orb.error {
+    background:
+      radial-gradient(circle at 38% 32%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.2) 7%, transparent 16%),
+      radial-gradient(circle at 50% 50%, var(--void) 12%, #4a0e0e 30%, var(--rust) 50%, #4a0e0e 70%, var(--abyss) 100%);
+    box-shadow: inset 0 0 60px #4a0e0e, 0 0 60px rgba(255,74,61,0.5);
+  }
+  @keyframes orb-pulse {
+    from { transform: scale(0.98); }
+    to   { transform: scale(1.05); }
+  }
+  /* concentric ring around the orb */
+  .ring {
+    position: absolute;
+    inset: -8%;
+    border-radius: 50%;
+    border: 1px solid rgba(212,175,55,0.4);
+    pointer-events: none;
+  }
+  .ring.r2 { inset: -16%; border-color: rgba(0,217,122,0.18); }
+  .ring.r3 { inset: -28%; border-color: rgba(0,217,122,0.08); border-style: dashed; animation: spin 60s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Live transcript ────────────────────────────────────────────────── */
+  .transcript {
+    margin-top: 20px;
+    min-height: 80px;
+    padding: 20px 24px;
+    border: 1px solid rgba(212,175,55,0.2);
+    background: rgba(10,13,12,0.6);
+    backdrop-filter: blur(8px);
+    border-radius: 4px;
+    text-align: center;
+    transition: border-color 0.3s, background 0.3s;
+  }
+  .transcript.has-text { border-color: rgba(0,217,122,0.35); }
+  .transcript .interim {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(18px, 2.4vw, 26px);
+    color: var(--gold-pale);
+    line-height: 1.3;
+  }
+  .transcript .final {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(20px, 2.8vw, 30px);
+    color: var(--pearl);
+    line-height: 1.3;
+    font-weight: 400;
+  }
+  .transcript .hint {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--dust);
+  }
+
+  /* ── Control bar ────────────────────────────────────────────────────── */
+  .controls {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    align-items: center;
+  }
+  .btn {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    padding: 14px 22px;
+    background: var(--emerald);
+    color: var(--void);
+    border: 0;
+    cursor: pointer;
+    border-radius: 2px;
+    font-weight: 600;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+    box-shadow: 0 4px 24px rgba(0,217,122,0.25);
+  }
+  .btn:hover { background: var(--gold-pale); box-shadow: 0 4px 32px rgba(212,175,55,0.4); }
+  .btn:active { transform: translateY(1px); }
+  .btn.ghost { background: transparent; color: var(--gold-pale); border: 1px solid var(--gold-pale); box-shadow: none; }
+  .btn.ghost:hover { background: var(--gold-pale); color: var(--void); }
+  .btn.danger { background: transparent; color: var(--rust); border: 1px solid var(--rust); box-shadow: none; }
+  .status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--dust);
+    text-align: center;
+  }
+  .status .live { color: var(--emerald); }
+  .status .err { color: var(--rust); }
+
+  /* ── Route selector ─────────────────────────────────────────────────── */
+  .routes {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1px;
+    background: rgba(212,175,55,0.2);
+    border: 1px solid rgba(212,175,55,0.2);
+  }
+  .route {
+    background: var(--abyss);
+    padding: 12px 8px;
+    text-align: center;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--silver);
+    transition: background 0.2s, color 0.2s;
+    user-select: none;
+  }
+  .route:hover { color: var(--gold-pale); }
+  .route.active { background: var(--emerald-deep); color: var(--pearl); }
+  .route .verb {
+    display: block;
+    margin-top: 4px;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 12px;
+    color: var(--bone);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  /* ── Reply panel ────────────────────────────────────────────────────── */
+  .reply {
+    margin-top: 20px;
+    padding: 20px 24px;
+    border: 1px solid rgba(0,217,122,0.18);
+    background: rgba(5,7,6,0.6);
+    border-radius: 4px;
+    display: none;
+  }
+  .reply.show { display: block; }
+  .reply-tag {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--emerald);
+    margin-bottom: 10px;
+  }
+  .reply-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(16px, 2vw, 21px);
+    color: var(--pearl);
+    line-height: 1.5;
+  }
+
+  /* ── Settings (collapsible) ────────────────────────────────────────── */
+  .settings { margin-top: 16px; }
+  .settings summary {
+    cursor: pointer;
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--dust);
+    padding: 8px 0;
+    list-style: none;
+  }
+  .settings summary::before { content: '∴ '; color: var(--emerald); }
+  .settings[open] summary { color: var(--gold-pale); }
+  .settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding: 16px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .settings label {
+    display: flex; flex-direction: column; gap: 6px;
+    color: var(--silver); letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .settings input, .settings select {
+    background: var(--abyss);
+    border: 1px solid rgba(212,175,55,0.2);
+    color: var(--pearl);
+    padding: 10px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    border-radius: 2px;
+  }
+  .settings input:focus, .settings select:focus { outline: 1px solid var(--emerald); border-color: var(--emerald); }
+
+  /* ── Footer ─────────────────────────────────────────────────────────── */
+  footer {
+    margin-top: auto;
+    padding-top: 24px;
+    border-top: 1px solid rgba(212,175,55,0.15);
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 0.5em;
+    text-transform: uppercase;
+    color: var(--dust);
+  }
+  footer a { color: var(--emerald); text-decoration: none; }
+
+  @media (max-width: 640px) {
+    .masthead { grid-template-columns: 1fr; gap: 4px; text-align: center; }
+    .masthead .meta { text-align: center; }
+    .controls { grid-template-columns: 1fr; }
+    .settings-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="geometry"></div>
+<div class="vignette"></div>
+
+<main>
+
+<div class="masthead">
+  <div class="seal">∴ STT · VEI ∴</div>
+  <div class="name">XLRD · TECH</div>
+  <div class="meta">Voice Ingress</div>
+</div>
+
+<div class="title">
+  <h1>The Voice Gate</h1>
+  <h2>Web ingress for the Xen mesh · any browser, any device</h2>
+</div>
+
+<div class="orb-wrap">
+  <div class="ring r3"></div>
+  <div class="ring r2"></div>
+  <div class="ring"></div>
+  <div class="orb" id="orb" role="button" tabindex="0" aria-label="Tap to start listening"></div>
+</div>
+
+<div class="transcript" id="transcript">
+  <div class="hint">Tap the orb to speak</div>
+</div>
+
+<div class="controls">
+  <button class="btn" id="toggle">Begin</button>
+  <div class="status" id="status">Idle. Mic dormant.</div>
+  <button class="btn ghost" id="speak-last" disabled>Replay</button>
+</div>
+
+<div class="routes" id="routes">
+  <div class="route active" data-route="/qwen">qwen<span class="verb">fast voice reply</span></div>
+  <div class="route" data-route="/tui">tui<span class="verb">drop into pane</span></div>
+  <div class="route" data-route="/deepseek">deepseek<span class="verb">reasoning</span></div>
+  <div class="route" data-route="/hermes">hermes<span class="verb">balanced</span></div>
+  <div class="route" data-route="/peer">peer<span class="verb">cross-vessel</span></div>
+</div>
+
+<div class="reply" id="reply">
+  <div class="reply-tag">∴ Response</div>
+  <div class="reply-text" id="reply-text"></div>
+</div>
+
+<details class="settings">
+  <summary>Settings</summary>
+  <div class="settings-grid">
+    <label>Endpoint base
+      <input type="text" id="base-url" value="https://tui.xlrd.org" autocomplete="off">
+    </label>
+    <label>Language
+      <select id="lang">
+        <option value="en-US" selected>en-US</option>
+        <option value="en-GB">en-GB</option>
+        <option value="es-ES">es-ES</option>
+        <option value="fr-FR">fr-FR</option>
+        <option value="de-DE">de-DE</option>
+        <option value="ja-JP">ja-JP</option>
+      </select>
+    </label>
+    <label>Continuous mode
+      <select id="continuous">
+        <option value="on" selected>on — auto-restart after each utterance</option>
+        <option value="off">off — single utterance</option>
+      </select>
+    </label>
+    <label>Speak the reply
+      <select id="speak-reply">
+        <option value="on" selected>on — Ava-style TTS in this browser</option>
+        <option value="off">off — text only</option>
+      </select>
+    </label>
+    <label>Peer name (for /peer route)
+      <input type="text" id="peer-name" value="web-stt" autocomplete="off">
+    </label>
+    <label>Optional bearer
+      <input type="password" id="bearer" placeholder="leave blank if endpoint is open" autocomplete="off">
+    </label>
+  </div>
+</details>
+
+<footer>
+  ∴ <a href="https://hitthe.link/xlrd-tech/">XLRD TECH</a> · <a href="https://hitthe.link/endpoints/">catalog</a> · <a href="https://hitthe.link/aua/">manifesto</a> ∴
+</footer>
+
+</main>
+
+<script>
+(() => {
+  'use strict';
+
+  // ── DOM ─────────────────────────────────────────────────────────────
+  const $ = (id) => document.getElementById(id);
+  const orb         = $('orb');
+  const transcript  = $('transcript');
+  const toggleBtn   = $('toggle');
+  const statusEl    = $('status');
+  const replyEl     = $('reply');
+  const replyText   = $('reply-text');
+  const speakLastBtn = $('speak-last');
+  const routesEl    = $('routes');
+  const baseUrlEl   = $('base-url');
+  const langEl      = $('lang');
+  const continuousEl = $('continuous');
+  const speakReplyEl = $('speak-reply');
+  const peerNameEl  = $('peer-name');
+  const bearerEl    = $('bearer');
+
+  // ── State ───────────────────────────────────────────────────────────
+  const LS_KEY = 'xen.stt.prefs.v1';
+  const state = {
+    listening: false,
+    activeRoute: '/qwen',
+    lastReply: '',
+    saved: {},
+  };
+
+  // ── LocalStorage prefs ──────────────────────────────────────────────
+  function loadPrefs() {
+    try { state.saved = JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch { state.saved = {}; }
+    if (state.saved.base) baseUrlEl.value = state.saved.base;
+    if (state.saved.lang) langEl.value = state.saved.lang;
+    if (state.saved.continuous) continuousEl.value = state.saved.continuous;
+    if (state.saved.speakReply) speakReplyEl.value = state.saved.speakReply;
+    if (state.saved.peer) peerNameEl.value = state.saved.peer;
+    if (state.saved.bearer) bearerEl.value = state.saved.bearer;
+    if (state.saved.route) {
+      state.activeRoute = state.saved.route;
+      document.querySelectorAll('.route').forEach(el => {
+        el.classList.toggle('active', el.dataset.route === state.activeRoute);
+      });
+    }
+  }
+  function savePrefs() {
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      base: baseUrlEl.value.trim().replace(/\/+$/, ''),
+      lang: langEl.value,
+      continuous: continuousEl.value,
+      speakReply: speakReplyEl.value,
+      peer: peerNameEl.value.trim() || 'web-stt',
+      bearer: bearerEl.value,
+      route: state.activeRoute,
+    }));
+  }
+  [baseUrlEl, langEl, continuousEl, speakReplyEl, peerNameEl, bearerEl].forEach(el => el.addEventListener('change', savePrefs));
+  loadPrefs();
+
+  // ── Route picker ────────────────────────────────────────────────────
+  routesEl.addEventListener('click', (e) => {
+    const r = e.target.closest('.route');
+    if (!r) return;
+    document.querySelectorAll('.route').forEach(el => el.classList.remove('active'));
+    r.classList.add('active');
+    state.activeRoute = r.dataset.route;
+    savePrefs();
+  });
+
+  // ── Web Speech API setup ────────────────────────────────────────────
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    statusEl.innerHTML = '<span class="err">Web Speech unsupported in this browser. Try Chrome, Edge, or Safari iOS 14.5+.</span>';
+    orb.classList.add('error');
+    toggleBtn.disabled = true;
+    return;
+  }
+  const recog = new SR();
+  recog.continuous = true;
+  recog.interimResults = true;
+  recog.maxAlternatives = 1;
+
+  function applyLang() { recog.lang = langEl.value || 'en-US'; }
+  applyLang();
+  langEl.addEventListener('change', () => { applyLang(); if (state.listening) restart(); });
+
+  // ── Status helpers ──────────────────────────────────────────────────
+  function setStatus(text, cls) {
+    statusEl.innerHTML = cls ? `<span class="${cls}">${text}</span>` : text;
+  }
+  function setTranscript(interim, final) {
+    transcript.classList.toggle('has-text', !!(interim || final));
+    let html = '';
+    if (final) html += `<div class="final">${escapeHtml(final)}</div>`;
+    if (interim) html += `<div class="interim">${escapeHtml(interim)}</div>`;
+    if (!final && !interim) html = '<div class="hint">Tap the orb to speak</div>';
+    transcript.innerHTML = html;
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ── Dispatch to AUA endpoint ─────────────────────────────────────────
+  async function dispatch(text) {
+    const base = (baseUrlEl.value || 'https://tui.xlrd.org').trim().replace(/\/+$/, '');
+    const route = state.activeRoute;
+    const bearer = bearerEl.value.trim();
+    const peer = peerNameEl.value.trim() || 'web-stt';
+
+    setStatus('Routing to ' + route + '...', 'live');
+
+    let url, init;
+    if (route === '/peer') {
+      url = base + '/peer';
+      init = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(bearer ? { 'Authorization': 'Bearer ' + bearer } : {}) },
+        body: JSON.stringify({ from: peer, text }),
+      };
+    } else {
+      url = base + route + '?q=' + encodeURIComponent(text);
+      init = { method: 'GET', headers: { 'Accept': 'application/json', ...(bearer ? { 'Authorization': 'Bearer ' + bearer } : {}) } };
+    }
+
+    try {
+      const r = await fetch(url, init);
+      const txt = await r.text();
+      let j;
+      try { j = JSON.parse(txt); } catch { j = { raw: txt }; }
+      setStatus('Received reply.', 'live');
+      const replyContent = j.text || j.reply || j.message || j.raw || JSON.stringify(j);
+      showReply(replyContent);
+      if (speakReplyEl.value === 'on' && replyContent && /^[a-z0-9 .,!?'"\-:;]+$/i.test(replyContent.replace(/\s+/g, ' ').slice(0, 100))) {
+        speakText(replyContent);
+      }
+    } catch (e) {
+      setStatus('Network error: ' + e.message, 'err');
+      showReply('Error: ' + e.message);
+    }
+  }
+
+  function showReply(text) {
+    state.lastReply = text;
+    replyText.textContent = text;
+    replyEl.classList.add('show');
+    speakLastBtn.disabled = false;
+  }
+
+  // ── TTS reply via browser SpeechSynthesis ───────────────────────────
+  function speakText(text) {
+    if (!window.speechSynthesis) return;
+    try { window.speechSynthesis.cancel(); } catch {}
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = (langEl.value || 'en-US');
+    u.rate = 1.05;
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v => /Ava|Samantha|Karen|Aria|Susan/i.test(v.name));
+    if (preferred) u.voice = preferred;
+    window.speechSynthesis.speak(u);
+  }
+  speakLastBtn.addEventListener('click', () => state.lastReply && speakText(state.lastReply));
+
+  // ── Recognition events ──────────────────────────────────────────────
+  let lastFinal = '';
+  recog.addEventListener('result', (ev) => {
+    let interim = '', final = '';
+    for (let i = ev.resultIndex; i < ev.results.length; i++) {
+      const r = ev.results[i];
+      if (r.isFinal) final += r[0].transcript + ' ';
+      else interim += r[0].transcript + ' ';
+    }
+    interim = interim.trim();
+    final = final.trim();
+    if (final && final !== lastFinal) {
+      lastFinal = final;
+      setTranscript('', final);
+      dispatch(final);
+    } else if (interim) {
+      setTranscript(interim, '');
+    }
+  });
+  recog.addEventListener('start', () => {
+    state.listening = true;
+    orb.classList.add('listening');
+    toggleBtn.textContent = 'End';
+    setStatus('Listening — speak now', 'live');
+  });
+  recog.addEventListener('end', () => {
+    state.listening = false;
+    orb.classList.remove('listening');
+    toggleBtn.textContent = 'Begin';
+    setStatus('Stopped.');
+    // Auto-restart in continuous mode
+    if (continuousEl.value === 'on' && state.shouldContinue) {
+      setTimeout(() => { try { recog.start(); } catch {} }, 250);
+    }
+  });
+  recog.addEventListener('error', (e) => {
+    setStatus('Recognition error: ' + e.error, 'err');
+    if (e.error === 'not-allowed') {
+      setStatus('Microphone permission denied. Reload + allow.', 'err');
+      orb.classList.add('error');
+    } else if (e.error === 'no-speech' && continuousEl.value === 'on' && state.shouldContinue) {
+      // common — just restart
+      setTimeout(() => { try { recog.start(); } catch {} }, 250);
+    }
+  });
+
+  // ── Toggle button / orb tap ─────────────────────────────────────────
+  function start() {
+    state.shouldContinue = true;
+    try { recog.start(); } catch (e) { /* may throw "already started" */ }
+  }
+  function stop() {
+    state.shouldContinue = false;
+    try { recog.stop(); } catch {}
+  }
+  function restart() {
+    state.shouldContinue = true;
+    try { recog.stop(); } catch {}
+    setTimeout(() => { try { recog.start(); } catch {} }, 200);
+  }
+  toggleBtn.addEventListener('click', () => state.listening ? stop() : start());
+  orb.addEventListener('click', () => state.listening ? stop() : start());
+  orb.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleBtn.click(); } });
+
+  // Page visibility — stop listening when backgrounded to free mic
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && state.listening) {
+      state.shouldContinue = false;
+      try { recog.stop(); } catch {}
+    }
+  });
+
+  setStatus('Ready. Tap the orb to begin.');
+})();
+</script>
+</body>
+</html>

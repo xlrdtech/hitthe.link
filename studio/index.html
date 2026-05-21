@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#06070A">
+<title>Studio — Xen harness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-deep:#06070A; --bg-1:#0A0612; --bg-2:#1A0F2E;
+  --blood:#A8121C; --blood-deep:#6A0810;
+  --chrome:#C9CED4; --glow:#3DD6FF; --amber:#FF8A1F; --iris:#7A4DFF;
+  --ink:#F4F1EA; --muted:#7A7E86;
+  --line:rgba(244,241,234,.08);
+  --card:rgba(255,255,255,.025); --card-hi:rgba(255,255,255,.045);
+  --inset:inset 0 1px 0 rgba(255,255,255,.06);
+  --grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.035 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+*{box-sizing:border-box;margin:0;padding:0}
+::selection{background:var(--blood);color:var(--ink)}
+html,body{background:var(--bg-deep);color:var(--ink);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;min-height:100dvh;overflow:hidden}
+body{background:radial-gradient(120% 80% at 50% 0%,var(--bg-2) 0%,var(--bg-1) 35%,var(--bg-deep) 70%) fixed}
+body::before{content:'';position:fixed;inset:0;background-image:var(--grain);opacity:.6;pointer-events:none;mix-blend-mode:overlay;z-index:1}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,0,0,.16) 3px 4px);pointer-events:none;z-index:2;mix-blend-mode:multiply;opacity:.3}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:8px;top:8px;background:var(--blood);color:var(--ink);padding:8px 12px;z-index:9999}
+:focus-visible{outline:2px solid var(--glow);outline-offset:2px;border-radius:6px}
+.app{position:relative;z-index:3;display:grid;grid-template-rows:auto 1fr auto auto;height:100vh;height:100dvh}
+header.top{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--line);background:rgba(0,0,0,.25);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.brand{font-family:'Fraunces',serif;font-weight:500;font-size:15px;letter-spacing:-.01em;color:var(--ink)}
+.brand em{font-style:italic;color:var(--blood);font-weight:600}
+.brand .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--glow);box-shadow:0 0 8px var(--glow);margin:0 6px;vertical-align:middle;animation:blink 2.4s infinite}
+.routes{display:flex;gap:6px}
+.route{appearance:none;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:6px 11px;border-radius:999px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.route::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--muted)}
+.route:hover{border-color:var(--blood);background:var(--card-hi)}
+.route[aria-pressed="true"]{background:linear-gradient(180deg,rgba(168,18,28,.35),rgba(168,18,28,.12));border-color:var(--blood);color:var(--ink);box-shadow:0 0 14px rgba(168,18,28,.4)}
+.route[aria-pressed="true"]::before{background:var(--glow);box-shadow:0 0 6px var(--glow)}
+.route.pending{opacity:.42;cursor:not-allowed}
+.route.pending::before{background:var(--amber)}
+.route.pending:hover{border-color:var(--line);background:var(--card)}
+.heads{display:flex;align-items:center;gap:10px;font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase}
+.heads b{color:var(--ink);font-weight:500}
+main.three{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr);gap:1px;background:var(--line);overflow:hidden;min-height:0}
+.panel{background:var(--bg-deep);display:flex;flex-direction:column;min-height:0;min-width:0;animation:rise 1.1s .15s both cubic-bezier(.2,.7,.1,1)}
+.panel .head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.panel .head h2{font-family:'Fraunces',serif;font-weight:500;font-size:12px;letter-spacing:.06em;color:var(--ink)}
+.panel .head .meta{display:flex;gap:8px;align-items:center}
+.panel .body{flex:1;overflow:auto;min-height:0}
+/* LEFT — transcript */
+#transcriptList{padding:12px;display:flex;flex-direction:column;gap:8px}
+.turn{padding:9px 11px;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:var(--inset);font-size:11.5px;animation:rise .35s both cubic-bezier(.2,.7,.1,1)}
+.turn .who{display:flex;justify-content:space-between;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.turn .who b{font-family:'Fraunces',serif;font-weight:500;letter-spacing:.02em;text-transform:none;font-size:11.5px}
+.turn.qi .who b{color:var(--glow)}
+.turn.studio .who b{color:var(--blood)}
+.turn .body{color:var(--ink);opacity:.92;font-size:11.5px;line-height:1.55;white-space:pre-wrap;word-wrap:break-word}
+.turn .codes{margin-top:6px;display:flex;flex-direction:column;gap:3px}
+.turn .code{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--amber);background:rgba(255,138,31,.06);padding:3px 7px;border-radius:5px;border-left:2px solid var(--amber);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.thinking{display:flex;align-items:center;gap:8px;padding:8px 11px;color:var(--glow);font-size:11px;font-style:italic}
+.thinking::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--glow);box-shadow:0 0 8px var(--glow);animation:blink 1s infinite}
+/* CENTER — preview */
+.preview-wrap{position:relative;flex:1;display:flex;flex-direction:column;min-height:0}
+.preview-chrome{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line);background:rgba(0,0,0,.3)}
+.dots{display:flex;gap:5px}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--blood);box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+.dots i:nth-child(2){background:var(--amber)} .dots i:nth-child(3){background:var(--glow)}
+.preview-url{flex:1;padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:rgba(0,0,0,.4);font-size:10.5px;color:var(--muted);letter-spacing:.04em}
+.preview-url b{color:var(--ink);font-weight:500}
+.preview-actions{display:flex;gap:6px}
+.btn{appearance:none;border:1px solid var(--line);background:linear-gradient(180deg,#1a1320,#0a060f);color:var(--ink);font:inherit;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:5px 10px;border-radius:6px;cursor:pointer;transition:all .15s}
+.btn:hover{border-color:var(--blood);color:var(--blood)}
+.btn.primary{background:linear-gradient(180deg,var(--blood),var(--blood-deep));border-color:var(--blood);color:var(--ink)}
+.btn.primary:hover{filter:brightness(1.15)}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+#preview{flex:1;width:100%;border:0;background:#0b0d12;min-height:0}
+.preview-empty{position:absolute;inset:36px 0 0;display:grid;place-items:center;color:var(--muted);font-size:11px;text-align:center;padding:24px;pointer-events:none}
+.preview-empty .relic{width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 38% 32%,#fff 0%,var(--chrome) 18%,var(--blood) 45%,var(--blood-deep) 75%,#1a0306 100%);box-shadow:0 0 0 1px rgba(255,255,255,.08),0 0 22px rgba(168,18,28,.5),inset 0 -8px 18px rgba(0,0,0,.5),inset 0 6px 12px rgba(255,255,255,.16);margin-bottom:14px;display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:600;font-size:22px;color:var(--ink);text-shadow:0 1px 2px rgba(0,0,0,.7),0 0 12px rgba(255,255,255,.15);letter-spacing:-.04em}
+.preview-empty .relic::after{content:'S'}
+.preview-empty h3{font-family:'Fraunces',serif;font-style:italic;font-weight:500;font-size:18px;color:var(--ink);margin-bottom:6px;letter-spacing:-.01em}
+.preview-empty p{max-width:34ch;line-height:1.55;font-size:11px}
+.preview-empty em{color:var(--blood);font-style:italic}
+/* RIGHT — tools */
+.tools{padding:14px;display:flex;flex-direction:column;gap:12px}
+.tool-block{padding:10px 12px;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:var(--inset)}
+.tool-block h3{font-family:'Fraunces',serif;font-style:italic;font-weight:500;font-size:12px;color:var(--ink);margin-bottom:8px;letter-spacing:-.005em}
+.tool-block h3 b{color:var(--blood);font-weight:500;font-style:normal}
+.mic-stage{display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px 0 8px}
+.mic{width:78px;height:78px;border-radius:50%;border:1px solid var(--line);background:radial-gradient(circle at 35% 30%,#fff 0%,#d8dade 12%,var(--blood) 42%,var(--blood-deep) 82%,#000 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 1px rgba(0,0,0,.4),0 0 22px rgba(168,18,28,.5),0 6px 22px rgba(0,0,0,.6);cursor:pointer;position:relative;display:grid;place-items:center;color:var(--ink);font-size:22px;transition:transform .1s;font-family:'Fraunces',serif}
+.mic:active{transform:scale(.95)}
+.mic:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 1px rgba(0,0,0,.4),0 0 32px rgba(168,18,28,.85),0 6px 24px rgba(0,0,0,.7)}
+.mic[data-state="listening"]{background:radial-gradient(circle at 35% 30%,#fff 0%,#d8dade 12%,#0a3d52 42%,#01151c 80%,#000 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 1px rgba(0,0,0,.4),0 0 28px rgba(61,214,255,.7),0 6px 22px rgba(0,0,0,.6);animation:pulse-cyan 1.4s infinite}
+.mic[data-state="processing"]{background:radial-gradient(circle at 35% 30%,#fff 0%,#d8dade 12%,#5a2d05 42%,#1a0d02 80%,#000 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 1px rgba(0,0,0,.4),0 0 28px rgba(255,138,31,.75),0 6px 22px rgba(0,0,0,.6);animation:spin-rim 1.4s linear infinite}
+.mic[data-state="speaking"]{box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 1px rgba(0,0,0,.4),0 0 40px rgba(168,18,28,.9),0 6px 24px rgba(0,0,0,.7)}
+.mic-state{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.mic-state.live{color:var(--glow)}
+.mic-state.processing{color:var(--amber)}
+.mic-state.speaking{color:var(--blood)}
+.gallery{display:grid;grid-template-columns:1fr 1fr;gap:6px;min-height:24px}
+.gallery img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;border:1px solid var(--line);background:#0a0612;cursor:pointer;transition:transform .15s}
+.gallery img:hover{transform:scale(1.04);border-color:var(--blood)}
+.gallery .ph{grid-column:span 2;font-size:10px;color:var(--muted);text-align:center;padding:14px 8px;font-style:italic}
+.composer{display:flex;gap:6px}
+.composer textarea{flex:1;min-height:60px;max-height:120px;resize:vertical;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:rgba(0,0,0,.35);color:var(--ink);font:inherit;font-size:11.5px;outline:none}
+.composer textarea:focus{border-color:var(--glow);box-shadow:0 0 0 1px rgba(61,214,255,.15)}
+.composer .send{align-self:stretch;padding:0 12px;border:0;background:linear-gradient(180deg,var(--blood),var(--blood-deep));color:var(--ink);font:inherit;font-size:11px;letter-spacing:.12em;text-transform:uppercase;border-radius:8px;cursor:pointer;display:grid;place-items:center;min-width:56px}
+.composer .send:hover{filter:brightness(1.15)}
+.composer .send:disabled{opacity:.4;cursor:not-allowed;filter:none}
+/* footer ambient */
+.ambient{display:flex;align-items:center;gap:12px;padding:6px 16px;border-top:1px solid var(--line);font-size:10px;color:var(--muted);letter-spacing:.04em;background:rgba(0,0,0,.3);min-height:30px;overflow:hidden;white-space:nowrap}
+.ambient .badge{display:inline-flex;align-items:center;gap:5px;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);flex:0 0 auto}
+.ambient .badge::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--muted)}
+.ambient .badge.live{color:var(--glow)} .ambient .badge.live::before{background:var(--glow);box-shadow:0 0 6px var(--glow)}
+.ambient .badge.off{color:var(--muted)} .ambient .badge.off::before{background:#3a3d44}
+.ambient .stream{flex:1;overflow:hidden;text-overflow:ellipsis;color:var(--ink);opacity:.7;font-style:italic;min-width:0}
+.ambient .stream b{font-family:'Fraunces',serif;color:var(--ink);font-style:normal;font-weight:500;margin-right:8px}
+.relic-line{font-family:'Fraunces',serif;font-style:italic;font-size:11px;color:var(--ink);flex:0 0 auto}
+.relic-line b{color:var(--blood);font-weight:500}
+/* mobile tabs */
+.tabbar{display:none;border-top:1px solid var(--line);background:rgba(0,0,0,.4)}
+.tabbar button{flex:1;appearance:none;border:0;background:transparent;color:var(--muted);font:inherit;font-size:10px;letter-spacing:.18em;text-transform:uppercase;padding:10px 0;cursor:pointer;border-top:2px solid transparent}
+.tabbar button[aria-selected="true"]{color:var(--ink);border-top-color:var(--blood);background:rgba(168,18,28,.06)}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes pulse-cyan{0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 1px rgba(0,0,0,.4),0 0 28px rgba(61,214,255,.55),0 6px 22px rgba(0,0,0,.6)}50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 1px rgba(0,0,0,.4),0 0 44px rgba(61,214,255,1),0 6px 24px rgba(0,0,0,.7)}}
+@keyframes spin-rim{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+@media (max-width:768px){
+  main.three{grid-template-columns:1fr;grid-template-rows:1fr;position:relative}
+  .panel{display:none}
+  .panel.active{display:flex}
+  .tabbar{display:flex}
+  header.top{flex-wrap:wrap;gap:8px}
+  .heads{order:3;width:100%;justify-content:space-between;font-size:9px}
+}
+</style>
+</head>
+<body>
+<a href="#main" class="skip">Skip to main</a>
+<div class="app" id="app">
+  <header class="top" role="banner">
+    <span class="brand">hitthe.link<em>/studio</em><span class="dot" aria-hidden="true"></span><span id="brandSub">harness</span></span>
+    <nav class="routes" role="tablist" aria-label="Agent route">
+      <button class="route" data-route="text" aria-pressed="true" title="Text via /gemini (live)">TEXT</button>
+      <button class="route pending" data-route="image" aria-pressed="false" title="wire pending">IMAGE</button>
+      <button class="route pending" data-route="edit" aria-pressed="false" title="wire pending">EDIT</button>
+      <button class="route pending" data-route="voice" aria-pressed="false" title="wire pending">VOICE</button>
+    </nav>
+    <span class="heads" aria-label="route health">
+      <span id="hStat">routes <b id="hLive">1</b>/4</span>
+    </span>
+  </header>
+
+  <main class="three" id="main">
+    <aside class="panel active" id="pLeft" role="region" aria-label="Transcript">
+      <div class="head"><h2>Transcript</h2><div class="meta"><button class="btn" id="exportBtn" title="Export full transcript as JSON">Export</button></div></div>
+      <div class="body" id="transcriptScroll">
+        <div id="transcriptList" aria-live="polite" aria-atomic="false"></div>
+      </div>
+    </aside>
+
+    <section class="panel active" id="pCenter" role="region" aria-label="Live preview">
+      <div class="preview-wrap">
+        <div class="preview-chrome">
+          <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="preview-url"><b>preview</b> · srcdoc · sandboxed · <span id="bufSize">0 bytes</span></span>
+          <span class="preview-actions">
+            <button class="btn" id="clearBtn">Clear</button>
+            <button class="btn primary" id="saveBtn" title="Save endpoint pending">Save build</button>
+          </span>
+        </div>
+        <iframe id="preview" sandbox="allow-scripts" title="Live preview — composed from streamed code blocks" srcdoc=""></iframe>
+        <div class="preview-empty" id="previewEmpty">
+          <div class="relic" aria-hidden="true"></div>
+          <h3>Live build awaits</h3>
+          <p>Ask Studio to render HTML / CSS / JS and watch it compose <em>character by character</em>. Code fences become a sandboxed iframe — every 100ms, rebuilt.</p>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel" id="pRight" role="region" aria-label="Tools">
+      <div class="head"><h2>Tools</h2><div class="meta"><span id="vState" class="mic-state">idle</span></div></div>
+      <div class="body tools">
+        <div class="tool-block">
+          <h3>Mic <b>·</b> voice</h3>
+          <div class="mic-stage">
+            <button class="mic" id="mic" data-state="idle" aria-label="Toggle voice listen" aria-pressed="false">●</button>
+            <div class="mic-state" id="micLabel">tap to listen</div>
+          </div>
+        </div>
+        <div class="tool-block">
+          <h3>Compose</h3>
+          <div class="composer">
+            <textarea id="composerInput" placeholder="ask studio to build something…" rows="3"></textarea>
+            <button class="send" id="sendBtn" title="Send (Ctrl+Enter)">Send</button>
+          </div>
+        </div>
+        <div class="tool-block">
+          <h3>Gallery <b>·</b> images</h3>
+          <div class="gallery" id="gallery"><div class="ph">no images yet · IMAGE route pending</div></div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <nav class="tabbar" role="tablist" aria-label="Mobile panels">
+    <button data-tab="pLeft" aria-selected="false">Chat</button>
+    <button data-tab="pCenter" aria-selected="true">Preview</button>
+    <button data-tab="pRight" aria-selected="false">Tools</button>
+  </nav>
+
+  <footer class="ambient" role="contentinfo">
+    <span class="badge off" id="spBadge" title="Screenpipe ambient context"><span id="spLabel">screenpipe</span></span>
+    <span class="stream" id="spStream"><b>ambient</b>quiet · screenpipe probing…</span>
+    <span class="relic-line">Automate <b>or</b> Die</span>
+  </footer>
+</div>
+
+<script type="module">
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+
+// ---- canonical AUA routes ----
+const AUA = 'https://tui.xlrd.org';
+const ROUTES = {
+  text:  { path:'/gemini',       wired:true,  label:'TEXT'  },
+  image: { path:'/grok-imagine', wired:false, label:'IMAGE' },
+  edit:  { path:'/photoroom',    wired:false, label:'EDIT'  },
+  voice: { path:'/grok-voice',   wired:false, label:'VOICE' },
+};
+let currentRoute = 'text';
+
+// ---- state ----
+const transcript = [];
+let htmlBuf = '', cssBuf = '', jsBuf = '';
+let rebuildTimer = null;
+let thinking = false;
+
+// ---- transcript ----
+function pushTurn(who, text, codes){
+  const t = { who, text, codes:codes||[], ts:Date.now() };
+  transcript.push(t);
+  renderTurn(t);
+  scrollLeftToEnd();
+}
+function renderTurn(t){
+  const list = $('transcriptList');
+  const div = document.createElement('article');
+  div.className = 'turn ' + (t.who==='qi' ? 'qi' : 'studio');
+  const time = new Date(t.ts).toLocaleTimeString([], {hour12:false});
+  let codesHtml = '';
+  if(t.codes && t.codes.length){
+    codesHtml = '<div class="codes">' + t.codes.map(c =>
+      '<div class="code" title="' + esc(c.body.slice(0,400)) + '">' + esc(c.lang) + ' · ' + c.body.length + ' chars</div>'
+    ).join('') + '</div>';
+  }
+  div.innerHTML = '<div class="who"><b>' + esc(t.who) + '</b><span>' + esc(time) + '</span></div>'
+    + '<div class="body">' + esc(t.text || '(empty)') + '</div>' + codesHtml;
+  list.appendChild(div);
+}
+function setThinking(on){
+  const list = $('transcriptList');
+  const existing = list.querySelector('.thinking');
+  if(on && !existing){
+    const d = document.createElement('div');
+    d.className = 'thinking';
+    d.textContent = 'Studio is thinking…';
+    list.appendChild(d);
+    scrollLeftToEnd();
+  } else if(!on && existing){ existing.remove(); }
+  thinking = on;
+}
+function scrollLeftToEnd(){
+  const s = $('transcriptScroll');
+  s.scrollTop = s.scrollHeight;
+}
+
+// ---- code-block parser ----
+// Accumulate code fences from streamed text into html/css/js buffers.
+function parseAndAccumulate(text){
+  const codes = [];
+  // Match all triple-backtick blocks with optional lang.
+  const re = /```(\w+)?\n([\s\S]*?)```/g;
+  let m;
+  while((m = re.exec(text)) !== null){
+    const lang = (m[1] || 'text').toLowerCase();
+    const body = m[2];
+    codes.push({ lang, body });
+    if(lang === 'html' || lang === 'htm') htmlBuf += '\n' + body;
+    else if(lang === 'css') cssBuf += '\n' + body;
+    else if(lang === 'js' || lang === 'javascript') jsBuf += '\n' + body;
+  }
+  return codes;
+}
+// Compose full sandboxed doc and update iframe srcdoc.
+function composeAndRender(){
+  const empty = !htmlBuf.trim() && !cssBuf.trim() && !jsBuf.trim();
+  $('previewEmpty').style.display = empty ? 'grid' : 'none';
+  if(empty){ $('preview').srcdoc = ''; $('bufSize').textContent = '0 bytes'; return; }
+  const doc = '<!doctype html><html><head><meta charset="utf-8"><style>' + cssBuf + '</style></head><body>' + htmlBuf + '<script>try{' + jsBuf + '}catch(e){document.body.insertAdjacentHTML("beforeend","<pre style=\\"color:#A8121C;font:12px monospace\\">"+e+"</pre>")}<\/script></body></html>';
+  $('preview').srcdoc = doc;
+  $('bufSize').textContent = doc.length.toLocaleString() + ' bytes';
+}
+function scheduleRender(){
+  if(rebuildTimer) clearTimeout(rebuildTimer);
+  rebuildTimer = setTimeout(composeAndRender, 100);
+}
+function clearBuffers(){
+  htmlBuf=''; cssBuf=''; jsBuf='';
+  composeAndRender();
+}
+$('clearBtn').addEventListener('click', () => {
+  clearBuffers();
+  pushTurn('qi','(cleared preview buffers)',[]);
+});
+$('saveBtn').addEventListener('click', () => {
+  // Save endpoint pending — graceful local download instead.
+  const blob = new Blob([$('preview').srcdoc || '<!-- empty -->'], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'studio-build-' + Date.now() + '.html';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  pushTurn('qi','(saved build locally — POST /studio/save endpoint pending)',[]);
+});
+
+// ---- route selector ----
+function setRoute(name){
+  if(!ROUTES[name]) return;
+  if(!ROUTES[name].wired){
+    pushTurn('qi','(route ' + ROUTES[name].label + ' is wire-pending — staying on ' + ROUTES[currentRoute].label + ')',[]);
+    return;
+  }
+  currentRoute = name;
+  document.querySelectorAll('.route').forEach(b => {
+    b.setAttribute('aria-pressed', b.dataset.route === name ? 'true' : 'false');
+  });
+}
+document.querySelectorAll('.route').forEach(b => {
+  b.addEventListener('click', () => setRoute(b.dataset.route));
+});
+
+// ---- send to /gemini ----
+async function send(text){
+  text = (text || '').trim();
+  if(!text || thinking) return;
+  pushTurn('qi', text, []);
+  $('composerInput').value = '';
+  setThinking(true);
+  try{
+    const ambient = $('spStream').textContent || '';
+    // The /gemini route accepts {q:"..."} non-streaming. Stream-shape parity will
+    // come when AUA exposes SSE. For now we simulate progressive rendering by
+    // token-batching the response on arrival.
+    const sys = 'You build single-file inline HTML/CSS/JS for a live preview iframe. ' +
+                'Default to a self-contained ```html block, plus optional ```css and ```js. ' +
+                'When asked to "render" or "build", emit code fences only when appropriate.';
+    const q = sys + '\n\n[ambient context: ' + ambient.replace(/\s+/g,' ').slice(0,180) + ']\n\nqi: ' + text;
+    const r = await fetch(AUA + ROUTES.text.path, {
+      method:'POST',
+      headers:{ 'content-type':'application/json' },
+      body: JSON.stringify({ q })
+    });
+    const j = await r.json();
+    setThinking(false);
+    if(!j.ok){
+      pushTurn('Studio', '(error: ' + (j.error || ('http ' + r.status)) + ')', []);
+      return;
+    }
+    // Progressive reveal — chunk by ~6 chars / 12ms so the preview rebuilds as
+    // if streamed. Honors prefers-reduced-motion by collapsing to a single push.
+    const full = j.text || '';
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const codes = parseAndAccumulate(full);
+    if(reduce){
+      pushTurn('Studio', full, codes);
+      composeAndRender();
+      maybeSpeak(stripFences(full));
+      return;
+    }
+    // Streaming illusion — push the turn empty, then fill char-progressively.
+    const t = { who:'Studio', text:'', codes, ts:Date.now() };
+    transcript.push(t);
+    const list = $('transcriptList');
+    const div = document.createElement('article');
+    div.className = 'turn studio';
+    const time = new Date(t.ts).toLocaleTimeString([], {hour12:false});
+    const codesHtml = codes.length
+      ? '<div class="codes">' + codes.map(c => '<div class="code">' + esc(c.lang) + ' · ' + c.body.length + ' chars</div>').join('') + '</div>'
+      : '';
+    div.innerHTML = '<div class="who"><b>Studio</b><span>' + esc(time) + '</span></div>'
+      + '<div class="body" id="liveBody"></div>' + codesHtml;
+    list.appendChild(div);
+    const body = div.querySelector('#liveBody');
+    let i = 0;
+    const step = () => {
+      const chunk = full.slice(i, i + 8);
+      body.textContent += chunk;
+      i += 8;
+      t.text = full.slice(0, i);
+      scheduleRender();
+      scrollLeftToEnd();
+      if(i < full.length) setTimeout(step, 12);
+      else { body.textContent = full; t.text = full; composeAndRender(); maybeSpeak(stripFences(full)); }
+    };
+    step();
+  }catch(err){
+    setThinking(false);
+    pushTurn('Studio','(network error: ' + esc(err.message) + ')', []);
+  }
+}
+function stripFences(s){
+  return String(s||'').replace(/```[\s\S]*?```/g,'').replace(/\s+/g,' ').trim();
+}
+
+$('sendBtn').addEventListener('click', () => send($('composerInput').value));
+$('composerInput').addEventListener('keydown', e => {
+  if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); send(e.target.value); }
+});
+
+// ---- Web Speech (STT + TTS) ----
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, listening = false;
+function setMicState(state){
+  $('mic').dataset.state = state;
+  $('mic').setAttribute('aria-pressed', state === 'listening' ? 'true' : 'false');
+  const labels = { idle:'tap to listen', listening:'listening', processing:'processing', speaking:'speaking' };
+  $('micLabel').textContent = labels[state] || state;
+  $('vState').textContent = state;
+  $('vState').className = 'mic-state ' + (state === 'listening' ? 'live' : state === 'processing' ? 'processing' : state === 'speaking' ? 'speaking' : '');
+}
+function startListen(){
+  if(!SR){ pushTurn('qi','(voice unavailable — Web Speech API not in this browser)',[]); return; }
+  if(listening){ rec && rec.stop(); return; }
+  try{
+    rec = new SR();
+    rec.lang = 'en-US'; rec.interimResults = true; rec.continuous = false;
+    rec.onstart = () => { listening = true; setMicState('listening'); };
+    rec.onresult = ev => {
+      let s = '';
+      for(let i = ev.resultIndex; i < ev.results.length; i++) s += ev.results[i][0].transcript;
+      $('composerInput').value = s;
+      if(ev.results[ev.results.length-1].isFinal){
+        setMicState('processing');
+        send(s).finally(() => setMicState('idle'));
+      }
+    };
+    rec.onerror = e => { setMicState('idle'); pushTurn('qi','(voice error: ' + esc(e.error||'unknown') + ')',[]); };
+    rec.onend = () => { listening = false; if($('mic').dataset.state === 'listening') setMicState('idle'); };
+    rec.start();
+  }catch(e){ pushTurn('qi','(voice start failed: ' + esc(e.message) + ')',[]); }
+}
+$('mic').addEventListener('click', startListen);
+
+let lastSpoken = '';
+function maybeSpeak(text){
+  if(!window.speechSynthesis || !text) return;
+  if(text === lastSpoken) return;
+  // Only auto-speak short reply gists — long code-block replies stay silent.
+  const gist = text.slice(0, 240);
+  if(gist.length < 4) return;
+  lastSpoken = text;
+  try{
+    setMicState('speaking');
+    const u = new SpeechSynthesisUtterance(gist);
+    u.rate = 1.04; u.pitch = 0.96; u.volume = 1.0;
+    // Prefer an "Ava"-like voice if present in the browser's list.
+    const voices = window.speechSynthesis.getVoices();
+    const pick = voices.find(v => /ava/i.test(v.name)) ||
+                 voices.find(v => /samantha|jenny|aria/i.test(v.name)) ||
+                 voices.find(v => v.lang && v.lang.startsWith('en'));
+    if(pick) u.voice = pick;
+    u.onend = () => setMicState('idle');
+    u.onerror = () => setMicState('idle');
+    window.speechSynthesis.speak(u);
+  }catch(e){ setMicState('idle'); }
+}
+
+// ---- export transcript ----
+$('exportBtn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify({ exported:new Date().toISOString(), turns:transcript }, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'studio-transcript-' + Date.now() + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+});
+
+// ---- Screenpipe ambient context ----
+async function pollScreenpipe(){
+  const ctrl = new AbortController();
+  const to = setTimeout(()=>ctrl.abort(), 1500);
+  try{
+    const r = await fetch('http://localhost:3030/search?limit=3', { signal: ctrl.signal, cache:'no-store' });
+    clearTimeout(to);
+    if(!r.ok) throw new Error('http ' + r.status);
+    const j = await r.json();
+    const items = (j.data || j.results || j.items || []).slice(0,3);
+    if(!items.length){ setAmbient('live','quiet · no recent activity'); return; }
+    const summary = items.map(it => {
+      const t = (it.content && (it.content.text || it.content.title)) || it.text || it.title || it.app_name || 'frame';
+      return String(t).replace(/\s+/g,' ').slice(0,40);
+    }).join(' · ');
+    setAmbient('live', summary);
+  }catch(err){
+    clearTimeout(to);
+    setAmbient('off', 'screenpipe offline');
+  }
+}
+function setAmbient(state, text){
+  const b = $('spBadge');
+  b.classList.remove('live','off'); b.classList.add(state);
+  $('spLabel').textContent = state === 'live' ? 'screenpipe' : 'offline';
+  $('spStream').innerHTML = '<b>ambient</b>' + esc(text);
+}
+pollScreenpipe();
+setInterval(pollScreenpipe, 30000);
+
+// ---- mobile tab routing ----
+document.querySelectorAll('.tabbar button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tabbar button').forEach(b => b.setAttribute('aria-selected', b===btn ? 'true' : 'false'));
+    document.querySelectorAll('main.three .panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ---- route health probe ----
+async function probeRoutes(){
+  let live = 0;
+  for(const [name, cfg] of Object.entries(ROUTES)){
+    try{
+      const r = await fetch(AUA + cfg.path, {
+        method:'POST',
+        headers:{'content-type':'application/json'},
+        body:'{}'
+      });
+      // 400 with "field required" still counts as wired; 404/503 = unwired.
+      if(r.status === 400 || r.status === 200){
+        cfg.wired = true; live++;
+      } else if(r.status === 404 || r.status === 503){
+        cfg.wired = false;
+      }
+    }catch(_){ /* ignore */ }
+    const btn = document.querySelector('.route[data-route="' + name + '"]');
+    if(btn){
+      if(cfg.wired){
+        btn.classList.remove('pending');
+        btn.title = cfg.label + ' via ' + cfg.path + ' (live)';
+      }else{
+        btn.classList.add('pending');
+        btn.title = cfg.label + ' — wire pending';
+      }
+    }
+  }
+  $('hLive').textContent = String(live);
+}
+probeRoutes();
+
+// ---- seed turn ----
+pushTurn('Studio','Studio harness ready. Ask me to build a one-file HTML demo — I render into the sandboxed iframe live, character by character. TEXT route via /gemini is live; IMAGE/EDIT/VOICE pending.',[]);
+
+// Pre-fill composer with a demo prompt to lower friction.
+$('composerInput').value = 'build a single-file HTML page with a centered oxblood rotating cube on deep black, JetBrains Mono labels, and a chrome ring. Use ```html / ```css / ```js fences.';
+
+</script>
+</body>
+</html>
