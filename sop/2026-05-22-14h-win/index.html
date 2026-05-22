@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SOP · 2026-05-22 · 14h ET · Win + Mac convergence</title>
+<meta name="description" content="State of play 2026-05-22 14h ET. Win-side: PayPal/Square sweep + Ava autoplay + UI-TARS probe. Mac-side: 5 waves, 2 new canon verdicts (STT + IFTTT), UI-TARS /click works.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper:#0A0A0C; --cream:#F4EEE4; --bone:#C7C2B6; --dust:#7A7A7A; --line:rgba(244,238,228,.12);
+  --volt:#00FF88; --rust:#E5552A; --gold:#D2AC47; --steel:#6AD4FF; --rose:#FF5E9C; --violet:#A78BFA;
+  --serif:'Instrument Serif',serif; --sans:'Inter',-apple-system,sans-serif; --mono:'JetBrains Mono',monospace;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { background:var(--paper); color:var(--cream); font-family:var(--sans); line-height:1.55; }
+body::before { content:""; position:fixed; inset:0; pointer-events:none; z-index:0; background:radial-gradient(ellipse 1200px 600px at 50% 0%, rgba(0,255,136,.05), transparent 60%); }
+.wrap { position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:60px 28px 100px; }
+
+header { margin-bottom:48px; }
+.eyebrow { font-family:var(--mono); font-size:11px; letter-spacing:.4em; text-transform:uppercase; color:var(--volt); margin-bottom:18px; }
+.eyebrow .ts { color:var(--bone); margin-left:14px; }
+h1 { font-family:var(--serif); font-weight:400; font-size:clamp(46px,7vw,90px); line-height:0.95; letter-spacing:-.025em; margin:0 0 18px; }
+h1 em { color:var(--volt); font-style:italic; }
+.lede { font-family:var(--serif); font-style:italic; font-size:clamp(18px,2.1vw,24px); color:var(--bone); max-width:880px; line-height:1.45; }
+
+.dyad { display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-top:8px; }
+@media (max-width:880px) { .dyad { grid-template-columns:1fr; } }
+.col { background:linear-gradient(155deg,#141414,#0E0E0E); border:1px solid var(--line); border-radius:14px; padding:28px 30px; border-top:3px solid var(--accent); }
+.col.win { --accent:var(--volt); }
+.col.mac { --accent:var(--violet); }
+.col .lbl { font-family:var(--mono); font-size:10px; letter-spacing:.3em; text-transform:uppercase; color:var(--accent); font-weight:700; margin-bottom:8px; }
+.col h2 { font-family:var(--serif); font-style:italic; font-size:32px; margin:0 0 18px; color:var(--cream); letter-spacing:-.02em; }
+.col h2 em { color:var(--accent); }
+
+.item { padding:14px 0; border-bottom:1px dotted var(--line); }
+.item:last-child { border-bottom:0; }
+.item .title { font-family:var(--sans); font-weight:600; font-size:15px; color:var(--cream); margin-bottom:6px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.item .title .pill { font-family:var(--mono); font-size:9px; letter-spacing:.16em; text-transform:uppercase; padding:3px 8px; border-radius:50px; border:1px solid var(--accent); color:var(--accent); }
+.item .title .pill.done { background:rgba(0,255,136,.1); }
+.item .title .pill.live { background:rgba(106,212,255,.1); border-color:var(--steel); color:var(--steel); }
+.item .title .pill.open { background:rgba(229,85,42,.1); border-color:var(--rust); color:var(--rust); }
+.item .title .pill.locked { background:rgba(210,172,71,.1); border-color:var(--gold); color:var(--gold); }
+.item .body { font-size:13.5px; color:var(--bone); line-height:1.6; }
+.item .body code { font-family:var(--mono); font-size:11.5px; background:rgba(255,255,255,.05); padding:1px 6px; border-radius:3px; color:var(--steel); }
+.item .body a { color:var(--accent); text-decoration:none; border-bottom:1px dotted; }
+
+.canon-strip {
+  margin-top:40px; padding:24px 28px; border-radius:14px;
+  background:linear-gradient(155deg,rgba(210,172,71,.08),rgba(210,172,71,.02));
+  border:1px solid var(--gold); border-left:4px solid var(--gold);
+}
+.canon-strip .head { color:var(--gold); font-family:var(--mono); font-size:11px; letter-spacing:.2em; text-transform:uppercase; font-weight:700; margin-bottom:14px; }
+.canon-strip ul { list-style:none; padding:0; margin:0; display:grid; grid-template-columns:1fr 1fr; gap:10px 24px; }
+@media (max-width:780px) { .canon-strip ul { grid-template-columns:1fr; } }
+.canon-strip li { font-size:13.5px; color:var(--cream); line-height:1.55; }
+.canon-strip li strong { color:var(--gold); font-weight:600; }
+.canon-strip li code { font-family:var(--mono); font-size:11.5px; background:rgba(255,255,255,.06); padding:1px 6px; border-radius:3px; color:var(--gold); }
+
+.open-rail {
+  margin-top:40px; padding:24px 28px; border-radius:14px;
+  background:linear-gradient(155deg,rgba(229,85,42,.06),rgba(229,85,42,.02));
+  border:1px solid var(--rust); border-left:4px solid var(--rust);
+}
+.open-rail .head { color:var(--rust); font-family:var(--mono); font-size:11px; letter-spacing:.2em; text-transform:uppercase; font-weight:700; margin-bottom:14px; }
+.open-rail ul { list-style:none; padding:0; margin:0; }
+.open-rail li { font-size:13.5px; color:var(--cream); line-height:1.65; padding:6px 0; }
+.open-rail li strong { color:var(--rust); }
+.open-rail li code { font-family:var(--mono); font-size:11.5px; background:rgba(255,255,255,.06); padding:1px 6px; border-radius:3px; color:var(--steel); }
+
+footer { margin-top:60px; padding-top:28px; border-top:1px solid var(--line); display:flex; justify-content:space-between; gap:16px; font-family:var(--mono); font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--dust); flex-wrap:wrap; }
+footer a { color:var(--volt); text-decoration:none; border-bottom:1px dotted rgba(0,255,136,.3); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">// SOP · WIN ⇋ MAC<span class="ts">2026-05-22 · 14h ET</span></div>
+  <h1>State of <em>play</em>,<br>this <em>hour</em>.</h1>
+  <div class="lede">Win-side shipped four moves. Mac-side ran five waves and landed two canon verdicts. Two new foundational canons locked. UI-TARS probe converged.</div>
+</header>
+
+<div class="dyad">
+
+  <div class="col win">
+    <div class="lbl">Win · Ezekiel</div>
+    <h2>Four <em>shipped</em>.</h2>
+
+    <div class="item">
+      <div class="title">Stripe → PayPal + Square sweep <span class="pill live">LIVE</span></div>
+      <div class="body">qi corrected "i use paypal and square." Five surfaces swept: <code>/ifttt/</code>, <code>/spine/</code>, <code>/offers/</code>, <code>/sao/</code>, <code>/menu/</code>. Canon <a href="#money">paypal_square_money_rails</a> locked. Stripe removed from stack. Live-verified 13:47:55 ET.</div>
+    </div>
+
+    <div class="item">
+      <div class="title">Ava TTS autoplay everywhere <span class="pill live">LIVE</span></div>
+      <div class="body"><code>_shared/ava-play.js</code> refactored. Silent autoplay on load + first-gesture unlock listener (pointerdown/touchstart/keydown/scroll/wheel, capture+passive, one-shot). Engaged repeat visitors get true autoplay; everyone else gets audio on first page interaction. Live-verified 13:56:45 ET.</div>
+    </div>
+
+    <div class="item">
+      <div class="title">UI-TARS probe (4471 · 4460 · 8080) <span class="pill done">REPORTED</span></div>
+      <div class="body">Win-side: <code>4471/screen</code> exists as Node proxy at <code>tui-url-server.js:996</code>, hangs 20s+. <code>4460</code> = UI-TARS Python <code>serve-uitars.py</code> (PID 48656, ~45h uptime). <code>8080</code> = nothing listening anywhere. Full diagnosis relayed to mac-xen.</div>
+    </div>
+
+    <div class="item">
+      <div class="title">IFTTT inventory page (carry-over from 13:32) <span class="pill live">LIVE</span></div>
+      <div class="body">12-applet plan at <a href="https://hitthe.link/ifttt/">/ifttt/</a> with PayPal·Payment + Square·Recurring recipes + MCP-unauth state card. Now feeds into the <em>tools.xlrd.org</em> runtime per the new IFTTT canon.</div>
+    </div>
+  </div>
+
+  <div class="col mac">
+    <div class="lbl">Mac · Xen</div>
+    <h2>Five <em>waves</em>.</h2>
+
+    <div class="item">
+      <div class="title">Outage caused + recovered <span class="pill done">RESOLVED</span></div>
+      <div class="body">G22 Fix A wrong — <code>STARTUP_GRACE_S=20</code> &lt; 25-30s cold-start. Reverted to 60s. omnimind UP.</div>
+    </div>
+
+    <div class="item">
+      <div class="title">Wave 1 · 5 audits <span class="pill done">5 ADVANCED</span></div>
+      <div class="body">All settled · 5 advanced.</div>
+    </div>
+
+    <div class="item">
+      <div class="title">Wave 2 · 5 populates <span class="pill open">2 OK · 3 REJECTED</span></div>
+      <div class="body">OK: voice-audio + comms-sms-beeper. Rejected: l7s / governance / life-ops.</div>
+    </div>
+
+    <div class="item">
+      <div class="title">Wave 3 · 8 workers <span class="pill done">3 DONE · 5 DRAFTED</span></div>
+      <div class="body">All settled · 3 done + 5 drafted.</div>
+    </div>
+
+    <div class="item">
+      <div class="title">Wave 4 · 4 workers <span class="pill done">4 DRAFTED</span></div>
+      <div class="body">All settled · 4 drafted patches.</div>
+    </div>
+
+    <div class="item">
+      <div class="title">Wave 5 · 4 audits + wakeup <span class="pill open">ALL REJECTED</span></div>
+      <div class="body">Direct mode now.</div>
+    </div>
+
+    <div class="item">
+      <div class="title">UI-TARS /click works <span class="pill done">CONFIRMED</span></div>
+      <div class="body"><code>{"q":"..."}</code> POST body required. <code>/screen</code> still hangs. Peer-message to Ezekiel queued — no response path yet.</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="canon-strip" id="money">
+  <div class="head">⚡ Two foundational canons locked this hour</div>
+  <ul>
+    <li><strong>STT verdict</strong> · Apple SFSpeechRecognizer + Whisper.cpp Metal redundancy. <strong>ALL cloud STT banned.</strong> Canary Qwen Win-side plan RETIRED. Whisper.cpp Metal is <em>re-enabled</em> for local use (prior "Whisper DIE" was cloud-only scope). <code>canon_stt_apple_whisper_metal_only_2026-05-22</code></li>
+    <li><strong>IFTTT verdict</strong> · YES build. Runtime = <code>tools.xlrd.org</code>. 3-layer auth (peer-token + HMAC + rate-budget). 20-tool allowlist. <code>hitthe.link/ifttt/</code> stays as inventory. <code>canon_ifttt_tools_xlrd_org_3layer_auth_2026-05-22</code></li>
+    <li><strong>Money rails</strong> · PayPal + Square only. Stripe out. PayPal MCP + Square MCP both in session, ready to fire once authed. <code>canon_paypal_square_money_rails_2026-05-22</code></li>
+    <li><strong>Always monitor until live</strong> · 200 OK + content-marker grep before claiming shipped. Push ≠ live. GH Pages has 30-90s deploy lag. <code>canon_always_monitor_until_live_2026-05-22</code></li>
+  </ul>
+</div>
+
+<div class="open-rail">
+  <div class="head">⚠ Open threads — what comes next</div>
+  <ul>
+    <li><strong>Ezekiel A2A response path</strong> — mac-xen says peer messages queued, no response path yet. <code>mac-vvs.ps1</code> sends via SSH → <code>vvs --stdin</code>; need to confirm mac-xen reads that inbox. Investigate omnimind inject path as alternative.</li>
+    <li><strong>UI-TARS /screen still hung</strong> — Node proxy at 4471 blocks 20s+, Python on 4460 has queue-blocked. Restart <code>serve-uitars.py</code> (PID 48656) recommended. <code>/click</code> works with POST body <code>{"q":"..."}</code>.</li>
+    <li><strong>tools.xlrd.org build</strong> — mac-xen owns runtime. Win-Ezekiel keeps inventory <code>/ifttt/</code> in sync as recipes wire live. 20-tool allowlist needs finalization.</li>
+    <li><strong>Canary Qwen background install</strong> — was pip-installing weights pre-verdict. Should kill the background download; STT verdict moved Win out of STT entirely.</li>
+    <li><strong>PayPal MCP + Square MCP auth</strong> — qi's browser sign-in unblocks direct payment-link tool dispatch (would bypass IFTTT for the 4 payment applets).</li>
+    <li><strong>Correction (truncated)</strong> — mac-xen had one more line of state-of-play that didn't transit. Awaiting re-send via better channel.</li>
+  </ul>
+</div>
+
+<footer>
+  <div>hitthe.link/sop/2026-05-22-14h-win</div>
+  <div>
+    <a href="/ifttt/">IFTTT inventory</a> ·
+    <a href="/spine/">Business spine</a> ·
+    <a href="/padre/">Padre</a> ·
+    <a href="/lab/">Lab</a>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>
