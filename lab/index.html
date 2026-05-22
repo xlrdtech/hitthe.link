@@ -301,21 +301,35 @@
 <section style="border-top:1px solid rgba(244,238,228,0.15);padding:100px 0 80px;">
   <div style="font-size:11px;letter-spacing:0.4em;text-transform:uppercase;color:var(--volt);margin-bottom:32px;">// The receipts</div>
   <h2 style="font-family:'Instrument Serif',serif;font-weight:400;font-size:clamp(48px,7vw,112px);line-height:0.95;color:var(--cream);margin-bottom:60px;letter-spacing:-0.03em;">From <em style="color:var(--rust);font-style:italic;">$1,500</em> a month<br>to under <em style="color:var(--volt);font-style:italic;">$300</em>.<br>On the way to <em style="color:var(--volt);font-style:italic;">zero</em>.</h2>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);border:1px solid rgba(244,238,228,0.12);background:var(--paper);">
-    <div style="padding:48px 36px;border-right:1px solid rgba(244,238,228,0.08);">
-      <div style="font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:var(--dust);margin-bottom:24px;">Industry average</div>
-      <div style="font-family:'Instrument Serif',serif;font-style:italic;font-size:84px;line-height:1;color:var(--rust);letter-spacing:-0.03em;">$1,500<small style="font-size:24px;color:var(--dust);font-style:normal;letter-spacing:0;">+ / mo</small></div>
-      <div style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--dust);margin-top:14px;">SaaS subscriptions, per individual</div>
+  <style>
+    .receipts-grid { display:grid; grid-template-columns:repeat(3,1fr); border:1px solid rgba(244,238,228,0.12); background:var(--paper); }
+    .receipts-grid > div { padding:48px 36px; border-right:1px solid rgba(244,238,228,0.08); }
+    .receipts-grid > div:last-child { border-right:0; }
+    .receipts-grid .num { font-family:'Instrument Serif',serif; font-style:italic; font-size:clamp(48px,8vw,84px); line-height:1; letter-spacing:-0.03em; word-break:keep-all; }
+    .receipts-grid .num small { font-size:clamp(16px,2.4vw,24px); color:var(--dust); font-style:normal; letter-spacing:0; white-space:nowrap; }
+    .receipts-grid .lbl-top { font-size:10px; letter-spacing:0.3em; text-transform:uppercase; color:var(--dust); margin-bottom:24px; }
+    .receipts-grid .lbl-bot { font-size:11px; letter-spacing:0.15em; text-transform:uppercase; color:var(--dust); margin-top:14px; }
+    @media (max-width:780px) {
+      .receipts-grid { grid-template-columns:1fr; }
+      .receipts-grid > div { border-right:0; border-bottom:1px solid rgba(244,238,228,0.08); padding:36px 24px; }
+      .receipts-grid > div:last-child { border-bottom:0; }
+    }
+  </style>
+  <div class="receipts-grid">
+    <div>
+      <div class="lbl-top">Industry average</div>
+      <div class="num" style="color:var(--rust);">$1,500<small>+ / mo</small></div>
+      <div class="lbl-bot">SaaS subscriptions, per individual</div>
     </div>
-    <div style="padding:48px 36px;border-right:1px solid rgba(244,238,228,0.08);background:linear-gradient(180deg,rgba(0,255,136,0.04),transparent);">
-      <div style="font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:var(--volt);margin-bottom:24px;">qi · today</div>
-      <div style="font-family:'Instrument Serif',serif;font-style:italic;font-size:84px;line-height:1;color:var(--volt);letter-spacing:-0.03em;">$300<small style="font-size:24px;color:var(--dust);font-style:normal;letter-spacing:0;"> / mo</small></div>
-      <div style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--volt);margin-top:14px;">80% reduction · live numbers</div>
+    <div style="background:linear-gradient(180deg,rgba(0,255,136,0.04),transparent);">
+      <div class="lbl-top" style="color:var(--volt);">qi · today</div>
+      <div class="num" style="color:var(--volt);">$300<small> / mo</small></div>
+      <div class="lbl-bot" style="color:var(--volt);">80% reduction · live numbers</div>
     </div>
-    <div style="padding:48px 36px;">
-      <div style="font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:var(--dust);margin-bottom:24px;">Target</div>
-      <div style="font-family:'Instrument Serif',serif;font-style:italic;font-size:84px;line-height:1;color:var(--cream);letter-spacing:-0.03em;">$0<small style="font-size:24px;color:var(--dust);font-style:normal;letter-spacing:0;"> / mo</small></div>
-      <div style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--dust);margin-top:14px;">100% sovereign · FOSS · local</div>
+    <div>
+      <div class="lbl-top">Target</div>
+      <div class="num" style="color:var(--cream);">$0<small> / mo</small></div>
+      <div class="lbl-bot">100% sovereign · FOSS · local</div>
     </div>
   </div>
   <p style="font-family:'Instrument Serif',serif;font-style:italic;font-size:clamp(20px,2.4vw,28px);color:var(--bone);max-width:880px;margin-top:48px;line-height:1.4;">The path to zero runs through the same architecture you're reading right now. Local Ollama replaces an OpenAI subscription. AUAs over the URL bar replace SaaS dashboards. GitHub Pages replaces Vercel. Cloudflared replaces paid ngrok. Edge-TTS replaces ElevenLabs. Every subscription is one ingenious local replacement away from disappearing.</p>
