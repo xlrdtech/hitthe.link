@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>The Business Spine — entities · payments · roadmaps</title>
-<meta name="description" content="Self Exec · Executive Leverage (R&D) · Slurtech · L7S · Padre · the business spine · entity map · Stripe payment lane · 3 visual roadmaps (ops · sales · fulfillment).">
+<meta name="description" content="Self Exec · Executive Leverage (R&D) · Slurtech · L7S · Padre · the business spine · entity map · PayPal + Square payment lane · 3 visual roadmaps (ops · sales · fulfillment).">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -186,15 +186,16 @@ footer a { color:var(--volt); text-decoration:none; border-bottom:1px dotted rgb
   <div class="sn">// 03 · Payment lane</div>
   <h2>One <em>real firm</em> rail.</h2>
   <div class="payment-card">
-    <h3>Stripe is the <em>one canonical</em> payment lane.</h3>
-    <div class="sub">Replaces ad-hoc Cash App / Venmo / one-off invoices. Makes Executive Leverage look like a real firm, not a side hustle.</div>
+    <h3><em>PayPal + Square</em> are the canonical payment lanes.</h3>
+    <div class="sub">Replaces ad-hoc Cash App / Venmo / one-off invoices. Two rails qi already runs — PayPal for B2B invoicing + international, Square for retail tap + fast Web Checkout. Makes Executive Leverage look like a real firm, not a side hustle. <span class="deprecated">Stripe is not in the stack.</span></div>
     <ul>
-      <li><strong>Invoicing:</strong> Stripe Invoices · branded · Net 7 default · auto-reminders · receipts emailed</li>
-      <li><strong>Padre $2K closes:</strong> Stripe Payment Link delivered via SMS (the Padre call script gets the link, not Cash App)</li>
-      <li><strong>Recurring monthly fees:</strong> Stripe Subscriptions · maintenance plans · auto-charge on cycle</li>
-      <li><strong>Deposit-first deals:</strong> Stripe Checkout split — 50% on signature, 50% on delivery</li>
-      <li><strong>Cash App / Venmo / PayPal:</strong> <span class="deprecated">deprecated for client billing</span> · personal-only or rare partner transfers (Anthony V Loopback)</li>
-      <li><strong>Receipts/tax:</strong> Stripe → QuickBooks sync · single audit trail</li>
+      <li><strong>Invoicing:</strong> PayPal Invoice · branded · Net 7 default · auto-reminders · receipts emailed</li>
+      <li><strong>Padre $2K closes:</strong> PayPal Invoice OR Square Web Checkout link delivered via SMS (the Padre call script gets the link, not Cash App)</li>
+      <li><strong>Recurring monthly fees:</strong> Square Subscriptions OR PayPal recurring profile · maintenance plans · auto-charge on cycle</li>
+      <li><strong>Deposit-first deals:</strong> PayPal Invoice for 50% on signature, second invoice for 50% on delivery</li>
+      <li><strong>Cash App / Venmo:</strong> <span class="deprecated">deprecated for client billing</span> · personal-only or rare partner transfers (Anthony V Loopback)</li>
+      <li><strong>Receipts/tax:</strong> PayPal + Square exports → QuickBooks · single audit trail</li>
+      <li><strong>MCP layer:</strong> PayPal MCP + Square MCP both available in Xen session — payment-link creation, transaction polling, and event push can fire through tools directly once authed (no IFTTT-in-the-middle required for these two rails)</li>
     </ul>
   </div>
 </section>
@@ -224,8 +225,8 @@ footer a { color:var(--volt); text-decoration:none; border-bottom:1px dotted rgb
         <li><strong>Lead sourcing:</strong> <a href="/padre/leads/" style="color:var(--accent);">PSO-2</a> · Henry County + verticals · Google Places API or WebKit scrape</li>
         <li><strong>Site demo:</strong> Pre-build the prospect's site BEFORE the call · proof on first ring</li>
         <li><strong>Padre script:</strong> <code>xen-padre-script</code> · opener + value + ask + soft close + objection handlers</li>
-        <li><strong>Quote:</strong> $2,000 / 7-day scope · $1K deposit Stripe Payment Link</li>
-        <li><strong>Close:</strong> Deposit hits Stripe · 7-day countdown starts · revision window locked</li>
+        <li><strong>Quote:</strong> $2,000 / 7-day scope · $1K deposit via PayPal Invoice or Square Web Checkout link</li>
+        <li><strong>Close:</strong> Deposit hits PayPal/Square · 7-day countdown starts · revision window locked</li>
         <li><strong>Boomerang:</strong> Site delivered → ownership reverts to operator · monthly maintenance optional</li>
       </ol>
     </div>
@@ -239,7 +240,7 @@ footer a { color:var(--volt); text-decoration:none; border-bottom:1px dotted rgb
         <li><strong>Deploy:</strong> Push to <code>hitthe.link/padre/&lt;slug&gt;/</code> · GH Pages serves in 60s</li>
         <li><strong>Voice walkthrough:</strong> Edge-TTS Ava pre-rendered · floating play button on every page</li>
         <li><strong>Revision window:</strong> 7 days from delivery · CSV logs revision asks</li>
-        <li><strong>Closeout:</strong> Final balance billed via Stripe · monthly maintenance offered · CRM row updated</li>
+        <li><strong>Closeout:</strong> Final balance billed via PayPal/Square · monthly maintenance offered · CRM row updated</li>
       </ol>
     </div>
 
@@ -250,10 +251,10 @@ footer a { color:var(--volt); text-decoration:none; border-bottom:1px dotted rgb
   <div class="sn">// 05 · Next moves</div>
   <h2>What this spine <em>unblocks</em>.</h2>
   <ol style="padding-left:24px; font-size:16px; line-height:1.7;">
-    <li><strong style="color:var(--volt);">Stripe account live</strong> · branded as Executive Leverage · first Payment Link tied to Padre $2K offer</li>
+    <li><strong style="color:var(--volt);">PayPal + Square live</strong> · branded as Executive Leverage · first PayPal Invoice or Square Web Checkout link tied to Padre $2K offer</li>
     <li><strong style="color:var(--volt);">Slurtech canon-defined</strong> · scope · ownership · product tour · ships at <code style="background:rgba(255,255,255,.05); padding:2px 6px; border-radius:3px;">hitthe.link/slurtech/</code></li>
     <li><strong style="color:var(--volt);">PSO-2 backend wired</strong> · lead sourcing endpoint · Google Places or WebKit scrape · Padre dialer pulls from real pipeline</li>
-    <li><strong style="color:var(--volt);">First 5 Henry County closes</strong> · weekly target · $10K cleared into Stripe</li>
+    <li><strong style="color:var(--volt);">First 5 Henry County closes</strong> · weekly target · $10K cleared into PayPal + Square</li>
     <li><strong style="color:var(--volt);">Public entity map</strong> · this page becomes the canonical "who owns what" reference for partners, investors, Jenny</li>
   </ol>
 </section>

@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>IFTTT Ops Overhaul — Padre · Beside · Stripe · Drive · Calendar</title>
-<meta name="description" content="IFTTT applet overhaul for Xen / Padre / Self Exec ops · Beside SMS triggers · Stripe payment automations · Drive uploads → Shang Tsung absorb · daily Padre dialer queue · calendar reminders.">
+<title>IFTTT Ops Overhaul — Padre · Beside · PayPal · Square · Drive · Calendar</title>
+<meta name="description" content="IFTTT applet overhaul for Xen / Padre / Self Exec ops · Beside SMS triggers · PayPal + Square payment automations · Drive uploads → Shang Tsung absorb · daily Padre dialer queue · calendar reminders.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -34,7 +34,7 @@ section h2 em { color:var(--volt); font-style:italic; }
   padding:24px 26px; border-left:3px solid var(--accent);
 }
 .recipe.beside { --accent:var(--steel); }
-.recipe.stripe { --accent:var(--gold); }
+.recipe.pay { --accent:var(--gold); }
 .recipe.drive { --accent:var(--volt); }
 .recipe.cal { --accent:var(--rose); }
 .recipe.padre { --accent:var(--violet); }
@@ -79,7 +79,7 @@ footer a { color:var(--volt); text-decoration:none; border-bottom:1px dotted rgb
 <header>
   <div class="eyebrow">// IFTTT Ops Overhaul · v0.1</div>
   <h1>Wire <em>everything</em>.<br>Trigger <em>once</em>.</h1>
-  <div class="lede">If Beside SMS lands · IF Stripe pays · IF Drive lands · IF Calendar fires · IF Padre lead arrives → THEN the next-step automation fires before qi has to think about it. Twelve applets that overhaul daily ops.</div>
+  <div class="lede">If Beside SMS lands · IF PayPal/Square pays · IF Drive lands · IF Calendar fires · IF Padre lead arrives → THEN the next-step automation fires before qi has to think about it. Twelve applets that overhaul daily ops.</div>
 </header>
 
 <div class="state-card">
@@ -100,18 +100,18 @@ footer a { color:var(--volt); text-decoration:none; border-bottom:1px dotted rgb
       <div class="status">status · plan · IFTTT applet TBD</div>
     </div>
 
-    <div class="recipe stripe">
-      <div class="tag">Stripe · Payment</div>
+    <div class="recipe pay">
+      <div class="tag">PayPal · Payment</div>
       <h3>Padre $1K deposit → site delivery</h3>
-      <div class="flow"><span class="if">IF</span> Stripe Payment Link succeeds (amount ≥ $1000, tag=padre) <span class="arrow">→</span> <span class="then">THEN</span> trigger <code>xen-padre-build --slug</code> + send confirmation SMS to client.</div>
-      <div class="why"><strong>Why:</strong> Payment → instant delivery cycle. No human in the loop. 7-day clock starts at Stripe confirmation, not at Padre handoff.</div>
+      <div class="flow"><span class="if">IF</span> PayPal Invoice paid OR Square Web Checkout succeeds (amount ≥ $1000, tag=padre) <span class="arrow">→</span> <span class="then">THEN</span> trigger <code>xen-padre-build --slug</code> + send confirmation SMS to client.</div>
+      <div class="why"><strong>Why:</strong> Payment → instant delivery cycle. No human in the loop. 7-day clock starts at PayPal/Square confirmation, not at Padre handoff. PayPal MCP + Square MCP both available in Xen session — bypasses IFTTT once authed.</div>
       <div class="status">status · plan · IFTTT applet TBD</div>
     </div>
 
-    <div class="recipe stripe">
-      <div class="tag">Stripe · Recurring</div>
+    <div class="recipe pay">
+      <div class="tag">Square · Recurring</div>
       <h3>Monthly maintenance → SMS qi</h3>
-      <div class="flow"><span class="if">IF</span> Stripe Subscription charges (monthly maintenance) <span class="arrow">→</span> <span class="then">THEN</span> SMS qi: "+ $X from <client>. Total MRR now $Y."</div>
+      <div class="flow"><span class="if">IF</span> Square Subscriptions OR PayPal recurring profile charges (monthly maintenance) <span class="arrow">→</span> <span class="then">THEN</span> SMS qi: "+ $X from <client>. Total MRR now $Y."</div>
       <div class="why"><strong>Why:</strong> qi sees revenue compound in real-time. Manifesting the close per <code>canon_l7s_pop_to_habits</code>.</div>
       <div class="status">status · plan · IFTTT applet TBD</div>
     </div>
@@ -197,7 +197,7 @@ footer a { color:var(--volt); text-decoration:none; border-bottom:1px dotted rgb
   <div class="flow-rail">
     <div class="step"><span class="n">1.</span><span class="b"><strong>Authorize IFTTT MCP</strong> on claude.ai (browser sign-in flow). <code>/mcp</code> shows status.</span></div>
     <div class="step"><span class="n">2.</span><span class="b"><strong>Inventory existing IFTTT applets</strong> on qi's account (if any) via <code>mcp__claude_ai_IFTTT__list_applets</code> when the tools load.</span></div>
-    <div class="step"><span class="n">3.</span><span class="b"><strong>Wire Stripe webhooks</strong> first (highest revenue impact). Stripe → IFTTT → omnimind hook. Recipes #2 and #3.</span></div>
+    <div class="step"><span class="n">3.</span><span class="b"><strong>Wire PayPal IPN + Square webhooks</strong> first (highest revenue impact). PayPal/Square → IFTTT → omnimind hook. Recipes #2 and #3. Note: PayPal MCP + Square MCP also available in session — can bypass IFTTT entirely once authed.</span></div>
     <div class="step"><span class="n">4.</span><span class="b"><strong>Wire Beside webhook</strong> for inbound SMS routing. Lyn pre-draft + persona-keyword routing. Recipes #1 and #11.</span></div>
     <div class="step"><span class="n">5.</span><span class="b"><strong>Wire Drive uploads</strong> for Shang Tsung absorb pipeline. Recipe #4 + #10.</span></div>
     <div class="step"><span class="n">6.</span><span class="b"><strong>Wire Calendar + Geofence</strong> for context-aware Xen state. Recipes #5 and #8.</span></div>
@@ -211,7 +211,7 @@ footer a { color:var(--volt); text-decoration:none; border-bottom:1px dotted rgb
   <h2>What this <em>retires</em>.</h2>
   <ul style="padding-left:24px; font-size:15.5px; line-height:1.85;">
     <li><strong style="color:var(--volt);">Manual SMS triage</strong> — Lyn pre-drafts via Beside webhook · qi just approves</li>
-    <li><strong style="color:var(--volt);">Manual Padre site build per close</strong> — Stripe payment auto-triggers <code>xen-padre-build</code></li>
+    <li><strong style="color:var(--volt);">Manual Padre site build per close</strong> — PayPal/Square payment auto-triggers <code>xen-padre-build</code></li>
     <li><strong style="color:var(--volt);">Daily lead-sourcing run</strong> — PSO-2 → IFTTT → auto-site → SMS queue lands at 9am</li>
     <li><strong style="color:var(--volt);">Voice keyword routing</strong> — apple-stt-v2 transcript → persona switch without manual context</li>
     <li><strong style="color:var(--volt);">Drive-drop pasting</strong> — qi drops a file, absorb fires, no manual paste loop</li>
