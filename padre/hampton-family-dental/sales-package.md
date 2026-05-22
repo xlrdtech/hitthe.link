@@ -11,7 +11,7 @@
 
 [OPENER — 1-2 lines]
 Hey, is this {contact_first_name} or someone with Hampton Family Dental?
-This is Padre with L7 Solutions — I noticed you've got 4.9-star reviews from 127+ customers but no website to showcase any of it.
+This is Padre with Executive Leverage (R&D) — I noticed you've got 4.9-star reviews from 127+ customers but no website to showcase any of it.
 
 [VALUE — 2 sentences]
 So I went ahead and built you a sample landing page that pulls together your reviews, services, and a click-to-call CTA — already live at https://hitthe.link/padre/hampton-family-dental/.
@@ -29,7 +29,7 @@ Does it make sense to get you set up this week or next?
 
 ## SMS (if call missed)
 
-Hi {contact_first_name} — Padre here with L7 Solutions. Built a sample site for Hampton Family Dental since your 4.9★ reviews deserve a real showcase: https://hitthe.link/padre/hampton-family-dental/ — 5 min walkthrough? Reply YES.
+Hi {contact_first_name} — Padre here with Executive Leverage (R&D). Built a sample site for Hampton Family Dental since your 4.9★ reviews deserve a real showcase: https://hitthe.link/padre/hampton-family-dental/ — 5 min walkthrough? Reply YES.
 
 ---
 
