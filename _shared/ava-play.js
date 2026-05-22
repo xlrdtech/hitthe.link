@@ -98,30 +98,70 @@
     }
   }
 
+  function ensureAudio() {
+    if (audio) return audio;
+    audio = new Audio(SRC);
+    audio.preload = 'auto';
+    audio.addEventListener('canplay', () => { if (state === 'loading') setState('playing'); });
+    audio.addEventListener('play',    () => setState('playing'));
+    audio.addEventListener('pause',   () => { if (state === 'playing') setState('paused'); });
+    audio.addEventListener('ended',   () => setState('idle'));
+    audio.addEventListener('error',   () => setState('error', 'ava.mp3 missing'));
+    return audio;
+  }
+
   btn.addEventListener('click', async () => {
-    if (state === 'playing') {
-      if (audio) audio.pause();
-      setState('paused');
-      return;
-    }
-    if (state === 'paused') {
-      if (audio) audio.play();
-      setState('playing');
-      return;
-    }
+    if (state === 'playing') { audio && audio.pause(); setState('paused'); return; }
+    if (state === 'paused')  { audio && audio.play();  setState('playing'); return; }
     if (state === 'loading') return;
     setState('loading');
+    ensureAudio();
+    try { await audio.play(); }
+    catch (e) { setState('error', 'tap blocked · retry'); }
+  });
 
-    if (!audio) {
-      audio = new Audio(SRC);
-      audio.addEventListener('canplay', () => setState('playing'));
-      audio.addEventListener('ended', () => setState('idle'));
-      audio.addEventListener('error', () => setState('error', 'ava.mp3 missing'));
-    }
+  // ── Autoplay (canon: qi 2026-05-22 "autoplay for all ava tts's") ─────────
+  // 1) Try silent autoplay on load. Most browsers block this for new visitors;
+  //    that's expected and is suppressed without flashing the error state.
+  // 2) On first user gesture anywhere on the document, fire play within the
+  //    gesture context — this always succeeds and unlocks audio for the rest
+  //    of the session. Engaged repeat visitors skip the gesture step.
+  let unlocked = false;
+
+  async function silentAutoplay() {
+    ensureAudio();
     try {
       await audio.play();
-    } catch (e) {
-      setState('error', 'tap blocked · retry');
+      unlocked = true;
+    } catch (_) {
+      // Stay idle without surfacing the gesture-policy rejection.
+      if (state !== 'playing') setState('idle');
     }
-  });
+  }
+
+  function gestureUnlock() {
+    if (unlocked) return;
+    unlocked = true;
+    ensureAudio();
+    if (audio.paused) {
+      const p = audio.play();
+      if (p && typeof p.then === 'function') {
+        p.catch(() => setState('error', 'tap blocked · retry'));
+      }
+    }
+  }
+
+  const GESTURES = ['pointerdown','touchstart','keydown','scroll','wheel'];
+  const onGesture = () => {
+    gestureUnlock();
+    GESTURES.forEach(g => document.removeEventListener(g, onGesture, true));
+  };
+  GESTURES.forEach(g => document.addEventListener(g, onGesture, { capture: true, passive: true }));
+
+  // Kick off the silent attempt; if HTML is still parsing, defer to DOMContentLoaded.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', silentAutoplay, { once: true });
+  } else {
+    silentAutoplay();
+  }
 })();
