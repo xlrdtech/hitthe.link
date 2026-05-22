@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{business_name}} · {{city}}</title>
+<meta name="description" content="{{business_name}} — {{tagline}}. {{rating}}★ from {{review_count}} reviews. Serving {{city}}.">
+<meta property="og:title" content="{{business_name}}">
+<meta property="og:description" content="{{tagline}}">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='80'%3E{{emoji}}%3C/text%3E%3C/svg%3E">
+<style>
+:root{--accent:{{accent_color}};--accent-dark:{{accent_dark}};--ink:#0e1116;--paper:#fafbfd;--soft:#6b7280;--gold:#d4af37;--line:rgba(14,17,22,.08)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--paper);color:var(--ink);font-family:'SF Pro Display',-apple-system,system-ui,'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.55}
+.hero{padding:64px 24px 56px;text-align:center;background:linear-gradient(180deg,var(--accent) 0%,var(--accent-dark) 100%);color:#fff;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 800px 400px at 50% 0%,rgba(255,255,255,.18),transparent 70%);pointer-events:none}
+.hero .badge{display:inline-block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.78);background:rgba(255,255,255,.12);padding:6px 14px;border-radius:99px;margin-bottom:18px}
+.hero h1{font-size:clamp(36px,6vw,68px);font-weight:800;letter-spacing:-.02em;line-height:1.05;margin-bottom:14px;text-shadow:0 2px 24px rgba(0,0,0,.18)}
+.hero .tagline{font-size:clamp(18px,2.4vw,24px);font-weight:300;color:rgba(255,255,255,.95);max-width:680px;margin:0 auto 28px;line-height:1.4}
+.hero .stars{font-size:22px;color:#ffd700;margin-bottom:6px;letter-spacing:2px}
+.hero .reviews{font-size:14px;color:rgba(255,255,255,.85);margin-bottom:32px}
+.cta-row{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:8px}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:16px 28px;border-radius:8px;font-weight:600;font-size:15px;text-decoration:none;transition:transform .15s,box-shadow .2s}
+.btn-primary{background:#fff;color:var(--accent-dark);box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(0,0,0,.24)}
+.btn-ghost{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.6)}
+.btn-ghost:hover{background:rgba(255,255,255,.1)}
+section{padding:64px 24px;max-width:1080px;margin:0 auto}
+section h2{font-size:clamp(28px,4vw,42px);font-weight:800;letter-spacing:-.01em;margin-bottom:14px;text-align:center}
+section .lead{font-size:18px;color:var(--soft);text-align:center;max-width:640px;margin:0 auto 40px}
+.services{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
+.service-card{padding:24px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.04);transition:transform .2s,box-shadow .2s}
+.service-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.08)}
+.service-card .icon{font-size:32px;margin-bottom:12px}
+.service-card h3{font-size:17px;font-weight:700;margin-bottom:8px}
+.service-card p{font-size:14px;color:var(--soft);line-height:1.5}
+.proof{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:64px 24px}
+.proof-grid{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px}
+.review{padding:24px;background:linear-gradient(180deg,#fffefb 0%,#fff 100%);border:1px solid var(--line);border-radius:10px;border-left:3px solid var(--gold)}
+.review .stars{color:var(--gold);font-size:14px;letter-spacing:2px;margin-bottom:10px}
+.review .quote{font-size:15px;line-height:1.5;font-style:italic;color:var(--ink);margin-bottom:10px}
+.review .author{font-size:13px;color:var(--soft);font-weight:600}
+.location-band{background:var(--ink);color:var(--paper);padding:48px 24px;text-align:center}
+.location-band h3{font-size:22px;font-weight:700;margin-bottom:8px}
+.location-band .addr{color:rgba(255,255,255,.78);font-size:15px;margin-bottom:8px}
+.location-band .hours{color:rgba(255,255,255,.6);font-size:13px}
+.contact-form{max-width:520px;margin:0 auto;padding:32px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 6px 30px rgba(0,0,0,.08)}
+.contact-form h2{font-size:24px;margin-bottom:8px;text-align:left}
+.contact-form .sub{color:var(--soft);font-size:14px;margin-bottom:22px;text-align:left}
+.contact-form input,.contact-form textarea{width:100%;padding:14px 16px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:inherit;margin-bottom:12px;background:#fafbfd}
+.contact-form input:focus,.contact-form textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.contact-form textarea{min-height:96px;resize:vertical}
+.contact-form button{width:100%;padding:16px;background:var(--accent);color:#fff;border:0;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;transition:background .2s}
+.contact-form button:hover{background:var(--accent-dark)}
+footer{padding:32px 24px;text-align:center;background:var(--ink);color:rgba(255,255,255,.5);font-size:12px;line-height:1.7}
+footer a{color:var(--gold);text-decoration:none}
+@media (max-width:680px){
+  .hero{padding:44px 18px 40px}
+  section{padding:48px 18px}
+  .proof{padding:48px 18px}
+}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="badge">{{category}}</div>
+  <h1>{{business_name}}</h1>
+  <div class="tagline">{{tagline}}</div>
+  <div class="stars">★ ★ ★ ★ ★</div>
+  <div class="reviews">{{rating}}/5 from {{review_count}}+ reviews · {{city}}</div>
+  <div class="cta-row">
+    <a class="btn btn-primary" href="tel:{{phone_e164}}">📞 Call {{phone_pretty}}</a>
+    <a class="btn btn-ghost" href="#contact">Request a Quote</a>
+  </div>
+</header>
+
+<section>
+  <h2>What we do</h2>
+  <p class="lead">{{services_intro}}</p>
+  <div class="services">
+    <div class="service-card"><div class="icon">{{service_1_icon}}</div><h3>{{service_1_title}}</h3><p>{{service_1_desc}}</p></div>
+    <div class="service-card"><div class="icon">{{service_2_icon}}</div><h3>{{service_2_title}}</h3><p>{{service_2_desc}}</p></div>
+    <div class="service-card"><div class="icon">{{service_3_icon}}</div><h3>{{service_3_title}}</h3><p>{{service_3_desc}}</p></div>
+  </div>
+</section>
+
+<section class="proof">
+  <h2>What clients say</h2>
+  <p class="lead">Real reviews from real {{city}} customers.</p>
+  <div class="proof-grid">
+    <div class="review"><div class="stars">★★★★★</div><div class="quote">"{{review_1_quote}}"</div><div class="author">— {{review_1_author}}</div></div>
+    <div class="review"><div class="stars">★★★★★</div><div class="quote">"{{review_2_quote}}"</div><div class="author">— {{review_2_author}}</div></div>
+    <div class="review"><div class="stars">★★★★★</div><div class="quote">"{{review_3_quote}}"</div><div class="author">— {{review_3_author}}</div></div>
+  </div>
+</section>
+
+<div class="location-band">
+  <h3>Visit us</h3>
+  <div class="addr">{{address}}</div>
+  <div class="hours">{{hours}}</div>
+</div>
+
+<section id="contact">
+  <div class="contact-form">
+    <h2>Get in touch</h2>
+    <div class="sub">Send us a message and we'll reply within one business day.</div>
+    <form method="post" action="mailto:{{contact_email}}" enctype="text/plain">
+      <input name="name" placeholder="Your name" required>
+      <input name="phone" placeholder="Phone number" required>
+      <input name="email" type="email" placeholder="Email">
+      <textarea name="message" placeholder="How can we help?" required></textarea>
+      <button type="submit">Send message</button>
+    </form>
+  </div>
+</section>
+
+<footer>
+  © {{year}} {{business_name}} · {{city}}<br>
+  Site by <a href="https://hitthe.link/padre/">L7 Solutions</a>
+</footer>
+</body>
+</html>
