@@ -374,6 +374,8 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
           let raw;
           try { raw = JSON.parse(msg.data); } catch (e) { return; }
           if (!raw || raw.event === "connected" || !raw.body) return;
+          // qi 2026-05-22 ultrathink: drop ancient backfill from SSE replay (>30d old) so live feed isn't 2020 noise
+          if (raw.ts && raw.ts > 0 && raw.ts < (Date.now() / 1000 - 30 * 86400)) return;
           const next = { ...normalizeLiveEvent(raw, counter++), fresh: true, unread: true };
           setEvents((prev) => {
             if (prev.some((p) => p._absTs === next._absTs && p.body === next.body && p.sender === next.sender)) {

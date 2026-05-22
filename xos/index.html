@@ -13,6 +13,7 @@
   <link rel="icon" type="image/svg+xml" href="icon.svg" />
   <link rel="shortcut icon" type="image/svg+xml" href="icon.svg" />
   <link rel="apple-touch-icon" href="icon.svg" />
+  <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#000000" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -34,5 +35,14 @@
   <script type="text/babel" src="tweaks-panel.jsx"></script>
   <script type="text/babel" src="ios-frame.jsx"></script>
   <script type="text/babel" src="app.jsx"></script>
+
+  <script>
+    // Register service worker for offline shell + asset cache (qi 2026-05-22 ultrathink xos 100%)
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("service-worker.js", { scope: "/xos/" }).catch(() => {});
+      });
+    }
+  </script>
 </body>
 </html>
