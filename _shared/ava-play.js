@@ -1,33 +1,20 @@
 // hitthe.link/_shared/ava-play.js
-// Drop-in floating Ava TTS play button.
-// Usage: <script src="https://hitthe.link/_shared/ava-play.js" defer></script>
-//        optional data attrs on the <script> tag:
-//          data-ava-text="..."     explicit text to speak (otherwise auto-extracts from <h1>+<p>)
-//          data-ava-endpoint="..." override the TTS endpoint (default: https://xen.xlrd.org/api/ava-tts)
-//          data-ava-voice="en-US-AvaMultilingualNeural"
-//          data-ava-bottom="24" / data-ava-right="24"  position in px
+// Drop-in floating Ava TTS play button — plays pre-generated ./ava.mp3 sibling file.
+// Generate the MP3 per page at build time with edge-tts:
+//   edge-tts --voice en-US-AvaMultilingualNeural --text "..." --write-media path/to/page/ava.mp3
+//
+// Optional <script> data attrs:
+//   data-ava-src="./ava.mp3"    explicit MP3 path (default: ./ava.mp3 relative to current page)
+//   data-ava-bottom="24" / data-ava-right="24"   position in px
 
 (function(){
   if (window.__avaPlayInit) return;
   window.__avaPlayInit = true;
 
   const SCRIPT_TAG = document.currentScript || document.querySelector('script[src*="ava-play.js"]');
-  const ENDPOINT   = (SCRIPT_TAG && SCRIPT_TAG.dataset.avaEndpoint) || 'https://xen.xlrd.org/api/ava-tts';
-  const VOICE      = (SCRIPT_TAG && SCRIPT_TAG.dataset.avaVoice)    || 'en-US-AvaMultilingualNeural';
-  const TEXT_ATTR  = SCRIPT_TAG && SCRIPT_TAG.dataset.avaText;
+  const SRC        = (SCRIPT_TAG && SCRIPT_TAG.dataset.avaSrc)    || './ava.mp3';
   const BOTTOM_PX  = parseInt((SCRIPT_TAG && SCRIPT_TAG.dataset.avaBottom) || '24', 10);
   const RIGHT_PX   = parseInt((SCRIPT_TAG && SCRIPT_TAG.dataset.avaRight)  || '24', 10);
-
-  function extractPageText() {
-    if (TEXT_ATTR && TEXT_ATTR.trim()) return TEXT_ATTR.trim();
-    const chunks = [];
-    document.querySelectorAll('h1, h2, p, .lede, .tag, .lb-mid, blockquote').forEach(el => {
-      const t = (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim();
-      if (t && t.length > 8 && t.length < 600) chunks.push(t);
-      if (chunks.join(' ').length > 1500) return;
-    });
-    return chunks.join('. ').slice(0, 2000);
-  }
 
   const css = `
     .ava-play-btn {
@@ -79,42 +66,62 @@
   document.body.appendChild(label);
 
   let audio = null;
-  let state = 'idle'; // idle | loading | playing | error
+  let state = 'idle';
 
-  function setState(next) {
+  function setState(next, msg) {
     state = next;
     btn.classList.remove('loading','playing','error');
-    if (next === 'loading') { btn.classList.add('loading'); label.textContent = 'Loading...'; label.classList.add('show'); }
-    else if (next === 'playing') { btn.classList.add('playing'); label.textContent = 'Playing · tap to stop'; btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>'; }
-    else if (next === 'error') { btn.classList.add('error'); label.textContent = 'Endpoint unreachable'; btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6,4 20,12 6,20" /></svg>'; setTimeout(() => setState('idle'), 4000); }
-    else { label.classList.remove('show'); label.textContent = 'Listen · Ava'; btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6,4 20,12 6,20" /></svg>'; }
+    if (next === 'loading') {
+      btn.classList.add('loading');
+      label.textContent = 'Loading Ava...';
+      label.classList.add('show');
+    } else if (next === 'playing') {
+      btn.classList.add('playing');
+      label.textContent = 'Playing · tap to pause';
+      label.classList.add('show');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>';
+    } else if (next === 'paused') {
+      btn.classList.add('playing');
+      label.textContent = 'Paused · tap to resume';
+      label.classList.add('show');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6,4 20,12 6,20" /></svg>';
+    } else if (next === 'error') {
+      btn.classList.add('error');
+      label.textContent = msg || 'ava.mp3 missing';
+      label.classList.add('show');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6,4 20,12 6,20" /></svg>';
+      setTimeout(() => setState('idle'), 5000);
+    } else {
+      label.classList.remove('show');
+      label.textContent = 'Listen · Ava';
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6,4 20,12 6,20" /></svg>';
+    }
   }
 
   btn.addEventListener('click', async () => {
     if (state === 'playing') {
-      if (audio) { audio.pause(); audio.currentTime = 0; }
-      setState('idle');
+      if (audio) audio.pause();
+      setState('paused');
+      return;
+    }
+    if (state === 'paused') {
+      if (audio) audio.play();
+      setState('playing');
       return;
     }
     if (state === 'loading') return;
     setState('loading');
-    const text = extractPageText();
-    if (!text) { setState('error'); return; }
+
+    if (!audio) {
+      audio = new Audio(SRC);
+      audio.addEventListener('canplay', () => setState('playing'));
+      audio.addEventListener('ended', () => setState('idle'));
+      audio.addEventListener('error', () => setState('error', 'ava.mp3 missing'));
+    }
     try {
-      const u = new URL(ENDPOINT);
-      u.searchParams.set('text', text);
-      u.searchParams.set('voice', VOICE);
-      if (audio) { try { audio.pause(); } catch(_){} }
-      audio = new Audio(u.toString());
-      audio.crossOrigin = 'anonymous';
-      audio.addEventListener('canplay',  () => setState('playing'));
-      audio.addEventListener('ended',    () => setState('idle'));
-      audio.addEventListener('pause',    () => { if (state !== 'idle' && audio.currentTime > 0 && audio.currentTime < audio.duration) {} });
-      audio.addEventListener('error',    () => setState('error'));
       await audio.play();
     } catch (e) {
-      console.warn('ava-play failed', e);
-      setState('error');
+      setState('error', 'tap blocked · retry');
     }
   });
 })();
