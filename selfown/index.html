@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SelfOwn_ · the GHL / LeadConnector killer</title>
+<meta name="description" content="SelfOwn_ is the for-profit XOS — built on the canonical Xenphone OS surface, designed to replace GoHighLevel / LeadConnector with sovereignty, no vendor lock, angel-number pricing.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream:#F5EFE0; --cream-2:#EDE4D0;
+  --gold:#D2AC47; --gold-deep:#A8842F; --gold-bright:#E8C97A;
+  --emerald:#0E5B43; --emerald-bright:#10B981;
+  --ink:#0A0A0A; --ink-2:#1A1410; --ink-3:#2C231C;
+  --slate:#1F2937; --slate-2:#111827;
+  --red-600:#DC2626;
+  --paper-line:rgba(168,132,47,.18);
+}
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; background:var(--ink); color:var(--cream); font-family:'Poppins',sans-serif; line-height:1.55; }
+.wrap { max-width:1120px; margin:0 auto; padding:60px 24px 100px; }
+
+/* Hero */
+.hero { text-align:center; margin-bottom:64px; position:relative; }
+.hero::before {
+  content:""; position:absolute; inset:-60px -40px 0; pointer-events:none; z-index:-1;
+  background:
+    radial-gradient(ellipse 800px 360px at 50% 0%, rgba(210,172,71,.16), transparent 70%);
+}
+.eyebrow { font-family:'Inter',sans-serif; font-size:11px; letter-spacing:.32em; text-transform:uppercase; color:var(--gold-bright); margin-bottom:18px; font-weight:600; }
+h1 { font-family:'Poppins',sans-serif; font-size:clamp(46px,7vw,84px); margin:0; font-weight:900; letter-spacing:-.025em; line-height:.95; }
+h1 .gold { color:var(--gold-bright); }
+h1 .underscore { color:var(--emerald-bright); font-weight:400; }
+.tagline { font-family:'Inter',sans-serif; font-style:italic; font-size:clamp(18px,2.2vw,24px); color:var(--cream); margin:20px auto 0; max-width:680px; font-weight:500; }
+.kicker { font-family:'Poppins',sans-serif; font-weight:700; font-size:14px; color:var(--gold); letter-spacing:.18em; text-transform:uppercase; margin-top:24px; }
+.kicker .strike { color:rgba(220,38,38,.7); text-decoration:line-through; margin-right:10px; }
+
+h2 { font-family:'Poppins',sans-serif; font-size:14px; letter-spacing:.18em; text-transform:uppercase; color:var(--gold-bright); font-weight:700; margin:64px 0 18px; padding-bottom:10px; border-bottom:1px solid rgba(210,172,71,.25); }
+
+/* Comparison */
+.compare {
+  display:grid; grid-template-columns:1.2fr 1fr 1fr; gap:0;
+  border-radius:14px; overflow:hidden;
+  background:linear-gradient(155deg,#141414,#0E0E0E); border:1px solid var(--paper-line);
+}
+.compare .cell {
+  padding:18px 20px; border-bottom:1px solid var(--paper-line); border-right:1px solid var(--paper-line);
+  font-size:13.5px; color:var(--cream); line-height:1.55;
+}
+.compare .cell:last-child { border-right:0; }
+.compare .cell.head { background:rgba(0,0,0,.45); font-family:'Inter',sans-serif; font-size:11px; letter-spacing:.12em; text-transform:uppercase; font-weight:700; color:var(--gold-bright); text-align:center; }
+.compare .cell.head.ghl { color:rgba(220,38,38,.85); }
+.compare .cell.head.selfown { color:var(--emerald-bright); }
+.compare .cell.feature { background:rgba(255,255,255,.02); font-weight:600; color:var(--cream); }
+.compare .cell.bad { color:#FCA5A5; font-style:italic; }
+.compare .cell.bad::before { content:"✗  "; color:var(--red-600); font-style:normal; font-weight:700; }
+.compare .cell.good { color:#86EFAC; font-weight:600; }
+.compare .cell.good::before { content:"✓  "; color:var(--emerald-bright); font-style:normal; font-weight:700; }
+.compare .cell:last-of-type { border-bottom:0; }
+.compare .cell.last { border-bottom:0; }
+
+/* Pillars */
+.pillars { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; margin:8px 0; }
+.pillar { background:linear-gradient(155deg,#141414,#0E0E0E); border:1px solid var(--paper-line); border-radius:14px; padding:24px 26px; border-left:3px solid var(--accent); }
+.pillar:nth-child(1) { --accent:var(--emerald-bright); }
+.pillar:nth-child(2) { --accent:var(--gold); }
+.pillar:nth-child(3) { --accent:var(--gold-bright); }
+.pillar:nth-child(4) { --accent:var(--emerald); }
+.pillar .num { font-family:'Poppins',sans-serif; color:var(--accent); font-size:24px; font-weight:900; line-height:1; margin-bottom:10px; }
+.pillar h3 { font-family:'Poppins',sans-serif; font-weight:800; font-size:18px; margin:0 0 8px; color:var(--cream); letter-spacing:-.005em; }
+.pillar p { font-size:13px; color:#C9C3B4; margin:0; line-height:1.6; }
+
+/* Pricing */
+.pricing { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px; }
+.tier {
+  background:linear-gradient(155deg,var(--cream),var(--cream-2)); color:var(--ink-2);
+  border-radius:18px; padding:8px;
+  box-shadow:0 20px 50px rgba(0,0,0,.5), 0 0 0 1px rgba(210,172,71,.3);
+  position:relative;
+}
+.tier.featured { transform:translateY(-8px); box-shadow:0 24px 60px rgba(210,172,71,.25), 0 0 0 1.5px var(--gold); }
+.tier.featured::before { content:"FEATURED"; position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--gold); color:var(--ink); padding:5px 16px; border-radius:50px; font-family:'Inter',sans-serif; font-size:10px; letter-spacing:.16em; font-weight:800; }
+.tier .frame { border:1px solid var(--paper-line); border-radius:12px; padding:28px 26px; background:linear-gradient(155deg,rgba(255,255,255,.4),transparent); }
+.tier .name { font-family:'Inter',sans-serif; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--gold-deep); font-weight:700; margin-bottom:8px; }
+.tier .price { font-family:'Poppins',sans-serif; font-weight:900; font-size:48px; color:var(--ink); line-height:1; margin-bottom:4px; }
+.tier .price .currency { font-size:24px; vertical-align:super; color:var(--gold-deep); margin-right:4px; }
+.tier .period { font-family:'Inter',sans-serif; font-size:12px; color:var(--gold-deep); margin-bottom:18px; font-style:italic; }
+.tier ul { list-style:none; padding:0; margin:0 0 22px; }
+.tier li { font-size:13px; color:var(--ink-2); padding:6px 0 6px 22px; position:relative; }
+.tier li::before { content:"✓"; position:absolute; left:0; top:6px; color:var(--emerald); font-weight:800; }
+.tier .cta { display:block; text-align:center; background:var(--emerald); color:var(--cream); padding:13px 24px; border-radius:50px; font-family:'Poppins',sans-serif; font-weight:700; font-size:13px; letter-spacing:.06em; text-transform:uppercase; text-decoration:none; }
+.tier.featured .cta { background:linear-gradient(155deg,var(--gold),var(--gold-deep)); color:var(--ink); box-shadow:0 8px 20px rgba(210,172,71,.4); }
+
+.callout { background:linear-gradient(155deg,rgba(16,185,129,.08),rgba(16,185,129,.02)); border:1.5px solid var(--emerald-bright); border-radius:14px; padding:24px 28px; margin:32px 0; }
+.callout .head { color:var(--emerald-bright); font-family:'Inter',sans-serif; font-size:11px; letter-spacing:.14em; text-transform:uppercase; font-weight:700; margin-bottom:8px; }
+.callout .body { font-size:14.5px; color:var(--cream); line-height:1.65; }
+.callout .body strong { color:var(--emerald-bright); }
+
+code { font-family:'JetBrains Mono',monospace; background:rgba(255,255,255,.06); padding:2px 6px; border-radius:3px; font-size:12px; }
+.footer { color:rgba(245,239,224,.5); font-size:11px; margin-top:60px; text-align:center; letter-spacing:.1em; text-transform:uppercase; }
+a { color:var(--gold-bright); border-bottom:1px dotted rgba(232,201,122,.4); text-decoration:none; }
+@media (max-width:780px) { .compare { grid-template-columns:1fr; } .compare .cell.feature::before { content:"FEATURE — "; color:var(--gold); font-weight:700; } .pricing { grid-template-columns:1fr; } .tier.featured { transform:none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hero">
+  <div class="eyebrow">for-profit XOS · sovereign client OS</div>
+  <h1>SelfOwn<span class="underscore">_</span></h1>
+  <div class="tagline">The mobile-first sovereign client OS your customers actually <em>own</em>.<br>Built on the canonical Xenphone OS.</div>
+  <div class="kicker"><span class="strike">GoHighLevel</span><span class="strike">LeadConnector</span> killer</div>
+</div>
+
+<h2>Why SelfOwn_ kills GHL / LeadConnector</h2>
+<div class="compare">
+  <div class="cell head">Feature</div>
+  <div class="cell head ghl">GoHighLevel / LeadConnector</div>
+  <div class="cell head selfown">SelfOwn_</div>
+
+  <div class="cell feature">Source ownership</div>
+  <div class="cell bad">Closed SaaS · vendor-controlled</div>
+  <div class="cell good">Full source via Shang Tsung PGS · inline self-contained HTML</div>
+
+  <div class="cell feature">Pricing model</div>
+  <div class="cell bad">$97-$497/mo + per-channel + per-message overages</div>
+  <div class="cell good">Angel-number flat tiers · $111 / $222 / $333+</div>
+
+  <div class="cell feature">Telephony</div>
+  <div class="cell bad">Raw Twilio SID exposed · per-message Twilio billing leak</div>
+  <div class="cell good">Beside AI proxy · single line item · AI-layer interception</div>
+
+  <div class="cell feature">Browser engine</div>
+  <div class="cell bad">Chromium-only iframes · attestation surface</div>
+  <div class="cell good">Engine-agnostic · Firefox / WebKit / curl + parse · respects the DIE list</div>
+
+  <div class="cell feature">Voice surface</div>
+  <div class="cell bad">Eleven Labs license fees · default voices</div>
+  <div class="cell good">Ava (Edge-TTS) — free, multilingual, identity-locked</div>
+
+  <div class="cell feature">CRM lock-in</div>
+  <div class="cell bad">Export = manual · contact data hostage</div>
+  <div class="cell good">Open schema · A2A handshake protocol envelope · escape any time</div>
+
+  <div class="cell feature">Mobile UI</div>
+  <div class="cell bad">Branded white-label · still GHL inside</div>
+  <div class="cell good">XOS · iOS 27 dark · React + JSX · drop your brand on day one</div>
+
+  <div class="cell feature last">Agent layer</div>
+  <div class="cell bad last">"Workflows" · no agent identity discipline</div>
+  <div class="cell good last">7-Persona Clone protocol · DEFINE · SPEC · BIND · DEPLOY · ITERATE</div>
+</div>
+
+<h2>Four pillars</h2>
+<div class="pillars">
+  <div class="pillar">
+    <div class="num">01</div>
+    <h3>Sovereign source</h3>
+    <p>Every page extracted via Shang Tsung PGS, inlined, self-hosted. No vendor decides what your client app does next year.</p>
+  </div>
+  <div class="pillar">
+    <div class="num">02</div>
+    <h3>Angel-pricing flat</h3>
+    <p>$111 / $222 / $333+ per qi's angel-number ladder. No per-message ramp. No surprise overages. Predictable client P&amp;L.</p>
+  </div>
+  <div class="pillar">
+    <div class="num">03</div>
+    <h3>Open agent mesh</h3>
+    <p>7-Persona Clone protocol + A2A handshake envelope means you can plug Lobo, Prof. L.L.C., Captain of 7C's, or any custom persona without re-platforming.</p>
+  </div>
+  <div class="pillar">
+    <div class="num">04</div>
+    <h3>Mobile-first OS</h3>
+    <p>XOS — Xenphone OS — is the canonical interface. iOS 27 dark, React + JSX, sub-pages absorb every client tool. Their customers see one polished OS, not five SaaS dashboards.</p>
+  </div>
+</div>
+
+<div class="callout">
+  <div class="head">★ deployment model</div>
+  <div class="body">Each client gets <strong>their own SelfOwn_ instance</strong> spun off the canonical XOS — same surface, their brand, their personas, their data. Migration off SelfOwn_ at any time exports the inline-HTML self-contained site to the client's chosen host. <strong>No platform jail.</strong></div>
+</div>
+
+<h2>Pricing — angel-number flat</h2>
+<div class="pricing">
+
+  <div class="tier"><div class="frame">
+    <div class="name">Solo Founder</div>
+    <div class="price"><span class="currency">$</span>111</div>
+    <div class="period">per month · single brand</div>
+    <ul>
+      <li>1 SelfOwn_ instance</li>
+      <li>XOS canonical surface + brand drop</li>
+      <li>Beside AI proxy SMS leg</li>
+      <li>1 persona clone (Lyn-equivalent)</li>
+      <li>Self-hosted source · full export anytime</li>
+    </ul>
+    <a href="#" class="cta">Spin up</a>
+  </div></div>
+
+  <div class="tier featured"><div class="frame">
+    <div class="name">Operator</div>
+    <div class="price"><span class="currency">$</span>222</div>
+    <div class="period">per month · multi-channel</div>
+    <ul>
+      <li>1 SelfOwn_ instance + sub-brand variants</li>
+      <li>Up to 3 persona clones</li>
+      <li>A2A handshake protocol active (clone-to-clone)</li>
+      <li>Shang Tsung PGS extracts (reference-driven design)</li>
+      <li>Voice + SMS + Vision (VVS) baked in</li>
+    </ul>
+    <a href="#" class="cta">Operate</a>
+  </div></div>
+
+  <div class="tier"><div class="frame">
+    <div class="name">Authority</div>
+    <div class="price"><span class="currency">$</span>333</div>
+    <div class="period">per month · full clone pack</div>
+    <ul>
+      <li>All 7 persona clones (Lobo / Luckie Links / Prof. L.L.C. / Systems Superhero / Captain of 7C's / Commissioner Goggins / Pastor 7)</li>
+      <li>Custom persona builds</li>
+      <li>Full A2A escalation routing</li>
+      <li>Priority Shang Tsung extraction queue</li>
+      <li>Source-canon mirroring on your domain</li>
+    </ul>
+    <a href="#" class="cta">Own it</a>
+  </div></div>
+
+</div>
+
+<h2>Built on canon · not on someone else's roadmap</h2>
+<ul style="padding-left:20px; font-size:14px; color:#C9C3B4;">
+  <li><strong>XOS</strong> at <a href="/xos/">hitthe.link/xos/</a> — the canonical mobile interface SelfOwn_ inherits from</li>
+  <li><strong>Beside proxy</strong> at <a href="/beside-proxy/">hitthe.link/beside-proxy/</a> — the SMS leg</li>
+  <li><strong>D.I.E. list</strong> at <a href="/die-list/">hitthe.link/die-list/</a> — what we don't build with</li>
+  <li><strong>Shang Tsung PGS</strong> at <a href="/pgs/">hitthe.link/pgs/</a> — the source-extraction engine</li>
+  <li><strong>7-Persona Clone protocol</strong> on <a href="https://tui.xlrd.org/share/2026-05-21-l7s-7-persona-identity-card-pack.html">tui.xlrd.org</a> — DEFINE shipped, SPEC drafted, BIND envelope live</li>
+</ul>
+
+<div class="footer">hitthe.link/selfown/ · for-profit XOS · GHL killer · 2026-05-22</div>
+</div>
+</body>
+</html>
