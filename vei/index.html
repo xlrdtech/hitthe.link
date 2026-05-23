@@ -488,26 +488,46 @@ function escapeHtml(s) {
   return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+// Retry queue — POSTs that fail during omnimind flap get queued in localStorage
+// and replayed every 5s + on online/focus. qi 2026-05-23: 'the posts are failing'.
+const QUEUE_KEY = 'vei-pending-posts';
+function loadQueue() { try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); } catch { return []; } }
+function saveQueue(q) { try { localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); } catch {} }
+function enqueuePost(payload) {
+  const q = loadQueue(); q.push(payload);
+  if (q.length > 200) q.splice(0, q.length - 200);
+  saveQueue(q);
+}
+async function tryPostOnce(payload) {
+  const res = await fetch(API_URL, { method:'POST', headers:HEADERS, body:JSON.stringify(payload) });
+  if (!res.ok) throw new Error('http ' + res.status);
+  return true;
+}
 async function postTranscript(text) {
+  const payload = { source: 'xen-vei', ts: Date.now(), text };
   try {
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: HEADERS,
-      body: JSON.stringify({ source: 'xen-vei', ts: Date.now(), text: text })
-    });
-    if (res.ok) {
-      sentCount++;
-      countEl.textContent = sentCount + ' sent';
-      return true;
-    } else {
-      appendError(`POST ${API_URL} → ${res.status}`);
-      return false;
-    }
+    await tryPostOnce(payload);
+    sentCount++;
+    countEl.textContent = sentCount + ' sent · xen.xlrd.org';
+    return true;
   } catch (e) {
-    appendError(`POST failed: ${e.message}`);
+    enqueuePost(payload);
+    appendError(`queued (${loadQueue().length} pending) — will retry`);
     return false;
   }
 }
+async function drainQueue() {
+  let q = loadQueue();
+  if (!q.length) return;
+  while (q.length) {
+    try { await tryPostOnce(q[0]); sentCount++; q.shift(); saveQueue(q); }
+    catch { break; }
+  }
+  countEl.textContent = sentCount + ' sent · xen.xlrd.org';
+}
+setInterval(drainQueue, 5000);
+window.addEventListener('online', drainQueue);
+window.addEventListener('focus', drainQueue);
 
 async function postAudioChunk(blob) {
   try {
