@@ -531,12 +531,21 @@ window.addEventListener('online', drainQueue);
 window.addEventListener('focus', drainQueue);
 
 async function postAudioChunk(blob) {
+  // Diagnostics: surface blob size + mime + URL so "Failed to fetch" gives
+  // us actionable info instead of opaque browser-network errors.
+  const blobInfo = `${blob?.size || 0}B ${blob?.type || 'no-type'}`;
+  if (!blob || blob.size === 0) {
+    appendError(`audio chunk EMPTY (${blobInfo}) — mic capture may be silenced`);
+    return false;
+  }
   try {
     const fd = new FormData();
-    fd.append('audio', blob, 'chunk.webm');
+    // Use mp4 extension if blob says mp4, else webm
+    const ext = (blob.type && blob.type.includes('mp4')) ? 'mp4' : 'webm';
+    fd.append('audio', blob, `chunk.${ext}`);
     fd.append('source', 'xen-vei-audio');
     fd.append('ts', Date.now().toString());
-    const res = await fetch(AUDIO_URL, { method: 'POST', body: fd });
+    const res = await fetch(AUDIO_URL, { method: 'POST', body: fd, mode: 'cors' });
     if (res.ok) {
       sentCount++;
       countEl.textContent = sentCount + ' chunks';
@@ -544,11 +553,12 @@ async function postAudioChunk(blob) {
       if (j && j.text) appendFinal(j.text, true);
       return true;
     } else {
-      appendError(`audio POST → ${res.status}`);
+      const errBody = await res.text().catch(() => '');
+      appendError(`audio POST → HTTP ${res.status} ${errBody.slice(0, 80)}`);
       return false;
     }
   } catch (e) {
-    appendError(`audio POST failed: ${e.message}`);
+    appendError(`audio POST failed: ${e.name}: ${e.message} (${blobInfo} → ${AUDIO_URL})`);
     return false;
   }
 }
