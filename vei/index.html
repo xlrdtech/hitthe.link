@@ -54,15 +54,16 @@ html, body {
   -moz-osx-font-smoothing:grayscale;
   overflow:hidden;
 }
-/* Background video layer — 10s ping-pong loop, dim until touched (qi 2026-05-23). */
-.bg-video {
+/* Background layer — Ophanim 3D avatar (qi-XLRD-ID). Dim until touched. */
+.bg-video, .bg-iframe {
   position:fixed; inset:0; width:100%; height:100%;
   object-fit:cover; z-index:0; pointer-events:none;
-  opacity:.18;
-  filter:blur(0px) saturate(.95);
+  border:0;
+  opacity:.32;
+  filter:saturate(.95);
   transition:opacity .55s ease-out, filter .55s ease-out;
 }
-body.lit .bg-video { opacity:.58; filter:blur(0px) saturate(1.15); }
+body.lit .bg-video, body.lit .bg-iframe { opacity:.78; filter:saturate(1.15); }
 /* Glass over the video — frosted layer with heavy blur + soft tint.
    qi 2026-05-23: 'video needs to be behind glass'. */
 .bg-overlay {
@@ -316,8 +317,7 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
 </style>
 </head>
 <body>
-<video class="bg-video" id="bg-video" autoplay muted playsinline preload="auto"
-       src="/vei/bg.mp4" aria-hidden="true"></video>
+<iframe class="bg-iframe" id="bg-iframe" src="/vei/avatar/" aria-hidden="true" tabindex="-1"></iframe>
 <div class="bg-overlay" aria-hidden="true"></div>
 <div class="wrap">
 
@@ -1060,30 +1060,8 @@ function subscribeXenReplies() {
 }
 subscribeXenReplies();
 
-// ─── Background video: ping-pong loop (forward 10s, reverse 10s, repeat) ─
-// qi 2026-05-23: 'plays for 10 seconds then 10 seconds reverse, seamless loop'
-(function pingPongBg() {
-  const v = document.getElementById('bg-video');
-  if (!v) return;
-  let reversing = false;
-  let rafId = null;
-  function reverseTick() {
-    if (!reversing) return;
-    v.currentTime = Math.max(0, v.currentTime - (1/30));
-    if (v.currentTime <= 0.04) {
-      reversing = false;
-      v.play().catch(() => {});
-      return;
-    }
-    rafId = requestAnimationFrame(reverseTick);
-  }
-  v.addEventListener('ended', () => {
-    reversing = true;
-    v.pause();
-    rafId = requestAnimationFrame(reverseTick);
-  });
-  v.play().catch(() => {});  // autoplay (muted, playsinline allows on iOS)
-})();
+// Background = Ophanim Three.js iframe (XLRD ID avatar). Continuous self-animating;
+// no ping-pong needed. The iframe runs its own RAF loop with rings + dust + core pulse.
 
 // ─── Touch-to-light: any user gesture brightens the bg for ~3s ────────
 (function touchLight() {
