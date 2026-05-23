@@ -185,22 +185,15 @@ header { padding:8px 0 22px; display:flex; align-items:flex-start; justify-conte
   -webkit-backdrop-filter:blur(12px);
 }
 .waveform {
-  flex:1; height:42px;
-  display:flex; align-items:center; gap:2px;
+  flex:1; height:48px;
+  position:relative;
   overflow:hidden;
 }
-.waveform .bar {
-  flex:1; min-width:2px;
-  background:var(--accent);
-  border-radius:1px;
-  opacity:.85;
-  box-shadow:0 0 6px var(--accent-glow);
-  height:8%;
-  transition:height .055s linear, opacity .12s ease-out;
+.waveform canvas {
+  width:100%; height:100%;
+  display:block;
 }
-.waveform.idle .bar { opacity:.32; height:8%; }
-.waveform.listen .bar { opacity:.95; }
-.waveform.err .bar { background:var(--bad); box-shadow:0 0 6px rgba(255,107,90,.4); }
+.waveform.err canvas { filter:hue-rotate(140deg) saturate(1.4); }
 
 .controls { display:flex; gap:8px; }
 button {
@@ -319,7 +312,7 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
     <button class="send-pill" id="fb-send">Send</button>
   </div>
   <div class="waveform-bar">
-    <div class="waveform" id="waveform"></div>
+    <div class="waveform" id="waveform"><canvas id="waveform-canvas"></canvas></div>
   </div>
   <input type="file" id="file-input" hidden multiple>
   <!-- Hidden legacy controls; mic icon in header IS the voice toggle. -->
@@ -607,29 +600,85 @@ function stopListening() {
   stopBtn.disabled = true;
 }
 
-// ─── Audio-reactive waveform (Web Audio API) ───────────────────────────
+// ─── Canvas waveform — smooth continuous phosphor line + glow ─────────
 const waveformEl = document.getElementById('waveform');
+const waveCanvas = document.getElementById('waveform-canvas');
+const waveCtx2d = waveCanvas.getContext('2d');
 const micIcon = document.getElementById('mic-icon');
-const NUM_BARS = 32;
-let waveformBars = [];
 let audioCtx = null;
 let analyser = null;
 let analyserStream = null;
 let rafId = null;
 let viz_listening = false;
 
-function buildBars() {
-  if (waveformBars.length) return;
-  waveformEl.innerHTML = '';
-  for (let i = 0; i < NUM_BARS; i++) {
-    const b = document.createElement('div');
-    b.className = 'bar';
-    b.style.height = '8%';
-    waveformEl.appendChild(b);
-    waveformBars.push(b);
-  }
+// Idle baseline animation — gentle sine drift when not listening
+let idlePhase = 0;
+
+function resizeCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  const w = waveformEl.clientWidth;
+  const h = waveformEl.clientHeight;
+  waveCanvas.width = Math.floor(w * dpr);
+  waveCanvas.height = Math.floor(h * dpr);
+  waveCanvas.style.width = w + 'px';
+  waveCanvas.style.height = h + 'px';
+  waveCtx2d.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
-buildBars();
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+function drawWave(samples, listening) {
+  const w = waveCanvas.width / (window.devicePixelRatio || 1);
+  const h = waveCanvas.height / (window.devicePixelRatio || 1);
+  waveCtx2d.clearRect(0, 0, w, h);
+  const mid = h / 2;
+  // Primary smooth phosphor line
+  waveCtx2d.lineWidth = 1.4;
+  waveCtx2d.strokeStyle = '#00FF88';
+  waveCtx2d.shadowColor = 'rgba(0,255,136,.85)';
+  waveCtx2d.shadowBlur = listening ? 16 : 8;
+  waveCtx2d.beginPath();
+  const N = samples.length;
+  for (let i = 0; i < N; i++) {
+    const x = (i / (N - 1)) * w;
+    // samples are 0..255 from time-domain data; center at 128
+    const norm = (samples[i] - 128) / 128;        // -1..1
+    const amp = listening ? 1 : 0.18;
+    const y = mid + norm * mid * 0.92 * amp;
+    if (i === 0) waveCtx2d.moveTo(x, y);
+    else waveCtx2d.lineTo(x, y);
+  }
+  waveCtx2d.stroke();
+  // Secondary inner glow line — thicker, dimmer
+  waveCtx2d.lineWidth = 3.0;
+  waveCtx2d.strokeStyle = 'rgba(0,255,136,.22)';
+  waveCtx2d.shadowBlur = 0;
+  waveCtx2d.stroke();
+}
+
+function tickListening() {
+  if (!analyser) return;
+  const samples = new Uint8Array(analyser.fftSize);
+  analyser.getByteTimeDomainData(samples);
+  drawWave(samples, true);
+  rafId = requestAnimationFrame(tickListening);
+}
+
+function tickIdle() {
+  if (analyser) return;             // listening loop takes over
+  const N = 256;
+  const samples = new Uint8Array(N);
+  idlePhase += 0.045;
+  for (let i = 0; i < N; i++) {
+    const t = (i / (N - 1)) * Math.PI * 6;
+    const v = Math.sin(t + idlePhase) * Math.sin(idlePhase * 0.3 + i * 0.04) * 0.6;
+    samples[i] = Math.max(0, Math.min(255, 128 + v * 128));
+  }
+  drawWave(samples, false);
+  rafId = requestAnimationFrame(tickIdle);
+}
+// Start idle drift
+rafId = requestAnimationFrame(tickIdle);
 
 async function startAnalyser() {
   if (analyser) return;
@@ -638,23 +687,11 @@ async function startAnalyser() {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const source = audioCtx.createMediaStreamSource(analyserStream);
     analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 128;          // 64 freq bins
-    analyser.smoothingTimeConstant = 0.55;
+    analyser.fftSize = 1024;
+    analyser.smoothingTimeConstant = 0.78;
     source.connect(analyser);
-    const bins = new Uint8Array(analyser.frequencyBinCount);
-    const tick = () => {
-      if (!analyser) return;
-      analyser.getByteFrequencyData(bins);
-      // Map 64 bins -> 32 bars by averaging pairs; emphasize voice band (2-22)
-      for (let i = 0; i < NUM_BARS; i++) {
-        const b = (bins[i * 2] + bins[i * 2 + 1]) / 2;
-        const norm = Math.min(1, b / 180);  // 180 = "loud" reference
-        const pct = Math.max(6, norm * 100);
-        if (waveformBars[i]) waveformBars[i].style.height = pct + '%';
-      }
-      rafId = requestAnimationFrame(tick);
-    };
-    rafId = requestAnimationFrame(tick);
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(tickListening);
   } catch (e) {
     appendError('mic visualizer denied: ' + e.message);
   }
@@ -665,8 +702,8 @@ function stopAnalyser() {
   if (analyser) { try { analyser.disconnect(); } catch (_) {} analyser = null; }
   if (audioCtx) { try { audioCtx.close(); } catch (_) {} audioCtx = null; }
   if (analyserStream) { analyserStream.getTracks().forEach(t => t.stop()); analyserStream = null; }
-  // settle bars to idle height
-  waveformBars.forEach(b => b.style.height = '8%');
+  // Resume idle drift
+  rafId = requestAnimationFrame(tickIdle);
 }
 
 // ─── Mic icon = single toggle (start/stop) ─────────────────────────────
