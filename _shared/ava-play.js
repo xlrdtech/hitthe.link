@@ -151,17 +151,33 @@
     }
   }
 
-  const GESTURES = ['pointerdown','touchstart','keydown','scroll','wheel'];
-  const onGesture = () => {
-    gestureUnlock();
-    GESTURES.forEach(g => document.removeEventListener(g, onGesture, true));
-  };
-  GESTURES.forEach(g => document.addEventListener(g, onGesture, { capture: true, passive: true }));
+  // ── URL-level mute override ──────────────────────────────────────────
+  // Append ?mute=1 (or ?silent=1) to any page URL to disable autoplay +
+  // gesture-unlock entirely for that load. Use during echo-loop sessions
+  // when audio output would feed back into the STT chain (canon: 2026-05-22
+  // GV/Rogue-Amoeba feedback diagnosis). Button stays visible and manual
+  // play still works if user explicitly taps it.
+  const urlParams = new URLSearchParams(location.search);
+  const urlMuted = urlParams.has('mute') || urlParams.has('silent') || urlParams.has('nopa');
 
-  // Kick off the silent attempt; if HTML is still parsing, defer to DOMContentLoaded.
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', silentAutoplay, { once: true });
+  if (!urlMuted) {
+    const GESTURES = ['pointerdown','touchstart','keydown','scroll','wheel'];
+    const onGesture = () => {
+      gestureUnlock();
+      GESTURES.forEach(g => document.removeEventListener(g, onGesture, true));
+    };
+    GESTURES.forEach(g => document.addEventListener(g, onGesture, { capture: true, passive: true }));
+
+    // Kick off the silent attempt; if HTML is still parsing, defer to DOMContentLoaded.
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', silentAutoplay, { once: true });
+    } else {
+      silentAutoplay();
+    }
   } else {
-    silentAutoplay();
+    // Muted load — show the button in a distinct state but do not autoplay or bind gestures.
+    label.textContent = 'Muted · ?mute=1';
+    label.classList.add('show');
+    btn.title = 'Audio muted by URL param. Tap to play anyway.';
   }
 })();
