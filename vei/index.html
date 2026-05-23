@@ -616,8 +616,8 @@ let analyserStream = null;
 let rafId = null;
 let viz_listening = false;
 
-// Idle baseline animation — gentle sine drift when not listening
-let idlePhase = 0;
+// Idle: canvas stays empty. Waveform only renders while the mic is on.
+// (qi 2026-05-23: idle line crossing the text was distracting.)
 
 function resizeCanvas() {
   const dpr = window.devicePixelRatio || 1;
@@ -669,21 +669,13 @@ function tickListening() {
   rafId = requestAnimationFrame(tickListening);
 }
 
-function tickIdle() {
-  if (analyser) return;             // listening loop takes over
-  const N = 256;
-  const samples = new Uint8Array(N);
-  idlePhase += 0.045;
-  for (let i = 0; i < N; i++) {
-    const t = (i / (N - 1)) * Math.PI * 6;
-    const v = Math.sin(t + idlePhase) * Math.sin(idlePhase * 0.3 + i * 0.04) * 0.6;
-    samples[i] = Math.max(0, Math.min(255, 128 + v * 128));
-  }
-  drawWave(samples, false);
-  rafId = requestAnimationFrame(tickIdle);
+function clearWave() {
+  const w = waveCanvas.width / (window.devicePixelRatio || 1);
+  const h = waveCanvas.height / (window.devicePixelRatio || 1);
+  waveCtx2d.clearRect(0, 0, w, h);
 }
-// Start idle drift
-rafId = requestAnimationFrame(tickIdle);
+// Start with a clean canvas. No idle drift.
+clearWave();
 
 async function startAnalyser() {
   if (analyser) return;
@@ -707,8 +699,7 @@ function stopAnalyser() {
   if (analyser) { try { analyser.disconnect(); } catch (_) {} analyser = null; }
   if (audioCtx) { try { audioCtx.close(); } catch (_) {} audioCtx = null; }
   if (analyserStream) { analyserStream.getTracks().forEach(t => t.stop()); analyserStream = null; }
-  // Resume idle drift
-  rafId = requestAnimationFrame(tickIdle);
+  clearWave();   // no idle line — canvas stays empty when not listening
 }
 
 // ─── Mic icon = single toggle (start/stop) ─────────────────────────────
