@@ -43,7 +43,6 @@
 html, body {
   height:100dvh;
   background:var(--bg);
-  background-image:radial-gradient(ellipse 70% 50% at 50% 55%, var(--bg-glow) 0%, var(--bg) 70%);
   color:var(--fg);
   font-family:var(--sans);
   font-feature-settings:"ss01","cv11";
@@ -51,6 +50,23 @@ html, body {
   -moz-osx-font-smoothing:grayscale;
   overflow:hidden;
 }
+/* Background video layer — 10s ping-pong loop, dim until touched (qi 2026-05-23). */
+.bg-video {
+  position:fixed; inset:0; width:100%; height:100%;
+  object-fit:cover; z-index:0; pointer-events:none;
+  opacity:.18;
+  filter:blur(0px) saturate(.95);
+  transition:opacity .55s ease-out, filter .55s ease-out;
+}
+body.lit .bg-video { opacity:.58; filter:blur(0px) saturate(1.15); }
+/* Soft radial overlay for legibility */
+.bg-overlay {
+  position:fixed; inset:0; z-index:1; pointer-events:none;
+  background:radial-gradient(ellipse 80% 60% at 50% 55%, rgba(10,31,18,.22), rgba(2,6,10,.78));
+  transition:background .55s ease-out;
+}
+body.lit .bg-overlay { background:radial-gradient(ellipse 80% 60% at 50% 55%, rgba(10,31,18,.10), rgba(2,6,10,.52)); }
+.wrap { position:relative; z-index:2; }
 .wrap {
   display:flex; flex-direction:column;
   height:100dvh; width:100%;
@@ -268,6 +284,9 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
 </style>
 </head>
 <body>
+<video class="bg-video" id="bg-video" autoplay muted playsinline preload="auto"
+       src="/vei/bg.mp4" aria-hidden="true"></video>
+<div class="bg-overlay" aria-hidden="true"></div>
 <div class="wrap">
 
 <header>
@@ -836,11 +855,37 @@ fileInput.addEventListener('change', async (e) => {
   e.target.value = '';
 });
 
-// ─── SSE: bi-directional history (user dictates + xen replies) ────────────
-// qi 2026-05-23: "the history needs to remain" — /events backfills last 5000
-// mirror-events.jsonl entries on connect, so both sides replay on reload.
-// dedupe by (source + text + ts) so backfill+live don't double-render.
+// ─── Local history (localStorage) + SSE replay (server-side) ────────────
+// qi 2026-05-23: 'every time I go back to it everything that I said should
+// still be there and everything you said to still be there'.
+// Two layers:
+// (1) localStorage 'vei-history' = array of {role, text, ts} — hydrates on load
+// (2) /events SSE backfill (mirror-events.jsonl, last 5000 events)
+// Dedupe by (source + text-prefix + ts).
+const LS_KEY = 'vei-history';
 const _renderedKeys = new Set();
+const _history = (() => {
+  try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch (_) { return []; }
+})();
+function saveHistory(entry) {
+  _history.push(entry);
+  if (_history.length > 1000) _history.splice(0, _history.length - 1000);
+  try { localStorage.setItem(LS_KEY, JSON.stringify(_history)); } catch (_) {}
+}
+function hydrateHistory() {
+  for (const e of _history) {
+    const key = `${e.role}|${(e.text || '').slice(0, 80)}|${e.ts || ''}`;
+    if (_renderedKeys.has(key)) continue;
+    _renderedKeys.add(key);
+    const div = document.createElement('div');
+    div.className = e.role === 'xen' ? 'xen-reply' : 'final';
+    div.textContent = e.text;
+    transcript.appendChild(div);
+    attachBubbleActions(div, e.text);
+  }
+  transcript.scrollTop = transcript.scrollHeight;
+}
+hydrateHistory();
 function renderEvent(d) {
   const txt = (d.text || d.body || d.message || '').toString().trim();
   if (!txt) return;
@@ -859,6 +904,7 @@ function renderEvent(d) {
     transcript.appendChild(div);
     attachBubbleActions(div, txt);
     transcript.scrollTop = transcript.scrollHeight;
+    saveHistory({ role: 'xen', text: txt, ts: d.ts || Date.now() });
   } else if (isUserDictate) {
     const div = document.createElement('div');
     div.className = 'final';
@@ -866,6 +912,7 @@ function renderEvent(d) {
     transcript.appendChild(div);
     attachBubbleActions(div, txt);
     transcript.scrollTop = transcript.scrollHeight;
+    saveHistory({ role: 'you', text: txt, ts: d.ts || Date.now() });
   }
 }
 
@@ -879,6 +926,44 @@ function subscribeXenReplies() {
   } catch (e) {}
 }
 subscribeXenReplies();
+
+// ─── Background video: ping-pong loop (forward 10s, reverse 10s, repeat) ─
+// qi 2026-05-23: 'plays for 10 seconds then 10 seconds reverse, seamless loop'
+(function pingPongBg() {
+  const v = document.getElementById('bg-video');
+  if (!v) return;
+  let reversing = false;
+  let rafId = null;
+  function reverseTick() {
+    if (!reversing) return;
+    v.currentTime = Math.max(0, v.currentTime - (1/30));
+    if (v.currentTime <= 0.04) {
+      reversing = false;
+      v.play().catch(() => {});
+      return;
+    }
+    rafId = requestAnimationFrame(reverseTick);
+  }
+  v.addEventListener('ended', () => {
+    reversing = true;
+    v.pause();
+    rafId = requestAnimationFrame(reverseTick);
+  });
+  v.play().catch(() => {});  // autoplay (muted, playsinline allows on iOS)
+})();
+
+// ─── Touch-to-light: any user gesture brightens the bg for ~3s ────────
+(function touchLight() {
+  let timer = null;
+  function lit() {
+    document.body.classList.add('lit');
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => document.body.classList.remove('lit'), 3000);
+  }
+  ['click','touchstart','keydown','input'].forEach(ev =>
+    document.addEventListener(ev, lit, { passive: true })
+  );
+})();
 
 // ─── Auto-start mic on load (qi 2026-05-23: 'start with voice mode'). ────
 // Browsers require a user gesture for getUserMedia on first session, so we
