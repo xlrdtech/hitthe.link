@@ -881,6 +881,23 @@ appendFinal = function(text, postedFlag) {
 // FULL visible transcript in DOM order, tagged by bubble type.
 function collectTranscriptText() {
   const out = [];
+  // qi 2026-05-23 17:57: pull FULL thread from localStorage (the actual archive),
+  // not just rendered DOM (only the last N visible bubbles). Includes timestamps
+  // per qi canon "everything needs to be timestamped."
+  try {
+    const activeId = (typeof _activeThreadId !== 'undefined' && _activeThreadId) ? _activeThreadId : null;
+    const entries = activeId ? loadThreadEntries(activeId) : [];
+    if (entries && entries.length) {
+      for (const e of entries) {
+        const role = (e.role || 'you').toString().toUpperCase();
+        const ts = e.ts ? new Date(e.ts).toLocaleString() : '';
+        const txt = (e.text || '').toString().trim();
+        if (txt) out.push(`[${ts}] ${role}: ${txt}`);
+      }
+      return out.join('\n');
+    }
+  } catch (_) {}
+  // Fallback: scrape DOM if localStorage history is empty.
   transcript.querySelectorAll('.final, .interim, .xen-reply, .firehose').forEach(el => {
     const role =
       el.classList.contains('xen-reply') ? 'XEN' :
