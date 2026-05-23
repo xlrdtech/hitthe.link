@@ -636,29 +636,39 @@ function drawWave(samples, listening) {
   const w = waveCanvas.width / (window.devicePixelRatio || 1);
   const h = waveCanvas.height / (window.devicePixelRatio || 1);
   waveCtx2d.clearRect(0, 0, w, h);
+  // Skip drawing if amplitude is below silence threshold — no flat line baseline.
+  // qi 2026-05-23: 'the sound wave should still work without starting with a line'.
+  const N = samples.length;
+  let peak = 0;
+  for (let i = 0; i < N; i++) {
+    const d = Math.abs(samples[i] - 128);
+    if (d > peak) peak = d;
+  }
+  const SILENCE_THRESHOLD = 6;  // out of 128 — below this, no draw
+  if (peak < SILENCE_THRESHOLD) return;
+  // Amplitude-driven opacity ramp so soft voice doesn't slam into full glow
+  const ampScale = Math.min(1, (peak - SILENCE_THRESHOLD) / 40);
   const mid = h / 2;
-  // Primary smooth phosphor line
   waveCtx2d.lineWidth = 1.4;
   waveCtx2d.strokeStyle = '#00FF88';
   waveCtx2d.shadowColor = 'rgba(0,255,136,.85)';
-  waveCtx2d.shadowBlur = listening ? 16 : 8;
+  waveCtx2d.shadowBlur = 6 + 12 * ampScale;
+  waveCtx2d.globalAlpha = 0.45 + 0.55 * ampScale;
   waveCtx2d.beginPath();
-  const N = samples.length;
   for (let i = 0; i < N; i++) {
     const x = (i / (N - 1)) * w;
-    // samples are 0..255 from time-domain data; center at 128
-    const norm = (samples[i] - 128) / 128;        // -1..1
-    const amp = listening ? 1 : 0.18;
-    const y = mid + norm * mid * 0.92 * amp;
+    const norm = (samples[i] - 128) / 128;
+    const y = mid + norm * mid * 0.92;
     if (i === 0) waveCtx2d.moveTo(x, y);
     else waveCtx2d.lineTo(x, y);
   }
   waveCtx2d.stroke();
-  // Secondary inner glow line — thicker, dimmer
+  // Secondary inner glow line
   waveCtx2d.lineWidth = 3.0;
   waveCtx2d.strokeStyle = 'rgba(0,255,136,.22)';
   waveCtx2d.shadowBlur = 0;
   waveCtx2d.stroke();
+  waveCtx2d.globalAlpha = 1;
 }
 
 function tickListening() {
