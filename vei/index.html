@@ -59,13 +59,26 @@ html, body {
   transition:opacity .55s ease-out, filter .55s ease-out;
 }
 body.lit .bg-video { opacity:.58; filter:blur(0px) saturate(1.15); }
-/* Soft radial overlay for legibility */
+/* Glass over the video — frosted layer with heavy blur + soft tint.
+   qi 2026-05-23: 'video needs to be behind glass'. */
 .bg-overlay {
   position:fixed; inset:0; z-index:1; pointer-events:none;
-  background:radial-gradient(ellipse 80% 60% at 50% 55%, rgba(10,31,18,.22), rgba(2,6,10,.78));
-  transition:background .55s ease-out;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 55%, rgba(10,31,18,.30), rgba(2,6,10,.72)),
+    linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  backdrop-filter:blur(22px) saturate(1.15);
+  -webkit-backdrop-filter:blur(22px) saturate(1.15);
+  border-top:1px solid rgba(255,255,255,.04);
+  border-bottom:1px solid rgba(0,0,0,.18);
+  transition:backdrop-filter .55s ease-out, background .55s ease-out;
 }
-body.lit .bg-overlay { background:radial-gradient(ellipse 80% 60% at 50% 55%, rgba(10,31,18,.10), rgba(2,6,10,.52)); }
+body.lit .bg-overlay {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 55%, rgba(10,31,18,.12), rgba(2,6,10,.42)),
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+  backdrop-filter:blur(10px) saturate(1.3);
+  -webkit-backdrop-filter:blur(10px) saturate(1.3);
+}
 .wrap { position:relative; z-index:2; }
 .wrap {
   display:flex; flex-direction:column;
@@ -146,6 +159,21 @@ header { padding:8px 0 22px; display:flex; align-items:flex-start; justify-conte
     0 0 0 1px var(--accent-glow); }
 .interim { opacity:.78; font-style:italic; }
 .xen-reply { align-self:flex-end; background:linear-gradient(145deg, rgba(0,255,136,.16), rgba(0,255,136,.04)); border-color:rgba(0,255,136,.28); color:var(--fg); }
+.firehose {
+  max-width:78%; align-self:flex-start;
+  padding:8px 12px; border-radius:10px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  color:var(--fg-dim);
+  font-family:var(--mono); font-size:11.5px; line-height:1.35;
+  word-break:break-word;
+  opacity:.7;
+}
+.firehose .src {
+  display:inline-block; margin-right:6px;
+  font-size:9.5px; letter-spacing:.10em; text-transform:uppercase;
+  color:var(--accent);
+}
 .posted {
   display:inline-block; margin-left:6px; padding:1px 7px; border-radius:var(--r-pill);
   background:rgba(0,0,0,.32); color:var(--accent);
@@ -997,6 +1025,23 @@ function renderEvent(d) {
     attachBubbleActions(div, txt);
     transcript.scrollTop = transcript.scrollHeight;
     saveHistory({ role: 'you', text: txt, ts: d.ts || Date.now() });
+  } else {
+    // Firehose catch-all — Beeper, SMS, Spark, mail, healthcheck, etc.
+    // qi 2026-05-23: 'fire hose and everything to show up'
+    const labelSrc = (d.source || d.sender || d.title || tag || 'firehose').toString().slice(0, 24);
+    const div = document.createElement('div');
+    div.className = 'firehose';
+    const srcSpan = document.createElement('span');
+    srcSpan.className = 'src';
+    srcSpan.textContent = labelSrc;
+    div.appendChild(srcSpan);
+    // Strip HTML tags from firehose body so blockquote/anchor noise doesn't show
+    const cleanBody = String(txt).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 300);
+    div.appendChild(document.createTextNode(cleanBody));
+    transcript.appendChild(div);
+    transcript.scrollTop = transcript.scrollHeight;
+    // Don't persist firehose to per-thread history (it's live ambient; would
+    // bloat thread storage). It still streams via SSE on every load.
   }
 }
 
