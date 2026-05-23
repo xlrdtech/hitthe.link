@@ -873,13 +873,24 @@ appendFinal = function(text, postedFlag) {
 };
 
 // ─── Top toolbar: copy-all / export / share / attach ─────────────────────
+// qi 2026-05-23 17:57: "Export only exported a partial version" — the old
+// selector only captured .final + .xen-reply, dropping .interim bubbles
+// (in-progress utterances that never finalized — large with the fire-and-
+// forget model since Web Speech can park final-promotion indefinitely) and
+// .firehose bubbles (inbound events from other sources). Now exports the
+// FULL visible transcript in DOM order, tagged by bubble type.
 function collectTranscriptText() {
   const out = [];
-  transcript.querySelectorAll('.final, .xen-reply').forEach(el => {
-    const role = el.classList.contains('xen-reply') ? 'XEN' : 'YOU';
+  transcript.querySelectorAll('.final, .interim, .xen-reply, .firehose').forEach(el => {
+    const role =
+      el.classList.contains('xen-reply') ? 'XEN' :
+      el.classList.contains('firehose') ? 'FIREHOSE' :
+      el.classList.contains('interim') ? 'YOU?' :
+      'YOU';
     const t = el.cloneNode(true);
-    t.querySelectorAll('.bubble-actions, .posted').forEach(n => n.remove());
-    out.push(`${role}: ${t.textContent.trim()}`);
+    t.querySelectorAll('.bubble-actions, .posted, .src').forEach(n => n.remove());
+    const txt = t.textContent.trim();
+    if (txt) out.push(`${role}: ${txt}`);
   });
   return out.join('\n');
 }
