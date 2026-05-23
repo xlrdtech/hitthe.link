@@ -46,6 +46,14 @@ button:disabled { opacity:.4; cursor:not-allowed; }
 button:hover:not(:disabled) { transform:translateY(-1px); }
 
 .unsupported { padding:18px; background:rgba(229,85,42,.08); border:1px solid var(--rust); border-radius:10px; font-size:14px; color:var(--cream); margin:14px 0; }
+
+.fallback { display:none; padding:14px; background:rgba(106,212,255,.06); border:1px solid var(--steel); border-radius:10px; margin-top:12px; }
+.fallback.show { display:block; }
+.fallback .hint { font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; color:var(--steel); margin-bottom:8px; text-transform:uppercase; line-height:1.4; }
+.fallback textarea { width:100%; min-height:80px; background:rgba(0,0,0,.4); color:var(--cream); border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-family:var(--sans); font-size:16px; line-height:1.5; resize:none; -webkit-appearance:none; }
+.fallback textarea:focus { outline:1px solid var(--steel); border-color:var(--steel); }
+.fallback .send-btn { margin-top:8px; width:100%; padding:12px; border-radius:50px; background:var(--steel); color:var(--paper); border:none; font-family:var(--mono); font-size:11.5px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; cursor:pointer; }
+.fallback .send-btn:disabled { opacity:.4; cursor:not-allowed; }
 </style>
 </head>
 <body>
@@ -71,6 +79,12 @@ button:hover:not(:disabled) { transform:translateY(-1px); }
   <button class="stop" id="stop-btn" disabled>Stop</button>
 </div>
 
+<div class="fallback" id="fallback">
+  <div class="hint">↓ keyboard mic fallback · tap mic on keyboard · enter to send</div>
+  <textarea id="fb-text" placeholder="dictate via keyboard mic or type here..." autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
+  <button class="send-btn" id="fb-send">Send</button>
+</div>
+
 </div>
 
 <script>
@@ -88,6 +102,37 @@ let recognition = null;
 let listening = false;
 let sentCount = 0;
 let interimEl = null;
+let networkErrorCount = 0;
+
+const fallbackEl = document.getElementById('fallback');
+const fbText = document.getElementById('fb-text');
+const fbSend = document.getElementById('fb-send');
+
+function showFallback(reason) {
+  fallbackEl.classList.add('show');
+  if (reason) appendError(reason);
+  startBtn.disabled = true;
+  stopBtn.disabled = true;
+  setStatus('idle', 'fallback mode');
+  setTimeout(() => fbText.focus(), 100);
+}
+
+async function sendFallback() {
+  const text = fbText.value.trim();
+  if (!text) return;
+  fbSend.disabled = true;
+  appendFinal(text, false);
+  const posted = await postTranscript(text);
+  if (posted) {
+    const lastFinal = transcript.querySelector('.final:last-child');
+    if (lastFinal && !lastFinal.innerHTML.includes('posted')) {
+      lastFinal.innerHTML += ' <span class="posted">✓ posted</span>';
+    }
+  }
+  fbText.value = '';
+  fbSend.disabled = false;
+  fbText.focus();
+}
 
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 if (!SR) {
@@ -194,6 +239,13 @@ function startListening() {
     if (e.error === 'no-speech' || e.error === 'aborted') return;
     setStatus('err', 'error: ' + e.error);
     appendError('speech error: ' + e.error);
+    if (e.error === 'network') {
+      networkErrorCount++;
+      if (networkErrorCount >= 3) {
+        listening = false;
+        showFallback('Web Speech API blocked or offline (' + networkErrorCount + ' network errors). Use keyboard mic below.');
+      }
+    }
   };
 
   recognition.onend = () => {
@@ -217,6 +269,16 @@ function stopListening() {
 
 startBtn.addEventListener('click', startListening);
 stopBtn.addEventListener('click', stopListening);
+
+fbSend.addEventListener('click', sendFallback);
+fbText.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendFallback();
+  }
+});
+
+if (!SR) showFallback('Web Speech API unavailable. Use keyboard mic.');
 
 window.addEventListener('beforeunload', stopListening);
 </script>
