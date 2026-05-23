@@ -83,7 +83,30 @@ footer a { color:var(--volt); text-decoration:none; border-bottom:1px dotted rgb
   <div class="lede">Win-side shipped four moves. Mac-side ran five waves and landed two canon verdicts. Two new foundational canons locked. UI-TARS probe converged.</div>
 </header>
 
-<div style="margin:0 0 28px; padding:24px 28px; border-radius:14px; background:linear-gradient(155deg,rgba(0,255,136,.14),rgba(0,255,136,.03)); border:1px solid #00FF88; border-left:4px solid #00FF88;">
+<div style="margin:0 0 24px; padding:22px 28px; border-radius:14px; background:linear-gradient(155deg,rgba(167,139,250,.12),rgba(167,139,250,.02)); border:1px solid #A78BFA; border-left:4px solid #A78BFA;">
+  <div style="color:#A78BFA; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.22em; text-transform:uppercase; font-weight:700; margin-bottom:12px;">↻ Tick 11 · 20h15 ET · Termius Terminal Multiplayer link from qi</div>
+  <p style="font-size:14px; color:#F4EEE4; line-height:1.6; margin-bottom:10px;">qi shared a <a href="https://termius.com/terminal-multiplayer" style="color:#A78BFA; border-bottom:1px dotted;">Termius Terminal Multiplayer</a> peer-link for "Local Terminal" — co-piloting a real terminal across panes. Opened Win-side via Start-Process so the Termius client (if installed) takes the deep-link; otherwise Zen renders the join page. Relayed to mac-xen for parallel join. Link contains session pw — handled as session-only.</p>
+  <p style="font-size:12px; color:#C7C2B6; line-height:1.6; font-style:italic;">Termius Multiplayer = real-time shared TTY (paid Termius feature). Both panes pointing at the same session lets us see qi's keystrokes + run side-channel commands in the same shell.</p>
+</div>
+
+<div style="margin:0 0 24px; padding:24px 28px; border-radius:14px; background:linear-gradient(155deg,rgba(0,255,136,.16),rgba(106,212,255,.04)); border:1px solid #00FF88; border-left:4px solid #00FF88;">
+  <div style="color:#00FF88; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.22em; text-transform:uppercase; font-weight:700; margin-bottom:14px;">★ Tick 10 · 20h14 ET · KEYLESS VERIFIED · password retired</div>
+  <p style="font-size:14.5px; color:#F4EEE4; line-height:1.6; margin-bottom:14px;">Polish landed. Win-side Ed25519 pubkey installed into <code style="font-family:'JetBrains Mono',monospace; background:rgba(255,255,255,.06); padding:1px 6px; border-radius:3px; color:#00FF88;">xen@xvm:~/.ssh/authorized_keys</code>. SSH now works with no password from Ezekiel.</p>
+  <pre style="font-family:'JetBrains Mono',monospace; font-size:12.5px; color:#A5F3FC; background:rgba(0,255,136,.05); border:1px solid rgba(0,255,136,.25); border-radius:8px; padding:14px 18px; overflow-x:auto; line-height:1.5; margin:0 0 14px;">$ ssh -o PasswordAuthentication=no -o BatchMode=yes xen@xvm 'whoami; hostname; pwd; date'
+=== KEYLESS VERIFIED ===
+xen
+xens-Virtual-Machine.local
+/Users/xen
+Fri May 22 17:14:06 PDT 2026</pre>
+  <ul style="list-style:none; padding:0; margin:0; display:grid; grid-template-columns:1fr 1fr; gap:6px 24px;">
+    <li style="font-size:13.5px; color:#F4EEE4; line-height:1.55;"><strong style="color:#00FF88;">auth path</strong> · publickey-only · no pw on disk anywhere</li>
+    <li style="font-size:13.5px; color:#F4EEE4; line-height:1.55;"><strong style="color:#00FF88;">guest authorized_keys</strong> · 1 entry (this Win Ezekiel) — additive, no eviction of any future entries</li>
+    <li style="font-size:13.5px; color:#F4EEE4; line-height:1.55;"><strong style="color:#FF5E9C;">Tailscale-SSH polish</strong> · BLOCKED — <code style="font-family:'JetBrains Mono',monospace; background:rgba(255,255,255,.06); padding:1px 6px; border-radius:3px; color:#6AD4FF;">tailscale: command not found</code> on guest. macOS App-Store Tailscale needs one-time "Install CLI" click from the menubar to symlink into <code style="font-family:'JetBrains Mono',monospace; background:rgba(255,255,255,.06); padding:1px 6px; border-radius:3px; color:#6AD4FF;">/usr/local/bin/</code>.</li>
+    <li style="font-size:13.5px; color:#F4EEE4; line-height:1.55;"><strong style="color:#00FF88;">Win pubkey</strong> · <code style="font-family:'JetBrains Mono',monospace; background:rgba(255,255,255,.06); padding:1px 6px; border-radius:3px; color:#6AD4FF;">ssh-ed25519 ...oarF92 grailbookings@gmail.com</code></li>
+  </ul>
+</div>
+
+<div style="margin:0 0 28px; padding:24px 28px; border-radius:14px; background:linear-gradient(155deg,rgba(0,255,136,.10),rgba(0,255,136,.02)); border:1px solid rgba(0,255,136,.6); border-left:4px solid rgba(0,255,136,.6);">
   <div style="color:#00FF88; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.22em; text-transform:uppercase; font-weight:700; margin-bottom:14px;">★ Tick 9 · 20h03 ET · VERIFIED FROM WINDOWS · SSH end-to-end working</div>
   <p style="font-size:14.5px; color:#F4EEE4; line-height:1.6; margin-bottom:14px;">qi said "done" — sshd flipped ON in the guest. Win-side connected via paramiko + env-passed pw + username probe. The UTM/macOS plan is now <strong style="color:#00FF88;">end-to-end live across the tailnet</strong>.</p>
   <pre style="font-family:'JetBrains Mono',monospace; font-size:12.5px; color:#A5F3FC; background:rgba(0,255,136,.05); border:1px solid rgba(0,255,136,.25); border-radius:8px; padding:14px 18px; overflow-x:auto; line-height:1.5; margin:0 0 14px;">$ ssh xen@xvm 'whoami; hostname; sw_vers; uptime'
