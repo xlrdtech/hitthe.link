@@ -615,27 +615,39 @@ function startListening() {
     stopBtn.disabled = false;
   };
 
-  recognition.onresult = async (e) => {
-    let interim = '';
+  // Fire-and-forget per qi 2026-05-23 17:44 — "It shouldn't be finals. It
+  // should be hitting the tui immediately. Just like before." Every interim
+  // and final POSTs to /api/dictate-inject the moment it arrives. Pane is
+  // the consumer and concatenates (canon_stt_audio_chain_2026-05-19 "instant
+  // chunks only"). Dedupe via lastPostedIndex so we don't re-POST the same
+  // interim text repeatedly as Web Speech keeps refining it.
+  let lastPostedText = '';
+  recognition.onresult = (e) => {
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const result = e.results[i];
-      if (result.isFinal) {
-        const text = result[0].transcript.trim();
-        if (text) {
-          appendFinal(text, false);
-          const posted = await postTranscript(text);
-          if (posted) {
-            const lastFinal = transcript.querySelector('.final:last-child');
-            if (lastFinal && !lastFinal.innerHTML.includes('posted')) {
-              lastFinal.innerHTML += ' <span class="posted">✓ posted</span>';
-            }
+      const text = (result[0].transcript || '').trim();
+      if (!text) continue;
+      // Web Speech repeats/refines the SAME interim string — only POST when
+      // the running text actually grows or finalizes.
+      if (text === lastPostedText) continue;
+      const isFinal = result.isFinal;
+      // Append to visible transcript
+      if (isFinal) {
+        appendFinal(text, false);
+      } else {
+        appendInterim(text);
+      }
+      // Fire-and-forget POST (no await — pane gets it immediately)
+      postTranscript(text).then(posted => {
+        if (posted && isFinal) {
+          const lastFinal = transcript.querySelector('.final:last-child');
+          if (lastFinal && !lastFinal.innerHTML.includes('posted')) {
+            lastFinal.innerHTML += ' <span class="posted">✓ posted</span>';
           }
         }
-      } else {
-        interim += result[0].transcript;
-      }
+      });
+      lastPostedText = text;
     }
-    if (interim) appendInterim(interim);
   };
 
   recognition.onerror = (e) => {
