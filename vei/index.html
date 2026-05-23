@@ -217,37 +217,54 @@ button.stop { color:var(--fg-dim); }
 button.stop:hover:not(:disabled) { color:var(--bad); border-color:var(--bad); background:rgba(255,107,90,.08); }
 button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
 
-.fallback {
-  display:none; position:absolute; bottom:80px; left:env(safe-area-inset-left, 16px); right:env(safe-area-inset-right, 16px);
-  padding:14px; background:var(--bg-input);
-  border:1px solid var(--line); border-radius:var(--r-card);
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
+/* Persistent unified composer — voice + text + attach are one fluid input row.
+   qi 2026-05-23: "text and attachments and voice all one in the same — fluid
+   transcript back-and-forth". Mic stays on independent of typing/attaching. */
+.text-row {
+  display:flex; align-items:center; gap:8px;
+  background:linear-gradient(145deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:var(--r-pill);
+  padding:6px 6px 6px 16px;
+  margin-bottom:8px;
+  backdrop-filter:blur(14px) saturate(1.2);
+  -webkit-backdrop-filter:blur(14px) saturate(1.2);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 6px 20px rgba(0,0,0,.24);
 }
-.fallback.show { display:block; }
-.fallback .hint {
-  font-family:var(--mono); font-size:10px; color:var(--fg-mute);
-  margin-bottom:10px; letter-spacing:.06em; text-transform:uppercase;
+.text-row textarea {
+  flex:1; min-height:24px; max-height:120px;
+  background:transparent; color:var(--fg);
+  border:0; outline:none; resize:none;
+  font-family:var(--sans); font-size:15px; line-height:1.4;
+  padding:6px 0;
+  -webkit-appearance:none;
 }
-.fallback textarea {
-  width:100%; min-height:72px;
-  background:rgba(0,0,0,.32); color:var(--fg);
-  border:1px solid var(--line); border-radius:12px;
-  padding:11px 14px;
-  font-family:var(--sans); font-size:15px; line-height:1.5;
-  resize:none; -webkit-appearance:none;
+.text-row textarea::placeholder { color:var(--fg-mute); }
+.text-row .icon-btn {
+  width:32px; height:32px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  background:transparent; border:0;
+  color:var(--fg-dim);
+  cursor:pointer;
+  border-radius:50%;
+  transition:background .12s, color .12s, transform .12s;
 }
-.fallback textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-glow); }
-.fallback textarea::placeholder { color:var(--fg-mute); }
-.fallback .send-btn {
-  margin-top:10px; width:100%; padding:11px;
+.text-row .icon-btn:hover { background:rgba(255,255,255,.08); color:var(--accent); transform:translateY(-1px); }
+.text-row .icon-btn svg { width:17px; height:17px; }
+.text-row .send-pill {
+  padding:7px 14px;
   background:var(--accent); color:var(--bg);
   border:0; border-radius:var(--r-pill);
-  font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
-  cursor:pointer; transition:background .12s, box-shadow .12s;
+  font-family:var(--mono); font-size:10.5px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+  cursor:pointer; box-shadow:0 0 10px var(--accent-glow);
+  transition:background .12s, transform .12s;
 }
-.fallback .send-btn:hover:not(:disabled) { background:var(--accent-hover); box-shadow:0 0 12px var(--accent-glow); }
-.fallback .send-btn:disabled { opacity:.4; cursor:not-allowed; }
+.text-row .send-pill:hover:not(:disabled) { background:var(--accent-hover); transform:translateY(-1px); }
+.text-row .send-pill:disabled { opacity:.35; cursor:not-allowed; }
+
+/* Legacy fallback wrapper — hide; functionality merged into .text-row */
+.fallback { display:none; }
+.fallback.show { display:none; }
 
 .unsupported {
   align-self:flex-start; max-width:88%; padding:14px 16px;
@@ -285,25 +302,30 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
   <button id="tb-copy" title="Copy all">Copy</button>
   <button id="tb-export" title="Export as .txt">Export</button>
   <button id="tb-share" title="Share via Web Share API">Share</button>
-  <button id="tb-attach" title="Send attachment">+ Attach</button>
-  <input type="file" id="file-input" hidden multiple>
 </div>
 
 <div id="transcript"></div>
 
 <div class="composer">
-  <div class="fallback" id="fallback">
-    <div class="hint">Keyboard fallback · tap mic on keyboard or type · Enter sends</div>
-    <textarea id="fb-text" placeholder="Dictate via keyboard mic or type here…" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
-    <button class="send-btn" id="fb-send">Send</button>
+  <!-- Persistent unified composer: text + attach + send. Mic stays on independently. -->
+  <div class="text-row">
+    <textarea id="fb-text" rows="1" placeholder="Type, dictate, or paste — voice stays on independently"
+      autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
+    <button class="icon-btn" id="tb-attach" title="Send attachment">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+      </svg>
+    </button>
+    <button class="send-pill" id="fb-send">Send</button>
   </div>
-
   <div class="waveform-bar">
     <div class="waveform" id="waveform"></div>
   </div>
-  <!-- Hidden start/stop controls; mic icon in header IS the toggle. -->
+  <input type="file" id="file-input" hidden multiple>
+  <!-- Hidden legacy controls; mic icon in header IS the voice toggle. -->
   <button class="start" id="start-btn" hidden>Start</button>
   <button class="stop" id="stop-btn" hidden disabled>Stop</button>
+  <div class="fallback" id="fallback" hidden></div>
 </div>
 
 </div>
