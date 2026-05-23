@@ -812,12 +812,11 @@ async function toggleMic() {
   viz_listening = true;
   await startAnalyser();   // Audio Analyser fires first so the visualizer
                             // shows reaction even before Web Speech connects
-  if (isFirefoxLike || !SR) {
-    appendError('Firefox/Zen detected — using MediaRecorder + server Whisper');
-    startMediaRecorder();
-  } else {
-    startListening();
-  }
+  // qi 2026-05-23: default to MediaRecorder + server Whisper. Web Speech's
+  // interim hypothesis revision was visible as "auto-correcting / deleting"
+  // text — qi rejected that behavior. Server Whisper delivers one committed
+  // transcript per audio chunk, no interim revision.
+  startMediaRecorder();
 }
 micIcon.addEventListener('click', toggleMic);
 
