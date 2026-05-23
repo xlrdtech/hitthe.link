@@ -4,85 +4,199 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <title>VEI · רוּחַ · voice echo input</title>
-<meta name="description" content="VEI (Voice Echo Input). Ruach-class STT routing to omnimind /api/dictate-inject. OptimisticAI-inspired light shell over the Web Speech + MediaRecorder pipeline. Public, no-auth, multi-device simultaneous.">
+<meta name="description" content="VEI (Voice Echo Input). Meta-AI-inspired chat shell over the Ruach Web Speech + MediaRecorder pipeline. Public, no-auth, multi-device simultaneous. POSTs to omnimind /api/dictate-inject.">
 <link rel="manifest" href="/vei/manifest.json">
-<meta name="theme-color" content="#FFFFFF">
+<meta name="theme-color" content="#1a1a1a">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-:root { --paper:#FAFAFA; --card:#FFFFFF; --cream:#0A0A0C; --bone:#404040; --dust:#737373; --line:rgba(0,0,0,.08); --volt:#3B82F6; --gold:#D2AC47; --steel:#0EA5E9; --rust:#EF4444; --serif:'Instrument Serif',serif; --sans:'Inter',-apple-system,sans-serif; --mono:'JetBrains Mono',monospace; }
+/* VEI — Meta-AI-inspired dark chat shell. Reference: optimisticai_d4925249 (Meta AI codename).
+   Palette pulled from Meta AI page: bg #1a1a1a, white text, soft-grey strokes, no chrome. */
+:root {
+  --bg:#1a1a1a;
+  --bg-elev:#242424;
+  --bg-input:#2a2a2a;
+  --fg:#ffffff;
+  --fg-dim:#a3a3a3;
+  --fg-mute:#737373;
+  --line:rgba(255,255,255,.08);
+  --line-strong:rgba(255,255,255,.16);
+  --accent:#0EA5E9;
+  --accent-hover:#38BDF8;
+  --good:#22C55E;
+  --warn:#F59E0B;
+  --bad:#EF4444;
+  --r-card:16px;
+  --r-pill:9999px;
+  --sans:'Inter','SF Pro Text',-apple-system,system-ui,sans-serif;
+  --mono:'JetBrains Mono','SF Mono',ui-monospace,monospace;
+}
 * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
-html, body { height:100%; background:var(--paper); color:var(--cream); font-family:var(--sans); overflow:hidden; }
-.wrap { display:flex; flex-direction:column; height:100vh; max-width:720px; margin:0 auto; padding:env(safe-area-inset-top, 16px) 20px env(safe-area-inset-bottom, 16px); }
+html, body {
+  height:100dvh;
+  background:var(--bg);
+  color:var(--fg);
+  font-family:var(--sans);
+  font-feature-settings:"ss01","cv11";
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  overflow:hidden;
+}
+.wrap {
+  display:flex; flex-direction:column;
+  height:100dvh; width:100%;
+  max-width:760px; margin:0 auto;
+  padding:env(safe-area-inset-top, 20px) 24px env(safe-area-inset-bottom, 20px);
+}
 
-header { padding-bottom:14px; border-bottom:1px solid var(--line); margin-bottom:14px; }
-.title { font-family:var(--serif); font-style:italic; font-size:32px; color:var(--cream); letter-spacing:-.02em; }
-.title em { color:var(--volt); }
-.endpoint { font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; color:var(--dust); margin-top:4px; }
+/* Header — minimal, Meta-AI-tight */
+header { padding:8px 0 18px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.brand { display:flex; align-items:center; gap:12px; }
+.brand-dot {
+  width:10px; height:10px; border-radius:50%;
+  background:var(--accent); box-shadow:0 0 12px var(--accent);
+  flex-shrink:0;
+}
+.brand-text { display:flex; flex-direction:column; gap:2px; }
+.title { font-size:18px; font-weight:600; letter-spacing:-.01em; line-height:1; color:var(--fg); }
+.title .heb { font-weight:400; color:var(--fg-dim); margin-left:8px; font-size:16px; }
+.subtitle { font-family:var(--mono); font-size:10.5px; letter-spacing:.04em; color:var(--fg-mute); }
 
-.status-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 14px; margin-bottom:12px; border-radius:50px; border:1px solid var(--line); background:var(--card); }
-.status-bar .dot { width:10px; height:10px; border-radius:50%; background:var(--dust); }
-.status-bar.listen .dot { background:var(--volt); box-shadow:0 0 12px var(--volt); animation:pulse 1.4s infinite; }
-.status-bar.err .dot { background:var(--rust); }
-.status-bar.idle .dot { background:var(--gold); }
-.status-bar .lbl { font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--cream); }
-.status-bar .count { font-family:var(--mono); font-size:11px; color:var(--dust); }
-@keyframes pulse { 0%, 100% { opacity:1; transform:scale(1); } 50% { opacity:.5; transform:scale(1.4); } }
+.count-chip {
+  font-family:var(--mono); font-size:11px;
+  background:var(--bg-elev); border:1px solid var(--line);
+  padding:6px 12px; border-radius:var(--r-pill);
+  color:var(--fg-dim);
+}
 
-#transcript { flex:1; overflow-y:auto; font-family:var(--sans); font-size:17px; line-height:1.55; padding:14px 0; }
-.final { color:var(--cream); margin-bottom:8px; padding:8px 0; border-bottom:1px dotted var(--line); }
-.interim { color:var(--dust); font-style:italic; }
-.error-line { color:var(--rust); font-family:var(--mono); font-size:13px; padding:6px 10px; background:rgba(229,85,42,.06); border-left:3px solid var(--rust); margin:6px 0; }
-.posted { color:var(--volt); font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; }
+/* Status pill — centered above transcript like Meta AI's input bar shadow */
+.status-bar {
+  display:inline-flex; align-items:center; gap:10px;
+  padding:8px 14px; margin:0 auto 16px;
+  background:var(--bg-elev); border:1px solid var(--line);
+  border-radius:var(--r-pill);
+  width:fit-content;
+  font-family:var(--mono); font-size:11px; letter-spacing:.06em;
+  color:var(--fg-dim); text-transform:lowercase;
+  transition:all .2s;
+}
+.status-bar .dot { width:6px; height:6px; border-radius:50%; background:var(--fg-mute); transition:all .2s; }
+.status-bar.listen .dot { background:var(--good); box-shadow:0 0 10px var(--good); animation:pulse 1.4s ease-in-out infinite; }
+.status-bar.err .dot { background:var(--bad); }
+.status-bar.idle .dot { background:var(--warn); }
+@keyframes pulse { 0%, 100% { opacity:1; transform:scale(1); } 50% { opacity:.5; transform:scale(1.5); } }
 
-.controls { padding-top:12px; border-top:1px solid var(--line); display:flex; gap:10px; }
-button { flex:1; padding:14px; border-radius:50px; border:1px solid var(--line); background:transparent; color:var(--cream); font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; cursor:pointer; transition:all .15s; }
-button.start { background:var(--volt); color:var(--paper); border-color:var(--volt); }
-button.stop { background:var(--rust); color:var(--cream); border-color:var(--rust); }
-button:disabled { opacity:.4; cursor:not-allowed; }
-button:hover:not(:disabled) { transform:translateY(-1px); }
+/* Transcript = chat-feed pattern */
+#transcript {
+  flex:1; overflow-y:auto;
+  display:flex; flex-direction:column; gap:12px;
+  padding:8px 4px 16px;
+  scroll-behavior:smooth;
+}
+#transcript::-webkit-scrollbar { width:6px; }
+#transcript::-webkit-scrollbar-thumb { background:var(--line-strong); border-radius:3px; }
 
-.unsupported { padding:18px; background:rgba(229,85,42,.08); border:1px solid var(--rust); border-radius:10px; font-size:14px; color:var(--cream); margin:14px 0; }
+.final, .interim {
+  max-width:88%; align-self:flex-start;
+  padding:12px 16px; border-radius:var(--r-card);
+  background:var(--bg-elev); border:1px solid var(--line);
+  font-size:15.5px; line-height:1.5; color:var(--fg);
+  animation:fadeIn .2s ease-out;
+}
+.final.posted-flag { border-color:rgba(34,197,94,.22); }
+.interim { color:var(--fg-dim); font-style:italic; background:transparent; border:1px dashed var(--line); }
+.posted { display:inline-block; margin-left:6px; padding:2px 8px; border-radius:var(--r-pill); background:rgba(34,197,94,.12); color:var(--good); font-family:var(--mono); font-size:10px; letter-spacing:.04em; }
+.error-line { align-self:stretch; padding:10px 14px; border-radius:10px; background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.32); color:#FCA5A5; font-family:var(--mono); font-size:12.5px; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
 
-.fallback { display:none; padding:14px; background:rgba(106,212,255,.06); border:1px solid var(--steel); border-radius:10px; margin-top:12px; }
+/* Composer area — Meta-AI bottom-anchored input zone with mic-button affordance */
+.composer { padding:16px 0 0; border-top:1px solid var(--line); }
+.controls { display:flex; gap:10px; }
+button {
+  flex:1; padding:14px 18px;
+  border-radius:var(--r-pill); border:1px solid var(--line-strong);
+  background:var(--bg-elev); color:var(--fg);
+  font-family:var(--sans); font-size:14px; font-weight:600; letter-spacing:.01em;
+  cursor:pointer; transition:transform .12s, background .12s, border-color .12s;
+}
+button:hover:not(:disabled) { background:var(--bg-input); border-color:var(--fg-mute); transform:translateY(-1px); }
+button.start { background:var(--accent); color:#0a1620; border-color:var(--accent); }
+button.start:hover:not(:disabled) { background:var(--accent-hover); border-color:var(--accent-hover); }
+button.stop { background:transparent; }
+button:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+
+.fallback {
+  display:none; margin-top:12px;
+  padding:14px; background:var(--bg-elev);
+  border:1px solid var(--line); border-radius:var(--r-card);
+}
 .fallback.show { display:block; }
-.fallback .hint { font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; color:var(--steel); margin-bottom:8px; text-transform:uppercase; line-height:1.4; }
-.fallback textarea { width:100%; min-height:80px; background:var(--card); color:var(--cream); border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-family:var(--sans); font-size:16px; line-height:1.5; resize:none; -webkit-appearance:none; }
-.fallback textarea:focus { outline:1px solid var(--steel); border-color:var(--steel); }
-.fallback .send-btn { margin-top:8px; width:100%; padding:12px; border-radius:50px; background:var(--steel); color:var(--paper); border:none; font-family:var(--mono); font-size:11.5px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; cursor:pointer; }
+.fallback .hint {
+  font-family:var(--mono); font-size:10.5px; color:var(--fg-mute);
+  margin-bottom:10px; letter-spacing:.04em;
+}
+.fallback textarea {
+  width:100%; min-height:80px;
+  background:var(--bg-input); color:var(--fg);
+  border:1px solid var(--line); border-radius:12px;
+  padding:12px 14px;
+  font-family:var(--sans); font-size:15px; line-height:1.5;
+  resize:none; -webkit-appearance:none;
+}
+.fallback textarea:focus { outline:none; border-color:var(--accent); }
+.fallback textarea::placeholder { color:var(--fg-mute); }
+.fallback .send-btn {
+  margin-top:10px; width:100%; padding:12px;
+  background:var(--accent); color:#0a1620;
+  border:0; border-radius:var(--r-pill);
+  font-family:var(--sans); font-size:14px; font-weight:600;
+  cursor:pointer; transition:background .12s;
+}
+.fallback .send-btn:hover:not(:disabled) { background:var(--accent-hover); }
 .fallback .send-btn:disabled { opacity:.4; cursor:not-allowed; }
+
+.unsupported {
+  padding:16px; margin:14px 0;
+  background:rgba(239,68,68,.06); border:1px solid rgba(239,68,68,.32);
+  border-radius:12px; color:#FCA5A5; font-size:14px;
+}
 </style>
 </head>
 <body>
 <div class="wrap">
 
 <header>
-  <div class="title"><em>VEI</em> · רוּחַ</div>
-  <div class="endpoint" id="endpoint-display">voice echo input · → xen.xlrd.org/api/dictate-inject</div>
+  <div class="brand">
+    <div class="brand-dot"></div>
+    <div class="brand-text">
+      <div class="title">VEI<span class="heb">· רוּחַ</span></div>
+      <div class="subtitle">voice echo input → xen.xlrd.org</div>
+    </div>
+  </div>
+  <div class="count-chip" id="count">0 sent</div>
 </header>
 
 <div class="status-bar idle" id="status">
-  <div style="display:flex; align-items:center; gap:10px;">
-    <div class="dot"></div>
-    <div class="lbl" id="status-lbl">tap start</div>
-  </div>
-  <div class="count" id="count">0 sent</div>
+  <div class="dot"></div>
+  <span id="status-lbl">tap start</span>
 </div>
 
 <div id="transcript"></div>
 
-<div class="controls">
-  <button class="start" id="start-btn">Start</button>
-  <button class="stop" id="stop-btn" disabled>Stop</button>
-</div>
+<div class="composer">
+  <div class="controls">
+    <button class="start" id="start-btn">Start listening</button>
+    <button class="stop" id="stop-btn" disabled>Stop</button>
+  </div>
 
-<div class="fallback" id="fallback">
-  <div class="hint">↓ keyboard mic fallback · tap mic on keyboard · enter to send</div>
-  <textarea id="fb-text" placeholder="dictate via keyboard mic or type here..." autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
-  <button class="send-btn" id="fb-send">Send</button>
+  <div class="fallback" id="fallback">
+    <div class="hint">keyboard fallback · tap mic on keyboard or type · enter sends</div>
+    <textarea id="fb-text" placeholder="dictate via keyboard mic or type here…" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
+    <button class="send-btn" id="fb-send">Send</button>
+  </div>
 </div>
 
 </div>
