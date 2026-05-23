@@ -312,10 +312,15 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
 </div>
 
 <div class="transcript-toolbar">
-  <button id="tb-copy" title="Copy all">Copy</button>
-  <button id="tb-export" title="Export as .txt">Export</button>
-  <button id="tb-share" title="Share via Web Share API">Share</button>
+  <button id="tb-newthread" title="Start new thread">＋ New</button>
+  <button id="tb-threads" title="Browse past threads">Threads</button>
+  <button id="tb-copy" title="Copy current thread">Copy</button>
+  <button id="tb-export" title="Export current thread as .txt">Export</button>
+  <button id="tb-share" title="Share current thread">Share</button>
 </div>
+
+<!-- Threads picker overlay (toggled by Threads button) -->
+<div id="thread-picker" style="display:none; position:absolute; top:60px; left:20px; right:20px; max-height:50vh; overflow-y:auto; background:rgba(20,40,28,.94); border:1px solid var(--line-strong); border-radius:var(--r-card); backdrop-filter:blur(18px); padding:10px; z-index:10; box-shadow:0 12px 36px rgba(0,0,0,.5);"></div>
 
 <div id="transcript"></div>
 
@@ -855,22 +860,57 @@ fileInput.addEventListener('change', async (e) => {
   e.target.value = '';
 });
 
-// ─── Local history (localStorage) + SSE replay (server-side) ────────────
-// qi 2026-05-23: 'every time I go back to it everything that I said should
-// still be there and everything you said to still be there'.
-// Two layers:
-// (1) localStorage 'vei-history' = array of {role, text, ts} — hydrates on load
-// (2) /events SSE backfill (mirror-events.jsonl, last 5000 events)
-// Dedupe by (source + text-prefix + ts).
-const LS_KEY = 'vei-history';
+// ─── Multi-thread history (localStorage) + SSE replay (server-side) ─────
+// qi 2026-05-23: 'option to start a new thread', 'export only what I want
+// to export', 'I need to be able to get back and find my chats'.
+// Schema:
+//   vei-threads = JSON [{id, started, lastTs, name}]
+//   vei-thread-<id> = JSON [{role, text, ts}]
+//   vei-active = string (current thread id)
+function loadThreads() {
+  try { return JSON.parse(localStorage.getItem('vei-threads') || '[]'); } catch (_) { return []; }
+}
+function saveThreads(arr) {
+  try { localStorage.setItem('vei-threads', JSON.stringify(arr)); } catch (_) {}
+}
+function getActiveId() {
+  let id = localStorage.getItem('vei-active');
+  if (!id) {
+    id = 't-' + Date.now();
+    localStorage.setItem('vei-active', id);
+    const list = loadThreads();
+    list.push({ id, started: Date.now(), lastTs: Date.now() });
+    saveThreads(list);
+  }
+  return id;
+}
+function loadThreadEntries(id) {
+  try { return JSON.parse(localStorage.getItem('vei-thread-' + id) || '[]'); } catch (_) { return []; }
+}
+function saveThreadEntries(id, entries) {
+  try { localStorage.setItem('vei-thread-' + id, JSON.stringify(entries)); } catch (_) {}
+}
+function threadLabel(t) {
+  const entries = loadThreadEntries(t.id);
+  const first = entries.find(e => e.role === 'you' && e.text);
+  const date = new Date(t.started);
+  const dateLabel = date.toLocaleString(undefined, { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+  const head = (first?.text || '(empty)').slice(0, 50).replace(/\s+/g, ' ');
+  return `${dateLabel} · ${head}`;
+}
+
 const _renderedKeys = new Set();
-const _history = (() => {
-  try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch (_) { return []; }
-})();
+let _activeThreadId = getActiveId();
+let _history = loadThreadEntries(_activeThreadId);
+
 function saveHistory(entry) {
   _history.push(entry);
-  if (_history.length > 1000) _history.splice(0, _history.length - 1000);
-  try { localStorage.setItem(LS_KEY, JSON.stringify(_history)); } catch (_) {}
+  if (_history.length > 2000) _history.splice(0, _history.length - 2000);
+  saveThreadEntries(_activeThreadId, _history);
+  // Bump thread lastTs
+  const list = loadThreads();
+  const t = list.find(x => x.id === _activeThreadId);
+  if (t) { t.lastTs = entry.ts || Date.now(); saveThreads(list); }
 }
 function hydrateHistory() {
   for (const e of _history) {
@@ -886,6 +926,50 @@ function hydrateHistory() {
   transcript.scrollTop = transcript.scrollHeight;
 }
 hydrateHistory();
+
+// ─── Thread controls: New / Browse ────────────────────────────────────
+document.getElementById('tb-newthread').addEventListener('click', () => {
+  const id = 't-' + Date.now();
+  localStorage.setItem('vei-active', id);
+  const list = loadThreads();
+  list.push({ id, started: Date.now(), lastTs: Date.now() });
+  saveThreads(list);
+  _activeThreadId = id;
+  _history = [];
+  _renderedKeys.clear();
+  transcript.innerHTML = '';
+});
+
+const threadPicker = document.getElementById('thread-picker');
+document.getElementById('tb-threads').addEventListener('click', () => {
+  if (threadPicker.style.display !== 'none') { threadPicker.style.display = 'none'; return; }
+  const list = loadThreads().slice().sort((a, b) => (b.lastTs || 0) - (a.lastTs || 0));
+  threadPicker.innerHTML = '';
+  const header = document.createElement('div');
+  header.style.cssText = 'font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--fg-mute);text-transform:uppercase;padding:4px 8px 10px;';
+  header.textContent = `${list.length} thread${list.length === 1 ? '' : 's'} · tap to load`;
+  threadPicker.appendChild(header);
+  for (const t of list) {
+    const row = document.createElement('button');
+    row.style.cssText = 'display:block;width:100%;text-align:left;padding:10px 12px;margin-bottom:4px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:10px;color:var(--fg);font-family:var(--sans);font-size:13.5px;cursor:pointer;';
+    if (t.id === _activeThreadId) {
+      row.style.borderColor = 'var(--accent)';
+      row.style.background = 'rgba(0,255,136,.10)';
+    }
+    row.textContent = (t.id === _activeThreadId ? '● ' : '') + threadLabel(t);
+    row.onclick = () => {
+      localStorage.setItem('vei-active', t.id);
+      _activeThreadId = t.id;
+      _history = loadThreadEntries(t.id);
+      _renderedKeys.clear();
+      transcript.innerHTML = '';
+      hydrateHistory();
+      threadPicker.style.display = 'none';
+    };
+    threadPicker.appendChild(row);
+  }
+  threadPicker.style.display = 'block';
+});
 function renderEvent(d) {
   const txt = (d.text || d.body || d.message || '').toString().trim();
   if (!txt) return;
