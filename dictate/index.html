@@ -89,7 +89,9 @@ button:hover:not(:disabled) { transform:translateY(-1px); }
 
 <script>
 const API_URL = 'https://xen.xlrd.org/api/dictate-inject';
+const AUDIO_URL = 'https://xen.xlrd.org/api/dictate-audio';
 const HEADERS = { 'Content-Type': 'application/json' };
+const CHUNK_MS = 5000;
 
 const transcript = document.getElementById('transcript');
 const status = document.getElementById('status');
@@ -103,6 +105,11 @@ let listening = false;
 let sentCount = 0;
 let interimEl = null;
 let networkErrorCount = 0;
+let mediaRecorder = null;
+let mediaStream = null;
+let mediaMode = false;
+
+const isFirefoxLike = /Firefox|Zen/i.test(navigator.userAgent);
 
 const fallbackEl = document.getElementById('fallback');
 const fbText = document.getElementById('fb-text');
@@ -135,11 +142,7 @@ async function sendFallback() {
 }
 
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-if (!SR) {
-  document.querySelector('.controls').insertAdjacentHTML('beforebegin',
-    '<div class="unsupported"><strong>Web Speech API not supported</strong> in this browser. Use Safari (Mac/iOS), Chrome, or Edge.</div>');
-  startBtn.disabled = true;
-}
+// Web Speech absence is fine — Start button routes to MediaRecorder + server Whisper
 
 function setStatus(state, label) {
   status.className = 'status-bar ' + state;
@@ -198,6 +201,75 @@ async function postTranscript(text) {
   }
 }
 
+async function postAudioChunk(blob) {
+  try {
+    const fd = new FormData();
+    fd.append('audio', blob, 'chunk.webm');
+    fd.append('source', 'xen-ruach-audio');
+    fd.append('ts', Date.now().toString());
+    const res = await fetch(AUDIO_URL, { method: 'POST', body: fd });
+    if (res.ok) {
+      sentCount++;
+      countEl.textContent = sentCount + ' chunks';
+      const j = await res.json().catch(() => null);
+      if (j && j.text) appendFinal(j.text, true);
+      return true;
+    } else {
+      appendError(`audio POST → ${res.status}`);
+      return false;
+    }
+  } catch (e) {
+    appendError(`audio POST failed: ${e.message}`);
+    return false;
+  }
+}
+
+async function startMediaRecorder() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    appendError('MediaRecorder unavailable — falling to textarea');
+    showFallback('MediaRecorder not supported. Use keyboard mic.');
+    return;
+  }
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+      ? 'audio/webm;codecs=opus'
+      : (MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '');
+    mediaRecorder = mimeType ? new MediaRecorder(mediaStream, { mimeType }) : new MediaRecorder(mediaStream);
+    mediaMode = true;
+    listening = true;
+    setStatus('listen', 'streaming audio');
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+    appendError('MediaRecorder active — server-side Whisper transcribes chunks');
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) postAudioChunk(e.data);
+    };
+    mediaRecorder.onerror = (e) => {
+      appendError('MediaRecorder error: ' + (e.error ? e.error.message : 'unknown'));
+    };
+    mediaRecorder.start(CHUNK_MS);
+  } catch (e) {
+    appendError('mic access denied or unavailable: ' + e.message);
+    showFallback('Mic access required. Use keyboard mic below or grant mic permission.');
+  }
+}
+
+function stopMediaRecorder() {
+  listening = false;
+  mediaMode = false;
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    try { mediaRecorder.stop(); } catch (_) {}
+  }
+  if (mediaStream) {
+    mediaStream.getTracks().forEach(t => t.stop());
+    mediaStream = null;
+  }
+  setStatus('idle', 'stopped');
+  startBtn.disabled = false;
+  stopBtn.disabled = true;
+}
+
 let useContinuous = true;
 
 function startListening() {
@@ -247,9 +319,11 @@ function startListening() {
         useContinuous = false;
         appendError('switching to non-continuous mode for compatibility...');
       }
-      if (networkErrorCount >= 5) {
+      if (networkErrorCount >= 3) {
         listening = false;
-        showFallback('Web Speech API persistent network errors (' + networkErrorCount + '). MediaRecorder + Whisper backend incoming from mac-xen. Stopgap: keyboard mic below.');
+        try { recognition.stop(); } catch (_) {}
+        appendError('Web Speech API blocked — switching to MediaRecorder + server Whisper');
+        startMediaRecorder();
       }
     }
   };
@@ -269,6 +343,7 @@ function startListening() {
 }
 
 function stopListening() {
+  if (mediaMode) { stopMediaRecorder(); return; }
   listening = false;
   if (recognition) {
     try { recognition.stop(); } catch (_) {}
@@ -278,7 +353,14 @@ function stopListening() {
   stopBtn.disabled = true;
 }
 
-startBtn.addEventListener('click', startListening);
+startBtn.addEventListener('click', () => {
+  if (isFirefoxLike || !SR) {
+    appendError('Firefox/Zen detected — using MediaRecorder + server Whisper');
+    startMediaRecorder();
+  } else {
+    startListening();
+  }
+});
 stopBtn.addEventListener('click', stopListening);
 
 fbSend.addEventListener('click', sendFallback);
@@ -289,7 +371,7 @@ fbText.addEventListener('keydown', (e) => {
   }
 });
 
-if (!SR) showFallback('Web Speech API unavailable. Use keyboard mic.');
+// SR absence handled by Start button → routes to MediaRecorder directly
 
 window.addEventListener('beforeunload', stopListening);
 </script>
