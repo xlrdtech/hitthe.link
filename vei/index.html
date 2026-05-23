@@ -615,19 +615,21 @@ function startListening() {
     stopBtn.disabled = false;
   };
 
-  recognition.onresult = (e) => {
+  recognition.onresult = async (e) => {
     let interim = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const result = e.results[i];
       if (result.isFinal) {
         const text = result[0].transcript.trim();
         if (text) {
-          const finalNode = appendFinal(text, false);
-          postTranscript(text).then((posted) => {
-            if (posted && finalNode && !finalNode.innerHTML.includes('posted')) {
-              finalNode.innerHTML += ' <span class="posted">✓ posted</span>';
+          appendFinal(text, false);
+          const posted = await postTranscript(text);
+          if (posted) {
+            const lastFinal = transcript.querySelector('.final:last-child');
+            if (lastFinal && !lastFinal.innerHTML.includes('posted')) {
+              lastFinal.innerHTML += ' <span class="posted">✓ posted</span>';
             }
-          }).catch(() => {});
+          }
         }
       } else {
         interim += result[0].transcript;
