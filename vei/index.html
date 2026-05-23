@@ -836,30 +836,47 @@ fileInput.addEventListener('change', async (e) => {
   e.target.value = '';
 });
 
-// ─── SSE: Xen responses stream back into the pane ───────────────────────
+// ─── SSE: bi-directional history (user dictates + xen replies) ────────────
+// qi 2026-05-23: "the history needs to remain" — /events backfills last 5000
+// mirror-events.jsonl entries on connect, so both sides replay on reload.
+// dedupe by (source + text + ts) so backfill+live don't double-render.
+const _renderedKeys = new Set();
+function renderEvent(d) {
+  const txt = (d.text || d.body || d.message || '').toString().trim();
+  if (!txt) return;
+  const tag = (d.event || d.kind || '').toString().toLowerCase();
+  const src = (d.source || d.sender || '').toString().toLowerCase();
+  const key = `${src}|${txt.slice(0, 80)}|${d.ts || ''}`;
+  if (_renderedKeys.has(key)) return;
+  _renderedKeys.add(key);
+  // Classify side
+  const isXenOut = tag.includes('xen-out') || src.includes('xen-reply') || src.includes('xen-primary') || src.includes('xen-out');
+  const isUserDictate = tag.includes('xen-dictate-in') || src.includes('xen-vei') || src.includes('xen-ruach') || src.includes('xen-dictate');
+  if (isXenOut) {
+    const div = document.createElement('div');
+    div.className = 'xen-reply';
+    div.textContent = txt;
+    transcript.appendChild(div);
+    attachBubbleActions(div, txt);
+    transcript.scrollTop = transcript.scrollHeight;
+  } else if (isUserDictate) {
+    const div = document.createElement('div');
+    div.className = 'final';
+    div.textContent = txt;
+    transcript.appendChild(div);
+    attachBubbleActions(div, txt);
+    transcript.scrollTop = transcript.scrollHeight;
+  }
+}
+
 function subscribeXenReplies() {
   try {
     const src = new EventSource('https://xen.xlrd.org/events');
     src.onmessage = (ev) => {
-      try {
-        const d = JSON.parse(ev.data);
-        // Only render xen-out / VOICE / xen-reply-vvs equivalents
-        const txt = d.text || d.body || d.message || '';
-        const tag = (d.event || d.kind || '').toString().toLowerCase();
-        const src2 = (d.source || '').toString().toLowerCase();
-        if (!txt) return;
-        if (tag.includes('xen-out') || tag.includes('voice') || src2.includes('xen-reply') || src2.includes('xen-out')) {
-          const div = document.createElement('div');
-          div.className = 'xen-reply';
-          div.textContent = txt;
-          transcript.appendChild(div);
-          attachBubbleActions(div, txt);
-          transcript.scrollTop = transcript.scrollHeight;
-        }
-      } catch (_) {}
+      try { renderEvent(JSON.parse(ev.data)); } catch (_) {}
     };
-    src.onerror = () => { /* CF Pages SSE may reconnect on its own */ };
-  } catch (e) { /* SSE not supported — no-op */ }
+    src.onerror = () => { /* CF/omnimind SSE auto-reconnects */ };
+  } catch (e) {}
 }
 subscribeXenReplies();
 
