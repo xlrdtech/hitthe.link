@@ -385,8 +385,8 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
 </div>
 
 <script>
-const API_URL = 'https://xen.xlrd.org/api/dictate-inject';
-const AUDIO_URL = 'https://xen.xlrd.org/api/dictate-audio';
+const API_URL = '/api/dictate-inject';
+const AUDIO_URL = '/api/dictate-audio';
 const HEADERS = { 'Content-Type': 'application/json' };
 const CHUNK_MS = 5000;
 
@@ -963,7 +963,7 @@ fileInput.addEventListener('change', async (e) => {
     fd.append('ts', Date.now().toString());
     appendError(`uploading ${f.name} (${(f.size/1024).toFixed(1)}KB)…`);
     try {
-      const r = await fetch('https://xen.xlrd.org/api/dictate-attach', { method:'POST', body:fd });
+      const r = await fetch('/api/dictate-attach', { method:'POST', body:fd });
       if (r.ok) {
         const j = await r.json().catch(() => ({}));
         appendFinal(`📎 ${f.name}${j.url ? ' → ' + j.url : ''}`, true);
