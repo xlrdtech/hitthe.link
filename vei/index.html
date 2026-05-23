@@ -96,22 +96,70 @@ header { padding:8px 0 22px; display:flex; align-items:flex-start; justify-conte
 #transcript::-webkit-scrollbar { width:5px; }
 #transcript::-webkit-scrollbar-thumb { background:var(--line-strong); border-radius:3px; }
 
-.final, .interim {
+/* Glass bubbles — heavy backdrop-blur + thin gloss highlight + translucent fill.
+   qi-spec 2026-05-23: "super hyper realistic glass" */
+.final, .interim, .xen-reply {
+  position:relative;
   max-width:78%; align-self:flex-start;
-  padding:11px 16px; border-radius:var(--r-card);
-  background:var(--bubble-bg); color:var(--bubble-fg);
-  font-size:15px; line-height:1.4; font-weight:500;
-  box-shadow:0 1px 0 rgba(0,0,0,.18);
-  animation:fadeIn .2s ease-out;
+  padding:12px 16px; border-radius:var(--r-card);
+  background:linear-gradient(145deg, rgba(255,255,255,.22), rgba(255,255,255,.08));
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.30),
+    inset 0 -1px 0 rgba(255,255,255,.06),
+    0 8px 24px rgba(0,0,0,.28),
+    0 0 0 0.5px rgba(255,255,255,.06);
+  backdrop-filter:blur(18px) saturate(1.3);
+  -webkit-backdrop-filter:blur(18px) saturate(1.3);
+  color:var(--fg);
+  font-size:15px; line-height:1.45; font-weight:500;
   word-break:break-word;
+  animation:fadeIn .22s cubic-bezier(.32,.72,.2,1);
 }
-.final.posted-flag { box-shadow:0 1px 0 rgba(0,0,0,.18), 0 0 0 1px var(--accent-glow); }
-.interim { background:rgba(176,200,170,.55); color:var(--bubble-fg); font-style:italic; opacity:.85; }
+/* Top-gloss specular reflection */
+.final::before, .interim::before, .xen-reply::before {
+  content:""; position:absolute; inset:1px 1px auto 1px; height:38%;
+  border-radius:var(--r-card) var(--r-card) 30% 30%/var(--r-card) var(--r-card) 60% 60%;
+  background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,0));
+  pointer-events:none;
+}
+.final.posted-flag { box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.30),
+    inset 0 -1px 0 rgba(255,255,255,.06),
+    0 8px 24px rgba(0,0,0,.28),
+    0 0 0 1px var(--accent-glow); }
+.interim { opacity:.78; font-style:italic; }
+.xen-reply { align-self:flex-end; background:linear-gradient(145deg, rgba(0,255,136,.16), rgba(0,255,136,.04)); border-color:rgba(0,255,136,.28); color:var(--fg); }
 .posted {
   display:inline-block; margin-left:6px; padding:1px 7px; border-radius:var(--r-pill);
-  background:var(--bg); color:var(--accent);
+  background:rgba(0,0,0,.32); color:var(--accent);
   font-family:var(--mono); font-size:9.5px; letter-spacing:.04em; font-weight:600;
 }
+/* Per-bubble action row (copy/share) */
+.bubble-actions {
+  display:flex; gap:6px; margin-top:8px;
+  opacity:0; transition:opacity .15s;
+}
+.final:hover .bubble-actions, .xen-reply:hover .bubble-actions { opacity:1; }
+.bubble-actions button {
+  padding:3px 8px; font-size:9.5px; font-weight:600; letter-spacing:.06em;
+  background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.18);
+  color:var(--fg-dim); border-radius:var(--r-pill);
+  cursor:pointer; transition:background .12s, color .12s;
+}
+.bubble-actions button:hover { background:rgba(0,255,136,.16); color:var(--accent); }
+/* Top transcript toolbar — copy-all / export / share */
+.transcript-toolbar {
+  display:flex; gap:6px; padding:0 4px 8px;
+}
+.transcript-toolbar button {
+  padding:5px 10px; font-family:var(--mono); font-size:9.5px; font-weight:600;
+  letter-spacing:.10em; text-transform:uppercase;
+  background:rgba(255,255,255,.06); border:1px solid var(--line);
+  color:var(--fg-dim); border-radius:var(--r-pill);
+  cursor:pointer; transition:all .12s;
+}
+.transcript-toolbar button:hover { background:rgba(0,255,136,.12); border-color:var(--accent); color:var(--accent); }
 .error-line {
   align-self:flex-start; max-width:78%; padding:10px 14px; border-radius:var(--r-card);
   background:rgba(255,107,90,.14); color:var(--bad);
@@ -137,7 +185,7 @@ header { padding:8px 0 22px; display:flex; align-items:flex-start; justify-conte
   -webkit-backdrop-filter:blur(12px);
 }
 .waveform {
-  flex:1; height:36px;
+  flex:1; height:42px;
   display:flex; align-items:center; gap:2px;
   overflow:hidden;
 }
@@ -145,19 +193,14 @@ header { padding:8px 0 22px; display:flex; align-items:flex-start; justify-conte
   flex:1; min-width:2px;
   background:var(--accent);
   border-radius:1px;
-  opacity:.55;
+  opacity:.85;
   box-shadow:0 0 6px var(--accent-glow);
-  transition:height .08s ease-out;
+  height:8%;
+  transition:height .055s linear, opacity .12s ease-out;
 }
-.waveform.listen .bar { animation:wave 1.2s ease-in-out infinite; }
-.waveform.listen .bar:nth-child(2n) { animation-delay:.1s; }
-.waveform.listen .bar:nth-child(3n) { animation-delay:.2s; }
-.waveform.listen .bar:nth-child(5n) { animation-delay:.3s; }
-.waveform.listen .bar:nth-child(7n) { animation-delay:.4s; }
-@keyframes wave {
-  0%, 100% { height:18%; opacity:.55; }
-  50%      { height:88%; opacity:.95; }
-}
+.waveform.idle .bar { opacity:.32; height:8%; }
+.waveform.listen .bar { opacity:.95; }
+.waveform.err .bar { background:var(--bad); box-shadow:0 0 6px rgba(255,107,90,.4); }
 
 .controls { display:flex; gap:8px; }
 button {
@@ -238,6 +281,14 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
   <span id="status-lbl">tap start</span>
 </div>
 
+<div class="transcript-toolbar">
+  <button id="tb-copy" title="Copy all">Copy</button>
+  <button id="tb-export" title="Export as .txt">Export</button>
+  <button id="tb-share" title="Share via Web Share API">Share</button>
+  <button id="tb-attach" title="Send attachment">+ Attach</button>
+  <input type="file" id="file-input" hidden multiple>
+</div>
+
 <div id="transcript"></div>
 
 <div class="composer">
@@ -248,40 +299,11 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
   </div>
 
   <div class="waveform-bar">
-    <div class="controls">
-      <button class="start" id="start-btn">Start</button>
-    </div>
-    <div class="waveform" id="waveform">
-      <div class="bar" style="height:18%"></div>
-      <div class="bar" style="height:32%"></div>
-      <div class="bar" style="height:54%"></div>
-      <div class="bar" style="height:72%"></div>
-      <div class="bar" style="height:88%"></div>
-      <div class="bar" style="height:72%"></div>
-      <div class="bar" style="height:54%"></div>
-      <div class="bar" style="height:36%"></div>
-      <div class="bar" style="height:62%"></div>
-      <div class="bar" style="height:80%"></div>
-      <div class="bar" style="height:48%"></div>
-      <div class="bar" style="height:28%"></div>
-      <div class="bar" style="height:42%"></div>
-      <div class="bar" style="height:66%"></div>
-      <div class="bar" style="height:82%"></div>
-      <div class="bar" style="height:58%"></div>
-      <div class="bar" style="height:32%"></div>
-      <div class="bar" style="height:50%"></div>
-      <div class="bar" style="height:74%"></div>
-      <div class="bar" style="height:42%"></div>
-      <div class="bar" style="height:22%"></div>
-      <div class="bar" style="height:36%"></div>
-      <div class="bar" style="height:60%"></div>
-      <div class="bar" style="height:48%"></div>
-      <div class="bar" style="height:30%"></div>
-    </div>
-    <div class="controls">
-      <button class="stop" id="stop-btn" disabled>Stop</button>
-    </div>
+    <div class="waveform" id="waveform"></div>
   </div>
+  <!-- Hidden start/stop controls; mic icon in header IS the toggle. -->
+  <button class="start" id="start-btn" hidden>Start</button>
+  <button class="stop" id="stop-btn" hidden disabled>Stop</button>
 </div>
 
 </div>
@@ -563,15 +585,218 @@ function stopListening() {
   stopBtn.disabled = true;
 }
 
-startBtn.addEventListener('click', () => {
+// ─── Audio-reactive waveform (Web Audio API) ───────────────────────────
+const waveformEl = document.getElementById('waveform');
+const micIcon = document.getElementById('mic-icon');
+const NUM_BARS = 32;
+let waveformBars = [];
+let audioCtx = null;
+let analyser = null;
+let analyserStream = null;
+let rafId = null;
+let viz_listening = false;
+
+function buildBars() {
+  if (waveformBars.length) return;
+  waveformEl.innerHTML = '';
+  for (let i = 0; i < NUM_BARS; i++) {
+    const b = document.createElement('div');
+    b.className = 'bar';
+    b.style.height = '8%';
+    waveformEl.appendChild(b);
+    waveformBars.push(b);
+  }
+}
+buildBars();
+
+async function startAnalyser() {
+  if (analyser) return;
+  try {
+    analyserStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioCtx.createMediaStreamSource(analyserStream);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 128;          // 64 freq bins
+    analyser.smoothingTimeConstant = 0.55;
+    source.connect(analyser);
+    const bins = new Uint8Array(analyser.frequencyBinCount);
+    const tick = () => {
+      if (!analyser) return;
+      analyser.getByteFrequencyData(bins);
+      // Map 64 bins -> 32 bars by averaging pairs; emphasize voice band (2-22)
+      for (let i = 0; i < NUM_BARS; i++) {
+        const b = (bins[i * 2] + bins[i * 2 + 1]) / 2;
+        const norm = Math.min(1, b / 180);  // 180 = "loud" reference
+        const pct = Math.max(6, norm * 100);
+        if (waveformBars[i]) waveformBars[i].style.height = pct + '%';
+      }
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+  } catch (e) {
+    appendError('mic visualizer denied: ' + e.message);
+  }
+}
+
+function stopAnalyser() {
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  if (analyser) { try { analyser.disconnect(); } catch (_) {} analyser = null; }
+  if (audioCtx) { try { audioCtx.close(); } catch (_) {} audioCtx = null; }
+  if (analyserStream) { analyserStream.getTracks().forEach(t => t.stop()); analyserStream = null; }
+  // settle bars to idle height
+  waveformBars.forEach(b => b.style.height = '8%');
+}
+
+// ─── Mic icon = single toggle (start/stop) ─────────────────────────────
+async function toggleMic() {
+  if (viz_listening) {
+    viz_listening = false;
+    stopListening();
+    stopAnalyser();
+    return;
+  }
+  viz_listening = true;
+  await startAnalyser();   // Audio Analyser fires first so the visualizer
+                            // shows reaction even before Web Speech connects
   if (isFirefoxLike || !SR) {
     appendError('Firefox/Zen detected — using MediaRecorder + server Whisper');
     startMediaRecorder();
   } else {
     startListening();
   }
+}
+micIcon.addEventListener('click', toggleMic);
+
+// Keep hidden buttons functional for legacy/automation triggers
+startBtn.addEventListener('click', toggleMic);
+stopBtn.addEventListener('click', () => { if (viz_listening) toggleMic(); });
+
+// ─── Per-bubble actions (copy/share) attached to each .final ─────────────
+function attachBubbleActions(bubbleEl, text) {
+  const row = document.createElement('div');
+  row.className = 'bubble-actions';
+  const copyBtn = document.createElement('button');
+  copyBtn.textContent = 'COPY';
+  copyBtn.onclick = (e) => {
+    e.stopPropagation();
+    navigator.clipboard?.writeText(text).then(() => {
+      copyBtn.textContent = 'COPIED'; setTimeout(() => copyBtn.textContent = 'COPY', 1200);
+    });
+  };
+  row.appendChild(copyBtn);
+  if (navigator.share) {
+    const shareBtn = document.createElement('button');
+    shareBtn.textContent = 'SHARE';
+    shareBtn.onclick = (e) => {
+      e.stopPropagation();
+      navigator.share({ text }).catch(() => {});
+    };
+    row.appendChild(shareBtn);
+  }
+  bubbleEl.appendChild(row);
+}
+
+// Wrap appendFinal to add bubble actions
+const _origAppendFinal = appendFinal;
+appendFinal = function(text, postedFlag) {
+  _origAppendFinal(text, postedFlag);
+  const lastFinal = transcript.querySelector('.final:last-child');
+  if (lastFinal) attachBubbleActions(lastFinal, text);
+};
+
+// ─── Top toolbar: copy-all / export / share / attach ─────────────────────
+function collectTranscriptText() {
+  const out = [];
+  transcript.querySelectorAll('.final, .xen-reply').forEach(el => {
+    const role = el.classList.contains('xen-reply') ? 'XEN' : 'YOU';
+    const t = el.cloneNode(true);
+    t.querySelectorAll('.bubble-actions, .posted').forEach(n => n.remove());
+    out.push(`${role}: ${t.textContent.trim()}`);
+  });
+  return out.join('\n');
+}
+
+document.getElementById('tb-copy').addEventListener('click', () => {
+  const text = collectTranscriptText();
+  if (!text) return;
+  navigator.clipboard?.writeText(text);
+  const btn = document.getElementById('tb-copy');
+  btn.textContent = 'Copied'; setTimeout(() => btn.textContent = 'Copy', 1200);
 });
-stopBtn.addEventListener('click', stopListening);
+
+document.getElementById('tb-export').addEventListener('click', () => {
+  const text = collectTranscriptText();
+  if (!text) return;
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `vei-transcript-${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.txt`;
+  document.body.appendChild(a); a.click(); a.remove();
+});
+
+document.getElementById('tb-share').addEventListener('click', async () => {
+  const text = collectTranscriptText();
+  if (!text) return;
+  if (navigator.share) {
+    try { await navigator.share({ title: 'VEI transcript', text }); } catch (_) {}
+  } else {
+    navigator.clipboard?.writeText(text);
+    alert('Copied to clipboard (share API unavailable)');
+  }
+});
+
+// ─── Attachments: file picker → upload to /api/dictate-attach ───────────
+const fileInput = document.getElementById('file-input');
+document.getElementById('tb-attach').addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files || []);
+  for (const f of files) {
+    const fd = new FormData();
+    fd.append('file', f, f.name);
+    fd.append('source', 'xen-vei-attach');
+    fd.append('ts', Date.now().toString());
+    appendError(`uploading ${f.name} (${(f.size/1024).toFixed(1)}KB)…`);
+    try {
+      const r = await fetch('https://xen.xlrd.org/api/dictate-attach', { method:'POST', body:fd });
+      if (r.ok) {
+        const j = await r.json().catch(() => ({}));
+        appendFinal(`📎 ${f.name}${j.url ? ' → ' + j.url : ''}`, true);
+      } else {
+        appendError(`upload ${r.status}: ${f.name}`);
+      }
+    } catch (err) {
+      appendError(`upload failed: ${err.message}`);
+    }
+  }
+  e.target.value = '';
+});
+
+// ─── SSE: Xen responses stream back into the pane ───────────────────────
+function subscribeXenReplies() {
+  try {
+    const src = new EventSource('https://xen.xlrd.org/events');
+    src.onmessage = (ev) => {
+      try {
+        const d = JSON.parse(ev.data);
+        // Only render xen-out / VOICE / xen-reply-vvs equivalents
+        const txt = d.text || d.body || d.message || '';
+        const tag = (d.event || d.kind || '').toString().toLowerCase();
+        const src2 = (d.source || '').toString().toLowerCase();
+        if (!txt) return;
+        if (tag.includes('xen-out') || tag.includes('voice') || src2.includes('xen-reply') || src2.includes('xen-out')) {
+          const div = document.createElement('div');
+          div.className = 'xen-reply';
+          div.textContent = txt;
+          transcript.appendChild(div);
+          attachBubbleActions(div, txt);
+          transcript.scrollTop = transcript.scrollHeight;
+        }
+      } catch (_) {}
+    };
+    src.onerror = () => { /* CF Pages SSE may reconnect on its own */ };
+  } catch (e) { /* SSE not supported — no-op */ }
+}
+subscribeXenReplies();
 
 fbSend.addEventListener('click', sendFallback);
 fbText.addEventListener('keydown', (e) => {
