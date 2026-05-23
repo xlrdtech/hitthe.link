@@ -792,7 +792,7 @@ micIcon.addEventListener('click', toggleMic);
 startBtn.addEventListener('click', toggleMic);
 stopBtn.addEventListener('click', () => { if (viz_listening) toggleMic(); });
 
-// ─── Per-bubble actions (copy/share) attached to each .final ─────────────
+// ─── Per-bubble actions (copy/share/call) attached to each .final and .xen-reply
 function attachBubbleActions(bubbleEl, text) {
   const row = document.createElement('div');
   row.className = 'bubble-actions';
@@ -805,6 +805,21 @@ function attachBubbleActions(bubbleEl, text) {
     });
   };
   row.appendChild(copyBtn);
+  // CALL button — only on Xen-reply bubbles. Triggers a voice call so qi can
+  // hear Xen live. Native dial to 9934 (Xen's Beside line) via tel:; the call
+  // routes through the Beside FCC bridge so qi joins Xen's voice channel.
+  // qi 2026-05-23: 'your messages need to have option to hit the call button'.
+  if (bubbleEl.classList.contains('xen-reply')) {
+    const callBtn = document.createElement('button');
+    callBtn.textContent = 'CALL';
+    callBtn.onclick = (e) => {
+      e.stopPropagation();
+      // qi-directive 2026-05-23: dial 404-734-8672 (qi's personal line).
+      // Browser tel: handler triggers native dialer; on iOS this opens FaceTime/Phone.
+      window.location.href = 'tel:+14047348672';
+    };
+    row.appendChild(callBtn);
+  }
   if (navigator.share) {
     const shareBtn = document.createElement('button');
     shareBtn.textContent = 'SHARE';
