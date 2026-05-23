@@ -13,23 +13,28 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-/* VEI — Meta-AI-inspired dark chat shell. Reference: optimisticai_d4925249 (Meta AI codename).
-   Palette pulled from Meta AI page: bg #1a1a1a, white text, soft-grey strokes, no chrome. */
+/* VEI — qi-locked design (Photoroom_20260523_134010.png reference).
+   Deep green radial gradient bg, phosphor-green waveform, soft cream chat bubbles.
+   Aesthetic: terminal-organism. Hebrew Ruach (breath/spirit) made visible. */
 :root {
-  --bg:#1a1a1a;
-  --bg-elev:#242424;
-  --bg-input:#2a2a2a;
-  --fg:#ffffff;
-  --fg-dim:#a3a3a3;
-  --fg-mute:#737373;
-  --line:rgba(255,255,255,.08);
-  --line-strong:rgba(255,255,255,.16);
-  --accent:#0EA5E9;
-  --accent-hover:#38BDF8;
-  --good:#22C55E;
-  --warn:#F59E0B;
-  --bad:#EF4444;
-  --r-card:16px;
+  --bg:#0A1F12;
+  --bg-glow:#1A4D2E;
+  --bg-elev:rgba(20, 60, 35, .25);
+  --bg-input:rgba(20, 60, 35, .45);
+  --fg:#F0EAD6;
+  --fg-dim:#A8C0A4;
+  --fg-mute:#6B8B72;
+  --line:rgba(176, 255, 200, .12);
+  --line-strong:rgba(176, 255, 200, .22);
+  --accent:#00FF88;
+  --accent-hover:#5FFF9E;
+  --accent-glow:rgba(0, 255, 136, .35);
+  --bubble-bg:rgba(176, 200, 170, .92);
+  --bubble-fg:#0A1F12;
+  --good:#00FF88;
+  --warn:#F5C842;
+  --bad:#FF6B5A;
+  --r-card:18px;
   --r-pill:9999px;
   --sans:'Inter','SF Pro Text',-apple-system,system-ui,sans-serif;
   --mono:'JetBrains Mono','SF Mono',ui-monospace,monospace;
@@ -38,6 +43,7 @@
 html, body {
   height:100dvh;
   background:var(--bg);
+  background-image:radial-gradient(ellipse 70% 50% at 50% 55%, var(--bg-glow) 0%, var(--bg) 70%);
   color:var(--fg);
   font-family:var(--sans);
   font-feature-settings:"ss01","cv11";
@@ -49,119 +55,161 @@ html, body {
   display:flex; flex-direction:column;
   height:100dvh; width:100%;
   max-width:760px; margin:0 auto;
-  padding:env(safe-area-inset-top, 20px) 24px env(safe-area-inset-bottom, 20px);
+  padding:env(safe-area-inset-top, 18px) 20px env(safe-area-inset-bottom, 16px);
+  position:relative;
 }
 
-/* Header — minimal, Meta-AI-tight */
-header { padding:8px 0 18px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
-.brand { display:flex; align-items:center; gap:12px; }
-.brand-dot {
-  width:10px; height:10px; border-radius:50%;
-  background:var(--accent); box-shadow:0 0 12px var(--accent);
-  flex-shrink:0;
-}
-.brand-text { display:flex; flex-direction:column; gap:2px; }
-.title { font-size:18px; font-weight:600; letter-spacing:-.01em; line-height:1; color:var(--fg); }
-.title .heb { font-weight:400; color:var(--fg-dim); margin-left:8px; font-size:16px; }
-.subtitle { font-family:var(--mono); font-size:10.5px; letter-spacing:.04em; color:var(--fg-mute); }
+/* Header — top-right mic icon, top-left brand, minimal chrome */
+header { padding:8px 0 22px; display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+.brand { display:flex; align-items:center; gap:10px; }
+.brand-dot { display:none; }
+.brand-text { display:flex; flex-direction:column; gap:3px; }
+.title { font-size:15px; font-weight:500; letter-spacing:.02em; line-height:1; color:var(--fg-dim); }
+.title .heb { color:var(--accent); margin-left:6px; font-size:14px; }
+.subtitle { font-family:var(--mono); font-size:9.5px; letter-spacing:.08em; color:var(--fg-mute); text-transform:uppercase; }
 
-.count-chip {
-  font-family:var(--mono); font-size:11px;
-  background:var(--bg-elev); border:1px solid var(--line);
-  padding:6px 12px; border-radius:var(--r-pill);
-  color:var(--fg-dim);
+.mic-icon {
+  width:32px; height:32px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--fg);
+  opacity:.85;
+  cursor:pointer;
+  transition:opacity .15s, transform .15s, color .15s;
 }
+.mic-icon svg { width:18px; height:18px; }
+.mic-icon:hover { opacity:1; transform:scale(1.05); }
+.mic-icon.active { color:var(--accent); opacity:1; filter:drop-shadow(0 0 6px var(--accent-glow)); }
 
-/* Status pill — centered above transcript like Meta AI's input bar shadow */
-.status-bar {
-  display:inline-flex; align-items:center; gap:10px;
-  padding:8px 14px; margin:0 auto 16px;
-  background:var(--bg-elev); border:1px solid var(--line);
-  border-radius:var(--r-pill);
-  width:fit-content;
-  font-family:var(--mono); font-size:11px; letter-spacing:.06em;
-  color:var(--fg-dim); text-transform:lowercase;
-  transition:all .2s;
-}
-.status-bar .dot { width:6px; height:6px; border-radius:50%; background:var(--fg-mute); transition:all .2s; }
-.status-bar.listen .dot { background:var(--good); box-shadow:0 0 10px var(--good); animation:pulse 1.4s ease-in-out infinite; }
-.status-bar.err .dot { background:var(--bad); }
-.status-bar.idle .dot { background:var(--warn); }
+.count-chip { display:none; }
+
+/* Status pill removed — replaced by waveform-bottom-bar visual feedback */
+.status-bar { display:none; }
 @keyframes pulse { 0%, 100% { opacity:1; transform:scale(1); } 50% { opacity:.5; transform:scale(1.5); } }
 
-/* Transcript = chat-feed pattern */
+/* Transcript = top-anchored chat bubbles, cream-on-green */
 #transcript {
   flex:1; overflow-y:auto;
-  display:flex; flex-direction:column; gap:12px;
-  padding:8px 4px 16px;
+  display:flex; flex-direction:column; gap:10px;
+  padding:4px 4px 100px;  /* bottom pad clears the waveform footer */
   scroll-behavior:smooth;
 }
-#transcript::-webkit-scrollbar { width:6px; }
+#transcript::-webkit-scrollbar { width:5px; }
 #transcript::-webkit-scrollbar-thumb { background:var(--line-strong); border-radius:3px; }
 
 .final, .interim {
-  max-width:88%; align-self:flex-start;
-  padding:12px 16px; border-radius:var(--r-card);
-  background:var(--bg-elev); border:1px solid var(--line);
-  font-size:15.5px; line-height:1.5; color:var(--fg);
+  max-width:78%; align-self:flex-start;
+  padding:11px 16px; border-radius:var(--r-card);
+  background:var(--bubble-bg); color:var(--bubble-fg);
+  font-size:15px; line-height:1.4; font-weight:500;
+  box-shadow:0 1px 0 rgba(0,0,0,.18);
   animation:fadeIn .2s ease-out;
+  word-break:break-word;
 }
-.final.posted-flag { border-color:rgba(34,197,94,.22); }
-.interim { color:var(--fg-dim); font-style:italic; background:transparent; border:1px dashed var(--line); }
-.posted { display:inline-block; margin-left:6px; padding:2px 8px; border-radius:var(--r-pill); background:rgba(34,197,94,.12); color:var(--good); font-family:var(--mono); font-size:10px; letter-spacing:.04em; }
-.error-line { align-self:stretch; padding:10px 14px; border-radius:10px; background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.32); color:#FCA5A5; font-family:var(--mono); font-size:12.5px; }
+.final.posted-flag { box-shadow:0 1px 0 rgba(0,0,0,.18), 0 0 0 1px var(--accent-glow); }
+.interim { background:rgba(176,200,170,.55); color:var(--bubble-fg); font-style:italic; opacity:.85; }
+.posted {
+  display:inline-block; margin-left:6px; padding:1px 7px; border-radius:var(--r-pill);
+  background:var(--bg); color:var(--accent);
+  font-family:var(--mono); font-size:9.5px; letter-spacing:.04em; font-weight:600;
+}
+.error-line {
+  align-self:flex-start; max-width:78%; padding:10px 14px; border-radius:var(--r-card);
+  background:rgba(255,107,90,.14); color:var(--bad);
+  font-family:var(--mono); font-size:12px; line-height:1.4;
+}
 @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
 
-/* Composer area — Meta-AI bottom-anchored input zone with mic-button affordance */
-.composer { padding:16px 0 0; border-top:1px solid var(--line); }
-.controls { display:flex; gap:10px; }
-button {
-  flex:1; padding:14px 18px;
-  border-radius:var(--r-pill); border:1px solid var(--line-strong);
-  background:var(--bg-elev); color:var(--fg);
-  font-family:var(--sans); font-size:14px; font-weight:600; letter-spacing:.01em;
-  cursor:pointer; transition:transform .12s, background .12s, border-color .12s;
+/* Composer = waveform-anchored bottom bar (matches qi reference image). Buttons
+   live IN the waveform pill, mic on left, stop on right. */
+.composer {
+  position:absolute;
+  left:env(safe-area-inset-left, 16px); right:env(safe-area-inset-right, 16px);
+  bottom:env(safe-area-inset-bottom, 16px);
+  padding:0;
 }
-button:hover:not(:disabled) { background:var(--bg-input); border-color:var(--fg-mute); transform:translateY(-1px); }
-button.start { background:var(--accent); color:#0a1620; border-color:var(--accent); }
-button.start:hover:not(:disabled) { background:var(--accent-hover); border-color:var(--accent-hover); }
-button.stop { background:transparent; }
-button:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+.waveform-bar {
+  display:flex; align-items:center; gap:10px;
+  background:var(--bg-input);
+  border:1px solid var(--line);
+  border-radius:var(--r-pill);
+  padding:10px 14px;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
+.waveform {
+  flex:1; height:36px;
+  display:flex; align-items:center; gap:2px;
+  overflow:hidden;
+}
+.waveform .bar {
+  flex:1; min-width:2px;
+  background:var(--accent);
+  border-radius:1px;
+  opacity:.55;
+  box-shadow:0 0 6px var(--accent-glow);
+  transition:height .08s ease-out;
+}
+.waveform.listen .bar { animation:wave 1.2s ease-in-out infinite; }
+.waveform.listen .bar:nth-child(2n) { animation-delay:.1s; }
+.waveform.listen .bar:nth-child(3n) { animation-delay:.2s; }
+.waveform.listen .bar:nth-child(5n) { animation-delay:.3s; }
+.waveform.listen .bar:nth-child(7n) { animation-delay:.4s; }
+@keyframes wave {
+  0%, 100% { height:18%; opacity:.55; }
+  50%      { height:88%; opacity:.95; }
+}
+
+.controls { display:flex; gap:8px; }
+button {
+  padding:10px 16px;
+  border-radius:var(--r-pill); border:1px solid var(--line-strong);
+  background:transparent; color:var(--fg);
+  font-family:var(--mono); font-size:10.5px; font-weight:600; letter-spacing:.14em; text-transform:uppercase;
+  cursor:pointer; transition:transform .12s, background .12s, border-color .12s, color .12s;
+}
+button:hover:not(:disabled) { background:var(--bg-elev); border-color:var(--accent); color:var(--accent); transform:translateY(-1px); }
+button.start { background:var(--accent); color:var(--bg); border-color:var(--accent); box-shadow:0 0 12px var(--accent-glow); }
+button.start:hover:not(:disabled) { background:var(--accent-hover); border-color:var(--accent-hover); color:var(--bg); }
+button.stop { color:var(--fg-dim); }
+button.stop:hover:not(:disabled) { color:var(--bad); border-color:var(--bad); background:rgba(255,107,90,.08); }
+button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
 
 .fallback {
-  display:none; margin-top:12px;
-  padding:14px; background:var(--bg-elev);
+  display:none; position:absolute; bottom:80px; left:env(safe-area-inset-left, 16px); right:env(safe-area-inset-right, 16px);
+  padding:14px; background:var(--bg-input);
   border:1px solid var(--line); border-radius:var(--r-card);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
 }
 .fallback.show { display:block; }
 .fallback .hint {
-  font-family:var(--mono); font-size:10.5px; color:var(--fg-mute);
-  margin-bottom:10px; letter-spacing:.04em;
+  font-family:var(--mono); font-size:10px; color:var(--fg-mute);
+  margin-bottom:10px; letter-spacing:.06em; text-transform:uppercase;
 }
 .fallback textarea {
-  width:100%; min-height:80px;
-  background:var(--bg-input); color:var(--fg);
+  width:100%; min-height:72px;
+  background:rgba(0,0,0,.32); color:var(--fg);
   border:1px solid var(--line); border-radius:12px;
-  padding:12px 14px;
+  padding:11px 14px;
   font-family:var(--sans); font-size:15px; line-height:1.5;
   resize:none; -webkit-appearance:none;
 }
-.fallback textarea:focus { outline:none; border-color:var(--accent); }
+.fallback textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-glow); }
 .fallback textarea::placeholder { color:var(--fg-mute); }
 .fallback .send-btn {
-  margin-top:10px; width:100%; padding:12px;
-  background:var(--accent); color:#0a1620;
+  margin-top:10px; width:100%; padding:11px;
+  background:var(--accent); color:var(--bg);
   border:0; border-radius:var(--r-pill);
-  font-family:var(--sans); font-size:14px; font-weight:600;
-  cursor:pointer; transition:background .12s;
+  font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+  cursor:pointer; transition:background .12s, box-shadow .12s;
 }
-.fallback .send-btn:hover:not(:disabled) { background:var(--accent-hover); }
+.fallback .send-btn:hover:not(:disabled) { background:var(--accent-hover); box-shadow:0 0 12px var(--accent-glow); }
 .fallback .send-btn:disabled { opacity:.4; cursor:not-allowed; }
 
 .unsupported {
-  padding:16px; margin:14px 0;
-  background:rgba(239,68,68,.06); border:1px solid rgba(239,68,68,.32);
-  border-radius:12px; color:#FCA5A5; font-size:14px;
+  align-self:flex-start; max-width:88%; padding:14px 16px;
+  background:rgba(255,107,90,.10); border:1px solid rgba(255,107,90,.32);
+  border-radius:var(--r-card); color:var(--bad); font-size:14px; line-height:1.4;
 }
 </style>
 </head>
@@ -170,16 +218,22 @@ button:disabled { opacity:.4; cursor:not-allowed; transform:none; }
 
 <header>
   <div class="brand">
-    <div class="brand-dot"></div>
     <div class="brand-text">
       <div class="title">VEI<span class="heb">· רוּחַ</span></div>
-      <div class="subtitle">voice echo input → xen.xlrd.org</div>
+      <div class="subtitle" id="count">0 sent · xen.xlrd.org</div>
     </div>
   </div>
-  <div class="count-chip" id="count">0 sent</div>
+  <div class="mic-icon" id="mic-icon" title="Microphone status">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+      <line x1="12" y1="19" x2="12" y2="23"/>
+      <line x1="8" y1="23" x2="16" y2="23"/>
+    </svg>
+  </div>
 </header>
 
-<div class="status-bar idle" id="status">
+<div class="status-bar idle" id="status" hidden>
   <div class="dot"></div>
   <span id="status-lbl">tap start</span>
 </div>
@@ -187,15 +241,46 @@ button:disabled { opacity:.4; cursor:not-allowed; transform:none; }
 <div id="transcript"></div>
 
 <div class="composer">
-  <div class="controls">
-    <button class="start" id="start-btn">Start listening</button>
-    <button class="stop" id="stop-btn" disabled>Stop</button>
+  <div class="fallback" id="fallback">
+    <div class="hint">Keyboard fallback · tap mic on keyboard or type · Enter sends</div>
+    <textarea id="fb-text" placeholder="Dictate via keyboard mic or type here…" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
+    <button class="send-btn" id="fb-send">Send</button>
   </div>
 
-  <div class="fallback" id="fallback">
-    <div class="hint">keyboard fallback · tap mic on keyboard or type · enter sends</div>
-    <textarea id="fb-text" placeholder="dictate via keyboard mic or type here…" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
-    <button class="send-btn" id="fb-send">Send</button>
+  <div class="waveform-bar">
+    <div class="controls">
+      <button class="start" id="start-btn">Start</button>
+    </div>
+    <div class="waveform" id="waveform">
+      <div class="bar" style="height:18%"></div>
+      <div class="bar" style="height:32%"></div>
+      <div class="bar" style="height:54%"></div>
+      <div class="bar" style="height:72%"></div>
+      <div class="bar" style="height:88%"></div>
+      <div class="bar" style="height:72%"></div>
+      <div class="bar" style="height:54%"></div>
+      <div class="bar" style="height:36%"></div>
+      <div class="bar" style="height:62%"></div>
+      <div class="bar" style="height:80%"></div>
+      <div class="bar" style="height:48%"></div>
+      <div class="bar" style="height:28%"></div>
+      <div class="bar" style="height:42%"></div>
+      <div class="bar" style="height:66%"></div>
+      <div class="bar" style="height:82%"></div>
+      <div class="bar" style="height:58%"></div>
+      <div class="bar" style="height:32%"></div>
+      <div class="bar" style="height:50%"></div>
+      <div class="bar" style="height:74%"></div>
+      <div class="bar" style="height:42%"></div>
+      <div class="bar" style="height:22%"></div>
+      <div class="bar" style="height:36%"></div>
+      <div class="bar" style="height:60%"></div>
+      <div class="bar" style="height:48%"></div>
+      <div class="bar" style="height:30%"></div>
+    </div>
+    <div class="controls">
+      <button class="stop" id="stop-btn" disabled>Stop</button>
+    </div>
   </div>
 </div>
 
@@ -259,8 +344,19 @@ const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 // Web Speech absence is fine — Start button routes to MediaRecorder + server Whisper
 
 function setStatus(state, label) {
+  // status pill is hidden in the new design; keep updating for a11y but drive the
+  // visible feedback through waveform + mic-icon classes per the qi-locked image.
   status.className = 'status-bar ' + state;
   statusLbl.textContent = label;
+  const wf = document.getElementById('waveform');
+  const mic = document.getElementById('mic-icon');
+  if (wf) {
+    wf.classList.remove('listen', 'err', 'idle');
+    wf.classList.add(state);
+  }
+  if (mic) {
+    mic.classList.toggle('active', state === 'listen');
+  }
 }
 
 function appendFinal(text, postedFlag) {
