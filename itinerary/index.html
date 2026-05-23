@@ -96,7 +96,7 @@ footer a { color:var(--volt); text-decoration:none; border-bottom:1px dotted; }
   <ol>
     <li>✅ Mobile URL Firehose <code>/api/q</code> — complete</li>
     <li>⬜ Always-Listen 3-Way Splitter (GenXC/SinXC/DocXC routing)</li>
-    <li>⬜ omni-G5 Open Notebook deploy</li>
+    <li>✅ omni-G5 Open Notebook deploy — shipped 2026-05-23 (OrbStack runtime, local-only)</li>
     <li>✅ G5 Pane Drift Drill — verified 2026-05-23</li>
     <li>🟡 G7 Beeper Index Live-Refresh — daemon active</li>
     <li>⬜ STT Double-Transcription Patch (<code>_posted_len = 0</code> reset bug)</li>
@@ -165,7 +165,7 @@ footer a { color:var(--volt); text-decoration:none; border-bottom:1px dotted; }
 <div class="section accent-volt" id="s2">
 <h3><span class="num">// 02</span><span class="agent-badge pr">PR</span><span class="agent-badge ez">EZ</span>System Overhauls (the "Ultrathink")</h3>
 <ul>
-<li><span class="badge pend">PEND</span><strong>Overhaul 1 — TTS Queue</strong>: FIFO HTTP server on port 4444; single-owner say worker (<code>xen-say-worker</code>) to fix barge-in cascade</li>
+<li><span class="badge done">DONE</span><strong>Overhaul 1 — TTS Queue</strong>: FIFO HTTP server + single-owner <code>xen-say-worker</code> (PID 6432) shipped 2026-05-23 by mac-xen primary; xen-reply-vvs now appends to queue, overlap class closed by construction. Stacks with sender-block-list + scoped barge-in (Ruach + apple-stt-v2 only) for complete voice-arbitration layer.</li>
 <li><span class="badge wip">WIP</span><strong>Overhaul 2 — Cloudflared Singleton</strong>: disable <code>com.cloudflare.mac.plist</code>, route exclusively through <code>godmode-mac</code> (✅ done per session canon)</li>
 <li><span class="badge pend">PEND</span><strong>Overhaul 3 — Voice-Priority Injection Lane</strong>: <code>xen-claude-wrapper.js</code> bypass quiet-poll for <code>priority="voice"</code> so voice injects mid-tool-call</li>
 <li><span class="badge pend">PEND</span><strong>Overhaul 4 — CoreAudio Healthcheck Daemon</strong>: poll <code>SwitchAudioSource</code> every 30s, auto <code>killall coreaudiod</code> + reroute</li>
