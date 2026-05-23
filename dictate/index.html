@@ -198,10 +198,12 @@ async function postTranscript(text) {
   }
 }
 
+let useContinuous = true;
+
 function startListening() {
   if (!SR) return;
   recognition = new SR();
-  recognition.continuous = true;
+  recognition.continuous = useContinuous;
   recognition.interimResults = true;
   recognition.lang = 'en-US';
 
@@ -241,16 +243,25 @@ function startListening() {
     appendError('speech error: ' + e.error);
     if (e.error === 'network') {
       networkErrorCount++;
-      if (networkErrorCount >= 3) {
+      if (networkErrorCount === 2 && useContinuous) {
+        useContinuous = false;
+        appendError('switching to non-continuous mode for compatibility...');
+      }
+      if (networkErrorCount >= 5) {
         listening = false;
-        showFallback('Web Speech API blocked or offline (' + networkErrorCount + ' network errors). Use keyboard mic below.');
+        showFallback('Web Speech API persistent network errors (' + networkErrorCount + '). MediaRecorder + Whisper backend incoming from mac-xen. Stopgap: keyboard mic below.');
       }
     }
   };
 
   recognition.onend = () => {
     if (listening) {
-      try { recognition.start(); } catch (_) {}
+      const delay = networkErrorCount > 0 ? Math.min(1000 * networkErrorCount, 4000) : 100;
+      setTimeout(() => {
+        if (listening) {
+          try { startListening(); } catch (_) {}
+        }
+      }, delay);
     }
   };
 
