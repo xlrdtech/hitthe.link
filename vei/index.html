@@ -880,6 +880,22 @@ function subscribeXenReplies() {
 }
 subscribeXenReplies();
 
+// ─── Auto-start mic on load (qi 2026-05-23: 'start with voice mode'). ────
+// Browsers require a user gesture for getUserMedia on first session, so we
+// try immediately AND queue a fallback start on the first body click/touch.
+(function autoStartMic() {
+  // Optimistic: works when mic permission is already granted from prior session
+  setTimeout(() => { if (!viz_listening) toggleMic().catch(() => {}); }, 250);
+  // Gesture fallback: any user interaction triggers mic if not already on
+  const onFirstGesture = () => {
+    if (!viz_listening) toggleMic().catch(() => {});
+    document.body.removeEventListener('click', onFirstGesture);
+    document.body.removeEventListener('touchstart', onFirstGesture);
+  };
+  document.body.addEventListener('click', onFirstGesture, { once: false, passive: true });
+  document.body.addEventListener('touchstart', onFirstGesture, { once: false, passive: true });
+})();
+
 fbSend.addEventListener('click', sendFallback);
 fbText.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
