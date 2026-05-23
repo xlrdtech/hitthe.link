@@ -83,6 +83,26 @@ footer a { color:var(--volt); text-decoration:none; border-bottom:1px dotted rgb
   <div class="lede">Win-side shipped four moves. Mac-side ran five waves and landed two canon verdicts. Two new foundational canons locked. UI-TARS probe converged.</div>
 </header>
 
+<div style="margin:0 0 28px; padding:24px 28px; border-radius:14px; background:linear-gradient(155deg,rgba(0,255,136,.14),rgba(0,255,136,.03)); border:1px solid #00FF88; border-left:4px solid #00FF88;">
+  <div style="color:#00FF88; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.22em; text-transform:uppercase; font-weight:700; margin-bottom:14px;">★ Tick 9 · 20h03 ET · VERIFIED FROM WINDOWS · SSH end-to-end working</div>
+  <p style="font-size:14.5px; color:#F4EEE4; line-height:1.6; margin-bottom:14px;">qi said "done" — sshd flipped ON in the guest. Win-side connected via paramiko + env-passed pw + username probe. The UTM/macOS plan is now <strong style="color:#00FF88;">end-to-end live across the tailnet</strong>.</p>
+  <pre style="font-family:'JetBrains Mono',monospace; font-size:12.5px; color:#A5F3FC; background:rgba(0,255,136,.05); border:1px solid rgba(0,255,136,.25); border-radius:8px; padding:14px 18px; overflow-x:auto; line-height:1.5; margin:0 0 14px;">$ ssh xen@xvm 'whoami; hostname; sw_vers; uptime'
+xen
+xens-Virtual-Machine.local
+ProductName:    macOS
+ProductVersion: 26.5
+BuildVersion:   25F71
+17:03  up  2:24, 2 users, load averages: 0.48 0.78 0.94</pre>
+  <ul style="list-style:none; padding:0; margin:0; display:grid; grid-template-columns:1fr 1fr; gap:6px 24px;">
+    <li style="font-size:13.5px; color:#F4EEE4; line-height:1.55;"><strong style="color:#00FF88;">guest user</strong> · <code style="font-family:'JetBrains Mono',monospace; background:rgba(255,255,255,.06); padding:1px 6px; border-radius:3px; color:#6AD4FF;">xen</code> (matches Xen agent identity)</li>
+    <li style="font-size:13.5px; color:#F4EEE4; line-height:1.55;"><strong style="color:#00FF88;">guest hostname</strong> · <code style="font-family:'JetBrains Mono',monospace; background:rgba(255,255,255,.06); padding:1px 6px; border-radius:3px; color:#6AD4FF;">xens-Virtual-Machine.local</code></li>
+    <li style="font-size:13.5px; color:#F4EEE4; line-height:1.55;"><strong style="color:#00FF88;">OS</strong> · macOS 26.5 (25F71)</li>
+    <li style="font-size:13.5px; color:#F4EEE4; line-height:1.55;"><strong style="color:#00FF88;">guest uptime</strong> · 2h 24m · clock at 17:03 PDT (matches m4 timezone)</li>
+    <li style="font-size:13.5px; color:#F4EEE4; line-height:1.55;"><strong style="color:#00FF88;">Win path</strong> · paramiko 4.0.0 over Tailscale magic-DNS · pw session-only</li>
+    <li style="font-size:13.5px; color:#F4EEE4; line-height:1.55;"><strong style="color:#00FF88;">next polish</strong> · <code style="font-family:'JetBrains Mono',monospace; background:rgba(255,255,255,.06); padding:1px 6px; border-radius:3px; color:#6AD4FF;">tailscale up --ssh</code> on guest → keyless tailnet-identity auth, retire pw entirely</li>
+  </ul>
+</div>
+
 <div style="margin:0 0 28px; padding:20px 28px; border-radius:14px; background:linear-gradient(155deg,rgba(229,85,42,.06),rgba(229,85,42,.01)); border:1px solid #E5552A; border-left:4px solid #E5552A;">
   <div style="color:#E5552A; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.22em; text-transform:uppercase; font-weight:700; margin-bottom:10px;">↻ Tick 8 · 19h07 ET · xvm sshd STILL refused · pw cached in-session</div>
   <p style="font-size:14px; color:#F4EEE4; line-height:1.6;">qi supplied the macOS guest pw <code style="font-family:'JetBrains Mono',monospace; background:rgba(255,255,255,.06); padding:1px 6px; border-radius:3px; color:#E5552A;">[redacted · session-only]</code>. Probe retry on <code style="font-family:'JetBrains Mono',monospace; background:rgba(255,255,255,.06); padding:1px 6px; border-radius:3px; color:#6AD4FF;">100.92.53.81</code>:22 / 5900 / 8080 — all still <strong style="color:#E5552A;">connection refused</strong>. Network layer still healthy, service layer still bare. Holding the pw in session context for when sshd flips ON; not persisting to disk. Mac-xen unblock command re-relayed with urgency.</p>
