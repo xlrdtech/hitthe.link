@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TrackingTogether · automation agency</title>
+<meta name="description" content="TrackingTogether — automation agency, single-pane-of-glass scope. Eli operates against owned + client projects. 50/50 split at venture-revenue layer.">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0A0A0C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TrackingTogether">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper:#0A0A0C; --cream:#F4EEE4; --bone:#C7C2B6; --dust:#7A7A7A; --line:rgba(244,238,228,.12);
+  --volt:#00FF88; --gold:#D2AC47; --steel:#6AD4FF; --violet:#A78BFA; --rose:#FF5E9C; --rust:#E5552A;
+  --serif:'Instrument Serif',serif; --sans:'Inter',-apple-system,sans-serif; --mono:'JetBrains Mono',monospace;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { background:var(--paper); color:var(--cream); font-family:var(--sans); line-height:1.55; }
+body::before { content:""; position:fixed; inset:0; pointer-events:none; z-index:0; background:radial-gradient(ellipse 1200px 600px at 50% 0%, rgba(106,212,255,.06), transparent 60%); }
+.wrap { position:relative; z-index:1; max-width:1100px; margin:0 auto; padding:60px 28px 100px; }
+
+header { margin-bottom:36px; }
+.eyebrow { font-family:var(--mono); font-size:11px; letter-spacing:.4em; text-transform:uppercase; color:var(--steel); margin-bottom:14px; }
+h1 { font-family:var(--serif); font-weight:400; font-size:clamp(48px,7.4vw,92px); line-height:0.95; letter-spacing:-.025em; margin:0 0 18px; }
+h1 em { color:var(--steel); font-style:italic; }
+.lede { font-family:var(--serif); font-style:italic; font-size:clamp(18px,2.1vw,22px); color:var(--bone); max-width:840px; line-height:1.45; margin-bottom:8px; }
+
+.canon-strip { display:flex; gap:14px; flex-wrap:wrap; margin:30px 0 22px; font-family:var(--mono); font-size:11px; }
+.canon-chip { padding:6px 14px; border:1px solid var(--line); border-radius:50px; color:var(--bone); letter-spacing:.06em; }
+.canon-chip strong { color:var(--cream); }
+
+.section { background:linear-gradient(155deg,#141414,#0E0E0E); border:1px solid var(--line); border-radius:14px; padding:28px 32px; margin:18px 0; border-left:3px solid var(--accent); }
+.section.accent-steel { --accent:var(--steel); }
+.section.accent-gold { --accent:var(--gold); }
+.section.accent-volt { --accent:var(--volt); }
+.section.accent-violet { --accent:var(--violet); }
+.section.accent-rose { --accent:var(--rose); }
+.section .lbl { font-family:var(--mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--accent); margin-bottom:12px; font-weight:700; }
+.section h2 { font-family:var(--serif); font-style:italic; font-size:30px; color:var(--cream); margin-bottom:14px; letter-spacing:-.01em; }
+.section h2 em { color:var(--accent); }
+.section p { font-size:15px; color:var(--bone); line-height:1.7; margin-bottom:10px; }
+.section p strong { color:var(--cream); font-weight:600; }
+.section code { font-family:var(--mono); font-size:12.5px; background:rgba(255,255,255,.06); padding:2px 8px; border-radius:4px; color:var(--steel); }
+
+.split { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:18px; }
+.split-card { background:rgba(0,0,0,.4); border:1px solid var(--line); border-radius:10px; padding:20px 22px; }
+.split-card.owned { border-left:3px solid var(--volt); }
+.split-card.clients { border-left:3px solid var(--gold); }
+.split-card .tag { font-family:var(--mono); font-size:10.5px; letter-spacing:.22em; text-transform:uppercase; color:var(--accent); margin-bottom:10px; font-weight:700; }
+.split-card.owned .tag { color:var(--volt); }
+.split-card.clients .tag { color:var(--gold); }
+.split-card h3 { font-family:var(--serif); font-style:italic; font-size:20px; color:var(--cream); margin-bottom:10px; }
+.split-card ul { list-style:none; padding:0; margin:0; }
+.split-card li { font-size:14px; color:var(--bone); padding:5px 0; border-bottom:1px dotted var(--line); font-family:var(--mono); letter-spacing:.04em; }
+.split-card li:last-child { border-bottom:0; }
+.split-card .note { font-family:var(--sans); font-size:12.5px; color:var(--dust); margin-top:10px; font-style:italic; }
+@media (max-width:720px) { .split { grid-template-columns:1fr; } }
+
+.split-memo { background:linear-gradient(155deg,rgba(106,212,255,.06),rgba(106,212,255,.01)); border:1px solid var(--steel); border-left:4px solid var(--steel); border-radius:12px; padding:24px 28px; margin:18px 0; }
+.split-memo .lbl { font-family:var(--mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--steel); margin-bottom:12px; font-weight:700; }
+.split-memo h2 { font-family:var(--serif); font-style:italic; font-size:28px; color:var(--cream); margin-bottom:14px; }
+.split-memo p { font-size:15px; color:var(--cream); line-height:1.7; margin-bottom:10px; }
+
+.eli-block { background:linear-gradient(155deg,rgba(167,139,250,.06),rgba(167,139,250,.01)); border:1px solid var(--violet); border-left:4px solid var(--violet); border-radius:12px; padding:24px 28px; margin:18px 0; }
+.eli-block .lbl { font-family:var(--mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--violet); margin-bottom:12px; font-weight:700; }
+.eli-block h2 { font-family:var(--serif); font-style:italic; font-size:26px; color:var(--cream); margin-bottom:12px; }
+.eli-block .role { display:flex; gap:14px; margin:18px 0 12px; flex-wrap:wrap; font-family:var(--mono); font-size:12px; }
+.eli-block .role span { padding:6px 12px; background:rgba(167,139,250,.1); border:1px solid rgba(167,139,250,.4); border-radius:50px; color:var(--violet); letter-spacing:.06em; }
+.eli-block ol { padding-left:22px; margin:0; }
+.eli-block li { font-size:14.5px; color:var(--bone); line-height:1.7; padding:4px 0; }
+.eli-block li strong { color:var(--cream); }
+
+footer { margin-top:48px; padding-top:24px; border-top:1px solid var(--line); display:flex; justify-content:space-between; gap:16px; font-family:var(--mono); font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--dust); flex-wrap:wrap; }
+footer a { color:var(--steel); text-decoration:none; border-bottom:1px dotted; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">// trackingtogether · automation agency · 2026-05-23</div>
+  <h1>Track <em>everything</em>.<br>Automate <em>everything</em>.</h1>
+  <div class="lede">TrackingTogether is Anthony's automation-agency brand. Every operation — owned ventures, client work, agent routing, deliverables — lives under a single pane of glass. Eli executes against the whole scope.</div>
+  <div class="canon-strip">
+    <span class="canon-chip">brand <strong>TrackingTogether</strong></span>
+    <span class="canon-chip">stake <strong>qi sole-prop · 50/50 Anthony venture-revenue</strong></span>
+    <span class="canon-chip">agent <strong>Eli</strong></span>
+    <span class="canon-chip">canon <strong>single pane of glass</strong></span>
+  </div>
+</header>
+
+<div class="section accent-steel">
+  <div class="lbl">// scope split · owned vs clients</div>
+  <h2>Two <em>operational lanes</em>, one umbrella</h2>
+  <p>Every project under TrackingTogether is either an <strong>Anthony-owned venture</strong> (equity + IP retained) or a <strong>client engagement</strong> (TT runs automations FOR the client, IP belongs to the client). The folder tree enforces the boundary.</p>
+  <div class="split">
+    <div class="split-card owned">
+      <div class="tag">owned_/ · equity + IP</div>
+      <h3>Anthony-owned ventures</h3>
+      <ul>
+        <li>net_meter_/</li>
+        <li>pfc_farms_/</li>
+        <li>_holdings_-private_/</li>
+        <li>ixl_/ (paired with Net Meter)</li>
+      </ul>
+      <div class="note">Internal R&amp;D, equity, brand assets retained.</div>
+    </div>
+    <div class="split-card clients">
+      <div class="tag">clients_/ · service + deliverables</div>
+      <h3>Client engagements</h3>
+      <ul>
+        <li>acme_/ + auto-vendor list</li>
+        <li>culligan_/ list</li>
+        <li>(continued as intake completes)</li>
+      </ul>
+      <div class="note">TT runs automations FOR them. IP belongs to client. Different access controls + revenue model.</div>
+    </div>
+  </div>
+</div>
+
+<div class="split-memo">
+  <div class="lbl">// 50/50 split memo · 2026-05-23</div>
+  <h2>Venture-revenue <em>at the brand layer</em></h2>
+  <p><strong>TrackingTogether</strong> is held as a sole-proprietorship under qi's portfolio. At the venture-revenue layer the split is <strong>50/50 with Anthony Vasquez</strong>. Eli persona operates as the execution agent against both owned + client lanes.</p>
+  <p>Full memo at <code>/trackingtogether/internal/docs/</code> (pending publish). Source: <code>/Volumes/tech_/sync_/profiles_/anthony_/ventures_/trackingtogether_/TT_5050_TRANSFER_2026-05-23.md</code></p>
+</div>
+
+<div class="eli-block">
+  <div class="lbl">// eli · agent operational role</div>
+  <h2>Eli <em>executes</em> against the whole scope</h2>
+  <div class="role">
+    <span>persona: ELI</span>
+    <span>org: L7S P1 routing</span>
+    <span>function: automation execution</span>
+    <span>scope: owned + clients</span>
+  </div>
+  <ol>
+    <li><strong>Owned-side</strong> — runs automation on Anthony's ventures (Net Meter monitoring, PFC Farms agricultural automation, IXL integration, _holdings_-private ops).</li>
+    <li><strong>Client-side</strong> — opt-out scrubs, contact-list maintenance, campaign management, scheduled reporting against client deliverables.</li>
+    <li><strong>RingCentral integration</strong> — scans for STOP/opt-out responses across client message threads, red-marks Google Sheet on 3-day schedule, surfaces clean call-lists to qi.</li>
+    <li><strong>Single-pane-of-glass</strong> — every task across both lanes lives on one master sheet under TT scope. No fragmentation.</li>
+  </ol>
+</div>
+
+<div class="section accent-volt">
+  <div class="lbl">// active p0 · this week</div>
+  <h2>Three blockers <em>before outbound calling resumes</em></h2>
+  <p><strong>1) Opt-out scrub</strong> — Eli scans RingCentral for every contact who replied STOP/opt-out, marks them RED on the Google Sheet, 3-day re-scan schedule. Blocker on calling green-list.</p>
+  <p><strong>2) Sheet consolidation</strong> — 3 chronological sheets → 1 master under TT scope. qi sends the 3 sheet links, Eli merges. Groups (Culligan, etc.) stay on same sheet, not split.</p>
+  <p><strong>3) Agriculture / patent pivot</strong> — fertilizer patent filed, white-girl ally (7 certs + degree, food-system collapse thesis) brings wineries + agricultural manufacturing equipment scope. Eli replicates site-building pattern for equipment marketplace research.</p>
+</div>
+
+<div class="section accent-gold">
+  <div class="lbl">// universal-intake pipeline</div>
+  <h2>Every contact → <em>master notebook</em></h2>
+  <p>Inbound across SMS / Beeper / Beside / mail → load contact notebook <code>~/.xen/notebooks/&lt;slug&gt;.md</code> + recent thread + persona-relevant canon → Nitro Qwen/Llama-70B drafts reply → sends via inbound channel → appends interaction back to notebook. One context spine across all channels.</p>
+  <p>Anthony V is the <strong>first intake target</strong> for this pipeline — the TrackingTogether scope serves as the canonical proving ground before extending to MB, Stal'lyon, and broader client roster.</p>
+</div>
+
+<footer>
+  <div>hitthe.link/trackingtogether · TT canon landing · 2026-05-23</div>
+  <div>
+    <a href="/itinerary/">Itinerary</a> ·
+    <a href="/context/">Context</a> ·
+    <a href="/xos/">XOS</a> ·
+    <a href="/vei/">VEI</a> ·
+    <a href="/spine/">Spine</a>
+  </div>
+</footer>
+
+</div>
+<script src="/_shared/ava-play.js?mute=1" defer></script>
+</body>
+</html>
