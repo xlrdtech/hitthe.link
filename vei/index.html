@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Ruach · רוּחַ · live voice → pane</title>
+<meta name="description" content="Ruach (Hebrew רוּחַ — spirit/breath/wind). 0touch live dictation via Web Speech API. Browser-native, on-device STT. POSTs transcripts to omnimind /api/dictate-inject. Mac · iPhone · iPad · any browser.">
+<link rel="manifest" href="/vei/manifest.json">
+<meta name="theme-color" content="#0A0A0C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root { --paper:#0A0A0C; --cream:#F4EEE4; --bone:#C7C2B6; --dust:#7A7A7A; --line:rgba(244,238,228,.12); --volt:#00FF88; --gold:#D2AC47; --steel:#6AD4FF; --rust:#E5552A; --serif:'Instrument Serif',serif; --sans:'Inter',-apple-system,sans-serif; --mono:'JetBrains Mono',monospace; }
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; background:var(--paper); color:var(--cream); font-family:var(--sans); overflow:hidden; }
+.wrap { display:flex; flex-direction:column; height:100vh; max-width:720px; margin:0 auto; padding:env(safe-area-inset-top, 16px) 20px env(safe-area-inset-bottom, 16px); }
+
+header { padding-bottom:14px; border-bottom:1px solid var(--line); margin-bottom:14px; }
+.title { font-family:var(--serif); font-style:italic; font-size:32px; color:var(--cream); letter-spacing:-.02em; }
+.title em { color:var(--volt); }
+.endpoint { font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; color:var(--dust); margin-top:4px; }
+
+.status-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 14px; margin-bottom:12px; border-radius:50px; border:1px solid var(--line); background:rgba(255,255,255,.02); }
+.status-bar .dot { width:10px; height:10px; border-radius:50%; background:var(--dust); }
+.status-bar.listen .dot { background:var(--volt); box-shadow:0 0 12px var(--volt); animation:pulse 1.4s infinite; }
+.status-bar.err .dot { background:var(--rust); }
+.status-bar.idle .dot { background:var(--gold); }
+.status-bar .lbl { font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--cream); }
+.status-bar .count { font-family:var(--mono); font-size:11px; color:var(--dust); }
+@keyframes pulse { 0%, 100% { opacity:1; transform:scale(1); } 50% { opacity:.5; transform:scale(1.4); } }
+
+#transcript { flex:1; overflow-y:auto; font-family:var(--sans); font-size:17px; line-height:1.55; padding:14px 0; }
+.final { color:var(--cream); margin-bottom:8px; padding:8px 0; border-bottom:1px dotted var(--line); }
+.interim { color:var(--dust); font-style:italic; }
+.error-line { color:var(--rust); font-family:var(--mono); font-size:13px; padding:6px 10px; background:rgba(229,85,42,.06); border-left:3px solid var(--rust); margin:6px 0; }
+.posted { color:var(--volt); font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; }
+
+.controls { padding-top:12px; border-top:1px solid var(--line); display:flex; gap:10px; }
+button { flex:1; padding:14px; border-radius:50px; border:1px solid var(--line); background:transparent; color:var(--cream); font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; cursor:pointer; transition:all .15s; }
+button.start { background:var(--volt); color:var(--paper); border-color:var(--volt); }
+button.stop { background:var(--rust); color:var(--cream); border-color:var(--rust); }
+button:disabled { opacity:.4; cursor:not-allowed; }
+button:hover:not(:disabled) { transform:translateY(-1px); }
+
+.unsupported { padding:18px; background:rgba(229,85,42,.08); border:1px solid var(--rust); border-radius:10px; font-size:14px; color:var(--cream); margin:14px 0; }
+
+.fallback { display:none; padding:14px; background:rgba(106,212,255,.06); border:1px solid var(--steel); border-radius:10px; margin-top:12px; }
+.fallback.show { display:block; }
+.fallback .hint { font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; color:var(--steel); margin-bottom:8px; text-transform:uppercase; line-height:1.4; }
+.fallback textarea { width:100%; min-height:80px; background:rgba(0,0,0,.4); color:var(--cream); border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-family:var(--sans); font-size:16px; line-height:1.5; resize:none; -webkit-appearance:none; }
+.fallback textarea:focus { outline:1px solid var(--steel); border-color:var(--steel); }
+.fallback .send-btn { margin-top:8px; width:100%; padding:12px; border-radius:50px; background:var(--steel); color:var(--paper); border:none; font-family:var(--mono); font-size:11.5px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; cursor:pointer; }
+.fallback .send-btn:disabled { opacity:.4; cursor:not-allowed; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="title"><em>Ruach</em> · רוּחַ</div>
+  <div class="endpoint" id="endpoint-display">→ xen.xlrd.org/api/dictate-inject · spirit · breath · wind</div>
+</header>
+
+<div class="status-bar idle" id="status">
+  <div style="display:flex; align-items:center; gap:10px;">
+    <div class="dot"></div>
+    <div class="lbl" id="status-lbl">tap start</div>
+  </div>
+  <div class="count" id="count">0 sent</div>
+</div>
+
+<div id="transcript"></div>
+
+<div class="controls">
+  <button class="start" id="start-btn">Start</button>
+  <button class="stop" id="stop-btn" disabled>Stop</button>
+</div>
+
+<div class="fallback" id="fallback">
+  <div class="hint">↓ keyboard mic fallback · tap mic on keyboard · enter to send</div>
+  <textarea id="fb-text" placeholder="dictate via keyboard mic or type here..." autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
+  <button class="send-btn" id="fb-send">Send</button>
+</div>
+
+</div>
+
+<script>
+const API_URL = 'https://xen.xlrd.org/api/dictate-inject';
+const AUDIO_URL = 'https://xen.xlrd.org/api/dictate-audio';
+const HEADERS = { 'Content-Type': 'application/json' };
+const CHUNK_MS = 5000;
+
+const transcript = document.getElementById('transcript');
+const status = document.getElementById('status');
+const statusLbl = document.getElementById('status-lbl');
+const countEl = document.getElementById('count');
+const startBtn = document.getElementById('start-btn');
+const stopBtn = document.getElementById('stop-btn');
+
+let recognition = null;
+let listening = false;
+let sentCount = 0;
+let interimEl = null;
+let networkErrorCount = 0;
+let mediaRecorder = null;
+let mediaStream = null;
+let mediaMode = false;
+
+const isFirefoxLike = /Firefox|Zen/i.test(navigator.userAgent);
+
+const fallbackEl = document.getElementById('fallback');
+const fbText = document.getElementById('fb-text');
+const fbSend = document.getElementById('fb-send');
+
+function showFallback(reason) {
+  fallbackEl.classList.add('show');
+  if (reason) appendError(reason);
+  startBtn.disabled = true;
+  stopBtn.disabled = true;
+  setStatus('idle', 'fallback mode');
+  setTimeout(() => fbText.focus(), 100);
+}
+
+async function sendFallback() {
+  const text = fbText.value.trim();
+  if (!text) return;
+  fbSend.disabled = true;
+  appendFinal(text, false);
+  const posted = await postTranscript(text);
+  if (posted) {
+    const lastFinal = transcript.querySelector('.final:last-child');
+    if (lastFinal && !lastFinal.innerHTML.includes('posted')) {
+      lastFinal.innerHTML += ' <span class="posted">✓ posted</span>';
+    }
+  }
+  fbText.value = '';
+  fbSend.disabled = false;
+  fbText.focus();
+}
+
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+// Web Speech absence is fine — Start button routes to MediaRecorder + server Whisper
+
+function setStatus(state, label) {
+  status.className = 'status-bar ' + state;
+  statusLbl.textContent = label;
+}
+
+function appendFinal(text, postedFlag) {
+  const div = document.createElement('div');
+  div.className = 'final';
+  div.innerHTML = escapeHtml(text) + (postedFlag ? ' <span class="posted">✓ posted</span>' : '');
+  transcript.appendChild(div);
+  transcript.scrollTop = transcript.scrollHeight;
+  if (interimEl) { interimEl.remove(); interimEl = null; }
+}
+
+function appendInterim(text) {
+  if (!interimEl) {
+    interimEl = document.createElement('div');
+    interimEl.className = 'interim';
+    transcript.appendChild(interimEl);
+  }
+  interimEl.textContent = text;
+  transcript.scrollTop = transcript.scrollHeight;
+}
+
+function appendError(msg) {
+  const div = document.createElement('div');
+  div.className = 'error-line';
+  div.textContent = msg;
+  transcript.appendChild(div);
+  transcript.scrollTop = transcript.scrollHeight;
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function postTranscript(text) {
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: HEADERS,
+      body: JSON.stringify({ source: 'xen-vei', ts: Date.now(), text: text })
+    });
+    if (res.ok) {
+      sentCount++;
+      countEl.textContent = sentCount + ' sent';
+      return true;
+    } else {
+      appendError(`POST ${API_URL} → ${res.status}`);
+      return false;
+    }
+  } catch (e) {
+    appendError(`POST failed: ${e.message}`);
+    return false;
+  }
+}
+
+async function postAudioChunk(blob) {
+  try {
+    const fd = new FormData();
+    fd.append('audio', blob, 'chunk.webm');
+    fd.append('source', 'xen-vei-audio');
+    fd.append('ts', Date.now().toString());
+    const res = await fetch(AUDIO_URL, { method: 'POST', body: fd });
+    if (res.ok) {
+      sentCount++;
+      countEl.textContent = sentCount + ' chunks';
+      const j = await res.json().catch(() => null);
+      if (j && j.text) appendFinal(j.text, true);
+      return true;
+    } else {
+      appendError(`audio POST → ${res.status}`);
+      return false;
+    }
+  } catch (e) {
+    appendError(`audio POST failed: ${e.message}`);
+    return false;
+  }
+}
+
+async function startMediaRecorder() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    appendError('MediaRecorder unavailable — falling to textarea');
+    showFallback('MediaRecorder not supported. Use keyboard mic.');
+    return;
+  }
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+      ? 'audio/webm;codecs=opus'
+      : (MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '');
+    mediaRecorder = mimeType ? new MediaRecorder(mediaStream, { mimeType }) : new MediaRecorder(mediaStream);
+    mediaMode = true;
+    listening = true;
+    setStatus('listen', 'streaming audio');
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+    appendError('MediaRecorder active — server-side Whisper transcribes chunks');
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) postAudioChunk(e.data);
+    };
+    mediaRecorder.onerror = (e) => {
+      appendError('MediaRecorder error: ' + (e.error ? e.error.message : 'unknown'));
+    };
+    mediaRecorder.start(CHUNK_MS);
+  } catch (e) {
+    appendError('mic access denied or unavailable: ' + e.message);
+    showFallback('Mic access required. Use keyboard mic below or grant mic permission.');
+  }
+}
+
+function stopMediaRecorder() {
+  listening = false;
+  mediaMode = false;
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    try { mediaRecorder.stop(); } catch (_) {}
+  }
+  if (mediaStream) {
+    mediaStream.getTracks().forEach(t => t.stop());
+    mediaStream = null;
+  }
+  setStatus('idle', 'stopped');
+  startBtn.disabled = false;
+  stopBtn.disabled = true;
+}
+
+let useContinuous = true;
+
+function startListening() {
+  if (!SR) return;
+  recognition = new SR();
+  recognition.continuous = useContinuous;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+
+  recognition.onstart = () => {
+    listening = true;
+    setStatus('listen', 'listening');
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+  };
+
+  recognition.onresult = async (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const result = e.results[i];
+      if (result.isFinal) {
+        const text = result[0].transcript.trim();
+        if (text) {
+          appendFinal(text, false);
+          const posted = await postTranscript(text);
+          if (posted) {
+            const lastFinal = transcript.querySelector('.final:last-child');
+            if (lastFinal && !lastFinal.innerHTML.includes('posted')) {
+              lastFinal.innerHTML += ' <span class="posted">✓ posted</span>';
+            }
+          }
+        }
+      } else {
+        interim += result[0].transcript;
+      }
+    }
+    if (interim) appendInterim(interim);
+  };
+
+  recognition.onerror = (e) => {
+    if (e.error === 'no-speech' || e.error === 'aborted') return;
+    setStatus('err', 'error: ' + e.error);
+    appendError('speech error: ' + e.error);
+    if (e.error === 'network') {
+      networkErrorCount++;
+      if (networkErrorCount === 2 && useContinuous) {
+        useContinuous = false;
+        appendError('switching to non-continuous mode for compatibility...');
+      }
+      if (networkErrorCount >= 3) {
+        listening = false;
+        try { recognition.stop(); } catch (_) {}
+        appendError('Web Speech API blocked — switching to MediaRecorder + server Whisper');
+        startMediaRecorder();
+      }
+    }
+  };
+
+  recognition.onend = () => {
+    if (listening) {
+      const delay = networkErrorCount > 0 ? Math.min(1000 * networkErrorCount, 4000) : 100;
+      setTimeout(() => {
+        if (listening) {
+          try { startListening(); } catch (_) {}
+        }
+      }, delay);
+    }
+  };
+
+  recognition.start();
+}
+
+function stopListening() {
+  if (mediaMode) { stopMediaRecorder(); return; }
+  listening = false;
+  if (recognition) {
+    try { recognition.stop(); } catch (_) {}
+  }
+  setStatus('idle', 'stopped');
+  startBtn.disabled = false;
+  stopBtn.disabled = true;
+}
+
+startBtn.addEventListener('click', () => {
+  if (isFirefoxLike || !SR) {
+    appendError('Firefox/Zen detected — using MediaRecorder + server Whisper');
+    startMediaRecorder();
+  } else {
+    startListening();
+  }
+});
+stopBtn.addEventListener('click', stopListening);
+
+fbSend.addEventListener('click', sendFallback);
+fbText.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendFallback();
+  }
+});
+
+// SR absence handled by Start button → routes to MediaRecorder directly
+
+window.addEventListener('beforeunload', stopListening);
+</script>
+</body>
+</html>
