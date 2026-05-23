@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Xen Dictate · live voice → pane</title>
+<meta name="description" content="0touch live dictation via Web Speech API. Browser-native, on-device STT. POSTs transcripts to omnimind /api/dictate-inject. Mac · iPhone · iPad · any browser.">
+<link rel="manifest" href="/dictate/manifest.json">
+<meta name="theme-color" content="#0A0A0C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root { --paper:#0A0A0C; --cream:#F4EEE4; --bone:#C7C2B6; --dust:#7A7A7A; --line:rgba(244,238,228,.12); --volt:#00FF88; --gold:#D2AC47; --steel:#6AD4FF; --rust:#E5552A; --serif:'Instrument Serif',serif; --sans:'Inter',-apple-system,sans-serif; --mono:'JetBrains Mono',monospace; }
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; background:var(--paper); color:var(--cream); font-family:var(--sans); overflow:hidden; }
+.wrap { display:flex; flex-direction:column; height:100vh; max-width:720px; margin:0 auto; padding:env(safe-area-inset-top, 16px) 20px env(safe-area-inset-bottom, 16px); }
+
+header { padding-bottom:14px; border-bottom:1px solid var(--line); margin-bottom:14px; }
+.title { font-family:var(--serif); font-style:italic; font-size:32px; color:var(--cream); letter-spacing:-.02em; }
+.title em { color:var(--volt); }
+.endpoint { font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; color:var(--dust); margin-top:4px; }
+
+.status-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 14px; margin-bottom:12px; border-radius:50px; border:1px solid var(--line); background:rgba(255,255,255,.02); }
+.status-bar .dot { width:10px; height:10px; border-radius:50%; background:var(--dust); }
+.status-bar.listen .dot { background:var(--volt); box-shadow:0 0 12px var(--volt); animation:pulse 1.4s infinite; }
+.status-bar.err .dot { background:var(--rust); }
+.status-bar.idle .dot { background:var(--gold); }
+.status-bar .lbl { font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--cream); }
+.status-bar .count { font-family:var(--mono); font-size:11px; color:var(--dust); }
+@keyframes pulse { 0%, 100% { opacity:1; transform:scale(1); } 50% { opacity:.5; transform:scale(1.4); } }
+
+#transcript { flex:1; overflow-y:auto; font-family:var(--sans); font-size:17px; line-height:1.55; padding:14px 0; }
+.final { color:var(--cream); margin-bottom:8px; padding:8px 0; border-bottom:1px dotted var(--line); }
+.interim { color:var(--dust); font-style:italic; }
+.error-line { color:var(--rust); font-family:var(--mono); font-size:13px; padding:6px 10px; background:rgba(229,85,42,.06); border-left:3px solid var(--rust); margin:6px 0; }
+.posted { color:var(--volt); font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; }
+
+.controls { padding-top:12px; border-top:1px solid var(--line); display:flex; gap:10px; }
+button { flex:1; padding:14px; border-radius:50px; border:1px solid var(--line); background:transparent; color:var(--cream); font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; cursor:pointer; transition:all .15s; }
+button.start { background:var(--volt); color:var(--paper); border-color:var(--volt); }
+button.stop { background:var(--rust); color:var(--cream); border-color:var(--rust); }
+button:disabled { opacity:.4; cursor:not-allowed; }
+button:hover:not(:disabled) { transform:translateY(-1px); }
+
+.unsupported { padding:18px; background:rgba(229,85,42,.08); border:1px solid var(--rust); border-radius:10px; font-size:14px; color:var(--cream); margin:14px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="title">Xen <em>Dictate</em></div>
+  <div class="endpoint" id="endpoint-display">→ xen.xlrd.org/api/dictate-inject</div>
+</header>
+
+<div class="status-bar idle" id="status">
+  <div style="display:flex; align-items:center; gap:10px;">
+    <div class="dot"></div>
+    <div class="lbl" id="status-lbl">tap start</div>
+  </div>
+  <div class="count" id="count">0 sent</div>
+</div>
+
+<div id="transcript"></div>
+
+<div class="controls">
+  <button class="start" id="start-btn">Start</button>
+  <button class="stop" id="stop-btn" disabled>Stop</button>
+</div>
+
+</div>
+
+<script>
+const API_URL = 'https://xen.xlrd.org/api/dictate-inject';
+const HEADERS = { 'Content-Type': 'application/json' };
+
+const transcript = document.getElementById('transcript');
+const status = document.getElementById('status');
+const statusLbl = document.getElementById('status-lbl');
+const countEl = document.getElementById('count');
+const startBtn = document.getElementById('start-btn');
+const stopBtn = document.getElementById('stop-btn');
+
+let recognition = null;
+let listening = false;
+let sentCount = 0;
+let interimEl = null;
+
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (!SR) {
+  document.querySelector('.controls').insertAdjacentHTML('beforebegin',
+    '<div class="unsupported"><strong>Web Speech API not supported</strong> in this browser. Use Safari (Mac/iOS), Chrome, or Edge.</div>');
+  startBtn.disabled = true;
+}
+
+function setStatus(state, label) {
+  status.className = 'status-bar ' + state;
+  statusLbl.textContent = label;
+}
+
+function appendFinal(text, postedFlag) {
+  const div = document.createElement('div');
+  div.className = 'final';
+  div.innerHTML = escapeHtml(text) + (postedFlag ? ' <span class="posted">✓ posted</span>' : '');
+  transcript.appendChild(div);
+  transcript.scrollTop = transcript.scrollHeight;
+  if (interimEl) { interimEl.remove(); interimEl = null; }
+}
+
+function appendInterim(text) {
+  if (!interimEl) {
+    interimEl = document.createElement('div');
+    interimEl.className = 'interim';
+    transcript.appendChild(interimEl);
+  }
+  interimEl.textContent = text;
+  transcript.scrollTop = transcript.scrollHeight;
+}
+
+function appendError(msg) {
+  const div = document.createElement('div');
+  div.className = 'error-line';
+  div.textContent = msg;
+  transcript.appendChild(div);
+  transcript.scrollTop = transcript.scrollHeight;
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function postTranscript(text) {
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: HEADERS,
+      body: JSON.stringify({ source: 'xen-dictate', ts: Date.now(), text: text })
+    });
+    if (res.ok) {
+      sentCount++;
+      countEl.textContent = sentCount + ' sent';
+      return true;
+    } else {
+      appendError(`POST ${API_URL} → ${res.status}`);
+      return false;
+    }
+  } catch (e) {
+    appendError(`POST failed: ${e.message}`);
+    return false;
+  }
+}
+
+function startListening() {
+  if (!SR) return;
+  recognition = new SR();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+
+  recognition.onstart = () => {
+    listening = true;
+    setStatus('listen', 'listening');
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+  };
+
+  recognition.onresult = async (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const result = e.results[i];
+      if (result.isFinal) {
+        const text = result[0].transcript.trim();
+        if (text) {
+          appendFinal(text, false);
+          const posted = await postTranscript(text);
+          if (posted) {
+            const lastFinal = transcript.querySelector('.final:last-child');
+            if (lastFinal && !lastFinal.innerHTML.includes('posted')) {
+              lastFinal.innerHTML += ' <span class="posted">✓ posted</span>';
+            }
+          }
+        }
+      } else {
+        interim += result[0].transcript;
+      }
+    }
+    if (interim) appendInterim(interim);
+  };
+
+  recognition.onerror = (e) => {
+    if (e.error === 'no-speech' || e.error === 'aborted') return;
+    setStatus('err', 'error: ' + e.error);
+    appendError('speech error: ' + e.error);
+  };
+
+  recognition.onend = () => {
+    if (listening) {
+      try { recognition.start(); } catch (_) {}
+    }
+  };
+
+  recognition.start();
+}
+
+function stopListening() {
+  listening = false;
+  if (recognition) {
+    try { recognition.stop(); } catch (_) {}
+  }
+  setStatus('idle', 'stopped');
+  startBtn.disabled = false;
+  stopBtn.disabled = true;
+}
+
+startBtn.addEventListener('click', startListening);
+stopBtn.addEventListener('click', stopListening);
+
+window.addEventListener('beforeunload', stopListening);
+</script>
+</body>
+</html>
