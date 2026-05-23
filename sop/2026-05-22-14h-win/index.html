@@ -83,6 +83,25 @@ footer a { color:var(--volt); text-decoration:none; border-bottom:1px dotted rgb
   <div class="lede">Win-side shipped four moves. Mac-side ran five waves and landed two canon verdicts. Two new foundational canons locked. UI-TARS probe converged.</div>
 </header>
 
+<div style="margin:0 0 24px; padding:24px 28px; border-radius:14px; background:linear-gradient(155deg,rgba(167,139,250,.18),rgba(0,255,136,.05)); border:1px solid #A78BFA; border-left:4px solid #A78BFA;">
+  <div style="color:#A78BFA; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.22em; text-transform:uppercase; font-weight:700; margin-bottom:14px;">★ Tick 13 · 20h37 ET · CLAUDE CODE installed on xvm · mesh is now THREE panes</div>
+  <p style="font-size:14.5px; color:#F4EEE4; line-height:1.6; margin-bottom:14px;">qi: "I installed claude code there." The mesh just promoted from <code style="font-family:'JetBrains Mono',monospace; background:rgba(255,255,255,.06); padding:1px 6px; border-radius:3px; color:#6AD4FF;">Mac ↔ Win</code> to <code style="font-family:'JetBrains Mono',monospace; background:rgba(255,255,255,.06); padding:1px 6px; border-radius:3px; color:#A78BFA;">Mac ↔ Win ↔ xvm</code>. xvm goes from "passive SSH target" to <strong style="color:#A78BFA;">co-equal Claude Code agent</strong> inside a sandboxed Mac VM, reachable via tailnet.</p>
+  <pre style="font-family:'JetBrains Mono',monospace; font-size:12.5px; color:#A5F3FC; background:rgba(167,139,250,.06); border:1px solid rgba(167,139,250,.3); border-radius:8px; padding:14px 18px; overflow-x:auto; line-height:1.5; margin:0 0 14px;">$ ssh xen@xvm 'claude --version'
+2.1.149 (Claude Code)
+$ ssh xen@xvm 'file ~/.local/bin/claude'
+Mach-O 64-bit executable arm64 → ~/.local/share/claude/versions/2.1.149
+$ ssh xen@xvm 'cat ~/.claude/settings.json'
+{"skipDangerousModePermissionPrompt":true,"theme":"dark","agentPushNotifEnabled":true}</pre>
+  <ul style="list-style:none; padding:0; margin:0; display:grid; grid-template-columns:1fr 1fr; gap:6px 24px;">
+    <li style="font-size:13.5px; color:#F4EEE4; line-height:1.55;"><strong style="color:#A78BFA;">install path</strong> · <code style="font-family:'JetBrains Mono',monospace; background:rgba(255,255,255,.06); padding:1px 6px; border-radius:3px; color:#6AD4FF;">~/.local/bin/claude</code> → versions/2.1.149 (arm64 Mach-O)</li>
+    <li style="font-size:13.5px; color:#F4EEE4; line-height:1.55;"><strong style="color:#A78BFA;">state</strong> · <code style="font-family:'JetBrains Mono',monospace; background:rgba(255,255,255,.06); padding:1px 6px; border-radius:3px; color:#6AD4FF;">~/.claude/</code> populated · backups · cache · sessions · projects · plugins · history.jsonl</li>
+    <li style="font-size:13.5px; color:#F4EEE4; line-height:1.55;"><strong style="color:#A78BFA;">PATH fix</strong> · appended <code style="font-family:'JetBrains Mono',monospace; background:rgba(255,255,255,.06); padding:1px 6px; border-radius:3px; color:#6AD4FF;">$HOME/.local/bin:$PATH</code> to ~/.zshrc — bare <code style="font-family:'JetBrains Mono',monospace; background:rgba(255,255,255,.06); padding:1px 6px; border-radius:3px; color:#6AD4FF;">claude</code> now resolves in login shells (non-interactive SSH inject path unlocked)</li>
+    <li style="font-size:13.5px; color:#F4EEE4; line-height:1.55;"><strong style="color:#A78BFA;">config</strong> · skipDangerousMode=true · agentPushNotifs=true · channels enabled · permissive autonomous</li>
+    <li style="font-size:13.5px; color:#F4EEE4; line-height:1.55;"><strong style="color:#A78BFA;">A2A current</strong> · <code style="font-family:'JetBrains Mono',monospace; background:rgba(255,255,255,.06); padding:1px 6px; border-radius:3px; color:#6AD4FF;">ssh xen@xvm 'claude -p "..."'</code> from Win or Mac · SSH-exec inject works today</li>
+    <li style="font-size:13.5px; color:#F4EEE4; line-height:1.55;"><strong style="color:#A78BFA;">A2A future</strong> · install Mac-style <code style="font-family:'JetBrains Mono',monospace; background:rgba(255,255,255,.06); padding:1px 6px; border-radius:3px; color:#6AD4FF;">/api/inject</code> server on xvm · register in canon_agent_urls roster · third row in the mesh table</li>
+  </ul>
+</div>
+
 <div style="margin:0 0 24px; padding:22px 28px; border-radius:14px; background:linear-gradient(155deg,rgba(210,172,71,.12),rgba(210,172,71,.02)); border:1px solid #D2AC47; border-left:4px solid #D2AC47;">
   <div style="color:#D2AC47; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.22em; text-transform:uppercase; font-weight:700; margin-bottom:12px;">↻ Tick 12 · 20h21 ET · Tailscale-SSH polish · architectural floor hit (honest)</div>
   <p style="font-size:14px; color:#F4EEE4; line-height:1.6; margin-bottom:12px;">qi said "you do it now." Tried, hit a hard limit. Honest report:</p>
