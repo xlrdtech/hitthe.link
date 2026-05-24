@@ -738,7 +738,12 @@ function startListening() {
   // after resolve), (2) interim spam closed by NOT POSTing interims (visual-only),
   // (3) dedup applies ONLY to finals (interim refinement passes never blocked).
   // Drops firehose volume ~5x, makes checkmarks correctly attach per-bubble.
+  // Time-windowed dedup: suppress identical text only if it arrives within
+  // 500ms of prior final (Web Speech bounces / confidence re-confirms typically
+  // hit within ~150ms; intentional human repeats survive a 500ms window).
+  const DEDUP_WINDOW_MS = 500;
   let lastPostedText = '';
+  let lastPostedAt = 0;
   recognition.onresult = (e) => {
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const result = e.results[i];
@@ -749,11 +754,13 @@ function startListening() {
         // Successful final = network healthy. Reset error counter so transient
         // blips don't accumulate over a long session and trip MediaRecorder.
         networkErrorCount = 0;
-        // Dedup only on finals (Web Speech emits same text across
-        // confidence-refinement passes; interim should never block)
-        if (text === lastPostedText) continue;
+        // Dedup only on finals AND only within DEDUP_WINDOW_MS — kills
+        // confidence-bounce repeats while preserving intentional human
+        // re-utterances ("hello hello", "yes yes", "ok ok").
+        if (text === lastPostedText && (Date.now() - lastPostedAt) < DEDUP_WINDOW_MS) continue;
         const finalDiv = appendFinal(text, false);
         lastPostedText = text;
+        lastPostedAt = Date.now();
         // Capture div ref BEFORE async post so checkmark attaches
         // to THIS final, not whatever happens to be :last-child
         // when the promise resolves
