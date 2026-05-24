@@ -2,7 +2,7 @@
 // Per canon_xos_canon_xenphone_dead_2026-05-22 + canon_xen_pwa_gh_pages_failover_2026-05-16
 // SSE + REST calls always go to network (never cached) so live data isn't stale.
 
-const VERSION = "xos-v1-2026-05-22";
+const VERSION = "xos-v2-2026-05-23";
 const SHELL = [
   "/xos/",
   "/xos/index.html",
@@ -16,8 +16,22 @@ const SHELL = [
 ];
 
 self.addEventListener("install", (ev) => {
+  // Per-asset add() instead of addAll(): cache.addAll is atomic — if ANY URL 404s,
+  // the entire batch rejects and offline cache never populates. xen.xlrd.org's CF
+  // proxy only serves a subset of /xos/ assets (styles.css yes, JSX modules no),
+  // so addAll silently fails on that origin. Per-asset catch lets cache build with
+  // whatever assets ARE available, gracefully degrading instead of total miss.
   ev.waitUntil(
-    caches.open(VERSION).then((cache) => cache.addAll(SHELL).catch(() => {}))
+    caches.open(VERSION).then((cache) =>
+      Promise.all(
+        SHELL.map((url) =>
+          cache.add(url).catch((err) => {
+            // 404s and CORS rejections silently skipped — preserves install
+            console.warn("[xos-sw] skip:", url, err && err.message);
+          })
+        )
+      )
+    )
   );
   self.skipWaiting();
 });
