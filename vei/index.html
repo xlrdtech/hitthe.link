@@ -1137,6 +1137,7 @@ function threadLabel(t) {
 }
 
 const _renderedKeys = new Set();
+const _xenOutSpoken = new Set(); // Option A speak-dedup · keys mirror _renderedKeys for xen-out events only
 let _activeThreadId = getActiveId();
 let _history = loadThreadEntries(_activeThreadId);
 
@@ -1226,6 +1227,26 @@ function renderEvent(d) {
     attachBubbleActions(div, txt);
     transcript.scrollTop = transcript.scrollHeight;
     saveHistory({ role: 'xen', text: txt, ts: d.ts || Date.now() });
+    // Option A · 2026-05-24 · speak xen-out replies via Web Speech Synthesis API
+    // so every device with VEI open (phone, watch, desktop) hears them. No extra
+    // Mac dep — works on any browser. Voice fires once per unique-key dedup above.
+    try {
+      if ('speechSynthesis' in window && txt && !_xenOutSpoken.has(key)) {
+        _xenOutSpoken.add(key);
+        // Cap memory: prune to last 200 spoken keys
+        if (_xenOutSpoken.size > 200) {
+          const it = _xenOutSpoken.values();
+          for (let i = 0; i < 50; i++) _xenOutSpoken.delete(it.next().value);
+        }
+        const u = new SpeechSynthesisUtterance(txt);
+        // Prefer AvaMultilingualNeural-style female voice if available, fallback to system default
+        const voices = window.speechSynthesis.getVoices();
+        const pref = voices.find(v => /ava|samantha|victoria|karen|allison/i.test(v.name)) || voices.find(v => /female/i.test(v.name));
+        if (pref) u.voice = pref;
+        u.rate = 1.05; u.pitch = 1.0; u.volume = 0.9;
+        window.speechSynthesis.speak(u);
+      }
+    } catch (_) { /* silent — voice is best-effort, never blocks render */ }
   } else if (isUserDictate) {
     const div = document.createElement('div');
     div.className = 'final';
