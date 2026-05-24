@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>M_B® STUDIO</title>
+<meta name="description" content="M_B® STUDIO — Trail anthems, R&B heart, soul texture, bounce pulse, live fire.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+:root{--ink:#050505;--off:#dedede;--mute:#adabaa;--card:#0d0d0d;--line:rgba(165,165,165,.6)}
+html,body{background:var(--ink);color:var(--off);font-family:"Inter","Inter Placeholder",sans-serif;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+video{display:block}
+::selection{background:rgba(0,153,255,.15);color:#0099ff}
+
+/* Nav */
+.nav{position:fixed;top:0;left:0;width:100%;z-index:100;padding:14px 44px;display:flex;justify-content:space-between;align-items:center;mix-blend-mode:difference;color:#fff}
+.nav .logo{font-size:14px;font-weight:700;letter-spacing:.02em;display:flex;gap:14px}
+.nav .menu{display:flex;gap:24px;font-size:14px;font-weight:500}
+.nav a:hover{opacity:.6}
+
+/* Hero */
+.hero{min-height:100vh;position:relative;display:flex;flex-direction:column;justify-content:center;padding:120px 14px 64px;max-width:1400px;margin:0 auto;overflow:hidden}
+.hero-bg{position:absolute;inset:0;z-index:-1;overflow:hidden}
+.hero-bg video{width:100%;height:100%;object-fit:cover;opacity:.55}
+.hero-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,5,5,.4) 0%,rgba(5,5,5,.7) 100%)}
+
+.cats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:64px;font-size:14px;font-weight:700;color:var(--off)}
+.cats span{opacity:0;transform:translateY(40px);transition:opacity .8s,transform .8s}
+.cats span.in{opacity:1;transform:none}
+.cats span:nth-child(1){text-align:left}
+.cats span:nth-child(5){text-align:right}
+
+/* Giant rotate-in title */
+.giant{font-family:"Inter",sans-serif;font-weight:700;line-height:.8;letter-spacing:-.09em;font-size:clamp(72px,14vw,170px);color:var(--off);overflow:hidden;display:block}
+.giant .ch{display:inline-block;transform:translateY(-380px) rotate(-24deg);transition:transform 1.1s cubic-bezier(.8,.2,0,1)}
+.giant .ch.in{transform:translateY(0) rotate(0)}
+.giant.rise .ch{transform:translateY(380px) rotate(-24deg)}
+.giant.rise .ch.in{transform:translateY(0) rotate(0)}
+
+/* Body word-stagger */
+.body-stagger{font-family:"Inter",sans-serif;font-weight:600;font-size:clamp(20px,2.6vw,32px);letter-spacing:-.03em;line-height:1.3;color:var(--off);margin:32px 0}
+.body-stagger .w{display:inline-block;opacity:0;transform:translateY(45px);transition:opacity .8s,transform .8s}
+.body-stagger .w.in{opacity:1;transform:none}
+
+.sub-line{display:flex;justify-content:space-between;gap:14px;margin-top:64px;font-size:13px;font-weight:700;color:var(--off)}
+.sub-line>div{display:flex;gap:18px;flex-wrap:wrap}
+.sub-line span{opacity:0;transform:translateY(40px);transition:opacity .8s,transform .8s}
+.sub-line span.in{opacity:1;transform:none}
+
+/* Section base */
+.section{padding:150px 14px;max-width:1400px;margin:0 auto;position:relative}
+.helper{font-size:14px;font-weight:700;color:var(--mute);margin-bottom:44px}
+.helper.in,.helper{opacity:0;transition:opacity .8s}
+.helper.in{opacity:1}
+.headline{display:grid;grid-template-columns:1fr 2fr;gap:24px;align-items:end}
+.headline-stack{display:flex;flex-direction:column;gap:0}
+.plus-row{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;margin:44px 0;opacity:0;transition:opacity .8s}
+.plus-row.in{opacity:1}
+.plus{width:10px;height:10px;position:relative;flex:none}
+.plus::before,.plus::after{content:"";position:absolute;background:var(--line)}
+.plus::before{width:10px;height:1px;top:50%;left:0}
+.plus::after{width:1px;height:10px;left:50%;top:0}
+.plus-line{height:1px;background:var(--line);width:100%}
+
+.section-split{display:grid;grid-template-columns:1fr 2fr;gap:24px;margin-top:64px;align-items:start}
+.section-body{font-family:"Inter",sans-serif;font-weight:600;font-size:clamp(18px,2vw,24px);letter-spacing:-.04em;line-height:1.3;color:var(--off);opacity:0;transform:translateY(20px);transition:opacity .8s,transform .8s}
+.section-body.in{opacity:1;transform:none}
+
+/* Framed - sliding image rail */
+.rail{display:flex;gap:14px;animation:rail 40s linear infinite;width:max-content;margin:64px 0}
+.rail img{width:380px;height:450px;object-fit:cover;border-radius:4px;opacity:.85}
+.rail img:hover{opacity:1}
+@keyframes rail{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* Services list */
+.svc-list{display:flex;flex-direction:column;gap:8px;margin-top:24px}
+.svc{display:grid;grid-template-columns:1fr auto auto;gap:14px;padding:24px 0;border-bottom:1px solid var(--line);font-size:18px;font-weight:600;letter-spacing:-.02em;opacity:0;transform:translateX(120px);transition:opacity .8s,transform .8s}
+.svc.in{opacity:1;transform:none}
+.svc .num{color:var(--mute);font-weight:700}
+.svc:hover{padding-left:14px;transition:padding .4s}
+
+/* Archive scroll grid */
+.archive-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin:44px 0}
+.archive-grid a{aspect-ratio:3/4;overflow:hidden;border-radius:4px;background:#111}
+.archive-grid img{width:100%;height:100%;object-fit:cover;transition:transform .6s}
+.archive-grid a:hover img{transform:scale(1.04)}
+
+/* Work cards */
+.work{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:44px}
+.work-card{position:relative;aspect-ratio:4/5;overflow:hidden;border-radius:4px;background:#111}
+.work-card img{width:100%;height:100%;object-fit:cover;transition:transform .8s}
+.work-card:hover img{transform:scale(1.05)}
+.work-card .label{position:absolute;left:14px;bottom:14px;right:14px;display:flex;justify-content:space-between;align-items:end;gap:14px}
+.work-card .name{font-size:clamp(28px,4vw,54px);font-weight:700;letter-spacing:-.06em;line-height:.9}
+.work-card .tag{font-size:13px;color:var(--mute);font-weight:500}
+
+/* Awards list */
+.aw{display:grid;grid-template-columns:1fr 2fr auto;gap:14px;padding:18px 0;border-bottom:1px solid var(--line);font-size:16px;font-weight:600;opacity:0;transform:translateX(120px);transition:opacity .8s,transform .8s}
+.aw.in{opacity:1;transform:none}
+
+/* Sticky perspective cards */
+.process-wrap{display:grid;grid-template-columns:5fr 4fr;gap:64px;align-items:start;margin-top:64px}
+.proc-cards{display:flex;flex-direction:column;gap:14px}
+.proc-card{background:var(--card);border-radius:8px;padding:24px;display:flex;flex-direction:column;justify-content:space-between;min-height:420px;opacity:.4;transform:perspective(1200px) translateY(80px) rotateY(-12deg);transition:opacity .8s,transform .8s;position:sticky;top:80px}
+.proc-card:nth-child(2){top:120px}
+.proc-card:nth-child(3){top:160px}
+.proc-card.in{opacity:1;transform:perspective(1200px) translateY(0) rotateY(0)}
+.proc-card h4{font-size:clamp(36px,5vw,54px);font-weight:600;letter-spacing:-.06em;line-height:1;margin-bottom:14px}
+.proc-card h5{font-size:24px;font-weight:600;letter-spacing:-.04em;color:var(--mute);margin-bottom:24px}
+.proc-card p{font-size:14px;color:var(--mute);line-height:1.6}
+.proc-card .num{text-align:right;font-size:14px;color:var(--mute);font-weight:700}
+.proc-img{position:sticky;top:80px;aspect-ratio:5/6;border-radius:4px;overflow:hidden;background:#111}
+.proc-img img{width:100%;height:100%;object-fit:cover}
+
+/* Pricing */
+.pricing{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:64px}
+.tier{background:var(--card);border:1px solid #1c1c1c;border-radius:8px;padding:24px;display:flex;flex-direction:column;gap:24px;min-height:480px}
+.tier.feature{background:#1c1c1c;border:none}
+.tier .feat{display:flex;flex-direction:column;gap:14px}
+.tier .row{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:start;padding:14px 0;border-bottom:1px solid var(--line);font-size:14px;font-weight:600}
+.tier .row::before{content:"+";width:20px;height:20px;background:var(--off);color:var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;line-height:1}
+.tier .tag{font-size:13px;color:var(--mute);font-weight:500;margin-top:auto}
+.tier h3{font-family:"Inter",sans-serif;font-size:clamp(34px,4vw,44px);font-weight:600;letter-spacing:-.06em}
+.tier .desc{font-size:13px;color:var(--mute);line-height:1.6}
+.tier .cta{margin-top:auto;background:var(--off);color:var(--ink);padding:14px 24px;border-radius:14px;font-size:14px;font-weight:600;text-align:center;border:1px solid var(--mute);transition:filter .3s}
+.tier .cta:hover{filter:invert(1)}
+.tier .price-icon{width:28px;height:28px;background:var(--off);border-radius:5px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink);font-weight:600;margin-left:auto;font-size:14px}
+
+/* Team */
+.team{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:64px}
+.member{aspect-ratio:3/4;background:#111;border-radius:4px;overflow:hidden;position:relative}
+.member img{width:100%;height:100%;object-fit:cover;transition:transform .8s}
+.member:hover img{transform:scale(1.04)}
+.member .info{position:absolute;left:14px;bottom:14px;right:14px;display:flex;justify-content:space-between;align-items:end}
+.member .nm{font-size:20px;font-weight:600;letter-spacing:-.04em}
+.member .role{font-size:13px;color:var(--mute);font-weight:500}
+
+/* FAQ */
+.faq{display:flex;flex-direction:column;gap:14px;margin-top:64px}
+.q{background:var(--card);border-radius:4px;padding:24px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:18px;font-weight:500;letter-spacing:-.01em;line-height:1.4;opacity:0;transform:translateY(100px);transition:opacity .8s,transform .8s}
+.q.in{opacity:1;transform:none}
+.q::after{content:"+";font-size:20px;transition:transform .3s}
+.q.open::after{transform:rotate(45deg)}
+.q .ans{display:none;font-size:14px;color:var(--mute);font-weight:400;line-height:1.6;margin-top:14px;width:100%}
+.q.open{flex-wrap:wrap}
+.q.open .ans{display:block}
+
+/* Footer */
+.footer{padding:120px 14px 44px;text-align:center;position:relative;overflow:hidden}
+.footer .let{display:flex;flex-direction:column;gap:0;align-items:center;margin-bottom:64px}
+.footer .let .giant{text-align:center;font-size:clamp(54px,11vw,110px)}
+.footer-links{display:flex;justify-content:center;gap:24px;font-size:13px;color:var(--mute);font-weight:500;margin:24px 0}
+.footer .copy{font-size:13px;color:var(--mute);font-weight:500}
+.footer .cta{display:inline-flex;align-items:end;justify-content:center;gap:14px;margin:24px 0;font-size:16px;font-weight:600;border-bottom:1px solid var(--off);padding:0 0 4px;cursor:pointer}
+.footer .cta::after{content:"";width:7px;height:7px;background:var(--off);border-radius:50%;margin-bottom:6px}
+
+/* Marquee bottom band */
+.marquee{margin:64px 0;overflow:hidden;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:14px 0}
+.marquee-track{display:flex;gap:48px;animation:rail 35s linear infinite;width:max-content;white-space:nowrap;font-family:"Inter",sans-serif;font-weight:700;letter-spacing:-.04em;font-size:clamp(28px,5vw,54px)}
+.marquee-track span{display:flex;align-items:center;gap:48px}
+.marquee-track .dot{width:8px;height:8px;background:var(--off);border-radius:50%;flex:none}
+
+/* Noise overlay */
+.noise{position:fixed;inset:0;pointer-events:none;z-index:1000;opacity:.08;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");background-size:128px}
+
+/* Bottom mood mask */
+.mood{margin:64px auto 0;max-width:1200px;height:280px;position:relative;mask:radial-gradient(circle at center,transparent 35%,#000 38%);-webkit-mask:radial-gradient(circle at center,transparent 35%,#000 38%);overflow:hidden}
+.mood img{width:100%;height:100%;object-fit:cover;transform:scale(1.5)}
+
+/* Responsive */
+@media (max-width:809px){
+  .nav{padding:14px}
+  .nav .menu{gap:14px}
+  .cats{grid-template-columns:1fr;text-align:left}
+  .cats span{text-align:left!important}
+  .sub-line{flex-direction:column}
+  .archive-grid{grid-template-columns:1fr 1fr}
+  .work{grid-template-columns:1fr}
+  .team{grid-template-columns:1fr 1fr}
+  .pricing{grid-template-columns:1fr}
+  .process-wrap{grid-template-columns:1fr}
+  .section-split{grid-template-columns:1fr}
+  .headline{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="noise"></div>
+
+<nav class="nav">
+  <div class="logo"><span>M_B®</span><span>STUDIO</span></div>
+  <div class="menu">
+    <a href="#about">ABOUT</a>
+    <a href="#works">WORKS</a>
+    <a href="#process">PROCESS</a>
+    <a href="#team">TEAM</a>
+    <a href="#faq">FAQ</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-bg"><video src="../mb/assets/hero-video.mp4" autoplay loop muted playsinline></video></div>
+  <div class="cats">
+    <span>TRAIL ANTHEMS</span>
+    <span>R&amp;B HEART</span>
+    <span>SOUL TEXTURE</span>
+    <span>BOUNCE PULSE</span>
+    <span>LIVE FIRE</span>
+  </div>
+  <h1 class="giant" data-split="char">M_B®</h1>
+  <h1 class="giant rise" data-split="char">STUDIO</h1>
+  <p class="body-stagger" data-split="word">A son-of-Celina studio shaping disruptive stories through editorial sound, cinematic visuals, and forward-thinking direction.</p>
+  <div class="sub-line">
+    <div>
+      <span>EST. 2026 · CELINA, GA</span>
+      <span>INDEPENDENT · GLOBAL CATALOG</span>
+    </div>
+    <div>
+      <span>EDITORIAL</span>
+      <span>ARTIST</span>
+      <span>LIVE</span>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="about">
+  <div class="helper">(©26)</div>
+  <p class="section-body">With editorial precision and cinematic flair, M_B® shapes bold sonic stories that move the body, anchor the heart, and linger in memory.</p>
+  <div class="plus-row"><div class="plus"></div><div class="plus-line"></div><div class="plus"></div></div>
+  <div class="section-split">
+    <div class="helper">(Today)</div>
+    <div>
+      <p class="section-body">We bring records to life with precision, creativity, and a bold visual edge — delivering captivating songs and cinematic visuals that leave a lasting impression.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="framed">
+  <div class="helper">(Framed)</div>
+  <div class="headline">
+    <h2 class="giant" data-split="char" style="font-size:clamp(48px,8vw,110px)">UNVEILED</h2>
+    <h2 class="giant rise" data-split="char" style="font-size:clamp(48px,8vw,110px)">THE&nbsp;LENS</h2>
+  </div>
+  <div class="plus-row"><div class="plus"></div><div class="plus-line"></div><div class="plus"></div></div>
+  <p class="section-body">M_B® symbolizes nuanced minimalism and filmic sophistication. We champion disparity — brightness and obscurity, trail and silk.</p>
+  <div class="rail">
+    <img src="../mb/assets/covers/king-of-the-jungle.jpg" alt="King of the Jungle">
+    <img src="../mb/assets/covers/trail-ride-feat-stallyon.jpg" alt="Trail Ride feat. Stallyon">
+    <img src="../mb/assets/covers/juke-joint.jpg" alt="Juke Joint">
+    <img src="../mb/assets/covers/thirsty-thursday.jpg" alt="Thirsty Thursday">
+    <img src="../mb/assets/covers/king-of-the-jungle.jpg" alt="King of the Jungle">
+    <img src="../mb/assets/covers/trail-ride-feat-stallyon.jpg" alt="Trail Ride feat. Stallyon">
+    <img src="../mb/assets/covers/juke-joint.jpg" alt="Juke Joint">
+    <img src="../mb/assets/covers/thirsty-thursday.jpg" alt="Thirsty Thursday">
+  </div>
+</section>
+
+<section class="section" id="services">
+  <div class="helper">(Services)</div>
+  <div class="headline">
+    <h2 class="giant" data-split="char" style="font-size:clamp(48px,8vw,110px)">SOUNDS&nbsp;</h2>
+    <h2 class="giant rise" data-split="char" style="font-size:clamp(48px,8vw,110px)">WE&nbsp;MAKE</h2>
+  </div>
+  <div class="plus-row"><div class="plus"></div><div class="plus-line"></div><div class="plus"></div></div>
+  <p class="section-body">We offer a curated range of music services — from songwriting and production to live performance and distribution — designed to elevate the M_B® catalog through bold storytelling.</p>
+  <div class="svc-list">
+    <div class="svc"><span>MUSIC PRODUCTION</span><span></span><span class="num">01</span></div>
+    <div class="svc"><span>LIVE PERFORMANCE</span><span></span><span class="num">02</span></div>
+    <div class="svc"><span>CREATIVE DIRECTION</span><span></span><span class="num">03</span></div>
+    <div class="svc"><span>DISTRIBUTION &amp; SYNC</span><span></span><span class="num">04</span></div>
+    <div class="svc"><span>BOOKING &amp; TOURING</span><span></span><span class="num">05</span></div>
+  </div>
+</section>
+
+<section class="section" id="archive">
+  <div class="helper">(Archive)</div>
+  <div class="headline">
+    <h2 class="giant" data-split="char" style="font-size:clamp(48px,8vw,110px)">VISUAL</h2>
+    <h2 class="giant rise" data-split="char" style="font-size:clamp(48px,8vw,110px)">ARCHIVE</h2>
+  </div>
+  <div class="plus-row"><div class="plus"></div><div class="plus-line"></div><div class="plus"></div></div>
+  <p class="section-body">A curated collection of the most striking covers and cuts from the M_B® catalog — blending cinematic storytelling with artistic precision.</p>
+  <div class="archive-grid">
+    <a href="#"><img src="../mb/assets/covers/king-of-the-jungle.jpg" alt=""></a>
+    <a href="#"><img src="../mb/assets/covers/trail-ride-feat-stallyon.jpg" alt=""></a>
+    <a href="#"><img src="../mb/assets/covers/juke-joint.jpg" alt=""></a>
+    <a href="#"><img src="../mb/assets/covers/thirsty-thursday.jpg" alt=""></a>
+    <a href="#"><img src="../mb/assets/covers/king-of-the-jungle.jpg" alt=""></a>
+  </div>
+</section>
+
+<section class="section" id="works">
+  <div class="helper">(Works)</div>
+  <div class="headline">
+    <h2 class="giant" data-split="char" style="font-size:clamp(48px,8vw,110px)">SELECTED&nbsp;</h2>
+    <h2 class="giant rise" data-split="char" style="font-size:clamp(48px,8vw,110px)">RELEASES</h2>
+  </div>
+  <div class="plus-row"><div class="plus"></div><div class="plus-line"></div><div class="plus"></div></div>
+  <p class="section-body">Explore the four marquee M_B® releases — from trail anthems to juke nights, each crafted with a unique perspective.</p>
+  <div class="work">
+    <a href="#" class="work-card">
+      <img src="../mb/assets/covers/king-of-the-jungle.jpg" alt="King of the Jungle">
+      <div class="label"><div class="name">KING OF<br>THE JUNGLE</div><div class="tag">Trail / Anthemic / 2026</div></div>
+    </a>
+    <a href="#" class="work-card">
+      <img src="../mb/assets/covers/trail-ride-feat-stallyon.jpg" alt="Trail Ride">
+      <div class="label"><div class="name">TRAIL<br>RIDE</div><div class="tag">feat. Stallyon · Trail / Bounce</div></div>
+    </a>
+    <a href="#" class="work-card">
+      <img src="../mb/assets/covers/juke-joint.jpg" alt="Juke Joint">
+      <div class="label"><div class="name">JUKE<br>JOINT</div><div class="tag">Soul / Live / Texture</div></div>
+    </a>
+    <a href="#" class="work-card">
+      <img src="../mb/assets/covers/thirsty-thursday.jpg" alt="Thirsty Thursday">
+      <div class="label"><div class="name">THIRSTY<br>THURSDAY</div><div class="tag">R&amp;B / Bounce / Pulse</div></div>
+    </a>
+  </div>
+</section>
+
+<section class="section">
+  <div class="helper">(Acclaimed)</div>
+  <div class="headline">
+    <h2 class="giant" data-split="char" style="font-size:clamp(48px,8vw,110px)">ACCLAIMED&nbsp;</h2>
+    <h2 class="giant rise" data-split="char" style="font-size:clamp(48px,8vw,110px)">AWWARD</h2>
+  </div>
+  <div class="plus-row"><div class="plus"></div><div class="plus-line"></div><div class="plus"></div></div>
+  <p class="section-body">M_B® records have earned playlist features, radio adds, and festival slots — setting new sonic benchmarks.</p>
+  <div class="svc-list">
+    <div class="aw"><span>DistroKid Editorial</span><span>Trail Anthem Pick</span><span class="num">(2026)</span></div>
+    <div class="aw"><span>Spotify RADAR</span><span>Emerging Trail Artist</span><span class="num">(2026)</span></div>
+    <div class="aw"><span>Apple Music</span><span>R&amp;B Bounce Spotlight</span><span class="num">(2026)</span></div>
+    <div class="aw"><span>BJR Festival</span><span>Booked &amp; Performed</span><span class="num">(2026)</span></div>
+    <div class="aw"><span>Tidal Rising</span><span>Soul Texture Feature</span><span class="num">(2026)</span></div>
+    <div class="aw"><span>SoundCloud Next Wave</span><span>Live Fire Slot</span><span class="num">(2026)</span></div>
+  </div>
+</section>
+
+<section class="section" id="process">
+  <div class="helper">(Process)</div>
+  <div class="headline">
+    <h2 class="giant" data-split="char" style="font-size:clamp(48px,8vw,110px)">STUDIO&nbsp;</h2>
+    <h2 class="giant rise" data-split="char" style="font-size:clamp(48px,8vw,110px)">METHOD</h2>
+  </div>
+  <div class="plus-row"><div class="plus"></div><div class="plus-line"></div><div class="plus"></div></div>
+  <p class="section-body">More than just steps — our process is a collaborative path that shapes raw ideas into cinematic, editorial, and emotionally impactful records.</p>
+  <div class="process-wrap">
+    <div class="proc-cards">
+      <div class="proc-card"><div><h4>INITIAL&nbsp;</h4><h5>INTAKE</h5><p>We start with a conversation to understand the artist's voice, story, and direction. We listen, we map the lane, we align the sound.</p></div><div class="num">/01</div></div>
+      <div class="proc-card"><div><h4>CREATIVE&nbsp;</h4><h5>BUILD</h5><p>Strategy meets imagination. Moodboards, reference reels, demo sketches, full arrangement. Every element planned before the record button.</p></div><div class="num">/02</div></div>
+      <div class="proc-card"><div><h4>ACTION&nbsp;</h4><h5>TIME</h5><p>Tracking, performing, mixing, mastering. We execute the plan with precision and energy — capturing motion and emotion exactly as envisioned.</p></div><div class="num">/03</div></div>
+    </div>
+    <div class="proc-img"><img src="../mb/assets/covers/juke-joint.jpg" alt=""></div>
+  </div>
+</section>
+
+<section class="section" id="pricing">
+  <div class="helper">(Pricing)</div>
+  <div class="headline">
+    <h2 class="giant" data-split="char" style="font-size:clamp(48px,8vw,110px)">ARTISTRY&nbsp;</h2>
+    <h2 class="giant rise" data-split="char" style="font-size:clamp(48px,8vw,110px)">PRICED</h2>
+  </div>
+  <div class="plus-row"><div class="plus"></div><div class="plus-line"></div><div class="plus"></div></div>
+  <p class="section-body">Flexible pricing designed around the scale, style, and ambition of your record — just tailored craft.</p>
+  <div class="pricing">
+    <div class="tier">
+      <div class="feat">
+        <div class="row"><span></span><span>1–2 studio sessions</span><span></span></div>
+        <div class="row"><span></span><span>Moodboard &amp; sonic direction</span><span></span></div>
+        <div class="row"><span></span><span>Mix &amp; master pass</span><span></span></div>
+        <div class="row"><span></span><span>Distribution upload</span><span></span></div>
+        <div class="row"><span></span><span>Up to 3 creative concepts</span><span></span></div>
+        <div class="row"><span></span><span>Single + cover art</span><span></span></div>
+      </div>
+      <div>
+        <div class="tag">For independent artists landing a single sharp release.</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:end"><h3>Single Release</h3><div class="price-icon">+</div></div>
+    </div>
+    <div class="tier feature">
+      <div class="feat">
+        <div class="row"><span></span><span>2–4 studio sessions with full team</span><span></span></div>
+        <div class="row"><span></span><span>Advanced production setups</span><span></span></div>
+        <div class="row"><span></span><span>Location or studio of choice</span><span></span></div>
+        <div class="row"><span></span><span>Up to 3 deliverables (audio + visual)</span><span></span></div>
+        <div class="row"><span></span><span>Custom storyboard &amp; reference reel</span><span></span></div>
+        <div class="row"><span></span><span>Full editing &amp; cover suite</span><span></span></div>
+      </div>
+      <div>
+        <div class="tag">Studio / Performance / Custom Set — For brands and artists seeking premium, cinematic storytelling with a refined artistic touch.</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:end;gap:14px"><h3>Project Cohort</h3><a href="mailto:hi@m_b.studio" class="cta" style="margin:0;flex:1;text-align:center">Start Now</a></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="team">
+  <div class="helper">(Team)</div>
+  <div class="headline">
+    <h2 class="giant" data-split="char" style="font-size:clamp(48px,8vw,110px)">VISUAL</h2>
+    <h2 class="giant rise" data-split="char" style="font-size:clamp(48px,8vw,110px)">THINKERS</h2>
+  </div>
+  <div class="plus-row"><div class="plus"></div><div class="plus-line"></div><div class="plus"></div></div>
+  <p class="section-body">A collective of artists, strategists, and storytellers — united by a vision to create striking, meaningful work.</p>
+  <div class="team">
+    <div class="member">
+      <img src="../mb/assets/covers/king-of-the-jungle.jpg" alt="">
+      <div class="info"><div class="nm">M_B®</div><div class="role">Artist &amp; Creative Director</div></div>
+    </div>
+    <div class="member">
+      <img src="../mb/assets/covers/trail-ride-feat-stallyon.jpg" alt="">
+      <div class="info"><div class="nm">Celina</div><div class="role">Bookings &amp; Management</div></div>
+    </div>
+    <div class="member">
+      <img src="../mb/assets/covers/juke-joint.jpg" alt="">
+      <div class="info"><div class="nm">Stallyon</div><div class="role">Feature &amp; Collaborator</div></div>
+    </div>
+    <div class="member">
+      <img src="../mb/assets/covers/thirsty-thursday.jpg" alt="">
+      <div class="info"><div class="nm">EL R&amp;D</div><div class="role">Brand &amp; Visual System</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="faq">
+  <div class="helper">(FAQ)</div>
+  <div class="headline">
+    <h2 class="giant" data-split="char" style="font-size:clamp(48px,8vw,110px)">NEED</h2>
+    <h2 class="giant rise" data-split="char" style="font-size:clamp(48px,8vw,110px)">ANSWER</h2>
+  </div>
+  <div class="plus-row"><div class="plus"></div><div class="plus-line"></div><div class="plus"></div></div>
+  <p class="section-body">Whether you're planning your first record or refining the M_B® catalog vision — here are answers to common questions about how we work.</p>
+  <div class="faq">
+    <div class="q">What type of artists do you work with?<div class="ans">Independent artists, festival circuit acts, and brand collaborations. Trail, R&amp;B, soul, bounce, live performance lanes specifically.</div></div>
+    <div class="q">Do you offer full-service production?<div class="ans">Yes — from intake to final mastered &amp; distributed record. Mix, master, cover art, distribution upload, sync ready.</div></div>
+    <div class="q">Can we book just one service, like mixing or cover art?<div class="ans">Yes. Individual services are available; reach out via the contact line for à la carte pricing.</div></div>
+    <div class="q">How far in advance should we book?<div class="ans">4–6 weeks for single release, 8–12 weeks for project cohort. Festival booking lead-time longer.</div></div>
+    <div class="q">Do you work internationally?<div class="ans">Yes — we're based in Celina, GA but the catalog reaches globally via DistroKid, Spotify, Apple Music, Tidal, SoundCloud, BJR.</div></div>
+    <div class="q">What's your pricing structure?<div class="ans">Two tiers — Single Release and Project Cohort. Custom scope quotes available. Payments via PayPal or Square.</div></div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="let">
+    <h2 class="giant" data-split="char" style="text-align:center">LET'S&nbsp;MAKE</h2>
+    <h2 class="giant rise" data-split="char" style="text-align:center">ICONIC&nbsp;WORK</h2>
+  </div>
+  <a href="mailto:hi@m_b.studio" class="cta">Contact Us</a>
+  <div class="marquee">
+    <div class="marquee-track">
+      <span>M_B® STUDIO<i class="dot"></i></span>
+      <span>TRAIL ANTHEMS<i class="dot"></i></span>
+      <span>R&amp;B HEART<i class="dot"></i></span>
+      <span>SOUL TEXTURE<i class="dot"></i></span>
+      <span>BOUNCE PULSE<i class="dot"></i></span>
+      <span>LIVE FIRE<i class="dot"></i></span>
+      <span>M_B® STUDIO<i class="dot"></i></span>
+      <span>TRAIL ANTHEMS<i class="dot"></i></span>
+      <span>R&amp;B HEART<i class="dot"></i></span>
+      <span>SOUL TEXTURE<i class="dot"></i></span>
+      <span>BOUNCE PULSE<i class="dot"></i></span>
+      <span>LIVE FIRE<i class="dot"></i></span>
+    </div>
+  </div>
+  <div class="footer-links">
+    <a href="#">404</a>
+    <a href="#">PRIVACY</a>
+    <a href="#">TERMS</a>
+  </div>
+  <div class="copy">© 2026 M_B® STUDIO · Powered by Executive Leverage (R&amp;D) · Celina · Bookings &amp; Mgmt</div>
+</footer>
+
+<script>
+// Split-char rotate-in animation
+document.querySelectorAll('[data-split="char"]').forEach(el=>{
+  const text=el.textContent;
+  el.innerHTML=[...text].map(c=>`<span class="ch">${c===' '?'&nbsp;':c}</span>`).join('');
+});
+
+// Split-word stagger animation
+document.querySelectorAll('[data-split="word"]').forEach(el=>{
+  const text=el.textContent;
+  el.innerHTML=text.split(' ').map(w=>`<span class="w">${w}</span>`).join(' ');
+});
+
+// IntersectionObserver to trigger animations
+const io=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(!e.isIntersecting)return;
+    const t=e.target;
+    if(t.matches('[data-split="char"]')){
+      [...t.querySelectorAll('.ch')].forEach((c,i)=>{
+        setTimeout(()=>c.classList.add('in'),i*40);
+      });
+    }else if(t.matches('[data-split="word"]')){
+      [...t.querySelectorAll('.w')].forEach((w,i)=>{
+        setTimeout(()=>w.classList.add('in'),i*30);
+      });
+    }else{
+      t.classList.add('in');
+      // stagger children if they have transitions
+      [...t.querySelectorAll('.svc,.aw,.q,.cats span,.sub-line span')].forEach((c,i)=>{
+        setTimeout(()=>c.classList.add('in'),i*80);
+      });
+    }
+    io.unobserve(t);
+  });
+},{threshold:0.15});
+
+document.querySelectorAll('[data-split="char"],[data-split="word"],.helper,.plus-row,.section-body,.svc-list,.proc-card,.q,.cats,.sub-line').forEach(el=>io.observe(el));
+
+// Sticky perspective on process cards via scroll
+const procCards=document.querySelectorAll('.proc-card');
+window.addEventListener('scroll',()=>{
+  procCards.forEach(c=>{
+    const r=c.getBoundingClientRect();
+    const vh=window.innerHeight;
+    const p=Math.min(Math.max((vh-r.top)/(vh*1.5),0),1);
+    const ry=(1-p)*-12;
+    const ty=(1-p)*80;
+    c.style.transform=`perspective(1200px) translateY(${ty}px) rotateY(${ry}deg)`;
+    c.style.opacity=Math.max(p,0.4);
+  });
+});
+
+// FAQ accordion
+document.querySelectorAll('.q').forEach(q=>{
+  q.addEventListener('click',()=>q.classList.toggle('open'));
+});
+</script>
+</body>
+</html>
