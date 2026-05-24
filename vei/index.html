@@ -1369,11 +1369,35 @@ subscribeXenReplies();
   // Gesture fallback: any user interaction triggers mic if not already on
   const onFirstGesture = () => {
     if (!viz_listening) toggleMic().catch(() => {});
+    // iOS speech-synthesis unlock — fire a silent utterance inside the user
+    // gesture so subsequent speechSynthesis.speak() calls work in background.
+    // Without this prime, iOS Safari silently no-ops every speak() because
+    // autoplay-style audio requires user-gesture origin. One-time only.
+    try {
+      if ('speechSynthesis' in window && !window._veiSpeechUnlocked) {
+        const prime = new SpeechSynthesisUtterance('');
+        prime.volume = 0; prime.rate = 1;
+        window.speechSynthesis.speak(prime);
+        window._veiSpeechUnlocked = true;
+      }
+    } catch (_) {}
     document.body.removeEventListener('click', onFirstGesture);
     document.body.removeEventListener('touchstart', onFirstGesture);
   };
   document.body.addEventListener('click', onFirstGesture, { once: false, passive: true });
   document.body.addEventListener('touchstart', onFirstGesture, { once: false, passive: true });
+})();
+
+// ─── Voices load async on iOS — wait for voiceschanged before xen-out speaks
+// look up the preferred voice. Without this, getVoices() returns empty array
+// on first call and our pref-voice lookup hits null, breaking voice selection.
+(function loadVoicesEarly() {
+  if (!('speechSynthesis' in window)) return;
+  const trigger = () => { window.speechSynthesis.getVoices(); };
+  trigger();
+  if (typeof window.speechSynthesis.onvoiceschanged !== 'undefined') {
+    window.speechSynthesis.onvoiceschanged = trigger;
+  }
 })();
 
 fbSend.addEventListener('click', sendFallback);
