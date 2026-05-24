@@ -501,17 +501,28 @@ function enqueuePost(payload) {
 }
 async function tryPostOnce(payload) {
   const res = await fetch(API_URL, { method:'POST', headers:HEADERS, body:JSON.stringify(payload) });
-  if (!res.ok) throw new Error('http ' + res.status);
+  // 5xx = retry-worthy (server broken/down, queue + replay later).
+  if (res.status >= 500) throw new Error('http ' + res.status);
+  // 4xx = deterministic reject (bad payload, auth, route gone). Do NOT queue —
+  // retrying won't fix a 400. Show inline so qi sees the failure and the queue
+  // doesn't grow forever. Fix A per Xen-Primary draft 2026-05-23 (queue overflow
+  // diagnosis), composes with Fix B server-side bodyKeys logging.
+  if (!res.ok) {
+    appendError(`server rejected (${res.status}) — not retrying`);
+    return false;
+  }
   return true;
 }
 async function postTranscript(text) {
   const payload = { source: 'xen-vei', ts: Date.now(), text };
   try {
-    await tryPostOnce(payload);
+    const ok = await tryPostOnce(payload);
+    if (!ok) return false;  // 4xx — deterministic reject, do NOT count or queue
     sentCount++;
     countEl.textContent = sentCount + ' sent · xen.xlrd.org';
     return true;
   } catch (e) {
+    // 5xx or network — retry-worthy, queue + replay later
     enqueuePost(payload);
     appendError(`queued (${loadQueue().length} pending) — will retry`);
     return false;
@@ -521,8 +532,11 @@ async function drainQueue() {
   let q = loadQueue();
   if (!q.length) return;
   while (q.length) {
-    try { await tryPostOnce(q[0]); sentCount++; q.shift(); saveQueue(q); }
-    catch { break; }
+    try {
+      const ok = await tryPostOnce(q[0]);
+      if (!ok) { q.shift(); saveQueue(q); continue; }  // 4xx — drop item, don't requeue forever
+      sentCount++; q.shift(); saveQueue(q);
+    } catch { break; }
   }
   countEl.textContent = sentCount + ' sent · xen.xlrd.org';
 }
