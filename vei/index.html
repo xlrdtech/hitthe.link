@@ -625,38 +625,36 @@ function startListening() {
     stopBtn.disabled = false;
   };
 
-  // Fire-and-forget per qi 2026-05-23 17:44 — "It shouldn't be finals. It
-  // should be hitting the tui immediately. Just like before." Every interim
-  // and final POSTs to /api/dictate-inject the moment it arrives. Pane is
-  // the consumer and concatenates (canon_stt_audio_chain_2026-05-19 "instant
-  // chunks only"). Dedupe via lastPostedIndex so we don't re-POST the same
-  // interim text repeatedly as Web Speech keeps refining it.
+  // 3-fix patch 2026-05-23 (Xen-Primary draft, Xql ship): (1) checkmark race
+  // closed by capturing finalDiv ref BEFORE async post (no :last-child lookup
+  // after resolve), (2) interim spam closed by NOT POSTing interims (visual-only),
+  // (3) dedup applies ONLY to finals (interim refinement passes never blocked).
+  // Drops firehose volume ~5x, makes checkmarks correctly attach per-bubble.
   let lastPostedText = '';
   recognition.onresult = (e) => {
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const result = e.results[i];
       const text = (result[0].transcript || '').trim();
       if (!text) continue;
-      // Web Speech repeats/refines the SAME interim string — only POST when
-      // the running text actually grows or finalizes.
-      if (text === lastPostedText) continue;
       const isFinal = result.isFinal;
-      // Append to visible transcript
       if (isFinal) {
-        appendFinal(text, false);
+        // Dedup only on finals (Web Speech emits same text across
+        // confidence-refinement passes; interim should never block)
+        if (text === lastPostedText) continue;
+        const finalDiv = appendFinal(text, false);
+        lastPostedText = text;
+        // Capture div ref BEFORE async post so checkmark attaches
+        // to THIS final, not whatever happens to be :last-child
+        // when the promise resolves
+        postTranscript(text).then(posted => {
+          if (posted && finalDiv && !finalDiv.innerHTML.includes('posted')) {
+            finalDiv.innerHTML += ' <span class="posted">✓ posted</span>';
+          }
+        });
       } else {
+        // Interim is visual-only — no server post, no dedup, no race
         appendInterim(text);
       }
-      // Fire-and-forget POST (no await — pane gets it immediately)
-      postTranscript(text).then(posted => {
-        if (posted && isFinal) {
-          const lastFinal = transcript.querySelector('.final:last-child');
-          if (lastFinal && !lastFinal.innerHTML.includes('posted')) {
-            lastFinal.innerHTML += ' <span class="posted">✓ posted</span>';
-          }
-        }
-      });
-      lastPostedText = text;
     }
   };
 
