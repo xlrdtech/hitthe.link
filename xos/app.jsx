@@ -250,9 +250,18 @@ function linkifyBody(body, onOpenLink) {
 function MirrorCard({ ev, fresh, onReply, onOpenLink }) {
   const [open, setOpen] = useState(false);
   const [val, setVal] = useState("");
-  const time = new Date(Date.now() + (ev.ts || 0) * 1000);
+  /* qi 2026-05-25 04:11 timestamps fix: ev.ts is UNIX seconds (per
+     normalizeLiveEvent which already multiplies by 1000). Pass directly to
+     Date — previous code added it to Date.now() yielding far-future garbage. */
+  const time = ev._absTs ? new Date(ev._absTs)
+             : ev.ts ? new Date(ev.ts * 1000)
+             : new Date();
   const pad = (n) => String(n).padStart(2, "0");
-  const when = `${pad(time.getHours())}:${pad(time.getMinutes())}`;
+  let _h = time.getHours();
+  const _m = pad(time.getMinutes());
+  const _ampm = _h >= 12 ? "PM" : "AM";
+  _h = (_h % 12) || 12;
+  const when = `${_h}:${_m} ${_ampm}`;
   const sec = pad(time.getSeconds());
   const isOut = ev.dir === "out";
   /* qi 2026-05-17 8672 follow-up: chatID-keyed thread routing.
@@ -1393,7 +1402,17 @@ function NotificationToast({ notif, onDismiss }) {
           </div>
           <div className="notif-text">{notif.body}</div>
         </div>
-        <div className="notif-time">now</div>
+        {/* qi 2026-05-25 timestamp canon: show real h:mm AM/PM not hardcoded "now". */}
+        <div className="notif-time">{(() => {
+          const _t = notif._absTs ? new Date(notif._absTs)
+                   : notif.ts ? new Date(notif.ts * 1000)
+                   : new Date();
+          let _h = _t.getHours();
+          const _m = String(_t.getMinutes()).padStart(2,"0");
+          const _ampm = _h >= 12 ? "PM" : "AM";
+          _h = (_h % 12) || 12;
+          return `${_h}:${_m} ${_ampm}`;
+        })()}</div>
         {/* qi 2026-05-17 8672: "notifications need to be dismissible" */}
         <button
           className="notif-dismiss"

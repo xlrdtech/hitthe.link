@@ -132,6 +132,14 @@ header { padding:8px 0 22px; display:flex; align-items:flex-start; justify-conte
 
 /* Glass bubbles — heavy backdrop-blur + thin gloss highlight + translucent fill.
    qi-spec 2026-05-23: "super hyper realistic glass" */
+/* qi 2026-05-25 timestamp canon — h:mm AM/PM tag on every bubble. */
+.bubble-ts {
+  display:block; font-family:var(--mono); font-size:9.5px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--fg-dim); opacity:.62;
+  margin-bottom:4px;
+}
+.bubble-txt { display:block; }
+
 .final, .interim, .xen-reply {
   position:relative;
   max-width:78%; align-self:flex-start;
@@ -1246,13 +1254,30 @@ function renderEvent(d) {
   const key = `${src}|${txt.slice(0, 80)}|${d.ts || ''}`;
   if (_renderedKeys.has(key)) return;
   _renderedKeys.add(key);
+  // qi 2026-05-25 timestamp canon — every bubble shows h:mm AM/PM.
+  const _fmtTs = (raw) => {
+    const _t = raw ? new Date(raw > 9999999999 ? raw : raw * 1000) : new Date();
+    let _h = _t.getHours();
+    const _m = String(_t.getMinutes()).padStart(2,'0');
+    const _ampm = _h >= 12 ? 'PM' : 'AM';
+    _h = (_h % 12) || 12;
+    return `${_h}:${_m} ${_ampm}`;
+  };
+  const _stamp = _fmtTs(d.ts);
   // Classify side
   const isXenOut = tag.includes('xen-out') || src.includes('xen-reply') || src.includes('xen-primary') || src.includes('xen-out');
   const isUserDictate = tag.includes('xen-dictate-in') || src.includes('xen-vei') || src.includes('xen-ruach') || src.includes('xen-dictate');
   if (isXenOut) {
     const div = document.createElement('div');
     div.className = 'xen-reply';
-    div.textContent = txt;
+    const tsEl = document.createElement('span');
+    tsEl.className = 'bubble-ts';
+    tsEl.textContent = _stamp;
+    const txtEl = document.createElement('span');
+    txtEl.className = 'bubble-txt';
+    txtEl.textContent = txt;
+    div.appendChild(tsEl);
+    div.appendChild(txtEl);
     transcript.appendChild(div);
     attachBubbleActions(div, txt);
     transcript.scrollTop = transcript.scrollHeight;
@@ -1264,7 +1289,14 @@ function renderEvent(d) {
   } else if (isUserDictate) {
     const div = document.createElement('div');
     div.className = 'final';
-    div.textContent = txt;
+    const tsEl = document.createElement('span');
+    tsEl.className = 'bubble-ts';
+    tsEl.textContent = _stamp;
+    const txtEl = document.createElement('span');
+    txtEl.className = 'bubble-txt';
+    txtEl.textContent = txt;
+    div.appendChild(tsEl);
+    div.appendChild(txtEl);
     transcript.appendChild(div);
     attachBubbleActions(div, txt);
     transcript.scrollTop = transcript.scrollHeight;
