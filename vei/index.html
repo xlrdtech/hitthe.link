@@ -1455,14 +1455,30 @@ window.addEventListener('beforeunload', stopListening);
   }
 
   async function attachBroadcasterTracks(c) {
-    // Find the Loopback "out" virtual device by label and capture it. Falls
-    // back to default mic on mobile / when no Loopback exists.
-    let stream;
+    // Find the Loopback virtual device that carries Mac say audio. qi 2026-05-25
+    // canon (canon_stt_vei_inout): system audio routes through "out" Loopback;
+    // STT input arrives via "in" Loopback. Try labels in this order:
+    //   1. "out" (canon default — system audio bus)
+    //   2. "in"  (qi may set output→in during testing, channel still captures)
+    //   3. any Loopback / BlackHole virtual device
+    //   4. fall back to default mic (worst case, captures room audio)
+    // We need an audioinput permission once so labels populate; ask for it.
+    try { (await navigator.mediaDevices.getUserMedia({ audio: true })).getTracks().forEach(t => t.stop()); } catch (_) {}
+    let stream, chosen = null;
     try {
       const devs = await navigator.mediaDevices.enumerateDevices();
-      const out = devs.find(d => d.kind === 'audioinput' && /^out\b/i.test(d.label));
-      const constraints = out ? { audio: { deviceId: { exact: out.deviceId } } } : { audio: true };
+      const inputs = devs.filter(d => d.kind === 'audioinput');
+      console.log('[rtc] audioinputs:', inputs.map(d => d.label || '(unlabeled)'));
+      chosen =
+        inputs.find(d => /^out\b/i.test(d.label)) ||
+        inputs.find(d => /^in\b/i.test(d.label)) ||
+        inputs.find(d => /loopback|blackhole|virtual/i.test(d.label)) ||
+        null;
+      const constraints = chosen
+        ? { audio: { deviceId: { exact: chosen.deviceId }, echoCancellation: false, noiseSuppression: false, autoGainControl: false } }
+        : { audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } };
       stream = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log('[rtc] broadcasting via:', chosen ? chosen.label : '(default mic)');
     } catch (e) {
       console.warn('[rtc] getUserMedia failed', e); return;
     }
