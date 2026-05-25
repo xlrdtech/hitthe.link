@@ -196,10 +196,25 @@ header { padding:8px 0 22px; display:flex; align-items:flex-start; justify-conte
   border-left:1px solid rgba(0,255,136,.18);
   box-shadow:-12px 0 36px rgba(0,0,0,.45);
   display:flex; flex-direction:column;
-  transform:translateX(100%); transition:transform .28s ease-out;
+  transform:translateX(100%); transition:transform .28s ease-out, width .28s ease-out, top .28s ease-out, bottom .28s ease-out, left .28s ease-out;
   font-family:var(--mono); font-size:11.5px; color:var(--fg-dim);
 }
 #events-rail.open { transform:translateX(0); }
+/* qi 2026-05-25 — fullscreen mode for the firehose panel. Toggle via the
+   ⤢ button in the header. Covers the viewport so qi can read the whole
+   chronicle without the rest of VEI peeking through. */
+#events-rail.fullscreen {
+  top:0; bottom:0; left:0; width:100vw;
+  border-left:0; box-shadow:none;
+  background:rgba(4,10,7,.96);
+}
+#events-rail .er-head .er-fs {
+  cursor:pointer; padding:2px 8px; border-radius:6px;
+  background:rgba(0,255,136,.08); border:1px solid rgba(0,255,136,.18);
+  color:var(--accent); font-size:11px; letter-spacing:.04em; text-transform:none;
+  transition:background .15s, border-color .15s;
+}
+#events-rail .er-head .er-fs:hover { background:rgba(0,255,136,.18); }
 #events-rail .er-head {
   padding:12px 16px; border-bottom:1px solid rgba(0,255,136,.18);
   display:flex; align-items:center; justify-content:space-between;
@@ -449,7 +464,10 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
 <aside id="events-rail" aria-label="Operator events">
   <div class="er-head">
     <span>Operator · Firehose</span>
-    <span style="cursor:pointer" id="er-clear" title="Clear panel">clear</span>
+    <span style="display:flex; gap:8px; align-items:center">
+      <span class="er-fs" id="er-fullscreen" title="Toggle fullscreen">⤢ full</span>
+      <span style="cursor:pointer" id="er-clear" title="Clear panel">clear</span>
+    </span>
   </div>
   <div class="er-status">
     <span id="er-sse" class="ok">sse · connecting</span>
@@ -1321,6 +1339,16 @@ const _eventsPip = document.getElementById('er-pip');
 const _eventsSseStatus = document.getElementById('er-sse');
 const _eventsQueueStatus = document.getElementById('er-queue');
 const _eventsClear = document.getElementById('er-clear');
+const _eventsFullscreen = document.getElementById('er-fullscreen');
+if (_eventsFullscreen) {
+  _eventsFullscreen.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const rail = document.getElementById('events-rail');
+    if (!rail) return;
+    const isFs = rail.classList.toggle('fullscreen');
+    _eventsFullscreen.textContent = isFs ? '⤡ exit' : '⤢ full';
+  });
+}
 let _eventsUnseen = 0;
 function _eventsBumpCount() {
   _eventsCount.textContent = ++_eventsUnseen;
