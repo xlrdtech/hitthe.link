@@ -480,6 +480,14 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
 
 </div>
 
+<!-- vdo.ninja underlay — invisible WebRTC transport behind VEI UI. qi 2026-05-25:
+     "Can you underlay vdo.ninja so it's invisible behind the vei interface?"
+     Broadcaster side pushes captured audio to room xen-qi-vei; receiver side
+     pulls and plays. Hidden behind the UI but loaded in DOM so it stays active. -->
+<iframe id="vdo-rtc" allow="microphone; autoplay; speaker; camera"
+  style="position:fixed; left:-10000px; top:-10000px; width:1px; height:1px; opacity:0; pointer-events:none; border:0;"
+  referrerpolicy="no-referrer-when-downgrade"></iframe>
+
 <script>
 const API_URL = 'https://xen.xlrd.org/api/dictate-inject';
 const AUDIO_URL = 'https://xen.xlrd.org/api/dictate-audio';
@@ -1538,6 +1546,34 @@ window.addEventListener('beforeunload', stopListening);
 
   // Expose for debugging
   window._veiRTC = { get pc(){return pc;}, get role(){return role;}, room: RTC_ROOM, peerId };
+})();
+
+// ─── vdo.ninja underlay — proven WebRTC transport behind VEI UI ───
+// qi 2026-05-25 "Can you underlay vdo.ninja so it's invisible behind the vei
+// interface?". Mac broadcaster pushes to room; phone receiver pulls and plays.
+// Audio-only, autostart, hidden chrome. iframe stays in DOM so the stream
+// persists for the whole VEI session.
+(function vdoUnderlay() {
+  const iframe = document.getElementById('vdo-rtc');
+  if (!iframe) return;
+  const room = RTC_ROOM + '-vdo';
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const role = RTC_ROLE_OVERRIDE || (isMobile ? 'receive' : 'broadcast');
+  // Common params: audio only, no video, hidden UI, autostart skip-prompts
+  const common = '&webcam=0&audiooutput=default&hands=0&cleanoutput&fullscreen&noheader&nomic';
+  let url;
+  if (role === 'broadcast') {
+    // push=ROOM = sender. label=xen-mac so receiver sees a name.
+    // audiodevice param accepts substring match on device label.
+    url = `https://vdo.ninja/?push=${encodeURIComponent(room)}&audioonly&autostart&webcam=0&label=xen-mac&audiodevice=out&proaudio&stereo=2`;
+  } else {
+    // view=ROOM = receiver. Autoplay needs a gesture first (handled by VEI's
+    // existing first-tap unlock for remote audio).
+    url = `https://vdo.ninja/?view=${encodeURIComponent(room)}&autoplay&audiooutput=default&cleanoutput`;
+  }
+  iframe.src = url;
+  window._veiVDO = { url, role, room };
+  console.log('[vdo] underlay role=' + role + ' url=' + url);
 })();
 </script>
 </body>
