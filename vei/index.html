@@ -1258,6 +1258,53 @@ fileInput.addEventListener('change', async (e) => {
   });
 })();
 
+// ─── Paste-anywhere + text-drop-anywhere → composer input ──────────────
+// qi 2026-05-25 09:16-09:17 PT: same idea as drag-drop files but for text —
+// cmd-V paste from any focus state, or dragging selected text from anywhere
+// on the page (or another window), should auto-route into the chat composer.
+(function pasteAndTextDropAnywhere() {
+  function injectToComposer(text) {
+    if (!text) return;
+    const t = String(text);
+    // Append (preserve any existing draft) with a space separator if needed.
+    const current = fbText.value;
+    fbText.value = current ? (current.endsWith('\n') ? current + t : current + (current ? '\n' : '') + t) : t;
+    fbText.dispatchEvent(new Event('input', { bubbles: true }));
+    fbText.focus();
+    // Auto-grow if your CSS supports it
+    try { fbText.style.height = 'auto'; fbText.style.height = fbText.scrollHeight + 'px'; } catch (_) {}
+  }
+
+  // Paste anywhere on page — if focus isn't already in the textarea, capture
+  // clipboard text and route it. If the user is pasting into the textarea
+  // directly, leave the default behavior alone.
+  document.addEventListener('paste', (e) => {
+    const active = document.activeElement;
+    if (active === fbText) return; // user is already in the input, default paste handles it
+    if (!e.clipboardData) return;
+    const text = e.clipboardData.getData('text/plain');
+    if (!text) return;
+    e.preventDefault();
+    injectToComposer(text);
+  });
+
+  // Drag-drop TEXT (already dragged-and-dropped from another app or selection).
+  // The file drop handler above already preventDefaults and reads dataTransfer;
+  // we extend it to also pick up text/plain when no files are in the transfer.
+  document.addEventListener('drop', (e) => {
+    const dt = e.dataTransfer;
+    if (!dt) return;
+    // If files dropped, the earlier listener handled it. Only route text when
+    // no files came with the drop.
+    const hasFiles = (dt.files && dt.files.length) || (dt.items && Array.from(dt.items).some((it) => it.kind === 'file'));
+    if (hasFiles) return;
+    const text = dt.getData && (dt.getData('text/plain') || dt.getData('text'));
+    if (!text) return;
+    // The earlier drop handler already preventDefault'd; just route.
+    injectToComposer(text);
+  }, true); // capture phase so we see it before the file-walk handler bails on no files
+})();
+
 // ─── Multi-thread history (localStorage) + SSE replay (server-side) ─────
 // qi 2026-05-23: 'option to start a new thread', 'export only what I want
 // to export', 'I need to be able to get back and find my chats'.
