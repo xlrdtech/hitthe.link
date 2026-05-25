@@ -230,7 +230,9 @@ header { padding:8px 0 22px; display:flex; align-items:flex-start; justify-conte
   display:block; font-size:9px; color:rgba(255,255,255,.32); margin-top:2px;
 }
 #er-toggle {
-  position:fixed; right:14px; top:14px; z-index:21;
+  /* 2026-05-25 — was right:14px which overlapped the mic-icon qi designed
+     into the header. Shifted left of the mic (32px icon + 14px padding + 14px gap). */
+  position:fixed; right:60px; top:14px; z-index:21;
   width:auto; min-width:56px; padding:8px 14px;
   background:rgba(8,18,12,.78); backdrop-filter:blur(10px);
   border:1px solid rgba(0,255,136,.32); border-radius:18px;
@@ -481,8 +483,28 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
 <script>
 const API_URL = 'https://xen.xlrd.org/api/dictate-inject';
 const AUDIO_URL = 'https://xen.xlrd.org/api/dictate-audio';
+const RTC_SIGNAL_URL = 'https://xen.xlrd.org/api/rtc-signal';
 const HEADERS = { 'Content-Type': 'application/json' };
 const CHUNK_MS = 5000;
+
+// ── VEI RTC: transport Mac say-worker voice to phone over WebRTC (peer-to-peer,
+// identical audio bytes, no re-synthesis). qi 2026-05-25 "vei rtc... public".
+// Broadcaster (?role=broadcast) captures the Loopback "out" virtual device on
+// Mac. Receiver (default on mobile) attaches inbound track to hidden audio.
+// Signaling via omnimind /api/rtc-signal SSE+POST. Open Relay TURN for
+// cellular fallback per qi greenlight.
+const RTC_ROOM = new URLSearchParams(location.search).get('room') || 'xen-qi';
+const RTC_ROLE_OVERRIDE = new URLSearchParams(location.search).get('role'); // broadcast | receive | null
+const RTC_ICE = {
+  iceServers: [
+    { urls: 'stun:stun.cloudflare.com:3478' },
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+    { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+    { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
+  ],
+  iceCandidatePoolSize: 4,
+};
 
 const transcript = document.getElementById('transcript');
 const status = document.getElementById('status');
@@ -1227,26 +1249,10 @@ function renderEvent(d) {
     attachBubbleActions(div, txt);
     transcript.scrollTop = transcript.scrollHeight;
     saveHistory({ role: 'xen', text: txt, ts: d.ts || Date.now() });
-    // Option A · 2026-05-24 · speak xen-out replies via Web Speech Synthesis API
-    // so every device with VEI open (phone, watch, desktop) hears them. No extra
-    // Mac dep — works on any browser. Voice fires once per unique-key dedup above.
-    try {
-      if ('speechSynthesis' in window && txt && !_xenOutSpoken.has(key)) {
-        _xenOutSpoken.add(key);
-        // Cap memory: prune to last 200 spoken keys
-        if (_xenOutSpoken.size > 200) {
-          const it = _xenOutSpoken.values();
-          for (let i = 0; i < 50; i++) _xenOutSpoken.delete(it.next().value);
-        }
-        const u = new SpeechSynthesisUtterance(txt);
-        // Prefer AvaMultilingualNeural-style female voice if available, fallback to system default
-        const voices = window.speechSynthesis.getVoices();
-        const pref = voices.find(v => /ava|samantha|victoria|karen|allison/i.test(v.name)) || voices.find(v => /female/i.test(v.name));
-        if (pref) u.voice = pref;
-        u.rate = 1.05; u.pitch = 1.0; u.volume = 0.9;
-        window.speechSynthesis.speak(u);
-      }
-    } catch (_) { /* silent — voice is best-effort, never blocks render */ }
+    // 2026-05-25 — Web Speech speak() retired. Voice transport now rides VEI
+    // RTC (broadcaster captures Mac "out" Loopback, receiver plays inbound
+    // peer-to-peer audio). Identical bytes across devices; no re-synthesis of
+    // stale SSE backfill. See veiRTC() block at end of script.
   } else if (isUserDictate) {
     const div = document.createElement('div');
     div.className = 'final';
@@ -1369,18 +1375,7 @@ subscribeXenReplies();
   // Gesture fallback: any user interaction triggers mic if not already on
   const onFirstGesture = () => {
     if (!viz_listening) toggleMic().catch(() => {});
-    // iOS speech-synthesis unlock — fire a silent utterance inside the user
-    // gesture so subsequent speechSynthesis.speak() calls work in background.
-    // Without this prime, iOS Safari silently no-ops every speak() because
-    // autoplay-style audio requires user-gesture origin. One-time only.
-    try {
-      if ('speechSynthesis' in window && !window._veiSpeechUnlocked) {
-        const prime = new SpeechSynthesisUtterance('');
-        prime.volume = 0; prime.rate = 1;
-        window.speechSynthesis.speak(prime);
-        window._veiSpeechUnlocked = true;
-      }
-    } catch (_) {}
+    // TTS unlock retired 2026-05-25 — RTC handles cross-device voice now.
     document.body.removeEventListener('click', onFirstGesture);
     document.body.removeEventListener('touchstart', onFirstGesture);
   };
@@ -1411,6 +1406,123 @@ fbText.addEventListener('keydown', (e) => {
 // SR absence handled by Start button → routes to MediaRecorder directly
 
 window.addEventListener('beforeunload', stopListening);
+
+// ─── VEI RTC client ─── peer-to-peer voice transport, no Web Speech re-synth
+(function veiRTC() {
+  if (!('RTCPeerConnection' in window)) return;
+
+  // Role: explicit ?role=broadcast|receive wins; otherwise broadcaster if a
+  // non-default audio input ("out" Loopback) is selectable, else receiver.
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  let role = RTC_ROLE_OVERRIDE || (isMobile ? 'receive' : 'broadcast');
+
+  let pc = null;
+  let sseEs = null;
+  let peerId = Math.random().toString(36).slice(2, 10);
+  let remoteAudio = null;
+
+  async function postSignal(type, payload) {
+    try {
+      await fetch(RTC_SIGNAL_URL, {
+        method: 'POST',
+        headers: HEADERS,
+        body: JSON.stringify({ room: RTC_ROOM, from: peerId, role, type, payload }),
+      });
+    } catch (e) { console.warn('[rtc] signal post failed', e); }
+  }
+
+  function newPC() {
+    const c = new RTCPeerConnection(RTC_ICE);
+    c.onicecandidate = (e) => {
+      if (e.candidate) postSignal('ice', e.candidate.toJSON());
+    };
+    c.onconnectionstatechange = () => {
+      console.log('[rtc] state', c.connectionState);
+    };
+    c.ontrack = (e) => {
+      if (!remoteAudio) {
+        remoteAudio = document.createElement('audio');
+        remoteAudio.autoplay = true;
+        remoteAudio.playsInline = true;
+        remoteAudio.id = 'vei-rtc-audio';
+        remoteAudio.style.display = 'none';
+        document.body.appendChild(remoteAudio);
+      }
+      remoteAudio.srcObject = e.streams[0] || new MediaStream([e.track]);
+      remoteAudio.play().catch(() => { /* needs gesture; first-tap unlock below */ });
+    };
+    return c;
+  }
+
+  async function attachBroadcasterTracks(c) {
+    // Find the Loopback "out" virtual device by label and capture it. Falls
+    // back to default mic on mobile / when no Loopback exists.
+    let stream;
+    try {
+      const devs = await navigator.mediaDevices.enumerateDevices();
+      const out = devs.find(d => d.kind === 'audioinput' && /^out\b/i.test(d.label));
+      const constraints = out ? { audio: { deviceId: { exact: out.deviceId } } } : { audio: true };
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
+    } catch (e) {
+      console.warn('[rtc] getUserMedia failed', e); return;
+    }
+    stream.getAudioTracks().forEach(t => c.addTrack(t, stream));
+  }
+
+  async function handleSignal(msg) {
+    if (msg.from === peerId) return; // self
+    if (!pc) pc = newPC();
+    try {
+      if (msg.type === 'offer' && role === 'receive') {
+        await pc.setRemoteDescription(msg.payload);
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        postSignal('answer', answer);
+      } else if (msg.type === 'answer' && role === 'broadcast') {
+        await pc.setRemoteDescription(msg.payload);
+      } else if (msg.type === 'ice' && pc.remoteDescription) {
+        await pc.addIceCandidate(msg.payload).catch(() => {});
+      } else if (msg.type === 'hello' && role === 'broadcast') {
+        // Receiver said hi → make a fresh offer
+        await startBroadcast();
+      }
+    } catch (e) { console.warn('[rtc] signal handle', msg.type, e); }
+  }
+
+  async function startBroadcast() {
+    if (pc) try { pc.close(); } catch (_) {}
+    pc = newPC();
+    await attachBroadcasterTracks(pc);
+    const offer = await pc.createOffer({ offerToReceiveAudio: false });
+    await pc.setLocalDescription(offer);
+    postSignal('offer', offer);
+  }
+
+  function openSSE() {
+    try {
+      sseEs = new EventSource(`${RTC_SIGNAL_URL}/sse?room=${encodeURIComponent(RTC_ROOM)}&peer=${peerId}`);
+      sseEs.onmessage = (e) => { try { handleSignal(JSON.parse(e.data)); } catch (_) {} };
+      sseEs.onerror = () => { setTimeout(openSSE, 3000); };
+    } catch (e) { console.warn('[rtc] sse open', e); }
+  }
+
+  // Unlock audio playback on first gesture (iOS Safari needs this)
+  document.body.addEventListener('click', () => {
+    if (remoteAudio) remoteAudio.play().catch(() => {});
+  }, { passive: true, once: false });
+
+  // Boot
+  openSSE();
+  if (role === 'broadcast') {
+    // wait a beat for SSE to be ready, then announce and start
+    setTimeout(() => { postSignal('hello', {}); startBroadcast(); }, 600);
+  } else {
+    setTimeout(() => postSignal('hello', {}), 600);
+  }
+
+  // Expose for debugging
+  window._veiRTC = { get pc(){return pc;}, get role(){return role;}, room: RTC_ROOM, peerId };
+})();
 </script>
 </body>
 </html>
