@@ -1302,15 +1302,14 @@ body {
   justify-content: center;
   cursor: default;
 }
+/* qi 2026-05-25: white center bar removed. Swipe-bar stays as an invisible
+   tap target (tap → app drawer). Horizontal swipe still scrolls panes. */
 .app-grabber::before {
   content: "";
-  width: 56px;
-  height: 4px;
-  border-radius: 3px;
-  background: rgba(255,255,255,.22);
-  transition: background .2s, width .2s;
+  width: 0;
+  height: 0;
 }
-.app-grabber:hover::before { background: rgba(255,255,255,.4); width: 64px; }
+.app-grabber:hover::before { background: transparent; width: 0; }
 .app-grabber .lbl {
   position: absolute;
   top: -10px;

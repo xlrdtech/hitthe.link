@@ -1463,10 +1463,17 @@ function App() {
 
   const handleNewEvent = (ev) => {
     setLiveEvents((prev) => [ev, ...prev].slice(0, 60));
-    // Only fire toast for inbound events or out for visual variety
-    if (ev.dir !== "in") return;
+    /* qi 2026-05-25: toast fires for inbound notifications AND outbound xen-reply-vvs
+       responses so qi SEES my replies as visible cards in the swipe-bar area
+       alongside his omni-inbox stream. Toast suppressed only for noise events. */
+    const isInbound = ev.dir === "in";
+    const isXenOut =
+      ev.event === "xen-out" ||
+      (ev.src && /xen-reply|xen-primary|xen-out/i.test(ev.src)) ||
+      (ev.sender && /xen-primary/i.test(ev.sender));
+    if (!isInbound && !isXenOut) return;
     if (notifTimer.current) clearTimeout(notifTimer.current);
-    setNotif({ ...ev, closing: false });
+    setNotif({ ...ev, closing: false, isXenOut });
     notifTimer.current = setTimeout(() => {
       setNotif((n) => n ? { ...n, closing: true } : null);
       setTimeout(() => setNotif(null), 300);
