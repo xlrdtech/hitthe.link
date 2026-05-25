@@ -1265,6 +1265,28 @@ document.getElementById('tb-threads').addEventListener('click', () => {
   }
   threadPicker.style.display = 'block';
 });
+// qi 2026-05-25 08:25 PT — URLs in bubble text were not clickable
+// because we wrote textContent directly. linkifyTo() returns an array of
+// DOM nodes (text + <a> nodes) that bubbles append in order. Stops the
+// "can't tap the link" friction.
+function linkifyTo(parent, text) {
+  const urlRe = /\bhttps?:\/\/[^\s<>"']+/gi;
+  let last = 0;
+  let m;
+  while ((m = urlRe.exec(text)) !== null) {
+    if (m.index > last) parent.appendChild(document.createTextNode(text.slice(last, m.index)));
+    const a = document.createElement('a');
+    a.href = m[0];
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.textContent = m[0];
+    a.style.cssText = 'color:#0099ff;text-decoration:underline;word-break:break-all';
+    parent.appendChild(a);
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parent.appendChild(document.createTextNode(text.slice(last)));
+}
+
 function renderEvent(d) {
   const txt = (d.text || d.body || d.message || '').toString().trim();
   if (!txt) return;
@@ -1294,7 +1316,7 @@ function renderEvent(d) {
     tsEl.textContent = _stamp;
     const txtEl = document.createElement('span');
     txtEl.className = 'bubble-txt';
-    txtEl.textContent = txt;
+    linkifyTo(txtEl, txt);
     div.appendChild(tsEl);
     div.appendChild(txtEl);
     transcript.appendChild(div);
@@ -1313,7 +1335,7 @@ function renderEvent(d) {
     tsEl.textContent = _stamp;
     const txtEl = document.createElement('span');
     txtEl.className = 'bubble-txt';
-    txtEl.textContent = txt;
+    linkifyTo(txtEl, txt);
     div.appendChild(tsEl);
     div.appendChild(txtEl);
     transcript.appendChild(div);
