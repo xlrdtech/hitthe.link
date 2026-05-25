@@ -1156,7 +1156,9 @@ async function uploadAttachments(files) {
     fd.append('file', f, f.name);
     fd.append('source', 'xen-vei-attach');
     fd.append('ts', Date.now().toString());
-    appendError(`uploading ${f.name} (${(f.size/1024).toFixed(1)}KB)…`);
+    // Preserve folder path when walked from a drag-dropped directory.
+    if (f.__path) fd.append('relativePath', f.__path);
+    appendError(`uploading ${f.__path || f.name} (${(f.size/1024).toFixed(1)}KB)…`);
     try {
       const r = await fetch('https://xen.xlrd.org/api/dictate-attach', { method:'POST', body:fd });
       if (r.ok) {
@@ -1176,9 +1178,11 @@ fileInput.addEventListener('change', async (e) => {
   e.target.value = '';
 });
 
-// Drag-drop on the whole page (also satisfies "drop on text field" since the
-// listener bubbles up through the document). A subtle accent border lights up
-// the body while a file is dragged over, then drops away on drop/leave.
+// Drag-drop on the whole page — accepts FILES AND FOLDERS. qi 2026-05-25 08:45
+// PT "I try to drag a whole folder into the UI and it didn't work". Folders
+// are walked recursively via webkitGetAsEntry; every file inside ships to
+// /api/dictate-attach with a relative-path prefix so the server preserves
+// folder structure.
 (function wireDragDrop() {
   const stop = (e) => { e.preventDefault(); e.stopPropagation(); };
   let depth = 0;
@@ -1193,12 +1197,64 @@ fileInput.addEventListener('change', async (e) => {
     depth = Math.max(0, depth - 1);
     if (depth === 0) setActive(false);
   });
+
+  // Recursive walk over a FileSystemEntry (browser File API directory entry).
+  // Returns array of File objects with __path set to the relative path.
+  function walkEntry(entry, pathPrefix = '') {
+    return new Promise((resolve) => {
+      if (!entry) return resolve([]);
+      if (entry.isFile) {
+        entry.file(
+          (file) => { file.__path = pathPrefix + file.name; resolve([file]); },
+          () => resolve([])
+        );
+      } else if (entry.isDirectory) {
+        const reader = entry.createReader();
+        const collected = [];
+        const readBatch = () => reader.readEntries(async (entries) => {
+          if (!entries.length) return resolve(collected);
+          for (const e of entries) {
+            const sub = await walkEntry(e, pathPrefix + entry.name + '/');
+            collected.push(...sub);
+          }
+          readBatch(); // keep reading until empty (some browsers chunk readEntries)
+        }, () => resolve(collected));
+        readBatch();
+      } else {
+        resolve([]);
+      }
+    });
+  }
+
   document.addEventListener('drop', async (e) => {
     stop(e);
     depth = 0;
     setActive(false);
-    const files = Array.from(e.dataTransfer && e.dataTransfer.files || []);
-    if (files.length) await uploadAttachments(files);
+    const dt = e.dataTransfer;
+    if (!dt) return;
+    const items = dt.items ? Array.from(dt.items) : [];
+    let collected = [];
+    // Prefer items[] which can expose directories via webkitGetAsEntry().
+    if (items.length && items[0].webkitGetAsEntry) {
+      for (const it of items) {
+        const entry = it.webkitGetAsEntry && it.webkitGetAsEntry();
+        if (entry) {
+          const sub = await walkEntry(entry);
+          collected.push(...sub);
+        } else if (it.kind === 'file') {
+          const f = it.getAsFile && it.getAsFile();
+          if (f) collected.push(f);
+        }
+      }
+    }
+    // Fallback: plain files[] (no folder support, but covers older drag sources).
+    if (!collected.length && dt.files && dt.files.length) {
+      collected = Array.from(dt.files);
+    }
+    if (collected.length) {
+      appendError(`drag-drop · ${collected.length} file${collected.length === 1 ? '' : 's'} queued`);
+      await uploadAttachments(collected);
+    }
   });
 })();
 
