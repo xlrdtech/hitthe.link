@@ -35,6 +35,69 @@
       --radius-xl: 28px;
     }
 
+    /* Pro Autosliding Marquee · Infinite horizontal loop · Used between sections */
+    .marquee {
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      padding: 1.75rem 0;
+      mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+      -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+      border-top: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
+      background: linear-gradient(180deg, rgba(10, 18, 40, 0.2), rgba(14, 24, 50, 0.4), rgba(10, 18, 40, 0.2));
+      backdrop-filter: blur(6px);
+    }
+    .marquee-track {
+      display: inline-flex;
+      align-items: center;
+      gap: 3.5rem;
+      white-space: nowrap;
+      animation: marqueeScroll 50s linear infinite;
+      will-change: transform;
+    }
+    .marquee-track.reverse { animation-direction: reverse; }
+    .marquee-track.fast { animation-duration: 32s; }
+    .marquee-track.slow { animation-duration: 72s; }
+    @keyframes marqueeScroll {
+      from { transform: translate3d(0, 0, 0); }
+      to   { transform: translate3d(-50%, 0, 0); }
+    }
+    .marquee:hover .marquee-track { animation-play-state: paused; }
+    .marquee-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 1.25rem;
+      font-family: 'Anton', 'Inter', sans-serif;
+      font-size: 1.5rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-subtle);
+      transition: color 0.3s ease;
+    }
+    .marquee-item:hover, .marquee-item.bright { color: #ffffff; }
+    .marquee-item .marquee-dot {
+      width: 8px;
+      height: 8px;
+      background: linear-gradient(135deg, #b9c4d6, #ffffff, #8997b4);
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 0 12px rgba(120, 170, 255, 0.4);
+    }
+    .marquee-item .marquee-mb {
+      font-family: 'Anton', sans-serif;
+      background: linear-gradient(180deg, #ffffff, #b9c4d6, #8997b4);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+    }
+    @media (max-width: 768px) {
+      .marquee-item { font-size: 1.1rem; gap: 0.9rem; }
+      .marquee-track { gap: 2.25rem; }
+      .marquee { padding: 1.25rem 0; }
+    }
+
     /* Inline Audio Player · Custom navy-styled */
     .audio-player {
       width: 100%;
@@ -705,32 +768,32 @@
     </div>
 
     <!-- Hero Content -->
-    <div class="relative z-10 w-full max-w-7xl mx-auto px-6 mt-20 flex flex-col justify-center items-start text-left h-full">
+    <div class="relative z-10 w-full max-w-5xl mx-auto px-6 pt-24 md:pt-20 pb-12 flex flex-col justify-center items-center text-center h-full">
 
-      <div class="mb-8 inline-flex overflow-hidden rounded-full p-[1px] hero-sub" style="animation-delay: 0.1s;">
+      <div class="mb-6 md:mb-8 inline-flex overflow-hidden rounded-full p-[1px] hero-sub" style="animation-delay: 0.1s;">
         <span class="inline-flex h-full w-full items-center justify-center rounded-full px-5 py-2 text-xs font-semibold uppercase tracking-widest text-white border border-subtle backdrop-blur-3xl" style="background-color: rgba(10, 18, 40, 0.7);">
           <span class="inline-block w-2 h-2 bg-white rounded-full mr-3 animate-pulse"></span>
           Booking 2026
         </span>
       </div>
 
-      <h1 class="hero-title text-6xl md:text-8xl lg:text-[160px] mb-2 md:mb-4 text-left" id="hero-title">
+      <h1 class="hero-title text-7xl sm:text-8xl md:text-9xl lg:text-[180px] mb-1 md:mb-2 text-center leading-[0.85]" id="hero-title">
         <span class="hero-mb block">M_B</span>
-        <span class="shine-text block text-5xl md:text-7xl lg:text-[120px] mt-2 md:mt-4" data-text="SOUTHERN SOUL">SOUTHERN SOUL</span>
       </h1>
+      <span class="shine-text block text-3xl sm:text-4xl md:text-6xl lg:text-[88px] text-center mb-6 md:mb-8" data-text="SOUTHERN SOUL">SOUTHERN SOUL</span>
 
-      <p class="hero-sub text-base md:text-xl text-subtle mt-8 mb-12 max-w-2xl leading-relaxed font-light text-left" style="animation-delay: 1s;">
+      <p class="hero-sub text-base md:text-xl text-subtle mb-10 max-w-2xl mx-auto leading-relaxed font-light text-center px-4" style="animation-delay: 1s;">
         Out of Douglasville, GA. Mane Family Mafia. Trail rides, field parties, and rodeos across the South — real live vocals, every show.
       </p>
 
       <!-- Floating Interaction Block -->
-      <div class="hero-sub border border-subtle backdrop-blur-xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-8 max-w-4xl w-full hover:border-white/30 transition-all duration-500 group hover:shadow-[0_0_60px_-15px_rgba(120,170,255,0.4)]" style="background-color: rgba(10, 18, 40, 0.55); animation-delay: 1.3s;">
-        <div class="text-left">
+      <div class="hero-sub border border-subtle backdrop-blur-xl p-5 md:p-7 flex flex-col md:flex-row md:items-center md:justify-between gap-5 md:gap-8 max-w-3xl w-full mx-auto hover:border-white/30 transition-all duration-500 group hover:shadow-[0_0_60px_-15px_rgba(120,170,255,0.4)]" style="background-color: rgba(10, 18, 40, 0.55); animation-delay: 1.3s;">
+        <div class="text-center md:text-left">
           <div class="text-xs uppercase tracking-widest text-subtle mb-2 group-hover:text-white transition-colors">New Single</div>
-          <div class="text-2xl md:text-3xl font-bold tracking-tight mb-2">Trail Ride · feat. Stal'lyon</div>
-          <p class="text-sm text-subtle max-w-md">The one moving rooms right now. Stream it, then come see it live.</p>
+          <div class="text-xl md:text-2xl font-bold tracking-tight mb-1">Trail Ride · feat. Stal'lyon</div>
+          <p class="text-sm text-subtle max-w-md mx-auto md:mx-0">Moving rooms right now. Stream it, then catch it live.</p>
         </div>
-        <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto md:min-w-[300px]">
+        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto md:min-w-[280px]">
           <a href="https://distrokid.com/hyperfollow/mb64/trail-ride-feat-stallyon" target="_blank" class="btn-primary w-full sm:w-auto">Listen</a>
           <a href="#tour" class="btn-secondary w-full sm:w-auto">Tour Dates</a>
         </div>
@@ -744,7 +807,32 @@
     </div>
   </header>
 
-  <hr class="navy-divider">
+  <!-- Marquee · Brand Opener -->
+  <div class="marquee" aria-hidden="true" style="margin-top: 0; margin-bottom: 4rem;">
+    <div class="marquee-track">
+      <span class="marquee-item bright"><span class="marquee-mb">M_B</span></span>
+      <span class="marquee-item"><span class="marquee-dot"></span>SOUTHERN SOUL</span>
+      <span class="marquee-item">MANE FAMILY MAFIA</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>DOUGLASVILLE, GA</span>
+      <span class="marquee-item">REAL LIVE VOCALS</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>NOW BOOKING 2026</span>
+      <span class="marquee-item">TRAIL RIDES · FIELD PARTIES · RODEOS</span>
+      <span class="marquee-item bright"><span class="marquee-mb">M_B</span></span>
+      <span class="marquee-item"><span class="marquee-dot"></span>SOUTHERN SOUL</span>
+      <span class="marquee-item">MANE FAMILY MAFIA</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>DOUGLASVILLE, GA</span>
+      <span class="marquee-item">REAL LIVE VOCALS</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>NOW BOOKING 2026</span>
+      <span class="marquee-item">TRAIL RIDES · FIELD PARTIES · RODEOS</span>
+      <span class="marquee-item bright" aria-hidden="true"><span class="marquee-mb">M_B</span></span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>SOUTHERN SOUL</span>
+      <span class="marquee-item" aria-hidden="true">MANE FAMILY MAFIA</span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>DOUGLASVILLE, GA</span>
+      <span class="marquee-item" aria-hidden="true">REAL LIVE VOCALS</span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>NOW BOOKING 2026</span>
+      <span class="marquee-item" aria-hidden="true">TRAIL RIDES · FIELD PARTIES · RODEOS</span>
+    </div>
+  </div>
 
   <!-- Music (Catalog) -->
   <section id="music" class="px-6 max-w-7xl mx-auto py-12 relative section-ambient">
@@ -943,7 +1031,32 @@
     </div>
   </section>
 
-  <hr class="navy-divider">
+  <!-- Marquee · Streaming Everywhere -->
+  <div class="marquee my-12" aria-hidden="true">
+    <div class="marquee-track">
+      <span class="marquee-item"><span class="marquee-dot"></span>STREAMING EVERYWHERE</span>
+      <span class="marquee-item">SPOTIFY</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>APPLE MUSIC</span>
+      <span class="marquee-item">AMAZON MUSIC</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>TIDAL</span>
+      <span class="marquee-item">YOUTUBE MUSIC</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>PANDORA</span>
+      <span class="marquee-item">DEEZER</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>iHEART RADIO</span>
+      <span class="marquee-item">SOUNDCLOUD</span>
+      <!-- duplicate for seamless loop -->
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>STREAMING EVERYWHERE</span>
+      <span class="marquee-item" aria-hidden="true">SPOTIFY</span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>APPLE MUSIC</span>
+      <span class="marquee-item" aria-hidden="true">AMAZON MUSIC</span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>TIDAL</span>
+      <span class="marquee-item" aria-hidden="true">YOUTUBE MUSIC</span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>PANDORA</span>
+      <span class="marquee-item" aria-hidden="true">DEEZER</span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>iHEART RADIO</span>
+      <span class="marquee-item" aria-hidden="true">SOUNDCLOUD</span>
+    </div>
+  </div>
 
   <!-- Watch · Videos + Portraits -->
   <section id="watch" class="px-6 max-w-7xl mx-auto py-12 relative section-ambient">
@@ -1040,7 +1153,37 @@
     </div>
   </section>
 
-  <hr class="navy-divider">
+  <!-- Marquee · The Crew -->
+  <div class="marquee my-12" aria-hidden="true">
+    <div class="marquee-track reverse fast">
+      <span class="marquee-item bright"><span class="marquee-mb">M_B</span></span>
+      <span class="marquee-item">STAL'LYON</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>MANE FAMILY MAFIA</span>
+      <span class="marquee-item">DDSB</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>GREYSOUL DA LEGEND</span>
+      <span class="marquee-item">JANELL</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>DUBBA SHOTTZ</span>
+      <span class="marquee-item">SHAY JONES</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>UNCLE LUCKY LUCK</span>
+      <span class="marquee-item">DJ TRUCKER</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>DJ D.WALK</span>
+      <span class="marquee-item">DJ MEGA</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>DJ PAYME</span>
+      <span class="marquee-item bright" aria-hidden="true"><span class="marquee-mb">M_B</span></span>
+      <span class="marquee-item" aria-hidden="true">STAL'LYON</span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>MANE FAMILY MAFIA</span>
+      <span class="marquee-item" aria-hidden="true">DDSB</span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>GREYSOUL DA LEGEND</span>
+      <span class="marquee-item" aria-hidden="true">JANELL</span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>DUBBA SHOTTZ</span>
+      <span class="marquee-item" aria-hidden="true">SHAY JONES</span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>UNCLE LUCKY LUCK</span>
+      <span class="marquee-item" aria-hidden="true">DJ TRUCKER</span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>DJ D.WALK</span>
+      <span class="marquee-item" aria-hidden="true">DJ MEGA</span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>DJ PAYME</span>
+    </div>
+  </div>
 
   <!-- Tour Dates -->
   <section id="tour" class="px-6 max-w-7xl mx-auto py-12 relative section-ambient">
@@ -1271,7 +1414,39 @@
     </div>
   </section>
 
-  <hr class="navy-divider">
+  <!-- Marquee · Tour Cities -->
+  <div class="marquee my-12" aria-hidden="true">
+    <div class="marquee-track slow">
+      <span class="marquee-item bright"><span class="marquee-dot"></span>ON THE ROAD</span>
+      <span class="marquee-item">FITZGERALD, GA</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>ABBEVILLE, SC</span>
+      <span class="marquee-item">ROANOKE, AL</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>MIDWAY, AL</span>
+      <span class="marquee-item">PIEDMONT, SC</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>ESTILL, SC</span>
+      <span class="marquee-item">SPARTA, GA</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>MILNER, GA</span>
+      <span class="marquee-item">RHINE, GA</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>CULLODEN, GA</span>
+      <span class="marquee-item">KILGORE, TX</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>JACKSONVILLE, FL</span>
+      <span class="marquee-item">DOUGLASVILLE, GA</span>
+      <span class="marquee-item bright" aria-hidden="true"><span class="marquee-dot"></span>ON THE ROAD</span>
+      <span class="marquee-item" aria-hidden="true">FITZGERALD, GA</span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>ABBEVILLE, SC</span>
+      <span class="marquee-item" aria-hidden="true">ROANOKE, AL</span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>MIDWAY, AL</span>
+      <span class="marquee-item" aria-hidden="true">PIEDMONT, SC</span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>ESTILL, SC</span>
+      <span class="marquee-item" aria-hidden="true">SPARTA, GA</span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>MILNER, GA</span>
+      <span class="marquee-item" aria-hidden="true">RHINE, GA</span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>CULLODEN, GA</span>
+      <span class="marquee-item" aria-hidden="true">KILGORE, TX</span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>JACKSONVILLE, FL</span>
+      <span class="marquee-item" aria-hidden="true">DOUGLASVILLE, GA</span>
+    </div>
+  </div>
 
   <!-- Flyer Wall · Every Show, Every Flyer -->
   <section id="flyers" class="px-6 max-w-7xl mx-auto py-12 relative section-ambient">
@@ -1362,7 +1537,35 @@
     </div>
   </section>
 
-  <hr class="navy-divider">
+  <!-- Marquee · The Vibes -->
+  <div class="marquee my-12" aria-hidden="true">
+    <div class="marquee-track">
+      <span class="marquee-item bright"><span class="marquee-dot"></span>SOUTHERN SOUL</span>
+      <span class="marquee-item">TRAIL RIDE</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>FIELD PARTY</span>
+      <span class="marquee-item">RODEO</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>BOOTS ON THE GROUND</span>
+      <span class="marquee-item">STEP HARD · RIDE DIRTY</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>DUKES &amp; BOOTS</span>
+      <span class="marquee-item">SOUL FEAST</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>BUGGY N STEPPAZ</span>
+      <span class="marquee-item">CARRYING ON IN THE VILLE</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>40 ACRES &amp; A MULE</span>
+      <span class="marquee-item">SOUTHERN SADDLE</span>
+      <span class="marquee-item bright" aria-hidden="true"><span class="marquee-dot"></span>SOUTHERN SOUL</span>
+      <span class="marquee-item" aria-hidden="true">TRAIL RIDE</span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>FIELD PARTY</span>
+      <span class="marquee-item" aria-hidden="true">RODEO</span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>BOOTS ON THE GROUND</span>
+      <span class="marquee-item" aria-hidden="true">STEP HARD · RIDE DIRTY</span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>DUKES &amp; BOOTS</span>
+      <span class="marquee-item" aria-hidden="true">SOUL FEAST</span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>BUGGY N STEPPAZ</span>
+      <span class="marquee-item" aria-hidden="true">CARRYING ON IN THE VILLE</span>
+      <span class="marquee-item" aria-hidden="true"><span class="marquee-dot"></span>40 ACRES &amp; A MULE</span>
+      <span class="marquee-item" aria-hidden="true">SOUTHERN SADDLE</span>
+    </div>
+  </div>
 
   <!-- About M_B -->
   <section id="about" class="px-6 max-w-5xl mx-auto py-12 relative section-ambient">
