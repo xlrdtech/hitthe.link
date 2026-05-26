@@ -29,7 +29,53 @@
       --accent: #ffffff;
       --navy-glow: rgba(80, 130, 220, 0.18);
       --navy-glow-strong: rgba(120, 170, 255, 0.28);
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
     }
+
+    /* Global Rounding */
+    .glow-card,
+    .glow-card > div:first-child,
+    .border.border-subtle:not(.tour-row),
+    .reveal-stagger > div,
+    nav .border,
+    .btn-primary,
+    .btn-secondary,
+    button:not(.book-modal-close),
+    input, select, textarea,
+    img, video {
+      border-radius: var(--radius-md);
+    }
+    .btn-primary, .btn-secondary, nav a.border, input, select, textarea {
+      border-radius: var(--radius-sm);
+    }
+    .book-modal-panel { border-radius: var(--radius-xl); }
+    .book-modal-close { border-radius: 50%; }
+    /* Tour rows · rounded on first + last for clean list edges */
+    .tour-row:first-child { border-top-left-radius: var(--radius-md); border-top-right-radius: var(--radius-md); }
+    .tour-row:last-child { border-bottom-left-radius: var(--radius-md); border-bottom-right-radius: var(--radius-md); }
+    /* Card image containers · top-rounded only since text fills the bottom */
+    .glow-card > div.w-full.aspect-\[16\/9\],
+    .glow-card > div.w-full.aspect-video,
+    .glow-card > div.w-full.aspect-\[4\/5\],
+    .glow-card > div.w-full.aspect-\[3\/4\] {
+      border-top-left-radius: var(--radius-md);
+      border-top-right-radius: var(--radius-md);
+      overflow: hidden;
+    }
+    /* Inner images/videos take the parent's clipping */
+    .glow-card img, .glow-card video { border-radius: 0; }
+    /* Hero floating block + tour wrapper get lg radius */
+    header .border.border-subtle.backdrop-blur-xl { border-radius: var(--radius-lg); }
+    #tour > div.border.border-subtle { border-radius: var(--radius-md); overflow: hidden; }
+    /* Date number block in tour rows */
+    .tour-row .text-3xl { display: inline-block; }
+    /* Nav book button pill-ish */
+    nav a[href="#book"] { border-radius: 999px; }
+    /* New release badge floating in cover image */
+    .glow-card .absolute.top-5.right-5 { border-radius: var(--radius-sm); }
 
     html, body {
       background-color: var(--bg-base);
@@ -445,6 +491,10 @@
             Tour
             <span class="absolute -bottom-1 left-0 w-0 h-px bg-white transition-all group-hover:w-full"></span>
           </a>
+          <a href="#flyers" class="hover:text-white transition-colors relative group">
+            Flyers
+            <span class="absolute -bottom-1 left-0 w-0 h-px bg-white transition-all group-hover:w-full"></span>
+          </a>
           <a href="#about" class="hover:text-white transition-colors relative group">
             About
             <span class="absolute -bottom-1 left-0 w-0 h-px bg-white transition-all group-hover:w-full"></span>
@@ -595,10 +645,118 @@
           </a>
         </div>
       </div>
+
+      <!-- Item 5 -->
+      <div class="border border-subtle glow-card hover-glow group cursor-pointer hidden-deployment" style="display: none;">
+        <div class="w-full aspect-[16/9] border-b border-subtle overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/covers/steppaz-anthem.jpg" alt="Steppaz Anthem" class="w-full h-full object-cover img-zoom grayscale opacity-50">
+        </div>
+        <div class="p-8">
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-2xl font-bold tracking-tight">Steppaz Anthem</h3>
+            <span class="font-mono text-xs text-subtle">005</span>
+          </div>
+          <p class="text-base text-subtle mb-8">For the line dancers. For the floor.</p>
+          <a href="https://distrokid.com/hyperfollow/mb64/steppaz-anthem" target="_blank" class="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-widest border-b border-subtle pb-2 hover:text-white hover:border-white text-subtle transition-all w-max group-hover:gap-4">
+            Listen
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.14645 3.14645C8.34171 2.95118 8.65829 2.95118 8.85355 3.14645L12.8536 7.14645C13.0488 7.34171 13.0488 7.65829 12.8536 7.85355L8.85355 11.8536C8.65829 12.0488 8.34171 12.0488 8.14645 11.8536C7.95118 11.6583 7.95118 11.3417 8.14645 11.1464L11.2929 8H2.5C2.22386 8 2 7.77614 2 7.5C2 7.22386 2.22386 7 2.5 7H11.2929L8.14645 3.85355C7.95118 3.65829 7.95118 3.34171 8.14645 3.14645Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Item 6 -->
+      <div class="border border-subtle glow-card hover-glow group cursor-pointer hidden-deployment" style="display: none;">
+        <div class="w-full aspect-[16/9] border-b border-subtle overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/covers/trail-bounce-anthem.jpg" alt="Trail Bounce Anthem" class="w-full h-full object-cover img-zoom grayscale opacity-50">
+        </div>
+        <div class="p-8">
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-2xl font-bold tracking-tight">Trail Bounce Anthem</h3>
+            <span class="font-mono text-xs text-subtle">006</span>
+          </div>
+          <p class="text-base text-subtle mb-8">Trail-ride rhythm. Built for the saddle.</p>
+          <a href="https://distrokid.com/hyperfollow/mb64/trail-bounce-anthem" target="_blank" class="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-widest border-b border-subtle pb-2 hover:text-white hover:border-white text-subtle transition-all w-max group-hover:gap-4">
+            Listen
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.14645 3.14645C8.34171 2.95118 8.65829 2.95118 8.85355 3.14645L12.8536 7.14645C13.0488 7.34171 13.0488 7.65829 12.8536 7.85355L8.85355 11.8536C8.65829 12.0488 8.34171 12.0488 8.14645 11.8536C7.95118 11.6583 7.95118 11.3417 8.14645 11.1464L11.2929 8H2.5C2.22386 8 2 7.77614 2 7.5C2 7.22386 2.22386 7 2.5 7H11.2929L8.14645 3.85355C7.95118 3.65829 7.95118 3.34171 8.14645 3.14645Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Item 7 -->
+      <div class="border border-subtle glow-card hover-glow group cursor-pointer hidden-deployment" style="display: none;">
+        <div class="w-full aspect-[16/9] border-b border-subtle overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/covers/juke-joint.jpg" alt="Juke Joint" class="w-full h-full object-cover img-zoom grayscale opacity-50">
+        </div>
+        <div class="p-8">
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-2xl font-bold tracking-tight">Juke Joint</h3>
+            <span class="font-mono text-xs text-subtle">007</span>
+          </div>
+          <p class="text-base text-subtle mb-8">Grown folks, low lights, slow bass.</p>
+          <a href="https://distrokid.com/hyperfollow/mb64/juke-joint" target="_blank" class="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-widest border-b border-subtle pb-2 hover:text-white hover:border-white text-subtle transition-all w-max group-hover:gap-4">
+            Listen
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.14645 3.14645C8.34171 2.95118 8.65829 2.95118 8.85355 3.14645L12.8536 7.14645C13.0488 7.34171 13.0488 7.65829 12.8536 7.85355L8.85355 11.8536C8.65829 12.0488 8.34171 12.0488 8.14645 11.8536C7.95118 11.6583 7.95118 11.3417 8.14645 11.1464L11.2929 8H2.5C2.22386 8 2 7.77614 2 7.5C2 7.22386 2.22386 7 2.5 7H11.2929L8.14645 3.85355C7.95118 3.65829 7.95118 3.34171 8.14645 3.14645Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Item 8 -->
+      <div class="border border-subtle glow-card hover-glow group cursor-pointer hidden-deployment" style="display: none;">
+        <div class="w-full aspect-[16/9] border-b border-subtle overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/covers/king-of-the-jungle.jpg" alt="King Of The Jungle" class="w-full h-full object-cover img-zoom grayscale opacity-50">
+        </div>
+        <div class="p-8">
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-2xl font-bold tracking-tight">King Of The Jungle</h3>
+            <span class="font-mono text-xs text-subtle">008</span>
+          </div>
+          <p class="text-base text-subtle mb-8">Statement of intent. Mane Family Mafia stomp.</p>
+          <a href="https://distrokid.com/hyperfollow/mb64/king-of-the-jungle" target="_blank" class="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-widest border-b border-subtle pb-2 hover:text-white hover:border-white text-subtle transition-all w-max group-hover:gap-4">
+            Listen
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.14645 3.14645C8.34171 2.95118 8.65829 2.95118 8.85355 3.14645L12.8536 7.14645C13.0488 7.34171 13.0488 7.65829 12.8536 7.85355L8.85355 11.8536C8.65829 12.0488 8.34171 12.0488 8.14645 11.8536C7.95118 11.6583 7.95118 11.3417 8.14645 11.1464L11.2929 8H2.5C2.22386 8 2 7.77614 2 7.5C2 7.22386 2.22386 7 2.5 7H11.2929L8.14645 3.85355C7.95118 3.65829 7.95118 3.34171 8.14645 3.14645Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Item 9 -->
+      <div class="border border-subtle glow-card hover-glow group cursor-pointer hidden-deployment" style="display: none;">
+        <div class="w-full aspect-[16/9] border-b border-subtle overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/covers/say-yes.jpg" alt="Say Yes" class="w-full h-full object-cover img-zoom grayscale opacity-50">
+        </div>
+        <div class="p-8">
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-2xl font-bold tracking-tight">Say Yes</h3>
+            <span class="font-mono text-xs text-subtle">009</span>
+          </div>
+          <p class="text-base text-subtle mb-8">Slow groove. For the slow walkers and the stayers.</p>
+          <a href="https://distrokid.com/hyperfollow/mb64/say-yes" target="_blank" class="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-widest border-b border-subtle pb-2 hover:text-white hover:border-white text-subtle transition-all w-max group-hover:gap-4">
+            Listen
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.14645 3.14645C8.34171 2.95118 8.65829 2.95118 8.85355 3.14645L12.8536 7.14645C13.0488 7.34171 13.0488 7.65829 12.8536 7.85355L8.85355 11.8536C8.65829 12.0488 8.34171 12.0488 8.14645 11.8536C7.95118 11.6583 7.95118 11.3417 8.14645 11.1464L11.2929 8H2.5C2.22386 8 2 7.77614 2 7.5C2 7.22386 2.22386 7 2.5 7H11.2929L8.14645 3.85355C7.95118 3.65829 7.95118 3.34171 8.14645 3.14645Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Item 10 -->
+      <div class="border border-subtle glow-card hover-glow group cursor-pointer hidden-deployment" style="display: none;">
+        <div class="w-full aspect-[16/9] border-b border-subtle overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/covers/twas-the-night-before-trailride.jpg" alt="Twas The Night Before Trailride" class="w-full h-full object-cover img-zoom grayscale opacity-50">
+        </div>
+        <div class="p-8">
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-2xl font-bold tracking-tight">'Twas The Night Before Trailride</h3>
+            <span class="font-mono text-xs text-subtle">010</span>
+          </div>
+          <p class="text-base text-subtle mb-8">The pre-ride mood. Lock in.</p>
+          <a href="https://distrokid.com/hyperfollow/mb64/twas-the-night-before-trailride" target="_blank" class="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-widest border-b border-subtle pb-2 hover:text-white hover:border-white text-subtle transition-all w-max group-hover:gap-4">
+            Listen
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.14645 3.14645C8.34171 2.95118 8.65829 2.95118 8.85355 3.14645L12.8536 7.14645C13.0488 7.34171 13.0488 7.65829 12.8536 7.85355L8.85355 11.8536C8.65829 12.0488 8.34171 12.0488 8.14645 11.8536C7.95118 11.6583 7.95118 11.3417 8.14645 11.1464L11.2929 8H2.5C2.22386 8 2 7.77614 2 7.5C2 7.22386 2.22386 7 2.5 7H11.2929L8.14645 3.85355C7.95118 3.65829 7.95118 3.34171 8.14645 3.14645Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+          </a>
+        </div>
+      </div>
     </div>
 
     <div class="mt-16 text-center reveal border-t border-subtle pt-10">
-      <button id="load-more-btn" class="btn-secondary w-full md:w-auto px-10 hover:bg-white hover:text-[#050b1c]">See All Songs</button>
+      <button id="load-more-btn" class="btn-secondary w-full md:w-auto px-10 hover:bg-white hover:text-[#050b1c]">See All 10 Songs</button>
     </div>
   </section>
 
@@ -656,24 +814,44 @@
     </div>
 
     <!-- Portrait Strip -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-16 reveal-stagger">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-16 reveal-stagger">
       <div class="border border-subtle glow-card hover-glow overflow-hidden group">
-        <div class="w-full aspect-[4/5] bg-white overflow-hidden">
-          <img src="assets/portraits/mb-portrait-1.jpg" alt="MB Portrait · Studio" class="w-full h-full object-cover img-zoom">
+        <div class="w-full aspect-[4/5] overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/portraits/mb-portrait-1.jpg" alt="MB Portrait · Studio" class="w-full h-full object-cover img-zoom" loading="lazy">
         </div>
-        <div class="p-6 flex items-center justify-between">
-          <span class="text-sm font-semibold uppercase tracking-widest">Studio · 2026</span>
-          <span class="font-mono text-xs text-subtle">PRESS 01</span>
+        <div class="p-5 flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-widest">Studio · 2026</span>
+          <span class="font-mono text-[10px] text-subtle">PRESS 01</span>
         </div>
       </div>
 
       <div class="border border-subtle glow-card hover-glow overflow-hidden group">
-        <div class="w-full aspect-[4/5] bg-white overflow-hidden">
-          <img src="assets/portraits/mb-portrait-2.png" alt="MB Portrait · Western Cut" class="w-full h-full object-cover img-zoom">
+        <div class="w-full aspect-[4/5] overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/portraits/mb-portrait-2.png" alt="MB Portrait · Mane Family Mafia" class="w-full h-full object-cover img-zoom" loading="lazy">
         </div>
-        <div class="p-6 flex items-center justify-between">
-          <span class="text-sm font-semibold uppercase tracking-widest">Mane Family Mafia Cut</span>
-          <span class="font-mono text-xs text-subtle">PRESS 02</span>
+        <div class="p-5 flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-widest">Mane Family Mafia</span>
+          <span class="font-mono text-[10px] text-subtle">PRESS 02</span>
+        </div>
+      </div>
+
+      <div class="border border-subtle glow-card hover-glow overflow-hidden group">
+        <div class="w-full aspect-[4/5] overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/portraits/mb-portrait-3.jpg" alt="MB Portrait · Promo Cut A" class="w-full h-full object-cover img-zoom" loading="lazy">
+        </div>
+        <div class="p-5 flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-widest">Promo · Cut A</span>
+          <span class="font-mono text-[10px] text-subtle">PRESS 03</span>
+        </div>
+      </div>
+
+      <div class="border border-subtle glow-card hover-glow overflow-hidden group">
+        <div class="w-full aspect-[4/5] overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/portraits/mb-portrait-4.jpg" alt="MB Portrait · Promo Cut B" class="w-full h-full object-cover img-zoom" loading="lazy">
+        </div>
+        <div class="p-5 flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-widest">Promo · Cut B</span>
+          <span class="font-mono text-[10px] text-subtle">PRESS 04</span>
         </div>
       </div>
     </div>
@@ -907,6 +1085,97 @@
     <div class="mt-12 text-center reveal">
       <p class="text-subtle text-sm mb-6">Booking goes through Celina · Artistbookinginc@gmail.com · (762) 436-0464</p>
       <a href="#book" class="btn-primary inline-block">Book M_B</a>
+    </div>
+  </section>
+
+  <hr class="navy-divider">
+
+  <!-- Flyer Wall · Every Show, Every Flyer -->
+  <section id="flyers" class="px-6 max-w-7xl mx-auto py-12 relative section-ambient">
+    <div class="ambient-orb" style="top: 5%; left: -5%; width: 380px; height: 380px; background: radial-gradient(circle, rgba(70,120,210,0.3), transparent); animation-delay: -9s;"></div>
+    <div class="ambient-orb" style="bottom: 10%; right: -8%; width: 340px; height: 340px; background: radial-gradient(circle, rgba(40,80,180,0.28), transparent); animation-delay: -15s;"></div>
+
+    <div class="mb-16 max-w-2xl reveal">
+      <h2 class="text-4xl md:text-5xl font-bold tracking-tighter mb-4">Flyer Wall</h2>
+      <p class="text-subtle text-lg">Every show. Every promoter. Every poster.</p>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 reveal-stagger">
+      <a href="assets/flyers/flyer-1000021971.jpg" target="_blank" class="border border-subtle glow-card hover-glow overflow-hidden group block">
+        <div class="w-full aspect-[3/4] overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/flyers/flyer-1000021971.jpg" alt="M_B show flyer" class="w-full h-full object-cover img-zoom opacity-90 group-hover:opacity-100 transition-opacity" loading="lazy">
+        </div>
+      </a>
+      <a href="assets/flyers/flyer-1000022117.png" target="_blank" class="border border-subtle glow-card hover-glow overflow-hidden group block">
+        <div class="w-full aspect-[3/4] overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/flyers/flyer-1000022117.png" alt="M_B show flyer" class="w-full h-full object-cover img-zoom opacity-90 group-hover:opacity-100 transition-opacity" loading="lazy">
+        </div>
+      </a>
+      <a href="assets/flyers/flyer-1000024037.png" target="_blank" class="border border-subtle glow-card hover-glow overflow-hidden group block">
+        <div class="w-full aspect-[3/4] overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/flyers/flyer-1000024037.png" alt="M_B show flyer" class="w-full h-full object-cover img-zoom opacity-90 group-hover:opacity-100 transition-opacity" loading="lazy">
+        </div>
+      </a>
+      <a href="assets/flyers/flyer-1000024127.jpg" target="_blank" class="border border-subtle glow-card hover-glow overflow-hidden group block">
+        <div class="w-full aspect-[3/4] overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/flyers/flyer-1000024127.jpg" alt="M_B show flyer" class="w-full h-full object-cover img-zoom opacity-90 group-hover:opacity-100 transition-opacity" loading="lazy">
+        </div>
+      </a>
+      <a href="assets/flyers/flyer-1000024835.png" target="_blank" class="border border-subtle glow-card hover-glow overflow-hidden group block">
+        <div class="w-full aspect-[3/4] overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/flyers/flyer-1000024835.png" alt="M_B show flyer" class="w-full h-full object-cover img-zoom opacity-90 group-hover:opacity-100 transition-opacity" loading="lazy">
+        </div>
+      </a>
+      <a href="assets/flyers/flyer-1000024867.png" target="_blank" class="border border-subtle glow-card hover-glow overflow-hidden group block">
+        <div class="w-full aspect-[3/4] overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/flyers/flyer-1000024867.png" alt="M_B show flyer" class="w-full h-full object-cover img-zoom opacity-90 group-hover:opacity-100 transition-opacity" loading="lazy">
+        </div>
+      </a>
+      <a href="assets/flyers/flyer-1000025096.png" target="_blank" class="border border-subtle glow-card hover-glow overflow-hidden group block">
+        <div class="w-full aspect-[3/4] overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/flyers/flyer-1000025096.png" alt="M_B show flyer" class="w-full h-full object-cover img-zoom opacity-90 group-hover:opacity-100 transition-opacity" loading="lazy">
+        </div>
+      </a>
+      <a href="assets/flyers/flyer-1000025121.jpg" target="_blank" class="border border-subtle glow-card hover-glow overflow-hidden group block">
+        <div class="w-full aspect-[3/4] overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/flyers/flyer-1000025121.jpg" alt="M_B show flyer" class="w-full h-full object-cover img-zoom opacity-90 group-hover:opacity-100 transition-opacity" loading="lazy">
+        </div>
+      </a>
+      <a href="assets/flyers/flyer-1000025370.jpg" target="_blank" class="border border-subtle glow-card hover-glow overflow-hidden group block">
+        <div class="w-full aspect-[3/4] overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/flyers/flyer-1000025370.jpg" alt="M_B show flyer" class="w-full h-full object-cover img-zoom opacity-90 group-hover:opacity-100 transition-opacity" loading="lazy">
+        </div>
+      </a>
+      <a href="assets/flyers/flyer-1000025371.jpg" target="_blank" class="border border-subtle glow-card hover-glow overflow-hidden group block">
+        <div class="w-full aspect-[3/4] overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/flyers/flyer-1000025371.jpg" alt="M_B show flyer" class="w-full h-full object-cover img-zoom opacity-90 group-hover:opacity-100 transition-opacity" loading="lazy">
+        </div>
+      </a>
+      <a href="assets/flyers/flyer-1000025372.jpg" target="_blank" class="border border-subtle glow-card hover-glow overflow-hidden group block">
+        <div class="w-full aspect-[3/4] overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/flyers/flyer-1000025372.jpg" alt="M_B show flyer" class="w-full h-full object-cover img-zoom opacity-90 group-hover:opacity-100 transition-opacity" loading="lazy">
+        </div>
+      </a>
+      <a href="assets/flyers/flyer-1000025373.jpg" target="_blank" class="border border-subtle glow-card hover-glow overflow-hidden group block">
+        <div class="w-full aspect-[3/4] overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/flyers/flyer-1000025373.jpg" alt="M_B show flyer" class="w-full h-full object-cover img-zoom opacity-90 group-hover:opacity-100 transition-opacity" loading="lazy">
+        </div>
+      </a>
+      <a href="assets/flyers/flyer-1000025374.jpg" target="_blank" class="border border-subtle glow-card hover-glow overflow-hidden group block">
+        <div class="w-full aspect-[3/4] overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/flyers/flyer-1000025374.jpg" alt="M_B show flyer" class="w-full h-full object-cover img-zoom opacity-90 group-hover:opacity-100 transition-opacity" loading="lazy">
+        </div>
+      </a>
+      <a href="assets/flyers/flyer-1000025375.jpg" target="_blank" class="border border-subtle glow-card hover-glow overflow-hidden group block">
+        <div class="w-full aspect-[3/4] overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/flyers/flyer-1000025375.jpg" alt="M_B show flyer" class="w-full h-full object-cover img-zoom opacity-90 group-hover:opacity-100 transition-opacity" loading="lazy">
+        </div>
+      </a>
+      <a href="assets/flyers/flyer-1000025376.jpg" target="_blank" class="border border-subtle glow-card hover-glow overflow-hidden group block">
+        <div class="w-full aspect-[3/4] overflow-hidden" style="background-color: var(--bg-deep);">
+          <img src="assets/flyers/flyer-1000025376.jpg" alt="M_B show flyer" class="w-full h-full object-cover img-zoom opacity-90 group-hover:opacity-100 transition-opacity" loading="lazy">
+        </div>
+      </a>
     </div>
   </section>
 
