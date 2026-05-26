@@ -15,32 +15,94 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
-    /* Exec Page Brutalist / Minimalist Theme Variables */
+    /* Navy Immersive Theme Variables */
     :root {
-      --bg-base: #030303;
-      --bg-panel: #0a0a0a;
-      --bg-header: rgba(3, 3, 3, 0.65);
-      --border-subtle: #1a1a1a;
-      --border-hover: #444444;
+      --bg-base: #050b1c;
+      --bg-deep: #030714;
+      --bg-panel: #0a1228;
+      --bg-elevated: #0e1832;
+      --bg-header: rgba(5, 11, 28, 0.75);
+      --border-subtle: #1a2540;
+      --border-hover: #3a5080;
       --text-main: #ededed;
-      --text-subtle: #888888;
+      --text-subtle: #8895b5;
       --accent: #ffffff;
+      --navy-glow: rgba(80, 130, 220, 0.18);
+      --navy-glow-strong: rgba(120, 170, 255, 0.28);
+    }
+
+    html, body {
+      background-color: var(--bg-base);
     }
 
     body {
       font-family: 'Inter', sans-serif;
-      background-color: var(--bg-base);
       color: var(--text-main);
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
+      position: relative;
     }
 
-    /* Grid Background Pattern */
-    .bg-grid {
-      background-size: 40px 40px;
+    /* Immersive Navy Backdrop · Fixed full-viewport animated gradient */
+    .navy-immersive {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(40, 80, 180, 0.22), transparent 60%),
+        radial-gradient(ellipse 70% 50% at 80% 30%, rgba(60, 100, 200, 0.18), transparent 60%),
+        radial-gradient(ellipse 90% 70% at 50% 90%, rgba(20, 50, 130, 0.25), transparent 65%),
+        linear-gradient(180deg, #050b1c 0%, #030714 50%, #050b1c 100%);
+      animation: navyDrift 22s ease-in-out infinite alternate;
+    }
+
+    .navy-immersive::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 50% 30% at var(--bx, 30%) var(--by, 40%), rgba(100, 150, 255, 0.08), transparent 70%);
+      animation: navyPulse 14s ease-in-out infinite alternate;
+    }
+
+    @keyframes navyDrift {
+      0%   { transform: translate3d(0, 0, 0) scale(1); filter: hue-rotate(0deg); }
+      50%  { transform: translate3d(-2%, 1%, 0) scale(1.04); filter: hue-rotate(8deg); }
+      100% { transform: translate3d(2%, -1%, 0) scale(1.02); filter: hue-rotate(-6deg); }
+    }
+    @keyframes navyPulse {
+      0%   { --bx: 20%; --by: 30%; opacity: 0.6; }
+      100% { --bx: 70%; --by: 65%; opacity: 1; }
+    }
+
+    /* Star/particle layer · subtle navy-light dots */
+    .navy-stars {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
       background-image:
-        linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+        radial-gradient(1px 1px at 10% 20%, rgba(160, 200, 255, 0.4), transparent),
+        radial-gradient(1px 1px at 30% 70%, rgba(160, 200, 255, 0.3), transparent),
+        radial-gradient(1.5px 1.5px at 60% 30%, rgba(180, 210, 255, 0.5), transparent),
+        radial-gradient(1px 1px at 80% 80%, rgba(160, 200, 255, 0.35), transparent),
+        radial-gradient(1px 1px at 45% 50%, rgba(160, 200, 255, 0.3), transparent),
+        radial-gradient(1.5px 1.5px at 90% 15%, rgba(180, 210, 255, 0.4), transparent),
+        radial-gradient(1px 1px at 5% 90%, rgba(160, 200, 255, 0.35), transparent),
+        radial-gradient(1px 1px at 70% 95%, rgba(160, 200, 255, 0.3), transparent);
+      background-size: 100% 100%;
+      animation: starTwinkle 8s ease-in-out infinite alternate;
+    }
+    @keyframes starTwinkle {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
+    /* Subtle Grid Background Pattern (over navy) */
+    .bg-grid {
+      background-size: 50px 50px;
+      background-image:
+        linear-gradient(to right, rgba(120, 170, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(120, 170, 255, 0.025) 1px, transparent 1px);
     }
 
     /* Utility Classes */
@@ -90,7 +152,7 @@
       border-radius: inherit;
       background: radial-gradient(
         800px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        rgba(255, 255, 255, 0.06),
+        var(--navy-glow-strong),
         transparent 40%
       );
       opacity: 0;
@@ -122,7 +184,7 @@
 
     input, select, textarea {
       width: 100%;
-      background-color: #050505;
+      background-color: rgba(5, 11, 28, 0.7);
       border: 1px solid var(--border-subtle);
       border-bottom: 1px solid var(--border-subtle);
       padding: 0.875rem 1rem;
@@ -134,16 +196,17 @@
     }
     input:focus, select:focus, textarea:focus {
       outline: none;
-      background-color: #0a0a0a;
-      border-color: transparent; /* hidden to let wrapper after element show */
+      background-color: rgba(14, 24, 50, 0.85);
+      border-color: transparent;
+      box-shadow: 0 0 24px -8px var(--navy-glow-strong);
     }
 
     /* Buttons */
     .btn-primary {
       background-color: var(--accent);
-      color: #000000;
+      color: #050b1c;
       padding: 0.875rem 1.5rem;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 0.875rem;
       display: inline-flex;
       align-items: center;
@@ -153,14 +216,23 @@
       position: relative;
       overflow: hidden;
     }
+    .btn-primary::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(120, 170, 255, 0.4), transparent 60%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
     .btn-primary:hover {
       transform: scale(1.02);
-      box-shadow: 0 10px 30px -10px rgba(255,255,255,0.3);
+      box-shadow: 0 10px 30px -10px var(--navy-glow-strong), 0 0 50px -10px rgba(255,255,255,0.25);
     }
+    .btn-primary:hover::before { opacity: 1; }
     .btn-primary:active { transform: scale(0.98); }
 
     .btn-secondary {
-      background-color: transparent;
+      background-color: rgba(10, 18, 40, 0.6);
       border: 1px solid var(--border-subtle);
       color: var(--text-main);
       padding: 0.875rem 1.5rem;
@@ -170,25 +242,190 @@
       align-items: center;
       justify-content: center;
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      backdrop-filter: blur(8px);
     }
     .btn-secondary:hover {
-      border-color: #ffffff;
-      background-color: #0a0a0a;
+      border-color: var(--border-hover);
+      background-color: rgba(14, 24, 50, 0.85);
       transform: translateY(-2px);
+      box-shadow: 0 8px 24px -8px var(--navy-glow);
     }
 
     /* Custom Scrollbar */
     ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: var(--bg-base); }
-    ::-webkit-scrollbar-thumb { background: #333; }
-    ::-webkit-scrollbar-thumb:hover { background: #555; }
+    ::-webkit-scrollbar-track { background: var(--bg-deep); }
+    ::-webkit-scrollbar-thumb { background: #1a2540; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3a5080; }
 
     /* Image Hover FX */
     .img-zoom { transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), filter 0.8s ease; }
     .group:hover .img-zoom { transform: scale(1.05); filter: grayscale(0%); opacity: 1; }
+
+    /* Section divider replacement · navy gradient horizontal line */
+    .navy-divider {
+      border: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border-hover), transparent);
+      margin: 6rem auto;
+      max-width: 80rem;
+      opacity: 0.5;
+    }
+
+    /* Tour rows divide via custom border */
+    .divide-y > * + * { border-top-color: var(--border-subtle); }
+
+    /* Tour Date Row · hover lift + navy ambient glow */
+    .tour-row {
+      position: relative;
+      transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .tour-row:hover {
+      background-color: rgba(14, 24, 50, 0.6);
+      transform: translateX(6px);
+      box-shadow: -4px 0 24px -8px var(--navy-glow-strong);
+    }
+    .tour-row::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      width: 3px;
+      height: 0;
+      background: linear-gradient(180deg, transparent, rgba(120, 170, 255, 0.6), transparent);
+      transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translateY(-50%);
+    }
+    .tour-row:hover::before { height: 70%; }
+
+    /* Section · subtle navy radial accent */
+    .section-ambient {
+      position: relative;
+    }
+    .section-ambient::before {
+      content: "";
+      position: absolute;
+      top: -10%;
+      right: -10%;
+      width: 50%;
+      height: 50%;
+      background: radial-gradient(circle, var(--navy-glow), transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+      filter: blur(60px);
+    }
+    .section-ambient > * { position: relative; z-index: 1; }
+
+    /* Floating ambient orbs · per-section animated accents */
+    @keyframes floatOrb {
+      0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.7; }
+      33%      { transform: translate(20px, -30px) scale(1.1); opacity: 1; }
+      66%      { transform: translate(-25px, 20px) scale(0.95); opacity: 0.85; }
+    }
+    .ambient-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+      animation: floatOrb 18s ease-in-out infinite;
+    }
+
+    /* Mobile-specific fixes */
+    @media (max-width: 768px) {
+      h1, h2, h3 { word-break: break-word; }
+      .reveal, .reveal-stagger > * {
+        transform: translateY(20px);
+        transition-duration: 0.6s;
+      }
+      .tour-row:hover { transform: translateX(2px); }
+      /* Prevent hero subtitle overlap with nav */
+      header h1 { font-size: clamp(2.5rem, 12vw, 4.5rem) !important; line-height: 0.95 !important; }
+      header p { font-size: 1rem; }
+      /* Scroll indicator hides on very small screens */
+      .scroll-indicator { display: none; }
+    }
+
+    /* Book M_B Modal */
+    .book-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+    .book-modal.open { display: flex; }
+    .book-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(3, 7, 20, 0.85);
+      backdrop-filter: blur(16px);
+      animation: backdropFadeIn 0.3s ease-out;
+    }
+    @keyframes backdropFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .book-modal-panel {
+      position: relative;
+      z-index: 1;
+      max-width: 56rem;
+      width: 100%;
+      max-height: 92vh;
+      overflow-y: auto;
+      background: linear-gradient(180deg, rgba(14, 24, 50, 0.95), rgba(10, 18, 40, 0.95));
+      border: 1px solid var(--border-hover);
+      box-shadow: 0 30px 80px -10px rgba(0,0,0,0.6), 0 0 80px -20px var(--navy-glow-strong);
+      animation: modalSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      backdrop-filter: blur(20px);
+    }
+    @keyframes modalSlideIn {
+      from { opacity: 0; transform: translateY(40px) scale(0.96); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .book-modal-close {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.25rem;
+      width: 2.5rem;
+      height: 2.5rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(10, 18, 40, 0.6);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 2;
+    }
+    .book-modal-close:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--accent);
+      transform: rotate(90deg);
+    }
+    body.modal-open { overflow: hidden; }
+    @media (max-width: 768px) {
+      .book-modal { padding: 0.5rem; }
+      .book-modal-panel { max-height: 96vh; }
+    }
+
+    /* Reduced motion accessibility */
+    @media (prefers-reduced-motion: reduce) {
+      .navy-immersive, .navy-immersive::after, .navy-stars, .ambient-orb {
+        animation: none !important;
+      }
+      .reveal, .reveal-stagger > * { transition: none; opacity: 1; transform: none; }
+    }
   </style>
 </head>
-<body class="bg-grid selection:bg-white selection:text-black pb-0">
+<body class="bg-grid selection:bg-white selection:text-[#050b1c] pb-0">
+
+  <!-- Immersive Navy Backdrop · Fixed full-viewport -->
+  <div class="navy-immersive" aria-hidden="true"></div>
+  <div class="navy-stars" aria-hidden="true"></div>
 
   <!-- Fixed Navigation -->
   <nav id="navbar" class="fixed top-0 w-full border-b border-subtle backdrop-blur-xl z-50 transition-all duration-300" style="background-color: var(--bg-header);">
@@ -215,7 +452,7 @@
         </div>
       </div>
       <div>
-        <a href="#book" class="text-xs uppercase tracking-widest font-bold border border-subtle px-5 py-3 hover:bg-white hover:text-black hover:scale-105 transition-all inline-block">Book M_B</a>
+        <a href="#book" class="text-xs uppercase tracking-widest font-bold border border-subtle px-5 py-3 hover:bg-white hover:text-[#050b1c] hover:scale-105 transition-all inline-block">Book M_B</a>
       </div>
     </div>
   </nav>
@@ -224,12 +461,14 @@
   <header class="relative w-[100vw] h-[100dvh] flex items-center justify-center overflow-hidden flex-col left-1/2 -translate-x-1/2">
     <!-- Full Bleed Video Background -->
     <div class="absolute inset-0 w-full h-full z-0" id="hero-bg">
-      <video autoplay muted loop playsinline class="w-full h-full object-cover opacity-60 scale-[1.02] transition-transform duration-1000">
+      <video autoplay muted loop playsinline preload="metadata" poster="assets/posters/hero-video.jpg" class="w-full h-full object-cover opacity-70 scale-[1.02] transition-transform duration-1000">
         <source src="assets/hero-video.mp4" type="video/mp4">
       </video>
-      <!-- Gradient Overlays for legibility -->
-      <div class="absolute inset-0 bg-gradient-to-b from-[#030303]/90 via-[#030303]/20 to-[#030303]"></div>
-      <div class="absolute inset-0 bg-gradient-to-r from-[#030303]/60 via-transparent to-[#030303]/60"></div>
+      <!-- Navy Gradient Overlays for legibility -->
+      <div class="absolute inset-0" style="background: linear-gradient(180deg, rgba(5,11,28,0.92) 0%, rgba(5,11,28,0.35) 30%, rgba(5,11,28,0.5) 70%, rgba(5,11,28,1) 100%);"></div>
+      <div class="absolute inset-0" style="background: linear-gradient(90deg, rgba(5,11,28,0.55) 0%, transparent 30%, transparent 70%, rgba(5,11,28,0.55) 100%);"></div>
+      <!-- Navy tint -->
+      <div class="absolute inset-0" style="background: radial-gradient(ellipse 80% 60% at 50% 50%, transparent, rgba(20, 40, 90, 0.4) 80%);"></div>
     </div>
 
     <!-- Hero Content -->
@@ -252,7 +491,7 @@
       </p>
 
       <!-- Floating Interaction Block -->
-      <div class="border border-subtle bg-panel/60 backdrop-blur-xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-8 max-w-4xl hover:border-white/30 transition-colors duration-500 rounded-sm group">
+      <div class="border border-subtle backdrop-blur-xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-8 max-w-4xl hover:border-white/30 transition-all duration-500 rounded-sm group hover:shadow-[0_0_60px_-15px_rgba(120,170,255,0.4)]" style="background-color: rgba(10, 18, 40, 0.55);">
         <div>
           <div class="text-xs uppercase tracking-widest text-subtle mb-2 group-hover:text-white transition-colors">New Single</div>
           <div class="text-3xl font-bold tracking-tight mb-2">Trail Ride · feat. Stal'lyon</div>
@@ -266,125 +505,18 @@
     </div>
 
     <!-- Scroll Indicator -->
-    <div class="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center opacity-50 animate-bounce">
+    <div class="scroll-indicator absolute bottom-10 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center opacity-60 animate-bounce">
       <span class="text-[10px] uppercase tracking-widest mb-2 font-mono">Scroll</span>
       <div class="w-px h-12 bg-gradient-to-b from-white to-transparent"></div>
     </div>
   </header>
 
-  <hr class="border-subtle my-24 max-w-7xl mx-auto">
-
-  <!-- Book M_B (Booking Intake) -->
-  <section id="book" class="px-6 max-w-4xl mx-auto py-12 relative">
-    <!-- Ambient light blurs -->
-    <div class="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-[100px] pointer-events-none"></div>
-
-    <div class="mb-16 reveal">
-      <h2 class="text-4xl md:text-5xl font-bold tracking-tighter mb-4">Book M_B</h2>
-      <p class="text-subtle text-lg">Tell us about the show. Celina handles every booking personally.</p>
-    </div>
-
-    <form class="space-y-6 reveal-stagger" onsubmit="event.preventDefault(); alert('Sent to Celina at Artistbookinginc@gmail.com — she\'ll be back to you shortly.');">
-
-      <!-- Step 0 -->
-      <div class="border border-subtle glow-card hover-glow">
-        <div class="border-b border-subtle p-5" style="background-color: rgba(5,5,5,0.5);">
-          <div class="flex items-center gap-6">
-            <span class="text-2xl font-mono text-subtle">0</span>
-            <h3 class="font-bold text-sm tracking-widest uppercase">Your Info</h3>
-          </div>
-        </div>
-        <div class="p-8 space-y-8">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="input-wrapper">
-              <label class="block text-xs text-subtle uppercase tracking-wider mb-3">Your Name</label>
-              <input type="text" placeholder="Your name" required>
-            </div>
-            <div class="input-wrapper">
-              <label class="block text-xs text-subtle uppercase tracking-wider mb-3">Email</label>
-              <input type="email" placeholder="you@email.com" required>
-            </div>
-          </div>
-          <div class="input-wrapper">
-            <label class="block text-xs text-subtle uppercase tracking-wider mb-3">Phone</label>
-            <input type="tel" placeholder="(555) 000-0000">
-          </div>
-        </div>
-      </div>
-
-      <!-- Step 1 -->
-      <div class="border border-subtle glow-card hover-glow">
-        <div class="border-b border-subtle p-5" style="background-color: rgba(5,5,5,0.5);">
-          <div class="flex items-center gap-6">
-            <span class="text-2xl font-mono text-subtle">1</span>
-            <h3 class="font-bold text-sm tracking-widest uppercase">The Show</h3>
-          </div>
-        </div>
-        <div class="p-8 space-y-8">
-          <div class="input-wrapper">
-            <label class="block text-xs text-subtle uppercase tracking-wider mb-3">What kind of show?</label>
-            <select required>
-              <option value="" disabled selected>Pick one...</option>
-              <option>Trail Ride</option>
-              <option>Field Party</option>
-              <option>Rodeo</option>
-              <option>Club / Lounge</option>
-              <option>Festival</option>
-              <option>Private Event</option>
-              <option>Feature Verse / Studio</option>
-            </select>
-          </div>
-          <div class="input-wrapper">
-            <label class="block text-xs text-subtle uppercase tracking-wider mb-3">Date</label>
-            <input type="date" required class="text-subtle">
-          </div>
-          <div class="input-wrapper">
-            <label class="block text-xs text-subtle uppercase tracking-wider mb-3">City / Venue</label>
-            <input type="text" placeholder="City, State — venue name if you have it">
-          </div>
-        </div>
-      </div>
-
-      <!-- Step 2 -->
-      <div class="border border-subtle glow-card hover-glow">
-        <div class="border-b border-subtle p-5" style="background-color: rgba(5,5,5,0.5);">
-          <div class="flex items-center gap-6">
-            <span class="text-2xl font-mono text-subtle">2</span>
-            <h3 class="font-bold text-sm tracking-widest uppercase">Budget &amp; Notes</h3>
-          </div>
-        </div>
-        <div class="p-8 space-y-8">
-          <div class="input-wrapper">
-            <label class="block text-xs text-subtle uppercase tracking-wider mb-3">Budget range</label>
-            <select required>
-              <option value="" disabled selected>Pick one...</option>
-              <option>Under $2K</option>
-              <option>$2K – $5K</option>
-              <option>$5K – $10K</option>
-              <option>$10K+</option>
-              <option>Let's talk</option>
-            </select>
-          </div>
-          <div class="input-wrapper">
-            <label class="block text-xs text-subtle uppercase tracking-wider mb-3">Anything else we should know?</label>
-            <textarea rows="4" placeholder="Headliner, supporting, length of set, sound provided, anything special — drop it here."></textarea>
-          </div>
-        </div>
-      </div>
-
-      <div class="pt-8 flex flex-col md:flex-row items-center justify-between gap-6 border-t border-subtle mt-12">
-        <div class="text-xs text-subtle font-mono uppercase tracking-widest">
-          Goes straight to Celina · Artistbookinginc
-        </div>
-        <button type="submit" class="btn-primary w-full md:w-auto px-12 py-4">Send To Celina</button>
-      </div>
-    </form>
-  </section>
-
-  <hr class="border-subtle my-24 max-w-7xl mx-auto">
+  <hr class="navy-divider">
 
   <!-- Music (Catalog) -->
-  <section id="music" class="px-6 max-w-7xl mx-auto py-12">
+  <section id="music" class="px-6 max-w-7xl mx-auto py-12 relative section-ambient">
+    <div class="ambient-orb" style="top: 10%; left: -5%; width: 320px; height: 320px; background: radial-gradient(circle, rgba(60,100,200,0.3), transparent); animation-delay: -2s;"></div>
+    <div class="ambient-orb" style="bottom: 5%; right: -8%; width: 380px; height: 380px; background: radial-gradient(circle, rgba(80,130,220,0.25), transparent); animation-delay: -10s;"></div>
     <div class="mb-16 max-w-2xl reveal">
       <h2 class="text-4xl md:text-5xl font-bold tracking-tighter mb-4">Music</h2>
       <p class="text-subtle text-lg">Streaming everywhere. Stream the singles, then come catch a show.</p>
@@ -393,7 +525,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-10 reveal-stagger" id="deployment-grid">
       <!-- Item 1 -->
       <div class="border border-subtle glow-card hover-glow group cursor-pointer">
-        <div class="w-full aspect-[16/9] bg-[#111] border-b border-subtle overflow-hidden relative">
+        <div class="w-full aspect-[16/9] border-b border-subtle overflow-hidden relative" style="background-color: var(--bg-deep);">
           <img src="assets/covers/trail-ride-feat-stallyon.jpg" alt="Trail Ride Cover" class="w-full h-full object-cover img-zoom grayscale opacity-50" onerror="this.src='https://placehold.co/1200x800/111/333?text=TRAIL+RIDE'">
           <div class="absolute top-5 right-5 bg-white text-black text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 shadow-xl">New Single</div>
         </div>
@@ -412,7 +544,7 @@
 
       <!-- Item 2 -->
       <div class="border border-subtle glow-card hover-glow group cursor-pointer">
-        <div class="w-full aspect-[16/9] bg-[#111] border-b border-subtle overflow-hidden">
+        <div class="w-full aspect-[16/9] border-b border-subtle overflow-hidden" style="background-color: var(--bg-deep);">
           <img src="assets/covers/ok-feat-stallyon.jpg" alt="OK Cover" class="w-full h-full object-cover img-zoom grayscale opacity-50" onerror="this.src='https://placehold.co/1200x800/111/333?text=OK'">
         </div>
         <div class="p-8">
@@ -430,7 +562,7 @@
 
       <!-- Item 3 -->
       <div class="border border-subtle glow-card hover-glow group cursor-pointer hidden-deployment" style="display: none;">
-        <div class="w-full aspect-[16/9] bg-[#111] border-b border-subtle overflow-hidden">
+        <div class="w-full aspect-[16/9] border-b border-subtle overflow-hidden" style="background-color: var(--bg-deep);">
           <img src="assets/covers/work-that-body.jpg" alt="Work That Body Cover" class="w-full h-full object-cover img-zoom grayscale opacity-50" onerror="this.src='https://placehold.co/1200x800/111/333?text=WORK'">
         </div>
         <div class="p-8">
@@ -448,7 +580,7 @@
 
       <!-- Item 4 -->
       <div class="border border-subtle glow-card hover-glow group cursor-pointer hidden-deployment" style="display: none;">
-        <div class="w-full aspect-[16/9] bg-[#111] border-b border-subtle overflow-hidden">
+        <div class="w-full aspect-[16/9] border-b border-subtle overflow-hidden" style="background-color: var(--bg-deep);">
           <img src="assets/covers/thirsty-thursday.jpg" alt="Thirsty Thursday Cover" class="w-full h-full object-cover img-zoom grayscale opacity-50" onerror="this.src='https://placehold.co/1200x800/111/333?text=THIRSTY'">
         </div>
         <div class="p-8">
@@ -466,14 +598,16 @@
     </div>
 
     <div class="mt-16 text-center reveal border-t border-subtle pt-10">
-      <button id="load-more-btn" class="btn-secondary w-full md:w-auto px-10 hover:bg-white hover:text-black">See All Songs</button>
+      <button id="load-more-btn" class="btn-secondary w-full md:w-auto px-10 hover:bg-white hover:text-[#050b1c]">See All Songs</button>
     </div>
   </section>
 
-  <hr class="border-subtle my-24 max-w-7xl mx-auto">
+  <hr class="navy-divider">
 
   <!-- Watch · Videos + Portraits -->
-  <section id="watch" class="px-6 max-w-7xl mx-auto py-12">
+  <section id="watch" class="px-6 max-w-7xl mx-auto py-12 relative section-ambient">
+    <div class="ambient-orb" style="top: 20%; right: -5%; width: 340px; height: 340px; background: radial-gradient(circle, rgba(50,90,190,0.3), transparent); animation-delay: -4s;"></div>
+    <div class="ambient-orb" style="bottom: 15%; left: -8%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(80,130,220,0.25), transparent); animation-delay: -12s;"></div>
     <div class="mb-16 max-w-2xl reveal">
       <h2 class="text-4xl md:text-5xl font-bold tracking-tighter mb-4">Watch</h2>
       <p class="text-subtle text-lg">Live footage, behind the scenes, on the road with Mane Family Mafia.</p>
@@ -481,8 +615,8 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 reveal-stagger">
       <div class="border border-subtle glow-card hover-glow overflow-hidden">
-        <div class="w-full aspect-video bg-black overflow-hidden">
-          <video src="assets/video/mb-reel-1.mp4" controls preload="metadata" playsinline class="w-full h-full object-cover"></video>
+        <div class="w-full aspect-video overflow-hidden" style="background-color: var(--bg-deep);">
+          <video src="assets/video/mb-reel-1.mp4" controls preload="metadata" playsinline poster="assets/posters/mb-reel-1.jpg" class="w-full h-full object-cover"></video>
         </div>
         <div class="p-6 flex items-center justify-between">
           <span class="text-sm font-semibold uppercase tracking-widest">Live · Reel 01</span>
@@ -491,8 +625,8 @@
       </div>
 
       <div class="border border-subtle glow-card hover-glow overflow-hidden">
-        <div class="w-full aspect-video bg-black overflow-hidden">
-          <video src="assets/video/mb-reel-2.mp4" controls preload="metadata" playsinline class="w-full h-full object-cover"></video>
+        <div class="w-full aspect-video overflow-hidden" style="background-color: var(--bg-deep);">
+          <video src="assets/video/mb-reel-2.mp4" controls preload="metadata" playsinline poster="assets/posters/mb-reel-2.jpg" class="w-full h-full object-cover"></video>
         </div>
         <div class="p-6 flex items-center justify-between">
           <span class="text-sm font-semibold uppercase tracking-widest">Live · Reel 02</span>
@@ -501,8 +635,8 @@
       </div>
 
       <div class="border border-subtle glow-card hover-glow overflow-hidden">
-        <div class="w-full aspect-video bg-black overflow-hidden">
-          <video src="assets/video/mb-reel-3.mp4" controls preload="metadata" playsinline class="w-full h-full object-cover"></video>
+        <div class="w-full aspect-video overflow-hidden" style="background-color: var(--bg-deep);">
+          <video src="assets/video/mb-reel-3.mp4" controls preload="metadata" playsinline poster="assets/posters/mb-reel-3.jpg" class="w-full h-full object-cover"></video>
         </div>
         <div class="p-6 flex items-center justify-between">
           <span class="text-sm font-semibold uppercase tracking-widest">Live · Reel 03</span>
@@ -511,8 +645,8 @@
       </div>
 
       <div class="border border-subtle glow-card hover-glow overflow-hidden">
-        <div class="w-full aspect-video bg-black overflow-hidden">
-          <video src="assets/video/mb-reel-4.mp4" controls preload="metadata" playsinline class="w-full h-full object-cover"></video>
+        <div class="w-full aspect-video overflow-hidden" style="background-color: var(--bg-deep);">
+          <video src="assets/video/mb-reel-4.mp4" controls preload="metadata" playsinline poster="assets/posters/mb-reel-4.jpg" class="w-full h-full object-cover"></video>
         </div>
         <div class="p-6 flex items-center justify-between">
           <span class="text-sm font-semibold uppercase tracking-widest">Live · Reel 04</span>
@@ -545,18 +679,20 @@
     </div>
   </section>
 
-  <hr class="border-subtle my-24 max-w-7xl mx-auto">
+  <hr class="navy-divider">
 
   <!-- Tour Dates -->
-  <section id="tour" class="px-6 max-w-7xl mx-auto py-12">
+  <section id="tour" class="px-6 max-w-7xl mx-auto py-12 relative section-ambient">
+    <div class="ambient-orb" style="top: 5%; left: -10%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(70,120,210,0.3), transparent); animation-delay: -8s;"></div>
+    <div class="ambient-orb" style="top: 60%; right: -8%; width: 360px; height: 360px; background: radial-gradient(circle, rgba(40,80,180,0.25), transparent); animation-delay: -14s;"></div>
     <div class="mb-16 max-w-2xl reveal">
       <h2 class="text-4xl md:text-5xl font-bold tracking-tighter mb-4">Tour</h2>
       <p class="text-subtle text-lg">Booked through Labor Day 2026. Catch a show.</p>
     </div>
 
-    <div class="border border-subtle reveal-stagger divide-y divide-[#1a1a1a]">
+    <div class="border border-subtle reveal-stagger divide-y" style="background-color: rgba(10, 18, 40, 0.4); backdrop-filter: blur(8px); border-color: var(--border-subtle);">
 
-      <div class="grid grid-cols-12 gap-4 p-6 hover:bg-[#0a0a0a] transition-colors items-center">
+      <div class="grid grid-cols-12 gap-4 p-6 tour-row items-center">
         <div class="col-span-3 md:col-span-2">
           <div class="text-xs uppercase tracking-widest text-subtle">Apr</div>
           <div class="text-3xl font-bold tracking-tight">25</div>
@@ -570,7 +706,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-12 gap-4 p-6 hover:bg-[#0a0a0a] transition-colors items-center">
+      <div class="grid grid-cols-12 gap-4 p-6 tour-row items-center">
         <div class="col-span-3 md:col-span-2">
           <div class="text-xs uppercase tracking-widest text-subtle">May</div>
           <div class="text-3xl font-bold tracking-tight">02</div>
@@ -584,7 +720,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-12 gap-4 p-6 hover:bg-[#0a0a0a] transition-colors items-center">
+      <div class="grid grid-cols-12 gap-4 p-6 tour-row items-center">
         <div class="col-span-3 md:col-span-2">
           <div class="text-xs uppercase tracking-widest text-subtle">May</div>
           <div class="text-3xl font-bold tracking-tight">23</div>
@@ -598,7 +734,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-12 gap-4 p-6 hover:bg-[#0a0a0a] transition-colors items-center">
+      <div class="grid grid-cols-12 gap-4 p-6 tour-row items-center">
         <div class="col-span-3 md:col-span-2">
           <div class="text-xs uppercase tracking-widest text-subtle">May</div>
           <div class="text-3xl font-bold tracking-tight">24</div>
@@ -612,7 +748,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-12 gap-4 p-6 hover:bg-[#0a0a0a] transition-colors items-center">
+      <div class="grid grid-cols-12 gap-4 p-6 tour-row items-center">
         <div class="col-span-3 md:col-span-2">
           <div class="text-xs uppercase tracking-widest text-subtle">May</div>
           <div class="text-3xl font-bold tracking-tight">30</div>
@@ -626,7 +762,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-12 gap-4 p-6 hover:bg-[#0a0a0a] transition-colors items-center">
+      <div class="grid grid-cols-12 gap-4 p-6 tour-row items-center">
         <div class="col-span-3 md:col-span-2">
           <div class="text-xs uppercase tracking-widest text-subtle">Jun</div>
           <div class="text-3xl font-bold tracking-tight">12</div>
@@ -640,7 +776,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-12 gap-4 p-6 hover:bg-[#0a0a0a] transition-colors items-center">
+      <div class="grid grid-cols-12 gap-4 p-6 tour-row items-center">
         <div class="col-span-3 md:col-span-2">
           <div class="text-xs uppercase tracking-widest text-subtle">Jun</div>
           <div class="text-3xl font-bold tracking-tight">20</div>
@@ -654,7 +790,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-12 gap-4 p-6 hover:bg-[#0a0a0a] transition-colors items-center">
+      <div class="grid grid-cols-12 gap-4 p-6 tour-row items-center">
         <div class="col-span-3 md:col-span-2">
           <div class="text-xs uppercase tracking-widest text-subtle">Jun</div>
           <div class="text-3xl font-bold tracking-tight">26</div>
@@ -668,7 +804,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-12 gap-4 p-6 hover:bg-[#0a0a0a] transition-colors items-center">
+      <div class="grid grid-cols-12 gap-4 p-6 tour-row items-center">
         <div class="col-span-3 md:col-span-2">
           <div class="text-xs uppercase tracking-widest text-subtle">Jul</div>
           <div class="text-3xl font-bold tracking-tight">11</div>
@@ -682,7 +818,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-12 gap-4 p-6 hover:bg-[#0a0a0a] transition-colors items-center">
+      <div class="grid grid-cols-12 gap-4 p-6 tour-row items-center">
         <div class="col-span-3 md:col-span-2">
           <div class="text-xs uppercase tracking-widest text-subtle">Jul</div>
           <div class="text-3xl font-bold tracking-tight">18</div>
@@ -696,7 +832,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-12 gap-4 p-6 hover:bg-[#0a0a0a] transition-colors items-center">
+      <div class="grid grid-cols-12 gap-4 p-6 tour-row items-center">
         <div class="col-span-3 md:col-span-2">
           <div class="text-xs uppercase tracking-widest text-subtle">Jul</div>
           <div class="text-3xl font-bold tracking-tight">25</div>
@@ -710,7 +846,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-12 gap-4 p-6 hover:bg-[#0a0a0a] transition-colors items-center">
+      <div class="grid grid-cols-12 gap-4 p-6 tour-row items-center">
         <div class="col-span-3 md:col-span-2">
           <div class="text-xs uppercase tracking-widest text-subtle">Aug</div>
           <div class="text-3xl font-bold tracking-tight">01</div>
@@ -724,7 +860,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-12 gap-4 p-6 hover:bg-[#0a0a0a] transition-colors items-center">
+      <div class="grid grid-cols-12 gap-4 p-6 tour-row items-center">
         <div class="col-span-3 md:col-span-2">
           <div class="text-xs uppercase tracking-widest text-subtle">Aug</div>
           <div class="text-3xl font-bold tracking-tight">08</div>
@@ -738,7 +874,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-12 gap-4 p-6 hover:bg-[#0a0a0a] transition-colors items-center">
+      <div class="grid grid-cols-12 gap-4 p-6 tour-row items-center">
         <div class="col-span-3 md:col-span-2">
           <div class="text-xs uppercase tracking-widest text-subtle">Aug</div>
           <div class="text-3xl font-bold tracking-tight">15</div>
@@ -752,7 +888,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-12 gap-4 p-6 hover:bg-[#0a0a0a] transition-colors items-center">
+      <div class="grid grid-cols-12 gap-4 p-6 tour-row items-center">
         <div class="col-span-3 md:col-span-2">
           <div class="text-xs uppercase tracking-widest text-subtle">Sep</div>
           <div class="text-3xl font-bold tracking-tight">04</div>
@@ -774,10 +910,12 @@
     </div>
   </section>
 
-  <hr class="border-subtle my-24 max-w-7xl mx-auto">
+  <hr class="navy-divider">
 
   <!-- About M_B -->
-  <section id="about" class="px-6 max-w-5xl mx-auto py-12 relative">
+  <section id="about" class="px-6 max-w-5xl mx-auto py-12 relative section-ambient">
+    <div class="ambient-orb" style="top: 10%; right: -5%; width: 360px; height: 360px; background: radial-gradient(circle, rgba(60,100,200,0.32), transparent); animation-delay: -3s;"></div>
+    <div class="ambient-orb" style="bottom: 20%; left: -10%; width: 320px; height: 320px; background: radial-gradient(circle, rgba(80,130,220,0.25), transparent); animation-delay: -11s;"></div>
     <div class="mb-16 reveal">
       <h2 class="text-4xl md:text-5xl font-bold tracking-tighter mb-4">About M_B</h2>
       <p class="text-subtle text-lg max-w-2xl">Real Southern Soul, hand-cut out of Douglasville, GA.</p>
@@ -801,10 +939,12 @@
     </div>
   </section>
 
-  <hr class="border-subtle my-24 max-w-7xl mx-auto">
+  <hr class="navy-divider">
 
   <!-- How To Book -->
-  <section id="how" class="px-6 max-w-5xl mx-auto py-12">
+  <section id="how" class="px-6 max-w-5xl mx-auto py-12 relative section-ambient">
+    <div class="ambient-orb" style="top: 20%; left: -8%; width: 340px; height: 340px; background: radial-gradient(circle, rgba(50,90,190,0.3), transparent); animation-delay: -5s;"></div>
+    <div class="ambient-orb" style="bottom: 10%; right: -10%; width: 380px; height: 380px; background: radial-gradient(circle, rgba(70,120,210,0.28), transparent); animation-delay: -13s;"></div>
     <div class="mb-16 reveal text-center md:text-left">
       <h2 class="text-4xl md:text-5xl font-bold tracking-tighter mb-4">How To Book</h2>
       <p class="text-subtle text-lg">Two steps. Quick.</p>
@@ -855,7 +995,8 @@
   </section>
 
   <!-- Footer CTA & Links -->
-  <section class="bg-[#050505] border-t border-subtle pt-32 pb-12 mt-24">
+  <section class="border-t border-subtle pt-32 pb-12 mt-24 relative section-ambient" style="background: linear-gradient(180deg, transparent 0%, rgba(3, 7, 20, 0.6) 50%, rgba(3, 7, 20, 0.9) 100%);">
+    <div class="ambient-orb" style="top: 10%; left: 30%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(80,130,220,0.18), transparent); animation-delay: -7s;"></div>
     <div class="px-6 max-w-4xl mx-auto text-center reveal">
       <h2 class="text-5xl md:text-7xl font-bold tracking-tighter mb-8 text-white drop-shadow-lg">Book The Show.</h2>
       <p class="text-subtle text-xl mb-12 max-w-2xl mx-auto font-light">Trail rides. Field parties. Rodeos. Clubs. Festivals. M_B brings the show.</p>
@@ -974,7 +1115,143 @@
           setTimeout(() => this.style.display = 'none', 300);
         });
       }
+
+      /* 7. Book M_B Modal — open/close/escape/backdrop click */
+      const bookModal = document.getElementById('book-modal');
+      const openModal = () => {
+        bookModal.classList.add('open');
+        document.body.classList.add('modal-open');
+        setTimeout(() => {
+          const firstInput = bookModal.querySelector('input, select, textarea');
+          if (firstInput) firstInput.focus();
+        }, 350);
+      };
+      const closeModal = () => {
+        bookModal.classList.remove('open');
+        document.body.classList.remove('modal-open');
+      };
+      document.querySelectorAll('a[href="#book"], [data-book-trigger]').forEach(el => {
+        el.addEventListener('click', e => {
+          e.preventDefault();
+          openModal();
+        });
+      });
+      bookModal.querySelector('.book-modal-backdrop').addEventListener('click', closeModal);
+      bookModal.querySelector('.book-modal-close').addEventListener('click', closeModal);
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && bookModal.classList.contains('open')) closeModal();
+      });
     });
   </script>
+
+  <!-- Book M_B Modal -->
+  <div id="book-modal" class="book-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="book-modal-title">
+    <div class="book-modal-backdrop"></div>
+    <div class="book-modal-panel">
+      <button class="book-modal-close" aria-label="Close booking form" type="button">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+
+      <div class="p-8 md:p-12">
+        <div class="mb-10">
+          <h2 id="book-modal-title" class="text-3xl md:text-4xl font-bold tracking-tighter mb-3">Book M_B</h2>
+          <p class="text-subtle text-base md:text-lg">Tell us about the show. Celina handles every booking personally.</p>
+        </div>
+
+        <form class="space-y-6" onsubmit="event.preventDefault(); alert('Sent to Celina at Artistbookinginc@gmail.com — she\'ll be back to you shortly.'); document.getElementById('book-modal').classList.remove('open'); document.body.classList.remove('modal-open');">
+
+          <div class="border border-subtle glow-card hover-glow">
+            <div class="border-b border-subtle p-5" style="background-color: rgba(10, 18, 40, 0.65); backdrop-filter: blur(8px);">
+              <div class="flex items-center gap-6">
+                <span class="text-2xl font-mono text-subtle">0</span>
+                <h3 class="font-bold text-sm tracking-widest uppercase">Your Info</h3>
+              </div>
+            </div>
+            <div class="p-6 md:p-8 space-y-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="input-wrapper">
+                  <label class="block text-xs text-subtle uppercase tracking-wider mb-3">Your Name</label>
+                  <input type="text" placeholder="Your name" required>
+                </div>
+                <div class="input-wrapper">
+                  <label class="block text-xs text-subtle uppercase tracking-wider mb-3">Email</label>
+                  <input type="email" placeholder="you@email.com" required>
+                </div>
+              </div>
+              <div class="input-wrapper">
+                <label class="block text-xs text-subtle uppercase tracking-wider mb-3">Phone</label>
+                <input type="tel" placeholder="(555) 000-0000">
+              </div>
+            </div>
+          </div>
+
+          <div class="border border-subtle glow-card hover-glow">
+            <div class="border-b border-subtle p-5" style="background-color: rgba(10, 18, 40, 0.65); backdrop-filter: blur(8px);">
+              <div class="flex items-center gap-6">
+                <span class="text-2xl font-mono text-subtle">1</span>
+                <h3 class="font-bold text-sm tracking-widest uppercase">The Show</h3>
+              </div>
+            </div>
+            <div class="p-6 md:p-8 space-y-6">
+              <div class="input-wrapper">
+                <label class="block text-xs text-subtle uppercase tracking-wider mb-3">What kind of show?</label>
+                <select required>
+                  <option value="" disabled selected>Pick one...</option>
+                  <option>Trail Ride</option>
+                  <option>Field Party</option>
+                  <option>Rodeo</option>
+                  <option>Club / Lounge</option>
+                  <option>Festival</option>
+                  <option>Private Event</option>
+                  <option>Feature Verse / Studio</option>
+                </select>
+              </div>
+              <div class="input-wrapper">
+                <label class="block text-xs text-subtle uppercase tracking-wider mb-3">Date</label>
+                <input type="date" required class="text-subtle">
+              </div>
+              <div class="input-wrapper">
+                <label class="block text-xs text-subtle uppercase tracking-wider mb-3">City / Venue</label>
+                <input type="text" placeholder="City, State — venue name if you have it">
+              </div>
+            </div>
+          </div>
+
+          <div class="border border-subtle glow-card hover-glow">
+            <div class="border-b border-subtle p-5" style="background-color: rgba(10, 18, 40, 0.65); backdrop-filter: blur(8px);">
+              <div class="flex items-center gap-6">
+                <span class="text-2xl font-mono text-subtle">2</span>
+                <h3 class="font-bold text-sm tracking-widest uppercase">Budget &amp; Notes</h3>
+              </div>
+            </div>
+            <div class="p-6 md:p-8 space-y-6">
+              <div class="input-wrapper">
+                <label class="block text-xs text-subtle uppercase tracking-wider mb-3">Budget range</label>
+                <select required>
+                  <option value="" disabled selected>Pick one...</option>
+                  <option>Under $2K</option>
+                  <option>$2K – $5K</option>
+                  <option>$5K – $10K</option>
+                  <option>$10K+</option>
+                  <option>Let's talk</option>
+                </select>
+              </div>
+              <div class="input-wrapper">
+                <label class="block text-xs text-subtle uppercase tracking-wider mb-3">Anything else we should know?</label>
+                <textarea rows="4" placeholder="Headliner, supporting, length of set, sound provided, anything special — drop it here."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-6 flex flex-col md:flex-row items-center justify-between gap-6 border-t border-subtle mt-8">
+            <div class="text-xs text-subtle font-mono uppercase tracking-widest text-center md:text-left">
+              Goes straight to Celina · Artistbookinginc
+            </div>
+            <button type="submit" class="btn-primary w-full md:w-auto px-10 py-4">Send To Celina</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
