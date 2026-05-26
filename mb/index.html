@@ -35,6 +35,87 @@
       --radius-xl: 28px;
     }
 
+    /* Inline Audio Player · Custom navy-styled */
+    .audio-player {
+      width: 100%;
+      height: 44px;
+      filter: hue-rotate(180deg) saturate(0.7) brightness(1.1);
+      border-radius: var(--radius-sm, 8px);
+      background: rgba(14, 24, 50, 0.6);
+    }
+    .audio-player::-webkit-media-controls-panel {
+      background: rgba(14, 24, 50, 0.85);
+    }
+    .audio-player::-webkit-media-controls-play-button,
+    .audio-player::-webkit-media-controls-mute-button {
+      filter: invert(1);
+    }
+    .audio-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: linear-gradient(90deg, rgba(14, 24, 50, 0.4), rgba(10, 18, 40, 0.2));
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md, 14px);
+      margin-bottom: 1rem;
+      transition: all 0.3s ease;
+    }
+    .audio-row:hover {
+      border-color: var(--border-hover);
+      box-shadow: 0 8px 24px -8px var(--navy-glow-strong);
+    }
+    .audio-row .audio-meta {
+      flex: 0 0 auto;
+      min-width: 0;
+      padding-right: 0.5rem;
+    }
+    .preview-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-subtle);
+      padding: 0.25rem 0.6rem;
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+      background: rgba(10, 18, 40, 0.5);
+    }
+    .preview-badge::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      background: #6ed9a4;
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba(110, 217, 164, 0.7);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    /* M_B Mark · inline reusable silver-gradient wordmark for nav/footer/buttons/headers */
+    .mb-mark {
+      font-family: 'Anton', 'Inter', sans-serif;
+      font-weight: 400;
+      letter-spacing: 0.01em;
+      background: linear-gradient(180deg, #ffffff 0%, #e6ecf5 30%, #b9c4d6 55%, #ffffff 75%, #8997b4 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      display: inline-block;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4)) drop-shadow(0 4px 12px rgba(120, 170, 255, 0.15));
+      text-transform: uppercase;
+    }
+    /* Buttons containing .mb-mark · scale slightly so it doesn't tower over button text */
+    .btn-primary .mb-mark, .btn-secondary .mb-mark, nav .mb-mark { font-size: 1.05em; }
+    h2 .mb-mark { font-size: 1em; }
+
     /* Hero Typography · M_B display + Southern Soul metallic shine */
     .hero-title {
       font-family: 'Anton', 'Inter', sans-serif;
@@ -579,7 +660,7 @@
   <nav id="navbar" class="fixed top-0 w-full border-b border-subtle backdrop-blur-xl z-50 transition-all duration-300" style="background-color: var(--bg-header);">
     <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
       <div class="flex items-center gap-10">
-        <a href="#" class="font-bold text-xl tracking-tighter hover:scale-105 transition-transform origin-left">M_B.</a>
+        <a href="#" class="text-xl hover:scale-105 transition-transform origin-left inline-flex items-baseline gap-0.5"><span class="mb-mark">M_B</span><span class="text-white">.</span></a>
         <div class="hidden md:flex items-center gap-8 text-xs uppercase tracking-widest text-subtle font-semibold">
           <a href="#music" class="hover:text-white transition-colors relative group">
             Music
@@ -604,7 +685,7 @@
         </div>
       </div>
       <div>
-        <a href="#book" class="text-xs uppercase tracking-widest font-bold border border-subtle px-5 py-3 hover:bg-white hover:text-[#050b1c] hover:scale-105 transition-all inline-block">Book M_B</a>
+        <a href="#book" class="text-xs uppercase tracking-widest font-bold border border-subtle px-5 py-3 hover:bg-white hover:text-[#050b1c] hover:scale-105 transition-all inline-flex items-center gap-1.5">Book <span class="mb-mark">M_B</span></a>
       </div>
     </div>
   </nav>
@@ -624,7 +705,7 @@
     </div>
 
     <!-- Hero Content -->
-    <div class="relative z-10 w-full max-w-7xl mx-auto px-6 mt-20 flex flex-col justify-center items-center h-full text-center">
+    <div class="relative z-10 w-full max-w-7xl mx-auto px-6 mt-20 flex flex-col justify-center items-start text-left h-full">
 
       <div class="mb-8 inline-flex overflow-hidden rounded-full p-[1px] hero-sub" style="animation-delay: 0.1s;">
         <span class="inline-flex h-full w-full items-center justify-center rounded-full px-5 py-2 text-xs font-semibold uppercase tracking-widest text-white border border-subtle backdrop-blur-3xl" style="background-color: rgba(10, 18, 40, 0.7);">
@@ -633,21 +714,21 @@
         </span>
       </div>
 
-      <h1 class="hero-title text-6xl md:text-8xl lg:text-[160px] mb-2 md:mb-4" id="hero-title">
+      <h1 class="hero-title text-6xl md:text-8xl lg:text-[160px] mb-2 md:mb-4 text-left" id="hero-title">
         <span class="hero-mb block">M_B</span>
         <span class="shine-text block text-5xl md:text-7xl lg:text-[120px] mt-2 md:mt-4" data-text="SOUTHERN SOUL">SOUTHERN SOUL</span>
       </h1>
 
-      <p class="hero-sub text-base md:text-xl text-subtle mt-8 mb-12 max-w-2xl leading-relaxed font-light px-4" style="animation-delay: 1s;">
+      <p class="hero-sub text-base md:text-xl text-subtle mt-8 mb-12 max-w-2xl leading-relaxed font-light text-left" style="animation-delay: 1s;">
         Out of Douglasville, GA. Mane Family Mafia. Trail rides, field parties, and rodeos across the South — real live vocals, every show.
       </p>
 
       <!-- Floating Interaction Block -->
       <div class="hero-sub border border-subtle backdrop-blur-xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-8 max-w-4xl w-full hover:border-white/30 transition-all duration-500 group hover:shadow-[0_0_60px_-15px_rgba(120,170,255,0.4)]" style="background-color: rgba(10, 18, 40, 0.55); animation-delay: 1.3s;">
-        <div class="text-center md:text-left">
+        <div class="text-left">
           <div class="text-xs uppercase tracking-widest text-subtle mb-2 group-hover:text-white transition-colors">New Single</div>
           <div class="text-2xl md:text-3xl font-bold tracking-tight mb-2">Trail Ride · feat. Stal'lyon</div>
-          <p class="text-sm text-subtle max-w-md mx-auto md:mx-0">The one moving rooms right now. Stream it, then come see it live.</p>
+          <p class="text-sm text-subtle max-w-md">The one moving rooms right now. Stream it, then come see it live.</p>
         </div>
         <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto md:min-w-[300px]">
           <a href="https://distrokid.com/hyperfollow/mb64/trail-ride-feat-stallyon" target="_blank" class="btn-primary w-full sm:w-auto">Listen</a>
@@ -1186,7 +1267,7 @@
 
     <div class="mt-12 text-center reveal">
       <p class="text-subtle text-sm mb-6">Booking goes through Celina · Artistbookinginc@gmail.com · (762) 436-0464</p>
-      <a href="#book" class="btn-primary inline-block">Book M_B</a>
+      <a href="#book" class="btn-primary inline-flex items-center gap-1.5">Book <span class="mb-mark">M_B</span></a>
     </div>
   </section>
 
@@ -1288,14 +1369,14 @@
     <div class="ambient-orb" style="top: 10%; right: -5%; width: 360px; height: 360px; background: radial-gradient(circle, rgba(60,100,200,0.32), transparent); animation-delay: -3s;"></div>
     <div class="ambient-orb" style="bottom: 20%; left: -10%; width: 320px; height: 320px; background: radial-gradient(circle, rgba(80,130,220,0.25), transparent); animation-delay: -11s;"></div>
     <div class="mb-16 mx-auto text-center reveal max-w-2xl">
-      <h2 class="text-4xl md:text-5xl font-bold tracking-tighter mb-4">About M_B</h2>
+      <h2 class="text-4xl md:text-5xl font-bold tracking-tighter mb-4">About <span class="mb-mark">M_B</span></h2>
       <p class="text-subtle text-lg">Real Southern Soul, hand-cut out of Douglasville, GA.</p>
     </div>
 
     <div class="space-y-16 reveal-stagger">
       <div class="border-l-2 border-white pl-8 relative group hover:pl-12 transition-all duration-300">
         <h3 class="text-2xl font-bold tracking-tight mb-4 group-hover:text-white text-gray-300 transition-colors">Live Vocals, Every Show</h3>
-        <p class="text-subtle text-lg leading-relaxed max-w-3xl">No backing tracks pretending to be live. M_B sings the show — trail rides, field parties, rodeos, clubs, festivals. The crowd gets the real thing.</p>
+        <p class="text-subtle text-lg leading-relaxed max-w-3xl">No backing tracks pretending to be live. <span class="mb-mark">M_B</span> sings the show — trail rides, field parties, rodeos, clubs, festivals. The crowd gets the real thing.</p>
       </div>
 
       <div class="border-l-2 border-subtle pl-8 relative group hover:border-white hover:pl-12 transition-all duration-300">
@@ -1305,7 +1386,7 @@
 
       <div class="border-l-2 border-subtle pl-8 relative group hover:border-white hover:pl-12 transition-all duration-300">
         <h3 class="text-2xl font-bold tracking-tight mb-4 group-hover:text-white text-gray-500 transition-colors">The Crew</h3>
-        <p class="text-subtle text-lg leading-relaxed max-w-3xl">Mane Family Mafia rolls with M_B — the Steppaz, the riders, the family. Bookings handled by Celina Crawford at Artistbookinginc. Contracts, riders, sound — all squared away before show day.</p>
+        <p class="text-subtle text-lg leading-relaxed max-w-3xl">Mane Family Mafia rolls with <span class="mb-mark">M_B</span> — the Steppaz, the riders, the family. Bookings handled by Celina Crawford at Artistbookinginc. Contracts, riders, sound — all squared away before show day.</p>
       </div>
     </div>
   </section>
@@ -1336,7 +1417,7 @@
           <span class="w-2 h-2 rounded-full bg-subtle group-hover:bg-white transition-colors"></span>
         </div>
         <h3 class="text-3xl font-bold tracking-tight mb-4 group-hover:-translate-y-1 transition-transform">Lock The Date</h3>
-        <p class="text-subtle text-lg">Celina sends the contract, you put 50% down, the date is yours. M_B and the crew show up ready to work.</p>
+        <p class="text-subtle text-lg">Celina sends the contract, you put 50% down, the date is yours. <span class="mb-mark">M_B</span> and the crew show up ready to work.</p>
       </div>
     </div>
 
@@ -1365,37 +1446,73 @@
     </div>
   </section>
 
-  <!-- Footer CTA & Links -->
-  <section class="border-t border-subtle pt-32 pb-12 mt-24 relative section-ambient" style="background: linear-gradient(180deg, transparent 0%, rgba(3, 7, 20, 0.6) 50%, rgba(3, 7, 20, 0.9) 100%);">
-    <div class="ambient-orb" style="top: 10%; left: 30%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(80,130,220,0.18), transparent); animation-delay: -7s;"></div>
-    <div class="px-6 max-w-4xl mx-auto text-center reveal">
-      <h2 class="text-5xl md:text-7xl font-bold tracking-tighter mb-8 text-white drop-shadow-lg">Book The Show.</h2>
-      <p class="text-subtle text-xl mb-12 max-w-2xl mx-auto font-light">Trail rides. Field parties. Rodeos. Clubs. Festivals. M_B brings the show.</p>
+  <!-- Footer · Overhauled · book-the-show CTA + phone+logo block + grid links -->
+  <section class="border-t border-subtle pt-24 pb-12 mt-24 relative section-ambient overflow-hidden" style="background: linear-gradient(180deg, transparent 0%, rgba(3, 7, 20, 0.7) 40%, rgba(3, 7, 20, 0.95) 100%);">
+    <div class="ambient-orb" style="top: 5%; left: 20%; width: 520px; height: 520px; background: radial-gradient(circle, rgba(80,130,220,0.22), transparent); animation-delay: -7s;"></div>
+    <div class="ambient-orb" style="bottom: 10%; right: 10%; width: 420px; height: 420px; background: radial-gradient(circle, rgba(60,100,200,0.18), transparent); animation-delay: -13s;"></div>
 
-      <div class="flex flex-col md:flex-row justify-center items-center gap-8 mb-32">
-        <a href="#book" class="btn-primary px-10 py-4 text-base shadow-[0_0_40px_rgba(255,255,255,0.15)] hover:shadow-[0_0_60px_rgba(255,255,255,0.3)]">Book M_B</a>
-        <div class="text-left border-l border-subtle pl-8">
-          <div class="text-xs text-subtle uppercase tracking-widest mb-2">Mgmt · Celina Crawford</div>
-          <a href="tel:+17624360464" class="text-2xl font-bold hover:text-white text-gray-300 transition-colors tracking-tight">(762) 436-0464</a>
+    <div class="px-6 max-w-6xl mx-auto">
+
+      <!-- Hero CTA Block -->
+      <div class="text-center reveal mb-20">
+        <div class="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-subtle font-mono mb-6">
+          <span class="w-8 h-px bg-subtle"></span>
+          Now Booking 2026
+          <span class="w-8 h-px bg-subtle"></span>
         </div>
+        <h2 class="text-5xl md:text-7xl font-bold tracking-tighter mb-6 text-white drop-shadow-lg">Book The Show.</h2>
+        <p class="text-subtle text-xl mb-10 max-w-2xl mx-auto font-light">Trail rides. Field parties. Rodeos. Clubs. Festivals. <span class="mb-mark">M_B</span> brings the show.</p>
+        <a href="#book" class="btn-primary inline-flex items-center gap-2 px-10 py-4 text-base shadow-[0_0_60px_-10px_rgba(120,170,255,0.4)] hover:shadow-[0_0_80px_-10px_rgba(120,170,255,0.7)]">
+          Book <span class="mb-mark">M_B</span>
+          <svg width="16" height="16" viewBox="0 0 15 15" fill="none" stroke="currentColor"><path d="M8.14645 3.14645C8.34171 2.95118 8.65829 2.95118 8.85355 3.14645L12.8536 7.14645C13.0488 7.34171 13.0488 7.65829 12.8536 7.85355L8.85355 11.8536C8.65829 12.0488 8.34171 12.0488 8.14645 11.8536C7.95118 11.6583 7.95118 11.3417 8.14645 11.1464L11.2929 8H2.5C2.22386 8 2 7.77614 2 7.5C2 7.22386 2.22386 7 2.5 7H11.2929L8.14645 3.85355C7.95118 3.65829 7.95118 3.34171 8.14645 3.14645Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"/></svg>
+        </a>
       </div>
 
-      <!-- Footer Meta -->
-      <div class="border-t border-subtle pt-10 flex flex-col md:flex-row justify-between items-center gap-8 text-sm text-subtle">
+      <!-- Phone + Logo Block -->
+      <div class="reveal flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 mb-20 border-y border-subtle py-12">
         <div class="text-center md:text-left">
-          <div class="font-bold text-white text-base tracking-tight mb-1">M_B.</div>
-          <div class="font-mono text-xs uppercase tracking-widest">Southern Soul · Mane Family Mafia</div>
+          <div class="text-xs text-subtle uppercase tracking-widest mb-3 font-mono">Mgmt · Celina Crawford</div>
+          <a href="tel:+17624360464" class="text-3xl md:text-4xl font-bold hover:text-white text-white transition-all tracking-tight hover:tracking-normal inline-block">(762) 436-0464</a>
+          <div class="text-sm text-subtle mt-2">Artistbookinginc</div>
         </div>
-        <div class="flex gap-8 font-medium">
-          <a href="https://therealmb.com/" class="hover:text-white transition-colors">Press Kit</a>
-          <a href="https://linktr.ee/therealmb276" class="hover:text-white transition-colors">Linktree</a>
-          <a href="https://www.instagram.com/thereal_m_b" class="hover:text-white transition-colors">Instagram</a>
+        <div class="hidden md:block w-px h-20 bg-gradient-to-b from-transparent via-[#3a5080] to-transparent"></div>
+        <a href="#" class="group block">
+          <div class="w-28 h-28 md:w-32 md:h-32 overflow-hidden border border-subtle hover:border-[#3a5080] transition-all hover:shadow-[0_0_40px_-10px_rgba(120,170,255,0.5)] hover:scale-105" style="background-color: rgba(10, 18, 40, 0.6); border-radius: 50%;">
+            <img src="assets/mb-logo.jpg" alt="M_B logo" class="w-full h-full object-cover img-zoom" loading="lazy">
+          </div>
+        </a>
+      </div>
+
+      <!-- Social + Link Grid -->
+      <div class="reveal grid grid-cols-1 sm:grid-cols-3 gap-6 mb-16 text-center">
+        <a href="https://therealmb.com/" target="_blank" class="border border-subtle hover:border-[#3a5080] transition-all p-6 group hover:shadow-[0_0_30px_-10px_rgba(120,170,255,0.4)]" style="background-color: rgba(10, 18, 40, 0.4); border-radius: var(--radius-md);">
+          <div class="text-xs text-subtle uppercase tracking-widest mb-2">Web</div>
+          <div class="text-base font-bold text-white group-hover:tracking-wider transition-all">therealmb.com</div>
+        </a>
+        <a href="https://linktr.ee/therealmb276" target="_blank" class="border border-subtle hover:border-[#3a5080] transition-all p-6 group hover:shadow-[0_0_30px_-10px_rgba(120,170,255,0.4)]" style="background-color: rgba(10, 18, 40, 0.4); border-radius: var(--radius-md);">
+          <div class="text-xs text-subtle uppercase tracking-widest mb-2">All Links</div>
+          <div class="text-base font-bold text-white group-hover:tracking-wider transition-all">linktr.ee/therealmb276</div>
+        </a>
+        <a href="https://www.instagram.com/thereal_m_b" target="_blank" class="border border-subtle hover:border-[#3a5080] transition-all p-6 group hover:shadow-[0_0_30px_-10px_rgba(120,170,255,0.4)]" style="background-color: rgba(10, 18, 40, 0.4); border-radius: var(--radius-md);">
+          <div class="text-xs text-subtle uppercase tracking-widest mb-2">Instagram</div>
+          <div class="text-base font-bold text-white group-hover:tracking-wider transition-all">@thereal_m_b</div>
+        </a>
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="reveal flex flex-col md:flex-row justify-between items-center gap-6 pt-8 border-t border-subtle text-sm text-subtle">
+        <div class="flex items-center gap-3">
+          <span class="mb-mark text-lg">M_B</span>
+          <span class="text-subtle">·</span>
+          <span class="font-mono text-xs uppercase tracking-widest">Southern Soul · Mane Family Mafia</span>
         </div>
-        <div class="text-center md:text-right font-mono text-xs">
-          <div>© 2026 M_B</div>
-          <a href="mailto:Artistbookinginc@gmail.com" class="hover:text-white transition-colors mt-1 inline-block">Artistbookinginc@gmail.com</a>
+        <div class="flex flex-col md:flex-row items-center gap-2 md:gap-6 font-mono text-xs">
+          <a href="mailto:Artistbookinginc@gmail.com" class="hover:text-white transition-colors">Artistbookinginc@gmail.com</a>
+          <span class="hidden md:inline">·</span>
+          <span>© 2026 <span class="mb-mark">M_B</span></span>
         </div>
       </div>
+
     </div>
   </section>
 
@@ -1487,7 +1604,40 @@
         });
       }
 
-      /* 7. Hero Video — force autoplay (browser autoplay policies sometimes silently block muted-autoplay) */
+      /* 7. Song Audio Players — inject inline 30s preview players into every music card */
+      const musicSection = document.getElementById('music');
+      if (musicSection) {
+        musicSection.querySelectorAll('a[href*="distrokid.com/hyperfollow/mb64/"]').forEach(link => {
+          const match = link.href.match(/mb64\/([^?#]+)/);
+          if (!match) return;
+          const slug = match[1];
+          const card = link.closest('.glow-card');
+          if (!card) return;
+          if (card.querySelector('.audio-row')) return;
+          const description = card.querySelector('p.text-base');
+          if (!description) return;
+          const audioRow = document.createElement('div');
+          audioRow.className = 'audio-row reveal';
+          audioRow.innerHTML = `
+            <span class="preview-badge">30s Preview</span>
+            <audio class="audio-player" controls preload="none" src="assets/audio/${slug}.mp3" aria-label="Preview"></audio>
+          `;
+          description.after(audioRow);
+          /* Pause others when one starts */
+          const audio = audioRow.querySelector('audio');
+          audio.addEventListener('play', () => {
+            document.querySelectorAll('.audio-player').forEach(a => {
+              if (a !== audio && !a.paused) a.pause();
+            });
+          });
+          /* Update link text to clarify it's full stream */
+          link.querySelectorAll('svg').forEach(s => s.remove());
+          link.textContent = 'Stream Full Song';
+          link.appendChild(Object.assign(document.createElement('span'), { innerHTML: ' →', style: 'margin-left:4px;' }));
+        });
+      }
+
+      /* 8. Hero Video — force autoplay (browser autoplay policies sometimes silently block muted-autoplay) */
       const heroVideo = document.getElementById('hero-video');
       if (heroVideo) {
         heroVideo.muted = true;
@@ -1555,7 +1705,7 @@
 
       <div class="p-8 md:p-12">
         <div class="mb-10">
-          <h2 id="book-modal-title" class="text-3xl md:text-4xl font-bold tracking-tighter mb-3">Book M_B</h2>
+          <h2 id="book-modal-title" class="text-3xl md:text-4xl font-bold tracking-tighter mb-3">Book <span class="mb-mark">M_B</span></h2>
           <p class="text-subtle text-base md:text-lg">Tell us about the show. Celina handles every booking personally.</p>
         </div>
 
