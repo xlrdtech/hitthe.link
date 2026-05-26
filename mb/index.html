@@ -461,7 +461,7 @@
   <header class="relative w-[100vw] h-[100dvh] flex items-center justify-center overflow-hidden flex-col left-1/2 -translate-x-1/2">
     <!-- Full Bleed Video Background -->
     <div class="absolute inset-0 w-full h-full z-0" id="hero-bg">
-      <video autoplay muted loop playsinline preload="metadata" poster="assets/posters/hero-video.jpg" class="w-full h-full object-cover opacity-70 scale-[1.02] transition-transform duration-1000">
+      <video id="hero-video" autoplay muted loop playsinline preload="auto" poster="assets/posters/hero-video.jpg" class="w-full h-full object-cover opacity-70 scale-[1.02] transition-transform duration-1000">
         <source src="assets/hero-video.mp4" type="video/mp4">
       </video>
       <!-- Navy Gradient Overlays for legibility -->
@@ -1116,7 +1116,37 @@
         });
       }
 
-      /* 7. Book M_B Modal — open/close/escape/backdrop click */
+      /* 7. Hero Video — force autoplay (browser autoplay policies sometimes silently block muted-autoplay) */
+      const heroVideo = document.getElementById('hero-video');
+      if (heroVideo) {
+        heroVideo.muted = true;
+        heroVideo.playsInline = true;
+        const tryPlay = () => {
+          const p = heroVideo.play();
+          if (p !== undefined) {
+            p.catch(() => {
+              /* Autoplay blocked — wait for first user interaction then retry */
+              const resume = () => {
+                heroVideo.play().catch(() => {});
+                document.removeEventListener('touchstart', resume);
+                document.removeEventListener('click', resume);
+                document.removeEventListener('scroll', resume);
+              };
+              document.addEventListener('touchstart', resume, { once: true });
+              document.addEventListener('click', resume, { once: true });
+              document.addEventListener('scroll', resume, { once: true });
+            });
+          }
+        };
+        if (heroVideo.readyState >= 2) tryPlay();
+        else heroVideo.addEventListener('loadeddata', tryPlay, { once: true });
+        /* Also retry on visibility change (tab refocus) */
+        document.addEventListener('visibilitychange', () => {
+          if (!document.hidden && heroVideo.paused) heroVideo.play().catch(() => {});
+        });
+      }
+
+      /* 8. Book M_B Modal — open/close/escape/backdrop click */
       const bookModal = document.getElementById('book-modal');
       const openModal = () => {
         bookModal.classList.add('open');
