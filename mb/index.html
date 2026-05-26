@@ -9,10 +9,10 @@
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Inter Font (Exec Page Standard) -->
+  <!-- Fonts · Inter for body + Anton display for hero title -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Anton&family=Cinzel:wght@600;700;800;900&display=swap" rel="stylesheet">
 
   <style>
     /* Navy Immersive Theme Variables */
@@ -34,6 +34,108 @@
       --radius-lg: 20px;
       --radius-xl: 28px;
     }
+
+    /* Hero Typography · M_B display + Southern Soul metallic shine */
+    .hero-title {
+      font-family: 'Anton', 'Inter', sans-serif;
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 0.88;
+      text-transform: uppercase;
+    }
+    .hero-mb {
+      display: inline-block;
+      background: linear-gradient(180deg, #ffffff 0%, #e6ecf5 30%, #b9c4d6 55%, #ffffff 75%, #8997b4 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      filter: drop-shadow(0 6px 24px rgba(120, 170, 255, 0.25));
+      animation: mbReveal 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    @keyframes mbReveal {
+      from { opacity: 0; transform: translateY(20px) scale(0.96); letter-spacing: 0.1em; }
+      to   { opacity: 1; transform: translateY(0) scale(1); letter-spacing: -0.02em; }
+    }
+
+    /* Southern Soul · Chrome metallic shine with traveling highlight */
+    .shine-text {
+      font-family: 'Cinzel', 'Anton', serif;
+      font-weight: 800;
+      letter-spacing: 0.005em;
+      background: linear-gradient(
+        100deg,
+        #5d6878 0%,
+        #b9c4d6 18%,
+        #ffffff 32%,
+        #e8eef7 42%,
+        #ffffff 50%,
+        #d3d8e0 60%,
+        #818c9c 75%,
+        #5d6878 90%,
+        #b9c4d6 100%
+      );
+      background-size: 220% 100%;
+      background-position: 100% 50%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      filter:
+        drop-shadow(0 2px 0 rgba(0,0,0,0.35))
+        drop-shadow(0 6px 14px rgba(120, 170, 255, 0.35))
+        drop-shadow(0 20px 40px rgba(0,0,0,0.4));
+      animation:
+        shineTravel 6s linear infinite,
+        shineReveal 1.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+      position: relative;
+      display: inline-block;
+    }
+    @keyframes shineTravel {
+      0%   { background-position: 100% 50%; }
+      100% { background-position: -120% 50%; }
+    }
+    @keyframes shineReveal {
+      from { opacity: 0; transform: translateY(30px) scale(0.94); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    /* Overlaid highlight sweep · animated white-glare flash */
+    .shine-text::after {
+      content: attr(data-text);
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,0.85) 50%, transparent 70%);
+      background-size: 220% 100%;
+      background-position: 100% 50%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      animation: shineFlash 6s linear infinite;
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+    @keyframes shineFlash {
+      0%, 30% { background-position: 100% 50%; opacity: 0; }
+      40%     { opacity: 1; }
+      60%     { background-position: -120% 50%; opacity: 1; }
+      70%, 100% { opacity: 0; }
+    }
+
+    /* Hero subtitle · staggered reveal */
+    .hero-sub {
+      animation: subReveal 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.7s both;
+    }
+    @keyframes subReveal {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Global Section Header Centering · h2 + the immediately-following p caption */
+    section h2 { text-align: center; }
+    section h2 + p { text-align: center; margin-left: auto; margin-right: auto; }
+    section .mb-16 { text-align: center; }
+    section .mb-16 > * { margin-left: auto; margin-right: auto; }
 
     /* Global Rounding */
     .glow-card,
@@ -522,32 +624,32 @@
     </div>
 
     <!-- Hero Content -->
-    <div class="relative z-10 w-full max-w-7xl mx-auto px-6 mt-20 flex flex-col justify-center h-full reveal">
+    <div class="relative z-10 w-full max-w-7xl mx-auto px-6 mt-20 flex flex-col justify-center items-center h-full text-center">
 
-      <div class="mb-6 inline-flex overflow-hidden rounded-full p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50 w-max">
-        <span class="inline-flex h-full w-full items-center justify-center rounded-full bg-[#0a0a0a] px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-white border border-subtle backdrop-blur-3xl">
+      <div class="mb-8 inline-flex overflow-hidden rounded-full p-[1px] hero-sub" style="animation-delay: 0.1s;">
+        <span class="inline-flex h-full w-full items-center justify-center rounded-full px-5 py-2 text-xs font-semibold uppercase tracking-widest text-white border border-subtle backdrop-blur-3xl" style="background-color: rgba(10, 18, 40, 0.7);">
           <span class="inline-block w-2 h-2 bg-white rounded-full mr-3 animate-pulse"></span>
           Booking 2026
         </span>
       </div>
 
-      <h1 class="text-6xl md:text-8xl lg:text-[140px] font-bold tracking-tighter leading-[0.85] mb-8" id="hero-title">
-        M_B.<br>
-        <span class="text-subtle inline-block" style="text-shadow: 0 10px 40px rgba(255,255,255,0.1);">Southern Soul.</span>
+      <h1 class="hero-title text-6xl md:text-8xl lg:text-[160px] mb-2 md:mb-4" id="hero-title">
+        <span class="hero-mb block">M_B</span>
+        <span class="shine-text block text-5xl md:text-7xl lg:text-[120px] mt-2 md:mt-4" data-text="SOUTHERN SOUL">SOUTHERN SOUL</span>
       </h1>
 
-      <p class="text-lg md:text-2xl text-subtle mb-16 max-w-3xl leading-relaxed font-light">
+      <p class="hero-sub text-base md:text-xl text-subtle mt-8 mb-12 max-w-2xl leading-relaxed font-light px-4" style="animation-delay: 1s;">
         Out of Douglasville, GA. Mane Family Mafia. Trail rides, field parties, and rodeos across the South — real live vocals, every show.
       </p>
 
       <!-- Floating Interaction Block -->
-      <div class="border border-subtle backdrop-blur-xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-8 max-w-4xl hover:border-white/30 transition-all duration-500 rounded-sm group hover:shadow-[0_0_60px_-15px_rgba(120,170,255,0.4)]" style="background-color: rgba(10, 18, 40, 0.55);">
-        <div>
+      <div class="hero-sub border border-subtle backdrop-blur-xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-8 max-w-4xl w-full hover:border-white/30 transition-all duration-500 group hover:shadow-[0_0_60px_-15px_rgba(120,170,255,0.4)]" style="background-color: rgba(10, 18, 40, 0.55); animation-delay: 1.3s;">
+        <div class="text-center md:text-left">
           <div class="text-xs uppercase tracking-widest text-subtle mb-2 group-hover:text-white transition-colors">New Single</div>
-          <div class="text-3xl font-bold tracking-tight mb-2">Trail Ride · feat. Stal'lyon</div>
-          <p class="text-sm text-subtle max-w-md">The one moving rooms right now. Stream it, then come see it live.</p>
+          <div class="text-2xl md:text-3xl font-bold tracking-tight mb-2">Trail Ride · feat. Stal'lyon</div>
+          <p class="text-sm text-subtle max-w-md mx-auto md:mx-0">The one moving rooms right now. Stream it, then come see it live.</p>
         </div>
-        <div class="flex flex-col sm:flex-row gap-4 min-w-[300px]">
+        <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto md:min-w-[300px]">
           <a href="https://distrokid.com/hyperfollow/mb64/trail-ride-feat-stallyon" target="_blank" class="btn-primary w-full sm:w-auto">Listen</a>
           <a href="#tour" class="btn-secondary w-full sm:w-auto">Tour Dates</a>
         </div>
@@ -567,7 +669,7 @@
   <section id="music" class="px-6 max-w-7xl mx-auto py-12 relative section-ambient">
     <div class="ambient-orb" style="top: 10%; left: -5%; width: 320px; height: 320px; background: radial-gradient(circle, rgba(60,100,200,0.3), transparent); animation-delay: -2s;"></div>
     <div class="ambient-orb" style="bottom: 5%; right: -8%; width: 380px; height: 380px; background: radial-gradient(circle, rgba(80,130,220,0.25), transparent); animation-delay: -10s;"></div>
-    <div class="mb-16 max-w-2xl reveal">
+    <div class="mb-16 max-w-2xl mx-auto text-center reveal">
       <h2 class="text-4xl md:text-5xl font-bold tracking-tighter mb-4">Music</h2>
       <p class="text-subtle text-lg">Streaming everywhere. Stream the singles, then come catch a show.</p>
     </div>
@@ -766,7 +868,7 @@
   <section id="watch" class="px-6 max-w-7xl mx-auto py-12 relative section-ambient">
     <div class="ambient-orb" style="top: 20%; right: -5%; width: 340px; height: 340px; background: radial-gradient(circle, rgba(50,90,190,0.3), transparent); animation-delay: -4s;"></div>
     <div class="ambient-orb" style="bottom: 15%; left: -8%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(80,130,220,0.25), transparent); animation-delay: -12s;"></div>
-    <div class="mb-16 max-w-2xl reveal">
+    <div class="mb-16 max-w-2xl mx-auto text-center reveal">
       <h2 class="text-4xl md:text-5xl font-bold tracking-tighter mb-4">Watch</h2>
       <p class="text-subtle text-lg">Live footage, behind the scenes, on the road with Mane Family Mafia.</p>
     </div>
@@ -863,7 +965,7 @@
   <section id="tour" class="px-6 max-w-7xl mx-auto py-12 relative section-ambient">
     <div class="ambient-orb" style="top: 5%; left: -10%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(70,120,210,0.3), transparent); animation-delay: -8s;"></div>
     <div class="ambient-orb" style="top: 60%; right: -8%; width: 360px; height: 360px; background: radial-gradient(circle, rgba(40,80,180,0.25), transparent); animation-delay: -14s;"></div>
-    <div class="mb-16 max-w-2xl reveal">
+    <div class="mb-16 max-w-2xl mx-auto text-center reveal">
       <h2 class="text-4xl md:text-5xl font-bold tracking-tighter mb-4">Tour</h2>
       <p class="text-subtle text-lg">Booked through Labor Day 2026. Catch a show.</p>
     </div>
@@ -1095,7 +1197,7 @@
     <div class="ambient-orb" style="top: 5%; left: -5%; width: 380px; height: 380px; background: radial-gradient(circle, rgba(70,120,210,0.3), transparent); animation-delay: -9s;"></div>
     <div class="ambient-orb" style="bottom: 10%; right: -8%; width: 340px; height: 340px; background: radial-gradient(circle, rgba(40,80,180,0.28), transparent); animation-delay: -15s;"></div>
 
-    <div class="mb-16 max-w-2xl reveal">
+    <div class="mb-16 max-w-2xl mx-auto text-center reveal">
       <h2 class="text-4xl md:text-5xl font-bold tracking-tighter mb-4">Flyer Wall</h2>
       <p class="text-subtle text-lg">Every show. Every promoter. Every poster.</p>
     </div>
@@ -1185,9 +1287,9 @@
   <section id="about" class="px-6 max-w-5xl mx-auto py-12 relative section-ambient">
     <div class="ambient-orb" style="top: 10%; right: -5%; width: 360px; height: 360px; background: radial-gradient(circle, rgba(60,100,200,0.32), transparent); animation-delay: -3s;"></div>
     <div class="ambient-orb" style="bottom: 20%; left: -10%; width: 320px; height: 320px; background: radial-gradient(circle, rgba(80,130,220,0.25), transparent); animation-delay: -11s;"></div>
-    <div class="mb-16 reveal">
+    <div class="mb-16 mx-auto text-center reveal max-w-2xl">
       <h2 class="text-4xl md:text-5xl font-bold tracking-tighter mb-4">About M_B</h2>
-      <p class="text-subtle text-lg max-w-2xl">Real Southern Soul, hand-cut out of Douglasville, GA.</p>
+      <p class="text-subtle text-lg">Real Southern Soul, hand-cut out of Douglasville, GA.</p>
     </div>
 
     <div class="space-y-16 reveal-stagger">
@@ -1214,7 +1316,7 @@
   <section id="how" class="px-6 max-w-5xl mx-auto py-12 relative section-ambient">
     <div class="ambient-orb" style="top: 20%; left: -8%; width: 340px; height: 340px; background: radial-gradient(circle, rgba(50,90,190,0.3), transparent); animation-delay: -5s;"></div>
     <div class="ambient-orb" style="bottom: 10%; right: -10%; width: 380px; height: 380px; background: radial-gradient(circle, rgba(70,120,210,0.28), transparent); animation-delay: -13s;"></div>
-    <div class="mb-16 reveal text-center md:text-left">
+    <div class="mb-16 mx-auto text-center reveal max-w-2xl">
       <h2 class="text-4xl md:text-5xl font-bold tracking-tighter mb-4">How To Book</h2>
       <p class="text-subtle text-lg">Two steps. Quick.</p>
     </div>
