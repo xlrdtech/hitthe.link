@@ -3,51 +3,273 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>C.U.B.E.™ · L7S Hero Calculator · Coming Soon</title>
+<title>C.U.B.E.™ — Credit Utilization Boosting Engineering · L7S Hero</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <style>
-  :root{--bg:#0a0a0f;--ink:#fafaf6;--mute:#8a8a98;--gold:#d4af37;--gold-soft:#f0d878;--line:rgba(212,175,55,.18);--card:#13131a}
-  *{box-sizing:border-box;margin:0;padding:0}
-  html,body{background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;overflow-wrap:break-word;word-break:normal;hyphens:none}
-  main{max-width:560px;text-align:center;opacity:0}
-  .tag{font-size:11px;letter-spacing:.4em;color:var(--gold);text-transform:uppercase;font-weight:600;margin-bottom:14px}
-  h1{font-size:clamp(40px,7vw,72px);font-weight:800;letter-spacing:-.03em;line-height:1;background:linear-gradient(135deg,var(--ink) 0%,var(--gold-soft) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:18px}
-  .sub{color:var(--mute);font-size:16px;margin-bottom:36px}
-  .status{display:inline-flex;align-items:center;gap:10px;background:rgba(247,201,72,.08);border:1px solid rgba(247,201,72,.3);padding:10px 20px;border-radius:999px;font-size:13px;letter-spacing:.05em;color:#f7c948;font-weight:600;margin-bottom:26px;text-transform:uppercase}
-  .status .dot{width:8px;height:8px;border-radius:50%;background:#f7c948;animation:pulse 1.6s ease-in-out infinite}
-  @keyframes pulse{0%,100%{opacity:.45;transform:scale(.85)}50%{opacity:1;transform:scale(1.15)}}
-  .panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px;text-align:left;margin-bottom:22px}
-  .panel h2{font-size:14px;letter-spacing:.18em;color:var(--gold);text-transform:uppercase;font-weight:600;margin-bottom:14px}
-  .panel p{color:var(--ink);font-size:15px;line-height:1.65}
-  .panel p + p{margin-top:12px;color:var(--mute)}
-  a.home{display:inline-flex;align-items:center;gap:8px;color:var(--gold);text-decoration:none;font-size:14px;font-weight:600;letter-spacing:.04em;border-bottom:1px solid transparent;transition:border-color .2s,color .2s}
-  a.home:hover{color:var(--gold-soft);border-color:var(--gold-soft)}
-  footer{text-align:center;margin-top:38px;color:var(--mute);font-size:12px}
-  footer .em{color:var(--gold);font-weight:600;letter-spacing:.05em}
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0f;--gold:#d4af37;--gold-soft:#f0d878;--line:rgba(212,175,55,.18);--card:#13131a;--card-2:#1a1a22;--text:#e8e6e0;--muted:#8a8678;--green:#4ec77a;--amber:#e8b340;--red:#e26666}
+html,body{background:var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;overflow-wrap:break-word;word-break:normal;hyphens:none}
+.wrap{max-width:980px;margin:0 auto;padding:40px 24px 80px}
+.back{color:var(--gold);text-decoration:none;font-size:13px;letter-spacing:.05em;display:inline-block;margin-bottom:24px;opacity:.7;transition:opacity .2s}
+.back:hover{opacity:1}
+header{border-bottom:1px solid var(--line);padding-bottom:28px;margin-bottom:32px}
+.badge{display:inline-block;font-size:11px;letter-spacing:.15em;color:var(--gold);background:rgba(212,175,55,.08);border:1px solid var(--line);padding:5px 12px;border-radius:12px;margin-bottom:12px;text-transform:uppercase}
+h1{font-size:32px;font-weight:700;letter-spacing:-.02em;background:linear-gradient(135deg,var(--gold),var(--gold-soft));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.15;margin-bottom:8px}
+.sub{font-size:14px;color:var(--muted);margin-top:6px;line-height:1.5}
+.author{font-size:12px;color:var(--gold);opacity:.7;margin-top:8px;letter-spacing:.05em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px;margin-bottom:20px}
+.card-title{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:18px;font-weight:600}
+.grid{display:grid;gap:14px}
+.tradeline{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:14px;background:var(--card-2);border:1px solid var(--line);border-radius:10px;margin-bottom:10px}
+.tradeline label{font-size:11px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:6px}
+.tradeline input{width:100%;background:transparent;border:none;border-bottom:1px solid var(--line);color:var(--text);font-size:18px;font-weight:600;padding:6px 2px;outline:none;font-family:inherit}
+.tradeline input:focus{border-bottom-color:var(--gold)}
+.tradeline .name-input{grid-column:1/-1;font-size:14px;font-weight:500}
+.row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:none}
+.row .label{color:var(--muted);font-size:13px}
+.row .val{font-size:18px;font-weight:600;color:var(--gold-soft);font-variant-numeric:tabular-nums}
+.big-num{font-size:48px;font-weight:700;background:linear-gradient(135deg,var(--gold),var(--gold-soft));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-variant-numeric:tabular-nums;line-height:1}
+.bigwrap{text-align:center;padding:20px 0}
+.bigwrap .lbl{font-size:12px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+.status{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.status.green .dot{background:var(--green)}
+.status.amber .dot{background:var(--amber)}
+.status.red .dot{background:var(--red)}
+.status.green{color:var(--green)}
+.status.amber{color:var(--amber)}
+.status.red{color:var(--red)}
+.bar-wrap{position:relative;height:8px;background:var(--card-2);border-radius:4px;overflow:hidden;margin:8px 0}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--amber),var(--red));transition:width .6s ease}
+.bar-target{position:absolute;left:8%;top:-4px;height:16px;width:2px;background:var(--gold);box-shadow:0 0 8px rgba(212,175,55,.6)}
+.schedule{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.sch-card{background:var(--card-2);border:1px solid var(--line);border-radius:10px;padding:14px;text-align:center}
+.sch-card .week{font-size:11px;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.sch-card .amt{font-size:20px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
+.sch-card .freq{font-size:11px;color:var(--muted);margin-top:4px}
+.fico-meter{padding:18px 0}
+.fico-bar{height:24px;background:var(--card-2);border-radius:12px;overflow:hidden;position:relative;border:1px solid var(--line)}
+.fico-fill{height:100%;background:linear-gradient(90deg,var(--green) 0%,var(--gold) 50%,var(--gold-soft) 100%);transition:width .8s cubic-bezier(.4,0,.2,1);border-radius:12px}
+.fico-labels{display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--muted)}
+.points{display:flex;justify-content:space-between;margin-top:14px;align-items:baseline}
+.points .gain{font-size:30px;font-weight:700;color:var(--gold-soft);font-variant-numeric:tabular-nums}
+.points .gain-lbl{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-left:8px}
+.steps{list-style:none;padding:0}
+.steps li{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+.steps li:last-child{border-bottom:none}
+.steps .num{flex:0 0 28px;height:28px;background:rgba(212,175,55,.08);border:1px solid var(--line);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--gold);font-weight:600}
+.steps .txt{font-size:13px;line-height:1.5;color:var(--text);padding-top:4px}
+.steps .txt strong{color:var(--gold-soft)}
+footer{text-align:center;color:var(--muted);font-size:12px;margin-top:48px;padding-top:24px;border-top:1px solid var(--line)}
+footer a{color:var(--gold);text-decoration:none}
+@media(max-width:640px){.tradeline{grid-template-columns:1fr 1fr}.tradeline .name-input{grid-column:1/-1}.schedule{grid-template-columns:1fr}h1{font-size:24px}.big-num{font-size:36px}}
 </style>
 </head>
 <body>
-<main id="hero">
-  <div class="tag">CALC 04 · Credit Hero · H.O.T.⁷</div>
-  <h1>C.U.B.E.™</h1>
-  <p class="sub">A C.U.B.E. is being calibrated. Letter expansion + scoring rubric pending from Luckie.</p>
+<div class="wrap">
+<a class="back" href="../">← All Calculators</a>
 
-  <div class="status"><span class="dot"></span>Spec Pending · awaiting acronym</div>
+<header>
+<div class="badge">Credit Hero · H.O.T.⁷ Track</div>
+<h1>C.U.B.E.™ — Credit Utilization Boosting Engineering</h1>
+<div class="sub">Move revolving balances into the 7-9% sweet spot. 30% of your FICO score is credit utilization — that's up to 193 points on a 550-point range.</div>
+<div class="author">by Luckie L. Goggins · L7S, INC. · EST. 2011</div>
+</header>
 
-  <div class="panel">
-    <h2>What this becomes</h2>
-    <p>When live, this surface will score your credit profile against the C.U.B.E.™ framework — drop your numbers, see the tier, get the move.</p>
-    <p>Same inline-HTML pattern as the other L7S Hero Calculators — drop your numbers, see the tier, get the move. No app to install, mobile-first, gold on black.</p>
-  </div>
+<div class="card">
+<div class="card-title">⚠️ Revolving tradelines only (credit cards). NOT installment loans (mortgage, auto, personal loans).</div>
+<div id="cards"></div>
+</div>
 
-  <a class="home" href="../">← Back to all calculators</a>
+<div class="card">
+<div class="card-title">Per-Card Utilization · Target: 7-9%</div>
+<div id="perCard"></div>
+</div>
 
-  <footer><span class="em">L7S</span> · Credit Hero · H.O.T.⁷</footer>
-</main>
+<div class="card">
+<div class="card-title">Overall Utilization</div>
+<div class="bigwrap">
+<div class="lbl">Total Across All Cards</div>
+<div class="big-num" id="overallPct">—%</div>
+<div class="status" id="overallStatus" style="margin-top:8px"><span class="dot"></span><span class="text">—</span></div>
+</div>
+<div class="bar-wrap">
+<div class="bar-fill" id="overallBar" style="width:0%"></div>
+<div class="bar-target" title="8% target"></div>
+</div>
+<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px">
+<span>0%</span><span style="color:var(--gold)">↑ 8% target</span><span>30%+</span>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">FICO Score Impact · Credit Utilization Category (30%)</div>
+<div class="fico-meter">
+<div class="fico-bar"><div class="fico-fill" id="ficoFill" style="width:0%"></div></div>
+<div class="fico-labels"><span>0 pts</span><span>193 pts available</span></div>
+</div>
+<div class="points">
+<div>
+<span class="gain" id="ficoGain">—</span>
+<span class="gain-lbl">est. points unlocked when at 8%</span>
+</div>
+<div style="font-size:11px;color:var(--muted);text-align:right">vs. current<br><span style="color:var(--gold-soft);font-size:14px" id="ficoCurrent">—</span></div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Payment Schedule · 3-5 payments every 2 days</div>
+<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Visa/MC/Amex network processing: 2-3 business days. Stagger to hit statement date at 8%.</div>
+<div class="schedule" id="schedule"></div>
+</div>
+
+<div class="card">
+<div class="card-title">The C.U.B.E. Protocol · 14 Steps</div>
+<ol class="steps">
+<li><span class="num">1</span><span class="txt">Activate or login to <strong>preferred credit monitoring service</strong>.</span></li>
+<li><span class="num">2</span><span class="txt">Pull <strong>3-Bureau Tri-Merge Credit Report</strong> (Experian · Equifax · TransUnion) as PDF.</span></li>
+<li><span class="num">3</span><span class="txt">Locate <strong>FICO Score Ingredients</strong>: Payment History (35%), <strong>Credit Utilization (30%)</strong>, Length of Credit (15%), Credit Mix (10%), New Credit (10%).</span></li>
+<li><span class="num">4</span><span class="txt">Focus on <strong>Credit Utilization</strong> (30%, "Amount of Debt") — revolving tradelines only.</span></li>
+<li><span class="num">5</span><span class="txt">⚠️ <strong>Revolving = credit cards only</strong>. NOT mortgages, auto loans, personal loans.</span></li>
+<li><span class="num">6</span><span class="txt">Find utilization % for <strong>each individual credit card</strong>.</span></li>
+<li><span class="num">7</span><span class="txt">Find <strong>3 key dates per tradeline</strong>: Statement Cycle Date, Due Date, Report Date.</span></li>
+<li><span class="num">8</span><span class="txt">Use a <strong>physical calendar with blue ink</strong> to mark all 3 dates for each main card.</span></li>
+<li><span class="num">9</span><span class="txt">Mirror to <strong>digital calendar + reminders</strong>.</span></li>
+<li><span class="num">10</span><span class="txt">Calculate <strong>7-9% range</strong> of credit limit for your top 3 primary tradelines.</span></li>
+<li><span class="num">11</span><span class="txt">Build payment schedule to keep balance in <strong>7-9% range</strong> (under 10% = excellent).</span></li>
+<li><span class="num">12</span><span class="txt">Make <strong>3 to 5 payments every 2 days</strong> (network processing time 2-3 business days).</span></li>
+<li><span class="num">13</span><span class="txt">Have a card for <strong>beginning, middle, and end</strong> of the month.</span></li>
+<li><span class="num">14</span><span class="txt">Move balances using the <strong>Captain of the C's Codex</strong> — Credit · Cash · Crypto · Currency · Conversions X-Change Method. Automate the habit.</span></li>
+</ol>
+</div>
+
+<footer>
+C.U.B.E.™ Model · System · Framework by Luckie L. Goggins · L7S, INC. · EST. 2011<br>
+Part of the L7S Hero S.O.S.™ Operating System · <a href="https://hitthe.link/calculators/">All Hero Calculators</a>
+</footer>
+</div>
+
 <script>
-  document.getElementById('hero').animate(
-    [{opacity:0,transform:'translateY(12px)'},{opacity:1,transform:'translateY(0)'}],
-    {duration:600,easing:'cubic-bezier(.2,.7,.2,1)',fill:'forwards'}
-  );
+const DEFAULT_CARDS = [
+  {name:'Card 1 (Beginning of Month)', limit:5000, balance:1200},
+  {name:'Card 2 (Mid-Month)', limit:8000, balance:2800},
+  {name:'Card 3 (End of Month)', limit:10000, balance:4500},
+];
+
+const TARGET_PCT = 8;
+const FICO_CATEGORY_POINTS = 193;
+
+const $ = (id) => document.getElementById(id);
+const fmt = (n) => '$' + Math.round(n).toLocaleString();
+const pct = (n) => n.toFixed(1) + '%';
+
+function renderInputs(){
+  const c = $('cards');
+  c.innerHTML = '';
+  DEFAULT_CARDS.forEach((card, i) => {
+    const div = document.createElement('div');
+    div.className = 'tradeline';
+    div.innerHTML = `
+      <div class="name-input">
+        <label>Tradeline ${i+1} Name</label>
+        <input type="text" value="${card.name}" data-i="${i}" data-k="name">
+      </div>
+      <div>
+        <label>Credit Limit</label>
+        <input type="number" value="${card.limit}" data-i="${i}" data-k="limit" min="0">
+      </div>
+      <div>
+        <label>Current Balance</label>
+        <input type="number" value="${card.balance}" data-i="${i}" data-k="balance" min="0">
+      </div>
+    `;
+    c.appendChild(div);
+  });
+  c.addEventListener('input', (e) => {
+    const i = +e.target.dataset.i, k = e.target.dataset.k;
+    DEFAULT_CARDS[i][k] = (k === 'name') ? e.target.value : (+e.target.value || 0);
+    compute();
+  });
+}
+
+function statusOf(p){
+  if (p <= 9) return {cls:'green', label:'Excellent · in 7-9% zone'};
+  if (p <= 20) return {cls:'amber', label:'Good · push down to 8%'};
+  if (p <= 30) return {cls:'amber', label:'High · pay down now'};
+  return {cls:'red', label:'Critical · over 30%'};
+}
+
+function compute(){
+  const cards = DEFAULT_CARDS;
+  let totalLimit = 0, totalBal = 0;
+  cards.forEach(c => { totalLimit += c.limit; totalBal += c.balance });
+  const overallPct = totalLimit > 0 ? (totalBal / totalLimit) * 100 : 0;
+  const s = statusOf(overallPct);
+
+  $('overallPct').textContent = pct(overallPct);
+  $('overallBar').style.width = Math.min(overallPct, 100) + '%';
+  const stat = $('overallStatus');
+  stat.className = 'status ' + s.cls;
+  stat.querySelector('.text').textContent = s.label;
+
+  // FICO impact: distance from 30% (worst) toward 8% (excellent), weighted to 193 pts
+  // Linear: at 30%+ = 0 pts gained, at 8% or below = full 193 pts
+  const ficoPctNow = Math.max(0, Math.min(1, (30 - overallPct) / 22)); // 22 = 30-8
+  const ficoNow = Math.round(ficoPctNow * FICO_CATEGORY_POINTS);
+  const ficoGain = FICO_CATEGORY_POINTS - ficoNow;
+  $('ficoFill').style.width = (ficoPctNow * 100) + '%';
+  $('ficoCurrent').textContent = ficoNow + ' / 193';
+  $('ficoGain').textContent = '+' + ficoGain;
+
+  // Per-card breakdown
+  const pc = $('perCard');
+  pc.innerHTML = '';
+  cards.forEach(c => {
+    const p = c.limit > 0 ? (c.balance / c.limit) * 100 : 0;
+    const target = c.limit * (TARGET_PCT / 100);
+    const payDown = Math.max(0, c.balance - target);
+    const cs = statusOf(p);
+    const row = document.createElement('div');
+    row.style.cssText = 'background:var(--card-2);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:10px';
+    row.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:14px;color:var(--text);font-weight:500">${c.name}</div>
+        <div class="status ${cs.cls}" style="font-size:11px"><span class="dot"></span>${pct(p)}</div>
+      </div>
+      <div class="row"><span class="label">Limit</span><span class="val">${fmt(c.limit)}</span></div>
+      <div class="row"><span class="label">Current Balance</span><span class="val">${fmt(c.balance)}</span></div>
+      <div class="row"><span class="label">Target Balance (8%)</span><span class="val">${fmt(target)}</span></div>
+      <div class="row"><span class="label">Pay Down Needed</span><span class="val" style="color:${payDown > 0 ? 'var(--gold)' : 'var(--green)'}">${payDown > 0 ? fmt(payDown) : '✓ at target'}</span></div>
+    `;
+    pc.appendChild(row);
+  });
+
+  // Schedule: split payDown into 3-5 chunks every 2 days
+  const totalPayDown = cards.reduce((sum, c) => sum + Math.max(0, c.balance - c.limit * (TARGET_PCT/100)), 0);
+  const numPayments = totalPayDown > 0 ? 4 : 0;
+  const perPayment = totalPayDown / Math.max(1, numPayments);
+  const sched = $('schedule');
+  sched.innerHTML = '';
+  if (totalPayDown <= 0){
+    sched.innerHTML = '<div class="sch-card" style="grid-column:1/-1;color:var(--green)"><div class="week">✓ AT TARGET</div><div class="amt">All cards in 7-9% range</div></div>';
+  } else {
+    const weeks = ['Days 1-2 · Beginning Card','Days 3-4 · Mid Card','Days 5-6 · End Card'];
+    weeks.forEach((w, i) => {
+      const div = document.createElement('div');
+      div.className = 'sch-card';
+      div.innerHTML = `<div class="week">${w}</div><div class="amt">${fmt(perPayment)}</div><div class="freq">payment ${i+1} of ${numPayments}</div>`;
+      sched.appendChild(div);
+    });
+  }
+}
+
+renderInputs();
+compute();
+
+gsap.from('header',{y:-20,opacity:0,duration:.6,ease:'power3.out'});
+gsap.from('.card',{y:30,opacity:0,duration:.5,stagger:.08,delay:.2,ease:'power2.out'});
+gsap.from('footer',{opacity:0,duration:.6,delay:.8});
 </script>
 </body>
 </html>
