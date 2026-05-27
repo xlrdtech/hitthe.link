@@ -697,6 +697,7 @@ async function postTranscript(text) {
 async function drainQueue() {
   let q = loadQueue();
   if (!q.length) return;
+  const startLen = q.length;
   while (q.length) {
     try {
       const ok = await tryPostOnce(q[0]);
@@ -705,6 +706,9 @@ async function drainQueue() {
     } catch { break; }
   }
   countEl.textContent = sentCount + ' sent · xen.xlrd.org';
+  if (q.length === 0 && startLen > 0) {
+    appendError(`✓ queue drained — ${startLen} replayed, omnimind back online`);
+  }
 }
 setInterval(drainQueue, 5000);
 window.addEventListener('online', drainQueue);
