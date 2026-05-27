@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NBLM Thread — Full-Scope Build Doc · 2026-05-17/18</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0f;--gold:#d4af37;--gold-soft:#f0d878;--line:rgba(212,175,55,.18);--card:#13131a;--card-2:#1a1a22;--text:#e8e6e0;--muted:#8a8678;--red:#e26666;--blue:#6ec1ff;--green:#4ec77a}
+html,body{background:var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;line-height:1.6;overflow-wrap:break-word;word-break:normal;hyphens:none}
+.wrap{max-width:980px;margin:0 auto;padding:48px 24px 80px}
+header{text-align:center;border-bottom:1px solid var(--line);padding-bottom:32px;margin-bottom:36px}
+.badge{display:inline-block;font-size:11px;letter-spacing:.2em;color:var(--gold);background:rgba(212,175,55,.08);border:1px solid var(--line);padding:6px 14px;border-radius:14px;margin-bottom:14px;text-transform:uppercase}
+h1{font-size:34px;font-weight:700;letter-spacing:-.02em;background:linear-gradient(135deg,var(--gold),var(--gold-soft));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.15;margin-bottom:10px}
+.sub{font-size:14px;color:var(--muted);max-width:680px;margin:0 auto;line-height:1.6}
+.toc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin-bottom:30px}
+.toc-title{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;font-weight:600}
+.toc ul{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:6px}
+.toc a{color:var(--text);text-decoration:none;font-size:13px;display:block;padding:5px 8px;border-radius:4px}
+.toc a:hover{background:rgba(212,175,55,.06);color:var(--gold-soft)}
+.section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:24px;margin-bottom:20px}
+.section h2{font-size:18px;color:var(--gold-soft);margin-bottom:14px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.section h2 .num{font-size:11px;color:var(--gold);background:rgba(212,175,55,.08);border:1px solid var(--line);padding:3px 9px;border-radius:8px;letter-spacing:.1em}
+.section h3{font-size:14px;color:var(--gold);margin:14px 0 6px;font-weight:600}
+.section p{font-size:13.5px;color:var(--text);margin-bottom:10px;line-height:1.7}
+.section ul{margin:6px 0 14px 20px}
+.section li{font-size:13.5px;color:var(--text);margin-bottom:6px;line-height:1.6}
+.section code{background:rgba(212,175,55,.08);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-family:'SF Mono',Menlo,monospace;font-size:12px;color:var(--gold)}
+.section strong{color:var(--gold-soft)}
+.section em{color:var(--blue);font-style:italic}
+.section .banned{color:var(--red);font-weight:600}
+.section .ok{color:var(--green);font-weight:600}
+.callout{background:rgba(110,193,255,.06);border:1px solid rgba(110,193,255,.18);border-radius:10px;padding:14px 18px;margin:12px 0;font-size:13px;color:var(--blue);line-height:1.6}
+.source{text-align:center;margin-top:40px;padding:18px;background:var(--card);border:1px solid var(--line);border-radius:10px;font-size:12px;color:var(--muted);font-family:'SF Mono',Menlo,monospace}
+.source code{color:var(--gold)}
+footer{text-align:center;color:var(--muted);font-size:12px;margin-top:40px;padding-top:24px;border-top:1px solid var(--line)}
+footer a{color:var(--gold);text-decoration:none}
+@media(max-width:640px){h1{font-size:24px}.wrap{padding:32px 16px}.toc ul{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+<div class="badge">NBLM Thread · Full-Scope · 2026-05-17/18</div>
+<h1>The NotebookLM Build Doc</h1>
+<div class="sub">qi's distilled architectural canon from the M4 Mac Mini Professional Audio Stability and Maintenance Guide. 26 sources, 1292 lines, every load-bearing lock-in from the May 17/18 working session. Per qi 2026-05-19: <em>"nblm txt was the full scope."</em></div>
+</header>
+
+<div class="toc">
+<div class="toc-title">Sections</div>
+<ul>
+<li><a href="#tldr">⚡ TL;DR — the spine</a></li>
+<li><a href="#stability">1. P0 Stability + Medical Lifeline</a></li>
+<li><a href="#overhauls">2. Five System Overhauls</a></li>
+<li><a href="#architecture">3. Architecture + Infrastructure Upgrades</a></li>
+<li><a href="#noauth">4. Zero-Auth · URL = Credential</a></li>
+<li><a href="#voice">5. Voice Pipeline · Apple STT canon</a></li>
+<li><a href="#beside">6. Beside API Integration</a></li>
+<li><a href="#fcc">7. FCC Elimination · Native Twilio Merge</a></li>
+<li><a href="#email">8. Email Wired into MMM Omninbox</a></li>
+<li><a href="#xpv3">9. XP v3 · Three-Panel Canonical Layout</a></li>
+<li><a href="#muse">10. Muse Spark Chat · Center Panel</a></li>
+<li><a href="#contacts">11. Persona Routing · Ashe + Kem</a></li>
+<li><a href="#bans">12. The D.I.E. List · Banned Engines</a></li>
+</ul>
+</div>
+
+<div class="section" id="tldr">
+<h2><span class="num">⚡</span>TL;DR — The Spine</h2>
+<p>The Xen stack lives at <code>/Volumes/tech_/qi_data/exedus/xen/</code>. Voice is the operating system; STT down = P0 stop-the-line. Every service exposes a URL that <strong>just works upon pasting</strong> — possessing the LAN/tunnel URL grants full access. Three-channel collapse: <strong>Spark · Beside · Beeper</strong>. The 9934 Beside line is the primary Xen agent number. Personal contacts (Ashe, Diamond, Pinkyy, LaQuita, Josie, Kem) route exclusively through Beeper under the East persona — they never touch Beside.</p>
+<div class="callout">"completely open, zero-config, frictionless" is the architectural mandate. <strong>HTTP 200 ≠ verified</strong>. Visual evidence required. Idle is blasphemy.</div>
+</div>
+
+<div class="section" id="stability">
+<h2><span class="num">1</span>P0 Stability + Medical Lifeline</h2>
+<h3>Hardware Resource Assertion</h3>
+<ul>
+<li>Disk/RAM preflight checks in <code>xen-boot</code></li>
+<li>Dedicated <code>/opt/models</code> quota partition so model downloads cannot consume root disk</li>
+</ul>
+<h3>Medical-Grade Fallbacks</h3>
+<ul>
+<li>Guaranteed offline emergency layer (e.g., $10 ESP32 running Vosk locally) that survives network drops</li>
+<li>Dead-man switch with wellness ping</li>
+</ul>
+<h3>Safe-Mode Testing</h3>
+<ul>
+<li>Stop "live tweaking" production files — validate in offline environment</li>
+<li>Simulated-failure gate that severs the network to test fallback</li>
+</ul>
+<h3>Godmode Hardening Drills</h3>
+<ul>
+<li>Pane-drift live drill (canonical <code>%0</code> only)</li>
+<li>Refresh Beeper index</li>
+<li>Deploy Siri takeover shim</li>
+<li>Resolve NotebookLM Chrome extension tension (sanctioned Chromium workaround or headless bridge)</li>
+</ul>
+</div>
+
+<div class="section" id="overhauls">
+<h2><span class="num">2</span>Five System Overhauls</h2>
+<h3>Overhaul 1 — TTS Queue</h3>
+<p>FIFO HTTP server on <code>:4444</code> to manage the TTS queue and fix "I didn't hear you" failures.</p>
+<h3>Overhaul 2 — Cloudflared Singleton</h3>
+<p>Resolve site flapping. Isolate <code>com.cloudflare.godmode-mac.plist</code> as canonical tunnel, disable duplicates.</p>
+<h3>Overhaul 3 — Voice-Priority Injection</h3>
+<p>Add <code>priority="voice"</code> flag to socket injection so voice transcripts bypass the quiet-poll and fire immediately during long tool calls.</p>
+<h3>Overhaul 4 — Audio Healthcheck Daemon</h3>
+<p>Poll <code>SwitchAudioSource</code> every 30s and fire automatic passwordless <code>killall coreaudiod</code> recovery if it hangs.</p>
+<h3>Overhaul 5 — UI Automator (Jogger)</h3>
+<p>Migrate from slow ADB tap/sleep scripts to <code>uiautomator2</code> driver — heavily reduces execution time.</p>
+</div>
+
+<div class="section" id="architecture">
+<h2><span class="num">3</span>Architecture + Infrastructure Upgrades</h2>
+<h3>Multiplayer Desktop</h3>
+<p>Separate input session (via <code>CGEventTap</code> or virtual HID device) — two cursors operate in parallel on the same Mac, solving Xen stealing foreground focus during UI automation.</p>
+<h3>XenBrowser Shared Sessions</h3>
+<p>WebRTC/WebSocket bridge mirrors desktop XB tab state to <code>web.xlrd.org</code> in real-time. Anyone with URL can view + remotely control browser <strong>without authentication wall</strong>.</p>
+<h3>Universal Integration · UI Sandbox Elimination</h3>
+<p>Enumerate every app qi opens manually. Actively build MCPs, APIs, or WebViews for them. Goal: completely <strong>stop fighting UI sandboxes</strong> before hospitalization.</p>
+<h3>Universal A2A Mesh Router</h3>
+<p>OS-universal device mesh syncs pane <code>%0</code> transcript, agent-to-agent voice between Mac and Windows, standardized routing so messages reach the device qi is actively using.</p>
+<h3>Hot-Reloading Enforcement</h3>
+<p><code>xen-hot-watcher</code> daemon for Python + Node. Refactor <code>xen-claude-wrapper.js</code> into supervisor split — code changes deploy in under 2 seconds without manual respawns.</p>
+</div>
+
+<div class="section" id="noauth">
+<h2><span class="num">4</span>Zero-Auth · URL = Credential</h2>
+<div class="callout">"All-or-nothing trust" model — possessing the LAN or tunnel URL itself grants full access. No bearer tokens. No headers. No login walls.</div>
+<h3>Hermes MCP Universal Install</h3>
+<p>Global install of <code>hermes-agent</code> MCP server binding to <code>127.0.0.1</code> completely auth-less. Claude Code, Codex, Copilot, Cursor seamlessly switch context without cross-CLI auth.</p>
+<h3>Beeper Proxy Zero-Auth Bridge</h3>
+<p>Local proxy on <code>:23374</code> transparently auto-injects Beeper API tokens. Any client hits <code>http://127.0.0.1:23374/v0/mcp</code> without bearer tokens.</p>
+<h3>XenBrowser Auth-less Remote Control</h3>
+<p>WebRTC/WebSocket bridge mirrors desktop XB to <code>web.xlrd.org</code>. <strong>No authentication wall</strong> — URL holder controls the browser.</p>
+<h3>Persistent PWA · Mac-Death Failover</h3>
+<p>Cloudflare Pages Functions (<code>/events</code> SSE relay, <code>/api/omni/*</code> proxies) + GitHub Pages static UI. XenPhone PWA + Omni-inbox stay live even if Mac crashes. No re-auth, no manual refresh.</p>
+<h3>Paste-and-Go Initialization</h3>
+<p>Zero manual config. No env vars, no token files to populate, no manual OS permission grants. Single command: <code>curl https://xen.xlrd.org/install.sh | bash</code> — auto-generates LaunchAgents, auto-discovers tokens, spins up entire system on a fresh Mac without a single setup menu.</p>
+</div>
+
+<div class="section" id="voice">
+<h2><span class="num">5</span>Voice Pipeline · Apple STT Canon</h2>
+<p>Apple STT (specifically <code>apple-stt-v2.py</code>) is the always-on frictionless listener. <strong>"STT down is always fatal."</strong></p>
+<h3>Architectural Patches Locked In</h3>
+<ul>
+<li><strong>RMS Gate Removal</strong> — v2 removed the 0.005 RMS_GATE that silently dropped audio from virtual devices reporting 0.0 peak despite carrying real signal.</li>
+<li><strong>Confidence Filter Retired</strong> — <code>_check_conf</code> commented out in <code>finalize()</code> and <code>didFinishRecognition_</code>. Apple unreliably reports <code>conf=0.00</code> on mid-utterance segments even when audio is solid.</li>
+<li><strong>V.E.I. Concat Fix</strong> — <code>_posted_len</code> now sets to <code>len(text)</code> instead of resetting to 0. Old bug caused entire session transcript to replay; fix pushes only new words.</li>
+<li><strong>Silence Threshold = 1.2s</strong> — initially dropped from 2.5s to 0.4s, then bumped to 1.2s to prevent the "triple fire glitch" fragmenting sentences.</li>
+<li><strong>Cloud-Fallback for Silent Wedging</strong> — if 2 consecutive 60s windows with no partials, recognizer is destroyed + recreated with <code>setRequiresOnDeviceRecognition_(False)</code> for Apple cloud transcription.</li>
+</ul>
+<div class="callout">If Apple STT breaks, system does NOT gracefully degrade to TUI menu. P0 stop-the-line. User is cut off.</div>
+<h3>Audio Overview Name Fidelity</h3>
+<p>Pre-pass sanitizer for NotebookLM replaces names (qi, Xen, Luckie, Anthony) with phonetic spellings so Audio Overviews pronounce them correctly for clients.</p>
+</div>
+
+<div class="section" id="beside">
+<h2><span class="num">6</span>Beside API Integration</h2>
+<p>The Beside platform has been <strong>fully reverse-engineered</strong>. XP gets complete programmatic remote control without the native Beside mobile/desktop app.</p>
+<h3>Auth + Infrastructure</h3>
+<ul>
+<li>Long-lived JWT (valid until 2027) at <code>~/.config/xen/beside.token</code></li>
+<li>Backend: <code>api.prod.tma.hearthands.tech:8443</code> (REST + gRPC)</li>
+<li>Send endpoint: <code>services.message.proto.v1.MessageService/SendMessage</code></li>
+<li>Xen inbox: <code>ibx_8KNDNS4HMN6VQD2AFN0NM2K4V0</code></li>
+<li>8672 chat ID: <code>prv_BD42PGSXAD2KV575NQZQWGCT84</code></li>
+</ul>
+<h3>Core Capabilities</h3>
+<ul>
+<li>Direct SMS via <code>MessageService/SendMessage</code></li>
+<li>Inbound polling for omni-inbox</li>
+<li>Twilio Voice SDK 2.16 replay using captured tokens (outbound voice)</li>
+<li>Automatic voicemail/transcript fetching</li>
+</ul>
+<h3>xen-reply-vvs Pipeline Patch</h3>
+<p>SMS leg no longer drives Google Voice or Android UI. Inline delivery posts JSON directly to Beside REST in background with <code>idempotencyKey</code> via <code>uuidgen</code>.</p>
+<h3>Mac-Death/DOM Fallback</h3>
+<p>If Beside API drops or returns 503, Xen autonomously launches XenBrowser, navigates to <code>app.beside.com/calls</code>, extracts transcripts from live DOM.</p>
+<h3>Per-Caller Memory</h3>
+<p><code>/api/call-end</code> hook writes date-stamped session recap to <code>callers.db</code>. Any agent audits via <code>/api/calls/&lt;e164&gt;/last</code>. AI greets returning callers with immediate recognition.</p>
+</div>
+
+<div class="section" id="fcc">
+<h2><span class="num">7</span>FCC Elimination · Native Twilio Merge</h2>
+<p>The FreeConferenceCall bridge (727-731-8395) is being torn down. Bridging migrates natively into Beside's Twilio infrastructure.</p>
+<h3>Implementation</h3>
+<ol style="margin-left:20px">
+<li><strong>Native Twilio Merging</strong> — Twilio Voice SDK 2.16 replay inside headless Chrome with captured JWT. XP PWA already has <code>add_call</code> and <code>merge_calls</code> voice verbs.</li>
+<li><strong>Twilio Conference Resource</strong> — For 3+ party calls, escalate <code>merge_calls</code> to spin up a Twilio Conference via Beside's proxy. Direct Twilio API usage is <span class="banned">banned</span>.</li>
+<li><strong>Deprecate Android FCC Anchor</strong> — Sever Beside Android app's 24/7 FCC connection once native conference is wired.</li>
+</ol>
+<div class="callout">Result: "ONE phone + Mac handles every inbound." No more brittle Android phone sleeping on a free conference line.</div>
+</div>
+
+<div class="section" id="email">
+<h2><span class="num">8</span>Email Wired into MMM Omninbox</h2>
+<p>All 26 active accounts (xlrdtech, selfexec, L7S, personal) aggregate via Spark CLI + Spark Desktop. Mapped seamlessly into the unified comms pane.</p>
+<h3>Inbound Pipeline</h3>
+<ul>
+<li><code>spark-inbox-watcher.py</code> daemon polls Spark unified inbox every 30s</li>
+<li>Spark → Beeper bridge converts every email to a Beeper "virtual chat"</li>
+<li>Virtual chats flow into <code>/api/omni/threads</code> consumed by MMM</li>
+<li>Firehose inject: <code>[MAIL &lt;acct&gt; from &lt;sender&gt;] &lt;subject&gt;</code></li>
+</ul>
+<div class="callout">Terminology canon: this channel is <strong>"Spark"</strong> — not "Mail" or "Email" — in all system parlance.</div>
+<h3>Outbound Pipeline</h3>
+<ul>
+<li>Reply submits to <code>/api/omni/send</code></li>
+<li>Mac's <code>mailto:</code> handler locked to Spark Desktop (the only client that reliably sends from all 26 "from" addresses)</li>
+<li><code>cliclick</code> + AppleScript paste-and-send recipe</li>
+</ul>
+<h3>Master Person Notebooks</h3>
+<p>Every Spark thread auto-appends to contact's <code>~/.xen/notebooks/&lt;slug&gt;.md</code>. Email merges with WhatsApp, texts, Beside call transcripts in one historical timeline per contact.</p>
+</div>
+
+<div class="section" id="xpv3">
+<h2><span class="num">9</span>XP v3 · Three-Panel Canonical Layout</h2>
+<div class="callout"><strong>mmm.xlrd.org</strong> (MIRROR omninbox) is the canonical left panel of the XenPhone OS.</div>
+<h3>The Layout</h3>
+<ul>
+<li><strong>Left · MMM/Omninbox</strong> — 24/7 continuous feed of Spark + Beeper + Beside</li>
+<li><strong>Center · Threads/WebView</strong> — tap a card on the left → thread slides into center for deep reading/typing</li>
+<li><strong>Right · Beside Dialer</strong> — full Beside CRM + phone UI for active calls</li>
+</ul>
+<h3>Always-Hot Guarantee · Mac-Death Survival</h3>
+<p>Client connects to serverless Cloudflare Pages Functions, not directly to the Mac. <code>functions/events.js</code> SSE relay keeps feed open infinitely. If Mac drops:</p>
+<ul>
+<li>Cloudflare KV cache (<code>OMNI_CACHE</code>) keeps inbox fully visible</li>
+<li>Outbound replies held in <code>PENDING_REPLIES</code> KV queue until Mac reconnects</li>
+<li>Zero re-auth, zero manual refresh</li>
+</ul>
+</div>
+
+<div class="section" id="muse">
+<h2><span class="num">10</span>Muse Spark Chat · Center Panel</h2>
+<p>The Meta AI artifact (453e77a0) — 10MB HTML featuring glass shell + focus-reactive orb background — is the permanent home of the XP center panel.</p>
+<h3>Wiring</h3>
+<ul>
+<li><strong>Default start page</strong> — <code>/muse/</code> loads instantly when XP opens</li>
+<li><strong>Direct-to-CLI</strong> — chat input field POSTs to <code>/api/cowork-vvs</code> terminal endpoint</li>
+<li><strong>Live event flow</strong> — text injects straight into pane <code>%0</code>; responses stream back via omnimind SSE</li>
+<li><strong>Local cache</strong> — <code>/Volumes/tech_/qi_data/exedus/xen/pwa/muse/index.html</code> served by omnimind</li>
+</ul>
+<div class="callout">Hyper-polished Meta AI aesthetic + Zero-Human Stack mandate. Talking directly to terminal layer through the UI without fighting third-party sandboxes.</div>
+</div>
+
+<div class="section" id="contacts">
+<h2><span class="num">11</span>Persona Routing · Ashe + Kem · Personal Lock</h2>
+<div class="callout">Personal contacts NEVER cross into Beside API or Beside CRM. They are managed exclusively through Beeper under the <strong>East persona</strong>.</div>
+<ul>
+<li><strong>Ashe, Pinkyy, Diamond, LaQuita, Josie</strong> — Beeper Google Messages bridge (<code>accountID: gmessages</code>)</li>
+<li><strong>Kem</strong> — Beeper FB Messenger channel exclusively</li>
+</ul>
+<p>This ensures personal relationships stay completely isolated in the Beeper firehose and never contaminate the 9934 Beside business line.</p>
+</div>
+
+<div class="section" id="bans">
+<h2><span class="num">12</span>The D.I.E. List · Banned Engines</h2>
+<ul>
+<li><span class="banned">Zoom Phone</span> — retired and removed from agent stack 2026-04-24</li>
+<li><span class="banned">Phound</span> — strictly banned. Never use, propose, or integrate.</li>
+<li><span class="banned">Direct Twilio API</span> — all VoIP must route through Beside's already-paid Twilio infrastructure</li>
+<li><span class="banned">BlackHole, Kokoro, Qwen-TTS, Piper, Coqui, Edge-TTS</span> — TTS layer is direct macOS <code>say -r 210</code> only (system Spoken Content voice)</li>
+<li><span class="banned">Any non-Spark email client</span> — only Spark Desktop can reliably send from 26 aggregated addresses</li>
+<li><span class="banned">"hold-ing" (rendered without hyphen)</span> — hard-literal user-facing text ban per qi 2026-05-15</li>
+</ul>
+</div>
+
+<div class="source">
+SOURCE: <code>/Volumes/tech_/sync_/notes_/logs_/nblmthread.txt</code> · 1292 lines · 2026-05-17/18 session<br>
+Per qi 2026-05-19: <em>"Nblm txt was the full scope."</em>
+</div>
+
+<footer>
+The Full-Scope Build Doc · <a href="/commandments/">The Xen Commandments</a> · <a href="/calculators/">Hero Calculators</a> · <a href="/">hitthe.link</a>
+</footer>
+</div>
+</body>
+</html>
