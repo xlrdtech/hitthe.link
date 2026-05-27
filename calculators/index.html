@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L7S · Hero Calculators</title>
+<style>
+  :root{
+    --bg:#0a0a0f;--ink:#fafaf6;--mute:#8a8a98;
+    --gold:#d4af37;--gold-soft:#f0d878;
+    --line:rgba(212,175,55,.18);--card:#13131a;--card-hi:#1a1a24;
+    --green:#5fcf80;--yellow:#f7c948;--red:#ef5b5b;--blue:#5b9aef;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden}
+  #bg-canvas{position:fixed;inset:0;z-index:0;opacity:.5}
+  main{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:48px 24px 96px}
+  header{text-align:center;margin-bottom:56px;opacity:0}
+  .brand{font-size:14px;letter-spacing:.4em;color:var(--gold);text-transform:uppercase;font-weight:600;margin-bottom:16px}
+  h1{font-size:clamp(40px,7vw,72px);font-weight:800;letter-spacing:-.03em;line-height:1.05;background:linear-gradient(135deg,var(--ink) 0%,var(--gold-soft) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:18px}
+  .sub{color:var(--mute);font-size:18px;max-width:640px;margin:0 auto}
+  .tracks{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:32px 0 48px;opacity:0}
+  .track-pill{background:var(--card);border:1px solid var(--line);padding:8px 18px;border-radius:999px;font-size:13px;color:var(--mute);font-weight:500}
+  .track-pill.active{background:var(--gold);color:var(--bg);border-color:var(--gold);font-weight:700}
+  section{margin-bottom:48px}
+  .section-title{display:flex;align-items:baseline;gap:14px;margin-bottom:20px;padding-left:4px}
+  .section-title h2{font-size:22px;font-weight:700;letter-spacing:-.01em}
+  .section-title .badge{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+  .calc{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;cursor:pointer;transition:transform .25s ease,background .25s ease,border-color .25s ease;text-decoration:none;color:inherit;display:flex;flex-direction:column;min-height:160px;opacity:0}
+  .calc:hover{transform:translateY(-3px);background:var(--card-hi);border-color:var(--gold)}
+  .calc-id{font-size:11px;letter-spacing:.18em;color:var(--gold);text-transform:uppercase;font-weight:600;margin-bottom:10px}
+  .calc-title{font-size:17px;font-weight:700;margin-bottom:8px;letter-spacing:-.01em}
+  .calc-desc{font-size:13px;color:var(--mute);flex:1;margin-bottom:14px}
+  .calc-status{display:inline-flex;align-items:center;gap:6px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+  .calc-status .dot{width:7px;height:7px;border-radius:50%}
+  .calc-status.ready .dot{background:var(--green);box-shadow:0 0 8px var(--green)}
+  .calc-status.ready{color:var(--green)}
+  .calc-status.queued .dot{background:var(--yellow)}
+  .calc-status.queued{color:var(--yellow)}
+  .calc-status.blocked .dot{background:var(--mute)}
+  .calc-status.blocked{color:var(--mute)}
+  .calc.blocked{opacity:.55;cursor:not-allowed}
+  .calc.blocked:hover{transform:none;border-color:var(--line);background:var(--card)}
+  footer{text-align:center;margin-top:80px;padding-top:32px;border-top:1px solid var(--line);color:var(--mute);font-size:13px}
+  footer .em{color:var(--gold);font-weight:600;letter-spacing:.05em}
+  @media(max-width:560px){main{padding:32px 16px 64px}h1{font-size:42px}}
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+
+<main>
+  <header id="hero">
+    <div class="brand">L7S · League of 7 Superheroes</div>
+    <h1>Hero Calculators</h1>
+    <p class="sub">Eleven instruments. Credit, Cashflow, Currency. Each one a single self-contained surface — open, drop your numbers, see your move.</p>
+  </header>
+
+  <div class="tracks" id="tracks">
+    <div class="track-pill active">11 Total</div>
+    <div class="track-pill">5 Credit Hero · H.O.T.⁷</div>
+    <div class="track-pill">4 Cashflow Hero</div>
+    <div class="track-pill">2 Currency Hero</div>
+  </div>
+
+  <section data-track="credit">
+    <div class="section-title">
+      <h2>Credit Hero</h2>
+      <span class="badge">H.O.T.⁷</span>
+    </div>
+    <div class="grid">
+      <a class="calc" href="calc-01-credit-aaoa/" data-status="ready">
+        <div class="calc-id">Calc 01</div>
+        <div class="calc-title">AAoA — Average Age of Accounts</div>
+        <div class="calc-desc">Add open dates → AAoA in years/months → FICO-tier thresholds + recommendations.</div>
+        <div class="calc-status ready"><span class="dot"></span>Ready</div>
+      </a>
+      <a class="calc" href="calc-02-credit-cui/" data-status="ready">
+        <div class="calc-id">Calc 02</div>
+        <div class="calc-title">CUI — Credit Utilization Index</div>
+        <div class="calc-desc">Per-card + aggregate utilization. Threshold tiers, recommended paydown amount.</div>
+        <div class="calc-status ready"><span class="dot"></span>Ready</div>
+      </a>
+      <a class="calc" href="calc-03-credit-dti/" data-status="ready">
+        <div class="calc-id">Calc 03</div>
+        <div class="calc-title">DTI — Debt to Income</div>
+        <div class="calc-desc">Front-end + back-end DTI. Mortgage qualification gates, paydown delta to qualify.</div>
+        <div class="calc-status ready"><span class="dot"></span>Ready</div>
+      </a>
+      <a class="calc blocked" data-status="blocked">
+        <div class="calc-id">Calc 04</div>
+        <div class="calc-title">C.U.B.E.™</div>
+        <div class="calc-desc">Acronym expansion pending from H.O.T.⁷ deck.</div>
+        <div class="calc-status blocked"><span class="dot"></span>Spec pending</div>
+      </a>
+      <a class="calc" href="calc-05-credit-comparable/" data-status="ready">
+        <div class="calc-id">Calc 05</div>
+        <div class="calc-title">Comparable Credit Index</div>
+        <div class="calc-desc">Compare your profile against peer cohort by age, income, region. Percentile rank.</div>
+        <div class="calc-status ready"><span class="dot"></span>Ready</div>
+      </a>
+    </div>
+  </section>
+
+  <section data-track="cashflow">
+    <div class="section-title">
+      <h2>Cashflow Hero</h2>
+      <span class="badge">F.I.N.E. M.E.N.T.A.L.</span>
+    </div>
+    <div class="grid">
+      <a class="calc blocked" data-status="blocked">
+        <div class="calc-id">Calc 06</div>
+        <div class="calc-title">F.I.N.E. M.E.N.T.A.L.™</div>
+        <div class="calc-desc">Freedom Number + Magic Number + mental-resilience scoring. Acronym + rubric pending.</div>
+        <div class="calc-status blocked"><span class="dot"></span>Spec pending</div>
+      </a>
+      <a class="calc blocked" data-status="blocked">
+        <div class="calc-id">Calc 07</div>
+        <div class="calc-title">G.R.I.P.™</div>
+        <div class="calc-desc">Financial control / grip scoring framework. Acronym pending.</div>
+        <div class="calc-status blocked"><span class="dot"></span>Spec pending</div>
+      </a>
+      <a class="calc" href="calc-08-cashflow-pies/" data-status="ready">
+        <div class="calc-id">Calc 08</div>
+        <div class="calc-title">P.I.E.S.™</div>
+        <div class="calc-desc">Profit / Income / Expense / Savings. 4-pillar allocation, animated split.</div>
+        <div class="calc-status ready"><span class="dot"></span>Ready</div>
+      </a>
+      <a class="calc" href="calc-09-cashflow-efa-fna/" data-status="ready">
+        <div class="calc-id">Calc 09</div>
+        <div class="calc-title">EFA / FNA</div>
+        <div class="calc-desc">Granular expense categorization + numerical health score. Top cut opportunity.</div>
+        <div class="calc-status ready"><span class="dot"></span>Ready</div>
+      </a>
+    </div>
+  </section>
+
+  <section data-track="currency">
+    <div class="section-title">
+      <h2>Currency Hero</h2>
+      <span class="badge">Forex · FP&amp;A</span>
+    </div>
+    <div class="grid">
+      <a class="calc" href="calc-10-currency-forex-fpa/" data-status="ready">
+        <div class="calc-id">Calc 10</div>
+        <div class="calc-title">London Day Break — Forex Entry/Exit</div>
+        <div class="calc-desc">Curtis Henderson (CFO) port. 7 GBP-cross pairs, OCO entries, 30-pip stops, R:R dial.</div>
+        <div class="calc-status ready"><span class="dot"></span>Ready · per Curtis</div>
+      </a>
+      <a class="calc" href="calc-11-curtis-second/" data-status="ready">
+        <div class="calc-id">Calc 11</div>
+        <div class="calc-title">1M Challenge — Compound Interest</div>
+        <div class="calc-desc">Curtis Henderson (CFO) port. Daily-compound model, $100 → $1M in ~189 days at 5%/day. Animated growth curve.</div>
+        <div class="calc-status ready"><span class="dot"></span>Ready · per Curtis</div>
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <div><span class="em">L7S Inc</span> · d/b/a L7 SOLUTIONS · Hero@L7SINC.COM · 404-777-0610</div>
+    <div style="margin-top:8px;font-size:11px;opacity:.7">11 calculators · 8 ready · 3 spec-pending (CUBE / F.I.N.E. M.E.N.T.A.L. / G.R.I.P.)</div>
+  </footer>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r158/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+// three.js ambient particle field
+(function(){
+  const canvas=document.getElementById('bg-canvas');
+  const scene=new THREE.Scene();
+  const cam=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,1,2000);
+  cam.position.z=420;
+  const r=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
+  r.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  r.setSize(innerWidth,innerHeight);
+  const cnt=400;
+  const geo=new THREE.BufferGeometry();
+  const pos=new Float32Array(cnt*3);
+  for(let i=0;i<cnt*3;i+=3){pos[i]=(Math.random()-.5)*900;pos[i+1]=(Math.random()-.5)*700;pos[i+2]=(Math.random()-.5)*600}
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  const mat=new THREE.PointsMaterial({color:0xd4af37,size:1.6,transparent:true,opacity:.6,sizeAttenuation:true});
+  const pts=new THREE.Points(geo,mat);
+  scene.add(pts);
+  function loop(){requestAnimationFrame(loop);pts.rotation.y+=.0006;pts.rotation.x+=.0003;r.render(scene,cam)}
+  loop();
+  addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();r.setSize(innerWidth,innerHeight)});
+})();
+
+// GSAP entrance
+gsap.to('#hero',{opacity:1,y:0,duration:.9,ease:'power3.out'});
+gsap.fromTo('#hero',{y:24},{y:0,duration:.9,ease:'power3.out'});
+gsap.to('#tracks',{opacity:1,duration:.7,delay:.3});
+gsap.to('.calc',{opacity:1,y:0,duration:.6,stagger:.06,delay:.4,ease:'power2.out'});
+gsap.fromTo('.calc',{y:18},{y:0,duration:.6,stagger:.06,delay:.4,ease:'power2.out'});
+</script>
+</body>
+</html>

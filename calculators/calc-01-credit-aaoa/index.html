@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AAoA · Average Age of Accounts · L7S Credit Hero</title>
+<style>
+  :root{
+    --bg:#0a0a0f;--ink:#fafaf6;--mute:#8a8a98;
+    --gold:#d4af37;--gold-soft:#f0d878;
+    --line:rgba(212,175,55,.18);--card:#13131a;--card-hi:#1a1a24;
+    --green:#5fcf80;--yellow:#f7c948;--red:#ef5b5b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh}
+  body{padding:32px 20px 80px;overflow-wrap:break-word;word-break:normal;hyphens:none}
+  .wrap{max-width:840px;margin:0 auto}
+  header{text-align:center;margin-bottom:36px;opacity:0}
+  .brand{font-size:12px;letter-spacing:.4em;color:var(--gold);text-transform:uppercase;font-weight:600;margin-bottom:12px}
+  h1{font-size:clamp(32px,5vw,52px);font-weight:800;letter-spacing:-.02em;line-height:1.1;background:linear-gradient(135deg,var(--ink) 0%,var(--gold-soft) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px}
+  .sub{color:var(--mute);font-size:16px;max-width:560px;margin:0 auto}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;margin-bottom:18px;opacity:0}
+  .panel-title{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px}
+  .panel-title h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
+  .panel-title .meta{font-size:12px;color:var(--mute);letter-spacing:.08em;text-transform:uppercase}
+  .accounts{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+  .account-row{display:grid;grid-template-columns:1fr 130px 36px;gap:10px;align-items:center}
+  .account-row input{background:#0a0a12;border:1px solid var(--line);color:var(--ink);padding:10px 12px;border-radius:10px;font-size:14px;font-family:inherit;width:100%}
+  .account-row input:focus{outline:2px solid var(--gold);outline-offset:1px}
+  .account-row input[type=date]{color-scheme:dark}
+  .account-row .rm{background:transparent;border:1px solid var(--line);color:var(--mute);width:36px;height:36px;border-radius:8px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+  .account-row .rm:hover{color:var(--red);border-color:var(--red)}
+  .actions{display:flex;gap:10px;flex-wrap:wrap}
+  button.add{background:var(--gold);color:var(--bg);border:none;padding:10px 18px;border-radius:10px;font-weight:700;cursor:pointer;font-size:13px;letter-spacing:.05em;text-transform:uppercase}
+  button.add:hover{background:var(--gold-soft)}
+  button.reset{background:transparent;border:1px solid var(--line);color:var(--mute);padding:10px 18px;border-radius:10px;font-weight:600;cursor:pointer;font-size:13px;letter-spacing:.05em;text-transform:uppercase}
+  button.reset:hover{color:var(--ink);border-color:var(--ink)}
+  .readout{text-align:center;padding:36px 18px;background:linear-gradient(180deg,var(--card-hi) 0%,var(--card) 100%);border-radius:18px;border:1px solid var(--gold);opacity:0}
+  .readout .num{font-size:clamp(48px,9vw,84px);font-weight:800;letter-spacing:-.04em;background:linear-gradient(135deg,var(--gold) 0%,var(--gold-soft) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
+  .readout .unit{font-size:18px;color:var(--mute);margin-top:6px;font-weight:500}
+  .readout .tier{display:inline-flex;align-items:center;gap:8px;margin-top:18px;padding:8px 16px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase}
+  .tier .dot{width:8px;height:8px;border-radius:50%}
+  .tier.t-excellent{background:rgba(95,207,128,.12);color:var(--green)}.tier.t-excellent .dot{background:var(--green);box-shadow:0 0 8px var(--green)}
+  .tier.t-good{background:rgba(91,154,239,.12);color:#5b9aef}.tier.t-good .dot{background:#5b9aef}
+  .tier.t-fair{background:rgba(247,201,72,.12);color:var(--yellow)}.tier.t-fair .dot{background:var(--yellow)}
+  .tier.t-thin{background:rgba(239,91,91,.12);color:var(--red)}.tier.t-thin .dot{background:var(--red)}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px}
+  .stat{background:#0a0a12;border:1px solid var(--line);border-radius:12px;padding:14px}
+  .stat .lab{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);font-weight:600;margin-bottom:6px}
+  .stat .val{font-size:22px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+  .rec{margin-top:18px;padding:14px 16px;background:rgba(212,175,55,.06);border-left:3px solid var(--gold);border-radius:8px;font-size:14px;color:var(--ink);line-height:1.55}
+  .rec strong{color:var(--gold);font-weight:700}
+  footer{text-align:center;margin-top:36px;color:var(--mute);font-size:12px}
+  footer .em{color:var(--gold);font-weight:600;letter-spacing:.05em}
+  @media(max-width:560px){
+    .account-row{grid-template-columns:1fr 110px 32px}
+    .stats{grid-template-columns:1fr;gap:8px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header id="hero">
+    <div class="brand">L7S Credit Hero · H.O.T.⁷</div>
+    <h1>AAoA</h1>
+    <p class="sub">Average Age of Accounts. Older files score higher. Add your tradelines below — open dates only.</p>
+  </header>
+
+  <div class="panel">
+    <div class="panel-title">
+      <h2>Your Accounts</h2>
+      <span class="meta" id="ct">0 accounts</span>
+    </div>
+    <div class="accounts" id="accounts"></div>
+    <div class="actions">
+      <button class="add" id="add">+ Add Account</button>
+      <button class="reset" id="reset">Reset</button>
+    </div>
+  </div>
+
+  <div class="readout" id="readout">
+    <div class="num" id="aaoa-num">—</div>
+    <div class="unit" id="aaoa-unit">years · months</div>
+    <div class="tier t-thin" id="tier"><span class="dot"></span><span id="tier-label">Add accounts</span></div>
+    <div class="stats">
+      <div class="stat"><div class="lab">Oldest</div><div class="val" id="oldest">—</div></div>
+      <div class="stat"><div class="lab">Newest</div><div class="val" id="newest">—</div></div>
+      <div class="stat"><div class="lab">Total</div><div class="val" id="total">0</div></div>
+    </div>
+    <div class="rec" id="rec">Open at least one tradeline to see your AAoA.</div>
+  </div>
+
+  <footer>
+    <div><span class="em">L7S Credit Hero</span> · H.O.T.⁷ · AAoA — Average Age of Accounts</div>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+const wrap=document.getElementById('accounts');
+const addBtn=document.getElementById('add');
+const resetBtn=document.getElementById('reset');
+
+function rowEl(){
+  const r=document.createElement('div');
+  r.className='account-row';
+  r.innerHTML=`
+    <input type="text" placeholder="Account name (e.g. Chase Sapphire)" class="nm">
+    <input type="date" class="dt" max="${new Date().toISOString().slice(0,10)}">
+    <button class="rm" title="remove">×</button>
+  `;
+  r.querySelector('.rm').onclick=()=>{gsap.to(r,{opacity:0,height:0,marginBottom:0,duration:.28,onComplete:()=>{r.remove();calc()}})};
+  r.querySelectorAll('input').forEach(i=>i.addEventListener('input',calc));
+  return r;
+}
+
+function addRow(){
+  const r=rowEl();
+  wrap.appendChild(r);
+  gsap.fromTo(r,{opacity:0,y:-6},{opacity:1,y:0,duration:.35});
+  calc();
+}
+
+function calc(){
+  const today=new Date();
+  const rows=[...wrap.querySelectorAll('.account-row')];
+  const dates=rows.map(r=>r.querySelector('.dt').value).filter(Boolean).map(d=>new Date(d)).filter(d=>!isNaN(d)&&d<=today);
+  document.getElementById('ct').textContent=`${rows.length} account${rows.length===1?'':'s'}`;
+  if(dates.length===0){
+    document.getElementById('aaoa-num').textContent='—';
+    document.getElementById('aaoa-unit').textContent='years · months';
+    document.getElementById('total').textContent='0';
+    document.getElementById('oldest').textContent='—';
+    document.getElementById('newest').textContent='—';
+    setTier('thin','Add accounts');
+    document.getElementById('rec').innerHTML='Open at least one tradeline to see your AAoA.';
+    return;
+  }
+  const ages=dates.map(d=>(today-d)/(365.25*86400000));
+  const avg=ages.reduce((a,b)=>a+b,0)/ages.length;
+  const oldest=Math.max(...ages);
+  const newest=Math.min(...ages);
+  const years=Math.floor(avg);
+  const months=Math.round((avg-years)*12);
+  document.getElementById('aaoa-num').textContent=`${years}y ${months}m`;
+  document.getElementById('aaoa-unit').textContent=`across ${dates.length} dated account${dates.length===1?'':'s'}`;
+  document.getElementById('total').textContent=dates.length;
+  document.getElementById('oldest').textContent=oldest>=1?`${oldest.toFixed(1)}y`:`${Math.round(oldest*12)}mo`;
+  document.getElementById('newest').textContent=newest>=1?`${newest.toFixed(1)}y`:`${Math.round(newest*12)}mo`;
+  // tiers — FICO weight on age: <2yr thin, 2-5 fair, 5-9 good, 9+ excellent
+  let tier,label,rec;
+  if(avg>=9){
+    tier='excellent';label='Excellent — Top Tier';
+    rec=`Strong file at <strong>${years}y ${months}m</strong>. Don't close your oldest accounts — they anchor your AAoA. Adding new tradelines will <em>drop</em> your average; only open new ones with intent.`;
+  } else if(avg>=5){
+    tier='good';label='Good';
+    rec=`Solid age. To reach <strong>excellent</strong> (9+ yrs), keep your oldest accounts active and avoid opening new tradelines for at least ${Math.ceil((9-avg)*12)} months unless strategically needed.`;
+  } else if(avg>=2){
+    tier='fair';label='Fair — Building';
+    rec=`Building phase. Don't close anything. ${Math.ceil((5-avg)*12)} months of no-new-accounts will push you into <strong>good</strong>. Become an authorized user on a family member's seasoned card to lift the average instantly.`;
+  } else {
+    tier='thin';label='Thin File';
+    rec=`Thin file at <strong>${years}y ${months}m</strong>. Get authorized-user added to a 10+ year old family account — it can lift your AAoA by years overnight. Avoid opening new accounts until oldest is 24+ months.`;
+  }
+  setTier(tier,label);
+  document.getElementById('rec').innerHTML=rec;
+}
+
+function setTier(t,label){
+  const el=document.getElementById('tier');
+  el.className=`tier t-${t}`;
+  document.getElementById('tier-label').textContent=label;
+}
+
+addBtn.onclick=addRow;
+resetBtn.onclick=()=>{wrap.innerHTML='';calc();addRow();addRow()};
+
+// seed with 2 rows
+addRow();addRow();
+
+gsap.to('#hero',{opacity:1,y:0,duration:.7,ease:'power3.out'});
+gsap.fromTo('#hero',{y:14},{y:0,duration:.7});
+gsap.to('.panel',{opacity:1,y:0,duration:.7,delay:.1,ease:'power2.out'});
+gsap.fromTo('.panel',{y:12},{y:0,duration:.7,delay:.1});
+gsap.to('#readout',{opacity:1,y:0,duration:.7,delay:.25,ease:'power2.out'});
+gsap.fromTo('#readout',{y:12},{y:0,duration:.7,delay:.25});
+</script>
+</body>
+</html>

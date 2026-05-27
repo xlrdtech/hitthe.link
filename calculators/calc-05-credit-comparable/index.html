@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>L7S Credit Hero · Comparable Credit Index</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+  /* ============================================================
+     L7S Credit Hero - Comparable Credit Index
+     Canon-9 inline-HTML mandate. Single file. All embedded.
+     ============================================================ */
+  :root {
+    --bg: #0a0a0f;
+    --bg-elev: #15151c;
+    --bg-card: #1c1c25;
+    --gold: #d4af37;
+    --gold-dim: #8a7224;
+    --white: #ffffff;
+    --muted: #9a9aa8;
+    --border: #2a2a35;
+    --green: #4ade80;
+    --red: #f87171;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+    min-height: 100vh;
+    overflow-wrap: break-word;
+    word-break: normal;
+    hyphens: none;
+  }
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .brand {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    margin-bottom: 18px;
+    font-weight: 600;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 520px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+  .field { display: flex; flex-direction: column; }
+  .field.full { grid-column: 1 / -1; }
+  label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    letter-spacing: 0.05em;
+  }
+  input, select {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    color: var(--white);
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: inherit;
+    transition: border-color 0.18s ease;
+    width: 100%;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--gold);
+  }
+  button {
+    background: var(--gold);
+    color: var(--bg);
+    border: none;
+    padding: 14px 24px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 8px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(212, 175, 55, 0.28);
+  }
+  button:active { transform: translateY(0); }
+
+  #results {
+    opacity: 0;
+    display: none;
+  }
+  #results.shown { display: block; }
+
+  .readout {
+    text-align: center;
+    padding: 12px 0 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+  .readout-label {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-bottom: 8px;
+  }
+  .readout-value {
+    font-size: 38px;
+    font-weight: 800;
+    color: var(--gold);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .readout-sub {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  .bars { display: flex; flex-direction: column; gap: 16px; }
+  .bar-row {
+    display: grid;
+    grid-template-columns: 110px 1fr 60px;
+    align-items: center;
+    gap: 12px;
+  }
+  @media (max-width: 520px) {
+    .bar-row { grid-template-columns: 90px 1fr 54px; gap: 8px; }
+  }
+  .bar-label {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .bar-track {
+    height: 14px;
+    background: var(--bg-elev);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+  }
+  .bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 8px;
+    background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+  }
+  .bar-fill.you { background: linear-gradient(90deg, #6ea8ff, #4ade80); }
+  .bar-fill.median { background: linear-gradient(90deg, #555, #9a9aa8); }
+  .bar-fill.top { background: linear-gradient(90deg, var(--gold-dim), var(--gold)); }
+  .bar-val {
+    font-size: 14px;
+    font-weight: 700;
+    text-align: right;
+    color: var(--white);
+  }
+
+  .action {
+    background: var(--bg-elev);
+    border-left: 3px solid var(--gold);
+    padding: 16px 18px;
+    border-radius: 8px;
+    margin-top: 20px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .action strong { color: var(--gold); }
+
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 36px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  footer .dot { color: var(--gold); margin: 0 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">L7S · Credit Hero</div>
+    <h1>Comparable Credit Index</h1>
+    <div class="subtitle">See how your file ranks against your real peer cohort.</div>
+  </header>
+
+  <section class="card">
+    <h2>Your Profile</h2>
+    <div class="grid">
+      <div class="field">
+        <label for="fico">FICO Score (300-850)</label>
+        <input id="fico" type="number" min="300" max="850" value="680" inputmode="numeric" />
+      </div>
+      <div class="field">
+        <label for="age">Age</label>
+        <input id="age" type="number" min="18" max="100" value="34" inputmode="numeric" />
+      </div>
+      <div class="field">
+        <label for="income">Annual Income (USD)</label>
+        <input id="income" type="number" min="0" step="1000" value="62000" inputmode="numeric" />
+      </div>
+      <div class="field">
+        <label for="region">US Census Division</label>
+        <select id="region">
+          <option value="new_england">New England</option>
+          <option value="mid_atlantic">Mid-Atlantic</option>
+          <option value="south_atlantic" selected>South Atlantic</option>
+          <option value="east_south_central">East South Central</option>
+          <option value="west_south_central">West South Central</option>
+          <option value="east_north_central">East North Central</option>
+          <option value="west_north_central">West North Central</option>
+          <option value="mountain">Mountain</option>
+          <option value="pacific">Pacific</option>
+        </select>
+      </div>
+      <div class="field full">
+        <button id="runBtn">Run My Comparable Index</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="results" class="card">
+    <div class="readout">
+      <div class="readout-label" id="rankLabel">Cohort Rank</div>
+      <div class="readout-value" id="rankValue">--</div>
+      <div class="readout-sub" id="rankSub">--</div>
+    </div>
+
+    <div class="bars">
+      <div class="bar-row">
+        <div class="bar-label">You</div>
+        <div class="bar-track"><div class="bar-fill you" id="barYou"></div></div>
+        <div class="bar-val" id="valYou">0</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Cohort Median</div>
+        <div class="bar-track"><div class="bar-fill median" id="barMedian"></div></div>
+        <div class="bar-val" id="valMedian">0</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Top Decile</div>
+        <div class="bar-track"><div class="bar-fill top" id="barTop"></div></div>
+        <div class="bar-val" id="valTop">0</div>
+      </div>
+    </div>
+
+    <div class="action" id="actionBox">
+      <strong>Action plan:</strong> <span id="actionText">--</span>
+    </div>
+  </section>
+
+  <footer>
+    L7S Credit Hero <span class="dot">·</span> H.O.T.<sup>7</sup>
+  </footer>
+
+</div>
+
+<script>
+/* ============================================================
+   Comparable Credit Index - logic
+   NOTE: Cohort baselines below are APPROXIMATE estimates based
+   on Experian-published 2024 "State of Credit" averages by age
+   bracket / income tier / US Census division. They are tuned
+   for illustrative cohort positioning and SHOULD be refreshed
+   when official annual updates publish. Not for underwriting.
+   ============================================================ */
+
+// Region base modifiers - approximate offsets vs national avg
+// Source basis: Experian 2024 average VantageScore by state, rolled to division
+const REGION_OFFSET = {
+  new_england: +12,
+  mid_atlantic: +6,
+  south_atlantic: -8,
+  east_south_central: -18,
+  west_south_central: -14,
+  east_north_central: +2,
+  west_north_central: +10,
+  mountain: +4,
+  pacific: +8
+};
+
+// Age bracket baseline FICO medians (approx Experian 2024)
+function ageBracket(age) {
+  if (age < 25) return { key: '18-24', median: 679 };
+  if (age < 30) return { key: '25-29', median: 687 };
+  if (age < 40) return { key: '30-39', median: 697 };
+  if (age < 56) return { key: '40-55', median: 716 };
+  if (age < 75) return { key: '56-74', median: 743 };
+  return { key: '75+', median: 760 };
+}
+
+// Income tier modifiers (approx; higher income correlates ~+15-30 FICO across tiers)
+function incomeTier(income) {
+  if (income < 25000) return { key: '<25k', mod: -22 };
+  if (income < 50000) return { key: '25-50k', mod: -8 };
+  if (income < 75000) return { key: '50-75k', mod: +4 };
+  if (income < 100000) return { key: '75-100k', mod: +12 };
+  if (income < 150000) return { key: '100-150k', mod: +20 };
+  return { key: '150k+', mod: +28 };
+}
+
+// Approx within-cohort std-dev (FICO) used for percentile estimation
+const COHORT_STDDEV = 58;
+
+// Normal CDF approximation (Abramowitz & Stegun)
+function normCdf(z) {
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989422804014327 * Math.exp(-z * z / 2);
+  const p = d * t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+  return z > 0 ? 1 - p : p;
+}
+
+function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+
+function compute() {
+  const fico = clamp(parseInt(document.getElementById('fico').value, 10) || 680, 300, 850);
+  const age = clamp(parseInt(document.getElementById('age').value, 10) || 34, 18, 100);
+  const income = Math.max(0, parseInt(document.getElementById('income').value, 10) || 0);
+  const region = document.getElementById('region').value;
+
+  const ab = ageBracket(age);
+  const it = incomeTier(income);
+  const regionMod = REGION_OFFSET[region] || 0;
+
+  // Cohort median = age baseline + income tier mod + region offset
+  let cohortMedian = ab.median + it.mod + regionMod;
+  cohortMedian = clamp(Math.round(cohortMedian), 520, 820);
+
+  // Top decile (~1.28 std-dev above median)
+  let topDecile = clamp(Math.round(cohortMedian + 1.28 * COHORT_STDDEV * 0.55), 600, 845);
+  // (0.55 scale because FICO is bounded + right-skewed near ceiling)
+
+  // Percentile of user within cohort
+  const z = (fico - cohortMedian) / COHORT_STDDEV;
+  const pct = normCdf(z); // 0..1, fraction at or below user
+  const percentile = Math.round(pct * 100);
+  const topPct = Math.max(1, 100 - percentile);
+
+  return { fico, age, income, region, ab, it, regionMod, cohortMedian, topDecile, percentile, topPct };
+}
+
+function fmtRegion(key) {
+  return key.split('_').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+}
+
+function renderResults(r) {
+  const results = document.getElementById('results');
+  results.classList.add('shown');
+
+  // Headline
+  const rankLabel = document.getElementById('rankLabel');
+  const rankValue = document.getElementById('rankValue');
+  const rankSub = document.getElementById('rankSub');
+
+  const cohortStr = `${r.ab.key} · ${r.it.key} · ${fmtRegion(r.region)}`;
+
+  if (r.fico >= r.cohortMedian) {
+    rankLabel.textContent = 'Cohort Rank';
+    rankValue.textContent = `Top ${r.topPct}%`;
+    rankSub.textContent = `vs peers in ${cohortStr}`;
+  } else {
+    const gap = r.cohortMedian - r.fico;
+    rankLabel.textContent = 'Below Median';
+    rankValue.textContent = `-${gap} pts`;
+    rankSub.textContent = `vs ${cohortStr} median (${r.cohortMedian})`;
+  }
+
+  // Bar widths scaled to 850
+  const scale = (v) => clamp((v / 850) * 100, 0, 100);
+
+  document.getElementById('valYou').textContent = r.fico;
+  document.getElementById('valMedian').textContent = r.cohortMedian;
+  document.getElementById('valTop').textContent = r.topDecile;
+
+  // GSAP animate
+  gsap.fromTo('#results', { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
+  gsap.fromTo('#barYou', { width: '0%' }, { width: scale(r.fico) + '%', duration: 1.1, ease: 'power3.out', delay: 0.15 });
+  gsap.fromTo('#barMedian', { width: '0%' }, { width: scale(r.cohortMedian) + '%', duration: 1.1, ease: 'power3.out', delay: 0.3 });
+  gsap.fromTo('#barTop', { width: '0%' }, { width: scale(r.topDecile) + '%', duration: 1.1, ease: 'power3.out', delay: 0.45 });
+
+  // Action text
+  const gapToTop = Math.max(0, r.topDecile - r.fico);
+  const action = document.getElementById('actionText');
+  if (gapToTop === 0) {
+    action.innerHTML = `You are already at or above top-decile in your cohort. Defend your file: keep <strong>CUI under 9%</strong>, never let oldest tradeline close, freeze bureaus when not applying.`;
+  } else {
+    action.innerHTML = `To reach top-decile in your cohort, gain <strong>${gapToTop} points</strong>. Top moves: pay down <strong>CUI (credit utilization)</strong> below 9% on every revolver, <strong>age the file</strong> (do not close oldest accounts), <strong>dispute errors</strong> via Method-of-Verification, and add a low-balance secured card if thin-file.`;
+  }
+}
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const r = compute();
+  renderResults(r);
+});
+
+// Allow Enter key to submit
+['fico','age','income'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('runBtn').click();
+  });
+});
+
+// Intro pulse on load
+gsap.from('header', { opacity: 0, y: -10, duration: 0.6, ease: 'power2.out' });
+gsap.from('.card', { opacity: 0, y: 14, duration: 0.6, ease: 'power2.out', stagger: 0.08, delay: 0.1 });
+</script>
+</body>
+</html>

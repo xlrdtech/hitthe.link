@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>L7S Currency Hero | 1 Million Challenge | Curtis Henderson CFO</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+  :root{
+    --bg:#0a0a0f;
+    --bg-2:#13131c;
+    --panel:#181824;
+    --panel-2:#1f1f2d;
+    --border:#2a2a3d;
+    --gold:#d4af37;
+    --gold-2:#f1d472;
+    --gold-dim:#8a7327;
+    --text:#f4f4f7;
+    --text-dim:#a0a0b0;
+    --green:#4ade80;
+    --red:#ef4444;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;
+    overflow-wrap:break-word;word-break:normal;hyphens:none;}
+  html,body{background:var(--bg);color:var(--text);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;line-height:1.5;min-height:100vh;}
+  body{padding:24px 16px 64px;
+    background:radial-gradient(ellipse at top,#1a1a2a 0%,var(--bg) 60%);}
+  .wrap{max-width:1100px;margin:0 auto;}
+  header{text-align:center;margin-bottom:28px;}
+  .brand{font-size:11px;letter-spacing:.32em;color:var(--gold);
+    text-transform:uppercase;font-weight:600;margin-bottom:8px;}
+  h1{font-size:clamp(26px,5vw,40px);font-weight:800;letter-spacing:-.02em;
+    background:linear-gradient(135deg,#fff 0%,var(--gold-2) 60%,var(--gold) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    margin-bottom:6px;}
+  .sub{color:var(--text-dim);font-size:14px;}
+  .grid{display:grid;grid-template-columns:1fr;gap:18px;}
+  @media(min-width:840px){.grid{grid-template-columns:380px 1fr;}}
+  .card{background:var(--panel);border:1px solid var(--border);
+    border-radius:14px;padding:20px;}
+  .card h2{font-size:13px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--gold);margin-bottom:16px;font-weight:600;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;color:var(--text-dim);
+    margin-bottom:6px;letter-spacing:.04em;}
+  .field input,.field select{width:100%;background:var(--bg-2);
+    border:1px solid var(--border);border-radius:8px;padding:10px 12px;
+    color:var(--text);font-size:15px;font-family:inherit;
+    transition:border-color .15s;}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--gold);}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;
+    margin-bottom:18px;}
+  @media(min-width:560px){.stats{grid-template-columns:repeat(4,1fr);}}
+  .stat{background:var(--panel-2);border:1px solid var(--border);
+    border-radius:10px;padding:14px;}
+  .stat .lbl{font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--text-dim);margin-bottom:6px;}
+  .stat .val{font-size:22px;font-weight:700;color:var(--gold-2);
+    font-variant-numeric:tabular-nums;}
+  .stat .val.sm{font-size:18px;}
+  .chart-wrap{background:var(--panel-2);border:1px solid var(--border);
+    border-radius:10px;padding:14px;margin-bottom:18px;}
+  svg.chart{width:100%;height:260px;display:block;}
+  .chart-axis text{fill:var(--text-dim);font-size:10px;}
+  .chart-axis line{stroke:var(--border);}
+  .chart-path{fill:none;stroke:var(--gold);stroke-width:2.2;
+    stroke-linejoin:round;stroke-linecap:round;
+    filter:drop-shadow(0 0 6px rgba(212,175,55,.4));}
+  .chart-fill{fill:url(#grad);opacity:.32;}
+  .chart-target{stroke:var(--green);stroke-width:1;stroke-dasharray:4 4;
+    fill:none;opacity:.6;}
+  .milestones{width:100%;border-collapse:collapse;font-size:14px;}
+  .milestones th,.milestones td{padding:10px 8px;text-align:left;
+    border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums;}
+  .milestones th{font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--gold);font-weight:600;}
+  .milestones tr.hit td{color:var(--text);}
+  .milestones tr.miss td{color:var(--text-dim);opacity:.55;}
+  .milestones td.day{color:var(--gold-2);font-weight:600;}
+  footer{text-align:center;margin-top:36px;padding-top:24px;
+    border-top:1px solid var(--border);color:var(--text-dim);font-size:12px;
+    letter-spacing:.08em;}
+  footer .gold{color:var(--gold);}
+  .hint{font-size:11px;color:var(--text-dim);margin-top:4px;line-height:1.4;}
+  .target-line-label{fill:var(--green);font-size:10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">L7S Currency Hero</div>
+    <h1>1 Million Challenge</h1>
+    <div class="sub">Compound interest goal planner — Curtis Henderson, CFO</div>
+  </header>
+
+  <div class="grid">
+    <aside class="card">
+      <h2>Inputs</h2>
+
+      <div class="field">
+        <label for="start">Starting Capital ($)</label>
+        <input id="start" type="number" value="100" min="1" step="any">
+      </div>
+
+      <div class="field">
+        <label for="target">Target ($)</label>
+        <input id="target" type="number" value="1000000" min="1" step="any">
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="rate">Growth Rate (%)</label>
+          <input id="rate" type="number" value="5" min="0" step="any">
+        </div>
+        <div class="field">
+          <label for="freq">Per Period</label>
+          <select id="freq">
+            <option value="daily" selected>Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="contrib">Contribution ($)</label>
+          <input id="contrib" type="number" value="0" min="0" step="any">
+        </div>
+        <div class="field">
+          <label for="contribFreq">Contribution Freq</label>
+          <select id="contribFreq">
+            <option value="none" selected>None</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="maxN">Max Periods to Project</label>
+        <input id="maxN" type="number" value="220" min="1" step="1">
+        <div class="hint">Curtis's sheet ran 220 days at 5%/day from $100.</div>
+      </div>
+    </aside>
+
+    <main class="card">
+      <h2>Projection</h2>
+      <div class="stats">
+        <div class="stat">
+          <div class="lbl">Periods to Target</div>
+          <div class="val" id="stat-periods">—</div>
+        </div>
+        <div class="stat">
+          <div class="lbl">Final Balance</div>
+          <div class="val sm" id="stat-final">—</div>
+        </div>
+        <div class="stat">
+          <div class="lbl">Total Contributed</div>
+          <div class="val sm" id="stat-contrib">—</div>
+        </div>
+        <div class="stat">
+          <div class="lbl">Total Growth</div>
+          <div class="val sm" id="stat-growth">—</div>
+        </div>
+      </div>
+
+      <div class="chart-wrap">
+        <svg class="chart" id="chart" viewBox="0 0 800 260" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="grad" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#d4af37" stop-opacity=".75"/>
+              <stop offset="100%" stop-color="#d4af37" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <g class="chart-axis" id="chart-axis"></g>
+          <path class="chart-fill" id="chart-fill" d=""></path>
+          <path class="chart-path" id="chart-path" d=""></path>
+          <line class="chart-target" id="chart-target" x1="0" y1="0" x2="800" y2="0"></line>
+          <text class="target-line-label" id="target-label" x="6" y="0">Target</text>
+        </svg>
+      </div>
+
+      <table class="milestones">
+        <thead>
+          <tr><th>Milestone</th><th>Period Hit</th><th>Balance at Hit</th></tr>
+        </thead>
+        <tbody id="milestones-body"></tbody>
+      </table>
+    </main>
+  </div>
+
+  <footer>
+    L7S Currency Hero <span class="gold">·</span>
+    1M Challenge <span class="gold">·</span>
+    per Curtis Henderson CFO
+  </footer>
+</div>
+
+<script>
+(function(){
+  const $ = (id) => document.getElementById(id);
+  const fmt$ = (n) => {
+    if (!isFinite(n)) return '—';
+    if (Math.abs(n) >= 1e9) return '$' + (n/1e9).toFixed(2) + 'B';
+    if (Math.abs(n) >= 1e6) return '$' + (n/1e6).toFixed(2) + 'M';
+    if (Math.abs(n) >= 1e3) return '$' + (n/1e3).toFixed(1) + 'K';
+    return '$' + n.toFixed(2);
+  };
+  const fmtNum = (n) => n.toLocaleString('en-US',{maximumFractionDigits:0});
+
+  const inputs = ['start','target','rate','freq','contrib','contribFreq','maxN']
+    .map(i => $(i));
+  inputs.forEach(el => el.addEventListener('input', recompute));
+
+  function simulate(){
+    const start = +$('start').value || 0;
+    const target = +$('target').value || 0;
+    const rate = (+$('rate').value || 0) / 100;
+    const freq = $('freq').value;
+    const contrib = +$('contrib').value || 0;
+    const contribFreq = $('contribFreq').value;
+    const maxN = Math.min(Math.max(parseInt($('maxN').value)||1, 1), 5000);
+
+    // Contribution alignment: if contribFreq doesn't match freq we
+    // approximate by spreading per period. Daily growth + monthly contrib
+    // ~ add monthly/30 each day, etc. Curtis's original sheet had no
+    // contributions, just pure compounding.
+    const perPeriodContrib = (() => {
+      if (contribFreq === 'none' || contrib === 0) return 0;
+      // periods per year for the growth freq
+      const growthPerYear = {daily:365,weekly:52,monthly:12,yearly:1}[freq];
+      const contribPerYear = {daily:365,weekly:52,monthly:12}[contribFreq];
+      return contrib * contribPerYear / growthPerYear;
+    })();
+
+    const series = [start];
+    let bal = start;
+    let totalContrib = 0;
+    let periodsToTarget = null;
+
+    for (let i = 1; i <= maxN; i++){
+      bal = bal * (1 + rate) + perPeriodContrib;
+      totalContrib += perPeriodContrib;
+      series.push(bal);
+      if (periodsToTarget === null && bal >= target && target > 0){
+        periodsToTarget = i;
+      }
+    }
+    return {series, periodsToTarget, finalBal: bal, totalContrib,
+      start, target, rate, freq, maxN};
+  }
+
+  function milestoneRows(series, freq){
+    const tiers = [10000, 100000, 250000, 500000, 1000000];
+    const out = [];
+    for (const tier of tiers){
+      let hit = null;
+      for (let i = 0; i < series.length; i++){
+        if (series[i] >= tier){ hit = i; break; }
+      }
+      out.push({tier, hit, bal: hit === null ? null : series[hit]});
+    }
+    return out;
+  }
+
+  function freqLabel(f){
+    return {daily:'days',weekly:'weeks',monthly:'months',yearly:'years'}[f];
+  }
+
+  function drawChart(sim){
+    const svg = $('chart');
+    const W = 800, H = 260, PAD_L = 8, PAD_R = 8, PAD_T = 12, PAD_B = 22;
+    const innerW = W - PAD_L - PAD_R;
+    const innerH = H - PAD_T - PAD_B;
+    const s = sim.series;
+    const maxY = Math.max(sim.target, ...s) * 1.05;
+    const minY = 0;
+    const N = s.length - 1;
+
+    const x = (i) => PAD_L + (i / Math.max(N,1)) * innerW;
+    const y = (v) => PAD_T + innerH - ((v - minY)/(maxY - minY)) * innerH;
+
+    let d = `M ${x(0)} ${y(s[0])}`;
+    for (let i = 1; i < s.length; i++) d += ` L ${x(i)} ${y(s[i])}`;
+    const fill = d + ` L ${x(N)} ${y(0)} L ${x(0)} ${y(0)} Z`;
+
+    $('chart-path').setAttribute('d', d);
+    $('chart-fill').setAttribute('d', fill);
+
+    const ty = y(sim.target);
+    const tl = $('chart-target');
+    tl.setAttribute('x1', PAD_L);
+    tl.setAttribute('x2', W - PAD_R);
+    tl.setAttribute('y1', ty);
+    tl.setAttribute('y2', ty);
+    const lbl = $('target-label');
+    lbl.setAttribute('y', Math.max(ty - 4, 10));
+    lbl.textContent = `Target ${fmt$(sim.target)}`;
+
+    // axis ticks
+    const axis = $('chart-axis');
+    axis.innerHTML = '';
+    const ticks = 5;
+    for (let i = 0; i <= ticks; i++){
+      const v = (maxY / ticks) * i;
+      const yy = y(v);
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1', PAD_L); line.setAttribute('x2', W - PAD_R);
+      line.setAttribute('y1', yy); line.setAttribute('y2', yy);
+      line.setAttribute('stroke-dasharray','2 4');
+      axis.appendChild(line);
+      const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+      t.setAttribute('x', W - PAD_R - 4); t.setAttribute('y', yy - 2);
+      t.setAttribute('text-anchor','end');
+      t.textContent = fmt$(v);
+      axis.appendChild(t);
+    }
+    // x ticks
+    const xTicks = 5;
+    for (let i = 0; i <= xTicks; i++){
+      const pi = Math.round(N * i / xTicks);
+      const xx = x(pi);
+      const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+      t.setAttribute('x', xx); t.setAttribute('y', H - 6);
+      t.setAttribute('text-anchor','middle');
+      t.textContent = pi;
+      axis.appendChild(t);
+    }
+
+    // Animate stroke draw
+    const path = $('chart-path');
+    const len = path.getTotalLength();
+    if (window.gsap){
+      gsap.set(path,{strokeDasharray:len,strokeDashoffset:len});
+      gsap.to(path,{strokeDashoffset:0,duration:1.1,ease:'power2.out'});
+      gsap.fromTo('#chart-fill',{opacity:0},{opacity:.32,duration:1.1,ease:'power2.out'});
+    }
+  }
+
+  function recompute(){
+    const sim = simulate();
+    const flbl = freqLabel(sim.freq);
+    $('stat-periods').textContent = sim.periodsToTarget !== null
+      ? `${sim.periodsToTarget} ${flbl}` : `> ${sim.maxN} ${flbl}`;
+    $('stat-final').textContent = fmt$(sim.finalBal);
+    $('stat-contrib').textContent = fmt$(sim.totalContrib);
+    $('stat-growth').textContent = fmt$(sim.finalBal - sim.start - sim.totalContrib);
+
+    const ms = milestoneRows(sim.series, sim.freq);
+    const tbody = $('milestones-body');
+    tbody.innerHTML = '';
+    for (const m of ms){
+      const tr = document.createElement('tr');
+      tr.className = m.hit === null ? 'miss' : 'hit';
+      tr.innerHTML = `
+        <td>${fmt$(m.tier)}</td>
+        <td class="day">${m.hit === null ? '—' : m.hit + ' ' + flbl}</td>
+        <td>${m.bal === null ? '—' : fmt$(m.bal)}</td>`;
+      tbody.appendChild(tr);
+      if (window.gsap){
+        gsap.from(tr,{opacity:0,y:6,duration:.4,
+          delay: 0.05 * tbody.children.length, ease:'power2.out'});
+      }
+    }
+
+    drawChart(sim);
+
+    if (window.gsap){
+      gsap.fromTo('.stat .val',
+        {scale:.94,opacity:.4},
+        {scale:1,opacity:1,duration:.45,stagger:.05,ease:'back.out(1.6)'});
+    }
+  }
+
+  recompute();
+})();
+</script>
+</body>
+</html>

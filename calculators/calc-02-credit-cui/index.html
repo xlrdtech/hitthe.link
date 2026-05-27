@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0a0a0f" />
+<title>CUI % Calculator · L7S Credit Hero H.O.T.⁷</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r158/three.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg-card: #121218;
+    --bg-card-2: #16161e;
+    --gold: #d4af37;
+    --gold-soft: #b8941f;
+    --text: #ffffff;
+    --text-dim: #9aa0a6;
+    --line: rgba(212, 175, 55, 0.18);
+    --line-soft: rgba(255, 255, 255, 0.06);
+    --best: #6ee7b7;
+    --excellent: #34d399;
+    --good: #fbbf24;
+    --warn: #fb923c;
+    --red: #ef4444;
+    --shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  #bg-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 28px 18px 80px;
+  }
+
+  header.brand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .logo {
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    font-size: 13px;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+
+  .track-tag {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    border: 1px solid var(--line);
+    padding: 5px 10px;
+    border-radius: 999px;
+  }
+
+  h1 {
+    font-size: clamp(26px, 5vw, 38px);
+    margin: 6px 0 4px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  h1 .gold { color: var(--gold); }
+
+  .sub {
+    color: var(--text-dim);
+    font-size: 14px;
+    margin: 0 0 22px;
+  }
+
+  .panel {
+    background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-card-2) 100%);
+    border: 1px solid var(--line-soft);
+    border-radius: 16px;
+    padding: 22px 18px;
+    box-shadow: var(--shadow);
+    margin-bottom: 18px;
+  }
+
+  .readout {
+    text-align: center;
+    padding: 28px 18px 24px;
+    border: 1px solid var(--line);
+    background:
+      radial-gradient(circle at 50% 0%, rgba(212,175,55,0.10), transparent 60%),
+      linear-gradient(180deg, var(--bg-card) 0%, var(--bg-card-2) 100%);
+  }
+  .readout .label {
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  .readout .value {
+    font-size: clamp(56px, 12vw, 88px);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin: 8px 0 6px;
+    color: var(--gold);
+    font-variant-numeric: tabular-nums;
+  }
+  .readout .value .pct {
+    font-size: 0.45em;
+    color: var(--text);
+    margin-left: 4px;
+    font-weight: 600;
+  }
+  .readout .tier-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    margin-top: 4px;
+  }
+  .readout .recommendation {
+    margin: 14px auto 0;
+    max-width: 540px;
+    color: var(--text-dim);
+    font-size: 14px;
+    min-height: 20px;
+  }
+  .readout .recommendation strong { color: var(--text); }
+
+  .bar-track {
+    margin: 16px auto 0;
+    max-width: 540px;
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.06);
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 999px;
+    background: var(--gold);
+    transition: background 0.3s ease;
+  }
+
+  .cards-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .cards-head h2 {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--text-dim);
+    margin: 0;
+    font-weight: 600;
+  }
+  .clear-btn {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--line-soft);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .clear-btn:hover { color: var(--text); border-color: var(--line); }
+
+  .card-row {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr auto auto;
+    gap: 8px;
+    align-items: center;
+    padding: 12px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--line-soft);
+    border-radius: 12px;
+    margin-bottom: 10px;
+  }
+
+  .card-row input {
+    width: 100%;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid var(--line-soft);
+    color: var(--text);
+    padding: 11px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s, background 0.2s;
+    min-width: 0;
+  }
+  .card-row input:focus {
+    outline: none;
+    border-color: var(--gold);
+    background: rgba(0,0,0,0.5);
+  }
+  .card-row input::placeholder { color: rgba(255,255,255,0.28); }
+
+  .card-row .util-cell {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 0 4px;
+    min-width: 60px;
+  }
+
+  .remove-btn {
+    background: transparent;
+    border: 1px solid var(--line-soft);
+    color: var(--text-dim);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+  }
+  .remove-btn:hover {
+    color: var(--red);
+    border-color: var(--red);
+    background: rgba(239,68,68,0.08);
+  }
+
+  .add-btn {
+    width: 100%;
+    background: transparent;
+    color: var(--gold);
+    border: 1px dashed var(--line);
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+    font-family: inherit;
+  }
+  .add-btn:hover {
+    background: rgba(212,175,55,0.06);
+    border-color: var(--gold);
+    color: #f1d275;
+  }
+
+  .tier-best       { background: rgba(110,231,183,0.14); color: var(--best); }
+  .tier-excellent  { background: rgba(52,211,153,0.14);  color: var(--excellent); }
+  .tier-good       { background: rgba(251,191,36,0.14);  color: var(--good); }
+  .tier-warn       { background: rgba(251,146,60,0.14);  color: var(--warn); }
+  .tier-red        { background: rgba(239,68,68,0.16);   color: var(--red); }
+  .tier-none       { background: rgba(255,255,255,0.06); color: var(--text-dim); }
+
+  .util-cell.tier-best       { color: var(--best); }
+  .util-cell.tier-excellent  { color: var(--excellent); }
+  .util-cell.tier-good       { color: var(--good); }
+  .util-cell.tier-warn       { color: var(--warn); }
+  .util-cell.tier-red        { color: var(--red); }
+  .util-cell.tier-none       { color: var(--text-dim); }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    margin: 16px auto 0;
+    max-width: 580px;
+  }
+  .legend-chip {
+    font-size: 11px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+  }
+
+  footer {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    margin-top: 28px;
+    text-transform: uppercase;
+  }
+  footer .dot { color: var(--gold); margin: 0 6px; }
+
+  /* Mobile */
+  @media (max-width: 640px) {
+    .card-row {
+      grid-template-columns: 1fr 1fr;
+      grid-template-areas:
+        "name name"
+        "bal limit"
+        "util remove";
+      gap: 8px;
+    }
+    .card-row .f-name   { grid-area: name; }
+    .card-row .f-bal    { grid-area: bal; }
+    .card-row .f-limit  { grid-area: limit; }
+    .card-row .util-cell { grid-area: util; text-align: left; }
+    .card-row .remove-btn { grid-area: remove; justify-self: end; }
+  }
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+
+<div class="wrap">
+  <header class="brand">
+    <div class="logo">L7S Credit Hero</div>
+    <div class="track-tag">H.O.T.⁷ · Track 02</div>
+  </header>
+
+  <h1>Credit Utilization <span class="gold">Index</span></h1>
+  <p class="sub">Live CUI % across all your revolving lines. Lower is better — the score model rewards single-digit utilization.</p>
+
+  <section class="panel readout" id="readout">
+    <div class="label">Aggregate CUI</div>
+    <div class="value"><span id="agg-value">0</span><span class="pct">%</span></div>
+    <div class="tier-badge tier-none" id="tier-badge">Add a card to begin</div>
+    <div class="bar-track"><div class="bar-fill" id="bar-fill"></div></div>
+    <div class="recommendation" id="recommendation">Enter at least one card with a limit to see your utilization.</div>
+    <div class="legend">
+      <span class="legend-chip tier-best">&lt; 1% Best</span>
+      <span class="legend-chip tier-excellent">&lt; 10% Excellent</span>
+      <span class="legend-chip tier-good">&lt; 30% Good</span>
+      <span class="legend-chip tier-warn">&ge; 30% Warning</span>
+      <span class="legend-chip tier-red">&ge; 50% Red Flag</span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="cards-head">
+      <h2>Your Cards</h2>
+      <button class="clear-btn" id="clear-btn" type="button">Reset</button>
+    </div>
+    <div id="rows"></div>
+    <button class="add-btn" id="add-btn" type="button">+ Add credit card</button>
+  </section>
+
+  <footer>L7S Credit Hero <span class="dot">·</span> H.O.T.<sup>7</sup></footer>
+</div>
+
+<script>
+  // ---------------- Tier logic ----------------
+  function tierFor(pct, hasLimit) {
+    if (!hasLimit) return { key: 'none', name: '—', cls: 'tier-none' };
+    if (pct < 1)   return { key: 'best',      name: 'Best',      cls: 'tier-best' };
+    if (pct < 10)  return { key: 'excellent', name: 'Excellent', cls: 'tier-excellent' };
+    if (pct < 30)  return { key: 'good',      name: 'Good',      cls: 'tier-good' };
+    if (pct < 50)  return { key: 'warn',      name: 'Warning',   cls: 'tier-warn' };
+    return            { key: 'red',       name: 'Red Flag',  cls: 'tier-red' };
+  }
+
+  const TIER_COLOR = {
+    best: '#6ee7b7', excellent: '#34d399', good: '#fbbf24',
+    warn: '#fb923c', red: '#ef4444', none: '#d4af37'
+  };
+
+  function fmt$(n) {
+    if (!isFinite(n)) n = 0;
+    return '$' + Math.round(n).toLocaleString('en-US');
+  }
+  function fmtPct(n) {
+    if (!isFinite(n)) return '0';
+    if (n === 0) return '0';
+    if (n < 10) return n.toFixed(1);
+    return Math.round(n).toString();
+  }
+
+  // ---------------- State (no localStorage, fresh each session) ----------------
+  let rowSeed = 0;
+  const rowsEl = document.getElementById('rows');
+
+  function addRow(prefill) {
+    rowSeed += 1;
+    const id = 'row-' + rowSeed;
+    const row = document.createElement('div');
+    row.className = 'card-row';
+    row.dataset.id = id;
+    row.innerHTML = `
+      <input class="f-name"  type="text"     inputmode="text"    placeholder="Card name (e.g. Chase Sapphire)" autocomplete="off" />
+      <input class="f-bal"   type="number"   inputmode="decimal" placeholder="Balance" min="0" step="1" />
+      <input class="f-limit" type="number"   inputmode="decimal" placeholder="Limit"   min="0" step="1" />
+      <div class="util-cell tier-none">—</div>
+      <button class="remove-btn" type="button" title="Remove card" aria-label="Remove card">×</button>
+    `;
+    if (prefill) {
+      row.querySelector('.f-name').value  = prefill.name  || '';
+      row.querySelector('.f-bal').value   = prefill.bal   ?? '';
+      row.querySelector('.f-limit').value = prefill.limit ?? '';
+    }
+    rowsEl.appendChild(row);
+
+    row.querySelectorAll('input').forEach(i => i.addEventListener('input', recompute));
+    row.querySelector('.remove-btn').addEventListener('click', () => {
+      if (window.gsap) {
+        gsap.to(row, { opacity: 0, y: -10, height: 0, paddingTop: 0, paddingBottom: 0, marginBottom: 0, duration: 0.25, onComplete: () => { row.remove(); recompute(); } });
+      } else {
+        row.remove(); recompute();
+      }
+    });
+
+    if (window.gsap) {
+      gsap.from(row, { opacity: 0, y: 16, duration: 0.35, ease: 'power2.out' });
+    }
+    recompute();
+    return row;
+  }
+
+  function recompute() {
+    const rows = Array.from(rowsEl.querySelectorAll('.card-row'));
+    let totalBal = 0, totalLimit = 0, anyLimit = false;
+
+    rows.forEach(r => {
+      const bal   = parseFloat(r.querySelector('.f-bal').value)   || 0;
+      const limit = parseFloat(r.querySelector('.f-limit').value) || 0;
+      const cell  = r.querySelector('.util-cell');
+      if (limit > 0) {
+        anyLimit = true;
+        const pct = (bal / limit) * 100;
+        const t = tierFor(pct, true);
+        cell.textContent = fmtPct(pct) + '%';
+        cell.className = 'util-cell ' + t.cls;
+        totalBal += bal;
+        totalLimit += limit;
+      } else {
+        cell.textContent = '—';
+        cell.className = 'util-cell tier-none';
+      }
+    });
+
+    const aggEl   = document.getElementById('agg-value');
+    const tierEl  = document.getElementById('tier-badge');
+    const recEl   = document.getElementById('recommendation');
+    const barEl   = document.getElementById('bar-fill');
+
+    if (!anyLimit || totalLimit <= 0) {
+      aggEl.textContent = '0';
+      tierEl.textContent = 'Add a card to begin';
+      tierEl.className = 'tier-badge tier-none';
+      recEl.innerHTML = 'Enter at least one card with a limit to see your utilization.';
+      barEl.style.width = '0%';
+      barEl.style.background = TIER_COLOR.none;
+      return;
+    }
+
+    const agg = (totalBal / totalLimit) * 100;
+    const t = tierFor(agg, true);
+
+    aggEl.textContent = fmtPct(agg);
+    tierEl.textContent = t.name;
+    tierEl.className = 'tier-badge ' + t.cls;
+
+    barEl.style.background = TIER_COLOR[t.key];
+    if (window.gsap) {
+      gsap.to(barEl, { width: Math.min(100, agg).toFixed(2) + '%', duration: 0.45, ease: 'power2.out' });
+    } else {
+      barEl.style.width = Math.min(100, agg).toFixed(2) + '%';
+    }
+
+    recEl.innerHTML = buildRecommendation(agg, totalBal, totalLimit, t);
+  }
+
+  function buildRecommendation(agg, totalBal, totalLimit, t) {
+    const targets = [
+      { pct: 30, label: 'good (< 30%)' },
+      { pct: 10, label: 'excellent (< 10%)' },
+      { pct: 1,  label: 'best-tier (< 1%)' }
+    ];
+
+    if (t.key === 'best') {
+      return `You're stacked. Hold steady — letting one statement post above 1% is fine, but keep the rolling average right where it is.`;
+    }
+    if (t.key === 'excellent') {
+      const need = totalBal - (totalLimit * 0.01);
+      return `Tight game. Pay <strong>${fmt$(need)}</strong> across these balances before the next statement cuts to push into best-tier (&lt; 1%).`;
+    }
+
+    // Pick the nearest lower target
+    let next = null;
+    for (const tg of targets) {
+      if (agg >= tg.pct) {
+        const need = totalBal - (totalLimit * (tg.pct / 100));
+        next = { ...tg, need };
+        break;
+      }
+    }
+
+    if (!next) {
+      return `Lower utilization is on the table. Trimming balances before statement close will improve scores.`;
+    }
+
+    const verb = t.key === 'red' ? 'Pay down' : (t.key === 'warn' ? 'Pay' : 'Pay');
+    const tone = t.key === 'red'
+      ? 'High utilization is dragging your FICO. '
+      : (t.key === 'warn' ? 'You\'re above the 30% scoring cliff. ' : '');
+
+    return `${tone}${verb} <strong>${fmt$(next.need)}</strong> across these cards to drop below <strong>${next.pct}%</strong> and reach ${next.label}.`;
+  }
+
+  // ---------------- Wire up ----------------
+  document.getElementById('add-btn').addEventListener('click', () => addRow());
+  document.getElementById('clear-btn').addEventListener('click', () => {
+    rowsEl.innerHTML = '';
+    seed();
+    recompute();
+  });
+
+  function seed() {
+    addRow();
+    addRow();
+  }
+  seed();
+
+  // ---------------- GSAP enter animation ----------------
+  if (window.gsap) {
+    gsap.from('header.brand', { opacity: 0, y: -10, duration: 0.5, ease: 'power2.out' });
+    gsap.from('h1',           { opacity: 0, y: 14,  duration: 0.55, ease: 'power2.out', delay: 0.05 });
+    gsap.from('.sub',         { opacity: 0, y: 10,  duration: 0.5, ease: 'power2.out', delay: 0.12 });
+    gsap.from('.panel',       { opacity: 0, y: 22,  duration: 0.6, ease: 'power3.out', stagger: 0.12, delay: 0.18 });
+    gsap.from('footer',       { opacity: 0, y: 8,   duration: 0.5, ease: 'power2.out', delay: 0.55 });
+  }
+
+  // ---------------- three.js ambient particle backdrop ----------------
+  (function initBackdrop(){
+    if (!window.THREE) return;
+    const canvas = document.getElementById('bg-canvas');
+    let scene, camera, renderer, points, raf;
+    const NUM = 140;
+
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight, false);
+
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
+      camera.position.z = 14;
+
+      const geom = new THREE.BufferGeometry();
+      const positions = new Float32Array(NUM * 3);
+      const speeds = new Float32Array(NUM);
+      for (let i = 0; i < NUM; i++) {
+        positions[i*3]   = (Math.random() - 0.5) * 28;
+        positions[i*3+1] = (Math.random() - 0.5) * 18;
+        positions[i*3+2] = (Math.random() - 0.5) * 8;
+        speeds[i] = 0.002 + Math.random() * 0.006;
+      }
+      geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+      const mat = new THREE.PointsMaterial({
+        color: 0xd4af37,
+        size: 0.05,
+        transparent: true,
+        opacity: 0.55,
+        sizeAttenuation: true,
+        depthWrite: false
+      });
+
+      points = new THREE.Points(geom, mat);
+      scene.add(points);
+
+      function onResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight, false);
+      }
+      window.addEventListener('resize', onResize);
+
+      function animate() {
+        const arr = geom.attributes.position.array;
+        for (let i = 0; i < NUM; i++) {
+          arr[i*3+1] += speeds[i];
+          if (arr[i*3+1] > 9) arr[i*3+1] = -9;
+        }
+        geom.attributes.position.needsUpdate = true;
+        points.rotation.z += 0.0006;
+        renderer.render(scene, camera);
+        raf = requestAnimationFrame(animate);
+      }
+      animate();
+
+      // Pause when tab hidden — keep it light
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          if (raf) cancelAnimationFrame(raf);
+        } else {
+          animate();
+        }
+      });
+    } catch (e) {
+      // Silent fail — the page works without backdrop
+      canvas.style.display = 'none';
+    }
+  })();
+</script>
+</body>
+</html>

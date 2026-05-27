@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>P.I.E.S.&trade; Cashflow Calculator - L7S Cashflow Hero</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+<style>
+  :root{
+    --bg:#0a0a0f;
+    --bg-2:#12121a;
+    --surface:#171722;
+    --surface-2:#1f1f2d;
+    --border:#262636;
+    --gold:#d4af37;
+    --gold-soft:#b8962e;
+    --gold-glow:rgba(212,175,55,0.35);
+    --text:#f4f4f5;
+    --muted:#9b9ba8;
+    --green:#3ddc97;
+    --amber:#f0b429;
+    --red:#ef5b5b;
+    --p:#d4af37;
+    --i:#7c5cff;
+    --e:#ef5b5b;
+    --s:#3ddc97;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+    overflow-wrap:break-word;word-break:normal;hyphens:none;}
+  body{min-height:100vh;background:
+    radial-gradient(1200px 600px at 80% -10%,rgba(212,175,55,0.10),transparent 60%),
+    radial-gradient(900px 500px at -10% 110%,rgba(124,92,255,0.08),transparent 60%),
+    var(--bg);}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px;}
+  header.brand{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap;}
+  .brand-mark{display:flex;align-items:center;gap:12px;}
+  .brand-dot{width:34px;height:34px;border-radius:10px;
+    background:linear-gradient(135deg,var(--gold),var(--gold-soft));
+    box-shadow:0 6px 20px var(--gold-glow);display:grid;place-items:center;
+    font-weight:800;color:#1a1500;font-size:14px;letter-spacing:0.5px;}
+  .brand-name{font-weight:700;letter-spacing:0.4px;}
+  .brand-sub{color:var(--muted);font-size:12px;letter-spacing:1.2px;text-transform:uppercase;}
+  h1{font-size:clamp(26px,3.6vw,40px);line-height:1.1;margin:8px 0 6px;letter-spacing:-0.02em;}
+  h1 .gold{background:linear-gradient(135deg,#f5d97a 0%,var(--gold) 50%,var(--gold-soft) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;}
+  .lede{color:var(--muted);max-width:62ch;font-size:15px;line-height:1.55;}
+
+  .grid{display:grid;grid-template-columns:1fr;gap:20px;margin-top:24px;}
+  @media(min-width:900px){.grid{grid-template-columns:1.05fr 1fr;align-items:start;}}
+
+  .card{background:linear-gradient(180deg,var(--surface) 0%,var(--bg-2) 100%);
+    border:1px solid var(--border);border-radius:18px;padding:22px;
+    box-shadow:0 1px 0 rgba(255,255,255,0.04) inset,0 20px 50px rgba(0,0,0,0.35);}
+  .card h2{margin:0 0 4px;font-size:18px;letter-spacing:-0.01em;}
+  .card .h-sub{color:var(--muted);font-size:13px;margin-bottom:18px;}
+
+  .field{margin-bottom:18px;}
+  .field label{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+    font-size:13px;color:var(--muted);margin-bottom:8px;letter-spacing:0.2px;}
+  .field label .val{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums;}
+  .income-input{display:flex;align-items:center;background:var(--surface-2);
+    border:1px solid var(--border);border-radius:12px;padding:10px 14px;gap:10px;
+    transition:border-color .2s,box-shadow .2s;}
+  .income-input:focus-within{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-glow);}
+  .income-input span{color:var(--gold);font-weight:700;font-size:18px;}
+  .income-input input{background:transparent;border:0;outline:0;color:var(--text);
+    font-size:22px;font-weight:600;width:100%;font-variant-numeric:tabular-nums;
+    font-family:inherit;}
+  .income-input input::-webkit-outer-spin-button,
+  .income-input input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+
+  .slider-row{display:grid;grid-template-columns:1fr;gap:14px;}
+  .slider{appearance:none;-webkit-appearance:none;width:100%;height:6px;border-radius:999px;
+    background:linear-gradient(90deg,var(--gold) 0%,var(--gold) var(--pct,0%),var(--border) var(--pct,0%),var(--border) 100%);
+    outline:none;}
+  .slider::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:20px;height:20px;
+    border-radius:50%;background:var(--gold);border:3px solid #1a1500;cursor:grab;
+    box-shadow:0 0 0 4px rgba(212,175,55,0.15);transition:transform .15s;}
+  .slider::-webkit-slider-thumb:active{cursor:grabbing;transform:scale(1.1);}
+  .slider::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--gold);
+    border:3px solid #1a1500;cursor:grab;}
+  .slider.p{--c:var(--p)} .slider.s{--c:var(--s)} .slider.e{--c:var(--e)}
+  .slider.p{background:linear-gradient(90deg,var(--p) 0%,var(--p) var(--pct,0%),var(--border) var(--pct,0%),var(--border) 100%);}
+  .slider.s{background:linear-gradient(90deg,var(--s) 0%,var(--s) var(--pct,0%),var(--border) var(--pct,0%),var(--border) 100%);}
+  .slider.e{background:linear-gradient(90deg,var(--e) 0%,var(--e) var(--pct,0%),var(--border) var(--pct,0%),var(--border) 100%);}
+  .slider.p::-webkit-slider-thumb{background:var(--p);border-color:#3a2e00;}
+  .slider.s::-webkit-slider-thumb{background:var(--s);border-color:#003a23;}
+  .slider.e::-webkit-slider-thumb{background:var(--e);border-color:#3a0000;}
+
+  .sum-row{display:flex;justify-content:space-between;align-items:center;
+    padding:10px 14px;background:var(--surface-2);border:1px solid var(--border);
+    border-radius:10px;font-size:13px;color:var(--muted);margin-top:6px;}
+  .sum-row .sum-val{font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);}
+  .sum-row.warn{border-color:var(--red);color:var(--red);}
+  .sum-row.warn .sum-val{color:var(--red);}
+
+  /* Pie */
+  .pie-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;}
+  .pie{position:relative;width:min(78vw,300px);aspect-ratio:1/1;border-radius:50%;
+    background:conic-gradient(var(--p) 0% 0%, var(--s) 0% 0%, var(--e) 0% 0%);
+    box-shadow:0 30px 60px rgba(0,0,0,0.55),0 0 0 1px rgba(255,255,255,0.04);
+    transition:background .15s linear;}
+  .pie::after{content:"";position:absolute;inset:18%;border-radius:50%;
+    background:radial-gradient(circle at 30% 30%,var(--surface) 0%,var(--bg-2) 100%);
+    box-shadow:inset 0 0 30px rgba(0,0,0,0.5);}
+  .pie-center{position:absolute;inset:0;display:grid;place-items:center;z-index:2;text-align:center;}
+  .score-label{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+  .score-val{font-size:clamp(38px,7vw,52px);font-weight:800;line-height:1;
+    background:linear-gradient(135deg,#f5d97a,var(--gold) 60%,var(--gold-soft));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    font-variant-numeric:tabular-nums;margin-top:4px;}
+  .score-tier{font-size:12px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:4px;}
+
+  .legend{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%;}
+  .leg{display:flex;align-items:center;gap:10px;background:var(--surface-2);
+    border:1px solid var(--border);padding:10px 12px;border-radius:12px;}
+  .swatch{width:12px;height:12px;border-radius:4px;flex:none;}
+  .leg .name{font-size:12px;color:var(--muted);letter-spacing:0.6px;text-transform:uppercase;}
+  .leg .amt{font-weight:700;font-variant-numeric:tabular-nums;font-size:15px;}
+
+  /* Pillars */
+  .pillars{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px;}
+  @media(min-width:560px){.pillars{grid-template-columns:repeat(4,1fr);}}
+  .pillar{position:relative;background:var(--surface);border:1px solid var(--border);
+    border-radius:14px;padding:14px;overflow:hidden;}
+  .pillar::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--c,var(--gold));}
+  .pillar .glyph{font-size:11px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+  .pillar .letter{font-size:34px;font-weight:800;line-height:1;color:var(--c,var(--gold));
+    margin:2px 0 6px;letter-spacing:-0.04em;}
+  .pillar .amt{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .pillar .pct{font-size:12px;color:var(--muted);margin-top:2px;}
+  .badge{display:inline-block;margin-top:10px;padding:4px 9px;border-radius:999px;
+    font-size:10px;letter-spacing:1.2px;text-transform:uppercase;font-weight:700;
+    border:1px solid var(--border);background:var(--surface-2);color:var(--muted);}
+  .badge.strong{background:rgba(61,220,151,0.12);border-color:rgba(61,220,151,0.45);color:var(--green);}
+  .badge.lean{background:rgba(61,220,151,0.12);border-color:rgba(61,220,151,0.45);color:var(--green);}
+  .badge.ok{background:rgba(240,180,41,0.10);border-color:rgba(240,180,41,0.40);color:var(--amber);}
+  .badge.weak{background:rgba(239,91,91,0.10);border-color:rgba(239,91,91,0.40);color:var(--red);}
+
+  .reco{margin-top:18px;padding:14px 16px;border-radius:14px;
+    background:linear-gradient(135deg,rgba(212,175,55,0.10),rgba(124,92,255,0.06));
+    border:1px solid rgba(212,175,55,0.25);display:flex;gap:12px;align-items:flex-start;}
+  .reco .ico{width:28px;height:28px;border-radius:8px;background:var(--gold);color:#1a1500;
+    display:grid;place-items:center;font-weight:800;flex:none;}
+  .reco .body{font-size:14px;line-height:1.5;}
+  .reco .body strong{color:var(--gold);}
+
+  footer{margin-top:36px;text-align:center;color:var(--muted);font-size:12px;letter-spacing:1.4px;
+    text-transform:uppercase;}
+  footer .sep{color:var(--gold);margin:0 8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="brand">
+    <div class="brand-mark">
+      <div class="brand-dot">L7S</div>
+      <div>
+        <div class="brand-name">L7S Cashflow Hero</div>
+        <div class="brand-sub">Track 08 - P.I.E.S.&trade;</div>
+      </div>
+    </div>
+    <div class="brand-sub">v1.0</div>
+  </header>
+
+  <h1>The <span class="gold">P.I.E.S.&trade;</span> Cashflow Calculator</h1>
+  <p class="lede">Allocate every dollar with intention. Profit first, Income known, Expense lean, Savings strong. Adjust the sliders and watch your monthly cashflow rebalance in real time.</p>
+
+  <div class="grid">
+    <!-- INPUT CARD -->
+    <section class="card" aria-label="Inputs">
+      <h2>Your monthly cashflow</h2>
+      <div class="h-sub">Enter gross monthly income, then dial in your allocations. P + E + S must equal 100%.</div>
+
+      <div class="field">
+        <label for="income">Monthly income <span class="val" id="incomeLbl">$8,000</span></label>
+        <div class="income-input">
+          <span>$</span>
+          <input id="income" type="number" inputmode="decimal" min="0" step="100" value="8000" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="profit">P - Profit <span class="val"><span id="profitPct">10</span>%</span></label>
+        <input id="profit" class="slider p" type="range" min="0" max="100" step="1" value="10" />
+      </div>
+      <div class="field">
+        <label for="expense">E - Expense <span class="val"><span id="expensePct">75</span>%</span></label>
+        <input id="expense" class="slider e" type="range" min="0" max="100" step="1" value="75" />
+      </div>
+      <div class="field">
+        <label for="savings">S - Savings <span class="val"><span id="savingsPct">15</span>%</span></label>
+        <input id="savings" class="slider s" type="range" min="0" max="100" step="1" value="15" />
+      </div>
+
+      <div class="sum-row" id="sumRow">
+        <span>Allocation total</span>
+        <span class="sum-val"><span id="sumVal">100</span>%</span>
+      </div>
+
+      <div class="reco" id="reco">
+        <div class="ico">!</div>
+        <div class="body" id="recoBody">Solid baseline. Bump Profit to 10%+ to hit the Strong tier.</div>
+      </div>
+    </section>
+
+    <!-- OUTPUT CARD -->
+    <section class="card" aria-label="P.I.E.S. score">
+      <h2>P.I.E.S. score</h2>
+      <div class="h-sub">Weighted health of your allocation. Higher = stronger cashflow.</div>
+      <div class="pie-wrap">
+        <div class="pie" id="pie" role="img" aria-label="Allocation pie chart">
+          <div class="pie-center">
+            <div>
+              <div class="score-label">Score</div>
+              <div class="score-val" id="scoreVal">68</div>
+              <div class="score-tier" id="scoreTier">Solid</div>
+            </div>
+          </div>
+        </div>
+        <div class="legend">
+          <div class="leg"><div class="swatch" style="background:var(--p)"></div>
+            <div><div class="name">Profit</div><div class="amt" id="legP">$800</div></div></div>
+          <div class="leg"><div class="swatch" style="background:var(--e)"></div>
+            <div><div class="name">Expense</div><div class="amt" id="legE">$6,000</div></div></div>
+          <div class="leg"><div class="swatch" style="background:var(--s)"></div>
+            <div><div class="name">Savings</div><div class="amt" id="legS">$1,200</div></div></div>
+          <div class="leg"><div class="swatch" style="background:var(--i)"></div>
+            <div><div class="name">Income</div><div class="amt" id="legI">$8,000</div></div></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- PILLAR CARDS -->
+  <section class="pillars" aria-label="Pillar breakdown">
+    <div class="pillar" style="--c:var(--p)">
+      <div class="glyph">Pillar 1</div>
+      <div class="letter">P</div>
+      <div class="amt" id="pAmt">$800</div>
+      <div class="pct"><span id="pPct">10</span>% Profit</div>
+      <div class="badge" id="pBadge">OK</div>
+    </div>
+    <div class="pillar" style="--c:var(--i)">
+      <div class="glyph">Pillar 2</div>
+      <div class="letter">I</div>
+      <div class="amt" id="iAmt">$8,000</div>
+      <div class="pct">100% Income</div>
+      <div class="badge strong">Source</div>
+    </div>
+    <div class="pillar" style="--c:var(--e)">
+      <div class="glyph">Pillar 3</div>
+      <div class="letter">E</div>
+      <div class="amt" id="eAmt">$6,000</div>
+      <div class="pct"><span id="ePct">75</span>% Expense</div>
+      <div class="badge" id="eBadge">OK</div>
+    </div>
+    <div class="pillar" style="--c:var(--s)">
+      <div class="glyph">Pillar 4</div>
+      <div class="letter">S</div>
+      <div class="amt" id="sAmt">$1,200</div>
+      <div class="pct"><span id="sPct">15</span>% Savings</div>
+      <div class="badge" id="sBadge">Strong</div>
+    </div>
+  </section>
+
+  <footer>L7S Cashflow Hero <span class="sep">&middot;</span> P.I.E.S.&trade;</footer>
+</div>
+
+<script>
+(function(){
+  // --- State ---
+  var state = {
+    income: 8000,
+    profit: 10,
+    expense: 75,
+    savings: 15,
+    // animated mirror of allocation values (for GSAP-driven pie)
+    aProfit: 10,
+    aExpense: 75,
+    aSavings: 15,
+    aScore: 68
+  };
+
+  // --- DOM ---
+  var $ = function(id){ return document.getElementById(id); };
+  var incomeEl = $('income');
+  var profitEl = $('profit');
+  var expenseEl = $('expense');
+  var savingsEl = $('savings');
+  var pie = $('pie');
+  var lastChanged = 'profit'; // which slider user last moved
+
+  // --- Helpers ---
+  function fmt(n){
+    if(!isFinite(n)) n = 0;
+    return '$' + Math.round(n).toLocaleString('en-US');
+  }
+  function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+
+  // Rebalance: keep P+E+S = 100 by adjusting the other two proportionally.
+  function rebalance(changed){
+    var p = state.profit, e = state.expense, s = state.savings;
+    var sum = p + e + s;
+    if(sum === 100) return;
+
+    // Identify the two that did NOT change.
+    var others;
+    if(changed === 'profit') others = ['expense','savings'];
+    else if(changed === 'expense') others = ['profit','savings'];
+    else others = ['profit','expense'];
+
+    var changedVal = state[changed];
+    var remaining = 100 - changedVal;
+    if(remaining < 0){
+      // changed slider exceeds 100 alone — clamp others to 0.
+      state[others[0]] = 0;
+      state[others[1]] = 0;
+      state[changed] = 100;
+      return;
+    }
+    var oA = state[others[0]];
+    var oB = state[others[1]];
+    var oSum = oA + oB;
+    if(oSum <= 0){
+      // split remaining 50/50
+      state[others[0]] = Math.round(remaining/2);
+      state[others[1]] = remaining - state[others[0]];
+    } else {
+      var nA = Math.round((oA / oSum) * remaining);
+      var nB = remaining - nA;
+      state[others[0]] = clamp(nA,0,100);
+      state[others[1]] = clamp(nB,0,100);
+    }
+  }
+
+  // --- Score & badges ---
+  function score(){
+    // (Profit*2 + Savings*2 + (100-Expense)*1) / 5
+    return (state.profit*2 + state.savings*2 + (100-state.expense)) / 5;
+  }
+  function tier(sc){
+    if(sc >= 28) return 'Elite';
+    if(sc >= 22) return 'Strong';
+    if(sc >= 16) return 'Solid';
+    if(sc >= 10) return 'Building';
+    return 'Fragile';
+  }
+  function badgeFor(kind,val){
+    if(kind === 'profit'){
+      if(val >= 10) return {cls:'strong',txt:'Strong'};
+      if(val >= 5)  return {cls:'ok',txt:'OK'};
+      return {cls:'weak',txt:'Weak'};
+    }
+    if(kind === 'savings'){
+      if(val >= 15) return {cls:'strong',txt:'Strong'};
+      if(val >= 10) return {cls:'ok',txt:'OK'};
+      return {cls:'weak',txt:'Weak'};
+    }
+    if(kind === 'expense'){
+      if(val < 70) return {cls:'lean',txt:'Lean'};
+      if(val < 85) return {cls:'ok',txt:'OK'};
+      return {cls:'weak',txt:'Heavy'};
+    }
+    return {cls:'',txt:''};
+  }
+  function recommendation(){
+    var fixes = [];
+    if(state.profit < 10) fixes.push({k:'Profit',by:10-state.profit,to:'Strong'});
+    if(state.savings < 15) fixes.push({k:'Savings',by:15-state.savings,to:'Strong'});
+    if(state.expense >= 70) fixes.push({k:'Expense',by:state.expense-69,to:'Lean',cut:true});
+    if(fixes.length === 0){
+      return 'All three pillars are in the Strong tier. Lock this allocation in and automate the transfers.';
+    }
+    var f = fixes[0];
+    if(f.cut){
+      return 'Trim <strong>' + f.k + '</strong> by ' + Math.round(f.by) + '% to drop under the Lean threshold of 70%.';
+    }
+    return 'Bump <strong>' + f.k + '</strong> by ' + Math.round(f.by) + '% to reach the ' + f.to + ' tier.';
+  }
+
+  // --- Pie ---
+  function paintPie(){
+    var p = state.aProfit, s = state.aSavings, e = state.aExpense;
+    var pEnd = p;
+    var sEnd = p + s;
+    // Profit, Savings, Expense order around the dial.
+    pie.style.background =
+      'conic-gradient(' +
+      'var(--p) 0% ' + pEnd + '%, ' +
+      'var(--s) ' + pEnd + '% ' + sEnd + '%, ' +
+      'var(--e) ' + sEnd + '% 100%)';
+  }
+
+  // --- Render ---
+  function render(animate){
+    // sliders + labels
+    profitEl.value = state.profit;
+    expenseEl.value = state.expense;
+    savingsEl.value = state.savings;
+    profitEl.style.setProperty('--pct', state.profit + '%');
+    expenseEl.style.setProperty('--pct', state.expense + '%');
+    savingsEl.style.setProperty('--pct', state.savings + '%');
+    $('profitPct').textContent = state.profit;
+    $('expensePct').textContent = state.expense;
+    $('savingsPct').textContent = state.savings;
+    $('pPct').textContent = state.profit;
+    $('ePct').textContent = state.expense;
+    $('sPct').textContent = state.savings;
+    $('incomeLbl').textContent = fmt(state.income);
+
+    // dollar amounts
+    var pAmt = state.income * state.profit/100;
+    var eAmt = state.income * state.expense/100;
+    var sAmt = state.income * state.savings/100;
+    $('pAmt').textContent = fmt(pAmt);
+    $('eAmt').textContent = fmt(eAmt);
+    $('sAmt').textContent = fmt(sAmt);
+    $('iAmt').textContent = fmt(state.income);
+    $('legP').textContent = fmt(pAmt);
+    $('legE').textContent = fmt(eAmt);
+    $('legS').textContent = fmt(sAmt);
+    $('legI').textContent = fmt(state.income);
+
+    // badges
+    var pb = badgeFor('profit', state.profit);
+    var eb = badgeFor('expense', state.expense);
+    var sb = badgeFor('savings', state.savings);
+    $('pBadge').className = 'badge ' + pb.cls;
+    $('pBadge').textContent = pb.txt;
+    $('eBadge').className = 'badge ' + eb.cls;
+    $('eBadge').textContent = eb.txt;
+    $('sBadge').className = 'badge ' + sb.cls;
+    $('sBadge').textContent = sb.txt;
+
+    // sum row
+    var sum = state.profit + state.expense + state.savings;
+    $('sumVal').textContent = sum;
+    $('sumRow').className = 'sum-row' + (sum === 100 ? '' : ' warn');
+
+    // recommendation
+    $('recoBody').innerHTML = recommendation();
+
+    // pie + score animation
+    var newScore = score();
+    if(animate && window.gsap){
+      gsap.to(state, {
+        aProfit: state.profit,
+        aExpense: state.expense,
+        aSavings: state.savings,
+        aScore: newScore,
+        duration: 0.55,
+        ease: 'power3.out',
+        onUpdate: function(){
+          paintPie();
+          $('scoreVal').textContent = Math.round(state.aScore);
+          $('scoreTier').textContent = tier(state.aScore);
+        }
+      });
+    } else {
+      state.aProfit = state.profit;
+      state.aExpense = state.expense;
+      state.aSavings = state.savings;
+      state.aScore = newScore;
+      paintPie();
+      $('scoreVal').textContent = Math.round(newScore);
+      $('scoreTier').textContent = tier(newScore);
+    }
+  }
+
+  // --- Events ---
+  incomeEl.addEventListener('input', function(){
+    var v = parseFloat(incomeEl.value);
+    state.income = isFinite(v) && v >= 0 ? v : 0;
+    render(true);
+  });
+
+  function bindSlider(el, key){
+    el.addEventListener('input', function(){
+      state[key] = parseInt(el.value,10) || 0;
+      lastChanged = key;
+      rebalance(key);
+      render(true);
+    });
+  }
+  bindSlider(profitEl,'profit');
+  bindSlider(expenseEl,'expense');
+  bindSlider(savingsEl,'savings');
+
+  // Entry animation
+  function bootAnim(){
+    if(!window.gsap){ render(false); return; }
+    // start from zero allocations & score, animate up to defaults
+    var startProfit = state.profit, startExpense = state.expense,
+        startSavings = state.savings, startScore = score();
+    state.aProfit = 0; state.aExpense = 0; state.aSavings = 0; state.aScore = 0;
+    paintPie();
+    $('scoreVal').textContent = '0';
+    gsap.to(state, {
+      aProfit: startProfit,
+      aExpense: startExpense,
+      aSavings: startSavings,
+      aScore: startScore,
+      duration: 1.1,
+      ease: 'power3.out',
+      onUpdate: function(){
+        paintPie();
+        $('scoreVal').textContent = Math.round(state.aScore);
+        $('scoreTier').textContent = tier(state.aScore);
+      }
+    });
+    gsap.from('.card', {y:18, opacity:0, duration:0.6, stagger:0.08, ease:'power2.out'});
+    gsap.from('.pillar', {y:16, opacity:0, duration:0.5, stagger:0.06, ease:'power2.out', delay:0.2});
+  }
+
+  // Initial paint (no animation yet — GSAP may still be loading)
+  render(false);
+  // Wait for GSAP defer to attach
+  window.addEventListener('load', bootAnim);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>L7S Cashflow Hero - EFA / FNA Calculator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root {
+    --bg: #0a0a0f;
+    --bg-elev: #14141c;
+    --bg-elev-2: #1c1c26;
+    --gold: #d4af37;
+    --gold-dim: #8a7325;
+    --text: #ffffff;
+    --text-dim: #a0a0b0;
+    --border: #2a2a36;
+    --green: #4ade80;
+    --yellow: #facc15;
+    --red: #f87171;
+  }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overflow-wrap: break-word;
+    word-break: normal;
+    hyphens: none;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+
+  header.hero {
+    text-align: center;
+    padding: 28px 8px 18px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+  header.hero .eyebrow {
+    color: var(--gold);
+    letter-spacing: 0.3em;
+    font-size: 11px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  header.hero h1 {
+    margin: 0 0 6px;
+    font-weight: 700;
+    font-size: clamp(24px, 4vw, 36px);
+    letter-spacing: -0.02em;
+  }
+  header.hero p {
+    margin: 0;
+    color: var(--text-dim);
+    font-size: 14px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  @media (min-width: 900px) {
+    .grid { grid-template-columns: 1.05fr 1fr; }
+  }
+
+  .card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+  }
+  .card h2 {
+    margin: 0 0 14px;
+    font-size: 14px;
+    color: var(--gold);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .income-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-elev-2);
+    border: 1px solid var(--gold-dim);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 18px;
+  }
+  .income-row label {
+    flex: 1;
+    color: var(--gold);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    font-size: 13px;
+    text-transform: uppercase;
+  }
+  .income-row .input-wrap { flex: 0 0 auto; }
+
+  .category {
+    margin-bottom: 14px;
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .category-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    background: rgba(212, 175, 55, 0.06);
+    border-bottom: 1px solid var(--border);
+  }
+  .category-head .title {
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .category-head .total {
+    color: var(--gold);
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .category-body {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 12px 14px;
+  }
+  @media (min-width: 520px) {
+    .category-body { grid-template-columns: 1fr 1fr; }
+  }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .input-wrap .prefix {
+    position: absolute;
+    left: 10px;
+    color: var(--text-dim);
+    font-size: 13px;
+    pointer-events: none;
+  }
+  input[type="number"] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 10px 9px 22px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    font-variant-numeric: tabular-nums;
+    outline: none;
+    transition: border-color 0.15s;
+    -moz-appearance: textfield;
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"]:focus {
+    border-color: var(--gold);
+  }
+  .income-row input[type="number"] {
+    width: 160px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  /* RIGHT side: results */
+  .score-block {
+    text-align: center;
+    padding: 16px 8px 8px;
+  }
+  .score-num {
+    font-size: clamp(54px, 9vw, 84px);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    background: linear-gradient(180deg, #fff 0%, var(--gold) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-variant-numeric: tabular-nums;
+  }
+  .score-label {
+    color: var(--text-dim);
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+  .ratio-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 14px 4px 6px;
+    border-top: 1px dashed var(--border);
+    margin-top: 14px;
+  }
+  .ratio-row .lbl {
+    color: var(--text-dim);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+  }
+  .ratio-row .val {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--gold);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bars { margin-top: 10px; }
+  .bar-row {
+    display: grid;
+    grid-template-columns: 110px 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 12px;
+  }
+  .bar-row .name {
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+    font-size: 11px;
+  }
+  .bar-track {
+    position: relative;
+    height: 14px;
+    background: var(--bg-elev-2);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .bar-fill {
+    position: absolute;
+    inset: 0 100% 0 0;
+    background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+    border-radius: 8px;
+  }
+  .bar-bench {
+    position: absolute;
+    top: -2px;
+    bottom: -2px;
+    width: 2px;
+    background: var(--text);
+    opacity: 0.45;
+  }
+  .bar-meta {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .badge.good { background: rgba(74, 222, 128, 0.15); color: var(--green); border: 1px solid rgba(74, 222, 128, 0.4); }
+  .badge.warn { background: rgba(250, 204, 21, 0.15); color: var(--yellow); border: 1px solid rgba(250, 204, 21, 0.4); }
+  .badge.bad  { background: rgba(248, 113, 113, 0.15); color: var(--red);    border: 1px solid rgba(248, 113, 113, 0.4); }
+  .pct { color: var(--text-dim); font-size: 11px; min-width: 42px; text-align: right; }
+
+  .recommend {
+    margin-top: 18px;
+    padding: 14px 16px;
+    border: 1px solid var(--gold-dim);
+    background: rgba(212, 175, 55, 0.06);
+    border-radius: 10px;
+  }
+  .recommend .lbl {
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .recommend .msg {
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--text);
+  }
+  .recommend .msg strong { color: var(--gold); }
+
+  footer.foot {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 22px;
+    border-top: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 11px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+  }
+  footer.foot .dot { color: var(--gold); margin: 0 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">L7S Cashflow Hero</div>
+    <h1>EFA / FNA Calculator</h1>
+    <p>Expense Financial Analysis &middot; Financial Numerical Analysis</p>
+  </header>
+
+  <div class="grid">
+
+    <!-- LEFT: Inputs -->
+    <section class="card">
+      <h2>Inputs</h2>
+
+      <div class="income-row">
+        <label for="income">Monthly Income</label>
+        <div class="input-wrap">
+          <span class="prefix">$</span>
+          <input type="number" id="income" min="0" step="100" value="6000" />
+        </div>
+      </div>
+
+      <div id="categories"></div>
+    </section>
+
+    <!-- RIGHT: Outputs -->
+    <section class="card">
+      <h2>Numerical Health</h2>
+
+      <div class="score-block">
+        <div class="score-num" id="score">0</div>
+        <div class="score-label">Health Score / 100</div>
+      </div>
+
+      <div class="ratio-row">
+        <div class="lbl">Total Expense Ratio</div>
+        <div class="val" id="totalRatio">0%</div>
+      </div>
+      <div class="ratio-row" style="border-top: none; padding-top: 4px;">
+        <div class="lbl">Savings Rate</div>
+        <div class="val" id="savingsRate" style="color: var(--green);">0%</div>
+      </div>
+
+      <h2 style="margin-top: 22px;">Category Breakdown</h2>
+      <div class="bars" id="bars"></div>
+
+      <div class="recommend" id="recommend">
+        <div class="lbl">Top Recommendation</div>
+        <div class="msg" id="recommendMsg">Enter your numbers to see your biggest cut opportunity.</div>
+      </div>
+    </section>
+
+  </div>
+
+  <footer class="foot">
+    L7S Cashflow Hero <span class="dot">&middot;</span> EFA / FNA
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  // --- Schema ---
+  const CATEGORIES = [
+    {
+      key: 'housing',
+      name: 'Housing',
+      benchmark: 0.30,
+      fields: [
+        { id: 'h_rent', label: 'Rent / Mortgage' },
+        { id: 'h_util', label: 'Utilities' },
+        { id: 'h_ins',  label: 'Insurance' },
+        { id: 'h_maint', label: 'Maintenance' },
+      ],
+    },
+    {
+      key: 'transport',
+      name: 'Transportation',
+      benchmark: 0.15,
+      fields: [
+        { id: 't_pay',  label: 'Car Payment' },
+        { id: 't_fuel', label: 'Fuel' },
+        { id: 't_ins',  label: 'Insurance' },
+        { id: 't_rep',  label: 'Repairs' },
+        { id: 't_tran', label: 'Transit' },
+      ],
+    },
+    {
+      key: 'food',
+      name: 'Food',
+      benchmark: 0.15,
+      fields: [
+        { id: 'f_groc', label: 'Groceries' },
+        { id: 'f_din',  label: 'Dining Out' },
+      ],
+    },
+    {
+      key: 'healthcare',
+      name: 'Healthcare',
+      benchmark: 0.10,
+      fields: [
+        { id: 'hc_prem', label: 'Insurance Premium' },
+        { id: 'hc_copay', label: 'Copays' },
+        { id: 'hc_rx',   label: 'Prescriptions' },
+      ],
+    },
+    {
+      key: 'debt',
+      name: 'Debt Service',
+      benchmark: 0.15,
+      fields: [
+        { id: 'd_cc',   label: 'Credit Card Payments' },
+        { id: 'd_stud', label: 'Student Loans' },
+        { id: 'd_pers', label: 'Personal Loans' },
+      ],
+    },
+    {
+      key: 'lifestyle',
+      name: 'Lifestyle',
+      benchmark: 0.10,
+      fields: [
+        { id: 'l_ent',  label: 'Entertainment' },
+        { id: 'l_sub',  label: 'Subscriptions' },
+        { id: 'l_hob',  label: 'Hobbies' },
+      ],
+    },
+    {
+      key: 'other',
+      name: 'Other',
+      benchmark: 0.05,
+      fields: [
+        { id: 'o_child', label: 'Childcare' },
+        { id: 'o_pet',   label: 'Pets' },
+        { id: 'o_gift',  label: 'Gifts' },
+        { id: 'o_misc',  label: 'Misc' },
+      ],
+    },
+  ];
+
+  // --- Build input UI ---
+  const catsHost = document.getElementById('categories');
+  CATEGORIES.forEach(cat => {
+    const wrap = document.createElement('div');
+    wrap.className = 'category';
+    wrap.innerHTML = `
+      <div class="category-head">
+        <div class="title">${cat.name}</div>
+        <div class="total" id="total_${cat.key}">$0</div>
+      </div>
+      <div class="category-body">
+        ${cat.fields.map(f => `
+          <div class="field">
+            <label for="${f.id}">${f.label}</label>
+            <div class="input-wrap">
+              <span class="prefix">$</span>
+              <input type="number" id="${f.id}" min="0" step="10" value="0" />
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    catsHost.appendChild(wrap);
+  });
+
+  // --- Build bars UI ---
+  const barsHost = document.getElementById('bars');
+  CATEGORIES.forEach(cat => {
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = `
+      <div class="name">${cat.name}</div>
+      <div class="bar-track">
+        <div class="bar-fill" id="fill_${cat.key}"></div>
+        <div class="bar-bench" id="bench_${cat.key}" style="left: ${(cat.benchmark * 100).toFixed(0)}%;"></div>
+      </div>
+      <div class="bar-meta">
+        <span class="pct" id="pct_${cat.key}">0%</span>
+        <span class="badge good" id="badge_${cat.key}">OK</span>
+      </div>
+    `;
+    barsHost.appendChild(row);
+  });
+
+  // --- Helpers ---
+  const $ = id => document.getElementById(id);
+  const num = id => {
+    const v = parseFloat($(id).value);
+    return isFinite(v) && v > 0 ? v : 0;
+  };
+  const fmtMoney = n => '$' + Math.round(n).toLocaleString();
+  const fmtPct = n => (n * 100).toFixed(1) + '%';
+
+  // Track previous % to animate fills smoothly
+  const prevPct = {};
+
+  function tierFor(pct, benchmark) {
+    if (pct <= benchmark) return 'good';
+    if (pct <= benchmark * 1.25) return 'warn';
+    return 'bad';
+  }
+  function tierLabel(t) {
+    if (t === 'good') return 'OK';
+    if (t === 'warn') return 'WATCH';
+    return 'OVER';
+  }
+  function tierColor(t) {
+    if (t === 'good') return ['#8a7325', '#d4af37'];
+    if (t === 'warn') return ['#a87f0e', '#facc15'];
+    return ['#a13838', '#f87171'];
+  }
+
+  function recompute() {
+    const income = num('income');
+    const safeIncome = income > 0 ? income : 1; // avoid /0
+
+    let totalExpense = 0;
+    const catData = [];
+
+    CATEGORIES.forEach(cat => {
+      const sum = cat.fields.reduce((acc, f) => acc + num(f.id), 0);
+      totalExpense += sum;
+      const pct = sum / safeIncome;
+      catData.push({ cat, sum, pct, over: Math.max(0, sum - cat.benchmark * safeIncome) });
+      $('total_' + cat.key).textContent = fmtMoney(sum);
+    });
+
+    // Update bars
+    catData.forEach(d => {
+      const t = tierFor(d.pct, d.cat.benchmark);
+      const [c1, c2] = tierColor(t);
+      const fill = $('fill_' + d.cat.key);
+      const widthTarget = Math.min(100, d.pct * 100);
+      const fromW = prevPct[d.cat.key] != null ? Math.min(100, prevPct[d.cat.key] * 100) : 0;
+      prevPct[d.cat.key] = d.pct;
+
+      if (window.gsap) {
+        gsap.fromTo(fill,
+          { width: fromW + '%' },
+          { width: widthTarget + '%', duration: 0.6, ease: 'power2.out', overwrite: 'auto' }
+        );
+      } else {
+        fill.style.width = widthTarget + '%';
+      }
+      fill.style.background = `linear-gradient(90deg, ${c1}, ${c2})`;
+
+      $('pct_' + d.cat.key).textContent = fmtPct(d.pct);
+      const badge = $('badge_' + d.cat.key);
+      badge.className = 'badge ' + t;
+      badge.textContent = tierLabel(t);
+    });
+
+    // Totals
+    const totalRatio = totalExpense / safeIncome;
+    const savingsRate = Math.max(-1, 1 - totalRatio);
+
+    animateNumberText($('totalRatio'), totalRatio, v => fmtPct(v));
+    animateNumberText($('savingsRate'), savingsRate, v => fmtPct(v));
+    $('savingsRate').style.color = savingsRate >= 0.2 ? 'var(--green)'
+      : savingsRate >= 0.05 ? 'var(--yellow)'
+      : 'var(--red)';
+
+    // Score: 10 points per category within benchmark (7 cats = 70), up to 30 from savings rate.
+    const withinCount = catData.filter(d => d.pct <= d.cat.benchmark).length;
+    const categoryScore = withinCount * 10; // out of 70
+    const savingsScore = Math.max(0, Math.min(30, savingsRate * 100)); // 30 pts at 30%+ savings
+    const score = Math.round(Math.min(100, categoryScore + savingsScore));
+    animateNumberText($('score'), score, v => Math.round(v).toString());
+
+    // Recommendation: biggest dollar overage
+    const overs = catData.filter(d => d.over > 0).sort((a, b) => b.over - a.over);
+    const msgEl = $('recommendMsg');
+    if (income <= 0) {
+      msgEl.innerHTML = 'Enter your monthly income to see your biggest cut opportunity.';
+    } else if (totalExpense === 0) {
+      msgEl.innerHTML = 'Enter your expense numbers to see your biggest cut opportunity.';
+    } else if (overs.length === 0) {
+      msgEl.innerHTML = `Every category is within benchmark. Lock in savings of <strong>${fmtMoney(income - totalExpense)}</strong>/mo.`;
+    } else {
+      const top = overs[0];
+      msgEl.innerHTML = `Biggest cut opportunity: <strong>${top.cat.name}</strong> &mdash; reduce by <strong>${fmtMoney(top.over)}</strong> to hit the ${Math.round(top.cat.benchmark * 100)}% benchmark.`;
+    }
+  }
+
+  // Tween numeric textContent values
+  const numState = new WeakMap();
+  function animateNumberText(el, toVal, formatter) {
+    const fromVal = numState.get(el) || 0;
+    numState.set(el, toVal);
+    if (window.gsap) {
+      const obj = { v: fromVal };
+      gsap.to(obj, {
+        v: toVal,
+        duration: 0.5,
+        ease: 'power2.out',
+        onUpdate: () => { el.textContent = formatter(obj.v); },
+        overwrite: 'auto',
+      });
+    } else {
+      el.textContent = formatter(toVal);
+    }
+  }
+
+  // Wire up listeners
+  document.querySelectorAll('input[type="number"]').forEach(inp => {
+    inp.addEventListener('input', recompute);
+    inp.addEventListener('focus', () => { if (inp.value === '0') inp.value = ''; });
+    inp.addEventListener('blur',  () => { if (inp.value === '')  inp.value = '0'; });
+  });
+
+  // Initial entrance animation
+  if (window.gsap) {
+    gsap.from('.hero', { opacity: 0, y: -8, duration: 0.5, ease: 'power2.out' });
+    gsap.from('.card', { opacity: 0, y: 14, duration: 0.6, stagger: 0.08, ease: 'power2.out' });
+  }
+
+  recompute();
+})();
+</script>
+</body>
+</html>
