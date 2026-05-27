@@ -10,15 +10,30 @@
 <meta name="description" content="Live visibility into every goal swarm. Who's working, what's happening, in real time.">
 <style>
 :root{
-  /* VEI canon (deep green / phosphor / cream) — terminal-organism aesthetic.
-     'gold' var name kept as alias for phosphor-green accent so structural CSS
-     below doesn't need a rewrite. */
-  --bg:#0A1F12;--ink:#F0EAD6;--mute:#6B8B72;
-  --gold:#0BA660;--gold-soft:#3FCB85;
+  /* VEI canon v2 (2026-05-27 14:08 PT) — hyperrealistic 3D, deeper contrast,
+     blurred glassmorphism, touch-responsive. Per qi:
+     'more 3d hyperrealistic and more contrast / darker blurred background
+     touch responsive'. */
+  --bg:#050C08;--bg-deep:#020604;--bg-glow:rgba(11,166,96,.06);
+  --ink:#FFFFFF;--ink-soft:#F0EAD6;--mute:#6B8B72;
+  --gold:#0BA660;--gold-soft:#3FCB85;--gold-glow:rgba(11,166,96,.55);
   --line:rgba(176, 255, 200, .14);
-  --card:rgba(20, 60, 35, .25);--card-hi:rgba(20, 60, 35, .42);
+  --line-glow:rgba(63,203,133,.35);
+  --card:rgba(8, 24, 14, .55);--card-hi:rgba(11, 36, 22, .75);
+  --shadow-3d:0 8px 32px -8px rgba(0,0,0,.6), 0 2px 0 rgba(255,255,255,.04) inset;
+  --shadow-3d-hi:0 16px 48px -12px rgba(0,0,0,.7), 0 0 0 1px var(--line-glow) inset, 0 2px 0 rgba(255,255,255,.06) inset;
   --green:#0BA660;--yellow:#F5C842;--red:#FF6B5A;--blue:#7AC8FF;--violet:#c995ff;
 }
+body::before{
+  content:"";position:fixed;inset:-20vmax;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 30%, var(--bg-glow), transparent 70%),
+    radial-gradient(ellipse 70% 60% at 80% 80%, rgba(63,203,133,.04), transparent 70%),
+    var(--bg-deep);
+  filter:blur(20px) saturate(1.2);
+}
+body{position:relative}
+main{position:relative;z-index:1}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:var(--bg);color:var(--ink);font-family:'Inter','SF Pro Text',-apple-system,system-ui,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden}
 /* Mobile-first base — per canon 2026-05-27 14:05 PT 'always optimize for mobile 1st'. */
@@ -36,7 +51,8 @@ h1{font-size:clamp(40px,7vw,72px);font-weight:800;letter-spacing:-.03em;line-hei
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
 
 .totals{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:32px}
-.totals .t{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;text-align:center}
+.totals .t{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;text-align:center;backdrop-filter:blur(14px) saturate(1.1);-webkit-backdrop-filter:blur(14px) saturate(1.1);box-shadow:var(--shadow-3d);transition:transform .18s ease,box-shadow .25s ease}
+.totals .t:hover{box-shadow:var(--shadow-3d-hi);transform:translateY(-1px)}
 .totals .t .n{font-size:32px;font-weight:800;letter-spacing:-.02em;color:var(--gold)}
 .totals .t .l{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);font-weight:600;margin-top:4px}
 
@@ -47,7 +63,9 @@ section{margin-bottom:40px}
 
 .grid{display:grid;grid-template-columns:1fr;gap:12px}
 @media(min-width:640px){.grid{grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}}
-.agent{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;min-height:120px;position:relative;overflow:hidden}
+.agent{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;min-height:120px;position:relative;overflow:hidden;backdrop-filter:blur(18px) saturate(1.15);-webkit-backdrop-filter:blur(18px) saturate(1.15);box-shadow:var(--shadow-3d);transition:transform .18s cubic-bezier(.2,.7,.2,1),box-shadow .25s ease,background .25s ease}
+.agent:hover{background:var(--card-hi);box-shadow:var(--shadow-3d-hi);transform:translateY(-2px)}
+.agent:active{transform:scale(.985);transition:transform .08s ease}
 .agent.persona-xen{border-color:var(--gold)}
 .agent.persona-lyn{border-color:var(--violet)}
 .agent.persona-eli{border-color:var(--blue)}
