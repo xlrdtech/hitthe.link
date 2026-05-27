@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0A1F12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Asana Progress — hitthe.link</title>
 <meta name="description" content="Live Asana task + project progress for L7S, SEL, XLRD work. Inline-HTML single-file dashboard, polled live.">
 <style>
@@ -16,8 +19,10 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden}
-main{max-width:1200px;margin:0 auto;padding:48px 24px 96px}
-header{text-align:center;margin-bottom:48px}
+/* Mobile-first base — per canon 2026-05-27 14:05 PT. */
+main{max-width:100%;margin:0 auto;padding:24px 16px max(48px,env(safe-area-inset-bottom))}
+header{text-align:center;margin-bottom:32px}
+@media(min-width:640px){main{max-width:1200px;padding:48px 24px 96px}header{margin-bottom:48px}}
 .brand{font-size:14px;letter-spacing:.4em;color:var(--gold);text-transform:uppercase;font-weight:600;margin-bottom:16px}
 h1{font-size:clamp(40px,7vw,72px);font-weight:800;letter-spacing:-.03em;line-height:1.05;background:linear-gradient(135deg,var(--ink) 0%,var(--gold-soft) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:18px}
 .sub{color:var(--mute);font-size:18px;max-width:640px;margin:0 auto}
@@ -31,7 +36,8 @@ section{margin-bottom:48px}
 .section-title{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:20px;padding-left:4px}
 .section-title h2{font-size:22px;font-weight:700;letter-spacing:-.01em}
 .section-title .meta{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:600}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.grid{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:640px){.grid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}}
 .task{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;min-height:140px}
 .task:hover{background:var(--card-hi);border-color:var(--gold)}
 .task-meta{font-size:11px;letter-spacing:.15em;color:var(--gold);text-transform:uppercase;font-weight:600;margin-bottom:8px}
@@ -58,7 +64,6 @@ footer a{color:var(--gold);text-decoration:none}
 .totals .t{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;text-align:center}
 .totals .t .n{font-size:32px;font-weight:800;letter-spacing:-.02em;color:var(--gold)}
 .totals .t .l{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);font-weight:600;margin-top:4px}
-@media(max-width:560px){main{padding:32px 16px 64px}h1{font-size:42px}.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
