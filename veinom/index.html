@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>VEINOM · ARE · RUACH</title>
+  <title>VEINOM · RUACH</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -262,7 +262,7 @@
     <header>
       <div class="brand">
         <div class="brand-text">
-          <span class="title">VEINOM · ARE<span class="heb">רוּחַ</span></span>
+          <span class="title">VEINOM<span class="heb">רוּחַ</span></span>
           <span class="subtitle">VOICE INJECT LOOP · TUI BRIDGE</span>
         </div>
       </div>
@@ -380,9 +380,39 @@
         }
       });
     }
+    /* Premium female voice picker · prefers Aria/Jenny/Ava neural > Samantha > anything female */
+    let cachedVoice = null;
+    const PREMIUM_FEMALE = [
+      /Microsoft Aria Online \(Natural\)/i,
+      /Microsoft Jenny Online \(Natural\)/i,
+      /Microsoft Ava Online \(Natural\)/i,
+      /Microsoft Emma Online \(Natural\)/i,
+      /Google US English/i,
+      /Samantha/i,
+      /Microsoft Aria/i, /Microsoft Jenny/i, /Microsoft Zira/i, /Microsoft Eva/i,
+      /female.*en[_-]US/i, /en[_-]US/i
+    ];
+    function pickVoice() {
+      if (cachedVoice) return cachedVoice;
+      const all = window.speechSynthesis.getVoices();
+      if (!all.length) return null;
+      for (const p of PREMIUM_FEMALE) {
+        const m = all.find(v => p.test(v.name) || p.test(v.voiceURI));
+        if (m) { cachedVoice = m; return m; }
+      }
+      cachedVoice = all[0]; return cachedVoice;
+    }
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.addEventListener('voiceschanged', () => { cachedVoice = null; pickVoice(); });
+      setTimeout(pickVoice, 100);
+    }
+
     function nativeSpeak(text, done) {
       if (!('speechSynthesis' in window)) { done(); return; }
       const u = new SpeechSynthesisUtterance(text);
+      const v = pickVoice();
+      if (v) u.voice = v;
+      u.rate = 1.05; u.pitch = 1.05;
       u.onend = done;
       u.onerror = done;
       window.speechSynthesis.cancel();
