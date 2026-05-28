@@ -326,6 +326,21 @@
       chat.scrollTop = chat.scrollHeight;
     }
 
+    /* Inject-queue ack · small mono badge, not a bubble · never spoken */
+    function addAck(payload) {
+      const chat = $('transcript');
+      const div = document.createElement('div');
+      div.style.cssText =
+        'align-self:flex-end;padding:6px 12px;border-radius:9999px;' +
+        'background:rgba(0,255,136,.10);border:1px solid rgba(0,255,136,.28);' +
+        'color:var(--accent);font-family:var(--mono);font-size:10.5px;' +
+        'letter-spacing:.16em;text-transform:uppercase;' +
+        'animation:fadeIn .22s cubic-bezier(.32,.72,.2,1);';
+      div.innerHTML = `✓ INJECTED · ${payload.chars || 0} chars · ${ts()}`;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
     /* Patch #1 · echo loop · pause SR while TTS speaks, resume on end */
     function speak(text) {
       if (!text) return Promise.resolve();
@@ -393,14 +408,33 @@
       try {
         const res = await fetch(url, { mode: 'cors' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const responseText = (await res.text()).trim();
-        if (!responseText) throw new Error('empty response');
-        addMessage('VEINOM', responseText);
-        await speak(responseText);
+        const raw = (await res.text()).trim();
+        if (!raw) throw new Error('empty response');
+
+        /* Parse · tui.xlrd.org returns {ok:true, via:'inject-queue', chars:N} ack */
+        let payload = null;
+        try { payload = JSON.parse(raw); } catch(_) { /* not JSON · treat as text */ }
+
+        if (payload && payload.via === 'inject-queue') {
+          if (payload.ok) {
+            addAck(payload);
+            status(isListening ? 'listening · injected' : 'injected', 'live');
+            setTimeout(() => status(isListening ? 'listening' : 'idle', isListening ? 'live' : ''), 1500);
+          } else {
+            addMessage('VEINOM', `Inject rejected · ${payload.error || 'unknown error'}`);
+            status('rejected', 'err');
+          }
+          return; // never speak the ack
+        }
+
+        /* Non-ack response · treat as conversational reply (current TUI is one-way · this branch
+           is here for when a /tui/reply stream is wired up later) */
+        addMessage('VEINOM', raw);
+        await speak(raw);
       } catch (e) {
         console.error('TUI fetch error:', e);
         const msg = /CORS|Failed to fetch|NetworkError/i.test(String(e))
-          ? 'Bridge offline · CORS blocked. tui.xlrd.org must return Access-Control-Allow-Origin.'
+          ? 'Bridge offline · check network. tui.xlrd.org CORS is open but the fetch failed.'
           : `Connection error · ${e.message || e}`;
         addMessage('VEINOM', msg);
         status('err', 'err');
