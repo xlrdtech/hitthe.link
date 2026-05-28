@@ -346,82 +346,107 @@
       chat.scrollTop = chat.scrollHeight;
     }
 
-    /* Patch #1 · echo loop · pause SR while TTS speaks, resume on end */
+    /* ── Ava-direct TTS · localhost:7723 primary → ava.xlrd.org fallback → silence.
+       Ava-only per canon · NO native SpeechSynthesis fallback. ── */
+    let currentAudio = null;
+    const AVA_LOCAL_URL = 'http://localhost:7723/';
+    const AVA_RELAY_URL = 'https://ava.xlrd.org/';
+    const AVA_VOICE = 'en-US-AvaMultilingualNeural';
+
+    async function avaSynthesize(text) {
+      const qs = `?text=${encodeURIComponent(text)}&voice=${AVA_VOICE}`;
+      for (const base of [AVA_LOCAL_URL, AVA_RELAY_URL]) {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 12000);
+        try {
+          const res = await fetch(base + qs, { signal: ctrl.signal });
+          if (!res.ok) { clearTimeout(t); continue; }
+          const blob = await res.blob();
+          clearTimeout(t);
+          if (blob.size < 200) continue;
+          return URL.createObjectURL(blob);
+        } catch (e) { clearTimeout(t); continue; }
+      }
+      throw new Error('all Ava endpoints unreachable');
+    }
+
+    /* speak · pause SR + barge-watcher armed while Ava plays, resume on end */
     function speak(text) {
-      if (!text) return Promise.resolve();
-      return new Promise(resolve => {
+      return new Promise(async resolve => {
+        if (!text) { resolve(); return; }
+        if (text.length > 1500) text = text.slice(0, 1500) + '…';
+        isSpeaking = true;
+        $('micIcon').classList.add('speaking');
+        $('listenBtn').classList.add('speaking');
+        status('VEINOM speaking · Ava', 'speaking');
+        if (recognition) { try { recognition.stop(); } catch(e){} }
+
         const done = () => {
           isSpeaking = false;
           $('micIcon').classList.remove('speaking');
           $('listenBtn').classList.remove('speaking');
           status(isListening ? 'listening' : 'idle', isListening ? 'live' : '');
-          // Resume SR only after TTS finishes
-          if (isListening && recognition) {
-            try { recognition.start(); } catch (e) { /* already started */ }
-          }
+          if (isListening && recognition) { try { recognition.start(); } catch (e) {} }
           resolve();
         };
 
-        isSpeaking = true;
-        $('micIcon').classList.add('speaking');
-        $('listenBtn').classList.add('speaking');
-        status('VEINOM speaking', 'speaking');
-
-        // Pause SR before TTS so we don't hear our own voice
-        if (recognition) { try { recognition.stop(); } catch(e){} }
-
-        /* Patch #2 · TTS fallback chain · Kokoro → native SpeechSynthesis */
-        if (window.TTS && typeof window.TTS.speak === 'function') {
-          try {
-            window.TTS.speak(text, { voice: 'kokoro', onend: done });
-            // Safety net if onend isn't supported by tts.rocks
-            setTimeout(done, Math.max(2000, text.length * 80));
-          } catch (e) {
-            console.warn('TTS.rocks failed, falling back:', e);
-            nativeSpeak(text, done);
-          }
-        } else {
-          nativeSpeak(text, done);
+        try {
+          const url = await avaSynthesize(text);
+          if (currentAudio) { try { currentAudio.pause(); } catch(_){} }
+          currentAudio = new Audio(url);
+          currentAudio.volume = 1.0;
+          const fin = () => { if (url) URL.revokeObjectURL(url); currentAudio = null; done(); };
+          currentAudio.onended = fin;
+          currentAudio.onerror = fin;
+          await currentAudio.play().catch(fin);
+        } catch (e) {
+          console.warn('[VEINOM] Ava unreachable:', e.message);
+          status('ava offline · silence', 'err');
+          done();
         }
       });
     }
-    /* Premium female voice picker · prefers Aria/Jenny/Ava neural > Samantha > anything female */
-    let cachedVoice = null;
-    const PREMIUM_FEMALE = [
-      /Microsoft Aria Online \(Natural\)/i,
-      /Microsoft Jenny Online \(Natural\)/i,
-      /Microsoft Ava Online \(Natural\)/i,
-      /Microsoft Emma Online \(Natural\)/i,
-      /Google US English/i,
-      /Samantha/i,
-      /Microsoft Aria/i, /Microsoft Jenny/i, /Microsoft Zira/i, /Microsoft Eva/i,
-      /female.*en[_-]US/i, /en[_-]US/i
-    ];
-    function pickVoice() {
-      if (cachedVoice) return cachedVoice;
-      const all = window.speechSynthesis.getVoices();
-      if (!all.length) return null;
-      for (const p of PREMIUM_FEMALE) {
-        const m = all.find(v => p.test(v.name) || p.test(v.voiceURI));
-        if (m) { cachedVoice = m; return m; }
-      }
-      cachedVoice = all[0]; return cachedVoice;
-    }
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.addEventListener('voiceschanged', () => { cachedVoice = null; pickVoice(); });
-      setTimeout(pickVoice, 100);
+
+    /* Barge-in cancel · stop Ava mid-utterance */
+    function cancelSpeak() {
+      if (currentAudio) { try { currentAudio.pause(); currentAudio.currentTime = 0; } catch(_){} }
+      isSpeaking = false;
+      $('micIcon').classList.remove('speaking');
+      $('listenBtn').classList.remove('speaking');
     }
 
-    function nativeSpeak(text, done) {
-      if (!('speechSynthesis' in window)) { done(); return; }
-      const u = new SpeechSynthesisUtterance(text);
-      const v = pickVoice();
-      if (v) u.voice = v;
-      u.rate = 1.05; u.pitch = 1.05;
-      u.onend = done;
-      u.onerror = done;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(u);
+    /* ── VAD barge-in · WebAudio amplitude watcher · independent mic stream ── */
+    let bargeStream = null, bargeCtx = null, bargeAnalyser = null, bargeRAF = null;
+    const BARGE_THRESHOLD = 28;
+    async function startBargeWatcher() {
+      if (bargeAnalyser) return;
+      try {
+        bargeStream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+        });
+        bargeCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const src = bargeCtx.createMediaStreamSource(bargeStream);
+        bargeAnalyser = bargeCtx.createAnalyser();
+        bargeAnalyser.fftSize = 256;
+        bargeAnalyser.smoothingTimeConstant = 0.4;
+        src.connect(bargeAnalyser);
+        tickBarge();
+      } catch (e) { console.warn('[VEINOM] barge watcher unavailable:', e.message); }
+    }
+    function tickBarge() {
+      if (!bargeAnalyser) return;
+      const buf = new Uint8Array(bargeAnalyser.frequencyBinCount);
+      bargeAnalyser.getByteFrequencyData(buf);
+      const start = Math.floor(buf.length * 0.12);
+      let sum = 0;
+      for (let i = start; i < buf.length; i++) sum += buf[i] * buf[i];
+      const rms = Math.sqrt(sum / (buf.length - start));
+      if (isSpeaking && rms > BARGE_THRESHOLD) {
+        cancelSpeak();
+        status('barge-in · interrupted Ava', 'live');
+        if (isListening && recognition) { try { recognition.start(); } catch(_){} }
+      }
+      bargeRAF = requestAnimationFrame(tickBarge);
     }
 
     /* Patch · debounce · don't double-send if SR fires twice rapidly */
@@ -493,23 +518,36 @@
       recognition.maxAlternatives = 1;
 
       let finalAccumulator = '';
+      let silenceTimer = null;
+      const SILENCE_MS = 1500;  /* accumulate across breath pauses · ship after true silence */
+
+      function flushFinal() {
+        silenceTimer = null;
+        if (!finalAccumulator.trim()) return;
+        const t = finalAccumulator.trim();
+        finalAccumulator = '';
+        sendToTUI(t);
+      }
 
       recognition.onresult = (event) => {
-        let finals = '';
+        let finals = '', interim = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const r = event.results[i];
-          if (r.isFinal) finals += r[0].transcript;
+          if (r.isFinal) finals += r[0].transcript + ' ';
+          else interim += r[0].transcript;
+        }
+        /* Barge-in via transcript · cancel Ava the instant speech is detected */
+        if (isSpeaking && (finals.trim() || interim.trim())) {
+          cancelSpeak();
+          status('barge-in · interrupted Ava', 'live');
         }
         if (finals.trim()) {
-          finalAccumulator = finals.trim();
+          finalAccumulator = (finalAccumulator + ' ' + finals).replace(/\s+/g, ' ').trim();
+          status('capturing · ' + finalAccumulator.slice(-60), 'live');
+          if (silenceTimer) clearTimeout(silenceTimer);
+          silenceTimer = setTimeout(flushFinal, SILENCE_MS);
         }
-      };
-
-      recognition.onspeechend = () => {
-        if (finalAccumulator) {
-          const t = finalAccumulator; finalAccumulator = '';
-          sendToTUI(t);
-        }
+        if (interim) status('hearing · ' + interim.slice(-50), 'live');
       };
 
       recognition.onend = () => {
@@ -565,6 +603,9 @@
             try { recognition.stop(); } catch(_){}
           }
         }, STALL_MS);
+
+        /* Arm the VAD barge-in watcher once · independent mic stream */
+        startBargeWatcher();
 
         return true;
       } catch (e) {
