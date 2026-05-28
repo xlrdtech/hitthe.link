@@ -255,13 +255,13 @@
   </style>
 </head>
 <body>
-  <!-- Palindrome video background · plays forward then reverse seamlessly -->
+  <!-- Palindrome video background · z-index 0 above gradient layers, below content (wrap is z-index 2) -->
   <video id="bgVideo" autoplay muted loop playsinline preload="auto" poster="assets/bg-poster.jpg"
-         style="position:fixed;inset:0;width:100vw;height:100vh;object-fit:cover;z-index:-3;opacity:.55;filter:saturate(1.15) brightness(.85);">
+         style="position:fixed;inset:0;width:100vw;height:100vh;object-fit:cover;z-index:0;opacity:.92;filter:saturate(1.25) brightness(.78);">
     <source src="assets/bg-loop.mp4" type="video/mp4">
   </video>
-  <div class="bg-glow-layer"></div>
-  <div class="bg-overlay"></div>
+  <!-- Thin glass overlay for legibility · forest-tint without blurring the video -->
+  <div style="position:fixed;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(10,31,18,.35) 0%,rgba(10,31,18,.55) 50%,rgba(6,23,13,.80) 100%);"></div>
 
   <div class="wrap">
     <header>
