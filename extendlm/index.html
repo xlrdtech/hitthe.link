@@ -400,6 +400,34 @@
       gap: 0.5rem;
     }
 
+    /* Tab Selector inside Cards */
+    .conn-tabs {
+      display: flex;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 0.15rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .conn-tab-btn {
+      flex: 1;
+      padding: 0.4rem 0.25rem;
+      font-size: 0.75rem;
+      font-family: var(--font-outfit);
+      font-weight: 600;
+      color: var(--text-muted);
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      border-radius: 0.35rem;
+      text-align: center;
+    }
+
+    .conn-tab-btn.active {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+    }
+
     /* File Drop Zone */
     .dropzone {
       border: 2px dashed rgba(255, 255, 255, 0.15);
@@ -1014,7 +1042,7 @@
       <div>
         <h1>ExtendLM Optimizer</h1>
       </div>
-      <div class="ext-status" id="extStatus">
+      <div class="ext-status" id="extStatus" style="cursor: pointer;" onclick="openInstructions()" title="Click to view connection instructions">
         <span class="status-dot"></span>
         <span class="status-text" id="extStatusText">Extension Offline</span>
       </div>
@@ -1060,12 +1088,35 @@
         </div>
         <div class="alert-text">
           <h3>Welcome to ExtendLM Scope-Merger</h3>
-          <p>Optimize your Google NotebookLM slots by merging notebooks with fewer than 100 sources. Connect directly to the extension or upload your database backup to build an optimized file.</p>
+          <p>Optimize your Google NotebookLM slots by merging notebooks with fewer than 100 sources. Choose a database connection method below to start planning.</p>
         </div>
       </div>
       <button class="alert-btn" onclick="openInstructions()">
         Instructions Guide
       </button>
+    </div>
+
+    <!-- Demo / Offline Status Warning Banner -->
+    <div class="alert-banner" id="demoBanner" style="background: linear-gradient(90deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%); border: 1px solid rgba(245, 158, 11, 0.3); margin-top: -0.75rem; margin-bottom: -0.75rem;">
+      <div class="alert-content">
+        <div class="alert-icon" style="color: var(--warning); background: rgba(245, 158, 11, 0.2);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div class="alert-text">
+          <h3 id="demoBannerTitle" style="color: var(--warning);">Offline / Not Synced (Showing Demo Data)</h3>
+          <p id="demoBannerDesc">The app is not connected to your live Google account. Log in to NotebookLM first or load your backup JSON file to see your real notebooks.</p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 0.5rem;">
+        <a href="https://notebooklm.google.com" target="_blank" class="alert-btn" style="text-decoration: none; background: var(--primary); border-color: var(--primary); color: #ffffff; font-weight: 600;">
+          Log In to NotebookLM
+        </a>
+        <button class="alert-btn" onclick="switchConnMode('file')">
+          Upload Backup JSON
+        </button>
+      </div>
     </div>
 
     <!-- Dashboard Analytics Widgets -->
@@ -1126,52 +1177,108 @@
     <!-- Main Workspace Layout -->
     <div class="workspace-layout">
       
-      <!-- Left sidebar: Controls and Upload -->
+      <!-- Left sidebar: Controls and Connections -->
       <aside class="control-panel">
         
-        <!-- Live Connection Card -->
-        <div class="panel-card" style="border-color: rgba(6, 182, 212, 0.35);">
+        <!-- Connection Center Card -->
+        <div class="panel-card" style="border-color: rgba(59, 130, 246, 0.25);">
           <h2>
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v1"/><path d="M18 8h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-4"/><circle cx="8" cy="12" r="2"/>
             </svg>
-            Live Extension Connection
-          </h2>
-          <p style="font-size: 0.8rem; color: var(--text-muted);">
-            If you are logged into ExtendLM, retrieve your active database immediately with one click.
-          </p>
-          <button class="btn btn-success" onclick="syncFromExtension()" id="btnExtSync">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-            </svg>
-            Auto-Sync database
-          </button>
-        </div>
-
-        <!-- Upload Card -->
-        <div class="panel-card">
-          <h2>
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-            Or Upload Manually
+            Connection Center
           </h2>
           
-          <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="12" y1="18" x2="12" y2="12"/>
-              <polyline points="9 15 12 12 15 15"/>
-            </svg>
-            <p>Drag & drop backup JSON file or</p>
-            <span>Browse files</span>
-            <input type="file" id="fileInput" style="display: none;" accept=".json" onchange="handleFileSelect(this)">
+          <div class="conn-tabs">
+            <button class="conn-tab-btn active" id="btnModeExt" onclick="switchConnMode('extension')">Extension</button>
+            <button class="conn-tab-btn" id="btnModeAgent" onclick="switchConnMode('agent')">Local Agent</button>
+            <button class="conn-tab-btn" id="btnModeCloud" onclick="switchConnMode('cloud')">Beside Cloud</button>
+            <button class="conn-tab-btn" id="btnModeFile" onclick="switchConnMode('file')">Backup File</button>
           </div>
 
-          <div style="display: flex; gap: 0.5rem;">
-            <button class="btn btn-secondary" onclick="loadDemoData()" style="flex: 1; padding: 0.5rem;">Use Demo</button>
-            <button class="btn btn-secondary" id="clearBtn" onclick="clearData()" style="flex: 1; padding: 0.5rem;" disabled>Reset</button>
+          <!-- CONNECTION MODE: EXTENSION -->
+          <div id="connView-extension" style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <p style="font-size: 0.75rem; color: var(--text-muted);">
+              Connect dynamically via your browser. Ensure you are signed in.
+            </p>
+            
+            <a href="https://notebooklm.google.com" target="_blank" class="btn btn-primary" style="text-decoration: none; padding: 0.6rem 1rem; color: #ffffff;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 2px;">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+              Log In to NotebookLM
+            </a>
+
+            <button class="btn btn-success" onclick="syncFromExtension()" id="btnExtSync" style="padding: 0.6rem 1rem;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+              </svg>
+              Auto-Sync from Extension
+            </button>
+
+            <div style="border-top: 1px solid var(--border-color); padding-top: 0.75rem; margin-top: 0.25rem; display: flex; flex-direction: column; gap: 0.5rem;">
+              <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-main);">Connection Problems?</span>
+              <p style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.3;">
+                If it shows <em>Extension Offline</em>, Chrome's security model is blocking direct messaging. Use this alternative:
+              </p>
+              <ol style="font-size: 0.7rem; color: var(--text-muted); padding-left: 1rem; line-height: 1.35; display: flex; flex-direction: column; gap: 0.25rem;">
+                <li>Open the ExtendLM Extension in your browser.</li>
+                <li>Click <strong>Export Database</strong> to save the JSON file.</li>
+                <li>Switch to the <strong>Backup File</strong> tab above and upload it.</li>
+              </ol>
+            </div>
+          </div>
+
+          <!-- CONNECTION MODE: LOCAL AGENT -->
+          <div id="connView-agent" style="display: none; flex-direction: column; gap: 0.75rem;">
+            <p style="font-size: 0.75rem; color: var(--text-muted);">
+              Connect to your local background Xen supervisor to fetch your operational database.
+            </p>
+            <div class="form-group">
+              <label for="agentUrl">Local Port URL</label>
+              <input class="form-input" type="text" id="agentUrl" value="http://localhost:7723">
+            </div>
+            <button class="btn btn-primary" onclick="syncFromLocalAgent()" id="btnAgentSync" style="padding: 0.6rem 1rem;">
+              Sync from Local Engine
+            </button>
+          </div>
+
+          <!-- CONNECTION MODE: BESIDE CLOUD -->
+          <div id="connView-cloud" style="display: none; flex-direction: column; gap: 0.75rem;">
+            <p style="font-size: 0.75rem; color: var(--text-muted);">
+              Sync your strategy groups directly from your Beside account.
+            </p>
+            <div class="form-group">
+              <label for="besideToken">Beside JWT Token</label>
+              <input class="form-input" type="password" id="besideToken" placeholder="Paste beside.token content...">
+            </div>
+            <button class="btn btn-primary" onclick="syncFromBesideCloud()" id="btnCloudSync" style="padding: 0.6rem 1rem;">
+              Sync from Beside Cloud
+            </button>
+            <div style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.3; border-top: 1px solid var(--border-color); padding-top: 0.5rem; margin-top: 0.25rem;">
+              🔑 <strong>How to get Beside Token:</strong> on your running Xen console, view the file at <code>~/.config/xen/beside.token</code> or copy the JWT from your active browser session on Beside.
+            </div>
+          </div>
+
+          <!-- CONNECTION MODE: MANUAL FILE -->
+          <div id="connView-file" style="display: none; flex-direction: column; gap: 0.75rem;">
+            <p style="font-size: 0.75rem; color: var(--text-muted);">
+              Load a local JSON database file exported manually from the ExtendLM extension.
+            </p>
+            <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/>
+              </svg>
+              <p>Drag & drop backup JSON file or</p>
+              <span>Browse files</span>
+              <input type="file" id="fileInput" style="display: none;" accept=".json" onchange="handleFileSelect(this)">
+            </div>
+          </div>
+
+          <!-- Reset / Demo Controls -->
+          <div style="display: flex; gap: 0.5rem; margin-top: 0.25rem;">
+            <button class="btn btn-secondary" onclick="loadDemoData()" style="flex: 1; padding: 0.45rem; font-size: 0.8rem;">Use Demo</button>
+            <button class="btn btn-secondary" id="clearBtn" onclick="clearData()" style="flex: 1; padding: 0.45rem; font-size: 0.8rem;" disabled>Reset</button>
           </div>
         </div>
 
@@ -1374,8 +1481,8 @@
       <div class="modal-body">
         <p>Follow these <strong>4 simple steps</strong> to merge your low-source notebooks and create slot capacity:</p>
         <ol style="margin-left: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.5rem;">
-          <li><strong>Check Connection:</strong> If the status indicator in the header says <strong>Extension Connected</strong>, click <strong>Auto-Sync Database</strong> to instantly import notebooks.</li>
-          <li><strong>Or Upload JSON File:</strong> Open ExtendLM, export database, and drag-and-drop the JSON backup file on the left side of this page.</li>
+          <li><strong>Select Connection Method:</strong> Choose how to connect. If using **Extension Sync**, make sure the Chrome extension has `hitthe.link` configured in its externally_connectable settings. Alternatively, use the **Local Agent** (Port 7723) or paste a **Beside Cloud JWT Token**.</li>
+          <li><strong>Or Upload JSON File:</strong> Open ExtendLM, export database, and drag-and-drop the JSON backup file under **Backup File** mode.</li>
           <li><strong>Verify Planner:</strong> Review the groups on the right side. Change your merge targets or grouping keys under <em>Merge Rules</em> if needed. Toggle notebooks on or off.</li>
           <li><strong>Execute & Import:</strong> Click <strong>Merge & Export JSON</strong>. Go back to ExtendLM's dashboard, open the Import dialog, upload this newly downloaded optimized JSON file, and replace/refresh your data!</li>
         </ol>
@@ -1493,6 +1600,17 @@
       }
     });
 
+    // Connection Switcher
+    function switchConnMode(mode) {
+      document.querySelectorAll('.conn-tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(`btnMode${mode.charAt(0).toUpperCase() + mode.slice(1)}`).classList.add('active');
+
+      document.getElementById('connView-extension').style.display = mode === 'extension' ? 'flex' : 'none';
+      document.getElementById('connView-agent').style.display = mode === 'agent' ? 'flex' : 'none';
+      document.getElementById('connView-cloud').style.display = mode === 'cloud' ? 'flex' : 'none';
+      document.getElementById('connView-file').style.display = mode === 'file' ? 'flex' : 'none';
+    }
+
     // Check extension status
     function pingExtension() {
       const statusEl = document.getElementById('extStatus');
@@ -1504,20 +1622,16 @@
 
         chrome.runtime.sendMessage(EXTENSION_ID, { action: 'ping' }, (response) => {
           if (chrome.runtime.lastError) {
-            // No direct response. This is common if externally_connectable isn't registered yet.
-            // We can gracefully fall back to waiting for a postMessage connection.
             statusEl.className = 'ext-status';
             textEl.innerText = 'Extension Offline';
             isExtensionAvailable = false;
             console.log('Direct extension communication unavailable. Fallback to file mode.');
           } else {
-            // Extension replied!
             isExtensionAvailable = true;
             statusEl.className = 'ext-status connected';
             textEl.innerText = 'Extension Connected';
             showNotification('ExtendLM Extension detected! Ready to sync.', 'success');
             
-            // Auto sync immediately on load if available
             syncFromExtension();
           }
         });
@@ -1535,17 +1649,14 @@
         statusEl.className = 'ext-status connecting';
         textEl.innerText = 'Syncing...';
 
-        // Try a sequence of export payload requests
         chrome.runtime.sendMessage(EXTENSION_ID, { action: 'exportDatabase' }, (response) => {
           if (chrome.runtime.lastError || !response) {
-            // Try fallback action formats
             chrome.runtime.sendMessage(EXTENSION_ID, { action: 'getData' }, (responseFallback) => {
               if (chrome.runtime.lastError || !responseFallback) {
-                // If direct requests fail, alert user and look for window message fallback
                 syncBtn.disabled = false;
                 statusEl.className = 'ext-status';
                 textEl.innerText = 'Sync Failed';
-                showNotification('Connection blocked. Export manually or add externally_connectable config.', 'error');
+                showNotification('Connection blocked. Verify extension externally_connectable config.', 'error');
               } else {
                 handleExtensionSyncResponse(responseFallback);
               }
@@ -1555,9 +1666,74 @@
           }
         });
       } else {
-        // We're outside a Chrome browser context
         showNotification('Direct connection requires a Chrome-based browser with ExtendLM installed.', 'error');
       }
+    }
+
+    // Local agent sync (localhost:7723)
+    function syncFromLocalAgent() {
+      const url = document.getElementById('agentUrl').value;
+      const syncBtn = document.getElementById('btnAgentSync');
+      const statusEl = document.getElementById('extStatus');
+      const textEl = document.getElementById('extStatusText');
+
+      syncBtn.disabled = true;
+      statusEl.className = 'ext-status connecting';
+      textEl.innerText = 'Syncing Agent...';
+
+      fetch(`${url}/api/database`)
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
+          return res.json();
+        })
+        .then(data => {
+          syncBtn.disabled = false;
+          handleSyncedData(data, 'localhost-agent');
+        })
+        .catch(err => {
+          syncBtn.disabled = false;
+          statusEl.className = 'ext-status';
+          textEl.innerText = 'Agent Offline';
+          showNotification(`Local agent connection failed: ${err.message}`, 'error');
+        });
+    }
+
+    // Beside Cloud JWT sync
+    function syncFromBesideCloud() {
+      const token = document.getElementById('besideToken').value;
+      const syncBtn = document.getElementById('btnCloudSync');
+      const statusEl = document.getElementById('extStatus');
+      const textEl = document.getElementById('extStatusText');
+
+      if (!token) {
+        showNotification('Please enter a valid Beside JWT token.', 'error');
+        return;
+      }
+
+      syncBtn.disabled = true;
+      statusEl.className = 'ext-status connecting';
+      textEl.innerText = 'Syncing Beside...';
+
+      // Standard API endpoints parsed from Beside reverse engineering guide
+      fetch('https://api.prod.tma.hearthands.tech:8443/v1/notebooks', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
+          return res.json();
+        })
+        .then(data => {
+          syncBtn.disabled = false;
+          handleSyncedData(data, 'beside-cloud');
+        })
+        .catch(err => {
+          syncBtn.disabled = false;
+          statusEl.className = 'ext-status';
+          textEl.innerText = 'Cloud Offline';
+          showNotification(`Beside Cloud connection failed: ${err.message}`, 'error');
+        });
     }
 
     function handleExtensionSyncResponse(response) {
@@ -1578,19 +1754,18 @@
       activeDb = database;
       isDemoMode = false;
       document.getElementById('demoRibbon').style.display = 'none';
+      document.getElementById('demoBanner').style.display = 'none';
       document.getElementById('clearBtn').disabled = false;
 
-      // Update indicators
       const statusEl = document.getElementById('extStatus');
       const textEl = document.getElementById('extStatusText');
       statusEl.className = 'ext-status connected';
       textEl.innerText = `Synced: ${email}`;
 
-      // Render schema mapping preview
       const shortPreview = JSON.stringify(database, null, 2);
       document.getElementById('jsonPreview').innerText = shortPreview.substring(0, 1000) + (shortPreview.length > 1000 ? '\n... (truncated)' : '');
 
-      showNotification(`Successfully synchronized ${database.notebooks?.length || 0} notebooks directly from extension!`, 'success');
+      showNotification(`Successfully synchronized ${database.notebooks?.length || 0} notebooks!`, 'success');
       
       autoDetectMappings(database);
       recalculateGroups();
@@ -1602,6 +1777,7 @@
       activeDb = JSON.parse(JSON.stringify(DEMO_DB));
       isDemoMode = true;
       document.getElementById('demoRibbon').style.display = 'block';
+      document.getElementById('demoBanner').style.display = 'flex';
       document.getElementById('clearBtn').disabled = false;
       
       showNotification('Loaded custom strategic DEMO database.', 'success');
@@ -1615,6 +1791,7 @@
       activeDb = null;
       isDemoMode = false;
       document.getElementById('demoRibbon').style.display = 'none';
+      document.getElementById('demoBanner').style.display = 'flex';
       document.getElementById('clearBtn').disabled = true;
       document.getElementById('fileInput').value = '';
       
@@ -1650,9 +1827,9 @@
           activeDb = parsed;
           isDemoMode = false;
           document.getElementById('demoRibbon').style.display = 'none';
+          document.getElementById('demoBanner').style.display = 'none';
           document.getElementById('clearBtn').disabled = false;
           
-          // Render schema mapping preview
           const shortPreview = JSON.stringify(parsed, null, 2);
           document.getElementById('jsonPreview').innerText = shortPreview.substring(0, 1000) + (shortPreview.length > 1000 ? '\n... (truncated)' : '');
           
