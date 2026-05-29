@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>L7S Currency Hero | 1 Million Challenge | Curtis Henderson CFO</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <style>
   :root{
     --bg:#0a0a0f;
@@ -20,13 +19,18 @@
     --green:#4ade80;
     --red:#ef4444;
   }
-  *{box-sizing:border-box;margin:0;padding:0;
-    overflow-wrap:break-word;word-break:normal;hyphens:none;}
+  *{box-sizing:border-box;margin:0;padding:0;}
   html,body{background:var(--bg);color:var(--text);
-    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
     -webkit-font-smoothing:antialiased;line-height:1.5;min-height:100vh;}
   body{padding:24px 16px 64px;
+    overflow-wrap:break-word;word-break:normal;hyphens:none;
     background:radial-gradient(ellipse at top,#1a1a2a 0%,var(--bg) 60%);}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  header{animation:fadeUp .6s ease both;}
+  .grid > .card:first-child{animation:fadeUp .6s ease .08s both;}
+  .grid > .card:last-child{animation:fadeUp .6s ease .16s both;}
   .wrap{max-width:1100px;margin:0 auto;}
   header{text-align:center;margin-bottom:28px;}
   .brand{font-size:11px;letter-spacing:.32em;color:var(--gold);
@@ -171,7 +175,8 @@
       </div>
 
       <div class="chart-wrap">
-        <svg class="chart" id="chart" viewBox="0 0 800 260" preserveAspectRatio="none">
+        <svg class="chart" id="chart" viewBox="0 0 800 260" preserveAspectRatio="none"
+          role="img" aria-label="Compound growth curve toward the target balance">
           <defs>
             <linearGradient id="grad" x1="0" x2="0" y1="0" y2="1">
               <stop offset="0%" stop-color="#d4af37" stop-opacity=".75"/>
@@ -199,33 +204,43 @@
     L7S Currency Hero <span class="gold">·</span>
     1M Challenge <span class="gold">·</span>
     per Curtis Henderson CFO
+    <div style="margin-top:8px;">
+      L7S Inc <span class="gold">·</span>
+      Hero@L7SINC.COM <span class="gold">·</span>
+      404-777-0610
+    </div>
   </footer>
 </div>
 
 <script>
 (function(){
   const $ = (id) => document.getElementById(id);
+  const reduceMotion = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const num = (id, fallback) => {
+    const v = parseFloat($(id).value);
+    return isFinite(v) ? v : fallback;
+  };
   const fmt$ = (n) => {
     if (!isFinite(n)) return '—';
     if (Math.abs(n) >= 1e9) return '$' + (n/1e9).toFixed(2) + 'B';
     if (Math.abs(n) >= 1e6) return '$' + (n/1e6).toFixed(2) + 'M';
     if (Math.abs(n) >= 1e3) return '$' + (n/1e3).toFixed(1) + 'K';
-    return '$' + n.toFixed(2);
+    return '$' + n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   };
-  const fmtNum = (n) => n.toLocaleString('en-US',{maximumFractionDigits:0});
 
   const inputs = ['start','target','rate','freq','contrib','contribFreq','maxN']
     .map(i => $(i));
   inputs.forEach(el => el.addEventListener('input', recompute));
 
   function simulate(){
-    const start = +$('start').value || 0;
-    const target = +$('target').value || 0;
-    const rate = (+$('rate').value || 0) / 100;
+    const start = Math.max(num('start', 0), 0);
+    const target = Math.max(num('target', 0), 0);
+    const rate = Math.max(num('rate', 0), 0) / 100;
     const freq = $('freq').value;
-    const contrib = +$('contrib').value || 0;
+    const contrib = Math.max(num('contrib', 0), 0);
     const contribFreq = $('contribFreq').value;
-    const maxN = Math.min(Math.max(parseInt($('maxN').value)||1, 1), 5000);
+    const maxN = Math.min(Math.max(Math.floor(num('maxN', 1)) || 1, 1), 5000);
 
     // Contribution alignment: if contribFreq doesn't match freq we
     // approximate by spreading per period. Daily growth + monthly contrib
@@ -243,12 +258,13 @@
     let bal = start;
     let totalContrib = 0;
     let periodsToTarget = null;
+    if (target > 0 && start >= target) periodsToTarget = 0;
 
     for (let i = 1; i <= maxN; i++){
       bal = bal * (1 + rate) + perPeriodContrib;
       totalContrib += perPeriodContrib;
       series.push(bal);
-      if (periodsToTarget === null && bal >= target && target > 0){
+      if (periodsToTarget === null && target > 0 && bal >= target){
         periodsToTarget = i;
       }
     }
@@ -256,7 +272,7 @@
       start, target, rate, freq, maxN};
   }
 
-  function milestoneRows(series, freq){
+  function milestoneRows(series){
     const tiers = [10000, 100000, 250000, 500000, 1000000];
     const out = [];
     for (const tier of tiers){
@@ -274,12 +290,12 @@
   }
 
   function drawChart(sim){
-    const svg = $('chart');
     const W = 800, H = 260, PAD_L = 8, PAD_R = 8, PAD_T = 12, PAD_B = 22;
     const innerW = W - PAD_L - PAD_R;
     const innerH = H - PAD_T - PAD_B;
     const s = sim.series;
-    const maxY = Math.max(sim.target, ...s) * 1.05;
+    const rawMax = Math.max(sim.target, ...s) * 1.05;
+    const maxY = rawMax > 0 ? rawMax : 1;
     const minY = 0;
     const N = s.length - 1;
 
@@ -333,13 +349,22 @@
       axis.appendChild(t);
     }
 
-    // Animate stroke draw
+    // Animate stroke draw (CSS only, self-contained, end state always visible)
     const path = $('chart-path');
-    const len = path.getTotalLength();
-    if (window.gsap){
-      gsap.set(path,{strokeDasharray:len,strokeDashoffset:len});
-      gsap.to(path,{strokeDashoffset:0,duration:1.1,ease:'power2.out'});
-      gsap.fromTo('#chart-fill',{opacity:0},{opacity:.32,duration:1.1,ease:'power2.out'});
+    let len = 0;
+    try { len = path.getTotalLength(); } catch (e) { len = 0; }
+    if (len > 0 && !reduceMotion){
+      path.style.transition = 'none';
+      path.style.strokeDasharray = len;
+      path.style.strokeDashoffset = len;
+      // force reflow so the transition runs from the dashed start state
+      void path.getBoundingClientRect();
+      path.style.transition = 'stroke-dashoffset 1.1s ease-out';
+      path.style.strokeDashoffset = '0';
+    } else {
+      // reduced motion or no length: leave the path fully drawn
+      path.style.strokeDasharray = 'none';
+      path.style.strokeDashoffset = '0';
     }
   }
 
@@ -352,7 +377,7 @@
     $('stat-contrib').textContent = fmt$(sim.totalContrib);
     $('stat-growth').textContent = fmt$(sim.finalBal - sim.start - sim.totalContrib);
 
-    const ms = milestoneRows(sim.series, sim.freq);
+    const ms = milestoneRows(sim.series);
     const tbody = $('milestones-body');
     tbody.innerHTML = '';
     for (const m of ms){
@@ -363,19 +388,9 @@
         <td class="day">${m.hit === null ? '—' : m.hit + ' ' + flbl}</td>
         <td>${m.bal === null ? '—' : fmt$(m.bal)}</td>`;
       tbody.appendChild(tr);
-      if (window.gsap){
-        gsap.from(tr,{opacity:0,y:6,duration:.4,
-          delay: 0.05 * tbody.children.length, ease:'power2.out'});
-      }
     }
 
     drawChart(sim);
-
-    if (window.gsap){
-      gsap.fromTo('.stat .val',
-        {scale:.94,opacity:.4},
-        {scale:1,opacity:1,duration:.45,stagger:.05,ease:'back.out(1.6)'});
-    }
   }
 
   recompute();

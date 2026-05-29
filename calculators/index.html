@@ -12,7 +12,7 @@
     --green:#5fcf80;--yellow:#f7c948;--red:#ef5b5b;--blue:#5b9aef;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden}
+  html,body{background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden;overflow-wrap:break-word;word-break:normal;hyphens:none}
   #bg-canvas{position:fixed;inset:0;z-index:0;opacity:.5}
   main{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:48px 24px 96px}
   header{text-align:center;margin-bottom:56px}
@@ -44,11 +44,17 @@
   .calc.blocked:hover{transform:none;border-color:var(--line);background:var(--card)}
   footer{text-align:center;margin-top:80px;padding-top:32px;border-top:1px solid var(--line);color:var(--mute);font-size:13px}
   footer .em{color:var(--gold);font-weight:600;letter-spacing:.05em}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+  #hero{animation:fadeUp .8s ease both}
+  #tracks{animation:fadeUp .7s ease .2s both}
+  .calc{animation:fadeUp .6s ease both}
+  .grid .calc:nth-child(2){animation-delay:.06s}.grid .calc:nth-child(3){animation-delay:.12s}.grid .calc:nth-child(4){animation-delay:.18s}.grid .calc:nth-child(5){animation-delay:.24s}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
   @media(max-width:560px){main{padding:32px 16px 64px}h1{font-size:42px}}
 </style>
 </head>
 <body>
-<canvas id="bg-canvas"></canvas>
+<canvas id="bg-canvas" aria-hidden="true"></canvas>
 
 <main>
   <header id="hero">
@@ -165,37 +171,31 @@
   </footer>
 </main>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r158/three.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script>
-// three.js ambient particle field
+// self-contained ambient gold particle field — no external libs, never hides content
 (function(){
-  const canvas=document.getElementById('bg-canvas');
-  const scene=new THREE.Scene();
-  const cam=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,1,2000);
-  cam.position.z=420;
-  const r=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
-  r.setPixelRatio(Math.min(window.devicePixelRatio,2));
-  r.setSize(innerWidth,innerHeight);
-  const cnt=400;
-  const geo=new THREE.BufferGeometry();
-  const pos=new Float32Array(cnt*3);
-  for(let i=0;i<cnt*3;i+=3){pos[i]=(Math.random()-.5)*900;pos[i+1]=(Math.random()-.5)*700;pos[i+2]=(Math.random()-.5)*600}
-  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
-  const mat=new THREE.PointsMaterial({color:0xd4af37,size:1.6,transparent:true,opacity:.6,sizeAttenuation:true});
-  const pts=new THREE.Points(geo,mat);
-  scene.add(pts);
-  function loop(){requestAnimationFrame(loop);pts.rotation.y+=.0006;pts.rotation.x+=.0003;r.render(scene,cam)}
-  loop();
-  addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();r.setSize(innerWidth,innerHeight)});
+  const c=document.getElementById('bg-canvas');
+  if(!c||!c.getContext)return;
+  const x=c.getContext('2d');let w,h,pts;
+  function size(){
+    w=c.width=innerWidth;h=c.height=innerHeight;
+    const n=Math.max(40,Math.min(140,Math.floor(w*h/13000)));
+    pts=Array.from({length:n},()=>({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-.5)*.18,vy:(Math.random()-.5)*.18,r:Math.random()*1.5+.4}));
+  }
+  size();addEventListener('resize',size);
+  const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  function draw(){
+    x.clearRect(0,0,w,h);x.fillStyle='#d4af37';x.globalAlpha=.55;
+    for(const p of pts){
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=w;else if(p.x>w)p.x=0;
+      if(p.y<0)p.y=h;else if(p.y>h)p.y=0;
+      x.beginPath();x.arc(p.x,p.y,p.r,0,6.2832);x.fill();
+    }
+    if(!reduce)requestAnimationFrame(draw);
+  }
+  draw();
 })();
-
-// GSAP entrance
-gsap.from('#hero',{opacity:0,y:24,duration:.9,ease:'power3.out'});
-gsap.fromTo('#hero',{y:24},{y:0,duration:.9,ease:'power3.out'});
-gsap.from('#tracks',{opacity:0,duration:.7,delay:.3});
-gsap.from('.calc',{opacity:0,y:24,duration:.6,stagger:.06,delay:.4,ease:'power2.out'});
-gsap.fromTo('.calc',{y:18},{y:0,duration:.6,stagger:.06,delay:.4,ease:'power2.out'});
 </script>
 </body>
 </html>

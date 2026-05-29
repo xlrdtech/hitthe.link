@@ -4,7 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>L7S Cashflow Hero - EFA / FNA Calculator</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; }
   :root {
@@ -31,11 +30,20 @@
   }
   .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
 
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
   header.hero {
     text-align: center;
     padding: 28px 8px 18px;
     border-bottom: 1px solid var(--border);
     margin-bottom: 28px;
+    animation: fadeUp .6s ease both;
   }
   header.hero .eyebrow {
     color: var(--gold);
@@ -70,7 +78,10 @@
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: 20px;
+    animation: fadeUp .6s ease both;
   }
+  .card.left  { animation-delay: .08s; }
+  .card.right { animation-delay: .16s; }
   .card h2 {
     margin: 0 0 14px;
     font-size: 14px;
@@ -168,6 +179,7 @@
     outline: none;
     transition: border-color 0.15s;
     -moz-appearance: textfield;
+    appearance: textfield;
   }
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button {
@@ -176,6 +188,7 @@
   }
   input[type="number"]:focus {
     border-color: var(--gold);
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.35);
   }
   .income-row input[type="number"] {
     width: 160px;
@@ -253,9 +266,13 @@
   }
   .bar-fill {
     position: absolute;
-    inset: 0 100% 0 0;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 0;
     background: linear-gradient(90deg, var(--gold-dim), var(--gold));
     border-radius: 8px;
+    transition: width 0.5s ease;
   }
   .bar-bench {
     position: absolute;
@@ -317,6 +334,8 @@
     text-transform: uppercase;
   }
   footer.foot .dot { color: var(--gold); margin: 0 8px; }
+  footer.foot a { color: var(--text-dim); text-decoration: none; }
+  footer.foot a:hover { color: var(--gold); }
 </style>
 </head>
 <body>
@@ -328,17 +347,17 @@
     <p>Expense Financial Analysis &middot; Financial Numerical Analysis</p>
   </header>
 
-  <div class="grid">
+  <main class="grid">
 
     <!-- LEFT: Inputs -->
-    <section class="card">
-      <h2>Inputs</h2>
+    <section class="card left" aria-labelledby="inputsHeading">
+      <h2 id="inputsHeading">Inputs</h2>
 
       <div class="income-row">
         <label for="income">Monthly Income</label>
         <div class="input-wrap">
-          <span class="prefix">$</span>
-          <input type="number" id="income" min="0" step="100" value="6000" />
+          <span class="prefix" aria-hidden="true">$</span>
+          <input type="number" id="income" min="0" step="100" value="6000" inputmode="decimal" />
         </div>
       </div>
 
@@ -346,8 +365,8 @@
     </section>
 
     <!-- RIGHT: Outputs -->
-    <section class="card">
-      <h2>Numerical Health</h2>
+    <section class="card right" aria-labelledby="healthHeading">
+      <h2 id="healthHeading">Numerical Health</h2>
 
       <div class="score-block">
         <div class="score-num" id="score">0</div>
@@ -372,18 +391,25 @@
       </div>
     </section>
 
-  </div>
+  </main>
 
   <footer class="foot">
-    L7S Cashflow Hero <span class="dot">&middot;</span> EFA / FNA
+    L7S Inc <span class="dot">&middot;</span>
+    <a href="mailto:Hero@L7SINC.COM">Hero@L7SINC.COM</a>
+    <span class="dot">&middot;</span>
+    <a href="tel:+14047770610">404-777-0610</a>
+    <span class="dot">&middot;</span>
+    Cashflow Hero EFA / FNA
   </footer>
 
 </div>
 
 <script>
 (function () {
+  "use strict";
+
   // --- Schema ---
-  const CATEGORIES = [
+  var CATEGORIES = [
     {
       key: 'housing',
       name: 'Housing',
@@ -392,8 +418,8 @@
         { id: 'h_rent', label: 'Rent / Mortgage' },
         { id: 'h_util', label: 'Utilities' },
         { id: 'h_ins',  label: 'Insurance' },
-        { id: 'h_maint', label: 'Maintenance' },
-      ],
+        { id: 'h_maint', label: 'Maintenance' }
+      ]
     },
     {
       key: 'transport',
@@ -404,8 +430,8 @@
         { id: 't_fuel', label: 'Fuel' },
         { id: 't_ins',  label: 'Insurance' },
         { id: 't_rep',  label: 'Repairs' },
-        { id: 't_tran', label: 'Transit' },
-      ],
+        { id: 't_tran', label: 'Transit' }
+      ]
     },
     {
       key: 'food',
@@ -413,8 +439,8 @@
       benchmark: 0.15,
       fields: [
         { id: 'f_groc', label: 'Groceries' },
-        { id: 'f_din',  label: 'Dining Out' },
-      ],
+        { id: 'f_din',  label: 'Dining Out' }
+      ]
     },
     {
       key: 'healthcare',
@@ -423,8 +449,8 @@
       fields: [
         { id: 'hc_prem', label: 'Insurance Premium' },
         { id: 'hc_copay', label: 'Copays' },
-        { id: 'hc_rx',   label: 'Prescriptions' },
-      ],
+        { id: 'hc_rx',   label: 'Prescriptions' }
+      ]
     },
     {
       key: 'debt',
@@ -433,8 +459,8 @@
       fields: [
         { id: 'd_cc',   label: 'Credit Card Payments' },
         { id: 'd_stud', label: 'Student Loans' },
-        { id: 'd_pers', label: 'Personal Loans' },
-      ],
+        { id: 'd_pers', label: 'Personal Loans' }
+      ]
     },
     {
       key: 'lifestyle',
@@ -443,8 +469,8 @@
       fields: [
         { id: 'l_ent',  label: 'Entertainment' },
         { id: 'l_sub',  label: 'Subscriptions' },
-        { id: 'l_hob',  label: 'Hobbies' },
-      ],
+        { id: 'l_hob',  label: 'Hobbies' }
+      ]
     },
     {
       key: 'other',
@@ -454,186 +480,179 @@
         { id: 'o_child', label: 'Childcare' },
         { id: 'o_pet',   label: 'Pets' },
         { id: 'o_gift',  label: 'Gifts' },
-        { id: 'o_misc',  label: 'Misc' },
-      ],
-    },
+        { id: 'o_misc',  label: 'Misc' }
+      ]
+    }
   ];
 
+  // --- Helpers ---
+  function $(id) { return document.getElementById(id); }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  // Read a guarded numeric value: empty / blank / NaN / negative / Infinity -> 0
+  function num(id) {
+    var el = $(id);
+    if (!el) { return 0; }
+    var v = parseFloat(el.value);
+    return (isFinite(v) && v > 0) ? v : 0;
+  }
+
+  function fmtMoney(n) {
+    if (!isFinite(n)) { n = 0; }
+    return '$' + Math.round(n).toLocaleString();
+  }
+  function fmtPct(n) {
+    if (!isFinite(n)) { n = 0; }
+    return (n * 100).toFixed(1) + '%';
+  }
+
+  function tierFor(pct, benchmark) {
+    if (pct <= benchmark) { return 'good'; }
+    if (pct <= benchmark * 1.25) { return 'warn'; }
+    return 'bad';
+  }
+  function tierLabel(t) {
+    if (t === 'good') { return 'OK'; }
+    if (t === 'warn') { return 'WATCH'; }
+    return 'OVER';
+  }
+  function tierColor(t) {
+    if (t === 'good') { return ['#8a7325', '#d4af37']; }
+    if (t === 'warn') { return ['#a87f0e', '#facc15']; }
+    return ['#a13838', '#f87171'];
+  }
+
   // --- Build input UI ---
-  const catsHost = document.getElementById('categories');
-  CATEGORIES.forEach(cat => {
-    const wrap = document.createElement('div');
+  var catsHost = $('categories');
+  CATEGORIES.forEach(function (cat) {
+    var wrap = document.createElement('div');
     wrap.className = 'category';
-    wrap.innerHTML = `
-      <div class="category-head">
-        <div class="title">${cat.name}</div>
-        <div class="total" id="total_${cat.key}">$0</div>
-      </div>
-      <div class="category-body">
-        ${cat.fields.map(f => `
-          <div class="field">
-            <label for="${f.id}">${f.label}</label>
-            <div class="input-wrap">
-              <span class="prefix">$</span>
-              <input type="number" id="${f.id}" min="0" step="10" value="0" />
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    `;
+    wrap.innerHTML =
+      '<div class="category-head">' +
+        '<div class="title">' + escapeHtml(cat.name) + '</div>' +
+        '<div class="total" id="total_' + cat.key + '">$0</div>' +
+      '</div>' +
+      '<div class="category-body">' +
+        cat.fields.map(function (f) {
+          return '<div class="field">' +
+            '<label for="' + f.id + '">' + escapeHtml(f.label) + '</label>' +
+            '<div class="input-wrap">' +
+              '<span class="prefix" aria-hidden="true">$</span>' +
+              '<input type="number" id="' + f.id + '" min="0" step="10" value="0" inputmode="decimal" />' +
+            '</div>' +
+          '</div>';
+        }).join('') +
+      '</div>';
     catsHost.appendChild(wrap);
   });
 
   // --- Build bars UI ---
-  const barsHost = document.getElementById('bars');
-  CATEGORIES.forEach(cat => {
-    const row = document.createElement('div');
+  var barsHost = $('bars');
+  CATEGORIES.forEach(function (cat) {
+    var benchPct = Math.min(100, cat.benchmark * 100).toFixed(0);
+    var row = document.createElement('div');
     row.className = 'bar-row';
-    row.innerHTML = `
-      <div class="name">${cat.name}</div>
-      <div class="bar-track">
-        <div class="bar-fill" id="fill_${cat.key}"></div>
-        <div class="bar-bench" id="bench_${cat.key}" style="left: ${(cat.benchmark * 100).toFixed(0)}%;"></div>
-      </div>
-      <div class="bar-meta">
-        <span class="pct" id="pct_${cat.key}">0%</span>
-        <span class="badge good" id="badge_${cat.key}">OK</span>
-      </div>
-    `;
+    row.innerHTML =
+      '<div class="name">' + escapeHtml(cat.name) + '</div>' +
+      '<div class="bar-track">' +
+        '<div class="bar-fill" id="fill_' + cat.key + '"></div>' +
+        '<div class="bar-bench" id="bench_' + cat.key + '" style="left: ' + benchPct + '%;" ' +
+          'title="' + Math.round(cat.benchmark * 100) + '% benchmark" aria-hidden="true"></div>' +
+      '</div>' +
+      '<div class="bar-meta">' +
+        '<span class="pct" id="pct_' + cat.key + '">0%</span>' +
+        '<span class="badge good" id="badge_' + cat.key + '">OK</span>' +
+      '</div>';
     barsHost.appendChild(row);
   });
 
-  // --- Helpers ---
-  const $ = id => document.getElementById(id);
-  const num = id => {
-    const v = parseFloat($(id).value);
-    return isFinite(v) && v > 0 ? v : 0;
-  };
-  const fmtMoney = n => '$' + Math.round(n).toLocaleString();
-  const fmtPct = n => (n * 100).toFixed(1) + '%';
-
-  // Track previous % to animate fills smoothly
-  const prevPct = {};
-
-  function tierFor(pct, benchmark) {
-    if (pct <= benchmark) return 'good';
-    if (pct <= benchmark * 1.25) return 'warn';
-    return 'bad';
-  }
-  function tierLabel(t) {
-    if (t === 'good') return 'OK';
-    if (t === 'warn') return 'WATCH';
-    return 'OVER';
-  }
-  function tierColor(t) {
-    if (t === 'good') return ['#8a7325', '#d4af37'];
-    if (t === 'warn') return ['#a87f0e', '#facc15'];
-    return ['#a13838', '#f87171'];
-  }
-
+  // --- Core compute ---
   function recompute() {
-    const income = num('income');
-    const safeIncome = income > 0 ? income : 1; // avoid /0
+    var income = num('income');
+    var safeIncome = income > 0 ? income : 1; // avoid /0
 
-    let totalExpense = 0;
-    const catData = [];
+    var totalExpense = 0;
+    var catData = [];
 
-    CATEGORIES.forEach(cat => {
-      const sum = cat.fields.reduce((acc, f) => acc + num(f.id), 0);
+    CATEGORIES.forEach(function (cat) {
+      var sum = cat.fields.reduce(function (acc, f) { return acc + num(f.id); }, 0);
       totalExpense += sum;
-      const pct = sum / safeIncome;
-      catData.push({ cat, sum, pct, over: Math.max(0, sum - cat.benchmark * safeIncome) });
+      var pct = sum / safeIncome;
+      catData.push({
+        cat: cat,
+        sum: sum,
+        pct: pct,
+        over: Math.max(0, sum - cat.benchmark * safeIncome)
+      });
       $('total_' + cat.key).textContent = fmtMoney(sum);
     });
 
-    // Update bars
-    catData.forEach(d => {
-      const t = tierFor(d.pct, d.cat.benchmark);
-      const [c1, c2] = tierColor(t);
-      const fill = $('fill_' + d.cat.key);
-      const widthTarget = Math.min(100, d.pct * 100);
-      const fromW = prevPct[d.cat.key] != null ? Math.min(100, prevPct[d.cat.key] * 100) : 0;
-      prevPct[d.cat.key] = d.pct;
+    // Update bars (CSS transition handles the animation; no external lib)
+    catData.forEach(function (d) {
+      var t = tierFor(d.pct, d.cat.benchmark);
+      var colors = tierColor(t);
+      var fill = $('fill_' + d.cat.key);
+      var widthTarget = Math.min(100, d.pct * 100);
 
-      if (window.gsap) {
-        gsap.fromTo(fill,
-          { width: fromW + '%' },
-          { width: widthTarget + '%', duration: 0.6, ease: 'power2.out', overwrite: 'auto' }
-        );
-      } else {
-        fill.style.width = widthTarget + '%';
-      }
-      fill.style.background = `linear-gradient(90deg, ${c1}, ${c2})`;
+      fill.style.width = widthTarget + '%';
+      fill.style.background = 'linear-gradient(90deg, ' + colors[0] + ', ' + colors[1] + ')';
 
-      $('pct_' + d.cat.key).textContent = fmtPct(d.pct);
-      const badge = $('badge_' + d.cat.key);
+      $('pct_' + d.cat.key).textContent = income > 0 ? fmtPct(d.pct) : '—';
+      var badge = $('badge_' + d.cat.key);
       badge.className = 'badge ' + t;
       badge.textContent = tierLabel(t);
     });
 
     // Totals
-    const totalRatio = totalExpense / safeIncome;
-    const savingsRate = Math.max(-1, 1 - totalRatio);
+    var totalRatio = totalExpense / safeIncome;
+    var savingsRate = Math.max(-1, 1 - totalRatio);
 
-    animateNumberText($('totalRatio'), totalRatio, v => fmtPct(v));
-    animateNumberText($('savingsRate'), savingsRate, v => fmtPct(v));
+    $('totalRatio').textContent = income > 0 ? fmtPct(totalRatio) : '—';
+    $('savingsRate').textContent = income > 0 ? fmtPct(savingsRate) : '—';
     $('savingsRate').style.color = savingsRate >= 0.2 ? 'var(--green)'
       : savingsRate >= 0.05 ? 'var(--yellow)'
       : 'var(--red)';
 
-    // Score: 10 points per category within benchmark (7 cats = 70), up to 30 from savings rate.
-    const withinCount = catData.filter(d => d.pct <= d.cat.benchmark).length;
-    const categoryScore = withinCount * 10; // out of 70
-    const savingsScore = Math.max(0, Math.min(30, savingsRate * 100)); // 30 pts at 30%+ savings
-    const score = Math.round(Math.min(100, categoryScore + savingsScore));
-    animateNumberText($('score'), score, v => Math.round(v).toString());
+    // Score: 10 points per category within benchmark (7 cats = 70),
+    // up to 30 from savings rate (30 pts at 30%+ savings).
+    var withinCount = catData.filter(function (d) { return d.pct <= d.cat.benchmark; }).length;
+    var categoryScore = withinCount * 10; // out of 70
+    var savingsScore = Math.max(0, Math.min(30, savingsRate * 100));
+    var score = (income > 0 && totalExpense > 0)
+      ? Math.round(Math.min(100, categoryScore + savingsScore))
+      : 0;
+    $('score').textContent = String(score);
 
     // Recommendation: biggest dollar overage
-    const overs = catData.filter(d => d.over > 0).sort((a, b) => b.over - a.over);
-    const msgEl = $('recommendMsg');
+    var overs = catData.filter(function (d) { return d.over > 0; })
+      .sort(function (a, b) { return b.over - a.over; });
+    var msgEl = $('recommendMsg');
     if (income <= 0) {
-      msgEl.innerHTML = 'Enter your monthly income to see your biggest cut opportunity.';
+      msgEl.textContent = 'Enter your monthly income to see your biggest cut opportunity.';
     } else if (totalExpense === 0) {
-      msgEl.innerHTML = 'Enter your expense numbers to see your biggest cut opportunity.';
+      msgEl.textContent = 'Enter your expense numbers to see your biggest cut opportunity.';
     } else if (overs.length === 0) {
-      msgEl.innerHTML = `Every category is within benchmark. Lock in savings of <strong>${fmtMoney(income - totalExpense)}</strong>/mo.`;
+      msgEl.innerHTML = 'Every category is within benchmark. Lock in savings of <strong>' +
+        fmtMoney(Math.max(0, income - totalExpense)) + '</strong>/mo.';
     } else {
-      const top = overs[0];
-      msgEl.innerHTML = `Biggest cut opportunity: <strong>${top.cat.name}</strong> &mdash; reduce by <strong>${fmtMoney(top.over)}</strong> to hit the ${Math.round(top.cat.benchmark * 100)}% benchmark.`;
-    }
-  }
-
-  // Tween numeric textContent values
-  const numState = new WeakMap();
-  function animateNumberText(el, toVal, formatter) {
-    const fromVal = numState.get(el) || 0;
-    numState.set(el, toVal);
-    if (window.gsap) {
-      const obj = { v: fromVal };
-      gsap.to(obj, {
-        v: toVal,
-        duration: 0.5,
-        ease: 'power2.out',
-        onUpdate: () => { el.textContent = formatter(obj.v); },
-        overwrite: 'auto',
-      });
-    } else {
-      el.textContent = formatter(toVal);
+      var top = overs[0];
+      msgEl.innerHTML = 'Biggest cut opportunity: <strong>' + escapeHtml(top.cat.name) +
+        '</strong> &mdash; reduce by <strong>' + fmtMoney(top.over) +
+        '</strong> to hit the ' + Math.round(top.cat.benchmark * 100) + '% benchmark.';
     }
   }
 
   // Wire up listeners
-  document.querySelectorAll('input[type="number"]').forEach(inp => {
+  document.querySelectorAll('input[type="number"]').forEach(function (inp) {
     inp.addEventListener('input', recompute);
-    inp.addEventListener('focus', () => { if (inp.value === '0') inp.value = ''; });
-    inp.addEventListener('blur',  () => { if (inp.value === '')  inp.value = '0'; });
+    inp.addEventListener('focus', function () { if (inp.value === '0') { inp.value = ''; } });
+    inp.addEventListener('blur',  function () { if (inp.value === '') { inp.value = '0'; } });
   });
-
-  // Initial entrance animation
-  if (window.gsap) {
-    gsap.from('.hero', { opacity: 0, y: -8, duration: 0.5, ease: 'power2.out' });
-    gsap.from('.card', { opacity: 0, y: 14, duration: 0.6, stagger: 0.08, ease: 'power2.out' });
-  }
 
   recompute();
 })();

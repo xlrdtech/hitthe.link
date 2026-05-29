@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>G.R.I.P.™ — Gross Revenue Income Profit-Share · L7S Hero</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--gold:#d4af37;--gold-soft:#f0d878;--line:rgba(212,175,55,.18);--card:#13131a;--card-2:#1a1a22;--text:#e8e6e0;--muted:#8a8678;--green:#4ec77a;--amber:#e8b340;--red:#e26666;--blue:#6ec1ff}
@@ -12,6 +11,7 @@ html,body{background:var(--bg);color:var(--text);font-family:Inter,-apple-system
 .wrap{max-width:980px;margin:0 auto;padding:40px 24px 80px}
 .back{color:var(--gold);text-decoration:none;font-size:13px;letter-spacing:.05em;display:inline-block;margin-bottom:24px;opacity:.7}
 .back:hover{opacity:1}
+.back:focus-visible{outline:2px solid var(--gold);outline-offset:3px;opacity:1}
 header{border-bottom:1px solid var(--line);padding-bottom:28px;margin-bottom:32px}
 .badge{display:inline-block;font-size:11px;letter-spacing:.15em;color:var(--gold);background:rgba(212,175,55,.08);border:1px solid var(--line);padding:5px 12px;border-radius:12px;margin-bottom:12px;text-transform:uppercase}
 h1{font-size:30px;font-weight:700;letter-spacing:-.02em;background:linear-gradient(135deg,var(--gold),var(--gold-soft));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.15;margin-bottom:8px}
@@ -25,9 +25,11 @@ h1{font-size:30px;font-weight:700;letter-spacing:-.02em;background:linear-gradie
 .row label .hint{display:block;font-size:11px;color:var(--muted);margin-top:2px}
 .row input{width:100%;background:var(--card-2);border:1px solid var(--line);color:var(--text);font-size:15px;font-weight:600;padding:8px 12px;border-radius:8px;outline:none;text-align:right;font-variant-numeric:tabular-nums;font-family:inherit}
 .row input:focus{border-color:var(--gold)}
-.tier-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.tier{background:var(--card-2);border:1px solid var(--line);border-radius:12px;padding:18px;cursor:pointer;transition:all .2s;position:relative}
+.row input:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.tier-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;justify-content:center}
+.tier{background:var(--card-2);border:1px solid var(--line);border-radius:12px;padding:18px;cursor:pointer;transition:all .2s;position:relative;text-align:left;color:var(--text);font-family:inherit;width:100%}
 .tier.active{border-color:var(--gold);background:rgba(212,175,55,.06)}
+.tier:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .tier .t-name{font-size:14px;color:var(--gold);font-weight:600;margin-bottom:4px}
 .tier .t-tag{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
 .tier .t-pct{font-size:26px;font-weight:700;color:var(--gold-soft);font-variant-numeric:tabular-nums;line-height:1}
@@ -36,19 +38,33 @@ h1{font-size:30px;font-weight:700;letter-spacing:-.02em;background:linear-gradie
 .payout-box{padding:24px 0;text-align:center;border-top:2px solid var(--gold);border-bottom:2px solid var(--gold);background:linear-gradient(180deg,rgba(212,175,55,.04),transparent);margin:14px 0}
 .payout-box .lbl{font-size:12px;color:var(--gold);letter-spacing:.15em;text-transform:uppercase;margin-bottom:8px}
 .payout-box .num{font-size:46px;font-weight:700;background:linear-gradient(135deg,var(--gold),var(--gold-soft));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-variant-numeric:tabular-nums;line-height:1}
-.payout-box .breakdown{margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:12px}
+.payout-box .breakdown{margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:12px;justify-content:center}
 .payout-box .bk{padding:8px;background:var(--card-2);border-radius:8px;border:1px solid var(--line)}
 .payout-box .bk .v{font-size:16px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
 .payout-box .bk .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .bar-stack{display:flex;height:32px;border-radius:8px;overflow:hidden;border:1px solid var(--line);margin:14px 0}
-.bar-stack .seg{display:flex;align-items:center;justify-content:center;font-size:11px;color:#0a0a0f;font-weight:700;transition:flex .6s ease}
+.bar-stack .seg{display:flex;align-items:center;justify-content:center;font-size:11px;color:#0a0a0f;font-weight:700;transition:flex .6s ease;white-space:nowrap;overflow:hidden}
 .s-cogs{background:#7a6a3a}
 .s-opex{background:#a88c4a}
 .s-share{background:var(--gold)}
 .s-keep{background:var(--green)}
+.legend{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px;flex-wrap:wrap;gap:8px}
+.metric{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
 .tip{background:rgba(110,193,255,.06);border:1px solid rgba(110,193,255,.18);border-radius:10px;padding:14px;margin-top:14px;font-size:12px;color:var(--blue);line-height:1.55}
 footer{text-align:center;color:var(--muted);font-size:12px;margin-top:48px;padding-top:24px;border-top:1px solid var(--line)}
 footer a{color:var(--gold);text-decoration:none}
+footer a:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.vh{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+header,.card,footer{animation:fadeUp .6s ease both}
+.card:nth-of-type(1){animation-delay:.06s}
+.card:nth-of-type(2){animation-delay:.12s}
+.card:nth-of-type(3){animation-delay:.18s}
+.card:nth-of-type(4){animation-delay:.24s}
+.card:nth-of-type(5){animation-delay:.3s}
+.card:nth-of-type(6){animation-delay:.36s}
+footer{animation-delay:.42s}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media(max-width:640px){.tier-grid{grid-template-columns:1fr}.payout-box .breakdown{grid-template-columns:1fr}h1{font-size:22px}.payout-box .num{font-size:32px}.row{grid-template-columns:1fr 110px}}
 </style>
 </head>
@@ -63,45 +79,46 @@ footer a{color:var(--gold);text-decoration:none}
 <div class="author">by Luckie L. Goggins · L7S, INC. · L7X Joint Venture model</div>
 </header>
 
-<div class="card">
-<div class="card-title">Revenue + Cost Inputs</div>
+<main>
+<section class="card">
+<h2 class="card-title">Revenue + Cost Inputs</h2>
 <div class="row">
-<label>Gross Revenue (deliverable sales)<span class="hint">monthly · service + product sales</span></label>
-<input type="number" id="grossRev" value="50000" min="0" step="500">
-</div>
-<div class="row">
-<label>Direct Costs (COGS)<span class="hint">cost of goods/services sold</span></label>
-<input type="number" id="cogs" value="12000" min="0" step="500">
+<label for="grossRev">Gross Revenue (deliverable sales)<span class="hint">monthly · service + product sales</span></label>
+<input type="number" id="grossRev" value="50000" min="0" step="500" inputmode="decimal">
 </div>
 <div class="row">
-<label>Operating Expenses<span class="hint">rent, software, fixed overhead</span></label>
-<input type="number" id="opex" value="8000" min="0" step="500">
+<label for="cogs">Direct Costs (COGS)<span class="hint">cost of goods/services sold</span></label>
+<input type="number" id="cogs" value="12000" min="0" step="500" inputmode="decimal">
 </div>
+<div class="row">
+<label for="opex">Operating Expenses<span class="hint">rent, software, fixed overhead</span></label>
+<input type="number" id="opex" value="8000" min="0" step="500" inputmode="decimal">
 </div>
+</section>
 
-<div class="card">
-<div class="card-title">Pick Partnership Tier · Earn-While-You-Learn</div>
-<div class="tier-grid">
-<div class="tier active" data-tier="affiliate"><div class="t-tag">Entry</div><div class="t-name">1 · Affiliate Partnership</div><div class="t-pct">15%</div><div class="t-pct-label">of net profit · per deal</div><div class="t-desc">Affiliate Partnership Program Access. No territory, no quota — paid per attributed sale.</div></div>
-<div class="tier" data-tier="ic"><div class="t-tag">Independent</div><div class="t-name">2 · 1099 SE · IC Reseller</div><div class="t-pct">25%</div><div class="t-pct-label">of net profit · per deal</div><div class="t-desc">Independent Contractor Reseller (Franchise model). Self-employed, own book of business.</div></div>
-<div class="tier" data-tier="iso"><div class="t-tag">White / Grey</div><div class="t-name">3 · ISO · Licensed Seat</div><div class="t-pct">40%</div><div class="t-pct-label">of net profit · per deal</div><div class="t-desc">Independent Sales Organization · White/Grey-Label · EULA + SULA Licensing Seat · Authorized Partner.</div></div>
-<div class="tier" data-tier="jv"><div class="t-tag">Enterprise</div><div class="t-name">4 · JO · JV · BCA</div><div class="t-pct">50%</div><div class="t-pct-label">of net profit · 50/50 split</div><div class="t-desc">Joint Operations · Joint Venture · Business Collaboration Agreement (e.g. L7X model).</div></div>
+<section class="card">
+<h2 class="card-title">Pick Partnership Tier · Earn-While-You-Learn</h2>
+<div class="tier-grid" role="group" aria-label="Partnership tier selection">
+<button type="button" class="tier active" data-tier="affiliate" aria-pressed="true"><div class="t-tag">Entry</div><div class="t-name">1 · Affiliate Partnership</div><div class="t-pct">15%</div><div class="t-pct-label">of net profit · per deal</div><div class="t-desc">Affiliate Partnership Program Access. No territory, no quota — paid per attributed sale.</div></button>
+<button type="button" class="tier" data-tier="ic" aria-pressed="false"><div class="t-tag">Independent</div><div class="t-name">2 · 1099 SE · IC Reseller</div><div class="t-pct">25%</div><div class="t-pct-label">of net profit · per deal</div><div class="t-desc">Independent Contractor Reseller (Franchise model). Self-employed, own book of business.</div></button>
+<button type="button" class="tier" data-tier="iso" aria-pressed="false"><div class="t-tag">White / Grey</div><div class="t-name">3 · ISO · Licensed Seat</div><div class="t-pct">40%</div><div class="t-pct-label">of net profit · per deal</div><div class="t-desc">Independent Sales Organization · White/Grey-Label · EULA + SULA Licensing Seat · Authorized Partner.</div></button>
+<button type="button" class="tier" data-tier="jv" aria-pressed="false"><div class="t-tag">Enterprise</div><div class="t-name">4 · JO · JV · BCA</div><div class="t-pct">50%</div><div class="t-pct-label">of net profit · 50/50 split</div><div class="t-desc">Joint Operations · Joint Venture · Business Collaboration Agreement (e.g. L7X model).</div></button>
 </div>
-</div>
+</section>
 
-<div class="card">
-<div class="card-title">P&amp;L Flow Breakdown</div>
-<div class="bar-stack" id="stack"></div>
-<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px;flex-wrap:wrap;gap:8px">
+<section class="card">
+<h2 class="card-title">P&amp;L Flow Breakdown</h2>
+<div class="bar-stack" id="stack" role="img" aria-label="Profit and loss flow: COGS, OpEx, partner share, and company retained portions of gross revenue"></div>
+<div class="legend">
 <span><span style="color:#7a6a3a">●</span> COGS</span>
 <span><span style="color:#a88c4a">●</span> OpEx</span>
-<span><span style="color:var(--gold))">●</span> Partner Share</span>
+<span><span style="color:var(--gold)">●</span> Partner Share</span>
 <span><span style="color:var(--green)">●</span> Company Keep</span>
 </div>
-</div>
+</section>
 
-<div class="card">
-<div class="card-title">Phantom Equity Payout · Profit-Share Math</div>
+<section class="card">
+<h2 class="card-title">Phantom Equity Payout · Profit-Share Math</h2>
 <div class="payout-box">
 <div class="lbl" id="tierLabel">Affiliate Partnership · 15%</div>
 <div class="num" id="payout">$0</div>
@@ -112,36 +129,38 @@ footer a{color:var(--gold);text-decoration:none}
 </div>
 </div>
 <div class="tip">📈 Phantom equity = profit-share without transferring legal ownership. Performance-tied compensation that gives producers skin in the game while keeping cap table clean. Scales linearly with revenue.</div>
-</div>
+</section>
 
-<div class="card">
-<div class="card-title">Performance Multiplier · Production Bonus</div>
+<section class="card">
+<h2 class="card-title">Performance Multiplier · Production Bonus</h2>
 <div class="row">
-<label>Monthly Revenue Target ($)<span class="hint">if producer hits 1.5×, multiplier triggers</span></label>
-<input type="number" id="target" value="40000" min="0" step="1000">
-</div>
-<div class="row">
-<label>Producer Multiplier<span class="hint">computed live based on revenue / target</span></label>
-<span id="multiplier" style="font-size:24px;font-weight:700;color:var(--gold-soft);text-align:right;font-variant-numeric:tabular-nums">1.0×</span>
+<label for="target">Monthly Revenue Target ($)<span class="hint">if producer hits 1.5×, multiplier triggers</span></label>
+<input type="number" id="target" value="40000" min="0" step="1000" inputmode="decimal">
 </div>
 <div class="row">
-<label>Boosted Payout<span class="hint">payout × multiplier · for high performers</span></label>
-<span id="boostedPayout" style="font-size:24px;font-weight:700;color:var(--gold);text-align:right;font-variant-numeric:tabular-nums">$0</span>
+<span id="multLabel">Producer Multiplier<span class="hint">computed live based on revenue / target</span></span>
+<span id="multiplier" class="metric" style="color:var(--gold-soft)" aria-labelledby="multLabel">1.0×</span>
 </div>
+<div class="row">
+<span id="boostLabel">Boosted Payout<span class="hint">payout × multiplier · for high performers</span></span>
+<span id="boostedPayout" class="metric" style="color:var(--gold)" aria-labelledby="boostLabel">$0</span>
 </div>
+</section>
 
-<div class="card">
-<div class="card-title">The Four Tiers · Earn-While-You-Learn</div>
+<section class="card">
+<h2 class="card-title">The Four Tiers · Earn-While-You-Learn</h2>
 <ol style="padding-left:24px;font-size:13px;line-height:1.7;color:var(--text)">
 <li style="margin-bottom:10px"><strong style="color:var(--gold-soft)">Affiliate Partnership Program Access</strong> — open-door entry. Anyone can refer, earn per attributed conversion. Lowest commitment, lowest share.</li>
 <li style="margin-bottom:10px"><strong style="color:var(--gold-soft)">1099 SE · IC Reseller (Franchise)</strong> — Independent Contractor with own book of business. Self-employed, manages their own taxes, commission scales.</li>
 <li style="margin-bottom:10px"><strong style="color:var(--gold-soft)">ISO · White-Label · Licensed Seat</strong> — Independent Sales Organization with EULA + SULA license. Can White-Label or Grey-Label the offering. Authorized partner status.</li>
 <li style="margin-bottom:10px"><strong style="color:var(--gold-soft)">Enterprise · JO · JV · BCA</strong> — Joint Operations, Joint Ventures, Business Collaboration Agreements. The L7X model. Largest share, deepest commitment.</li>
 </ol>
-</div>
+</section>
+</main>
 
 <footer>
 G.R.I.P.™ Model · System · Framework · REINS Phantom Equity by Luckie L. Goggins · L7S, INC.<br>
+L7S Inc · Hero@L7SINC.COM · 404-777-0610<br>
 Part of the L7S Hero S.O.S.™ Operating System · <a href="https://hitthe.link/calculators/">All Hero Calculators</a>
 </footer>
 </div>
@@ -157,19 +176,28 @@ const TIERS = {
 let activeTier = 'affiliate';
 
 const $ = (id) => document.getElementById(id);
-const fmt = (n) => '$' + Math.max(0, Math.round(n)).toLocaleString();
+
+function num(id){
+  const v = parseFloat($(id).value);
+  return (isFinite(v) && v > 0) ? v : 0;
+}
+
+const fmt = (n) => {
+  const v = (isFinite(n)) ? Math.max(0, Math.round(n)) : 0;
+  return '$' + v.toLocaleString('en-US');
+};
 
 function compute(){
-  const gross = +$('grossRev').value || 0;
-  const cogs = +$('cogs').value || 0;
-  const opex = +$('opex').value || 0;
-  const target = +$('target').value || 1;
+  const gross = num('grossRev');
+  const cogs = num('cogs');
+  const opex = num('opex');
+  const target = num('target');
 
   const grossProfit = gross - cogs;
   const netProfit = Math.max(0, grossProfit - opex);
   const t = TIERS[activeTier];
   const partnerShare = netProfit * t.pct;
-  const companyKeep = netProfit - partnerShare;
+  const companyKeep = Math.max(0, netProfit - partnerShare);
 
   $('grossV').textContent = fmt(gross);
   $('netV').textContent = fmt(netProfit);
@@ -177,24 +205,24 @@ function compute(){
   $('payout').textContent = fmt(partnerShare);
   $('tierLabel').textContent = t.label;
 
-  // P&L stacked bar
+  // P&L stacked bar (percentages clamped to 0..100, only drawn when revenue exists)
   const stack = $('stack');
   stack.innerHTML = '';
   if (gross > 0) {
-    const cogsP = (cogs / gross) * 100;
-    const opexP = (opex / gross) * 100;
-    const partnerP = (partnerShare / gross) * 100;
-    const keepP = Math.max(0, ((companyKeep) / gross) * 100);
-    stack.innerHTML = `
-      <div class="seg s-cogs" style="flex:${cogsP}">${cogsP > 8 ? cogsP.toFixed(0)+'% COGS' : ''}</div>
-      <div class="seg s-opex" style="flex:${opexP}">${opexP > 8 ? opexP.toFixed(0)+'% OpEx' : ''}</div>
-      <div class="seg s-share" style="flex:${partnerP}">${partnerP > 8 ? partnerP.toFixed(0)+'% Share' : ''}</div>
-      <div class="seg s-keep" style="flex:${keepP}">${keepP > 8 ? keepP.toFixed(0)+'% Keep' : ''}</div>
-    `;
+    const clamp = (x) => Math.max(0, Math.min(100, x));
+    const cogsP = clamp((cogs / gross) * 100);
+    const opexP = clamp((opex / gross) * 100);
+    const partnerP = clamp((partnerShare / gross) * 100);
+    const keepP = clamp((companyKeep / gross) * 100);
+    stack.innerHTML =
+      '<div class="seg s-cogs" style="flex:' + cogsP + '">' + (cogsP > 8 ? cogsP.toFixed(0) + '% COGS' : '') + '</div>' +
+      '<div class="seg s-opex" style="flex:' + opexP + '">' + (opexP > 8 ? opexP.toFixed(0) + '% OpEx' : '') + '</div>' +
+      '<div class="seg s-share" style="flex:' + partnerP + '">' + (partnerP > 8 ? partnerP.toFixed(0) + '% Share' : '') + '</div>' +
+      '<div class="seg s-keep" style="flex:' + keepP + '">' + (keepP > 8 ? keepP.toFixed(0) + '% Keep' : '') + '</div>';
   }
 
-  // Performance multiplier
-  const ratio = gross / Math.max(1, target);
+  // Performance multiplier — ratio of revenue to target (target<=0 => no boost, ratio treated as 1.0)
+  const ratio = target > 0 ? gross / target : 1.0;
   let mult = 1.0;
   if (ratio >= 2.0) mult = 2.0;
   else if (ratio >= 1.5) mult = 1.5;
@@ -205,21 +233,21 @@ function compute(){
   $('boostedPayout').textContent = fmt(partnerShare * mult);
 }
 
-document.querySelectorAll('.tier').forEach(t => {
+document.querySelectorAll('.tier').forEach((t) => {
   t.addEventListener('click', () => {
-    document.querySelectorAll('.tier').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.tier').forEach((x) => {
+      x.classList.remove('active');
+      x.setAttribute('aria-pressed', 'false');
+    });
     t.classList.add('active');
+    t.setAttribute('aria-pressed', 'true');
     activeTier = t.dataset.tier;
     compute();
   });
 });
 
-['grossRev','cogs','opex','target'].forEach(id => $(id).addEventListener('input', compute));
+['grossRev', 'cogs', 'opex', 'target'].forEach((id) => $(id).addEventListener('input', compute));
 compute();
-
-gsap.from('header',{y:-20,opacity:0,duration:.6,ease:'power3.out'});
-gsap.from('.card',{y:30,opacity:0,duration:.5,stagger:.08,delay:.2,ease:'power2.out'});
-gsap.from('footer',{opacity:0,duration:.6,delay:.8});
 </script>
 </body>
 </html>
