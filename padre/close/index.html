@@ -198,6 +198,37 @@ textarea:focus{outline:none;border-color:var(--ruby);box-shadow:0 0 0 1px var(--
 footer{text-align:center;color:var(--mute);font-size:10px;font-family:'JetBrains Mono',monospace;padding:30px;letter-spacing:.16em;text-transform:uppercase;font-weight:700}
 footer .em{font-family:'Cormorant Garamond',serif;font-style:italic;text-transform:none;letter-spacing:.02em;font-size:14px;color:var(--soft);display:block;margin-bottom:10px}
 @media(prefers-reduced-motion:reduce){*{animation:none!important}}
+
+/* ====== HYPERREALISTIC METAL SKIN (real forged surfaces, not gradients) ====== */
+:root{--mcard:url('assets/m-card.png');--mhero:url('assets/m-hero.png');--mgold:url('assets/m-gold.png')}
+/* fallback to existing real-metal plate until sharper m-* land */
+@supports not (background:image-set(url(x) 1x)){}
+/* cards: real brushed metal slab + dark scrim for legibility + machined bevel */
+.card{background:linear-gradient(168deg,rgba(6,7,11,.80),rgba(3,4,7,.90)),var(--mcard),#0a0b0f!important;background-size:cover!important;background-position:center!important;backdrop-filter:none!important;
+  box-shadow:0 1px 0 rgba(255,255,255,.14) inset,0 -2px 8px rgba(0,0,0,.6) inset,0 22px 54px -30px #000,0 0 0 1px rgba(0,0,0,.5)!important}
+.card.lead{box-shadow:0 0 0 1px rgba(255,34,73,.5),0 24px 60px -28px rgba(255,34,73,.6),0 1px 0 rgba(255,255,255,.16) inset,0 -2px 8px rgba(0,0,0,.6) inset!important}
+.card::before{background:radial-gradient(120% 60% at 50% -10%,rgba(255,255,255,.12),transparent 58%)!important}
+/* price menu: same forged plate */
+.price{background:linear-gradient(168deg,rgba(6,7,11,.82),rgba(3,4,7,.92)),var(--mcard),#0a0b0f!important;background-size:cover!important;backdrop-filter:none!important;
+  box-shadow:0 1px 0 rgba(255,255,255,.12) inset,0 16px 44px -26px #000!important}
+/* dials: small machined metal chips */
+.dial{background:linear-gradient(180deg,rgba(20,22,30,.6),rgba(3,4,7,.85)),var(--mcard),#0a0b0f!important;background-size:cover!important;backdrop-filter:none!important;
+  box-shadow:0 1px 0 rgba(255,255,255,.1) inset,0 -2px 6px rgba(0,0,0,.5) inset!important}
+/* action buttons: forged metal plates; call = bright platinum, sms = ruby-anodized over metal */
+.act{background:linear-gradient(180deg,rgba(26,28,38,.55),rgba(4,5,9,.8)),var(--mcard)!important;background-size:cover!important;
+  box-shadow:0 1px 0 rgba(255,255,255,.12) inset,0 -2px 6px rgba(0,0,0,.6) inset,0 8px 18px -10px #000!important}
+.act.call{background:linear-gradient(180deg,#ffffff,#dbe2ea 48%,#aab4c2 78%,#7c8696)!important;color:#060608!important;
+  box-shadow:0 0 22px -8px #fff,0 1px 0 rgba(255,255,255,.7) inset,0 -2px 5px rgba(0,0,0,.25) inset!important}
+.act.sms{background:linear-gradient(180deg,#ff6c86,#ff2249 52%,#7c0a1f),var(--mcard)!important;background-blend-mode:overlay,normal!important;background-size:cover!important;color:#fff!important;
+  box-shadow:0 0 26px -7px var(--ruby),0 1px 0 rgba(255,255,255,.28) inset!important}
+/* hero: forged-metal slab glows behind the sigil */
+.hero::after{content:'';position:absolute;inset:0;z-index:-1;background:var(--mhero);background-size:cover;background-position:center;opacity:.22;mix-blend-mode:screen;pointer-events:none}
+/* the orb bezel becomes a real machined ring */
+.orb .gemwrap{background:radial-gradient(circle at 38% 28%,rgba(255,255,255,.16),#060608 74%),var(--mcard)!important;background-size:cover!important;
+  box-shadow:0 5px 12px rgba(0,0,0,.75) inset,0 0 0 1px rgba(255,255,255,.12),0 2px 3px rgba(255,255,255,.1)!important}
+/* gold-bar accent on section label + lead stripe */
+.lbl::after{background:linear-gradient(90deg,rgba(210,172,71,.55),transparent)!important;height:2px!important}
+.toast{background:linear-gradient(180deg,#fff,#cdd4dc)!important}
 </style>
 </head>
 <body>
