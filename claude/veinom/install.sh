@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================
 #  VEINOM · one-command installer (macOS / Linux)
-#  Run:  curl -fsSL https://hitthe.link/claudeveinom/install.sh | bash
+#  Run:  curl -fsSL https://hitthe.link/claude/veinom/install.sh | bash
 # =============================================================
 set -e
 VEINOM="$HOME/.veinom"
@@ -26,7 +26,7 @@ echo "  + Ava voice engine ready"
 # 3. Fetch components
 mkdir -p "$AVA" "$EXT"
 echo "  > downloading components..."
-curl -fsSL "https://hitthe.link/claudeveinom/ava-server.py" -o "$AVA/ava-server.py"
+curl -fsSL "https://hitthe.link/claude/veinom/ava-server.py" -o "$AVA/ava-server.py"
 curl -fsSL "https://hitthe.link/veinom/extension/veinom.zip" -o "$EXT/veinom.zip"
 ( cd "$EXT" && unzip -oq veinom.zip )
 echo "  + components in $VEINOM"
@@ -80,5 +80,5 @@ echo "  2. Developer mode -> Load unpacked"
 echo "  3. Select:  $EXT"
 echo ""
 echo "  Or just open the web app:"
-echo "       https://hitthe.link/claudeveinom/app/"
+echo "       https://hitthe.link/claude/veinom/app/"
 echo ""

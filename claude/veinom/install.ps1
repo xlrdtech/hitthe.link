@@ -1,6 +1,6 @@
 # =============================================================
 #  VEINOM · one-command installer (Windows / PowerShell)
-#  Run:  irm https://hitthe.link/claudeveinom/install.ps1 | iex
+#  Run:  irm https://hitthe.link/claude/veinom/install.ps1 | iex
 # =============================================================
 $ErrorActionPreference = "Stop"
 $VEINOM = "$env:USERPROFILE\.veinom"
@@ -28,7 +28,7 @@ Write-Host "  + Ava voice engine ready"
 # 3. Fetch the Ava server + extension zip
 New-Item -ItemType Directory -Force -Path $AVA, $EXT | Out-Null
 Write-Host "  > downloading components..."
-Invoke-WebRequest "https://hitthe.link/claudeveinom/ava-server.py" -OutFile "$AVA\ava-server.py" -UseBasicParsing
+Invoke-WebRequest "https://hitthe.link/claude/veinom/ava-server.py" -OutFile "$AVA\ava-server.py" -UseBasicParsing
 Invoke-WebRequest "https://hitthe.link/veinom/extension/veinom.zip" -OutFile "$EXT\veinom.zip" -UseBasicParsing
 Expand-Archive -Path "$EXT\veinom.zip" -DestinationPath $EXT -Force
 Write-Host "  + components downloaded to $VEINOM"
@@ -57,7 +57,7 @@ Write-Host "       $EXT" -ForegroundColor Cyan
 Write-Host "  4. Visit any AI chat + click Start on the VEINOM panel"
 Write-Host ""
 Write-Host "  Or skip the extension entirely — open the web app:" -ForegroundColor DarkGreen
-Write-Host "       https://hitthe.link/claudeveinom/app/" -ForegroundColor Cyan
+Write-Host "       https://hitthe.link/claude/veinom/app/" -ForegroundColor Cyan
 Write-Host ""
 Start-Process "chrome://extensions/"
-Start-Process "https://hitthe.link/claudeveinom/app/"
+Start-Process "https://hitthe.link/claude/veinom/app/"
