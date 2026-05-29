@@ -1,0 +1,41 @@
+name: Auto-update root site index
+# Regenerates sites.json on every push so hitthe.link/ auto-lists new builds/sites/apps as they go live.
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'sites.json'
+      - 'index.html'
+      - '.github/workflows/sites-index.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sites-index
+  cancel-in-progress: true
+
+jobs:
+  build-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so per-dir last-commit dates resolve
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Generate sites.json
+        run: node scripts/gen-sites.mjs
+      - name: Commit if changed
+        run: |
+          if [ -n "$(git status --porcelain sites.json)" ]; then
+            git config user.name "xlrd-index-bot"
+            git config user.email "bot@xlrd.org"
+            git add sites.json
+            git commit -m "chore: auto-update root index [skip ci]"
+            git push
+          else
+            echo "sites.json unchanged"
+          fi
