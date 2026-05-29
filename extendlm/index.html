@@ -68,7 +68,6 @@
     header {
       background: rgba(15, 23, 42, 0.6);
       backdrop-filter: blur(12px);
-      border-b: 1px solid var(--border-color);
       border-bottom: 1px solid var(--border-color);
       padding: 1.25rem 2rem;
       display: flex;
@@ -121,6 +120,54 @@
       border-radius: 9999px;
       font-weight: 600;
       margin-left: 0.5rem;
+    }
+
+    .ext-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      padding: 0.35rem 0.75rem;
+      border-radius: 9999px;
+      color: var(--text-muted);
+      margin-left: 0.75rem;
+    }
+
+    .ext-status .status-dot {
+      width: 0.45rem;
+      height: 0.45rem;
+      border-radius: 50%;
+      background: var(--text-muted);
+      display: inline-block;
+    }
+
+    .ext-status.connected {
+      border-color: var(--success);
+      color: var(--success);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
+    }
+
+    .ext-status.connected .status-dot {
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    .ext-status.connecting {
+      border-color: var(--warning);
+      color: var(--warning);
+    }
+
+    .ext-status.connecting .status-dot {
+      background: var(--warning);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.6; }
+      50% { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.6; }
     }
 
     .nav-tabs {
@@ -357,7 +404,7 @@
     .dropzone {
       border: 2px dashed rgba(255, 255, 255, 0.15);
       border-radius: 0.75rem;
-      padding: 2rem 1.5rem;
+      padding: 1.5rem 1.25rem;
       text-align: center;
       cursor: pointer;
       background: rgba(30, 41, 59, 0.2);
@@ -370,21 +417,22 @@
     }
 
     .dropzone svg {
-      width: 2.5rem;
-      height: 2.5rem;
-      margin-bottom: 0.75rem;
+      width: 2.25rem;
+      height: 2.25rem;
+      margin-bottom: 0.5rem;
       color: var(--text-muted);
     }
 
     .dropzone p {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.25rem;
     }
 
     .dropzone span {
       color: var(--primary);
       font-weight: 500;
+      font-size: 0.85rem;
     }
 
     /* Form fields */
@@ -442,6 +490,17 @@
 
     .btn-primary:hover:not(:disabled) {
       box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, var(--success), #047857);
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-success:hover:not(:disabled) {
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
       transform: translateY(-1px);
     }
 
@@ -955,7 +1014,10 @@
       <div>
         <h1>ExtendLM Optimizer</h1>
       </div>
-      <span>PWA</span>
+      <div class="ext-status" id="extStatus">
+        <span class="status-dot"></span>
+        <span class="status-text" id="extStatusText">Extension Offline</span>
+      </div>
     </div>
 
     <div class="nav-tabs">
@@ -998,7 +1060,7 @@
         </div>
         <div class="alert-text">
           <h3>Welcome to ExtendLM Scope-Merger</h3>
-          <p>Optimize your Google NotebookLM slots by merging notebooks with fewer than 100 sources. Upload your ExtendLM backup, set your scope grouping, verify the plan, and download the modified backup file to import back.</p>
+          <p>Optimize your Google NotebookLM slots by merging notebooks with fewer than 100 sources. Connect directly to the extension or upload your database backup to build an optimized file.</p>
         </div>
       </div>
       <button class="alert-btn" onclick="openInstructions()">
@@ -1067,13 +1129,32 @@
       <!-- Left sidebar: Controls and Upload -->
       <aside class="control-panel">
         
+        <!-- Live Connection Card -->
+        <div class="panel-card" style="border-color: rgba(6, 182, 212, 0.35);">
+          <h2>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            Live Extension Connection
+          </h2>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">
+            If you are logged into ExtendLM, retrieve your active database immediately with one click.
+          </p>
+          <button class="btn btn-success" onclick="syncFromExtension()" id="btnExtSync">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+            </svg>
+            Auto-Sync database
+          </button>
+        </div>
+
         <!-- Upload Card -->
         <div class="panel-card">
           <h2>
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
             </svg>
-            Database Source
+            Or Upload Manually
           </h2>
           
           <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
@@ -1089,8 +1170,8 @@
           </div>
 
           <div style="display: flex; gap: 0.5rem;">
-            <button class="btn btn-secondary" onclick="loadDemoData()" style="flex: 1;">Use Demo</button>
-            <button class="btn btn-secondary" id="clearBtn" onclick="clearData()" style="flex: 1;" disabled>Reset</button>
+            <button class="btn btn-secondary" onclick="loadDemoData()" style="flex: 1; padding: 0.5rem;">Use Demo</button>
+            <button class="btn btn-secondary" id="clearBtn" onclick="clearData()" style="flex: 1; padding: 0.5rem;" disabled>Reset</button>
           </div>
         </div>
 
@@ -1213,7 +1294,7 @@
               </table>
             </div>
 
-            <div style="padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; border-t: 1px solid var(--border-color); border-top: 1px solid var(--border-color);">
+            <div style="padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color);">
               <span style="font-size: 0.8rem; color: var(--text-muted);" id="inspectorTableCounter">Showing 0-0 of 0 sources</span>
               <div style="display: flex; gap: 0.5rem;">
                 <button class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;" id="prevPageBtn" onclick="changeInspectorPage(-1)">Previous</button>
@@ -1293,8 +1374,8 @@
       <div class="modal-body">
         <p>Follow these <strong>4 simple steps</strong> to merge your low-source notebooks and create slot capacity:</p>
         <ol style="margin-left: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.5rem;">
-          <li><strong>Export Database:</strong> Open your Chrome browser, open the ExtendLM extension page dashboard, and click the <strong>Export</strong> button to save your entire database backup as a JSON file.</li>
-          <li><strong>Upload JSON File:</strong> Drag and drop the exported file into the <strong>Database Source</strong> area on the left of this app.</li>
+          <li><strong>Check Connection:</strong> If the status indicator in the header says <strong>Extension Connected</strong>, click <strong>Auto-Sync Database</strong> to instantly import notebooks.</li>
+          <li><strong>Or Upload JSON File:</strong> Open ExtendLM, export database, and drag-and-drop the JSON backup file on the left side of this page.</li>
           <li><strong>Verify Planner:</strong> Review the groups on the right side. Change your merge targets or grouping keys under <em>Merge Rules</em> if needed. Toggle notebooks on or off.</li>
           <li><strong>Execute & Import:</strong> Click <strong>Merge & Export JSON</strong>. Go back to ExtendLM's dashboard, open the Import dialog, upload this newly downloaded optimized JSON file, and replace/refresh your data!</li>
         </ol>
@@ -1367,6 +1448,10 @@
     let inspectorPage = 0;
     const inspectorPageSize = 10;
 
+    // Extension Messaging Config
+    const EXTENSION_ID = 'jefclkefiknlccjcjmkkhlcfkdgcmgcm';
+    let isExtensionAvailable = false;
+
     // Initialize App
     window.addEventListener('DOMContentLoaded', () => {
       loadDemoData();
@@ -1388,6 +1473,18 @@
         }
       });
 
+      // Attempt initial ping to the extension
+      pingExtension();
+
+      // Listen for content script postMessage bridges
+      window.addEventListener('message', (event) => {
+        if (event.data && event.data.source === 'extendlm-extension') {
+          if (event.data.action === 'syncDatabase' && event.data.database) {
+            handleSyncedData(event.data.database, event.data.email);
+          }
+        }
+      });
+
       // Register PWA Service Worker
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js')
@@ -1395,6 +1492,110 @@
           .catch(err => console.log('Service Worker registration failed:', err));
       }
     });
+
+    // Check extension status
+    function pingExtension() {
+      const statusEl = document.getElementById('extStatus');
+      const textEl = document.getElementById('extStatusText');
+
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+        statusEl.className = 'ext-status connecting';
+        textEl.innerText = 'Pinging...';
+
+        chrome.runtime.sendMessage(EXTENSION_ID, { action: 'ping' }, (response) => {
+          if (chrome.runtime.lastError) {
+            // No direct response. This is common if externally_connectable isn't registered yet.
+            // We can gracefully fall back to waiting for a postMessage connection.
+            statusEl.className = 'ext-status';
+            textEl.innerText = 'Extension Offline';
+            isExtensionAvailable = false;
+            console.log('Direct extension communication unavailable. Fallback to file mode.');
+          } else {
+            // Extension replied!
+            isExtensionAvailable = true;
+            statusEl.className = 'ext-status connected';
+            textEl.innerText = 'Extension Connected';
+            showNotification('ExtendLM Extension detected! Ready to sync.', 'success');
+            
+            // Auto sync immediately on load if available
+            syncFromExtension();
+          }
+        });
+      }
+    }
+
+    // Direct Sync logic
+    function syncFromExtension() {
+      const statusEl = document.getElementById('extStatus');
+      const textEl = document.getElementById('extStatusText');
+      const syncBtn = document.getElementById('btnExtSync');
+
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+        syncBtn.disabled = true;
+        statusEl.className = 'ext-status connecting';
+        textEl.innerText = 'Syncing...';
+
+        // Try a sequence of export payload requests
+        chrome.runtime.sendMessage(EXTENSION_ID, { action: 'exportDatabase' }, (response) => {
+          if (chrome.runtime.lastError || !response) {
+            // Try fallback action formats
+            chrome.runtime.sendMessage(EXTENSION_ID, { action: 'getData' }, (responseFallback) => {
+              if (chrome.runtime.lastError || !responseFallback) {
+                // If direct requests fail, alert user and look for window message fallback
+                syncBtn.disabled = false;
+                statusEl.className = 'ext-status';
+                textEl.innerText = 'Sync Failed';
+                showNotification('Connection blocked. Export manually or add externally_connectable config.', 'error');
+              } else {
+                handleExtensionSyncResponse(responseFallback);
+              }
+            });
+          } else {
+            handleExtensionSyncResponse(response);
+          }
+        });
+      } else {
+        // We're outside a Chrome browser context
+        showNotification('Direct connection requires a Chrome-based browser with ExtendLM installed.', 'error');
+      }
+    }
+
+    function handleExtensionSyncResponse(response) {
+      const syncBtn = document.getElementById('btnExtSync');
+      syncBtn.disabled = false;
+
+      let database = response.database || response.data || response;
+      let email = response.email || 'active-user@gmail.com';
+
+      if (database && (database.notebooks || database.sources)) {
+        handleSyncedData(database, email);
+      } else {
+        showNotification('Invalid data structure received from extension.', 'error');
+      }
+    }
+
+    function handleSyncedData(database, email) {
+      activeDb = database;
+      isDemoMode = false;
+      document.getElementById('demoRibbon').style.display = 'none';
+      document.getElementById('clearBtn').disabled = false;
+
+      // Update indicators
+      const statusEl = document.getElementById('extStatus');
+      const textEl = document.getElementById('extStatusText');
+      statusEl.className = 'ext-status connected';
+      textEl.innerText = `Synced: ${email}`;
+
+      // Render schema mapping preview
+      const shortPreview = JSON.stringify(database, null, 2);
+      document.getElementById('jsonPreview').innerText = shortPreview.substring(0, 1000) + (shortPreview.length > 1000 ? '\n... (truncated)' : '');
+
+      showNotification(`Successfully synchronized ${database.notebooks?.length || 0} notebooks directly from extension!`, 'success');
+      
+      autoDetectMappings(database);
+      recalculateGroups();
+      renderInspectorTable();
+    }
 
     // Load Demo Database
     function loadDemoData() {
@@ -1424,6 +1625,11 @@
       
       document.getElementById('plannerGroupsContainer').innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 3rem;">Please upload a database backup file on the left to begin planner generation.</div>';
       document.getElementById('jsonPreview').innerText = 'No file uploaded.';
+
+      const statusEl = document.getElementById('extStatus');
+      const textEl = document.getElementById('extStatusText');
+      statusEl.className = 'ext-status';
+      textEl.innerText = 'Extension Offline';
       
       renderInspectorTable();
       showNotification('Database reset. Ready for new input.', 'success');
@@ -1452,7 +1658,6 @@
           
           showNotification(`Successfully loaded database "${file.name}"`, 'success');
           
-          // Auto-detect schema mapping
           autoDetectMappings(parsed);
           recalculateGroups();
           renderInspectorTable();
@@ -1468,7 +1673,6 @@
     function autoDetectMappings(data) {
       const keys = Object.keys(data);
       
-      // Auto-detect array paths
       if (keys.includes('notebooks')) mapping.notebooksKey = 'notebooks';
       else {
         const potentialNotebooks = keys.find(k => Array.isArray(data[k]) && k.toLowerCase().includes('notebook'));
@@ -1481,7 +1685,6 @@
         if (potentialSources) mapping.sourcesKey = potentialSources;
       }
       
-      // Write detected mapping inputs back to form
       document.getElementById('mapNotebooks').value = mapping.notebooksKey;
       document.getElementById('mapSources').value = mapping.sourcesKey;
       
@@ -1521,10 +1724,8 @@
       const groupingType = document.getElementById('scopeGrouping').value;
       const titleRule = document.getElementById('titleRule').value;
       
-      // Reset groups
       mergeGroups = {};
       
-      // Build notebook source counts map
       const nbSourceCounts = {};
       notebooks.forEach(nb => {
         nbSourceCounts[nb[mapping.notebookIdField]] = 0;
@@ -1537,7 +1738,6 @@
         }
       });
       
-      // Grouping process
       notebooks.forEach(nb => {
         const nbId = nb[mapping.notebookIdField];
         const nbTitle = nb.title || 'Untitled Notebook';
@@ -1548,11 +1748,9 @@
         let scope = 'unassigned';
         
         if (groupingType === 'title-prefix') {
-          // Splitting logic
           if (nbTitle.includes(titleRule)) {
             scope = nbTitle.split(titleRule)[0].trim();
           } else {
-            // Check if matches generic pattern like "Miami 5" or "L7S"
             if (nbTitle.toLowerCase().includes('miami 5')) scope = 'Miami 5';
             else if (nbTitle.toLowerCase().includes('l7s')) scope = 'L7S';
             else if (nbTitle.toLowerCase().includes('xlrd')) scope = 'XLRD TECH';
@@ -1567,7 +1765,6 @@
           if (scopeTag) {
             scope = scopeTag.split('scope:')[1].trim().toUpperCase();
           } else {
-            // Check other tags
             const checkTags = ['miami5', 'l7s', 'xlrd', 'temple'];
             const foundTag = tags.find(t => checkTags.includes(t.toLowerCase()));
             scope = foundTag ? foundTag.toUpperCase() : 'General / No Scope';
@@ -1590,14 +1787,12 @@
           sourceCount: sourceCount,
           folderName: folders.find(f => f.id === folderId)?.name || '',
           tags: tags,
-          selected: sourceCount < sourceLimit // Pre-select for merge if below limit
+          selected: sourceCount < sourceLimit
         });
       });
       
-      // Pick best target for each group
       for (const scope in mergeGroups) {
         const group = mergeGroups[scope];
-        // Select notebook with highest source count as initial target
         let maxCount = -1;
         let targetId = null;
         
@@ -1611,7 +1806,6 @@
         group.targetNotebookId = targetId;
       }
       
-      // Render components
       renderPlannerGroups();
       updateDashboardStats();
     }
@@ -1630,7 +1824,6 @@
       
       for (const scope in mergeGroups) {
         const group = mergeGroups[scope];
-        // How many notebooks will actually be deleted in this group
         let toMerge = group.notebooks.filter(nb => nb.selected && nb.id !== group.targetNotebookId);
         mergeableCount += toMerge.length;
       }
@@ -1658,7 +1851,6 @@
         
         const isOptimized = group.notebooks.some(n => n.selected && n.id !== group.targetNotebookId);
         
-        // Calculate pre/post state
         let currentCount = group.notebooks.reduce((sum, n) => sum + n.sourceCount, 0);
         let targetNb = group.notebooks.find(n => n.id === group.targetNotebookId);
         let targetTitle = targetNb ? targetNb.title : 'None';
@@ -1745,7 +1937,6 @@
       cardEl.classList.toggle('collapsed');
     }
 
-    // Toggle Checkbox selection
     function toggleNotebookMerge(scopeKey, notebookId, isChecked) {
       const group = mergeGroups[scopeKey];
       const notebook = group.notebooks.find(n => n.id === notebookId);
@@ -1785,7 +1976,7 @@
       let updatedSourcesCount = 0;
       
       const notebooksToDelete = new Set();
-      const sourceMoveMap = {}; // From ID -> To Target ID
+      const sourceMoveMap = {};
       
       for (const scope in mergeGroups) {
         const group = mergeGroups[scope];
