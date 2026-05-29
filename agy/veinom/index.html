@@ -1,0 +1,2436 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Johan Beker – Premium Portfolio</title>
+    <meta name="description" content="Polo is a sleek and professionally designed portfolio template, built to help creatives showcase their work with modern aesthetics and seamless functionality.">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="assets/johan_avatar.png">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,500;1,700&display=swap" rel="stylesheet">
+
+    <!-- CSS Styling (Inline & Highly Curated) -->
+    <style>
+        /* CSS RESET & VARIABLES */
+        :root {
+            --bg-base: #0a0a0a;
+            --bg-surface: #0f0f0f;
+            --bg-card: rgba(255, 255, 255, 0.02);
+            --border-color: rgba(255, 255, 255, 0.07);
+            --border-hover: rgba(255, 255, 255, 0.15);
+            --text-primary: #ffffff;
+            --text-secondary: #a3a3a3;
+            --text-muted: #737373;
+            --accent: #ffd700; /* Gold */
+            --accent-gradient: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+            --glow-color: rgba(255, 215, 0, 0.15);
+            --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            --font-display: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-color) var(--bg-base);
+        }
+
+        body {
+            background-color: var(--bg-base);
+            background-image: radial-gradient(circle at 50% 0%, #1c1c1c 0%, #0a0a0a 100%);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* CUSTOM SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-base);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--border-hover);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+            transition: var(--transition-smooth);
+        }
+
+        /* TYPOGRAPHY */
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-display);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        /* UTILITY CLASSES */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .gradient-text {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .glass-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            transition: var(--transition-smooth);
+        }
+
+        .glass-panel:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            border-radius: 9999px;
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 14px;
+            transition: var(--transition-smooth);
+            cursor: pointer;
+            border: none;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            color: #000;
+            box-shadow: 0 4px 15px var(--glow-color);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+
+        .badge {
+            display: inline-flex;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* HEADER / NAVIGATION */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.7);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 72px;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-circle {
+            width: 10px;
+            height: 10px;
+            background: var(--accent-gradient);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .nav-link {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            position: relative;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--text-primary);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent-gradient);
+            transition: var(--transition-smooth);
+        }
+
+        .nav-link:hover::after, .nav-link.active::after {
+            width: 100%;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* VIEW CONTAINER (SPA ROUTER) */
+        .view-content {
+            margin-top: 72px;
+            min-height: calc(100vh - 72px);
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .view-content.active-view {
+            display: block;
+            opacity: 1;
+        }
+
+        /* HERO SECTION */
+        .hero {
+            padding: 120px 0 80px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero-avatar {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            border: 3px solid var(--border-color);
+            margin: 0 auto 24px auto;
+            background-image: url('assets/johan_avatar.png');
+            background-size: cover;
+            background-position: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .hero-avatar::after {
+            content: '';
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 14px;
+            height: 14px;
+            background: #10b981; /* green available indicator */
+            border: 2px solid var(--bg-base);
+            border-radius: 50%;
+            box-shadow: 0 0 8px #10b981;
+        }
+
+        .hero h1 {
+            font-size: 64px;
+            line-height: 1.1;
+            margin-bottom: 16px;
+            font-weight: 800;
+        }
+
+        .hero p {
+            font-size: 20px;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 32px auto;
+            font-weight: 400;
+        }
+
+        .hero-actions {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        /* STATS SECTION */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            padding: 40px;
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        .stat-item h3 {
+            font-size: 42px;
+            margin-bottom: 4px;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-item p {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+        }
+
+        /* SECTION HEADERS */
+        .section-header {
+            margin-bottom: 48px;
+            text-align: center;
+        }
+
+        .section-header .badge {
+            margin-bottom: 12px;
+        }
+
+        .section-header h2 {
+            font-size: 38px;
+            font-weight: 800;
+        }
+
+        /* TIMELINE SECTION */
+        .timeline-section {
+            padding: 80px 0;
+        }
+
+        .timeline-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+        }
+
+        .timeline-card {
+            padding: 32px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .timeline-year {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+
+        .timeline-title {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .timeline-company {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* SERVICES SECTION */
+        .services-section {
+            padding: 80px 0;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .service-card {
+            padding: 40px;
+            display: flex;
+            gap: 24px;
+        }
+
+        .service-icon {
+            font-size: 32px;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            flex-shrink: 0;
+        }
+
+        .service-info h3 {
+            font-size: 22px;
+            margin-bottom: 12px;
+        }
+
+        .service-info p {
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        .services-tag-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .service-tag {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 9999px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* PROCESS SECTION */
+        .process-section {
+            padding: 80px 0;
+        }
+
+        .process-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+        }
+
+        .process-card {
+            padding: 32px;
+            position: relative;
+        }
+
+        .process-num {
+            font-size: 12px;
+            font-weight: 700;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            margin-bottom: 24px;
+        }
+
+        .process-card h3 {
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+
+        .process-card p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* RECENT WORK */
+        .projects-section {
+            padding: 80px 0;
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 32px;
+        }
+
+        .project-card {
+            display: block;
+            border-radius: 20px;
+            overflow: hidden;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            transition: var(--transition-smooth);
+        }
+
+        .project-card:hover {
+            transform: translateY(-6px);
+            border-color: var(--border-hover);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .project-img-wrapper {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+            overflow: hidden;
+            background: #151515;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .project-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: var(--transition-smooth);
+        }
+
+        .project-card:hover .project-img {
+            transform: scale(1.03);
+        }
+
+        .project-details {
+            padding: 24px;
+        }
+
+        .project-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .project-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .project-desc {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        /* WHY ME SECTION */
+        .why-me-section {
+            padding: 80px 0;
+        }
+
+        .why-me-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        .why-me-card {
+            padding: 40px;
+        }
+
+        .why-me-card h3 {
+            font-size: 22px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .why-me-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .why-me-item {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .why-me-item-icon {
+            font-size: 16px;
+            flex-shrink: 0;
+            margin-top: 3px;
+        }
+
+        .why-me-item-icon.check {
+            color: #10b981;
+        }
+
+        .why-me-item-icon.cross {
+            color: #ef4444;
+        }
+
+        .why-me-item-text h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .why-me-item-text p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* TESTIMONIALS */
+        .testimonials-section {
+            padding: 80px 0;
+            overflow: hidden;
+        }
+
+        .testimonials-slider-container {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .testimonials-track {
+            display: flex;
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .testimonial-slide {
+            min-width: 100%;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .testimonial-quote {
+            font-size: 24px;
+            font-family: var(--font-display);
+            font-weight: 500;
+            line-height: 1.5;
+            margin-bottom: 24px;
+            font-style: italic;
+        }
+
+        .testimonial-author-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            margin: 0 auto 12px auto;
+            background: var(--bg-surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--accent);
+            font-family: var(--font-display);
+        }
+
+        .testimonial-author-name {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .testimonial-author-role {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .testimonial-controls {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .testimonial-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--border-color);
+            border: none;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .testimonial-dot.active {
+            background: var(--accent);
+            width: 24px;
+            border-radius: 4px;
+        }
+
+        /* FAQ SECTION */
+        .faq-section {
+            padding: 80px 0;
+        }
+
+        .faq-list {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .faq-item {
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--bg-card);
+            transition: var(--transition-smooth);
+        }
+
+        .faq-header {
+            padding: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .faq-question {
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .faq-toggle-icon {
+            font-size: 18px;
+            transition: transform 0.4s ease;
+            color: var(--text-secondary);
+        }
+
+        .faq-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        .faq-content-inner {
+            padding: 0 24px 24px 24px;
+        }
+
+        .faq-item.active {
+            border-color: var(--border-hover);
+            background: rgba(255,255,255,0.04);
+        }
+
+        .faq-item.active .faq-toggle-icon {
+            transform: rotate(45deg);
+            color: var(--accent);
+        }
+
+        /* CALL TO ACTION / GROW TOGETHER BANNER */
+        .cta-banner {
+            padding: 80px 40px;
+            text-align: center;
+            margin-bottom: 80px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-banner h2 {
+            font-size: 48px;
+            line-height: 1.2;
+            margin-bottom: 16px;
+        }
+
+        .cta-banner p {
+            color: var(--text-secondary);
+            font-size: 18px;
+            max-width: 600px;
+            margin: 0 auto 32px auto;
+        }
+
+        .pricing-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            max-width: 700px;
+            margin: 40px auto 0 auto;
+            text-align: left;
+        }
+
+        .pricing-card {
+            padding: 32px;
+            background: rgba(10,10,10,0.5);
+        }
+
+        .pricing-card h4 {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .pricing-price {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 12px;
+            font-family: var(--font-display);
+        }
+
+        .pricing-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* PROJECTS VIEW PAGE */
+        .projects-page-header {
+            padding: 80px 0 40px 0;
+            text-align: center;
+        }
+
+        .projects-page-header h1 {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .projects-page-header p {
+            font-size: 18px;
+            color: var(--text-secondary);
+        }
+
+        .projects-filter-bar {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 48px;
+        }
+
+        .filter-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 10px 20px;
+            border-radius: 9999px;
+            font-family: var(--font-display);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            border-color: var(--text-primary);
+            color: var(--text-primary);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .filter-btn.active {
+            background: var(--text-primary);
+            color: var(--bg-base);
+            border-color: var(--text-primary);
+        }
+
+        /* CONTACT VIEW PAGE */
+        .contact-view-container {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 64px;
+            padding: 80px 0;
+        }
+
+        .contact-info-panel h1 {
+            font-size: 48px;
+            line-height: 1.1;
+            margin-bottom: 24px;
+        }
+
+        .contact-info-panel p {
+            color: var(--text-secondary);
+            font-size: 16px;
+            margin-bottom: 40px;
+        }
+
+        .contact-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .contact-stat-row {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .contact-stat-num {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--accent);
+            font-family: var(--font-display);
+            min-width: 100px;
+        }
+
+        .contact-stat-label {
+            font-size: 14px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .contact-form-panel {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-control {
+            width: 100%;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 15px;
+            transition: var(--transition-smooth);
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
+        }
+
+        .budget-selector {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .budget-btn {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            font-family: var(--font-display);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .budget-btn:hover, .budget-btn.active {
+            border-color: var(--accent);
+            color: var(--text-primary);
+        }
+
+        .budget-btn.active {
+            background: rgba(255, 215, 0, 0.08);
+            border-color: var(--accent);
+        }
+
+        /* CASE STUDY DETAILS PAGE */
+        .case-study-hero {
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .case-study-hero h1 {
+            font-size: 56px;
+            margin-bottom: 16px;
+        }
+
+        .case-study-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-top: 48px;
+            text-align: left;
+            padding: 24px 0;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .case-study-meta-item h4 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .case-study-meta-item p {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .case-study-main-img-wrapper {
+            margin: 48px 0;
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .case-study-main-img {
+            width: 100%;
+            display: block;
+        }
+
+        .case-study-content-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 64px;
+            padding: 40px 0;
+        }
+
+        .case-study-left h2 {
+            font-size: 32px;
+            line-height: 1.2;
+            position: sticky;
+            top: 100px;
+        }
+
+        .case-study-right {
+            display: flex;
+            flex-direction: column;
+            gap: 48px;
+        }
+
+        .case-study-section-block h3 {
+            font-size: 20px;
+            margin-bottom: 16px;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .case-study-section-block p {
+            color: var(--text-secondary);
+            font-size: 17px;
+            line-height: 1.7;
+        }
+
+        .case-study-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .case-study-stat-card {
+            padding: 24px;
+            text-align: center;
+        }
+
+        .case-study-stat-num {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--accent);
+            font-family: var(--font-display);
+        }
+
+        .case-study-stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .case-study-footer {
+            padding: 80px 0;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* FOOTER */
+        footer {
+            padding: 48px 0;
+            border-top: 1px solid var(--border-color);
+            background: rgba(10, 10, 10, 0.9);
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .footer-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-credits a {
+            color: var(--text-secondary);
+        }
+
+        .footer-credits a:hover {
+            color: var(--accent);
+        }
+
+        /* MOBILE MENU OVERLAY */
+        .mobile-menu {
+            position: fixed;
+            top: 72px;
+            left: 0;
+            width: 100%;
+            height: calc(100vh - 72px);
+            background: var(--bg-base);
+            z-index: 99;
+            padding: 40px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .mobile-menu.open {
+            transform: translateX(0);
+        }
+
+        .mobile-menu .nav-link {
+            font-size: 24px;
+            font-weight: 700;
+            font-family: var(--font-display);
+        }
+
+        /* RESPONSIVE LAYOUT MEDIA QUERIES */
+        @media (max-width: 1024px) {
+            .timeline-grid, .process-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .why-me-grid {
+                grid-template-columns: 1fr;
+            }
+            .case-study-content-grid {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
+            .case-study-left h2 {
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header nav {
+                display: none;
+            }
+            .mobile-menu-toggle {
+                display: block;
+            }
+            .hero h1 {
+                font-size: 42px;
+            }
+            .hero p {
+                font-size: 16px;
+            }
+            .services-grid, .projects-grid {
+                grid-template-columns: 1fr;
+            }
+            .pricing-cards {
+                grid-template-columns: 1fr;
+            }
+            .contact-view-container {
+                grid-template-columns: 1fr;
+                gap: 48px;
+            }
+            .case-study-meta-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .footer-container {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+            .stats-bar {
+                grid-template-columns: 1fr;
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVIGATION HEADER -->
+    <header>
+        <div class="container nav-container">
+            <a href="#home" class="logo">
+                <span class="logo-circle"></span>POLO
+            </a>
+            <nav>
+                <a href="#home" class="nav-link nav-route-link" data-route="home">Services</a>
+                <a href="#projects" class="nav-link nav-route-link" data-route="projects">Projects</a>
+                <a href="#contact" class="nav-link nav-route-link" data-route="contact">Contact</a>
+                <a href="#contact" class="btn btn-secondary btn-nav-cta">Get for Free</a>
+            </nav>
+            <button class="mobile-menu-toggle" id="menu-toggle-btn">
+                &#9776;
+            </button>
+        </div>
+    </header>
+
+    <!-- MOBILE MENU OVERLAY -->
+    <div class="mobile-menu" id="mobile-menu-panel">
+        <a href="#home" class="nav-link nav-route-link" data-route="home">Services</a>
+        <a href="#projects" class="nav-link nav-route-link" data-route="projects">Projects</a>
+        <a href="#contact" class="nav-link nav-route-link" data-route="contact">Contact</a>
+        <a href="#contact" class="btn btn-primary" style="margin-top: auto;">Get for Free</a>
+    </div>
+
+    <!-- MAIN VIEW WRAPPERS -->
+
+    <!-- ==================== HOME VIEW ==================== -->
+    <div id="home-view" class="view-content active-view">
+        
+        <!-- HERO -->
+        <section class="hero container">
+            <div class="hero-avatar"></div>
+            <div class="badge">Available for work</div>
+            <h1 style="margin-top: 16px;">Hello, I am <span class="gradient-text">Johan Beker</span></h1>
+            <p>I'm a versatile designer based in Berlin, Germany, specializing in creative design with seamless technical execution to craft exceptional digital experiences.</p>
+            <div class="hero-actions">
+                <a href="#projects" class="btn btn-primary">See All Projects</a>
+                <a href="#contact" class="btn btn-secondary">Contact Now</a>
+            </div>
+            
+            <!-- STATS -->
+            <div class="stats-bar glass-panel">
+                <div class="stat-item">
+                    <h3>100+</h3>
+                    <p>Happy clients</p>
+                </div>
+                <div class="stat-item">
+                    <h3>$250M+</h3>
+                    <p>Revenue Added</p>
+                </div>
+                <div class="stat-item">
+                    <h3>4.8</h3>
+                    <p>Average Rating</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- EXPERIENCE TIMELINE -->
+        <section class="timeline-section container">
+            <div class="section-header">
+                <div class="badge">Timeline</div>
+                <h2>Work Experience</h2>
+            </div>
+            <div class="timeline-grid">
+                <div class="timeline-card glass-panel">
+                    <span class="timeline-year">2021</span>
+                    <div>
+                        <h3 class="timeline-title">UX/UI Designer</h3>
+                        <p class="timeline-company">GreenLeaf Co</p>
+                    </div>
+                </div>
+                <div class="timeline-card glass-panel">
+                    <span class="timeline-year">2022</span>
+                    <div>
+                        <h3 class="timeline-title">Product Designer</h3>
+                        <p class="timeline-company">UrbanFit Studio</p>
+                    </div>
+                </div>
+                <div class="timeline-card glass-panel">
+                    <span class="timeline-year">2023</span>
+                    <div>
+                        <h3 class="timeline-title">Graphic Designer</h3>
+                        <p class="timeline-company">PixelCraft Studios</p>
+                    </div>
+                </div>
+                <div class="timeline-card glass-panel">
+                    <span class="timeline-year">2024</span>
+                    <div>
+                        <h3 class="timeline-title">UI/UX Interaction</h3>
+                        <p class="timeline-company">VistaWorks</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROCESS -->
+        <section class="process-section container">
+            <div class="section-header">
+                <div class="badge">How it works</div>
+                <h2>Process Is Everything</h2>
+            </div>
+            <div class="process-grid">
+                <div class="process-card glass-panel">
+                    <div class="process-num">01</div>
+                    <h3>Let's Get In Touch</h3>
+                    <p>Start by reaching out through our contact page. Fill out the form or book a call to discuss your project goals.</p>
+                </div>
+                <div class="process-card glass-panel">
+                    <div class="process-num">02</div>
+                    <h3>Grab Your Designs</h3>
+                    <p>Tell me your unique vision, and I’ll create stunning, functional designs that perfectly align with your target audience.</p>
+                </div>
+                <div class="process-card glass-panel">
+                    <div class="process-num">03</div>
+                    <h3>Kickstart Dev</h3>
+                    <p>I transform your design concepts into a powerful, clean, scalable solution, fully optimized and ready to launch.</p>
+                </div>
+                <div class="process-card glass-panel">
+                    <div class="process-num">04</div>
+                    <h3>Hand Over</h3>
+                    <p>Receive a fully tested, polished, and high-quality product tailored to your needs with ongoing post-launch support.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SERVICES -->
+        <section class="services-section container">
+            <div class="section-header">
+                <div class="badge">My Services</div>
+                <h2>Explore Design Services</h2>
+            </div>
+            <div class="services-grid">
+                <div class="service-card glass-panel">
+                    <div class="service-icon">&#128bb;</div>
+                    <div class="service-info">
+                        <h3>Website Design</h3>
+                        <p>Designing breathtaking, user-centric websites that boost engagement, conversions, and growth, perfectly aligned with your brand.</p>
+                    </div>
+                </div>
+                <div class="service-card glass-panel">
+                    <div class="service-icon">&#127a8;</div>
+                    <div class="service-info">
+                        <h3>Graphic Design</h3>
+                        <p>Crafting bold, engaging, and versatile graphic designs that elevate your brand narrative and captivate your audience across mediums.</p>
+                    </div>
+                </div>
+                <div class="service-card glass-panel">
+                    <div class="service-icon">&#127912;</div>
+                    <div class="service-info">
+                        <h3>Logo Design</h3>
+                        <p>Crafting distinctive, scalable, and impactful logos that embody your brand’s core identity and long-term vision.</p>
+                    </div>
+                </div>
+                <div class="service-card glass-panel">
+                    <div class="service-icon">&#9889;</div>
+                    <div class="service-info">
+                        <h3>Framer Design</h3>
+                        <p>Bringing ideas to life with interactive, user-centered Framer builds that simplify complexity and elevate digital interaction.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="services-tag-cloud">
+                <span class="service-tag">Framer Migration</span>
+                <span class="service-tag">Video & Motion Graphics</span>
+                <span class="service-tag">Copywriting</span>
+                <span class="service-tag">Posters</span>
+                <span class="service-tag">Custom Code</span>
+                <span class="service-tag">SEO Optimization</span>
+                <span class="service-tag">Icon Systems</span>
+                <span class="service-tag">Social Media Kits</span>
+                <span class="service-tag">Landing Pages</span>
+                <span class="service-tag">Performance Tuning</span>
+            </div>
+        </section>
+
+        <!-- RECENT WORK -->
+        <section class="projects-section container">
+            <div class="section-header">
+                <div class="badge">Portfolio</div>
+                <h2>Recent Designs</h2>
+            </div>
+            <div class="projects-grid">
+                <!-- Project 1 -->
+                <a href="#project/lanx" class="project-card">
+                    <div class="project-img-wrapper">
+                        <img src="assets/project_lanx.png" alt="LanX Photography website" class="project-img">
+                    </div>
+                    <div class="project-details">
+                        <div class="project-meta">
+                            <span class="badge">Web Design</span>
+                            <span class="timeline-company">June Dennis</span>
+                        </div>
+                        <h3 class="project-title">LanX</h3>
+                        <p class="project-desc">A visually immersive, storytelling-driven website tailored for professional photographers.</p>
+                    </div>
+                </a>
+                <!-- Project 2 -->
+                <a href="#project/studio" class="project-card">
+                    <div class="project-img-wrapper">
+                        <img src="assets/project_studio.png" alt="Studio Creative website" class="project-img">
+                    </div>
+                    <div class="project-details">
+                        <div class="project-meta">
+                            <span class="badge">Framer Development</span>
+                            <span class="timeline-company">Creative Studio</span>
+                        </div>
+                        <h3 class="project-title">Studio</h3>
+                        <p class="project-desc">A bold and highly expressive website layout reflecting modern design agency identity.</p>
+                    </div>
+                </a>
+            </div>
+            <div style="text-align: center; margin-top: 48px;">
+                <a href="#projects" class="btn btn-secondary">See All 6 Projects</a>
+            </div>
+        </section>
+
+        <!-- COMPARISON / WHY ME -->
+        <section class="why-me-section container">
+            <div class="section-header">
+                <div class="badge">Why Choose Me</div>
+                <h2>Design Excellence Partner</h2>
+            </div>
+            <div class="why-me-grid">
+                <!-- Partner with me -->
+                <div class="why-me-card glass-panel" style="border-color: rgba(16, 185, 129, 0.2);">
+                    <h3><span style="color: #10b981;">&#10004;</span> Partnering with Me</h3>
+                    <ul class="why-me-list">
+                        <li class="why-me-item">
+                            <span class="why-me-item-icon check">&#10004;</span>
+                            <div class="why-me-item-text">
+                                <h4>Skilled Professional</h4>
+                                <p>Gain access to top-tier expertise ensuring flawless execution and pixel-perfect design results.</p>
+                            </div>
+                        </li>
+                        <li class="why-me-item">
+                            <span class="why-me-item-icon check">&#10004;</span>
+                            <div class="why-me-item-text">
+                                <h4>Future-Ready Designs</h4>
+                                <p>Modern, scalable visual languages that keep your brand ahead of design trends and competition.</p>
+                            </div>
+                        </li>
+                        <li class="why-me-item">
+                            <span class="why-me-item-icon check">&#10004;</span>
+                            <div class="why-me-item-text">
+                                <h4>Client-Centric Collaboration</h4>
+                                <p>Your vision directs the project. I maintain high-frequency alignment loops to capture feedback.</p>
+                            </div>
+                        </li>
+                        <li class="why-me-item">
+                            <span class="why-me-item-icon check">&#10004;</span>
+                            <div class="why-me-item-text">
+                                <h4>Timely Delivery tracking</h4>
+                                <p>Stay informed with regular milestones and strict timeline tracking to meet launch targets.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <!-- Detractors -->
+                <div class="why-me-card glass-panel" style="border-color: rgba(239, 68, 68, 0.2);">
+                    <h3><span style="color: #ef4444;">&#10006;</span> General Alternatives</h3>
+                    <ul class="why-me-list">
+                        <li class="why-me-item">
+                            <span class="why-me-item-icon cross">&#10006;</span>
+                            <div class="why-me-item-text">
+                                <h4>Amateur Designers</h4>
+                                <p>Inconsistent styling, messy folder organization, and overlooked details that degrade quality.</p>
+                            </div>
+                        </li>
+                        <li class="why-me-item">
+                            <span class="why-me-item-icon cross">&#10006;</span>
+                            <div class="why-me-item-text">
+                                <h4>Outdated Concepts</h4>
+                                <p>Stale templates that fail to reflect current interactive design practices or modern brand narratives.</p>
+                            </div>
+                        </li>
+                        <li class="why-me-item">
+                            <span class="why-me-item-icon cross">&#10006;</span>
+                            <div class="why-me-item-text">
+                                <h4>Detached Communication</h4>
+                                <p>Poor alignment loops and long silence periods leading to frustrating revisions and delays.</p>
+                            </div>
+                        </li>
+                        <li class="why-me-item">
+                            <span class="why-me-item-icon cross">&#10006;</span>
+                            <div class="why-me-item-text">
+                                <h4>Unreliable Work schedules</h4>
+                                <p>Unstructured project pipelines that risk slipping deadlines and compromising build quality.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- TESTIMONIALS SLIDER -->
+        <section class="testimonials-section container">
+            <div class="section-header">
+                <div class="badge">Reviews</div>
+                <h2>Clients Love Me</h2>
+            </div>
+            <div class="testimonials-slider-container glass-panel">
+                <div class="testimonials-track" id="testimonial-track-element">
+                    <!-- Slide 1 -->
+                    <div class="testimonial-slide">
+                        <p class="testimonial-quote">"Working with Johan was a absolute game changer! The design details exceeded our expectations, creating a seamless and visually stunning brand identity."</p>
+                        <div class="testimonial-author-img">WS</div>
+                        <h4 class="testimonial-author-name">Will Smith</h4>
+                        <p class="testimonial-author-role">Product Operations, PranavNB</p>
+                    </div>
+                    <!-- Slide 2 -->
+                    <div class="testimonial-slide">
+                        <p class="testimonial-quote">"Exceptional creativity and attention to detail! The final responsive product not only looks premium but doubled our conversions within weeks of launch."</p>
+                        <div class="testimonial-author-img">IS</div>
+                        <h4 class="testimonial-author-name">Ikta Sollork</h4>
+                        <p class="testimonial-author-role">Founder, VijayNB</p>
+                    </div>
+                    <!-- Slide 3 -->
+                    <div class="testimonial-slide">
+                        <p class="testimonial-quote">"Working with this process was effortless. The visual direction was understood perfectly, and the designs truly represent our high-end agency standards."</p>
+                        <div class="testimonial-author-img">RH</div>
+                        <h4 class="testimonial-author-name">Ryan Harper</h4>
+                        <p class="testimonial-author-role">CEO, Paral Founder</p>
+                    </div>
+                    <!-- Slide 4 -->
+                    <div class="testimonial-slide">
+                        <p class="testimonial-quote">"A game-changing partnership! The collaboration was smooth, transparent, and resulted in a brand presence we are incredibly proud to show."</p>
+                        <div class="testimonial-author-img">DS</div>
+                        <h4 class="testimonial-author-name">Diane Swag</h4>
+                        <p class="testimonial-author-role">Manager, Swag Studio</p>
+                    </div>
+                </div>
+                <div class="testimonial-controls" id="testimonial-dots-container">
+                    <!-- Dots generated in JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ ACCORDIONS -->
+        <section class="faq-section container">
+            <div class="section-header">
+                <div class="badge">FAQ</div>
+                <h2>Questions & Answers</h2>
+            </div>
+            <div class="faq-list">
+                <!-- Accordion 1 -->
+                <div class="faq-item">
+                    <div class="faq-header">
+                        <span class="faq-question">What services do you offer?</span>
+                        <span class="faq-toggle-icon">&#43;</span>
+                    </div>
+                    <div class="faq-content">
+                        <div class="faq-content-inner">
+                            I specialize in responsive website design, brand identity development, high-fidelity UI/UX design, custom icon systems, and premium development pipelines such as Framer and Webflow setups.
+                        </div>
+                    </div>
+                </div>
+                <!-- Accordion 2 -->
+                <div class="faq-item">
+                    <div class="faq-header">
+                        <span class="faq-question">How do I start working with you?</span>
+                        <span class="faq-toggle-icon">&#43;</span>
+                    </div>
+                    <div class="faq-content">
+                        <div class="faq-content-inner">
+                            You can easily initiate a project by filling out the form on our Contact view, selecting your budget tier, or directly booking a visual discovery call to discuss target goals.
+                        </div>
+                    </div>
+                </div>
+                <!-- Accordion 3 -->
+                <div class="faq-item">
+                    <div class="faq-header">
+                        <span class="faq-question">What design tools do you use?</span>
+                        <span class="faq-toggle-icon">&#43;</span>
+                    </div>
+                    <div class="faq-content">
+                        <div class="faq-content-inner">
+                            My design workflow is primarily built on Figma for interface and product layouts, Adobe Creative Cloud for asset manipulation, and Framer/Webflow for deploying interactive sites.
+                        </div>
+                    </div>
+                </div>
+                <!-- Accordion 4 -->
+                <div class="faq-item">
+                    <div class="faq-header">
+                        <span class="faq-question">How long does a typical project take?</span>
+                        <span class="faq-toggle-icon">&#43;</span>
+                    </div>
+                    <div class="faq-content">
+                        <div class="faq-content-inner">
+                            A standard landing page or portfolio design typically spans 2 to 3 weeks, while comprehensive multi-page agency or corporate redesign campaigns take around 4 to 6 weeks.
+                        </div>
+                    </div>
+                </div>
+                <!-- Accordion 5 -->
+                <div class="faq-item">
+                    <div class="faq-header">
+                        <span class="faq-question">Do you offer post-launch support and revisions?</span>
+                        <span class="faq-toggle-icon">&#43;</span>
+                    </div>
+                    <div class="faq-content">
+                        <div class="faq-content-inner">
+                            Yes, all project tiers include 30 days of comprehensive QA support and structured iteration periods during development to guarantee full alignment with client expectations.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA BANNER -->
+        <section class="container" style="margin-bottom: 80px;">
+            <div class="cta-banner glass-panel" style="background: radial-gradient(circle at center, #1b1a0d 0%, #0f0f0f 100%);">
+                <div class="badge">Let's collaborate</div>
+                <h2 style="margin-top: 16px;">Let's Grow Together</h2>
+                <p>Choose the partnership model that fits your current business scale and let's construct something beautiful.</p>
+                <a href="#contact" class="btn btn-primary">Get Started Now</a>
+                
+                <div class="pricing-cards">
+                    <div class="pricing-card glass-panel">
+                        <h4>Essential Pack</h4>
+                        <div class="pricing-price">From $1,999</div>
+                        <p class="pricing-desc">Showcasing sleek, high-performance layouts tailored for personal brands and studios looking for rapid market impact.</p>
+                    </div>
+                    <div class="pricing-card glass-panel">
+                        <h4>Scale Pack</h4>
+                        <div class="pricing-price">From $4,999</div>
+                        <p class="pricing-desc">Comprehensive brand architecture and complex interaction design built to scale corporate conversions.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- ==================== PROJECTS VIEW ==================== -->
+    <div id="projects-view" class="view-content">
+        <section class="container">
+            <div class="projects-page-header">
+                <div class="badge">Directory</div>
+                <h1>Elevating Brands to Success</h1>
+                <p>Explore my collection of high-performance digital projects and design case studies.</p>
+            </div>
+
+            <!-- Category Filter Buttons -->
+            <div class="projects-filter-bar">
+                <button class="filter-btn active" data-filter="all">All Work</button>
+                <button class="filter-btn" data-filter="web">Web Design</button>
+                <button class="filter-btn" data-filter="framer">Framer Dev</button>
+                <button class="filter-btn" data-filter="brand">Brand Identity</button>
+            </div>
+
+            <!-- 6 Projects Grid -->
+            <div class="projects-grid" id="project-directory-grid">
+                <!-- Card 1 -->
+                <a href="#project/lanx" class="project-card" data-category="web">
+                    <div class="project-img-wrapper">
+                        <img src="assets/project_lanx.png" alt="LanX case study" class="project-img">
+                    </div>
+                    <div class="project-details">
+                        <div class="project-meta">
+                            <span class="badge">Web Design</span>
+                            <span class="timeline-company">June Dennis</span>
+                        </div>
+                        <h3 class="project-title">LanX</h3>
+                        <p class="project-desc">Create a visually stunning photography website presenting high-end visual galleries.</p>
+                    </div>
+                </a>
+
+                <!-- Card 2 -->
+                <a href="#project/studio" class="project-card" data-category="framer">
+                    <div class="project-img-wrapper">
+                        <img src="assets/project_studio.png" alt="Studio case study" class="project-img">
+                    </div>
+                    <div class="project-details">
+                        <div class="project-meta">
+                            <span class="badge">Framer Development</span>
+                            <span class="timeline-company">Creative Studio</span>
+                        </div>
+                        <h3 class="project-title">Studio</h3>
+                        <p class="project-desc">Visually expressive, conversion-optimized design structure with custom interactions.</p>
+                    </div>
+                </a>
+
+                <!-- Card 3 -->
+                <a href="#project/portal" class="project-card" data-category="web">
+                    <div class="project-img-wrapper">
+                        <img src="assets/project_portal.png" alt="Portal case study" class="project-img">
+                    </div>
+                    <div class="project-details">
+                        <div class="project-meta">
+                            <span class="badge">Web Design</span>
+                            <span class="timeline-company">Jakub Hannah</span>
+                        </div>
+                        <h3 class="project-title">Portal</h3>
+                        <p class="project-desc">A bold portfolio template simplifying project showcasing and lead generation for freelancers.</p>
+                    </div>
+                </a>
+
+                <!-- Card 4 -->
+                <a href="#project/brandin" class="project-card" data-category="brand">
+                    <div class="project-img-wrapper">
+                        <img src="assets/project_brandin.png" alt="Brandin case study" class="project-img">
+                    </div>
+                    <div class="project-details">
+                        <div class="project-meta">
+                            <span class="badge">Brand Design</span>
+                            <span class="timeline-company">Brandin Marketing</span>
+                        </div>
+                        <h3 class="project-title">Brandin</h3>
+                        <p class="project-desc">Redefine agency branding visual systems, typography styles, and corporate guidelines.</p>
+                    </div>
+                </a>
+
+                <!-- Card 5 -->
+                <a href="#project/fade" class="project-card" data-category="framer">
+                    <div class="project-img-wrapper">
+                        <img src="assets/project_fade.png" alt="Fade case study" class="project-img">
+                    </div>
+                    <div class="project-details">
+                        <div class="project-meta">
+                            <span class="badge">Framer Development</span>
+                            <span class="timeline-company">Framer Template</span>
+                        </div>
+                        <h3 class="project-title">Fade</h3>
+                        <p class="project-desc">A premium portfolio layout combining modern elements with fluid web animations.</p>
+                    </div>
+                </a>
+
+                <!-- Card 6 -->
+                <a href="#project/atom-ai" class="project-card" data-category="brand">
+                    <div class="project-img-wrapper">
+                        <img src="assets/project_atom_ai.png" alt="Atom AI case study" class="project-img">
+                    </div>
+                    <div class="project-details">
+                        <div class="project-meta">
+                            <span class="badge">Web Design</span>
+                            <span class="timeline-company">Framer Template</span>
+                        </div>
+                        <h3 class="project-title">Atom AI</h3>
+                        <p class="project-desc">A world-class SaaS web template designed for cutting-edge AI software startups.</p>
+                    </div>
+                </a>
+            </div>
+        </section>
+    </div>
+
+    <!-- ==================== CONTACT VIEW ==================== -->
+    <div id="contact-view" class="view-content">
+        <section class="container contact-view-container">
+            <!-- Left Info Panel -->
+            <div class="contact-info-panel">
+                <div class="badge">Get in Touch</div>
+                <h1 style="margin-top: 16px;">Let’s Collaborate & Begin</h1>
+                <p>Fill out the project scope builder to get a custom quote and design consultation within 48 hours.</p>
+                
+                <div class="contact-stats">
+                    <div class="contact-stat-row">
+                        <div class="contact-stat-num">100+</div>
+                        <div class="contact-stat-label">Happy Clients</div>
+                    </div>
+                    <div class="contact-stat-row">
+                        <div class="contact-stat-num">$250M</div>
+                        <div class="contact-stat-label">Revenue Generated</div>
+                    </div>
+                    <div class="contact-stat-row">
+                        <div class="contact-stat-num">4.8</div>
+                        <div class="contact-stat-label">Average Star Rating</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Form Panel -->
+            <div class="contact-form-panel glass-panel">
+                <form id="contact-form-element">
+                    <div class="form-group">
+                        <label for="form-name">Name</label>
+                        <input type="text" id="form-name" class="form-control" placeholder="Johan Doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-email">Email</label>
+                        <input type="email" id="form-email" class="form-control" placeholder="johandoe@gmail.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-website">Website (Optional)</label>
+                        <input type="url" id="form-website" class="form-control" placeholder="https://example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Budget Range</label>
+                        <div class="budget-selector" id="form-budget-selector">
+                            <button type="button" class="budget-btn active" data-budget="1999">$1,999 - Essential Pack</button>
+                            <button type="button" class="budget-btn" data-budget="4999">$4,999 - Scale Pack</button>
+                            <button type="button" class="budget-btn" data-budget="custom">Custom Scale</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-message">Message</label>
+                        <textarea id="form-message" class="form-control" rows="5" placeholder="Tell me about your project target goals..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; border-radius: 8px;">Send Message</button>
+                    <p style="text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 16px;">We respond to all requests within 48 business hours.</p>
+                </form>
+            </div>
+        </section>
+    </div>
+
+    <!-- ==================== CASE STUDY DETAIL VIEWS ==================== -->
+
+    <!-- Case Study: LanX -->
+    <div id="project-lanx-view" class="view-content">
+        <section class="container">
+            <div class="case-study-hero">
+                <div class="badge">Web Design</div>
+                <h1 style="margin-top: 16px;">LanX</h1>
+                <p>High-end photography portfolio layout designed for visually immersive storytelling.</p>
+                
+                <div class="case-study-meta-grid">
+                    <div class="case-study-meta-item">
+                        <h4>Client</h4>
+                        <p>June Dennis</p>
+                    </div>
+                    <div class="case-study-meta-item">
+                        <h4>Services</h4>
+                        <p>Web Design</p>
+                    </div>
+                    <div class="case-study-meta-item">
+                        <h4>Date</h4>
+                        <p>June 2024</p>
+                    </div>
+                    <div class="case-study-meta-item">
+                        <h4>Live Preview</h4>
+                        <p><a href="#contact" class="gradient-text">Book Inquire</a></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="case-study-main-img-wrapper">
+                <img src="assets/project_lanx.png" alt="LanX Mockup" class="case-study-main-img">
+            </div>
+
+            <div class="case-study-content-grid">
+                <div class="case-study-left">
+                    <h2>Creating visual spaces for photography portfolios</h2>
+                </div>
+                <div class="case-study-right">
+                    <div class="case-study-section-block">
+                        <h3>The Goal</h3>
+                        <p>Create a visually stunning portfolio site that showcases professional photography projects in a clean layout. The focus was on highlighting raw detail, storytelling, and converting visits into direct booking inquiries.</p>
+                    </div>
+                    <div class="case-study-section-block">
+                        <h3>The Challenge</h3>
+                        <p>The previous portfolio site suffered from low loading speeds due to heavy unoptimized images. Galleries were difficult to navigate, and the lacked direct, obvious channels to initiate bookings or review packages.</p>
+                    </div>
+                    <div class="case-study-section-block">
+                        <h3>The Result</h3>
+                        <p>We launched a high-performance web experience featuring lazy-loading masonry grids and smooth gallery transitions. Within the first month, session durations doubled, and direct bookings rose by over 40%.</p>
+                        <div class="case-study-stats-grid">
+                            <div class="case-study-stat-card glass-panel">
+                                <div class="case-study-stat-num">+40%</div>
+                                <div class="case-study-stat-label">Direct Bookings</div>
+                            </div>
+                            <div class="case-study-stat-card glass-panel">
+                                <div class="case-study-stat-num">2x</div>
+                                <div class="case-study-stat-label">Session Duration</div>
+                            </div>
+                            <div class="case-study-stat-card glass-panel">
+                                <div class="case-study-stat-num">-50%</div>
+                                <div class="case-study-stat-label">Page Load Time</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="case-study-footer">
+                <a href="#projects" class="btn btn-secondary">Back to Projects</a>
+            </div>
+        </section>
+    </div>
+
+    <!-- Case Study: Studio -->
+    <div id="project-studio-view" class="view-content">
+        <section class="container">
+            <div class="case-study-hero">
+                <div class="badge">Framer Development</div>
+                <h1 style="margin-top: 16px;">Studio</h1>
+                <p>Bold, expressive brand showcase for a high-end creative agency.</p>
+                
+                <div class="case-study-meta-grid">
+                    <div class="case-study-meta-item">
+                        <h4>Client</h4>
+                        <p>Creative Studio</p>
+                    </div>
+                    <div class="case-study-meta-item">
+                        <h4>Services</h4>
+                        <p>Web Development</p>
+                    </div>
+                    <div class="case-study-meta-item">
+                        <h4>Date</h4>
+                        <p>August 2024</p>
+                    </div>
+                    <div class="case-study-meta-item">
+                        <h4>Live Preview</h4>
+                        <p><a href="#contact" class="gradient-text">Book Inquire</a></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="case-study-main-img-wrapper">
+                <img src="assets/project_studio.png" alt="Studio Mockup" class="case-study-main-img">
+            </div>
+
+            <div class="case-study-content-grid">
+                <div class="case-study-left">
+                    <h2>Balancing visual identity with high performance</h2>
+                </div>
+                <div class="case-study-right">
+                    <div class="case-study-section-block">
+                        <h3>The Goal</h3>
+                        <p>Design a conversion-optimized web home for a creative design agency. The layout needed to match their bold branding while retaining extremely fast load times and clean accessibility standards.</p>
+                    </div>
+                    <div class="case-study-section-block">
+                        <h3>The Challenge</h3>
+                        <p>The client's previous layouts were generic and failed to convey agency authority. Branding was visually disjointed across desktop and mobile, leading to high bounce rates from potential enterprise partners.</p>
+                    </div>
+                    <div class="case-study-section-block">
+                        <h3>The Result</h3>
+                        <p>A completely customized responsive structure, built with dynamic layout elements and interactive typography. Within six weeks post-launch, the studio secured multiple high-value design retainers.</p>
+                        <div class="case-study-stats-grid">
+                            <div class="case-study-stat-card glass-panel">
+                                <div class="case-study-stat-num">3x</div>
+                                <div class="case-study-stat-label">Inbound Leads</div>
+                            </div>
+                            <div class="case-study-stat-card glass-panel">
+                                <div class="case-study-stat-num">-35%</div>
+                                <div class="case-study-stat-label">Bounce Rate</div>
+                            </div>
+                            <div class="case-study-stat-card glass-panel">
+                                <div class="case-study-stat-num">100%</div>
+                                <div class="case-study-stat-label">Mobile Match</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="case-study-footer">
+                <a href="#projects" class="btn btn-secondary">Back to Projects</a>
+            </div>
+        </section>
+    </div>
+
+    <!-- Case Study: Portal -->
+    <div id="project-portal-view" class="view-content">
+        <section class="container">
+            <div class="case-study-hero">
+                <div class="badge">Web Design</div>
+                <h1 style="margin-top: 16px;">Portal</h1>
+                <p>Sleek, minimalist digital portfolio layout for creative freelancers.</p>
+                
+                <div class="case-study-meta-grid">
+                    <div class="case-study-meta-item">
+                        <h4>Client</h4>
+                        <p>Jakub Hannah</p>
+                    </div>
+                    <div class="case-study-meta-item">
+                        <h4>Services</h4>
+                        <p>Web Design</p>
+                    </div>
+                    <div class="case-study-meta-item">
+                        <h4>Date</h4>
+                        <p>October 2024</p>
+                    </div>
+                    <div class="case-study-meta-item">
+                        <h4>Live Preview</h4>
+                        <p><a href="#contact" class="gradient-text">Book Inquire</a></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="case-study-main-img-wrapper">
+                <img src="assets/project_portal.png" alt="Portal Mockup" class="case-study-main-img">
+            </div>
+
+            <div class="case-study-content-grid">
+                <div class="case-study-left">
+                    <h2>Simplifying digital catalog presentation</h2>
+                </div>
+                <div class="case-study-right">
+                    <div class="case-study-section-block">
+                        <h3>The Goal</h3>
+                        <p>Provide a flexible, modern portfolio architecture where users can seamlessly catalog projects and display visual files without design clutter.</p>
+                    </div>
+                    <div class="case-study-section-block">
+                        <h3>The Challenge</h3>
+                        <p>Most marketplace templates are either over-designed, leading to slow rendering, or lack the modular flexibility required to showcase varying projects.</p>
+                    </div>
+                    <div class="case-study-section-block">
+                        <h3>The Result</h3>
+                        <p>We developed a grid-centric structure relying on CSS variables and responsive glassmorphism modules, receiving high praise from early adopters for client conversions.</p>
+                        <div class="case-study-stats-grid">
+                            <div class="case-study-stat-card glass-panel">
+                                <div class="case-study-stat-num">+55%</div>
+                                <div class="case-study-stat-label">User Engagement</div>
+                            </div>
+                            <div class="case-study-stat-card glass-panel">
+                                <div class="case-study-stat-num">98</div>
+                                <div class="case-study-stat-label">Lighthouse Score</div>
+                            </div>
+                            <div class="case-study-stat-card glass-panel">
+                                <div class="case-study-stat-num">4.9/5</div>
+                                <div class="case-study-stat-label">User Rating</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="case-study-footer">
+                <a href="#projects" class="btn btn-secondary">Back to Projects</a>
+            </div>
+        </section>
+    </div>
+
+    <!-- Case Study: Brandin -->
+    <div id="project-brandin-view" class="view-content">
+        <section class="container">
+            <div class="case-study-hero">
+                <div class="badge">Brand Design</div>
+                <h1 style="margin-top: 16px;">Brandin</h1>
+                <p>Complete identity redesign and guidelines for Brandin Marketing.</p>
+                
+                <div class="case-study-meta-grid">
+                    <div class="case-study-meta-item">
+                        <h4>Client</h4>
+                        <p>Brandin Marketing</p>
+                    </div>
+                    <div class="case-study-meta-item">
+                        <h4>Services</h4>
+                        <p>Brand Design</p>
+                    </div>
+                    <div class="case-study-meta-item">
+                        <h4>Date</h4>
+                        <p>December 2024</p>
+                    </div>
+                    <div class="case-study-meta-item">
+                        <h4>Live Preview</h4>
+                        <p><a href="#contact" class="gradient-text">Book Inquire</a></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="case-study-main-img-wrapper">
+                <img src="assets/project_brandin.png" alt="Brandin Mockup" class="case-study-main-img">
+            </div>
+
+            <div class="case-study-content-grid">
+                <div class="case-study-left">
+                    <h2>Redefining agency identity for market placement</h2>
+                </div>
+                <div class="case-study-right">
+                    <div class="case-study-section-block">
+                        <h3>The Goal</h3>
+                        <p>Establish a comprehensive, unified identity system (logo, layout assets, typography guidelines) to reposition the agency for higher-value corporate campaigns.</p>
+                    </div>
+                    <div class="case-study-section-block">
+                        <h3>The Challenge</h3>
+                        <p>Their former logo design and marketing collaterals felt dated and inconsistent, which failed to communicate the creative calibre of work they delivered to clients.</p>
+                    </div>
+                    <div class="case-study-section-block">
+                        <h3>The Result</h3>
+                        <p>A beautiful luxury brand system that elevated marketing presence. Within two months post-launch, the agency witnessed a significant increase in qualified enterprise leads.</p>
+                        <div class="case-study-stats-grid">
+                            <div class="case-study-stat-card glass-panel">
+                                <div class="case-study-stat-num">+80%</div>
+                                <div class="case-study-stat-label">Enterprise Leads</div>
+                            </div>
+                            <div class="case-study-stat-card glass-panel">
+                                <div class="case-study-stat-num">100%</div>
+                                <div class="case-study-stat-label">Brand Cohesion</div>
+                            </div>
+                            <div class="case-study-stat-card glass-panel">
+                                <div class="case-study-stat-num">2.5x</div>
+                                <div class="case-study-stat-label">Pipeline Value</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="case-study-footer">
+                <a href="#projects" class="btn btn-secondary">Back to Projects</a>
+            </div>
+        </section>
+    </div>
+
+    <!-- Case Study: Fade -->
+    <div id="project-fade-view" class="view-content">
+        <section class="container">
+            <div class="case-study-hero">
+                <div class="badge">Framer Development</div>
+                <h1 style="margin-top: 16px;">Fade</h1>
+                <p>A premium design theme leveraging smooth animated scroll states.</p>
+                
+                <div class="case-study-meta-grid">
+                    <div class="case-study-meta-item">
+                        <h4>Client</h4>
+                        <p>Framer Marketplace</p>
+                    </div>
+                    <div class="case-study-meta-item">
+                        <h4>Services</h4>
+                        <p>Framer Dev</p>
+                    </div>
+                    <div class="case-study-meta-item">
+                        <h4>Date</h4>
+                        <p>January 2025</p>
+                    </div>
+                    <div class="case-study-meta-item">
+                        <h4>Live Preview</h4>
+                        <p><a href="#contact" class="gradient-text">Book Inquire</a></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="case-study-main-img-wrapper">
+                <img src="assets/project_fade.png" alt="Fade Mockup" class="case-study-main-img">
+            </div>
+
+            <div class="case-study-content-grid">
+                <div class="case-study-left">
+                    <h2>Applying premium animation paradigms</h2>
+                </div>
+                <div class="case-study-right">
+                    <div class="case-study-section-block">
+                        <h3>The Goal</h3>
+                        <p>Create a portfolio template featuring premium CSS and JS animations that highlight work without degrading site accessibility.</p>
+                    </div>
+                    <div class="case-study-section-block">
+                        <h3>The Challenge</h3>
+                        <p>Heavy visual transitions often compromise system resources, leading to laggy scrolling experiences particularly on smaller mobile screens.</p>
+                    </div>
+                    <div class="case-study-section-block">
+                        <h3>The Result</h3>
+                        <p>A seamless, highly responsive framework using hardware-accelerated transforms to achieve fluid transitions and absolute scroll alignment.</p>
+                        <div class="case-study-stats-grid">
+                            <div class="case-study-stat-card glass-panel">
+                                <div class="case-study-stat-num">60fps</div>
+                                <div class="case-study-stat-label">Scroll Speed</div>
+                            </div>
+                            <div class="case-study-stat-card glass-panel">
+                                <div class="case-study-stat-num">0.1s</div>
+                                <div class="case-study-stat-label">Input Delay</div>
+                            </div>
+                            <div class="case-study-stat-card glass-panel">
+                                <div class="case-study-stat-num">99.9%</div>
+                                <div class="case-study-stat-label">Uptime Yield</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="case-study-footer">
+                <a href="#projects" class="btn btn-secondary">Back to Projects</a>
+            </div>
+        </section>
+    </div>
+
+    <!-- Case Study: Atom AI -->
+    <div id="project-atom-ai-view" class="view-content">
+        <section class="container">
+            <div class="case-study-hero">
+                <div class="badge">Web Design</div>
+                <h1 style="margin-top: 16px;">Atom AI</h1>
+                <p>Futuristic dark mode interface design for modern SaaS solutions.</p>
+                
+                <div class="case-study-meta-grid">
+                    <div class="case-study-meta-item">
+                        <h4>Client</h4>
+                        <p>Framer Marketplace</p>
+                    </div>
+                    <div class="case-study-meta-item">
+                        <h4>Services</h4>
+                        <p>Web Design</p>
+                    </div>
+                    <div class="case-study-meta-item">
+                        <h4>Date</h4>
+                        <p>March 2025</p>
+                    </div>
+                    <div class="case-study-meta-item">
+                        <h4>Live Preview</h4>
+                        <p><a href="#contact" class="gradient-text">Book Inquire</a></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="case-study-main-img-wrapper">
+                <img src="assets/project_atom_ai.png" alt="Atom AI Mockup" class="case-study-main-img">
+            </div>
+
+            <div class="case-study-content-grid">
+                <div class="case-study-left">
+                    <h2>Designing interfaces for SaaS systems</h2>
+                </div>
+                <div class="case-study-right">
+                    <div class="case-study-section-block">
+                        <h3>The Goal</h3>
+                        <p>Build a modern SaaS template showcasing data nodes, graphs, and system dashboards tailored to represent next-generation Artificial Intelligence solutions.</p>
+                    </div>
+                    <div class="case-study-section-block">
+                        <h3>The Challenge</h3>
+                        <p>SaaS marketing sites require a balance of complex technical data visualizations and clear, client-focused copy to engage non-technical decision makers.</p>
+                    </div>
+                    <div class="case-study-section-block">
+                        <h3>The Result</h3>
+                        <p>We designed an incredibly immersive SaaS framework complete with high-tech visualization mockups and glowing design systems, facilitating rapid landing page rollouts.</p>
+                        <div class="case-study-stats-grid">
+                            <div class="case-study-stat-card glass-panel">
+                                <div class="case-study-stat-num">99/100</div>
+                                <div class="case-study-stat-label">UX Score</div>
+                            </div>
+                            <div class="case-study-stat-card glass-panel">
+                                <div class="case-study-stat-num">3x</div>
+                                <div class="case-study-stat-label">Build Speed</div>
+                            </div>
+                            <div class="case-study-stat-card glass-panel">
+                                <div class="case-study-stat-num">+65%</div>
+                                <div class="case-study-stat-label">Lead Capture</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="case-study-footer">
+                <a href="#projects" class="btn btn-secondary">Back to Projects</a>
+            </div>
+        </section>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container footer-container">
+            <div>
+                &copy; 2026 Polo Portfolio. All rights reserved.
+            </div>
+            <div class="footer-credits">
+                Made by <a href="#home">Framebase</a> | Recreated by <a href="#home">Antigravity</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC (Inline & Snappy) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // ==================== SPA HASH ROUTING ====================
+            const views = {
+                'home': document.getElementById('home-view'),
+                'projects': document.getElementById('projects-view'),
+                'contact': document.getElementById('contact-view'),
+                'project/lanx': document.getElementById('project-lanx-view'),
+                'project/studio': document.getElementById('project-studio-view'),
+                'project/portal': document.getElementById('project-portal-view'),
+                'project/brandin': document.getElementById('project-brandin-view'),
+                'project/fade': document.getElementById('project-fade-view'),
+                'project/atom-ai': document.getElementById('project-atom-ai-view')
+            };
+
+            function handleRoute() {
+                // Get hash route
+                let rawHash = window.location.hash || '#home';
+                let route = rawHash.replace('#', '');
+                
+                // Close mobile menu if open
+                mobileMenu.classList.remove('open');
+
+                // Check route fallback
+                if (!views[route]) {
+                    route = 'home';
+                }
+
+                // Transition out current active view and transition in new view
+                Object.keys(views).forEach(key => {
+                    if (key === route) {
+                        views[key].classList.add('active-view');
+                        // Trigger simple render fade
+                        views[key].style.opacity = 0;
+                        setTimeout(() => {
+                            views[key].style.opacity = 1;
+                        }, 50);
+                    } else {
+                        views[key].classList.remove('active-view');
+                    }
+                });
+
+                // Update navigation link highlights
+                document.querySelectorAll('.nav-route-link').forEach(link => {
+                    const linkRoute = link.getAttribute('data-route');
+                    if (linkRoute === route || (route.startsWith('project/') && linkRoute === 'projects')) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                });
+
+                // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            window.addEventListener('hashchange', handleRoute);
+            handleRoute(); // Initialize routing
+
+            // ==================== MOBILE MENU ====================
+            const menuToggle = document.getElementById('menu-toggle-btn');
+            const mobileMenu = document.getElementById('mobile-menu-panel');
+
+            menuToggle.addEventListener('click', () => {
+                mobileMenu.classList.toggle('open');
+            });
+
+            // Close mobile menu on clicking any overlay link
+            mobileMenu.querySelectorAll('.nav-route-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.remove('open');
+                });
+            });
+
+            // ==================== REVIEWS / TESTIMONIALS SLIDER ====================
+            const track = document.getElementById('testimonial-track-element');
+            const slides = Array.from(track.children);
+            const dotsContainer = document.getElementById('testimonial-dots-container');
+            let activeIndex = 0;
+
+            // Generate dots
+            slides.forEach((_, idx) => {
+                const dot = document.createElement('button');
+                dot.classList.add('testimonial-dot');
+                if (idx === 0) dot.classList.add('active');
+                dot.addEventListener('click', () => moveToSlide(idx));
+                dotsContainer.appendChild(dot);
+            });
+
+            const dots = Array.from(dotsContainer.children);
+
+            function moveToSlide(targetIndex) {
+                track.style.transform = `translateX(-${targetIndex * 100}%)`;
+                dots[activeIndex].classList.remove('active');
+                dots[targetIndex].classList.add('active');
+                activeIndex = targetIndex;
+            }
+
+            // Auto transition slides
+            setInterval(() => {
+                let nextIdx = (activeIndex + 1) % slides.length;
+                moveToSlide(nextIdx);
+            }, 6000);
+
+            // ==================== FAQ ACCORDION EXPANSION ====================
+            const faqItems = document.querySelectorAll('.faq-item');
+            faqItems.forEach(item => {
+                const header = item.querySelector('.faq-header');
+                const content = item.querySelector('.faq-content');
+
+                header.addEventListener('click', () => {
+                    const isActive = item.classList.contains('active');
+                    
+                    // Close other items
+                    faqItems.forEach(otherItem => {
+                        otherItem.classList.remove('active');
+                        otherItem.querySelector('.faq-content').style.maxHeight = null;
+                    });
+
+                    if (!isActive) {
+                        item.classList.add('active');
+                        content.style.maxHeight = content.scrollHeight + "px";
+                    }
+                });
+            });
+
+            // ==================== PROJECTS GALLERY FILTER ====================
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            const projectCards = document.querySelectorAll('#project-directory-grid .project-card');
+
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Update active class on buttons
+                    filterButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    const filterValue = btn.getAttribute('data-filter');
+
+                    // Filter matching cards
+                    projectCards.forEach(card => {
+                        const cardCategory = card.getAttribute('data-category');
+                        if (filterValue === 'all' || cardCategory === filterValue) {
+                            card.style.display = 'block';
+                            // fade animation
+                            card.style.opacity = 0;
+                            setTimeout(() => {
+                                card.style.opacity = 1;
+                            }, 50);
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                });
+            });
+
+            // ==================== CONTACT FORM BUDGET SELECTOR & SUBMIT ====================
+            const budgetButtons = document.querySelectorAll('#form-budget-selector .budget-btn');
+            let selectedBudget = '1999';
+
+            budgetButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    budgetButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedBudget = btn.getAttribute('data-budget');
+                });
+            });
+
+            const contactForm = document.getElementById('contact-form-element');
+            contactForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const name = document.getElementById('form-name').value;
+                const email = document.getElementById('form-email').value;
+                const website = document.getElementById('form-website').value;
+                const message = document.getElementById('form-message').value;
+
+                // Form details console logging (mock submission success)
+                console.log('--- Form Submission ---');
+                console.log('Name:', name);
+                console.log('Email:', email);
+                console.log('Website:', website);
+                console.log('Budget Limit:', selectedBudget);
+                console.log('Message:', message);
+                
+                alert(`Thank you, ${name}! Your design request has been submitted. We will reach out to you within 48 hours.`);
+                contactForm.reset();
+                budgetButtons.forEach(b => b.classList.remove('active'));
+                budgetButtons[0].classList.add('active'); // reset to default
+                selectedBudget = '1999';
+            });
+        });
+    </script>
+</body>
+</html>
