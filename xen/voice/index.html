@@ -1378,6 +1378,23 @@ const _xenOutSpoken = new Set(); // Option A speak-dedup · keys mirror _rendere
 // should SPEAK — the backlog renders silently. Without this the no-drop queue
 // clogs with old replies and the live one never plays = "replies not coming through".
 const _avaConnectTs = Date.now();
+
+// Visible status HUD (qi 2026-05-30): ends the blind-patch loop — qi can read the
+// real audio state aloud. Shows armed?, queue depth, replies received, last status.
+let _hudRx = 0, _hudSpoke = 0, _hudLast = 'init', _hudEl = null;
+function _hud(last) {
+  if (last) _hudLast = last;
+  if (!_hudEl) {
+    _hudEl = document.createElement('div');
+    _hudEl.id = 'ava-hud';
+    _hudEl.style.cssText = 'position:fixed;top:6px;left:6px;z-index:100001;background:rgba(0,0,0,.72);color:#7CFC9A;font:600 11px/1.4 ui-monospace,Menlo,monospace;padding:5px 8px;border-radius:7px;max-width:78vw;pointer-events:none;white-space:pre-wrap';
+    (document.body || document.documentElement).appendChild(_hudEl);
+  }
+  _hudEl.textContent = 'armed:' + ((typeof _avaAudioUnlocked!=='undefined'&&_avaAudioUnlocked)?'YES':'no') +
+    ' on:' + ((typeof _avaOn!=='undefined'&&_avaOn)?'1':'0') +
+    ' q:' + ((typeof _avaQueue!=='undefined'&&_avaQueue)?_avaQueue.length:'?') +
+    ' rx:' + _hudRx + ' spoke:' + _hudSpoke + '\n' + _hudLast;
+}
 let _activeThreadId = getActiveId();
 let _history = loadThreadEntries(_activeThreadId);
 
@@ -1537,7 +1554,9 @@ function renderEvent(d) {
     saveHistory({ role: 'xen', text: txt, ts: d.ts || Date.now() });
     // Speak ONLY live replies — skip the SSE backlog replay (old ts) so the queue
     // never clogs with history. 10s grace covers the load→connect gap.
-    if ((d.ts || 0) > _avaConnectTs - 10000) speakAva(txt);
+    _hudRx++; const _live = (d.ts || 0) > _avaConnectTs - 10000;
+    _hud('rx ' + (_live ? 'LIVE' : 'old') + ' ts=' + (d.ts||0) + ' "' + txt.slice(0,24) + '"');
+    if (_live) speakAva(txt);
   } else if (isUserDictate) {
     const div = document.createElement('div');
     div.className = 'final';
@@ -1655,6 +1674,7 @@ function subscribeXenReplies() {
   } catch (e) {}
 }
 subscribeXenReplies();
+try { _hud('loaded — tap to arm'); } catch (_) {}
 
 // Background = Ophanim Three.js iframe (XLRD ID avatar). Continuous self-animating;
 // no ping-pong needed. The iframe runs its own RAF loop with rings + dust + core pulse.
@@ -1773,9 +1793,9 @@ function _avaDrain() {
   const clip = _avaQueue.shift();
   _avaPlaying = true;
   const a = _ensureAvaAudio();
-  a.onplaying = () => { _avaStatus = 'playing'; _renderAvaPill(); };
+  a.onplaying = () => { _avaStatus = 'playing'; _hudSpoke++; _hud('PLAYING'); _renderAvaPill(); };
   a.onended   = () => { _avaPlaying = false; _avaStatus = _avaQueue.length ? ('queued ' + _avaQueue.length) : 'idle'; _renderAvaPill(); _avaDrain(); };
-  a.onerror   = () => { _avaPlaying = false; _avaStatus = 'audio-err'; _renderAvaPill(); _speakAvaFallback(clip); _avaDrain(); };
+  a.onerror   = () => { _avaPlaying = false; _avaStatus = 'audio-err'; _hud('audio-err'); _renderAvaPill(); _speakAvaFallback(clip); _avaDrain(); };
   _avaStatus = 'fetching'; _renderAvaPill();
   const url = AVA_TTS_URL + '?voice=ava&text=' + encodeURIComponent(clip);
   // Fetch the FULL mp3 as a blob, then play from an object URL — fully buffered,
@@ -1860,6 +1880,7 @@ function _renderAvaPill() {
   const unlock = () => {
     if (_avaUnlocked) { if (overlay) { overlay.remove(); overlay = null; } return; }
     _avaUnlocked = true;
+    _hud('ARMED by tap');
     _unlockAvaAudio();                 // arm the MP3 player off this gesture
     _avaVoice = pickAvaVoice();
     try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; window.speechSynthesis.speak(u); } catch (_) {}
