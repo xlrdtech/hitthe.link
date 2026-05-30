@@ -195,7 +195,7 @@ section{padding:72px 0;position:relative;z-index:2}
 .osnote{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:30px}
 .ospill{font-family:var(--fm);font-size:11.5px;color:var(--chrome);border:1px solid var(--line);border-radius:999px;padding:8px 15px;background:rgba(212,175,55,.04);transition:border-color .2s,color .2s}
 .ospill:hover{border-color:var(--gold);color:var(--gold-hi)}
-.heroes{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.heroes{display:flex;flex-wrap:wrap;justify-content:center;gap:16px}.heroes>*{flex:0 1 300px;min-width:258px}
 .hcard{background:linear-gradient(165deg,var(--ink-2),var(--ink));border:1px solid var(--line);border-radius:16px;padding:24px;transition:transform .25s,border-color .25s,box-shadow .25s;position:relative;scroll-margin-top:90px;overflow:hidden}
 .hcard::before{content:"";position:absolute;top:0;left:0;width:100%;height:2px;background:var(--grad-gold);transform:scaleX(0);transform-origin:left;transition:transform .35s}
 .hcard:hover::before,.hcard.flash::before{transform:scaleX(1)}
@@ -305,7 +305,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border:none;border-ra
 .chip{font-family:var(--fm);font-size:10.5px;color:var(--chrome);border:1px solid var(--line);border-radius:999px;padding:5px 11px}
 
 /* PRICING */
-.tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;align-items:stretch}
+.tiers{display:flex;flex-wrap:wrap;justify-content:center;gap:16px;align-items:stretch}.tiers>*{flex:0 1 230px;min-width:200px}
 .tier{background:linear-gradient(165deg,var(--ink-2),var(--ink));border:1px solid var(--line);border-radius:18px;padding:26px;display:flex;flex-direction:column;transition:transform .25s,border-color .25s,box-shadow .25s;position:relative}
 .tier:hover{transform:translateY(-4px);border-color:var(--line-2);box-shadow:0 18px 40px rgba(0,0,0,.5)}
 .tier.best{border-color:var(--gold);box-shadow:0 0 34px rgba(212,175,55,.18)}
@@ -367,7 +367,7 @@ footer{border-top:1px solid var(--line);padding:46px 0 80px;position:relative;z-
 
 <nav id="nav">
   <div class="nav-in">
-    <a href="#top" class="brand"><span class="crest">L7</span> L7S <span class="bsub">HERO&nbsp;S.O.S.</span></a>
+    <a href="#top" class="brand"><img src="assets/logo.png" alt="L7S HERO S.O.S." style="width:34px;height:34px;object-fit:contain;display:block"> L7S <span class="bsub">HERO&nbsp;S.O.S.</span></a>
     <div class="nav-links">
       <a href="#reframe">Why L7S</a>
       <a href="#heroes">7 Heroes</a>
@@ -696,7 +696,7 @@ footer{border-top:1px solid var(--line);padding:46px 0 80px;position:relative;z-
   <div class="wrap">
     <div class="foot-in">
       <div>
-        <div class="brand" style="margin-bottom:12px"><span class="crest">L7</span> L7S <span class="bsub">Inc.</span></div>
+        <div class="brand" style="margin-bottom:12px"><img src="assets/logo.png" alt="L7S HERO S.O.S." style="width:34px;height:34px;object-fit:contain;display:block"> L7S <span class="bsub">Inc.</span></div>
         <div class="slogan">Start, Scale, and Streamline Services to Save Subscribers.™</div>
       </div>
       <div class="foot-col"><span style="color:var(--text-2);font-weight:600;margin-bottom:4px">Contact</span><a href="tel:+14047770610">(404) 777-0610</a><a href="mailto:admin@l7sinc.com">admin@l7sinc.com</a><span>760 Old Roswell Rd, Suite 324 · Roswell, GA 30076</span></div>
@@ -733,12 +733,23 @@ var lastRoute=null;
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function escRe(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
 
-// word-boundary count: how many times keyword appears as a whole token
-function kwHits(text,kw){
+// Word-boundary keyword scorer. Returns the summed score for a keyword across the
+// query: each whole-token hit contributes the keyword's length PLUS an intent-position
+// bonus that rewards keywords appearing EARLIER in the goal (people lead with their
+// real intent — "fund my corporation" is a funding goal, not a structuring one).
+// Word boundaries mean "cover" never matches inside "discover" and "corp" never
+// matches inside "corporation". Returns 0 when the keyword is absent.
+function kwScore(text,kw){
   var re=new RegExp('(^|[^a-z0-9])'+escRe(kw)+'($|[^a-z0-9])','g');
-  var n=0;
-  while(re.exec(text)!==null){n++;}
-  return n;
+  var total=0,len=Math.max(1,text.length),m;
+  while((m=re.exec(text))!==null){
+    var pos=m.index + (m[1]?m[1].length:0);     // start index of the matched token
+    var posBonus=Math.round(8*(1-pos/len));      // 0..8, biggest at the start of the goal (intent leads)
+    var lenW=2+Math.min(kw.length,6);            // capped length weight so one long noun can't dominate a leading intent verb
+    total += lenW + posBonus;
+    if(re.lastIndex===m.index)re.lastIndex++;    // guard against zero-width loops
+  }
+  return total;
 }
 
 function routeGoal(){
@@ -749,11 +760,11 @@ function routeGoal(){
   var best=null,bestScore=-1,bestIdx=999;
   HEROES.forEach(function(h,idx){
     var s=0;
-    h.kw.forEach(function(k){ s += kwHits(q,k)*k.length; });
+    h.kw.forEach(function(k){ s += kwScore(q,k); });
     // strictly greater wins; on a tie, the earlier (higher-priority) Hero keeps it
     if(s>bestScore){bestScore=s;best=h;bestIdx=idx;}
   });
-  var conf = bestScore>=10?'Strong match': bestScore>0?'Likely match':'Best guess';
+  var conf = bestScore>=16?'Strong match': bestScore>0?'Likely match':'Best guess';
   if(!best||bestScore<=0){best=HEROES[3];conf='Best guess';} // default CEO/Ops
   lastRoute={name:best.name,goal:q,conf:conf};
   out.className='router-out show';
