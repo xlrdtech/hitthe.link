@@ -632,10 +632,19 @@ function setStatus(state, label) {
   }
 }
 
+function _nowStamp() {
+  // h:mm AM/PM — timestamp on qi's OWN input bubbles too (qi 2026-05-30:
+  // "I only see timestamps on your output, not my inputs").
+  const d = new Date();
+  let h = d.getHours(); const m = ('0' + d.getMinutes()).slice(-2);
+  const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+  return h + ':' + m + ' ' + ap;
+}
 function appendFinal(text, postedFlag) {
   const div = document.createElement('div');
   div.className = 'final';
-  div.innerHTML = escapeHtml(text) + (postedFlag ? ' <span class="posted">✓ posted</span>' : '');
+  div.innerHTML = '<span class="bubble-ts">' + _nowStamp() + '</span><span class="bubble-txt">' +
+                  escapeHtml(text) + '</span>' + (postedFlag ? ' <span class="posted">✓ posted</span>' : '');
   transcript.appendChild(div);
   transcript.scrollTop = transcript.scrollHeight;
   if (interimEl) { interimEl.remove(); interimEl = null; }
@@ -1718,20 +1727,32 @@ function _avaBargeIn() {
   try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (_) {}
   _avaStatus = 'you spoke'; _renderAvaPill();
 }
-function speakAva(text) {
-  if (!_avaOn || !text) return;
-  const clip = String(text).slice(0, 800);
+// QUEUE, never drop (qi 2026-05-30: "I haven't heard you the last 3-5 outputs").
+// Old cancel-and-replace meant rapid xen-out replies killed each other so none
+// played. Now every reply enqueues + plays in order — one voice, zero drops.
+let _avaQueue = [], _avaPlaying = false;
+function _avaDrain() {
+  if (_avaPlaying || !_avaQueue.length) return;
+  if (!_avaOn) { _avaQueue = []; return; }
+  const clip = _avaQueue.shift();
+  _avaPlaying = true;
   try {
     const a = _ensureAvaAudio();
     a.onplaying = () => { _avaStatus = 'playing'; _renderAvaPill(); };
-    a.onended   = () => { _avaStatus = 'idle'; _renderAvaPill(); };
-    a.onerror   = () => { _avaStatus = 'audio-err'; _renderAvaPill(); _speakAvaFallback(clip); };
+    a.onended   = () => { _avaPlaying = false; _avaStatus = _avaQueue.length ? ('queued ' + _avaQueue.length) : 'idle'; _renderAvaPill(); _avaDrain(); };
+    a.onerror   = () => { _avaPlaying = false; _avaStatus = 'audio-err'; _renderAvaPill(); _speakAvaFallback(clip); _avaDrain(); };
     _avaStatus = 'fetching'; _renderAvaPill();
     a.src = AVA_TTS_URL + '?voice=ava&text=' + encodeURIComponent(clip);
     const p = a.play();
-    if (p && p.catch) p.catch(() => { _avaStatus = 'blocked'; _renderAvaPill(); _speakAvaFallback(clip); });
+    if (p && p.catch) p.catch(() => { _avaPlaying = false; _avaStatus = 'blocked'; _renderAvaPill(); _speakAvaFallback(clip); });
     _avaAudioUnlocked = true; _renderAvaPill();
-  } catch (_) { _avaStatus = 'exception'; _renderAvaPill(); _speakAvaFallback(clip); }
+  } catch (_) { _avaPlaying = false; _avaStatus = 'exception'; _renderAvaPill(); _speakAvaFallback(clip); _avaDrain(); }
+}
+function speakAva(text) {
+  if (!_avaOn || !text) return;
+  _avaQueue.push(String(text).slice(0, 800));
+  if (_avaQueue.length > 12) _avaQueue = _avaQueue.slice(-12);
+  _avaDrain();
 }
 // Backup only if MP3 playback is blocked (no gesture yet): browser speech.
 function _speakAvaFallback(clip) {
