@@ -1823,18 +1823,19 @@ function _avaDrain() {
   if (!_avaOn) { _avaQueue = []; return; }
   const clip = _avaQueue.shift();
   _avaPlaying = true;
-  const a = _ensureAvaAudio();
-  a.onplaying = () => { _avaStatus = 'playing'; _hudSpoke++; _hud('PLAYING'); _renderAvaPill(); };
-  a.onended   = () => { _avaPlaying = false; _avaStatus = _avaQueue.length ? ('queued ' + _avaQueue.length) : 'idle'; _renderAvaPill(); _avaDrain(); };
-  a.onerror   = () => { _avaPlaying = false; _avaStatus = 'audio-err'; _hud('audio-err'); _avaTelemetry('audio-err on play'); _renderAvaPill(); _avaDrain(); };
-  _avaStatus = 'fetching'; _renderAvaPill();
-  // DIRECT src playback (qi 2026-05-30: heard me fine this way). The blob:
-  // object-URL crackle fix BROKE iOS Safari playback (audio-err, spoke=0) —
-  // iOS chokes on blob: in <audio>. Working voice > crackle-free silence.
-  a.src = AVA_TTS_URL + '?voice=ava&text=' + encodeURIComponent(clip);
-  const p = a.play();
-  if (p && p.catch) p.catch(() => { _avaPlaying = false; _avaStatus = 'blocked'; _hud('blocked'); _avaTelemetry('play blocked'); _renderAvaPill(); _avaDrain(); });
-  _avaAudioUnlocked = true; _renderAvaPill();
+  // ONE PATH, NO FALLBACK (qi 2026-05-30 canon: "if it needs to fall back, that
+  // means it does not work" — the MP3+speechSynthesis fallback WAS the double
+  // voice). speechSynthesis only: fastest (no network), sounds great on iPhone.
+  if (!('speechSynthesis' in window)) { _avaPlaying = false; _avaStatus = 'no-tts'; _avaTelemetry('no speechSynthesis'); return; }
+  if (!_avaVoice) _avaVoice = pickAvaVoice();
+  const u = new SpeechSynthesisUtterance(clip);
+  if (_avaVoice) { u.voice = _avaVoice; u.lang = _avaVoice.lang; }
+  u.rate = 1.0; u.pitch = 1.0; u.volume = 1.0;
+  u.onstart = () => { _avaStatus = 'speaking'; _hudSpoke++; _hud('SPEAKING'); _renderAvaPill(); };
+  u.onend   = () => { _avaPlaying = false; _avaStatus = _avaQueue.length ? ('queued ' + _avaQueue.length) : 'idle'; _renderAvaPill(); _avaDrain(); };
+  u.onerror = () => { _avaPlaying = false; _avaStatus = 'tts-err'; _hud('tts-err'); _avaTelemetry('speechSynthesis error'); _renderAvaPill(); _avaDrain(); };
+  try { window.speechSynthesis.resume(); window.speechSynthesis.speak(u); _avaAudioUnlocked = true; _renderAvaPill(); }
+  catch (e) { _avaPlaying = false; _avaStatus = 'tts-throw'; _avaTelemetry('speak threw'); _renderAvaPill(); _avaDrain(); }
 }
 // Page → omnimind telemetry so XEN AUTO-NOTICES failures without qi reading the
 // HUD aloud (qi 2026-05-30: "why don't you automatically notice"). Errors only.
@@ -1855,16 +1856,8 @@ function speakAva(text) {
   if (_avaQueue.length > 12) _avaQueue = _avaQueue.slice(-12);
   _avaDrain();
 }
-// Backup only if MP3 playback is blocked (no gesture yet): browser speech.
-function _speakAvaFallback(clip) {
-  try {
-    if (!('speechSynthesis' in window)) return;
-    if (!_avaVoice) _avaVoice = pickAvaVoice();
-    const u = new SpeechSynthesisUtterance(clip);
-    if (_avaVoice) { u.voice = _avaVoice; u.lang = _avaVoice.lang; }
-    window.speechSynthesis.cancel(); window.speechSynthesis.resume(); window.speechSynthesis.speak(u);
-  } catch (_) {}
-}
+// _speakAvaFallback REMOVED 2026-05-30 — qi canon "no fallbacks; if it needs to
+// fall back it doesn't work." speechSynthesis is the single voice path now.
 // Ava voice pill + first-gesture unlock. The pill shows the ACTUAL voice the
 // browser picked (Ava if available, else the best en-US neural fallback) so the
 // live engine is visible/verifiable on screen, and lets qi mute voice-out.
