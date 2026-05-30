@@ -1749,10 +1749,12 @@ function _speakAvaFallback(clip) {
 function _renderAvaPill() {
   const ic = document.getElementById('ava-icon');
   if (!ic) return;
-  ic.classList.toggle('active', _avaOn && _avaStatus === 'playing');
-  ic.style.opacity = _avaOn ? '1' : '.4';
-  ic.title = _avaOn ? ('Ava voice: ON' + (_avaStatus ? ' · ' + _avaStatus : '') + ' — tap to mute')
-                    : 'Ava voice: OFF — tap to unmute';
+  const on = _avaOn && _avaAudioUnlocked;
+  ic.classList.toggle('active', on);            // green glow when armed + on
+  ic.style.opacity = !_avaAudioUnlocked ? '.6' : (_avaOn ? '1' : '.4');
+  ic.title = !_avaAudioUnlocked ? 'Tap to enable Ava voice'
+           : (_avaOn ? ('Ava voice ON' + (_avaStatus ? ' · ' + _avaStatus : '') + ' — tap to mute')
+                     : 'Ava voice OFF — tap to unmute');
 }
 (function avaToggleUI() {
   // Speaker icon in the header (left of the mic), same style — no bottom pill.
@@ -1761,10 +1763,16 @@ function _renderAvaPill() {
     if (!ic) { setTimeout(wire, 200); return; }
     ic.addEventListener('click', (e) => {
       e.stopPropagation();
-      _avaOn = !_avaOn;
-      if (!_avaOn) { try { if (_avaAudio) _avaAudio.pause(); } catch (_) {} try { window.speechSynthesis.cancel(); } catch (_) {} }
+      if (!_avaAudioUnlocked) { _unlockAvaAudio(); _avaOn = true; }   // first tap = arm + enable
+      else {
+        _avaOn = !_avaOn;                                            // later taps = mute toggle
+        if (!_avaOn) { try { if (_avaAudio) _avaAudio.pause(); } catch (_) {} try { window.speechSynthesis.cancel(); } catch (_) {} }
+      }
       _renderAvaPill();
     });
+    // qi's natural mic tap also arms the audio output — so no separate tap is needed.
+    const mi = document.getElementById('mic-icon');
+    if (mi) mi.addEventListener('click', () => { _unlockAvaAudio(); });
     _renderAvaPill();
   };
   if (document.body) wire(); else document.addEventListener('DOMContentLoaded', wire);
