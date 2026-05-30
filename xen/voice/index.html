@@ -1857,6 +1857,8 @@ function _avaDrain() {
   _avaStatus = 'fetching'; _renderAvaPill();
   const url = AVA_TTS_URL + '?voice=ava&text=' + encodeURIComponent(clip);
   if (_avaCtx && _avaCtx.state !== 'closed') {
+    // Resume context (handles background state on iOS where it auto-suspends)
+    if (_avaCtx.state === 'suspended') _avaCtx.resume();
     fetch(url, { cache: 'no-cache' }).then(r => {
       if (!r.ok) throw new Error('http ' + r.status);
       return r.arrayBuffer();
