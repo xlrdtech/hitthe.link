@@ -1492,6 +1492,14 @@ function linkifyTo(parent, text) {
 }
 
 function renderEvent(d) {
+  // omnimind emits xen-out in TWO shapes: flat {text,...} AND double-wrapped
+  // {event,data:{text,...},ts}. The wrapped form has no top-level text, so it
+  // was dropped at the !txt guard = total silence. Unwrap the inner payload.
+  // (qi 2026-05-30, verified against live /events capture.) Dedup catches the
+  // duplicate when both shapes arrive for the same reply.
+  if (d && d.data && typeof d.data === 'object' && (d.data.text || d.data.body || d.data.message)) {
+    d = d.data;
+  }
   const txt = (d.text || d.body || d.message || '').toString().trim();
   if (!txt) return;
   const tag = (d.event || d.kind || '').toString().toLowerCase();
