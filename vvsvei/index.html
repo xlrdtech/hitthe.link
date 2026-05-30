@@ -1682,7 +1682,9 @@ function speakAva(text) {
     if (_avaVoice) { u.voice = _avaVoice; u.lang = _avaVoice.lang; }
     u.rate = 1.0; u.pitch = 1.0; u.volume = 1.0;
     window.speechSynthesis.cancel();   // drop stale backlog (SSE backfill)
+    window.speechSynthesis.resume();   // iOS pauses the engine after idle — wake it before speaking
     window.speechSynthesis.speak(u);
+    setTimeout(() => { try { window.speechSynthesis.resume(); } catch (_) {} }, 60);  // iOS belt-and-suspenders
   } catch (_) {}
 }
 // Ava voice pill + first-gesture unlock. The pill shows the ACTUAL voice the
@@ -1716,6 +1718,10 @@ function _renderAvaPill() {
     _avaUnlocked = true;
     _avaVoice = pickAvaVoice();
     try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; window.speechSynthesis.speak(u); } catch (_) {}
+    // iOS WebKit suspends speechSynthesis after ~15s idle and silently blocks
+    // speak() fired from a non-gesture (SSE) context. This heartbeat keeps the
+    // engine warm so xen-out replies actually speak on iPhone. (qi 2026-05-30)
+    try { setInterval(() => { try { if (window.speechSynthesis && !window.speechSynthesis.speaking) window.speechSynthesis.resume(); } catch (_) {} }, 4000); } catch (_) {}
     _renderAvaPill();
   };
   document.body.addEventListener('click', unlock, { passive: true });
