@@ -1705,6 +1705,19 @@ function subscribeXenReplies() {
 }
 subscribeXenReplies();
 try { _hud('loaded — tap to arm'); } catch (_) {}
+// Show real-time status in the overlay title as soon as window loads
+// so qi never sits tapping on a blank screen — visible progress always.
+(function initLoadStatus() {
+  const updateStatus = () => {
+    try {
+      if (window._avaSetLoad) {
+        if (!_avaAudioUnlocked) window._avaSetLoad('Tap to connect', 'loading ' + _hudRx + ' messages…', Math.min(99, Math.round(_hudRx / 50)));
+      }
+    } catch (_) {}
+  };
+  updateStatus();
+  setInterval(updateStatus, 800);
+})();
 
 // Background = Ophanim Three.js iframe (XLRD ID avatar). Continuous self-animating;
 // no ping-pong needed. The iframe runs its own RAF loop with rings + dust + core pulse.
@@ -1831,8 +1844,8 @@ let _avaQueue = [], _avaPlaying = false;
 function _avaDrain() {
   if (_avaPlaying || !_avaQueue.length) return;
   if (!_avaOn) { _avaQueue = []; return; }
-  // Wait for audio to be armed (user tap) — retry every 500ms instead of dropping.
-  if (!_avaAudioUnlocked || !_avaCtx) { setTimeout(_avaDrain, 500); return; }
+  // Drop queue if not armed yet — prevent speaking-over-self from retry floods.
+  if (!_avaAudioUnlocked || !_avaCtx) { return; }
   const clip = _avaQueue.shift();
   _avaPlaying = true;
   // MP3 via <audio> — the path that WORKED (qi confirmed hearing on 2026-05-30).
