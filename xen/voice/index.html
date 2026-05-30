@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0a0f">
+<title>VVS/VEI - Web Voice (Ava)</title>
+<style>
+  :root{--bg:#0a0a0f;--ink:#fafaf6;--mute:#8a8a98;--gold:#d4af37;--gold-soft:#f0d878;--line:rgba(212,175,55,.18);--card:#13131a;--green:#5fcf80;--red:#ef5b5b}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;overflow-wrap:break-word;word-break:normal;hyphens:none}
+  body{padding:24px 18px 40px;display:flex;flex-direction:column;min-height:100vh}
+  header{text-align:center;margin-bottom:18px}
+  .brand{font-size:11px;letter-spacing:.4em;color:var(--gold);text-transform:uppercase;font-weight:600;margin-bottom:8px}
+  h1{font-size:clamp(26px,7vw,40px);font-weight:800;letter-spacing:-.02em;background:linear-gradient(135deg,var(--ink),var(--gold-soft));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .sub{color:var(--mute);font-size:13px;margin-top:4px}
+  .mic-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;margin:22px 0}
+  .mic{width:116px;height:116px;border-radius:50%;border:2px solid var(--gold);background:var(--card);color:var(--gold);font-size:46px;display:grid;place-items:center;cursor:pointer;transition:all .2s;user-select:none}
+  .mic.live{background:var(--gold);color:var(--bg);box-shadow:0 0 0 0 rgba(212,175,55,.6);animation:pulse 1.4s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(212,175,55,.5)}70%{box-shadow:0 0 0 22px rgba(212,175,55,0)}100%{box-shadow:0 0 0 0 rgba(212,175,55,0)}}
+  .status{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);min-height:18px}
+  .status.live{color:var(--gold)}
+  .feed{flex:1;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;overflow-y:auto;max-height:48vh;display:flex;flex-direction:column;gap:10px}
+  .msg{padding:10px 13px;border-radius:12px;font-size:15px;max-width:88%}
+  .msg.me{align-self:flex-end;background:rgba(212,175,55,.12);border:1px solid var(--line)}
+  .msg.xen{align-self:flex-start;background:#1a1a24;border:1px solid var(--line)}
+  .msg .who{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin-bottom:3px}
+  .row{display:flex;gap:10px;margin-top:12px}
+  input{flex:1;background:#0a0a12;border:1px solid var(--line);color:var(--ink);padding:13px;border-radius:12px;font-size:15px;font-family:inherit}
+  input:focus{outline:2px solid var(--gold)}
+  .send{background:var(--gold);color:var(--bg);border:none;padding:0 20px;border-radius:12px;font-weight:700;cursor:pointer}
+  .err{color:var(--red);font-size:12px;text-align:center;min-height:16px}
+  footer{text-align:center;margin-top:14px;color:var(--mute);font-size:11px}
+  footer .em{color:var(--gold);font-weight:600}
+  @media(prefers-reduced-motion:reduce){.mic.live{animation:none}}
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand">XEN - VVS / VEI</div>
+    <h1>Web Voice</h1>
+    <div class="sub">Tap the mic, talk to Xen. Replies speak in Ava.</div>
+  </header>
+  <div class="mic-wrap">
+    <div class="mic" id="mic" role="button" aria-label="Toggle voice">&#127908;</div>
+    <div class="status" id="status">tap to talk</div>
+    <div class="err" id="err"></div>
+  </div>
+  <div class="feed" id="feed"></div>
+  <div class="row">
+    <input id="text" type="text" placeholder="or type to Xen..." inputmode="text" />
+    <button class="send" id="send">Send</button>
+  </div>
+  <footer><span class="em">XEN VVS/VEI</span> - browser voice in, Ava neural out. Native VEI untouched.</footer>
+
+<script>
+(function(){
+  "use strict";
+  // omnimind API base (served via the godmode tunnel; same omnimind that powers native VEI)
+  var API = "https://api.xlrd.org";
+  var SOURCE = "vvsvei-web";
+  var feed = document.getElementById('feed');
+  var statusEl = document.getElementById('status');
+  var errEl = document.getElementById('err');
+  var mic = document.getElementById('mic');
+  var input = document.getElementById('text');
+
+  function add(who, text){
+    var d = document.createElement('div');
+    d.className = 'msg ' + (who === 'me' ? 'me' : 'xen');
+    d.innerHTML = '<div class="who"></div><div class="body"></div>';
+    d.querySelector('.who').textContent = who === 'me' ? 'you' : 'xen';
+    d.querySelector('.body').textContent = text;
+    feed.appendChild(d); feed.scrollTop = feed.scrollHeight;
+  }
+  function setErr(m){ errEl.textContent = m || ''; }
+
+  // ── Output: speak text via omnimind /api/tts (Edge-TTS Ava, no auth) ──
+  var audio = new Audio();
+  function speak(text){
+    if(!text) return;
+    audio.src = API + "/api/tts?voice=ava&text=" + encodeURIComponent(text.slice(0, 600));
+    audio.play().catch(function(){ /* autoplay may need a tap; mic tap unlocks it */ });
+  }
+
+  // ── Input: send transcript to omnimind /api/dictate-inject (no auth) ──
+  function sendToXen(text){
+    text = (text||'').trim(); if(!text) return;
+    add('me', text);
+    fetch(API + "/api/dictate-inject", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: text, source: SOURCE })
+    }).then(function(r){ if(!r.ok) setErr("send " + r.status); else setErr(""); })
+      .catch(function(e){ setErr("send failed: " + e.message); });
+  }
+
+  // ── Replies: subscribe to omnimind unified-log SSE; speak Xen's outputs ──
+  function connectSSE(){
+    try{
+      var es = new EventSource(API + "/api/unified-log/stream");
+      es.onmessage = function(ev){
+        try{
+          var d = JSON.parse(ev.data);
+          var role = (d.role || d.author || '').toLowerCase();
+          var txt = d.text || d.body || d.message || '';
+          // speak Xen/assistant replies only (skip our own echoes + inbound)
+          if(txt && /xen|assistant|reply|vvs/.test(role) && !/dictate|vvsvei-web/.test(JSON.stringify(d))){
+            add('xen', txt); speak(txt);
+          }
+        }catch(e){}
+      };
+      es.onerror = function(){ statusEl.textContent = "reconnecting..."; };
+      es.onopen = function(){ setErr(""); };
+    }catch(e){ setErr("sse: " + e.message); }
+  }
+  connectSSE();
+
+  // ── VEI: browser speech recognition (STT). Continuous hands-free loop for
+  //     Siri + Bluetooth hearing: listen -> send -> Ava speaks -> auto-listen again.
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var rec = null, listening = false, handsFree = false, speaking = false;
+  function startListen(){
+    if(!rec || listening || speaking) return;
+    try{ rec.start(); listening = true; mic.classList.add('live'); statusEl.textContent = "listening..."; statusEl.classList.add('live'); setErr(""); }
+    catch(e){ /* already started */ }
+  }
+  function stopAll(){ handsFree = false; if(rec && listening){ try{ rec.stop(); }catch(e){} } }
+  // after Ava finishes speaking, resume listening (the conversation loop)
+  audio.addEventListener('ended', function(){ speaking = false; if(handsFree) setTimeout(startListen, 350); });
+  audio.addEventListener('play', function(){ speaking = true; });
+  if(SR){
+    rec = new SR(); rec.lang = "en-US"; rec.continuous = false; rec.interimResults = false;
+    rec.onresult = function(e){ sendToXen(e.results[0][0].transcript); };
+    rec.onend = function(){
+      listening = false; mic.classList.remove('live'); statusEl.classList.remove('live');
+      statusEl.textContent = handsFree ? "..." : "tap to talk";
+      // hands-free: if we ended without speaking (silence/no match), re-arm
+      if(handsFree && !speaking) setTimeout(startListen, 500);
+    };
+    rec.onerror = function(e){ if(e.error!=='no-speech') setErr("mic: " + e.error); };
+  } else {
+    statusEl.textContent = "type below (no mic API)";
+  }
+  mic.addEventListener('click', function(){
+    audio.play().catch(function(){}); audio.pause(); // unlock autoplay
+    if(!rec){ input.focus(); return; }
+    if(handsFree || listening){ stopAll(); statusEl.textContent="tap to talk"; return; }
+    handsFree = true; startListen();
+  });
+  // ?autostart=1 (Siri Shortcut "Open URL") -> begin the hands-free loop immediately
+  if(/[?&]autostart=1/.test(location.search)){
+    handsFree = true;
+    // a tap is normally needed to unlock audio; on Shortcut-launch most iOS allows it
+    setTimeout(function(){ audio.play().catch(function(){}); startListen(); }, 600);
+    statusEl.textContent = "hands-free - say it";
+  }
+
+  // ── type fallback ──
+  document.getElementById('send').addEventListener('click', function(){ sendToXen(input.value); input.value=''; });
+  input.addEventListener('keydown', function(e){ if(e.key==='Enter'){ sendToXen(input.value); input.value=''; } });
+})();
+</script>
+</body>
+</html>
