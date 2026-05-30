@@ -1873,6 +1873,15 @@ function _avaDrain() {
       src.start(0);
       _avaStatus = 'playing'; _hud('PLAYING via WebAudio'); _renderAvaPill();
     }).catch(e => {
+      // Retry once on decode failure (transient TTS server partial chunk)
+      if (e.message && e.message.includes('Decoding')) {
+        fetch(url + '&_r=1', { cache: 'no-cache' }).then(r => r.arrayBuffer()).then(buf => _avaCtx.decodeAudioData(buf.slice(0))).then(decoded => {
+          const src = _avaCtx.createBufferSource(); _avaCurrentSource = src; src.buffer = decoded; src.connect(_avaCtx.destination);
+          src.onended = () => { if (_avaCurrentSource === src) _avaCurrentSource = null; _avaPlaying = false; _avaStatus = 'idle'; _hudSpoke++; _renderAvaPill(); _avaDrain(); };
+          src.start(0); _avaStatus = 'playing(retry)'; _renderAvaPill();
+        }).catch(() => { _avaPlaying = false; _avaStatus = 'decode-err'; _avaTelemetry('WebAudio err(retry): '+e.message); _renderAvaPill(); _avaDrain(); });
+        return;
+      }
       _avaPlaying = false; _avaStatus = 'webaudio-err'; _avaTelemetry('WebAudio err: '+e.message); _renderAvaPill(); _avaDrain();
     });
   } else {
