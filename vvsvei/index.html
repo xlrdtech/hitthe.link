@@ -1378,6 +1378,9 @@ const _xenOutSpoken = new Set(); // Option A speak-dedup · keys mirror _rendere
 // should SPEAK — the backlog renders silently. Without this the no-drop queue
 // clogs with old replies and the live one never plays = "replies not coming through".
 const _avaConnectTs = Date.now();
+// Speak only AFTER the server's 'caught-up' sentinel (set true in renderEvent,
+// reset false on each SSE (re)connect so re-replayed backlog stays silent).
+let _avaLive = false;
 
 // Visible status HUD (qi 2026-05-30): ends the blind-patch loop — qi can read the
 // real audio state aloud. Shows armed?, queue depth, replies received, last status.
@@ -1517,6 +1520,15 @@ function renderEvent(d) {
   if (d && d.data && typeof d.data === 'object' && (d.data.text || d.data.body || d.data.message)) {
     d = d.data;
   }
+  // CANONICAL sentinel (qi 2026-05-30, grok+gemini-3.1-pro+codex converged): the
+  // 'caught-up' event marks the end of the SSE backlog replay. Everything before
+  // it = backlog (render silently), everything after = LIVE (speak). Clock-skew-
+  // immune — no client/server timestamp comparison. Catch it BEFORE the !txt
+  // guard since the sentinel carries no text.
+  if ((d.event || d.kind || '').toString().toLowerCase() === 'caught-up') {
+    _avaLive = true; _hud('LIVE (caught-up)');
+    return;
+  }
   const txt = (d.text || d.body || d.message || '').toString().trim();
   if (!txt) return;
   const tag = (d.event || d.kind || '').toString().toLowerCase();
@@ -1554,9 +1566,9 @@ function renderEvent(d) {
     saveHistory({ role: 'xen', text: txt, ts: d.ts || Date.now() });
     // Speak ONLY live replies — skip the SSE backlog replay (old ts) so the queue
     // never clogs with history. 10s grace covers the load→connect gap.
-    _hudRx++; const _live = (d.ts || 0) > _avaConnectTs - 10000;
-    _hud('rx ' + (_live ? 'LIVE' : 'old') + ' ts=' + (d.ts||0) + ' "' + txt.slice(0,24) + '"');
-    if (_live) speakAva(txt);
+    _hudRx++;
+    _hud('rx ' + (_avaLive ? 'LIVE' : 'backlog') + ' "' + txt.slice(0,24) + '"');
+    if (_avaLive) speakAva(txt);   // sentinel-gated: only live replies speak
   } else if (isUserDictate) {
     const div = document.createElement('div');
     div.className = 'final';
@@ -1661,6 +1673,8 @@ function subscribeXenReplies() {
       _eventsSseStatus.textContent = 'sse · connected';
       _eventsSseStatus.className = 'ok';
       _eventsPip.classList.remove('off');
+      _avaLive = false;   // backlog replays on (re)connect — stay silent until caught-up
+      _hud('connected — awaiting caught-up');
     };
     src.onmessage = (ev) => {
       try { renderEvent(JSON.parse(ev.data)); } catch (_) {}
