@@ -1857,7 +1857,7 @@ function _avaDrain() {
   _avaStatus = 'fetching'; _renderAvaPill();
   const url = AVA_TTS_URL + '?voice=ava&text=' + encodeURIComponent(clip);
   if (_avaCtx && _avaCtx.state !== 'closed') {
-    fetch(url, { cache: 'force-cache' }).then(r => {
+    fetch(url, { cache: 'no-cache' }).then(r => {
       if (!r.ok) throw new Error('http ' + r.status);
       return r.arrayBuffer();
     }).then(buf => {
