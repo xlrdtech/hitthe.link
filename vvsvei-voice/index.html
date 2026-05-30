@@ -116,28 +116,45 @@
   }
   connectSSE();
 
-  // ── VEI: browser speech recognition (STT) ──
+  // ── VEI: browser speech recognition (STT). Continuous hands-free loop for
+  //     Siri + Bluetooth hearing: listen -> send -> Ava speaks -> auto-listen again.
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  var rec = null, listening = false;
+  var rec = null, listening = false, handsFree = false, speaking = false;
+  function startListen(){
+    if(!rec || listening || speaking) return;
+    try{ rec.start(); listening = true; mic.classList.add('live'); statusEl.textContent = "listening..."; statusEl.classList.add('live'); setErr(""); }
+    catch(e){ /* already started */ }
+  }
+  function stopAll(){ handsFree = false; if(rec && listening){ try{ rec.stop(); }catch(e){} } }
+  // after Ava finishes speaking, resume listening (the conversation loop)
+  audio.addEventListener('ended', function(){ speaking = false; if(handsFree) setTimeout(startListen, 350); });
+  audio.addEventListener('play', function(){ speaking = true; });
   if(SR){
     rec = new SR(); rec.lang = "en-US"; rec.continuous = false; rec.interimResults = false;
-    rec.onresult = function(e){
-      var t = e.results[0][0].transcript;
-      sendToXen(t);
+    rec.onresult = function(e){ sendToXen(e.results[0][0].transcript); };
+    rec.onend = function(){
+      listening = false; mic.classList.remove('live'); statusEl.classList.remove('live');
+      statusEl.textContent = handsFree ? "..." : "tap to talk";
+      // hands-free: if we ended without speaking (silence/no match), re-arm
+      if(handsFree && !speaking) setTimeout(startListen, 500);
     };
-    rec.onend = function(){ listening = false; mic.classList.remove('live'); statusEl.textContent = "tap to talk"; statusEl.classList.remove('live'); };
-    rec.onerror = function(e){ setErr("mic: " + e.error); };
+    rec.onerror = function(e){ if(e.error!=='no-speech') setErr("mic: " + e.error); };
   } else {
     statusEl.textContent = "type below (no mic API)";
   }
   mic.addEventListener('click', function(){
-    // unlock audio autoplay on first tap
-    audio.play().catch(function(){}); audio.pause();
+    audio.play().catch(function(){}); audio.pause(); // unlock autoplay
     if(!rec){ input.focus(); return; }
-    if(listening){ rec.stop(); return; }
-    try{ rec.start(); listening = true; mic.classList.add('live'); statusEl.textContent = "listening..."; statusEl.classList.add('live'); setErr(""); }
-    catch(e){ setErr("mic start: " + e.message); }
+    if(handsFree || listening){ stopAll(); statusEl.textContent="tap to talk"; return; }
+    handsFree = true; startListen();
   });
+  // ?autostart=1 (Siri Shortcut "Open URL") -> begin the hands-free loop immediately
+  if(/[?&]autostart=1/.test(location.search)){
+    handsFree = true;
+    // a tap is normally needed to unlock audio; on Shortcut-launch most iOS allows it
+    setTimeout(function(){ audio.play().catch(function(){}); startListen(); }, 600);
+    statusEl.textContent = "hands-free - say it";
+  }
 
   // ── type fallback ──
   document.getElementById('send').addEventListener('click', function(){ sendToXen(input.value); input.value=''; });
