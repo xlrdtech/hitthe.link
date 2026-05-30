@@ -1096,10 +1096,18 @@ function attachBubbleActions(bubbleEl, text) {
 
 // Wrap appendFinal to add bubble actions
 const _origAppendFinal = appendFinal;
+// Double-input fix (qi 2026-05-30): qi's dictation renders LOCALLY here (Web
+// Speech) AND again when omnimind echoes it back over SSE as xen-dictate-in.
+// Register each locally-rendered line so the SSE echo can be suppressed.
+const _localDictated = new Map(); // normText -> ts
+function _normDict(t){ return String(t||'').toLowerCase().replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim(); }
 appendFinal = function(text, postedFlag) {
   _origAppendFinal(text, postedFlag);
   const lastFinal = transcript.querySelector('.final:last-child');
   if (lastFinal) attachBubbleActions(lastFinal, text);
+  const k = _normDict(text);
+  if (k) { _localDictated.set(k, Date.now());
+    if (_localDictated.size > 50) { for (const [kk,vv] of _localDictated) { if (Date.now()-vv > 30000) _localDictated.delete(kk); } } }
 };
 
 // ─── Top toolbar: copy-all / export / share / attach ─────────────────────
@@ -1570,6 +1578,12 @@ function renderEvent(d) {
     _hud('rx ' + (_avaLive ? 'LIVE' : 'backlog') + ' "' + txt.slice(0,24) + '"');
     if (_avaLive) speakAva(txt);   // sentinel-gated: only live replies speak
   } else if (isUserDictate) {
+    // Skip the SSE echo of qi's OWN dictation already rendered locally (Web
+    // Speech) — that was the doubling. 30s window; consume the registry entry.
+    const _dk = _normDict(txt);
+    if (_dk && _localDictated.has(_dk) && (Date.now() - _localDictated.get(_dk) < 30000)) {
+      _localDictated.delete(_dk); return;
+    }
     const div = document.createElement('div');
     div.className = 'final';
     const tsEl = document.createElement('span');
