@@ -443,13 +443,22 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
       <div class="subtitle" id="count">0 sent · xen.xlrd.org</div>
     </div>
   </div>
-  <div class="mic-icon" id="mic-icon" title="Microphone status">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-      <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-      <line x1="12" y1="19" x2="12" y2="23"/>
-      <line x1="8" y1="23" x2="16" y2="23"/>
-    </svg>
+  <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+    <div class="mic-icon" id="ava-icon" title="Ava voice (tap to mute/unmute)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+      </svg>
+    </div>
+    <div class="mic-icon" id="mic-icon" title="Microphone status">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+        <line x1="12" y1="19" x2="12" y2="23"/>
+        <line x1="8" y1="23" x2="16" y2="23"/>
+      </svg>
+    </div>
   </div>
 </header>
 
@@ -470,14 +479,14 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
 <div id="thread-picker" style="display:none; position:absolute; top:60px; left:20px; right:20px; max-height:50vh; overflow-y:auto; background:rgba(20,40,28,.94); border:1px solid var(--line-strong); border-radius:var(--r-card); backdrop-filter:blur(18px); padding:10px; z-index:10; box-shadow:0 12px 36px rgba(0,0,0,.5);"></div>
 
 <!-- Events panel toggle (Task #10) -->
-<button id="er-toggle" aria-label="Toggle events panel" aria-expanded="false">
+<button id="er-toggle" aria-label="Toggle events panel" aria-expanded="false" style="display:none">
   <span class="pip" id="er-pip"></span>
   <span>Events</span>
   <span class="count zero" id="er-count">0</span>
 </button>
 
 <!-- Events panel (operator state · in-pane) -->
-<aside id="events-rail" aria-label="Operator events">
+<aside id="events-rail" aria-label="Operator events" style="display:none">
   <div class="er-head">
     <span>Operator · Firehose</span>
     <span style="display:flex; gap:8px; align-items:center">
@@ -801,6 +810,7 @@ function startListening() {
   recognition.continuous = useContinuous;
   recognition.interimResults = true;
   recognition.lang = 'en-US';
+  recognition.onspeechstart = () => { _avaBargeIn(); };  // earliest barge-in trigger
 
   recognition.onstart = () => {
     listening = true;
@@ -821,6 +831,7 @@ function startListening() {
   let lastPostedText = '';
   let lastPostedAt = 0;
   recognition.onresult = (e) => {
+    _avaBargeIn();  // any recognized speech = qi talking → stop my voice immediately
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const result = e.results[i];
       const text = (result[0].transcript || '').trim();
@@ -1498,13 +1509,17 @@ function renderEvent(d) {
     transcript.scrollTop = transcript.scrollHeight;
     saveHistory({ role: 'you', text: txt, ts: d.ts || Date.now() });
   } else {
-    // Firehose / operator-state events — route to in-pane events-rail (Task #10)
-    // so transcript stays pure conversation, mesh noise stays surfaced but separate.
+    // qi 2026-05-30: events render IN the chat, not a separate panel —
+    // "everything is supposed to show up in the chat". Firehose bubble inline.
     const labelSrc = (d.source || d.sender || d.title || tag || 'firehose').toString().slice(0, 24);
     const cleanBody = String(txt).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 300);
-    appendEventItem(labelSrc, cleanBody, d.ts || Date.now());
-    // Don't persist firehose to per-thread history (it's live ambient; would
-    // bloat thread storage). It still streams via SSE on every load.
+    const fdiv = document.createElement('div');
+    fdiv.className = 'firehose';
+    const fsrc = document.createElement('span'); fsrc.className = 'src'; fsrc.textContent = labelSrc;
+    const fbody = document.createElement('span'); fbody.className = 'bubble-txt'; fbody.textContent = cleanBody;
+    fdiv.appendChild(fsrc); fdiv.appendChild(fbody);
+    transcript.appendChild(fdiv);
+    transcript.scrollTop = transcript.scrollHeight;
   }
 }
 
@@ -1697,6 +1712,12 @@ function _unlockAvaAudio() {
   const a = _ensureAvaAudio();
   try { a.src = _AVA_SILENT; const p = a.play(); if (p && p.then) p.then(() => { _avaAudioUnlocked = true; _renderAvaPill(); }).catch(() => {}); } catch (_) {}
 }
+// Barge-in: the instant qi's mic catches speech, cut my voice (qi 2026-05-30).
+function _avaBargeIn() {
+  try { if (_avaAudio) _avaAudio.pause(); } catch (_) {}
+  try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (_) {}
+  _avaStatus = 'you spoke'; _renderAvaPill();
+}
 function speakAva(text) {
   if (!_avaOn || !text) return;
   const clip = String(text).slice(0, 800);
@@ -1726,25 +1747,27 @@ function _speakAvaFallback(clip) {
 // browser picked (Ava if available, else the best en-US neural fallback) so the
 // live engine is visible/verifiable on screen, and lets qi mute voice-out.
 function _renderAvaPill() {
-  const p = document.getElementById('ava-toggle');
-  if (!p) return;
-  const vn = _avaAudioUnlocked ? ('Ava neural' + (_avaStatus ? ' · ' + _avaStatus : '')) : 'tap mic once to arm';
-  p.textContent = _avaOn ? ('Ava voice: ON · ' + vn) : 'Ava voice: OFF';
-  p.setAttribute('aria-pressed', _avaOn ? 'true' : 'false');
-  p.style.opacity = _avaOn ? '1' : '.55';
+  const ic = document.getElementById('ava-icon');
+  if (!ic) return;
+  ic.classList.toggle('active', _avaOn && _avaStatus === 'playing');
+  ic.style.opacity = _avaOn ? '1' : '.4';
+  ic.title = _avaOn ? ('Ava voice: ON' + (_avaStatus ? ' · ' + _avaStatus : '') + ' — tap to mute')
+                    : 'Ava voice: OFF — tap to unmute';
 }
 (function avaToggleUI() {
-  const pill = document.createElement('button');
-  pill.id = 'ava-toggle';
-  pill.textContent = 'Ava voice: ON';
-  pill.style.cssText = 'position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:99999;max-width:92vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:linear-gradient(145deg,rgba(0,255,136,.18),rgba(0,255,136,.05));color:#bff7d8;border:1px solid rgba(0,255,136,.4);border-radius:999px;padding:7px 16px;font:600 12px/1 -apple-system,BlinkMacSystemFont,sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)';
-  pill.addEventListener('click', () => {
-    _avaOn = !_avaOn;
-    if (!_avaOn) { try { window.speechSynthesis.cancel(); } catch (_) {} }
+  // Speaker icon in the header (left of the mic), same style — no bottom pill.
+  const wire = () => {
+    const ic = document.getElementById('ava-icon');
+    if (!ic) { setTimeout(wire, 200); return; }
+    ic.addEventListener('click', (e) => {
+      e.stopPropagation();
+      _avaOn = !_avaOn;
+      if (!_avaOn) { try { if (_avaAudio) _avaAudio.pause(); } catch (_) {} try { window.speechSynthesis.cancel(); } catch (_) {} }
+      _renderAvaPill();
+    });
     _renderAvaPill();
-  });
-  const mount = () => { document.body.appendChild(pill); _renderAvaPill(); };
-  if (document.body) mount(); else document.addEventListener('DOMContentLoaded', mount);
+  };
+  if (document.body) wire(); else document.addEventListener('DOMContentLoaded', wire);
 })();
 // First user gesture unlocks speechSynthesis (autoplay policy) + locks the voice.
 (function avaUnlock() {
