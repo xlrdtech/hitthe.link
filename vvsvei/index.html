@@ -1652,13 +1652,25 @@ function pickAvaVoice() {
   if (!('speechSynthesis' in window)) return null;
   const vs = window.speechSynthesis.getVoices() || [];
   if (!vs.length) return null;
+  // INSTANT mandate (qi 2026-05-30: "must never be anything less than instant").
+  // On-device ONLY. localService=true synthesizes locally with zero network
+  // latency; network voices (e.g. "Google US English") lag + need connectivity,
+  // so they are last-resort only — never chosen while any local voice exists.
+  const local = vs.filter(v => v.localService);
+  const enUS = v => /en[-_]?US/i.test(v.lang);
+  const ava  = v => /\bava\b/i.test(v.name);
+  const hq   = v => /(premium|enhanced|neural|natural|siri)/i.test(v.name);
+  const pool = local.length ? local : vs;   // prefer the local pool for instant speech
   return (
-    vs.find(v => /\bava\b/i.test(v.name) && /en[-_]?US/i.test(v.lang)) ||
-    vs.find(v => /\bava\b/i.test(v.name)) ||
-    vs.find(v => /en[-_]?US/i.test(v.lang) && /(premium|enhanced|neural|natural|siri)/i.test(v.name)) ||
-    vs.find(v => /(samantha|google us english)/i.test(v.name)) ||
-    vs.find(v => /en[-_]?US/i.test(v.lang)) ||
-    vs.find(v => /^en/i.test(v.lang)) ||
+    pool.find(v => ava(v) && enUS(v)) ||
+    pool.find(v => ava(v)) ||
+    pool.find(v => enUS(v) && hq(v)) ||
+    pool.find(v => /samantha/i.test(v.name)) ||
+    pool.find(v => enUS(v)) ||
+    pool.find(v => /^en/i.test(v.lang)) ||
+    local[0] ||
+    vs.find(v => ava(v)) ||      // Ava even if network-flagged, before giving up
+    vs.find(v => enUS(v)) ||
     vs[0] || null
   );
 }
