@@ -1528,6 +1528,8 @@ function renderEvent(d) {
   // guard since the sentinel carries no text.
   if ((d.event || d.kind || '').toString().toLowerCase() === 'caught-up') {
     _avaLive = true; _hud('LIVE (caught-up)');
+    try { if (window._avaSetLoad) window._avaSetLoad('✓ Live', 'caught up — listening', 100); } catch (_) {}
+    try { if (window._avaDismissOverlay) setTimeout(window._avaDismissOverlay, 700); } catch (_) {}
     return;
   }
   const txt = (d.text || d.body || d.message || '').toString().trim();
@@ -1569,6 +1571,7 @@ function renderEvent(d) {
     // never clogs with history. 10s grace covers the load→connect gap.
     _hudRx++;
     _hud('rx ' + (_avaLive ? 'LIVE' : 'backlog') + ' "' + txt.slice(0,24) + '"');
+    if (!_avaLive) { try { if (window._avaSetLoad) window._avaSetLoad('Loading history…', _hudRx + ' messages', Math.min(99, Math.round(_hudRx / 50))); } catch (_) {} }
     if (_avaLive) speakAva(txt);   // sentinel-gated: only live replies speak
   } else if (isUserDictate) {
     // Skip the SSE echo of qi's OWN dictation already rendered locally (Web
@@ -1900,20 +1903,38 @@ function _renderAvaPill() {
     if (_avaUnlocked || overlay || !document.body) return;
     overlay = document.createElement('div');
     overlay.id = 'ava-arm';
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(6,20,12,.9);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);cursor:pointer;color:#bff7d8;font:600 19px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;text-align:center;padding:24px';
-    overlay.innerHTML = '<div style="font-size:46px">🎙️</div><div>Tap anywhere to start</div><div style="font-size:13px;opacity:.65;max-width:300px">enables voice + mic — one tap, then hands-free</div>';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(6,20,12,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);cursor:pointer;color:#bff7d8;font:600 19px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;text-align:center;padding:24px';
+    overlay.innerHTML =
+      '<div style="font-size:46px">🎙️</div>' +
+      '<div id="ava-arm-title">Tap anywhere to start</div>' +
+      '<div id="ava-arm-sub" style="font-size:13px;opacity:.65;max-width:300px">enables voice + mic — one tap, then live</div>' +
+      '<div id="ava-arm-barwrap" style="display:none;width:220px;height:8px;background:rgba(255,255,255,.12);border-radius:99px;overflow:hidden;margin-top:6px"><div id="ava-arm-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#00ff88,#7CFC9A);transition:width .25s"></div></div>';
     document.body.appendChild(overlay);
   }
+  // Truthful real-time loader (qi 2026-05-30: "real-time percentage loading
+  // screen", "tap into a void" = bad). After the tap, the overlay STAYS and shows
+  // connecting -> loading history % -> live, dismissing only when caught-up.
+  window._avaSetLoad = function(title, sub, pct) {
+    const t = document.getElementById('ava-arm-title');
+    const s = document.getElementById('ava-arm-sub');
+    const bw = document.getElementById('ava-arm-barwrap');
+    const b = document.getElementById('ava-arm-bar');
+    if (t && title != null) t.textContent = title;
+    if (s && sub != null) s.textContent = sub;
+    if (bw && b && pct != null) { bw.style.display = 'block'; b.style.width = Math.max(0, Math.min(100, pct)) + '%'; }
+  };
+  window._avaDismissOverlay = function() { if (overlay) { overlay.remove(); overlay = null; } };
   const unlock = () => {
-    if (_avaUnlocked) { if (overlay) { overlay.remove(); overlay = null; } return; }
+    if (_avaUnlocked) return;          // already armed; loader handles dismissal
     _avaUnlocked = true;
     _hud('ARMED by tap');
-    _unlockAvaAudio();                 // arm the MP3 player off this gesture
     _avaVoice = pickAvaVoice();
     try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; window.speechSynthesis.speak(u); } catch (_) {}
     try { if (typeof toggleMic === 'function' && !viz_listening) toggleMic().catch(() => {}); } catch (_) {}  // start mic same gesture
     try { setInterval(() => { try { if (window.speechSynthesis && !window.speechSynthesis.speaking) window.speechSynthesis.resume(); } catch (_) {} }, 4000); } catch (_) {}
-    if (overlay) { overlay.remove(); overlay = null; }
+    // Keep the overlay as a live loader until caught-up. If already live, dismiss.
+    if (_avaLive) { window._avaDismissOverlay(); }
+    else { window._avaSetLoad('Connecting…', 'loading your conversation', Math.min(99, Math.round(_hudRx / 50))); }
     _renderAvaPill();
   };
   document.body.addEventListener('click', unlock, { passive: true });
