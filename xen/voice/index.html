@@ -1394,17 +1394,10 @@ let _avaLive = false;
 // real audio state aloud. Shows armed?, queue depth, replies received, last status.
 let _hudRx = 0, _hudSpoke = 0, _hudLast = 'init', _hudEl = null;
 function _hud(last) {
+  // qi 2026-05-30: HUD overlay REMOVED from the UI (diagnostic scaffolding, did
+  // its job, qi didn't want it overlaying the chat). Console-only now.
   if (last) _hudLast = last;
-  if (!_hudEl) {
-    _hudEl = document.createElement('div');
-    _hudEl.id = 'ava-hud';
-    _hudEl.style.cssText = 'position:fixed;top:6px;left:6px;z-index:100001;background:rgba(0,0,0,.72);color:#7CFC9A;font:600 11px/1.4 ui-monospace,Menlo,monospace;padding:5px 8px;border-radius:7px;max-width:78vw;pointer-events:none;white-space:pre-wrap';
-    (document.body || document.documentElement).appendChild(_hudEl);
-  }
-  _hudEl.textContent = 'armed:' + ((typeof _avaAudioUnlocked!=='undefined'&&_avaAudioUnlocked)?'YES':'no') +
-    ' on:' + ((typeof _avaOn!=='undefined'&&_avaOn)?'1':'0') +
-    ' q:' + ((typeof _avaQueue!=='undefined'&&_avaQueue)?_avaQueue.length:'?') +
-    ' rx:' + _hudRx + ' spoke:' + _hudSpoke + '\n' + _hudLast;
+  try { console.debug('[vvsvei]', 'armed:'+_avaAudioUnlocked, 'rx:'+_hudRx, 'spoke:'+_hudSpoke, _hudLast); } catch (_) {}
 }
 let _activeThreadId = getActiveId();
 let _history = loadThreadEntries(_activeThreadId);
@@ -1840,12 +1833,9 @@ function _avaDrain() {
 // Page → omnimind telemetry so XEN AUTO-NOTICES failures without qi reading the
 // HUD aloud (qi 2026-05-30: "why don't you automatically notice"). Errors only.
 function _avaTelemetry(what) {
-  try {
-    fetch('https://xen.xlrd.org/api/dictate-inject', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: '[VVSVEI-TELEMETRY] ' + what + ' (rx=' + _hudRx + ' spoke=' + _hudSpoke + ' armed=' + _avaAudioUnlocked + ')', source: 'vei-telemetry' })
-    }).catch(function(){});
-  } catch (_) {}
+  // qi 2026-05-30: console-only — telemetry POST to dictate-inject was spamming
+  // qi's chat ("[VVSVEI-TELEMETRY]..."). No chat noise. Readable via Comet console.
+  try { console.warn('[vvsvei-telemetry]', what, 'rx=' + _hudRx, 'spoke=' + _hudSpoke, 'armed=' + _avaAudioUnlocked); } catch (_) {}
 }
 function speakAva(text) {
   if (!_avaOn || !text) return;
