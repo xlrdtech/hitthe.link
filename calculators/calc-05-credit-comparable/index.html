@@ -468,7 +468,9 @@
         <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
       </summary>
       <div class="body">
-        Your cohort median is modeled from <strong>age-bracket FICO medians</strong>, adjusted by an <strong>income-tier modifier</strong> and a <strong>US Census division offset</strong>. Your percentile is estimated from a normal distribution around that median (σ ≈ 58 pts), and the top-decile target sits ~1.28σ above it. The gauge plots your score on the canonical FICO scale (Poor 300–579 · Fair 580–669 · Good 670–739 · Very Good 740–799 · Exceptional 800–850).
+        Your cohort median is modeled from <strong>age-bracket FICO medians</strong>, adjusted by an <strong>income-tier modifier</strong> and a <strong>US Census division offset</strong>. Your percentile is estimated from a normal distribution around that median (σ ≈ 58 pts). The <strong>Top Decile</strong> target is the true 90th-percentile score of that same distribution — exactly 1.28σ above the median — so the label and your percentile readout always agree (no scaling fudge). The gauge plots your score on the canonical FICO scale (Poor 300–579 · Fair 580–669 · Good 670–739 · Very Good 740–799 · Exceptional 800–850).
+        <br /><br />
+        <strong>Note on score models:</strong> the age and income baselines are in FICO points, while the regional offset is derived from Experian's VantageScore-by-state data (rolled to division) and applied only as a small directional proxy — FICO and VantageScore are different scoring models and are not interchangeable. Published FICO medians by Census division are not available, so we do not invent them.
         <div class="trust-row">
           <span class="trust-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg> Basis: Experian 2024 State of Credit</span>
           <span class="trust-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 2"/></svg> Estimate only — won't affect your score</span>
@@ -497,8 +499,15 @@
    when official annual updates publish. Not for underwriting.
    ============================================================ */
 
-// Region base modifiers - approximate offsets vs national avg
-// Source basis: Experian 2024 average VantageScore by state, rolled to division
+// Region base modifiers - approximate directional offsets vs national avg.
+// Source basis: Experian 2024 average VantageScore by state, rolled to division.
+// NOTE ON SCORE MODELS: the age/income baselines below are FICO points, while
+// these regional deltas are derived from VantageScore data. VantageScore and
+// FICO are DIFFERENT models (both 0-850 banded, but not interchangeable). We
+// apply the regional figures only as a small directional proxy on the FICO
+// baseline -- not as a true FICO regional median -- because published
+// FICO-by-Census-division medians are not available. This blend is disclosed
+// in the on-page methodology so the dial is not silently mixing two models.
 var REGION_OFFSET = {
   new_england: +12,
   mid_atlantic: +6,
@@ -567,9 +576,12 @@ function compute() {
   var cohortMedian = ab.median + it.mod + regionMod;
   cohortMedian = clamp(Math.round(cohortMedian), 520, 820);
 
-  // Top decile (~1.28 std-dev above median)
-  // (0.55 scale because FICO is bounded + right-skewed near ceiling)
-  var topDecile = clamp(Math.round(cohortMedian + 1.28 * COHORT_STDDEV * 0.55), 600, 845);
+  // Top decile = the 90th-percentile score of the cohort: exactly 1.28 std-dev
+  // above the median under the same normal model used for the user's percentile
+  // below (z=1.28 -> normCdf=0.90). No scaling fudge -- the band labeled
+  // "Top Decile" must sit at a true ~90th percentile so the figure stays honest
+  // and self-consistent with the percentile readout.
+  var topDecile = clamp(Math.round(cohortMedian + 1.28 * COHORT_STDDEV), 600, 845);
 
   // Percentile of user within cohort
   var z = (fico - cohortMedian) / COHORT_STDDEV;
