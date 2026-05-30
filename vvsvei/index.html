@@ -1964,21 +1964,10 @@ function _renderAvaPill() {
     // _unlockAvaAudio() was never being called from unlock(), so _avaCtx was null
     // and _avaDrain fell through to the blocked <audio>.play() path every time.
     _unlockAvaAudio();
-    // ROOT-CAUSE FIX (parallel swarm 2026-05-30): iOS only unlocks speechSynthesis
-    // when an AUDIBLE, NON-EMPTY utterance is spoken synchronously inside the
-    // gesture. The old volume=0 whitespace warm-up was a no-op → the gesture got
-    // consumed without priming → every later SSE .speak() was silently blocked =
-    // "tap then silence." Use audible-but-near-silent real text + reconcile flags.
-    try {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance('.');
-      u.volume = 0.05;
-      if (_avaVoice) { u.voice = _avaVoice; u.lang = _avaVoice.lang; }
-      window.speechSynthesis.speak(u);
-      _avaAudioUnlocked = true;
-    } catch (_) {}
+    // Web Audio API is the sole voice path now — no speechSynthesis in the page.
+    // Removed speechSynthesis warm-up to eliminate the multiple-voices issue.
+    _avaAudioUnlocked = true;
     try { if (typeof toggleMic === 'function' && !viz_listening) toggleMic().catch(() => {}); } catch (_) {}  // start mic same gesture
-    try { setInterval(() => { try { if (window.speechSynthesis && !window.speechSynthesis.speaking) window.speechSynthesis.resume(); } catch (_) {} }, 4000); } catch (_) {}
     // Keep the overlay as a live loader until caught-up. If already live, dismiss.
     if (_avaLive) { window._avaDismissOverlay(); }
     else { window._avaSetLoad('Connecting…', 'loading your conversation', Math.min(99, Math.round(_hudRx / 50))); }
