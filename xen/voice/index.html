@@ -1809,19 +1809,25 @@ function _avaDrain() {
   const a = _ensureAvaAudio();
   a.onplaying = () => { _avaStatus = 'playing'; _hudSpoke++; _hud('PLAYING'); _renderAvaPill(); };
   a.onended   = () => { _avaPlaying = false; _avaStatus = _avaQueue.length ? ('queued ' + _avaQueue.length) : 'idle'; _renderAvaPill(); _avaDrain(); };
-  a.onerror   = () => { _avaPlaying = false; _avaStatus = 'audio-err'; _hud('audio-err'); _renderAvaPill(); _speakAvaFallback(clip); _avaDrain(); };
+  a.onerror   = () => { _avaPlaying = false; _avaStatus = 'audio-err'; _hud('audio-err'); _avaTelemetry('audio-err on play'); _renderAvaPill(); _speakAvaFallback(clip); _avaDrain(); };
   _avaStatus = 'fetching'; _renderAvaPill();
-  const url = AVA_TTS_URL + '?voice=ava&text=' + encodeURIComponent(clip);
-  // Fetch the FULL mp3 as a blob, then play from an object URL — fully buffered,
-  // no mid-stream decode (that streaming decode was the crackle). qi 2026-05-30.
-  fetch(url).then(r => r.blob()).then(b => {
-    if (a._avaUrl) { try { URL.revokeObjectURL(a._avaUrl); } catch (_) {} }
-    a._avaUrl = URL.createObjectURL(b);
-    a.src = a._avaUrl;
-    const p = a.play();
-    if (p && p.catch) p.catch(() => { _avaPlaying = false; _avaStatus = 'blocked'; _renderAvaPill(); _speakAvaFallback(clip); _avaDrain(); });
-    _avaAudioUnlocked = true; _renderAvaPill();
-  }).catch(() => { _avaPlaying = false; _avaStatus = 'fetch-err'; _renderAvaPill(); _speakAvaFallback(clip); _avaDrain(); });
+  // DIRECT src playback (qi 2026-05-30: heard me fine this way). The blob:
+  // object-URL crackle fix BROKE iOS Safari playback (audio-err, spoke=0) —
+  // iOS chokes on blob: in <audio>. Working voice > crackle-free silence.
+  a.src = AVA_TTS_URL + '?voice=ava&text=' + encodeURIComponent(clip);
+  const p = a.play();
+  if (p && p.catch) p.catch(() => { _avaPlaying = false; _avaStatus = 'blocked'; _hud('blocked'); _avaTelemetry('play blocked'); _renderAvaPill(); _speakAvaFallback(clip); _avaDrain(); });
+  _avaAudioUnlocked = true; _renderAvaPill();
+}
+// Page → omnimind telemetry so XEN AUTO-NOTICES failures without qi reading the
+// HUD aloud (qi 2026-05-30: "why don't you automatically notice"). Errors only.
+function _avaTelemetry(what) {
+  try {
+    fetch('https://xen.xlrd.org/api/dictate-inject', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: '[VVSVEI-TELEMETRY] ' + what + ' (rx=' + _hudRx + ' spoke=' + _hudSpoke + ' armed=' + _avaAudioUnlocked + ')', source: 'vei-telemetry' })
+    }).catch(function(){});
+  } catch (_) {}
 }
 function speakAva(text) {
   if (!_avaOn || !text) return;
