@@ -432,7 +432,10 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
 </style>
 </head>
 <body>
-<iframe class="bg-iframe" id="bg-iframe" src="/vei/avatar/" aria-hidden="true" tabindex="-1"></iframe>
+<!-- qi 2026-05-30: avatar iframe deferred on VVSVEI — the /vei/avatar Three.js
+     bundle was the load-struggle. Voice page loads fast without it; the avatar
+     attaches only after the page is interactive + voice armed (idle-time). -->
+<iframe class="bg-iframe" id="bg-iframe" data-src="/vei/avatar/" aria-hidden="true" tabindex="-1" loading="lazy"></iframe>
 <div class="bg-overlay" aria-hidden="true"></div>
 <div class="wrap">
 
@@ -1840,6 +1843,17 @@ fbText.addEventListener('keydown', (e) => {
 // SR absence handled by Start button → routes to MediaRecorder directly
 
 window.addEventListener('beforeunload', stopListening);
+
+// Deferred avatar: attach the heavy /vei/avatar Three.js iframe only AFTER the
+// page is interactive + idle, so VVSVEI loads fast (qi 2026-05-30 "struggles to
+// load"). Voice/chat work immediately; the cosmetic avatar fills in later.
+(function deferAvatar() {
+  const f = document.getElementById('bg-iframe');
+  if (!f || !f.dataset.src) return;
+  const attach = () => { if (!f.src && f.dataset.src) f.src = f.dataset.src; };
+  if (document.readyState === 'complete') setTimeout(attach, 2500);
+  else window.addEventListener('load', () => setTimeout(attach, 2500));
+})();
 
 // ─── VEI RTC client ─── peer-to-peer voice transport, no Web Speech re-synth
 (function veiRTC() {
