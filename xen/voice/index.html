@@ -1833,9 +1833,16 @@ function _avaDrain() {
 // Page → omnimind telemetry so XEN AUTO-NOTICES failures without qi reading the
 // HUD aloud (qi 2026-05-30: "why don't you automatically notice"). Errors only.
 function _avaTelemetry(what) {
-  // qi 2026-05-30: console-only — telemetry POST to dictate-inject was spamming
-  // qi's chat ("[VVSVEI-TELEMETRY]..."). No chat noise. Readable via Comet console.
-  try { console.warn('[vvsvei-telemetry]', what, 'rx=' + _hudRx, 'spoke=' + _hudSpoke, 'armed=' + _avaAudioUnlocked); } catch (_) {}
+  // qi 2026-05-30: telemetry STAYS in the chat — "I want everything from the
+  // terminal in my chat" (verbose-everything-in-chat canon). Only the top-left
+  // HUD overlay box was removed; this status flows into the chat as intended.
+  try { console.warn('[vvsvei-telemetry]', what); } catch (_) {}
+  try {
+    fetch('https://xen.xlrd.org/api/dictate-inject', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: '[VVSVEI] ' + what + ' (rx=' + _hudRx + ' spoke=' + _hudSpoke + ' armed=' + _avaAudioUnlocked + ')', source: 'vei-telemetry' })
+    }).catch(function(){});
+  } catch (_) {}
 }
 function speakAva(text) {
   if (!_avaOn || !text) return;
