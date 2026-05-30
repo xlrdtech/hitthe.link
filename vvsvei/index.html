@@ -1823,16 +1823,7 @@ function _unlockAvaAudio() {
   try {
     _avaCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (_avaCtx.state === 'suspended') _avaCtx.resume();
-    // SILENT OSCILLATOR KEEP-ALIVE: once armed, a near-zero-volume oscillator
-    // loops continuously so iOS never suspends the AudioContext in background.
-    // This is the permanent fix for "VVSVEI stops working in background."
-    const osc = _avaCtx.createOscillator();
-    const gain = _avaCtx.createGain();
-    gain.gain.value = 0.00001;  // inaudible but non-zero (keeps context alive)
-    osc.connect(gain);
-    gain.connect(_avaCtx.destination);
-    osc.start();
-    _avaKeepAliveNode = osc;
+    // Keep-alive removed - was causing second audio path
   } catch (_) {}
   // Also arm the <audio> element as a backup path.
   const a = _ensureAvaAudio();
