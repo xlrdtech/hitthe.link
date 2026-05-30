@@ -1807,8 +1807,11 @@ function _unlockAvaAudio() {
 }
 // Barge-in: the instant qi's mic catches speech, cut my voice (qi 2026-05-30).
 function _avaBargeIn() {
-  try { if (_avaAudio) _avaAudio.pause(); } catch (_) {}
+  // qi talking wins: stop current audio AND clear the queue so nothing resumes
+  // (queued replies were continuing after barge-in = "not cutting"). qi 2026-05-30.
+  try { if (_avaAudio) { _avaAudio.pause(); _avaAudio.currentTime = 0; } } catch (_) {}
   try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (_) {}
+  _avaQueue = []; _avaPlaying = false;
   _avaStatus = 'you spoke'; _renderAvaPill();
 }
 // QUEUE, never drop (qi 2026-05-30: "I haven't heard you the last 3-5 outputs").
@@ -1823,14 +1826,14 @@ function _avaDrain() {
   const a = _ensureAvaAudio();
   a.onplaying = () => { _avaStatus = 'playing'; _hudSpoke++; _hud('PLAYING'); _renderAvaPill(); };
   a.onended   = () => { _avaPlaying = false; _avaStatus = _avaQueue.length ? ('queued ' + _avaQueue.length) : 'idle'; _renderAvaPill(); _avaDrain(); };
-  a.onerror   = () => { _avaPlaying = false; _avaStatus = 'audio-err'; _hud('audio-err'); _avaTelemetry('audio-err on play'); _renderAvaPill(); _speakAvaFallback(clip); _avaDrain(); };
+  a.onerror   = () => { _avaPlaying = false; _avaStatus = 'audio-err'; _hud('audio-err'); _avaTelemetry('audio-err on play'); _renderAvaPill(); _avaDrain(); };
   _avaStatus = 'fetching'; _renderAvaPill();
   // DIRECT src playback (qi 2026-05-30: heard me fine this way). The blob:
   // object-URL crackle fix BROKE iOS Safari playback (audio-err, spoke=0) —
   // iOS chokes on blob: in <audio>. Working voice > crackle-free silence.
   a.src = AVA_TTS_URL + '?voice=ava&text=' + encodeURIComponent(clip);
   const p = a.play();
-  if (p && p.catch) p.catch(() => { _avaPlaying = false; _avaStatus = 'blocked'; _hud('blocked'); _avaTelemetry('play blocked'); _renderAvaPill(); _speakAvaFallback(clip); _avaDrain(); });
+  if (p && p.catch) p.catch(() => { _avaPlaying = false; _avaStatus = 'blocked'; _hud('blocked'); _avaTelemetry('play blocked'); _renderAvaPill(); _avaDrain(); });
   _avaAudioUnlocked = true; _renderAvaPill();
 }
 // Page → omnimind telemetry so XEN AUTO-NOTICES failures without qi reading the
