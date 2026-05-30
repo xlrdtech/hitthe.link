@@ -1686,10 +1686,15 @@ function subscribeXenReplies() {
       _eventsPip.classList.remove('off');
       _avaLive = false;   // backlog replays on (re)connect — stay silent until caught-up
       _hud('connected — awaiting caught-up');
+      // FALLBACK (parallel swarm 2026-05-30): voice must NEVER hang on a sentinel
+      // that may not arrive. 8s past the backlog-replay window, go live regardless.
+      setTimeout(() => { if (!_avaLive) { _avaLive = true; _hud('LIVE (grace timeout)'); if (window._avaDismissOverlay) window._avaDismissOverlay(); } }, 8000);
     };
     src.onmessage = (ev) => {
       try { renderEvent(JSON.parse(ev.data)); } catch (_) {}
     };
+    // Also catch a NAMED 'caught-up' SSE event (not just JSON-body on default channel).
+    try { src.addEventListener('caught-up', () => { _avaLive = true; _hud('LIVE (named caught-up)'); if (window._avaDismissOverlay) setTimeout(window._avaDismissOverlay, 600); }); } catch (_) {}
     src.onerror = () => {
       _eventsSseStatus.textContent = 'sse · reconnecting';
       _eventsSseStatus.className = 'warn';
@@ -1930,7 +1935,19 @@ function _renderAvaPill() {
     _avaUnlocked = true;
     _hud('ARMED by tap');
     _avaVoice = pickAvaVoice();
-    try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; window.speechSynthesis.speak(u); } catch (_) {}
+    // ROOT-CAUSE FIX (parallel swarm 2026-05-30): iOS only unlocks speechSynthesis
+    // when an AUDIBLE, NON-EMPTY utterance is spoken synchronously inside the
+    // gesture. The old volume=0 whitespace warm-up was a no-op → the gesture got
+    // consumed without priming → every later SSE .speak() was silently blocked =
+    // "tap then silence." Use audible-but-near-silent real text + reconcile flags.
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance('.');
+      u.volume = 0.05;
+      if (_avaVoice) { u.voice = _avaVoice; u.lang = _avaVoice.lang; }
+      window.speechSynthesis.speak(u);
+      _avaAudioUnlocked = true;
+    } catch (_) {}
     try { if (typeof toggleMic === 'function' && !viz_listening) toggleMic().catch(() => {}); } catch (_) {}  // start mic same gesture
     try { setInterval(() => { try { if (window.speechSynthesis && !window.speechSynthesis.speaking) window.speechSynthesis.resume(); } catch (_) {} }, 4000); } catch (_) {}
     // Keep the overlay as a live loader until caught-up. If already live, dismiss.
