@@ -1755,7 +1755,10 @@ function _avaDrain() {
 }
 function speakAva(text) {
   if (!_avaOn || !text) return;
-  _avaQueue.push(String(text).slice(0, 800));
+  // Strip a leading persona tag — Xen never speaks "Xen:" aloud (one-Xen canon,
+  // qi heard it as "Zantac"). Lyn/Eli tags also stripped from the spoken leg.
+  const spoken = String(text).replace(/^\s*(Xen|Lyn|Eli)\s*:\s*/i, '');
+  _avaQueue.push(spoken.slice(0, 800));
   if (_avaQueue.length > 12) _avaQueue = _avaQueue.slice(-12);
   _avaDrain();
 }
