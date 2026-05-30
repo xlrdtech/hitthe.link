@@ -358,9 +358,19 @@ artifacts in <strong>Comet</strong>
 <h2 id="fusion-model---one-session-two-machines">8. Fusion model - one
 session, two machines</h2>
 <ul>
-<li><strong>Shared state, not forked.</strong> Memory via bastra-recall
-(vault <code>/Volumes/X31/xen-vault/root</code>). Both halves read/write
-the same memory. Recall before acting; save durable facts.</li>
+<li><strong>Shared memory (LIVE 2026-05-30).</strong> The bastra-recall
+vault is now a PRIVATE git repo:
+<strong><code>github.com/xlrdtech/xen-vault</code></strong> (only
+<code>memories/</code> synced; bulk notes_/documents gitignored). Mac
+side auto-syncs via <code>~/bin/xen-vault-sync</code> (launchd
+<code>com.xen.vault-sync</code>, every 180s: pull –rebase –autostash +
+commit + push <code>memories/</code>, fail-soft). <strong>Windows/xql
+setup:</strong>
+<code>git clone https://github.com/xlrdtech/xen-vault</code> to the
+Windows bastra-recall vault path, point bastra-recall at the clone, and
+run an equivalent 180s pull+commit+push loop. Then both machines
+read/write the SAME memory = fused. Recall before acting; save durable
+facts; both halves see each other’s saves within ~3 min.</li>
 <li><strong>Comms are shared</strong> through the bridges: Beside
 (cloud, both reach it), Beeper (Mac :23373 → proxy :23374 → Windows
 reaches over LAN/tunnel). So xql on Windows sends/reads the same threads
