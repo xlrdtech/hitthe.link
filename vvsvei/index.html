@@ -1816,11 +1816,11 @@ function _unlockAvaAudio() {
   _avaAudioUnlocked = true; _renderAvaPill();
 }
 // Barge-in: the instant qi's mic catches speech, cut my voice (qi 2026-05-30).
+let _avaCurrentSource = null;  // track the active AudioBufferSourceNode for barge-in
 function _avaBargeIn() {
-  // qi talking wins: stop current audio AND clear the queue so nothing resumes
-  // (queued replies were continuing after barge-in = "not cutting"). qi 2026-05-30.
+  // Stop the Web Audio source node (the actual playing node) + clear queue.
+  try { if (_avaCurrentSource) { _avaCurrentSource.stop(); _avaCurrentSource = null; } } catch (_) {}
   try { if (_avaAudio) { _avaAudio.pause(); _avaAudio.currentTime = 0; } } catch (_) {}
-  try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (_) {}
   _avaQueue = []; _avaPlaying = false;
   _avaStatus = 'you spoke'; _renderAvaPill();
 }
@@ -1849,9 +1849,10 @@ function _avaDrain() {
       return _avaCtx.decodeAudioData(buf.slice(0));  // defensive copy
     }).then(decoded => {
       const src = _avaCtx.createBufferSource();
+      _avaCurrentSource = src;  // track for barge-in
       src.buffer = decoded;
       src.connect(_avaCtx.destination);
-      src.onended = () => { _avaPlaying = false; _avaStatus = _avaQueue.length ? ('queued '+_avaQueue.length) : 'idle'; _hudSpoke++; _renderAvaPill(); _avaDrain(); };
+      src.onended = () => { if (_avaCurrentSource === src) _avaCurrentSource = null; _avaPlaying = false; _avaStatus = _avaQueue.length ? ('queued '+_avaQueue.length) : 'idle'; _hudSpoke++; _renderAvaPill(); _avaDrain(); };
       src.start(0);
       _avaStatus = 'playing'; _hud('PLAYING via WebAudio'); _renderAvaPill();
     }).catch(e => {
