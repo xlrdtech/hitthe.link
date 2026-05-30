@@ -40,7 +40,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;opa
 .hr{height:1px;border:0;background:var(--line);margin:0}
 
 /* reveal */
-.rv{opacity:0;transform:translateY(18px);transition:opacity .6s var(--ease),transform .6s var(--ease)}
+.js .rv{opacity:0;transform:translateY(18px);transition:opacity .6s var(--ease),transform .6s var(--ease)}
 .rv.in{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}.rv{opacity:1;transform:none}}
 
@@ -432,6 +432,7 @@ footer{border-top:1px solid rgba(201,162,75,.12);padding:46px 0 64px;position:re
 <div class="refb"><b>REFERENCE BUILD v7 · CHAMPION</b> · /l7/reference/site/7 · not production</div>
 
 <script>
+document.documentElement.classList.add('js');
 var HEROES=[
  {id:'hero-credit',name:'Credit Hero (H.O.T⁷™)',kw:['credit','score','tradeline','tradelines','fico','report','repair','profile','bureau']},
  {id:'hero-capital',name:'Capital Hero (F.U.N.D™)',kw:['fund','funding','loan','capital','raise','money','invest','grant','line of credit','lender','financing','borrow']},
@@ -476,6 +477,8 @@ recalc();
 // compositor-only scroll reveal
 var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.15,rootMargin:'0px 0px -8% 0px'});
 document.querySelectorAll('.rv').forEach(function(el){io.observe(el);});
+// safety net: never leave content hidden if the observer misfires
+setTimeout(function(){document.querySelectorAll('.rv:not(.in)').forEach(function(e){e.classList.add('in');});},2000);
 </script>
 </body>
 </html>
