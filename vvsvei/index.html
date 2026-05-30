@@ -1373,6 +1373,11 @@ function threadLabel(t) {
 
 const _renderedKeys = new Set();
 const _xenOutSpoken = new Set(); // Option A speak-dedup · keys mirror _renderedKeys for xen-out events only
+// qi 2026-05-30: /events replays the FULL xen-out history (~1700 events) on every
+// SSE connect. Only LIVE replies (ts newer than this page's connect, minus grace)
+// should SPEAK — the backlog renders silently. Without this the no-drop queue
+// clogs with old replies and the live one never plays = "replies not coming through".
+const _avaConnectTs = Date.now();
 let _activeThreadId = getActiveId();
 let _history = loadThreadEntries(_activeThreadId);
 
@@ -1522,10 +1527,9 @@ function renderEvent(d) {
     attachBubbleActions(div, txt);
     transcript.scrollTop = transcript.scrollHeight;
     saveHistory({ role: 'xen', text: txt, ts: d.ts || Date.now() });
-    // qi 2026-05-30 — Ava voice-OUT added to /vei (the page qi actually uses).
-    // Plays real Ava-neural MP3 via /api/tts through a gesture-armed <audio>.
-    // RTC stays active below (silent unless a broadcaster runs); speakAva is additive.
-    speakAva(txt);
+    // Speak ONLY live replies — skip the SSE backlog replay (old ts) so the queue
+    // never clogs with history. 10s grace covers the load→connect gap.
+    if ((d.ts || 0) > _avaConnectTs - 10000) speakAva(txt);
   } else if (isUserDictate) {
     const div = document.createElement('div');
     div.className = 'final';
