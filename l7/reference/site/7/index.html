@@ -162,7 +162,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 .tier .badge{font-family:var(--fm);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#1a1206;background:var(--gold-grad);border-radius:999px;padding:4px 10px;align-self:flex-start;margin-bottom:12px}
 .tier .tn{font-family:var(--fd);font-weight:700;font-size:18px}
 .tier .tp{font-family:var(--fs);font-weight:600;font-size:34px;margin:8px 0 2px}
-.tier .tp span{font-size:13px;color:var(--text-3);font-weight:400;font-family:var(--fb)}
+.tier .tp span{display:block;margin-top:3px;font-size:13px;color:var(--text-3);font-weight:400;font-family:var(--fb)}
 .tier ul{list-style:none;margin:16px 0 20px;flex:1}
 .tier li{font-size:12.5px;color:var(--text-2);padding:6px 0 6px 18px;position:relative}
 .tier li::before{content:"";position:absolute;left:0;top:11px;width:6px;height:6px;border-radius:1px;background:var(--gold-grad)}
@@ -252,6 +252,15 @@ input[type=range]{flex:0 1 300px;max-width:300px}
   .acard{flex-basis:100%;min-width:0;margin-left:auto;margin-right:auto}
   .router input{flex-basis:100%;min-width:0}
   .router-in .btn{margin-left:auto;margin-right:auto}
+}
+/* ── mobile: resize-to-fit, never wrap (lower clamp floors; JS holds designed line count) ── */
+h1,.sec-h,.h1sub{text-wrap:balance}
+@media(max-width:760px){
+  h1{font-size:clamp(24px,8vw,76px)}
+  .sec-h{font-size:clamp(19px,6vw,46px)}
+  .h1sub{font-size:clamp(13px,3.6vw,21px)}
+  .eyebrow,.sec-tag{font-size:10px;letter-spacing:.16em;gap:8px}
+  .eyebrow::before,.eyebrow::after,.sec-tag::before,.sec-tag::after{width:18px}
 }
 </style>
 </head>
@@ -529,6 +538,30 @@ var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isInter
 document.querySelectorAll('.rv').forEach(function(el){io.observe(el);});
 // safety net: never leave content hidden if the observer misfires
 setTimeout(function(){document.querySelectorAll('.rv:not(.in)').forEach(function(e){e.classList.add('in');});},2000);
+
+// ── resize-to-fit: text shrinks to hold its designed lines instead of wrapping (font-size only → no overlap) ──
+(function(){
+  var SINGLE='.eyebrow,.sec-tag,.step .meta,.proof .pl,.dial .vlab,.dial .tier,.card .src';
+  var MULTI=[['h1',2],['.sec-h',2],['.h1sub',3]];
+  function fitLine(el){
+    el.style.whiteSpace='nowrap';el.style.fontSize='';
+    var avail=(el.parentElement?el.parentElement.clientWidth:0)-2;if(avail<=0)return;
+    var s=parseFloat(getComputedStyle(el).fontSize),g=90;
+    while(el.scrollWidth>avail&&s>8&&g-->0){s-=0.5;el.style.fontSize=s+'px';}
+  }
+  function fitBox(el,maxLines){
+    el.style.fontSize='';
+    var cs=getComputedStyle(el),s=parseFloat(cs.fontSize),lh=parseFloat(cs.lineHeight)||s*1.2,g=90;
+    while(el.scrollHeight>lh*maxLines+2&&s>14&&g-->0){s-=0.5;el.style.fontSize=s+'px';lh=parseFloat(getComputedStyle(el).lineHeight)||s*1.2;}
+  }
+  function fitAll(){
+    document.querySelectorAll(SINGLE).forEach(fitLine);
+    MULTI.forEach(function(m){document.querySelectorAll(m[0]).forEach(function(el){fitBox(el,m[1]);});});
+  }
+  var t;function deb(){clearTimeout(t);t=setTimeout(fitAll,120);}
+  fitAll();window.addEventListener('load',fitAll);window.addEventListener('resize',deb);
+  setTimeout(fitAll,500);setTimeout(fitAll,2200);
+})();
 </script>
 </body>
 </html>
