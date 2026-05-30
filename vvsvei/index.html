@@ -1832,16 +1832,28 @@ function _renderAvaPill() {
 })();
 // First user gesture unlocks speechSynthesis (autoplay policy) + locks the voice.
 (function avaUnlock() {
+  // iOS HARD-REQUIRES one user gesture to unlock audio output; mic auto-start
+  // does NOT count, and every reload re-locks it — that's why qi heard nothing
+  // after reload. This makes that single mandatory gesture ONE obvious tap via a
+  // full-screen arming layer; after it, fully hands-free. (qi 2026-05-30)
+  let overlay = null;
+  function makeOverlay() {
+    if (_avaUnlocked || overlay || !document.body) return;
+    overlay = document.createElement('div');
+    overlay.id = 'ava-arm';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(6,20,12,.9);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);cursor:pointer;color:#bff7d8;font:600 19px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;text-align:center;padding:24px';
+    overlay.innerHTML = '<div style="font-size:46px">🎙️</div><div>Tap anywhere to start</div><div style="font-size:13px;opacity:.65;max-width:300px">enables voice + mic — one tap, then hands-free</div>';
+    document.body.appendChild(overlay);
+  }
   const unlock = () => {
-    if (_avaUnlocked || !('speechSynthesis' in window)) return;
+    if (_avaUnlocked) { if (overlay) { overlay.remove(); overlay = null; } return; }
     _avaUnlocked = true;
-    _unlockAvaAudio();                 // arm the MP3 player off this same gesture (no extra tap)
+    _unlockAvaAudio();                 // arm the MP3 player off this gesture
     _avaVoice = pickAvaVoice();
     try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; window.speechSynthesis.speak(u); } catch (_) {}
-    // iOS WebKit suspends speechSynthesis after ~15s idle and silently blocks
-    // speak() fired from a non-gesture (SSE) context. This heartbeat keeps the
-    // engine warm so xen-out replies actually speak on iPhone. (qi 2026-05-30)
+    try { if (typeof toggleMic === 'function' && !viz_listening) toggleMic().catch(() => {}); } catch (_) {}  // start mic same gesture
     try { setInterval(() => { try { if (window.speechSynthesis && !window.speechSynthesis.speaking) window.speechSynthesis.resume(); } catch (_) {} }, 4000); } catch (_) {}
+    if (overlay) { overlay.remove(); overlay = null; }
     _renderAvaPill();
   };
   document.body.addEventListener('click', unlock, { passive: true });
@@ -1850,7 +1862,8 @@ function _renderAvaPill() {
     const prev = window.speechSynthesis.onvoiceschanged;
     window.speechSynthesis.onvoiceschanged = () => { try { if (prev) prev(); } catch (_) {} _avaVoice = pickAvaVoice(); _renderAvaPill(); };
   }
-  if (!_avaVoice) { _avaVoice = pickAvaVoice(); _renderAvaPill(); }  // already-granted sessions
+  if (!_avaVoice) { _avaVoice = pickAvaVoice(); _renderAvaPill(); }
+  makeOverlay();
 })();
 
 fbSend.addEventListener('click', sendFallback);
