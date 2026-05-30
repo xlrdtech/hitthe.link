@@ -392,14 +392,14 @@
           <div class="donut-center">
             <div>
               <div class="score-label">Score</div>
-              <div class="score-val" id="scoreVal">15</div>
-              <div class="score-tier" id="scoreTier">Building</div>
+              <div class="score-val" id="scoreVal">67</div>
+              <div class="score-tier" id="scoreTier">Solid</div>
             </div>
           </div>
         </div>
 
         <div class="scale" aria-hidden="true">
-          <div class="scale-marker"><div class="needle" id="scaleNeedle" style="left:15%"></div></div>
+          <div class="scale-marker"><div class="needle" id="scaleNeedle" style="left:67%"></div></div>
           <div class="scale-track">
             <span class="s1"></span><span class="s2"></span><span class="s3"></span><span class="s4"></span><span class="s5"></span>
           </div>
@@ -458,7 +458,7 @@
   <details class="trust">
     <summary><span class="tIco">&#9432;</span> How we score this &middot; methodology &amp; assumptions <span class="arr">&rsaquo;</span></summary>
     <div class="tbody">
-      <p>The <strong>P.I.E.S.&trade; score</strong> rewards Profit and Savings while penalizing heavy Expense, using <code>(Profit&times;2 + Savings&times;2 + (100 &minus; Expense)) &divide; 5</code>, clamped to 0&ndash;100. Tiers: <strong>Fragile</strong> below 10, <strong>Building</strong> 10&ndash;15, <strong>Solid</strong> 16&ndash;21, <strong>Strong</strong> 22&ndash;27, <strong>Elite</strong> 28+.</p>
+      <p>The <strong>P.I.E.S.&trade; score</strong> blends three independent sub-pillars on a true 0&ndash;100 dial: a <strong>Profit</strong> sub-score (0 at 0%, 100 at the 15% target), a <strong>Savings</strong> sub-score (0 at 0%, 100 at the 20% target), and an <strong>Expense</strong> discipline sub-score (100 at &le;65% lean, 0 at &ge;90% heavy). They are weighted <code>0.40&times;Expense + 0.30&times;Profit + 0.30&times;Savings</code>, clamped to 0&ndash;100 &mdash; so shifting dollars between Profit and Savings genuinely moves the headline. Tiers: <strong>Fragile</strong> below 30, <strong>Building</strong> 30&ndash;49, <strong>Solid</strong> 50&ndash;67, <strong>Strong</strong> 68&ndash;84, <strong>Elite</strong> 85+.</p>
       <p>Channel benchmarks: Profit <strong>Strong &ge; 10%</strong>, Savings <strong>Strong &ge; 15%</strong>, Expense <strong>Lean &lt; 70%</strong>. Profit, Expense, and Savings always rebalance to total 100% of income.</p>
       <p>This is an educational allocation estimate &mdash; not financial advice, and running it commits you to nothing. Numbers update live as you adjust; nothing is stored or sent.</p>
     </div>
@@ -534,17 +534,31 @@
   }
 
   // --- Score & badges ---
-  // Weighted health: reward Profit & Savings, penalize heavy Expense.
-  // (Profit*2 + Savings*2 + (100-Expense)) / 5, clamped to 0-100.
+  // Weighted health on a true 0-100 dial. Because P+E+S always rebalance to 100,
+  // a naive "reward P+S, penalize E" formula collapses to 60-0.6*E (P & S cancel out,
+  // and the max caps at 60). Instead we score three INDEPENDENT sub-pillars against
+  // their own benchmarks, so Profit and Savings each genuinely move the headline:
+  //   profitScore  — ramps 0 -> 100 as Profit goes 0% -> 15% (Strong target)
+  //   savingsScore — ramps 0 -> 100 as Savings goes 0% -> 20% (Strong target)
+  //   expenseScore — ramps 100 -> 0 as Expense goes 65% (lean) -> 90% (heavy)
+  // Weighted: Expense discipline 40%, Profit 30%, Savings 30%. Spans the full 0-100.
+  var W_EXPENSE = 0.40, W_PROFIT = 0.30, W_SAVINGS = 0.30;
+  var PROFIT_TARGET = 15;   // % at which Profit sub-score hits 100
+  var SAVINGS_TARGET = 20;  // % at which Savings sub-score hits 100
+  var EXPENSE_LEAN = 65;    // % at or below which Expense sub-score is 100
+  var EXPENSE_HEAVY = 90;   // % at or above which Expense sub-score is 0
   function score(){
-    var raw = (state.profit*2 + state.savings*2 + (100 - state.expense)) / 5;
+    var profitScore  = clamp(state.profit  / PROFIT_TARGET,  0, 1) * 100;
+    var savingsScore = clamp(state.savings / SAVINGS_TARGET, 0, 1) * 100;
+    var expenseScore = clamp((EXPENSE_HEAVY - state.expense) / (EXPENSE_HEAVY - EXPENSE_LEAN), 0, 1) * 100;
+    var raw = W_EXPENSE * expenseScore + W_PROFIT * profitScore + W_SAVINGS * savingsScore;
     return clamp(raw, 0, 100);
   }
   function tier(sc){
-    if(sc >= 28) return 'Elite';
-    if(sc >= 22) return 'Strong';
-    if(sc >= 16) return 'Solid';
-    if(sc >= 10) return 'Building';
+    if(sc >= 85) return 'Elite';
+    if(sc >= 68) return 'Strong';
+    if(sc >= 50) return 'Solid';
+    if(sc >= 30) return 'Building';
     return 'Fragile';
   }
   function badgeFor(kind,val){

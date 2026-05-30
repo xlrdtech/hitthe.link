@@ -285,7 +285,7 @@ footer{animation-delay:.3s}
 <section class="hero">
   <span class="eyebrow"><span class="pulse" aria-hidden="true"></span>Credit Hero · H.O.T.⁷ Track</span>
   <h1>C.U.B.E.™ — Credit Utilization Boosting Engineering</h1>
-  <p class="sub">Engineer your revolving balances into the <strong>7-9% sweet spot</strong>. Credit utilization is <strong>30% of your FICO score</strong> — that's up to <strong>193 points</strong> on a 550-point range. Deploy the C.U.B.E. and watch the gauge move live.</p>
+  <p class="sub">Engineer your revolving balances into the <strong>7-9% sweet spot</strong>. Credit utilization is <strong>~30% of a FICO score</strong> — a major, fast-moving factor, so lowering it can help. <strong>Results vary by individual</strong>. Deploy the C.U.B.E. and watch the gauge move live.</p>
   <div class="author"><span class="chip">Mission Author</span> Luckie L. Goggins · L7S, Inc. · EST. 2011</div>
 </section>
 
@@ -344,24 +344,24 @@ footer{animation-delay:.3s}
     <div class="bar-legend"><span>0%</span><span class="tgt">↑ 8% target zone</span><span>30%+</span></div>
   </div>
 
-  <!-- RIGHT col: FICO impact (featured / result) -->
+  <!-- RIGHT col: utilization-category progress (featured / result) -->
   <div class="card featured">
     <div class="card-head">
       <span class="card-ico" aria-hidden="true">★</span>
-      <span class="card-title">FICO Score Impact · Utilization (30%)</span>
+      <span class="card-title">Utilization Health · A FICO Factor (~30%)</span>
     </div>
     <div class="fico-meter">
       <div class="fico-bar"><div class="fico-fill" id="ficoFill" style="width:0%"></div></div>
-      <div class="fico-labels"><span>0 pts unlocked</span><span>193 pts available</span></div>
+      <div class="fico-labels"><span>30%+ (high)</span><span>8% target ✦</span></div>
     </div>
     <div class="points">
       <div>
         <span class="gain" id="ficoGain">—</span>
-        <span class="gain-lbl">est. points unlocked when at 8%</span>
+        <span class="gain-lbl">toward the 8% utilization target</span>
       </div>
-      <div style="font-size:10.5px;color:var(--ink-muted);text-align:right">currently credited<br><span style="color:var(--gold-secondary);font-size:15px;font-family:var(--font-figures)" id="ficoCurrent">—</span></div>
+      <div style="font-size:10.5px;color:var(--ink-muted);text-align:right">your utilization<br><span style="color:var(--gold-secondary);font-size:15px;font-family:var(--font-figures)" id="ficoCurrent">—</span></div>
     </div>
-    <p class="disclaim">Estimate of the credit-utilization category only, not a full score prediction. Modeled linearly: full category credit at/below 8%, zero at/above 30%.</p>
+    <p class="disclaim">Utilization is one of the largest, fastest-moving FICO factors — lowering it can help, but <b>results vary</b> and no tool can promise a specific point gain. This bar tracks only how close your utilization is to the 8% target, not your full score.</p>
   </div>
 
   <!-- Per-card breakdown -->
@@ -416,10 +416,10 @@ footer{animation-delay:.3s}
     <div class="trust">
       <span class="t-item"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>No registration to see results</span>
       <span class="t-item"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>Nothing leaves your browser</span>
-      <span class="t-item"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>FICO-category weighting (30%)</span>
-      <span class="t-item"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>Estimate, not a prediction</span>
+      <span class="t-item"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>Utilization is ~30% of FICO</span>
+      <span class="t-item"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>Educational, not a prediction</span>
     </div>
-    <p class="disclaim">C.U.B.E.™ is an educational planning tool. Running it will not affect your real credit score and creates no commitment. Point figures model the credit-utilization category of a FICO-style score and are illustrative.</p>
+    <p class="disclaim">C.U.B.E.™ is an educational planning tool. Running it will not affect your real credit score and creates no commitment. It estimates only your credit-utilization ratio and how close it is to the 8% target — it does not predict your score or any specific point change. Results vary by individual.</p>
   </div>
 
 </div>
@@ -443,9 +443,8 @@ const DEFAULT_CARDS = [
 ];
 
 const TARGET_PCT = 8;          // mid-point of the 7-9% sweet spot
-const FICO_CATEGORY_POINTS = 193;
-const FICO_WORST_PCT = 30;     // at/above this, no utilization points credited
-const FICO_BEST_PCT = 8;       // at/below this, full category points credited
+const UTIL_HIGH_PCT = 30;      // at/above this, utilization is considered "high" (0% progress)
+const UTIL_TARGET_PCT = 8;     // at/below this, utilization is at target (100% progress)
 
 let cards = DEFAULT_CARDS.map(c => ({...c}));
 
@@ -516,17 +515,17 @@ function compute(){
     gaugeNeedle.style.transform = 'rotate(' + (gFrac * 180 - 90) + 'deg)';
   }
 
-  // FICO impact: linear credit between FICO_WORST_PCT (0 pts) and FICO_BEST_PCT (full pts).
-  // At/below 8% => full 193; at/above 30% => 0; clamped to [0,1].
-  const span = FICO_WORST_PCT - FICO_BEST_PCT; // 22
+  // Utilization-target progress (illustrative, no fabricated point gains).
+  // Progress is derived ONLY from the user's own utilization vs. the 8% target / 30% ceiling.
+  // At/below 8% => 100% of the way to target; at/above 30% => 0%; clamped to [0,1].
+  const span = UTIL_HIGH_PCT - UTIL_TARGET_PCT; // 22
   const ficoFrac = totalLimit > 0
-    ? Math.max(0, Math.min(1, (FICO_WORST_PCT - overallPct) / span))
+    ? Math.max(0, Math.min(1, (UTIL_HIGH_PCT - overallPct) / span))
     : 0;
-  const ficoNow = Math.round(ficoFrac * FICO_CATEGORY_POINTS);
-  const ficoGain = FICO_CATEGORY_POINTS - ficoNow;
+  const progressPct = Math.round(ficoFrac * 100);
   $('ficoFill').style.width = (ficoFrac * 100) + '%';
-  $('ficoCurrent').textContent = ficoNow.toLocaleString('en-US') + ' / ' + FICO_CATEGORY_POINTS.toLocaleString('en-US');
-  $('ficoGain').textContent = '+' + ficoGain.toLocaleString('en-US');
+  $('ficoCurrent').textContent = totalLimit > 0 ? pct(overallPct) : '—';
+  $('ficoGain').textContent = totalLimit > 0 ? progressPct + '%' : '—';
 
   // Per-card breakdown
   const pc = $('perCard');

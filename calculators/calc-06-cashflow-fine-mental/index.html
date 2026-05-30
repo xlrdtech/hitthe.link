@@ -210,7 +210,7 @@ footer{animation-delay:.32s}
 <header class="hero">
   <div class="badge">Cashflow Hero · Mission Tool 06</div>
   <h1>F.I.N.E. M.E.N.T.A.L.™</h1>
-  <p class="lead"><strong>Financial Investigation Needs Evaluation.</strong> Map every asset and liability, lock in your true <strong>net worth</strong>, and project your <strong>trajectory</strong>. The numbers don't lie — only your tracking habit does.</p>
+  <p class="lead"><strong>Financial Investigation Needs Evaluation.</strong> Map every asset and liability, lock in your true <strong>net worth</strong>, then project your <strong>trajectory</strong> from what you'll actually set aside each month. The numbers don't lie — only your tracking habit does.</p>
   <div class="author">A Cashflow Hero deployment by Luckie L. Goggins · L7S, INC.</div>
 </header>
 
@@ -268,26 +268,40 @@ footer{animation-delay:.32s}
       <div class="mbody">
         <p><b>Net Worth</b> = total Assets − total Liabilities. Blank or invalid entries count as $0; negative figures are clamped to $0.</p>
         <p><b>Assets share</b> = assets ÷ (assets + liabilities). A healthy position trends toward a larger gold ring and a positive net worth.</p>
-        <p><b>Trajectory targets</b> grow your net worth's magnitude by +10% (1yr), +35% (3yr), and +70% (5yr) — so a negative position is projected to climb toward zero, not deeper into the red.</p>
+        <p><b>Trajectory</b> is a straight projection of your own input: future net worth = today's net worth + (monthly amount you set aside × number of months). No growth rate, no market returns, no interest are assumed or fabricated. Enter $0 and the line stays flat — we never invent growth you didn't put in. Illustrative only; real life varies.</p>
       </div>
     </details>
   </section>
 
   <!-- TRAJECTORY -->
   <section class="card span2" aria-labelledby="trajHeading">
-    <div class="card-title" id="trajHeading">Trajectory · Net-Worth Targets</div>
-    <div class="card-sub">Where disciplined tracking takes you. Pull this monthly and watch the line climb.</div>
+    <div class="card-title" id="trajHeading">Trajectory · Net-Worth Projection</div>
+    <div class="card-sub">Illustrative only. Set what you'll actually set aside each month — the line projects your own contributions, nothing more. No assumed returns, no fabricated growth.</div>
 
-    <div class="traj-chart" role="img" aria-label="Projected net worth over 5 years">
+    <div class="row-input" style="border-bottom:1px solid var(--hairline);padding-bottom:16px;margin-bottom:4px">
+      <div class="row-head">
+        <label for="monthlyContrib">Monthly amount you'll set aside
+          <span class="hint" id="hint_contrib">Net savings per month you control — the only driver of this projection</span></label>
+        <div class="field">
+          <span class="cur">$</span>
+          <input id="monthlyContrib" type="number" inputmode="decimal" value="0" min="0" step="50" aria-describedby="hint_contrib">
+        </div>
+      </div>
+      <div class="slider-wrap">
+        <input id="rg_contrib" class="a-range" type="range" min="0" max="1000" step="1" value="0" aria-label="Monthly contribution slider" tabindex="-1">
+      </div>
+    </div>
+
+    <div class="traj-chart" role="img" aria-label="Projected net worth over 5 years from monthly contributions">
       <svg id="trajSvg" viewBox="0 0 600 200" preserveAspectRatio="none" aria-hidden="true"></svg>
     </div>
 
     <div class="targets-grid">
-      <div class="target-tile"><div class="tl">1 yr · +10%</div><div class="tv" id="t1">—</div><div class="ty">target net worth</div></div>
-      <div class="target-tile"><div class="tl">3 yr · +35%</div><div class="tv" id="t3">—</div><div class="ty">target net worth</div></div>
-      <div class="target-tile"><div class="tl">5 yr · +70%</div><div class="tv" id="t5">—</div><div class="ty">target net worth</div></div>
+      <div class="target-tile"><div class="tl">1 yr</div><div class="tv" id="t1">—</div><div class="ty">projected net worth</div></div>
+      <div class="target-tile"><div class="tl">3 yr</div><div class="tv" id="t3">—</div><div class="ty">projected net worth</div></div>
+      <div class="target-tile"><div class="tl">5 yr</div><div class="tv" id="t5">—</div><div class="ty">projected net worth</div></div>
     </div>
-    <div class="tip">Tracking discipline: pull this 1× per month, log your net worth, and watch the trajectory line. Consistency beats intensity — the habit is the hero.</div>
+    <div class="tip" id="trajTip">Set a monthly amount above to project your trajectory. With $0 set aside, the line stays flat — we never invent growth you didn't put in. Pull this 1× per month and log your real net worth; consistency beats intensity.</div>
   </section>
 
   <!-- ACRONYM -->
@@ -465,17 +479,26 @@ function compute(){
     stack.innerHTML = '<div class="seg empty-seg">Enter values to see your ledger</div>';
   }
 
-  // Trajectory targets: project growth ABOVE today's net worth.
-  // Growth applies to the magnitude so a negative net worth moves UPWARD
-  // toward zero/positive rather than deeper into the red.
-  $('t1').textContent = fmt(net + Math.abs(net) * 0.10);
-  $('t3').textContent = fmt(net + Math.abs(net) * 0.35);
-  $('t5').textContent = fmt(net + Math.abs(net) * 0.70);
+  // Trajectory projection: HONEST straight-line from the user's own input.
+  // future = today's net worth + (monthly contribution × months).
+  // No growth rate, no returns, no fabricated magnitude scaling. With a $0
+  // contribution the projection is flat — we never invent growth.
+  const monthly = clean($('monthlyContrib') && $('monthlyContrib').value);
+  $('t1').textContent = fmt(net + monthly * 12);
+  $('t3').textContent = fmt(net + monthly * 36);
+  $('t5').textContent = fmt(net + monthly * 60);
+
+  const tip = $('trajTip');
+  if (tip){
+    tip.textContent = monthly > 0
+      ? 'Projecting ' + fmt(monthly) + '/mo set aside — straight line, no assumed returns. Pull this 1× per month and log your real net worth; consistency beats intensity.'
+      : 'Set a monthly amount above to project your trajectory. With $0 set aside, the line stays flat — we never invent growth you didn’t put in. Pull this 1× per month and log your real net worth; consistency beats intensity.';
+  }
 
   /* ---- Presentation layer (reads the SAME values, changes no result) ---- */
   paintDonut(ratio, ledger);
   paintTier(net, ratio, ledger);
-  paintTrajectory(net);
+  paintTrajectory(net, monthly);
 }
 
 /* Donut ring = assets share of the ledger (same `ratio` as the bar). */
@@ -507,16 +530,17 @@ function paintTier(net, ratio, ledger){
   txt.textContent = msg;
 }
 
-/* Trajectory line: today + the three target nodes (same target math). */
-function paintTrajectory(net){
+/* Trajectory line: today + the three projection nodes (same honest math). */
+function paintTrajectory(net, monthly){
   const svg = $('trajSvg');
   if (!svg) return;
+  const m = clean(monthly);
   const W = 600, H = 200, padL = 8, padR = 8, padT = 14, padB = 26;
   const pts = [
     {yr:'Now', v: net},
-    {yr:'1yr', v: net + Math.abs(net) * 0.10},
-    {yr:'3yr', v: net + Math.abs(net) * 0.35},
-    {yr:'5yr', v: net + Math.abs(net) * 0.70},
+    {yr:'1yr', v: net + m * 12},
+    {yr:'3yr', v: net + m * 36},
+    {yr:'5yr', v: net + m * 60},
   ];
   const xs = [0,1,2,3];
   const vals = pts.map(p => p.v);
@@ -544,6 +568,29 @@ function paintTrajectory(net){
 
 renderInputs(ASSETS, 'assets');
 renderInputs(LIABS, 'liabs');
+
+// Monthly-contribution input drives the (now honest) trajectory projection.
+// Number field is the source of truth; the slider mirrors it — same pattern
+// as the asset/liability rows. Both paths recompute, fabricating nothing.
+(function wireContribution(){
+  const num = $('monthlyContrib');
+  const rg  = $('rg_contrib');
+  if (!num) return;
+  // Reuse the same soft slider curve, scaled for monthly amounts (cap $10k/mo).
+  const CMAX = 10000;
+  const cValToSlider = (v) => Math.round(Math.pow(Math.min(Math.max(clean(v),0),CMAX)/CMAX, 0.5) * 1000);
+  const cSliderToVal = (s) => Math.round(Math.pow(Math.min(Math.max(parseFloat(s)||0,0),1000)/1000, 2) * CMAX / 50) * 50;
+  if (rg) rg.value = cValToSlider(num.value);
+  num.addEventListener('input', () => {
+    if (rg) rg.value = cValToSlider(num.value);
+    compute();
+  });
+  if (rg) rg.addEventListener('input', () => {
+    num.value = cSliderToVal(rg.value);
+    compute();
+  });
+})();
+
 compute();
 
 // Seed with example

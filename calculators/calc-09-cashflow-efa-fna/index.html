@@ -886,18 +886,34 @@
       $('total_' + cat.key).textContent = fmtMoney(sum);
     });
 
+    // Zero-denominator guard: with no income, ratios are undefined, so every
+    // per-item readout (badge, bar fill, percentage) must be neutral — never a
+    // fabricated "100000% OVER". Valid-input scoring below is untouched.
+    var hasIncome = income > 0;
+
     // Update bars (CSS transition handles the animation; no external lib)
     catData.forEach(function (d) {
+      var fill = $('fill_' + d.cat.key);
+      var badge = $('badge_' + d.cat.key);
+
+      if (!hasIncome) {
+        // Neutralize: empty bar in the default gold gradient, no tier, "—".
+        fill.style.width = '0%';
+        fill.style.background = '';
+        $('pct_' + d.cat.key).textContent = '—';
+        badge.className = 'badge';
+        badge.textContent = '—';
+        return;
+      }
+
       var t = tierFor(d.pct, d.cat.benchmark);
       var colors = tierColor(t);
-      var fill = $('fill_' + d.cat.key);
       var widthTarget = Math.min(100, d.pct * 100);
 
       fill.style.width = widthTarget + '%';
       fill.style.background = 'linear-gradient(90deg, ' + colors[0] + ', ' + colors[1] + ')';
 
-      $('pct_' + d.cat.key).textContent = income > 0 ? fmtPct(d.pct) : '—';
-      var badge = $('badge_' + d.cat.key);
+      $('pct_' + d.cat.key).textContent = fmtPct(d.pct);
       badge.className = 'badge ' + t;
       badge.textContent = tierLabel(t);
     });
