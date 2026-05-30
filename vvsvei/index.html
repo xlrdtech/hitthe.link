@@ -1842,8 +1842,11 @@ function _avaDrain() {
   _avaStatus = 'fetching'; _renderAvaPill();
   const url = AVA_TTS_URL + '?voice=ava&text=' + encodeURIComponent(clip);
   if (_avaCtx && _avaCtx.state !== 'closed') {
-    fetch(url).then(r => r.arrayBuffer()).then(buf => {
-      return _avaCtx.decodeAudioData(buf);
+    fetch(url, { cache: 'force-cache' }).then(r => {
+      if (!r.ok) throw new Error('http ' + r.status);
+      return r.arrayBuffer();
+    }).then(buf => {
+      return _avaCtx.decodeAudioData(buf.slice(0));  // defensive copy
     }).then(decoded => {
       const src = _avaCtx.createBufferSource();
       src.buffer = decoded;
