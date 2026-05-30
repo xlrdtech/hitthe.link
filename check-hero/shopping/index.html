@@ -26,7 +26,10 @@
   li.done{opacity:.5}
   li.done .box{background:var(--gold)}
   li.done .item{text-decoration:line-through;color:var(--mute)}
-  .actions{display:flex;gap:10px;justify-content:center;margin-top:24px}
+  .amz{flex-shrink:0;margin-left:auto;font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--bg);background:linear-gradient(135deg,#ff9900,#ffb84d);padding:8px 12px;border-radius:9px;text-decoration:none}
+  .amz:active{filter:brightness(.9)}
+  .actions{display:flex;gap:10px;justify-content:center;margin-top:24px;flex-wrap:wrap}
+  .cart-all{background:linear-gradient(135deg,#ff9900,#ffb84d);color:#15140e;border:none}
   button{background:transparent;border:1px solid var(--line);color:var(--mute);padding:11px 20px;border-radius:10px;font-weight:600;font-size:13px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:inherit}
   button:active{border-color:var(--gold);color:var(--gold)}
   footer{text-align:center;margin-top:30px;color:var(--mute);font-size:11px}
@@ -45,6 +48,7 @@
   </header>
   <ul id="list"></ul>
   <div class="actions">
+    <button class="cart-all" id="cartall">Order all on Amazon</button>
     <button id="reset">Reset all</button>
   </div>
   <footer><span class="em">L7S Check Hero</span> - tap an item to mark it got</footer>
@@ -73,11 +77,14 @@ function refresh(){
   document.getElementById('count').textContent = done + " of " + ITEMS.length;
   document.getElementById('fill').style.width = (ITEMS.length? (done/ITEMS.length*100):0) + "%";
 }
+function amzUrl(name){ return "https://www.amazon.com/s?k=" + encodeURIComponent(name); }
 ITEMS.forEach(function(name){
   var li = document.createElement('li');
   if(state[name]) li.className='done';
-  li.innerHTML = '<div class="box">'+(state[name]?'✓':'')+'</div><div class="item"></div>';
+  li.innerHTML = '<div class="box">'+(state[name]?'✓':'')+'</div><div class="item"></div><a class="amz" target="_blank" rel="noopener">Amazon</a>';
   li.querySelector('.item').textContent = name;
+  li.querySelector('.amz').href = amzUrl(name);
+  li.querySelector('.amz').addEventListener('click', function(ev){ ev.stopPropagation(); });
   li.addEventListener('click', function(){
     state[name] = !state[name];
     li.className = state[name] ? 'done' : '';
@@ -85,6 +92,10 @@ ITEMS.forEach(function(name){
     save(); refresh();
   });
   list.appendChild(li);
+});
+document.getElementById('cartall').addEventListener('click', function(){
+  // open an Amazon search tab per item (most reliable cross-account "cart all")
+  ITEMS.forEach(function(name, i){ setTimeout(function(){ window.open(amzUrl(name), '_blank', 'noopener'); }, i*250); });
 });
 document.getElementById('reset').addEventListener('click', function(){
   state = {}; save();
