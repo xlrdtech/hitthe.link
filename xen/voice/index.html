@@ -1682,7 +1682,7 @@ function pickAvaVoice() {
 // Ava = en-US-AvaMultilingualNeural ("edge tts Ava neural English").
 const AVA_TTS_URL = 'https://xen.xlrd.org/api/tts';
 const _AVA_SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=';
-let _avaAudio = null, _avaAudioUnlocked = false;
+let _avaAudio = null, _avaAudioUnlocked = false, _avaStatus = '';
 function _ensureAvaAudio() {
   if (_avaAudio) return _avaAudio;
   _avaAudio = new Audio();
@@ -1703,11 +1703,15 @@ function speakAva(text) {
   const clip = String(text).slice(0, 800);
   try {
     const a = _ensureAvaAudio();
+    a.onplaying = () => { _avaStatus = 'playing'; _renderAvaPill(); };
+    a.onended   = () => { _avaStatus = 'idle'; _renderAvaPill(); };
+    a.onerror   = () => { _avaStatus = 'audio-err'; _renderAvaPill(); _speakAvaFallback(clip); };
+    _avaStatus = 'fetching'; _renderAvaPill();
     a.src = AVA_TTS_URL + '?voice=ava&text=' + encodeURIComponent(clip);
     const p = a.play();
-    if (p && p.catch) p.catch(() => _speakAvaFallback(clip));
+    if (p && p.catch) p.catch(() => { _avaStatus = 'blocked'; _renderAvaPill(); _speakAvaFallback(clip); });
     _avaAudioUnlocked = true; _renderAvaPill();
-  } catch (_) { _speakAvaFallback(clip); }
+  } catch (_) { _avaStatus = 'exception'; _renderAvaPill(); _speakAvaFallback(clip); }
 }
 // Backup only if MP3 playback is blocked (no gesture yet): browser speech.
 function _speakAvaFallback(clip) {
@@ -1725,7 +1729,7 @@ function _speakAvaFallback(clip) {
 function _renderAvaPill() {
   const p = document.getElementById('ava-toggle');
   if (!p) return;
-  const vn = _avaAudioUnlocked ? 'Ava neural' : 'tap mic once to arm';
+  const vn = _avaAudioUnlocked ? ('Ava neural' + (_avaStatus ? ' · ' + _avaStatus : '')) : 'tap mic once to arm';
   p.textContent = _avaOn ? ('Ava voice: ON · ' + vn) : 'Ava voice: OFF';
   p.setAttribute('aria-pressed', _avaOn ? 'true' : 'false');
   p.style.opacity = _avaOn ? '1' : '.55';

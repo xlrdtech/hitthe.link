@@ -1478,10 +1478,10 @@ function renderEvent(d) {
     attachBubbleActions(div, txt);
     transcript.scrollTop = transcript.scrollHeight;
     saveHistory({ role: 'xen', text: txt, ts: d.ts || Date.now() });
-    // 2026-05-25 — Web Speech speak() retired. Voice transport now rides VEI
-    // RTC (broadcaster captures Mac "out" Loopback, receiver plays inbound
-    // peer-to-peer audio). Identical bytes across devices; no re-synthesis of
-    // stale SSE backfill. See veiRTC() block at end of script.
+    // qi 2026-05-30 — Ava voice-OUT added to /vei (the page qi actually uses).
+    // Plays real Ava-neural MP3 via /api/tts through a gesture-armed <audio>.
+    // RTC stays active below (silent unless a broadcaster runs); speakAva is additive.
+    speakAva(txt);
   } else if (isUserDictate) {
     const div = document.createElement('div');
     div.className = 'final';
@@ -1639,6 +1639,134 @@ subscribeXenReplies();
   if (typeof window.speechSynthesis.onvoiceschanged !== 'undefined') {
     window.speechSynthesis.onvoiceschanged = trigger;
   }
+})();
+
+// ─── Ava TTS (web VVSVEI clone) ───────────────────────────────────────
+// qi 2026-05-30: browser-native voice-out so the web VEI speaks Xen's replies
+// with no Mac/Loopback dependency. speechSynthesis ONLY — Edge-TTS/Kokoro/
+// Piper/Coqui are D.I.E.-banned; this rides the browser's built-in engine and
+// prefers the "Ava" neural voice (Apple), with en-US neural fallbacks.
+let _avaOn = true, _avaVoice = null, _avaUnlocked = false;
+function pickAvaVoice() {
+  if (!('speechSynthesis' in window)) return null;
+  const vs = window.speechSynthesis.getVoices() || [];
+  if (!vs.length) return null;
+  // INSTANT mandate (qi 2026-05-30: "must never be anything less than instant").
+  // On-device ONLY. localService=true synthesizes locally with zero network
+  // latency; network voices (e.g. "Google US English") lag + need connectivity,
+  // so they are last-resort only — never chosen while any local voice exists.
+  const local = vs.filter(v => v.localService);
+  const enUS = v => /en[-_]?US/i.test(v.lang);
+  const ava  = v => /\bava\b/i.test(v.name);
+  const hq   = v => /(premium|enhanced|neural|natural|siri)/i.test(v.name);
+  const pool = local.length ? local : vs;   // prefer the local pool for instant speech
+  return (
+    pool.find(v => ava(v) && enUS(v)) ||
+    pool.find(v => ava(v)) ||
+    pool.find(v => enUS(v) && hq(v)) ||
+    pool.find(v => /samantha/i.test(v.name)) ||
+    pool.find(v => enUS(v)) ||
+    pool.find(v => /^en/i.test(v.lang)) ||
+    local[0] ||
+    vs.find(v => ava(v)) ||      // Ava even if network-flagged, before giving up
+    vs.find(v => enUS(v)) ||
+    vs[0] || null
+  );
+}
+// Voice-OUT = real Ava neural MP3 from omnimind /api/tts, played through an
+// <audio> element unlocked by qi's EXISTING mic tap (no extra tap). iOS allows
+// audio.play() once the element was unlocked by any prior gesture — unlike
+// speechSynthesis, which iOS blocks from background SSE events (that was the
+// silence). qi 2026-05-30: "your voice in, my voice out, same page, no taps".
+// Ava = en-US-AvaMultilingualNeural ("edge tts Ava neural English").
+const AVA_TTS_URL = 'https://xen.xlrd.org/api/tts';
+const _AVA_SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=';
+let _avaAudio = null, _avaAudioUnlocked = false, _avaStatus = '';
+function _ensureAvaAudio() {
+  if (_avaAudio) return _avaAudio;
+  _avaAudio = new Audio();
+  _avaAudio.preload = 'auto';
+  _avaAudio.setAttribute('playsinline', '');
+  _avaAudio.crossOrigin = 'anonymous';
+  return _avaAudio;
+}
+// Arm the audio element on a real gesture (the mic tap qi already makes) so iOS
+// will let us play() later from a background SSE event.
+function _unlockAvaAudio() {
+  if (_avaAudioUnlocked) return;
+  const a = _ensureAvaAudio();
+  try { a.src = _AVA_SILENT; const p = a.play(); if (p && p.then) p.then(() => { _avaAudioUnlocked = true; _renderAvaPill(); }).catch(() => {}); } catch (_) {}
+}
+function speakAva(text) {
+  if (!_avaOn || !text) return;
+  const clip = String(text).slice(0, 800);
+  try {
+    const a = _ensureAvaAudio();
+    a.onplaying = () => { _avaStatus = 'playing'; _renderAvaPill(); };
+    a.onended   = () => { _avaStatus = 'idle'; _renderAvaPill(); };
+    a.onerror   = () => { _avaStatus = 'audio-err'; _renderAvaPill(); _speakAvaFallback(clip); };
+    _avaStatus = 'fetching'; _renderAvaPill();
+    a.src = AVA_TTS_URL + '?voice=ava&text=' + encodeURIComponent(clip);
+    const p = a.play();
+    if (p && p.catch) p.catch(() => { _avaStatus = 'blocked'; _renderAvaPill(); _speakAvaFallback(clip); });
+    _avaAudioUnlocked = true; _renderAvaPill();
+  } catch (_) { _avaStatus = 'exception'; _renderAvaPill(); _speakAvaFallback(clip); }
+}
+// Backup only if MP3 playback is blocked (no gesture yet): browser speech.
+function _speakAvaFallback(clip) {
+  try {
+    if (!('speechSynthesis' in window)) return;
+    if (!_avaVoice) _avaVoice = pickAvaVoice();
+    const u = new SpeechSynthesisUtterance(clip);
+    if (_avaVoice) { u.voice = _avaVoice; u.lang = _avaVoice.lang; }
+    window.speechSynthesis.cancel(); window.speechSynthesis.resume(); window.speechSynthesis.speak(u);
+  } catch (_) {}
+}
+// Ava voice pill + first-gesture unlock. The pill shows the ACTUAL voice the
+// browser picked (Ava if available, else the best en-US neural fallback) so the
+// live engine is visible/verifiable on screen, and lets qi mute voice-out.
+function _renderAvaPill() {
+  const p = document.getElementById('ava-toggle');
+  if (!p) return;
+  const vn = _avaAudioUnlocked ? ('Ava neural' + (_avaStatus ? ' · ' + _avaStatus : '')) : 'tap mic once to arm';
+  p.textContent = _avaOn ? ('Ava voice: ON · ' + vn) : 'Ava voice: OFF';
+  p.setAttribute('aria-pressed', _avaOn ? 'true' : 'false');
+  p.style.opacity = _avaOn ? '1' : '.55';
+}
+(function avaToggleUI() {
+  const pill = document.createElement('button');
+  pill.id = 'ava-toggle';
+  pill.textContent = 'Ava voice: ON';
+  pill.style.cssText = 'position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:99999;max-width:92vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:linear-gradient(145deg,rgba(0,255,136,.18),rgba(0,255,136,.05));color:#bff7d8;border:1px solid rgba(0,255,136,.4);border-radius:999px;padding:7px 16px;font:600 12px/1 -apple-system,BlinkMacSystemFont,sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)';
+  pill.addEventListener('click', () => {
+    _avaOn = !_avaOn;
+    if (!_avaOn) { try { window.speechSynthesis.cancel(); } catch (_) {} }
+    _renderAvaPill();
+  });
+  const mount = () => { document.body.appendChild(pill); _renderAvaPill(); };
+  if (document.body) mount(); else document.addEventListener('DOMContentLoaded', mount);
+})();
+// First user gesture unlocks speechSynthesis (autoplay policy) + locks the voice.
+(function avaUnlock() {
+  const unlock = () => {
+    if (_avaUnlocked || !('speechSynthesis' in window)) return;
+    _avaUnlocked = true;
+    _unlockAvaAudio();                 // arm the MP3 player off this same gesture (no extra tap)
+    _avaVoice = pickAvaVoice();
+    try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; window.speechSynthesis.speak(u); } catch (_) {}
+    // iOS WebKit suspends speechSynthesis after ~15s idle and silently blocks
+    // speak() fired from a non-gesture (SSE) context. This heartbeat keeps the
+    // engine warm so xen-out replies actually speak on iPhone. (qi 2026-05-30)
+    try { setInterval(() => { try { if (window.speechSynthesis && !window.speechSynthesis.speaking) window.speechSynthesis.resume(); } catch (_) {} }, 4000); } catch (_) {}
+    _renderAvaPill();
+  };
+  document.body.addEventListener('click', unlock, { passive: true });
+  document.body.addEventListener('touchstart', unlock, { passive: true });
+  if ('speechSynthesis' in window && typeof window.speechSynthesis.onvoiceschanged !== 'undefined') {
+    const prev = window.speechSynthesis.onvoiceschanged;
+    window.speechSynthesis.onvoiceschanged = () => { try { if (prev) prev(); } catch (_) {} _avaVoice = pickAvaVoice(); _renderAvaPill(); };
+  }
+  if (!_avaVoice) { _avaVoice = pickAvaVoice(); _renderAvaPill(); }  // already-granted sessions
 })();
 
 fbSend.addEventListener('click', sendFallback);
