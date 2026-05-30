@@ -1831,6 +1831,8 @@ let _avaQueue = [], _avaPlaying = false;
 function _avaDrain() {
   if (_avaPlaying || !_avaQueue.length) return;
   if (!_avaOn) { _avaQueue = []; return; }
+  // Wait for audio to be armed (user tap) — retry every 500ms instead of dropping.
+  if (!_avaAudioUnlocked || !_avaCtx) { setTimeout(_avaDrain, 500); return; }
   const clip = _avaQueue.shift();
   _avaPlaying = true;
   // MP3 via <audio> — the path that WORKED (qi confirmed hearing on 2026-05-30).
