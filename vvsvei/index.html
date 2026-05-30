@@ -1960,6 +1960,10 @@ function _renderAvaPill() {
     _avaUnlocked = true;
     _hud('ARMED by tap');
     _avaVoice = pickAvaVoice();
+    // CRITICAL: create + resume AudioContext synchronously in this gesture.
+    // _unlockAvaAudio() was never being called from unlock(), so _avaCtx was null
+    // and _avaDrain fell through to the blocked <audio>.play() path every time.
+    _unlockAvaAudio();
     // ROOT-CAUSE FIX (parallel swarm 2026-05-30): iOS only unlocks speechSynthesis
     // when an AUDIBLE, NON-EMPTY utterance is spoken synchronously inside the
     // gesture. The old volume=0 whitespace warm-up was a no-op → the gesture got
