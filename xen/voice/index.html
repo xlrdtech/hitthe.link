@@ -1736,17 +1736,22 @@ function _avaDrain() {
   if (!_avaOn) { _avaQueue = []; return; }
   const clip = _avaQueue.shift();
   _avaPlaying = true;
-  try {
-    const a = _ensureAvaAudio();
-    a.onplaying = () => { _avaStatus = 'playing'; _renderAvaPill(); };
-    a.onended   = () => { _avaPlaying = false; _avaStatus = _avaQueue.length ? ('queued ' + _avaQueue.length) : 'idle'; _renderAvaPill(); _avaDrain(); };
-    a.onerror   = () => { _avaPlaying = false; _avaStatus = 'audio-err'; _renderAvaPill(); _speakAvaFallback(clip); _avaDrain(); };
-    _avaStatus = 'fetching'; _renderAvaPill();
-    a.src = AVA_TTS_URL + '?voice=ava&text=' + encodeURIComponent(clip);
+  const a = _ensureAvaAudio();
+  a.onplaying = () => { _avaStatus = 'playing'; _renderAvaPill(); };
+  a.onended   = () => { _avaPlaying = false; _avaStatus = _avaQueue.length ? ('queued ' + _avaQueue.length) : 'idle'; _renderAvaPill(); _avaDrain(); };
+  a.onerror   = () => { _avaPlaying = false; _avaStatus = 'audio-err'; _renderAvaPill(); _speakAvaFallback(clip); _avaDrain(); };
+  _avaStatus = 'fetching'; _renderAvaPill();
+  const url = AVA_TTS_URL + '?voice=ava&text=' + encodeURIComponent(clip);
+  // Fetch the FULL mp3 as a blob, then play from an object URL — fully buffered,
+  // no mid-stream decode (that streaming decode was the crackle). qi 2026-05-30.
+  fetch(url).then(r => r.blob()).then(b => {
+    if (a._avaUrl) { try { URL.revokeObjectURL(a._avaUrl); } catch (_) {} }
+    a._avaUrl = URL.createObjectURL(b);
+    a.src = a._avaUrl;
     const p = a.play();
-    if (p && p.catch) p.catch(() => { _avaPlaying = false; _avaStatus = 'blocked'; _renderAvaPill(); _speakAvaFallback(clip); });
+    if (p && p.catch) p.catch(() => { _avaPlaying = false; _avaStatus = 'blocked'; _renderAvaPill(); _speakAvaFallback(clip); _avaDrain(); });
     _avaAudioUnlocked = true; _renderAvaPill();
-  } catch (_) { _avaPlaying = false; _avaStatus = 'exception'; _renderAvaPill(); _speakAvaFallback(clip); _avaDrain(); }
+  }).catch(() => { _avaPlaying = false; _avaStatus = 'fetch-err'; _renderAvaPill(); _speakAvaFallback(clip); _avaDrain(); });
 }
 function speakAva(text) {
   if (!_avaOn || !text) return;
