@@ -1376,14 +1376,35 @@ const _xenOutSpoken = new Set(); // Option A speak-dedup · keys mirror _rendere
 let _activeThreadId = getActiveId();
 let _history = loadThreadEntries(_activeThreadId);
 
+// qi 2026-05-30: open a FRESH thread on every reload so the page doesn't
+// re-hydrate a huge saved transcript — that DOM rebuild (up to 2000 bubbles +
+// per-bubble actions) was the "struggles to load". The prior thread is already
+// auto-saved (saveHistory persists every turn) and stays browsable via Threads.
+// Only rotate if the current thread has content (no empty-thread spam).
+(function freshThreadOnReload() {
+  if (_history && _history.length > 0) {
+    const id = 't-' + Date.now();
+    localStorage.setItem('vei-active', id);
+    const list = loadThreads();
+    list.push({ id, started: Date.now(), lastTs: Date.now() });
+    saveThreads(list);
+    _activeThreadId = id;
+    _history = [];
+  }
+})();
+
 function saveHistory(entry) {
   _history.push(entry);
   if (_history.length > 2000) _history.splice(0, _history.length - 2000);
   saveThreadEntries(_activeThreadId, _history);
-  // Bump thread lastTs
+  // Bump thread lastTs + auto-name from the first qi message (meaningful Threads list).
   const list = loadThreads();
   const t = list.find(x => x.id === _activeThreadId);
-  if (t) { t.lastTs = entry.ts || Date.now(); saveThreads(list); }
+  if (t) {
+    t.lastTs = entry.ts || Date.now();
+    if (!t.name && entry.role === 'you' && entry.text) t.name = entry.text.slice(0, 40);
+    saveThreads(list);
+  }
 }
 function hydrateHistory() {
   for (const e of _history) {
