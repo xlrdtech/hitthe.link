@@ -1792,6 +1792,9 @@ function pickAvaVoice() {
 const AVA_TTS_URL = 'https://xen.xlrd.org/api/tts';
 const _AVA_SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=';
 let _avaAudio = null, _avaAudioUnlocked = false, _avaStatus = '';
+// Web Audio API context — once unlocked by a gesture, can play audio at any time
+// without gesture requirement. This is the cross-platform fix for NotAllowedError.
+let _avaCtx = null;
 function _ensureAvaAudio() {
   if (_avaAudio) return _avaAudio;
   _avaAudio = new Audio();
@@ -1800,12 +1803,17 @@ function _ensureAvaAudio() {
   _avaAudio.crossOrigin = 'anonymous';
   return _avaAudio;
 }
-// Arm the audio element on a real gesture (the mic tap qi already makes) so iOS
-// will let us play() later from a background SSE event.
 function _unlockAvaAudio() {
   if (_avaAudioUnlocked) return;
+  // Unlock Web Audio API context in the gesture — stays unlocked forever after.
+  try {
+    _avaCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (_avaCtx.state === 'suspended') _avaCtx.resume();
+  } catch (_) {}
+  // Also arm the <audio> element as a backup path.
   const a = _ensureAvaAudio();
   try { a.src = _AVA_SILENT; const p = a.play(); if (p && p.then) p.then(() => { _avaAudioUnlocked = true; _renderAvaPill(); }).catch(() => {}); } catch (_) {}
+  _avaAudioUnlocked = true; _renderAvaPill();
 }
 // Barge-in: the instant qi's mic catches speech, cut my voice (qi 2026-05-30).
 function _avaBargeIn() {
@@ -1828,15 +1836,33 @@ function _avaDrain() {
   // MP3 via <audio> — the path that WORKED (qi confirmed hearing on 2026-05-30).
   // speechSynthesis blocks on iOS when fired from background SSE events.
   // <audio>.play() works once the element was armed in the tap gesture.
-  const a = _ensureAvaAudio();
-  a.onplaying = () => { _avaStatus = 'playing'; _hudSpoke++; _hud('PLAYING'); _renderAvaPill(); };
-  a.onended   = () => { _avaPlaying = false; _avaStatus = _avaQueue.length ? ('queued '+_avaQueue.length) : 'idle'; _renderAvaPill(); _avaDrain(); };
-  a.onerror   = (e) => { _avaPlaying = false; _avaStatus = 'audio-err'; _hud('audio-err:'+a.error?.code); _avaTelemetry('audio-err code='+a.error?.code+' src='+a.src.slice(-40)); _renderAvaPill(); _avaDrain(); };
+  // Web Audio API path — unlocked once by gesture, no per-play gesture required.
+  // Fetch the MP3, decode via AudioContext, play through AudioBufferSourceNode.
+  // Falls back to <audio> element if Web Audio not available.
   _avaStatus = 'fetching'; _renderAvaPill();
-  a.src = AVA_TTS_URL + '?voice=ava&text=' + encodeURIComponent(clip);
-  const p = a.play();
-  if (p && p.catch) p.catch((e) => { _avaPlaying = false; _avaStatus = 'blocked:'+e.name; _hud('blocked'); _avaTelemetry('play blocked: '+e.name); _renderAvaPill(); _avaDrain(); });
-  _avaAudioUnlocked = true; _renderAvaPill();
+  const url = AVA_TTS_URL + '?voice=ava&text=' + encodeURIComponent(clip);
+  if (_avaCtx && _avaCtx.state !== 'closed') {
+    fetch(url).then(r => r.arrayBuffer()).then(buf => {
+      return _avaCtx.decodeAudioData(buf);
+    }).then(decoded => {
+      const src = _avaCtx.createBufferSource();
+      src.buffer = decoded;
+      src.connect(_avaCtx.destination);
+      src.onended = () => { _avaPlaying = false; _avaStatus = _avaQueue.length ? ('queued '+_avaQueue.length) : 'idle'; _hudSpoke++; _renderAvaPill(); _avaDrain(); };
+      src.start(0);
+      _avaStatus = 'playing'; _hud('PLAYING via WebAudio'); _renderAvaPill();
+    }).catch(e => {
+      _avaPlaying = false; _avaStatus = 'webaudio-err'; _avaTelemetry('WebAudio err: '+e.message); _renderAvaPill(); _avaDrain();
+    });
+  } else {
+    const a = _ensureAvaAudio();
+    a.onplaying = () => { _avaStatus = 'playing'; _hudSpoke++; _renderAvaPill(); };
+    a.onended   = () => { _avaPlaying = false; _avaStatus = _avaQueue.length ? ('queued '+_avaQueue.length) : 'idle'; _renderAvaPill(); _avaDrain(); };
+    a.onerror   = () => { _avaPlaying = false; _avaStatus = 'audio-err'; _avaTelemetry('audio-err fallback'); _renderAvaPill(); _avaDrain(); };
+    a.src = url;
+    const p = a.play();
+    if (p && p.catch) p.catch(e => { _avaPlaying = false; _avaStatus = 'blocked:'+e.name; _avaTelemetry('play blocked: '+e.name); _renderAvaPill(); _avaDrain(); });
+  }
 }
 // Page → omnimind telemetry so XEN AUTO-NOTICES failures without qi reading the
 // HUD aloud (qi 2026-05-30: "why don't you automatically notice"). Errors only.
