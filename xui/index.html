@@ -1,647 +1,1393 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>XUI — SelfOwn OS</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>XP with vei core + XOS2 layer</title>
+<meta name="description" content="XP — desktop-class always-on voice-first PWA. vei core interaction model + XOS2 reliability layer. Unified threads, vei clone webview zone, Beside CRM dialer, 3D vertical tab stack, persona agents, never-miss.">
+<meta name="theme-color" content="#0A1F12">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="XP">
 <style>
-:root{--g:#00ff88;--g2:#00cc66;--glass:rgba(0,255,136,0.08);--glass2:rgba(0,255,136,0.14);--dark:#050a07;--panel:rgba(6,14,10,0.95);--border:rgba(0,255,136,0.18);--border2:rgba(0,255,136,0.35);--text:rgba(255,255,255,0.92);--sub:rgba(255,255,255,0.42);--red:#ff4466;--amber:#ffaa00;--blue:#44aaff;--purple:#aa44ff;}
-*{margin:0;padding:0;box-sizing:border-box;}
-html,body{width:100%;height:100%;background:var(--dark);font-family:'SF Pro Display','Segoe UI',system-ui,sans-serif;color:var(--text);overflow:hidden;}
-#xos{display:grid;grid-template-rows:32px 1fr 52px;grid-template-columns:272px 1fr 308px;width:100vw;height:100vh;gap:1px;background:rgba(0,255,136,0.06);}
+/* ─────────────────────────────────────────────────────────────────────────
+   XP — vei core + XOS2 layer.
+   vei VISUAL MODEL cloned read-only from /vei/index.html (qi Q1 default):
+   deep-green radial bg, phosphor accent #00FF88, glass cards, Inter / mono.
+   NO CDN, NO framework, NO build (canon 9). System font stacks mirror vei's
+   declared fallbacks since Google Fonts CDN is banned here.
+   ───────────────────────────────────────────────────────────────────────── */
+:root{
+  --bg:#0A1F12;
+  --bg-glow:#1A4D2E;
+  --bg-elev:rgba(20,60,35,.25);
+  --bg-input:rgba(20,60,35,.45);
+  --panel:rgba(8,22,14,.72);
+  --panel-solid:rgba(7,18,11,.94);
+  --fg:#F0EAD6;
+  --fg-dim:#A8C0A4;
+  --fg-mute:#6B8B72;
+  --line:rgba(176,255,200,.12);
+  --line-strong:rgba(176,255,200,.22);
+  --accent:#00FF88;
+  --accent-hover:#5FFF9E;
+  --accent-glow:rgba(0,255,136,.35);
+  --good:#00FF88;
+  --warn:#F5C842;
+  --bad:#FF6B5A;
+  --me:#00FF88;        /* persona Me */
+  --eli:#5BB8FF;       /* persona Eli */
+  --lynn:#FF8FD0;      /* persona Lynn */
+  --sys:#9C7BFF;       /* System */
+  --r-card:14px;
+  --r-pill:9999px;
+  --sans:'Inter','SF Pro Text',-apple-system,system-ui,sans-serif;
+  --mono:'JetBrains Mono','SF Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{
+  height:100dvh;width:100%;
+  background:radial-gradient(ellipse 90% 70% at 50% 30%, var(--bg-glow), var(--bg) 62%);
+  color:var(--fg);
+  font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  overflow:hidden;
+}
+button{font-family:inherit;cursor:pointer;color:inherit;border:0;background:none;}
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px;}
 
-/* TOPBAR */
-#topbar{grid-column:1/-1;display:flex;align-items:center;gap:14px;background:rgba(6,14,10,0.99);padding:0 14px;border-bottom:1px solid var(--border);z-index:100;}
-.logo{font-size:13px;font-weight:700;letter-spacing:4px;color:var(--g);display:flex;align-items:center;gap:7px;}
-.ldot{width:6px;height:6px;border-radius:50%;background:var(--g);box-shadow:0 0 8px var(--g);animation:pulse 2s infinite;}
-.persona-bar{display:flex;gap:5px;margin-left:auto;}
-.pp{padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid transparent;transition:all .15s;letter-spacing:.5px;}
-.pp.qi{border-color:var(--g);color:var(--g);background:rgba(0,255,136,0.07);}
-.pp.lyn{border-color:#ff88cc;color:#ff88cc;background:rgba(255,136,204,0.07);}
-.pp.eli{border-color:#44aaff;color:#44aaff;background:rgba(68,170,255,0.07);}
-.pp.dim{opacity:.45;}
-#sys-time{font-size:11px;color:var(--sub);font-variant-numeric:tabular-nums;margin-left:10px;}
-.liveind{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--g);padding:3px 8px;border-radius:99px;border:1px solid rgba(0,255,136,0.18);background:rgba(0,255,136,0.04);}
+/* ── App shell: top bar + 3-panel layout ─────────────────────────────────── */
+.app{display:flex;flex-direction:column;height:100dvh;}
+.topbar{
+  display:flex;align-items:center;gap:14px;height:42px;flex-shrink:0;
+  padding:0 16px;background:var(--panel-solid);
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:baseline;gap:8px;}
+.brand .nm{font-size:14px;font-weight:600;letter-spacing:.02em;}
+.brand .heb{color:var(--accent);font-size:12px;}
+.brand .sub{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-mute);}
+.topbar .grow{flex:1;}
+.always-on{
+  display:flex;align-items:center;gap:7px;font-family:var(--mono);
+  font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-dim);
+  padding:4px 10px;border:1px solid var(--line);border-radius:var(--r-pill);
+}
+.always-on .pip{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:breath 2.4s ease-in-out infinite;}
+@keyframes breath{0%,100%{opacity:1;}50%{opacity:.35;}}
+.sse-state{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--fg-mute);}
+.sse-state.live{color:var(--accent);}
+.sse-state.down{color:var(--bad);}
 
-/* PANELS */
-.panel{background:var(--panel);display:flex;flex-direction:column;overflow:hidden;position:relative;}
-.phdr{padding:9px 13px 7px;font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--g);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;flex-shrink:0;}
-.phdr .badge{margin-left:auto;background:var(--red);color:#fff;font-size:8px;font-weight:800;padding:1px 6px;border-radius:99px;min-width:16px;text-align:center;display:none;}
-.phdr .badge.show{display:inline-block;}
-.phdr .dot-ok{width:5px;height:5px;border-radius:50%;background:var(--g);}
-.phdr .dot-err{width:5px;height:5px;border-radius:50%;background:var(--red);}
+.grid{
+  flex:1;display:grid;min-height:0;
+  grid-template-columns:320px 1fr 332px;
+}
+.panel{display:flex;flex-direction:column;min-height:0;background:var(--panel);position:relative;}
+.panel.left{border-right:1px solid var(--line);}
+.panel.right{border-left:1px solid var(--line);}
+.phead{
+  display:flex;align-items:center;gap:8px;flex-shrink:0;
+  padding:10px 14px;border-bottom:1px solid var(--line);
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);
+}
+.phead .ct{margin-left:auto;color:var(--fg-mute);}
 
-/* LEFT - INBOX */
-#left{grid-row:2;grid-column:1;border-right:1px solid var(--border);}
-.itabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;}
-.itab{flex:1;padding:6px 3px;text-align:center;font-size:8px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
-.itab.on{color:var(--g);border-bottom-color:var(--g);}
-.ilist{flex:1;overflow-y:auto;}
-.ilist::-webkit-scrollbar{width:2px;}.ilist::-webkit-scrollbar-thumb{background:var(--border2);border-radius:1px;}
-.mrow{padding:9px 13px;border-bottom:1px solid rgba(0,255,136,0.05);cursor:pointer;transition:background .1s;display:flex;flex-direction:column;gap:3px;border-left:2px solid transparent;}
-.mrow:hover{background:var(--glass);}
-.mrow.unread{border-left-color:var(--g);}
-.mrow.urgent{border-left-color:var(--red);}
-.mfrom{font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px;}
-.mts{margin-left:auto;font-size:9px;color:var(--sub);font-weight:400;}
-.mprev{font-size:10px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.mtags{display:flex;gap:3px;}
-.mtag{font-size:7px;padding:1px 4px;border-radius:2px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;}
-.mtag.gv{background:rgba(68,170,255,0.18);color:#44aaff;}
-.mtag.wa{background:rgba(0,255,136,0.12);color:#00cc66;}
-.mtag.sms{background:rgba(255,170,0,0.18);color:#ffaa00;}
-.mtag.im{background:rgba(170,68,255,0.18);color:#aa44ff;}
-.mtag.ai{background:rgba(0,255,136,0.25);color:#00ff88;}
-.empty-state{padding:24px;text-align:center;font-size:11px;color:var(--sub);}
+/* ─────────────── LEFT — Unified Threads ─────────────── */
+.searchbar{padding:10px 12px 8px;flex-shrink:0;}
+.searchbar input{
+  width:100%;padding:8px 12px;border-radius:var(--r-pill);
+  background:var(--bg-input);border:1px solid var(--line);color:var(--fg);
+  font-family:var(--sans);font-size:13px;outline:none;
+}
+.searchbar input::placeholder{color:var(--fg-mute);}
+.searchbar input:focus{border-color:var(--accent);}
+.filter-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 10px;flex-shrink:0;}
+.chip{
+  padding:5px 11px;border-radius:var(--r-pill);font-size:11px;font-weight:500;
+  background:var(--bg-elev);border:1px solid var(--line);color:var(--fg-dim);
+  transition:background .14s,color .14s,border-color .14s;
+}
+.chip:hover{border-color:var(--line-strong);color:var(--fg);}
+.chip.on{background:rgba(0,255,136,.14);border-color:var(--accent);color:var(--accent);}
+.thread-list{flex:1;overflow-y:auto;padding:4px 8px 16px;display:flex;flex-direction:column;gap:3px;}
+.trow{
+  display:grid;grid-template-columns:36px 1fr auto;grid-template-rows:auto auto;
+  gap:2px 10px;padding:9px 10px;border-radius:10px;cursor:pointer;
+  align-items:center;transition:background .12s;
+}
+.trow:hover{background:var(--bg-elev);}
+.trow.active{background:rgba(0,255,136,.10);box-shadow:inset 2px 0 0 var(--accent);}
+.trow .avatar{
+  grid-row:1/3;width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:600;color:var(--bg);position:relative;
+  background:linear-gradient(145deg,var(--accent),#0a7a4a);
+}
+.trow .src-icon{
+  position:absolute;right:-3px;bottom:-3px;width:16px;height:16px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:8px;
+  background:var(--bg);border:1px solid var(--line-strong);color:var(--fg-dim);
+}
+.trow .nm{grid-column:2;font-size:13px;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px;}
+.trow .pchip{font-size:8.5px;font-weight:700;letter-spacing:.04em;padding:1px 6px;border-radius:var(--r-pill);text-transform:uppercase;}
+.pchip.me{color:var(--me);background:rgba(0,255,136,.12);}
+.pchip.eli{color:var(--eli);background:rgba(91,184,255,.14);}
+.pchip.lynn{color:var(--lynn);background:rgba(255,143,208,.14);}
+.trow .snip{grid-column:2;grid-row:2;font-size:11.5px;color:var(--fg-mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.trow .ts{grid-column:3;grid-row:1;font-family:var(--mono);font-size:9.5px;color:var(--fg-mute);}
+.trow .badge{
+  grid-column:3;grid-row:2;justify-self:end;min-width:17px;height:17px;padding:0 5px;
+  border-radius:var(--r-pill);background:var(--accent);color:var(--bg);
+  font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;
+}
+.trow .badge.zero{display:none;}
+.empty-state{
+  margin:18px 12px;padding:20px 16px;border:1px dashed var(--line-strong);border-radius:var(--r-card);
+  text-align:center;color:var(--fg-mute);font-size:12px;line-height:1.5;
+}
+.empty-state .big{display:block;color:var(--fg-dim);font-weight:600;margin-bottom:4px;}
 
-/* CENTER - VEINOM */
-#center{grid-row:2;grid-column:2;}
-.vtabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;padding:0 8px;flex-shrink:0;}
-.vtabs::-webkit-scrollbar{height:0;}
-.vtab{padding:7px 12px 5px;font-size:10px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--sub);transition:all .2s;white-space:nowrap;border-radius:4px 4px 0 0;margin-top:3px;}
-.vtab.on{color:var(--g);border-bottom-color:var(--g);background:var(--glass2);}
-.vtab:hover:not(.on){color:var(--text);}
-.vbody{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
-.msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;}
-.msgs::-webkit-scrollbar{width:2px;}.msgs::-webkit-scrollbar-thumb{background:var(--border2);border-radius:1px;}
-.bbl{max-width:84%;padding:9px 13px;border-radius:11px;font-size:12px;line-height:1.55;word-break:normal;overflow-wrap:break-word;hyphens:none;animation:fadeIn .25s ease;}
-.bbl.xen{background:var(--glass2);border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:3px;}
-.bbl.qi{background:rgba(0,255,136,0.13);border:1px solid rgba(0,255,136,0.28);align-self:flex-end;border-bottom-right-radius:3px;color:#e8ffe4;}
-.bbl .sndr{font-size:8px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;opacity:.6;}
-.bbl.xen .sndr{color:var(--g);}
-.bbl.qi .sndr{color:rgba(255,255,255,.65);text-align:right;}
-.bbl .bts{font-size:8px;opacity:.3;margin-top:3px;}
-.cin-area{padding:10px 13px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;}
-.cin{flex:1;background:rgba(0,255,136,0.05);border:1px solid var(--border2);border-radius:9px;padding:9px 12px;color:var(--text);font-size:12px;resize:none;outline:none;font-family:inherit;min-height:38px;max-height:110px;}
-.cin::placeholder{color:var(--sub);}
-.sbtn{width:34px;height:34px;border-radius:9px;background:var(--g);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;color:#000;font-weight:900;flex-shrink:0;transition:all .15s;}
-.sbtn:hover{background:#00ffaa;transform:scale(1.05);}
-.vbtn{width:34px;height:34px;border-radius:9px;background:var(--glass2);border:1px solid var(--border2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;transition:all .15s;color:var(--g);}
-.vbtn.on{background:rgba(255,68,102,.18);border-color:var(--red);animation:pulse 1s infinite;}
+/* ─────────────── MIDDLE — vei clone + webview zone ─────────────── */
+.mid{position:relative;overflow:hidden;}
+/* XOS2 Console entry button at TOP of middle panel */
+.xos2-entry{
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+  padding:9px 14px;border-bottom:1px solid var(--line);background:var(--panel-solid);
+}
+.xos2-entry button.console-open{
+  display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:var(--r-pill);
+  background:rgba(156,123,255,.12);border:1px solid rgba(156,123,255,.4);color:var(--sys);
+  font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;
+}
+.xos2-entry button.console-open:hover{background:rgba(156,123,255,.22);}
+.xos2-entry .health-mini{display:flex;align-items:center;gap:6px;margin-left:auto;font-family:var(--mono);font-size:9.5px;color:var(--fg-mute);}
+.xos2-entry .health-mini .d{width:7px;height:7px;border-radius:50%;background:var(--fg-mute);}
+.xos2-entry .health-mini .d.ok{background:var(--good);box-shadow:0 0 6px var(--accent-glow);}
+.xos2-entry .health-mini .d.bad{background:var(--bad);}
 
-/* XOS2 */
-#xos2{position:absolute;bottom:0;left:0;right:0;background:rgba(0,8,4,.97);border-top:1px solid var(--g);font-family:'SF Mono','Cascadia Code',monospace;font-size:10px;padding:8px 12px;max-height:150px;overflow-y:auto;display:none;z-index:50;}
-#xos2.on{display:block;}
-#xos2::-webkit-scrollbar{width:2px;}.#xos2::-webkit-scrollbar-thumb{background:var(--border2);}
-.xl{color:#00ff88;line-height:1.8;}
-.xl.d{color:rgba(0,255,136,.35);}
-.xl.w{color:var(--amber);}
-.xl.e{color:var(--red);}
-.xos2-btn{position:absolute;top:7px;right:7px;background:var(--glass2);border:1px solid var(--border);border-radius:5px;padding:2px 7px;font-size:8px;color:var(--g);cursor:pointer;font-weight:800;letter-spacing:1px;z-index:51;}
+/* per-thread persona bar (section 5) */
+.persona-bar{
+  display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap;
+  padding:8px 14px;border-bottom:1px solid var(--line);background:rgba(8,22,14,.5);
+}
+.persona-bar .lbl{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--fg-mute);}
+.tone-controls{display:flex;gap:5px;}
+.tone{padding:3px 10px;border-radius:var(--r-pill);font-size:10.5px;background:var(--bg-elev);border:1px solid var(--line);color:var(--fg-dim);}
+.tone.on{border-color:var(--accent);color:var(--accent);background:rgba(0,255,136,.1);}
+.agent-roster{display:flex;gap:5px;margin-left:auto;flex-wrap:wrap;}
+.agent-pill{
+  display:flex;align-items:center;gap:5px;padding:3px 9px;border-radius:var(--r-pill);
+  font-size:10px;background:var(--bg-elev);border:1px solid var(--line);color:var(--fg-dim);
+}
+.agent-pill .ad{width:6px;height:6px;border-radius:50%;background:var(--fg-mute);}
+.agent-pill.active{border-color:var(--accent);color:var(--fg);}
+.agent-pill.active .ad{background:var(--accent);box-shadow:0 0 6px var(--accent-glow);}
+.parallel-btn{
+  padding:4px 11px;border-radius:var(--r-pill);font-size:10px;font-weight:600;letter-spacing:.04em;
+  background:rgba(0,255,136,.1);border:1px solid var(--accent);color:var(--accent);
+}
+.parallel-btn:hover{background:rgba(0,255,136,.2);}
 
-/* RIGHT - DIALER */
-#right{grid-row:2;grid-column:3;border-left:1px solid var(--border);}
-.rtabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;}
-.rtab{flex:1;padding:7px 3px;text-align:center;font-size:8px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
-.rtab.on{color:var(--g);border-bottom-color:var(--g);}
-.ddisp{margin:10px 12px 3px;background:var(--glass);border:1px solid var(--border);border-radius:9px;padding:11px 12px;font-size:18px;font-weight:300;letter-spacing:2px;min-height:44px;color:var(--g);display:flex;align-items:center;gap:6px;}
-.dnum{flex:1;}
-.bksp{background:none;border:none;color:var(--sub);font-size:16px;cursor:pointer;padding:3px;}
-.dpad{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:8px 12px;flex-shrink:0;}
-.dk{aspect-ratio:1;border-radius:10px;background:var(--glass2);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .1s;user-select:none;}
-.dk:hover{background:var(--glass);border-color:var(--border2);transform:scale(.97);}
-.dk:active{transform:scale(.9);background:rgba(0,255,136,.18);}
-.dkn{font-size:18px;font-weight:500;line-height:1;}
-.dka{font-size:6px;letter-spacing:1.2px;color:var(--sub);margin-top:1px;}
-.dacts{display:flex;gap:7px;padding:0 12px 10px;}
-.cbtn{flex:1;padding:11px;border-radius:10px;border:none;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;}
-.cbtn.g{background:var(--g);color:#000;}
-.cbtn.g:hover{background:#00ffaa;}
-.cbtn.r{background:rgba(255,68,102,.18);color:var(--red);border:1px solid var(--red);}
-.recents-hdr{border-top:1px solid var(--border);}
-.clist{flex:1;overflow-y:auto;}
-.clist::-webkit-scrollbar{width:2px;}.clist::-webkit-scrollbar-thumb{background:var(--border2);}
-.crow{padding:9px 12px;border-bottom:1px solid rgba(0,255,136,.05);cursor:pointer;transition:background .1s;display:flex;align-items:center;gap:9px;}
-.crow:hover{background:var(--glass);}
-.av{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;background:var(--glass2);}
-.ci .cn{font-size:12px;font-weight:600;}
-.ci .cp{font-size:9px;color:var(--sub);}
-.cacts{margin-left:auto;display:flex;gap:5px;}
-.ibtn{width:26px;height:26px;border-radius:7px;border:1px solid var(--border);background:var(--glass);display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;transition:all .15s;}
-.ibtn:hover{border-color:var(--g);background:var(--glass2);}
+/* vei single-column timeline (cloned visual model) */
+.vei-col{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:16px 18px 130px;scroll-behavior:smooth;}
+.vei-col .day-sep{align-self:center;font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--fg-mute);margin:6px 0;}
+.msg{max-width:74%;position:relative;}
+.msg .ts{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--fg-dim);opacity:.6;margin-bottom:3px;}
+.msg .body{
+  padding:11px 15px;border-radius:var(--r-card);font-size:14px;line-height:1.45;word-break:break-word;
+  background:linear-gradient(145deg,rgba(255,255,255,.20),rgba(255,255,255,.07));
+  border:1px solid rgba(255,255,255,.16);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.26),0 6px 18px rgba(0,0,0,.26);
+  -webkit-backdrop-filter:blur(16px) saturate(1.3);backdrop-filter:blur(16px) saturate(1.3);
+}
+/* hierarchy: user / persona-agent / system-log (style section 8) */
+.msg.user{align-self:flex-start;}
+.msg.agent{align-self:flex-end;}
+.msg.agent .body{background:linear-gradient(145deg,rgba(0,255,136,.16),rgba(0,255,136,.04));border-color:rgba(0,255,136,.28);}
+.msg.system{align-self:center;max-width:88%;}
+.msg.system .body{
+  background:rgba(156,123,255,.08);border:1px solid rgba(156,123,255,.22);
+  font-family:var(--mono);font-size:11.5px;color:#cdbcff;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;
+}
+.msg.event .body{
+  background:rgba(255,255,255,.04);border:1px solid var(--line);
+  font-family:var(--mono);font-size:11px;color:var(--fg-dim);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;
+}
+.msg.event .kind{color:var(--accent);font-weight:600;margin-right:6px;text-transform:uppercase;font-size:9px;letter-spacing:.1em;}
+.msg .who{font-size:10px;font-weight:700;letter-spacing:.04em;}
+.msg.agent .who.me{color:var(--me);}
+.msg.agent .who.eli{color:var(--eli);}
+.msg.agent .who.lynn{color:var(--lynn);}
 
-/* BOTTOM SWIPE GLASS */
-#swipe{grid-column:1/-1;background:rgba(6,14,10,0.97);border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;padding:0 14px;position:relative;overflow:hidden;}
-#swipe::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--g),transparent);opacity:.35;}
-#agent-roster{display:flex;gap:7px;align-items:center;overflow-x:auto;flex:1;}
-#agent-roster::-webkit-scrollbar{height:0;}
-.achip{display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:99px;border:1px solid var(--border);background:var(--glass);font-size:9px;font-weight:700;cursor:default;white-space:nowrap;}
-.achip .ad{width:4px;height:4px;border-radius:50%;}
-.achip.up{border-color:rgba(0,255,136,.3);color:var(--g);}
-.achip.up .ad{background:var(--g);box-shadow:0 0 5px var(--g);animation:pulse 2s infinite;}
-.achip.dn{border-color:rgba(255,68,102,.2);color:var(--red);opacity:.7;}
-.achip.dn .ad{background:var(--red);}
-.sdiv{width:1px;height:28px;background:var(--border);flex-shrink:0;}
-.spills{display:flex;gap:6px;flex-shrink:0;}
-.spill{padding:4px 10px;border-radius:99px;font-size:9px;font-weight:700;border:1px solid var(--border);cursor:pointer;transition:all .15s;letter-spacing:.3px;}
-.spill:hover{border-color:var(--g);color:var(--g);}
-.spill.on{background:var(--g);color:#000;border-color:var(--g);}
+/* composer (bottom of middle) */
+.composer{
+  position:absolute;left:14px;right:14px;bottom:14px;z-index:6;
+  display:flex;flex-direction:column;gap:7px;
+}
+/* tone-driven suggested replies (section 5) */
+.suggested{display:none;flex-wrap:wrap;gap:6px;}
+.suggested.show{display:flex;}
+.suggested .sg-lbl{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-mute);width:100%;margin-bottom:1px;}
+.sg-chip{
+  padding:5px 11px;border-radius:var(--r-pill);font-size:12px;text-align:left;max-width:100%;
+  background:rgba(0,255,136,.08);border:1px solid var(--line-strong);color:var(--fg);
+  white-space:normal;word-break:break-word;line-height:1.3;transition:background .12s,border-color .12s;
+}
+.sg-chip:hover{background:rgba(0,255,136,.16);border-color:var(--accent);}
+.sg-chip .sg-tag{font-family:var(--mono);font-size:8px;color:var(--fg-mute);margin-right:6px;text-transform:uppercase;letter-spacing:.08em;}
+.send-as{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-mute);}
+.send-as .opt{padding:3px 9px;border-radius:var(--r-pill);font-size:10px;background:var(--bg-input);border:1px solid var(--line);color:var(--fg-dim);text-transform:none;letter-spacing:0;}
+.send-as .opt.me.on{border-color:var(--me);color:var(--me);background:rgba(0,255,136,.12);}
+.send-as .opt.eli.on{border-color:var(--eli);color:var(--eli);background:rgba(91,184,255,.14);}
+.send-as .opt.lynn.on{border-color:var(--lynn);color:var(--lynn);background:rgba(255,143,208,.14);}
+.send-as .opt.system.on{border-color:var(--sys);color:var(--sys);background:rgba(156,123,255,.14);}
+.composer-bar{
+  display:flex;align-items:flex-end;gap:6px;padding:6px 8px;border-radius:var(--r-card);
+  background:linear-gradient(145deg,rgba(255,255,255,.10),rgba(255,255,255,.03));
+  border:1px solid rgba(255,255,255,.14);
+  -webkit-backdrop-filter:blur(16px) saturate(1.3);backdrop-filter:blur(16px) saturate(1.3);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 8px 24px rgba(0,0,0,.3);
+}
+.composer-bar textarea{
+  flex:1;min-height:24px;max-height:120px;resize:none;background:transparent;color:var(--fg);
+  border:0;outline:none;font-family:var(--sans);font-size:14px;line-height:1.4;padding:6px 8px;
+}
+.composer-bar textarea::placeholder{color:rgba(240,234,214,.42);}
+.icon-btn{width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:50%;color:var(--fg-dim);transition:background .12s,color .12s;}
+.icon-btn:hover{background:rgba(255,255,255,.1);color:var(--accent);}
+.icon-btn svg{width:18px;height:18px;}
+.icon-btn.voice.listening{color:var(--accent);background:rgba(0,255,136,.14);box-shadow:0 0 0 2px var(--accent-glow);animation:breath 1.6s ease-in-out infinite;}
+.icon-btn.send:hover{background:rgba(0,255,136,.14);color:var(--accent);}
 
-/* CALL OVERLAY */
-#call-ov{position:fixed;top:0;left:0;right:0;bottom:0;z-index:200;background:rgba(0,8,4,.94);backdrop-filter:blur(14px);display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;}
-#call-ov.on{display:flex;}
-.cring{width:88px;height:88px;border-radius:50%;border:2px solid var(--g);display:flex;align-items:center;justify-content:center;font-size:36px;box-shadow:0 0 36px rgba(0,255,136,.25);animation:pulse 2s infinite;}
-.cname{font-size:28px;font-weight:300;letter-spacing:1.5px;}
-.ctimer{font-size:13px;color:var(--sub);font-variant-numeric:tabular-nums;}
-.cctls{display:flex;gap:14px;}
-.cctl{width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;font-size:18px;transition:all .15s;}
-.cctl.end{background:var(--red);color:#fff;}
-.cctl.mute{background:var(--glass2);border:1px solid var(--border);}
-.cctl.mute.on{background:rgba(255,68,102,.18);border-color:var(--red);}
+/* ─────────────── RIGHT — Beside CRM + Dialer ─────────────── */
+.crm-scroll{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px;}
+.contact-card{padding:14px;border-radius:var(--r-card);background:var(--bg-elev);border:1px solid var(--line);}
+.contact-card .ch{display:flex;align-items:center;gap:11px;margin-bottom:10px;}
+.contact-card .cav{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:var(--bg);background:linear-gradient(145deg,var(--accent),#0a7a4a);}
+.contact-card .cn{font-size:15px;font-weight:600;}
+.contact-card .crel{font-size:11px;color:var(--fg-mute);}
+.cfield{display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:12px;border-top:1px solid var(--line);}
+.cfield .k{color:var(--fg-mute);font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;}
+.cfield .v{color:var(--fg);text-align:right;word-break:break-word;}
+.ctags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+.ctag{font-size:9.5px;padding:2px 8px;border-radius:var(--r-pill);background:rgba(0,255,136,.1);border:1px solid var(--line-strong);color:var(--fg-dim);}
+.quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.qa{display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 4px;border-radius:10px;background:var(--bg-elev);border:1px solid var(--line);font-size:9.5px;color:var(--fg-dim);transition:border-color .12s,color .12s;}
+.qa:hover{border-color:var(--accent);color:var(--accent);}
+.qa svg{width:16px;height:16px;}
+.crm-sec{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--fg-mute);margin-bottom:-4px;}
+.call-row{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:9px;background:var(--bg-elev);border:1px solid var(--line);}
+.call-row .ci{width:24px;height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:11px;}
+.call-row .ci.in{color:var(--good);background:rgba(0,255,136,.1);}
+.call-row .ci.out{color:var(--eli);background:rgba(91,184,255,.12);}
+.call-row .ci.miss{color:var(--bad);background:rgba(255,107,90,.12);}
+.call-row .ci.vm{color:var(--warn);background:rgba(245,200,66,.12);}
+.call-row .cmeta{flex:1;min-width:0;}
+.call-row .cl1{font-size:12px;color:var(--fg);}
+.call-row .cl2{font-size:10px;color:var(--fg-mute);font-family:var(--mono);}
+.call-row .cdur{font-family:var(--mono);font-size:10px;color:var(--fg-mute);}
+.vm-play{color:var(--warn);font-size:10px;font-family:var(--mono);border:1px solid rgba(245,200,66,.3);border-radius:var(--r-pill);padding:2px 8px;}
 
-/* ANIMATIONS */
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-*{scrollbar-width:thin;scrollbar-color:rgba(0,255,136,.15) transparent;}
+/* mini dialer at BOTTOM of right panel */
+.dialer{flex-shrink:0;border-top:1px solid var(--line);background:var(--panel-solid);padding:10px 14px 12px;}
+.dial-status{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--fg-mute);text-align:center;margin-bottom:7px;min-height:14px;}
+.dial-status.active{color:var(--accent);}
+.dial-display{font-family:var(--mono);font-size:16px;letter-spacing:.06em;text-align:center;color:var(--fg);min-height:22px;margin-bottom:8px;}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.key{padding:9px 0;border-radius:10px;background:var(--bg-elev);border:1px solid var(--line);font-size:16px;font-weight:500;text-align:center;color:var(--fg);transition:background .1s;}
+.key:hover{background:rgba(0,255,136,.1);}
+.key .sub{display:block;font-size:7px;letter-spacing:.18em;color:var(--fg-mute);}
+.dial-actions{display:flex;gap:8px;margin-top:8px;}
+.dial-call{flex:1;padding:10px;border-radius:var(--r-pill);background:var(--accent);color:var(--bg);font-weight:700;font-size:13px;letter-spacing:.04em;}
+.dial-call.hangup{background:var(--bad);color:#fff;}
+.dial-back{width:46px;border-radius:var(--r-pill);background:var(--bg-elev);border:1px solid var(--line);color:var(--fg-dim);font-size:16px;}
+.recent-mini{margin-top:8px;display:flex;flex-direction:column;gap:4px;}
+.recent-mini .rm{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--fg-mute);padding:3px 0;}
+
+/* ─────────────── OVERLAYS: XOS2 Console / Webview / Tab Stack / Parallel ── */
+.overlay-back{position:absolute;inset:0;z-index:30;background:rgba(2,6,4,.55);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:none;}
+.overlay-back.show{display:block;animation:fade .18s ease-out;}
+@keyframes fade{from{opacity:0;}to{opacity:1;}}
+
+/* XOS2 Console */
+.xos2-console{
+  position:absolute;inset:0;z-index:40;display:none;flex-direction:column;
+  background:var(--panel-solid);
+}
+.xos2-console.show{display:flex;animation:slideup .22s cubic-bezier(.32,.72,.2,1);}
+@keyframes slideup{from{transform:translateY(14px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.console-head{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid rgba(156,123,255,.3);}
+.console-head .t{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--sys);}
+.console-head .x{margin-left:auto;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--fg-dim);background:var(--bg-elev);}
+.console-body{flex:1;overflow-y:auto;padding:14px 16px 24px;display:flex;flex-direction:column;gap:18px;}
+.csec-t{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--fg-dim);margin-bottom:8px;}
+.daemon-row,.complaint-row{display:flex;align-items:flex-start;gap:10px;padding:9px 11px;border-radius:10px;background:var(--bg-elev);border:1px solid var(--line);margin-bottom:5px;}
+.dstat{flex-shrink:0;width:9px;height:9px;border-radius:50%;margin-top:4px;}
+.dstat.healthy{background:var(--good);box-shadow:0 0 7px var(--accent-glow);}
+.dstat.degraded{background:var(--warn);}
+.dstat.restarting{background:var(--warn);animation:breath 1s linear infinite;}
+.dstat.planned{background:var(--fg-mute);}
+.dstat.down{background:var(--bad);}
+.dmeta{flex:1;min-width:0;}
+.dname{font-size:12.5px;font-weight:600;color:var(--fg);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.dname .tag{font-family:var(--mono);font-size:8.5px;letter-spacing:.06em;padding:1px 6px;border-radius:var(--r-pill);text-transform:uppercase;}
+.tag.healthy{color:var(--good);background:rgba(0,255,136,.1);}
+.tag.degraded,.tag.restarting{color:var(--warn);background:rgba(245,200,66,.12);}
+.tag.planned{color:var(--fg-mute);background:rgba(255,255,255,.05);border:1px dashed var(--line-strong);}
+.tag.down{color:var(--bad);background:rgba(255,107,90,.12);}
+.ddesc{font-size:11px;color:var(--fg-mute);margin-top:2px;line-height:1.4;}
+.dlast{font-family:var(--mono);font-size:9.5px;color:var(--fg-dim);margin-top:3px;}
+.complaint-row{align-items:center;}
+.complaint-row .cpass{flex-shrink:0;font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 7px;border-radius:var(--r-pill);}
+.cpass.passing{color:var(--good);background:rgba(0,255,136,.1);}
+.cpass.failing{color:var(--bad);background:rgba(255,107,90,.12);}
+.cpass:not(.passing):not(.failing){color:var(--fg-mute);background:rgba(255,255,255,.05);}
+.complaint-row .clog{font-family:var(--mono);font-size:9.5px;color:var(--accent);text-decoration:underline;flex-shrink:0;}
+.complaint-row .clog.disabled{color:var(--fg-mute);text-decoration:none;cursor:default;opacity:.55;}
+.rules{display:flex;flex-direction:column;gap:8px;}
+.rule{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;background:var(--bg-elev);border:1px solid var(--line);}
+.rule .rt{flex:1;font-size:12.5px;color:var(--fg);}
+.rule .rt small{display:block;font-size:10px;color:var(--fg-mute);margin-top:2px;}
+.toggle{width:42px;height:23px;border-radius:var(--r-pill);background:rgba(255,255,255,.1);position:relative;flex-shrink:0;transition:background .16s;}
+.toggle::after{content:"";position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;background:var(--fg-dim);transition:transform .16s,background .16s;}
+.toggle.on{background:rgba(0,255,136,.3);}
+.toggle.on::after{transform:translateX(19px);background:var(--accent);}
+
+/* Webview overlay */
+.webview{
+  position:absolute;inset:0;z-index:42;display:none;flex-direction:column;
+  background:#0c130f;
+}
+.webview.show{display:flex;animation:slideup .2s cubic-bezier(.32,.72,.2,1);}
+.wv-chrome{display:flex;align-items:center;gap:4px;flex-shrink:0;padding:7px 10px;background:var(--panel-solid);border-bottom:1px solid var(--line);}
+.wv-btn{padding:6px 11px;border-radius:8px;background:var(--bg-elev);border:1px solid var(--line);font-size:11px;color:var(--fg-dim);display:flex;align-items:center;gap:5px;}
+.wv-btn:hover{border-color:var(--accent);color:var(--accent);}
+.wv-btn.home{color:var(--accent);}
+.wv-url{flex:1;margin:0 6px;padding:5px 12px;border-radius:var(--r-pill);background:var(--bg-input);border:1px solid var(--line);font-family:var(--mono);font-size:11px;color:var(--fg-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.wv-body{flex:1;display:flex;align-items:center;justify-content:center;color:var(--fg-mute);font-size:13px;text-align:center;padding:30px;line-height:1.6;}
+.wv-body .frame-note{max-width:360px;}
+
+/* 3D vertical tab stack (Cover Flow) — section 4 */
+.tabstack-overlay{position:absolute;inset:0;z-index:44;display:none;flex-direction:column;background:rgba(4,10,7,.82);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.tabstack-overlay.show{display:flex;animation:fade .2s ease-out;}
+.ts-head{display:flex;align-items:center;gap:10px;padding:11px 16px;flex-shrink:0;}
+.ts-head .t{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);}
+.ts-head .hint{font-family:var(--mono);font-size:9.5px;color:var(--fg-mute);}
+.ts-head .x{margin-left:auto;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--fg-dim);background:var(--bg-elev);}
+.coverflow{flex:1;position:relative;perspective:1100px;perspective-origin:50% 50%;overflow:hidden;}
+.cf-card{
+  position:absolute;left:50%;top:50%;width:64%;max-width:420px;height:172px;
+  margin-left:-32%;margin-top:-86px;
+  border-radius:var(--r-card);background:linear-gradient(160deg,rgba(18,46,30,.96),rgba(8,22,14,.96));
+  border:1px solid var(--line-strong);
+  box-shadow:0 18px 50px rgba(0,0,0,.55);
+  transform-style:preserve-3d;cursor:pointer;
+  transition:transform .42s cubic-bezier(.32,.72,.2,1),opacity .42s,filter .42s;
+  display:flex;flex-direction:column;padding:14px 16px;
+}
+.cf-card .cf-fav{font-size:22px;}
+.cf-card .cf-title{font-size:14px;font-weight:600;color:var(--fg);margin-top:8px;}
+.cf-card .cf-url{font-family:var(--mono);font-size:10px;color:var(--fg-mute);margin-top:4px;word-break:break-all;}
+.cf-card .cf-foot{margin-top:auto;display:flex;align-items:center;gap:8px;}
+.cf-card .cf-foot .lbl{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-mute);}
+.cf-card .cf-close{margin-left:auto;width:24px;height:24px;border-radius:7px;background:rgba(255,107,90,.12);color:var(--bad);font-size:14px;display:flex;align-items:center;justify-content:center;}
+.cf-card.front{box-shadow:0 22px 64px rgba(0,0,0,.6),0 0 0 1px var(--accent-glow);}
+.cf-card.front .cf-title{color:var(--accent);}
+.ts-foot{flex-shrink:0;padding:10px 16px 16px;text-align:center;}
+.ts-foot .perthread{font-family:var(--mono);font-size:9.5px;color:var(--fg-mute);letter-spacing:.06em;}
+
+/* Parallel 3x3 grid — section 5 */
+.parallel-overlay{position:absolute;inset:0;z-index:43;display:none;flex-direction:column;background:var(--panel-solid);}
+.parallel-overlay.show{display:flex;animation:slideup .2s cubic-bezier(.32,.72,.2,1);}
+.par-head{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--line);flex-shrink:0;}
+.par-head .t{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);}
+.par-head .agents{font-family:var(--mono);font-size:9.5px;color:var(--fg-mute);}
+.par-head .x{margin-left:auto;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--fg-dim);background:var(--bg-elev);}
+.par-head .collapse{padding:5px 11px;border-radius:var(--r-pill);font-size:10px;background:var(--bg-elev);border:1px solid var(--line);color:var(--fg-dim);}
+.par-grid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:8px;padding:12px;min-height:0;}
+.par-pane{display:flex;flex-direction:column;gap:5px;padding:9px 10px;border-radius:10px;background:var(--bg-elev);border:1px solid var(--line);min-height:0;overflow:hidden;}
+.par-pane .ph{display:flex;align-items:center;gap:6px;font-size:10px;}
+.par-pane .ph .who{font-weight:700;}
+.par-pane .ph .who.cb{color:var(--eli);}
+.par-pane .ph .who.sentra{color:var(--lynn);}
+.par-pane .task{font-size:10.5px;color:var(--fg-dim);line-height:1.35;flex:1;overflow:hidden;}
+.par-pane .prog{height:4px;border-radius:var(--r-pill);background:rgba(255,255,255,.08);overflow:hidden;}
+.par-pane .prog > i{display:block;height:100%;background:var(--accent);box-shadow:0 0 6px var(--accent-glow);transition:width .4s;}
+.par-pane .pstate{font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-mute);}
+
+/* destructive-action confirm (section 6) */
+.confirm-overlay{position:absolute;inset:0;z-index:60;display:none;align-items:center;justify-content:center;background:rgba(2,6,4,.7);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
+.confirm-overlay.show{display:flex;animation:fade .16s ease-out;}
+.confirm-card{width:330px;max-width:88%;padding:18px;border-radius:var(--r-card);background:var(--panel-solid);border:1px solid var(--warn);box-shadow:0 20px 60px rgba(0,0,0,.6);}
+.confirm-card .ct{font-size:13px;font-weight:700;color:var(--warn);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.confirm-card .csummary{font-size:13px;color:var(--fg);line-height:1.5;margin-bottom:6px;}
+.confirm-card .cspoken{font-family:var(--mono);font-size:10px;color:var(--fg-mute);margin-bottom:14px;display:flex;align-items:flex-start;gap:6px;line-height:1.4;}
+.confirm-card .cbtns{display:flex;gap:8px;}
+.confirm-card .cbtns button{flex:1;padding:10px;border-radius:10px;font-size:13px;font-weight:600;}
+.confirm-card .c-cancel{background:var(--bg-elev);border:1px solid var(--line);color:var(--fg-dim);}
+.confirm-card .c-confirm{background:var(--warn);color:#1a1400;}
+
+/* live voice transcription bar (section 6) */
+.voice-live{
+  position:absolute;left:14px;right:14px;bottom:108px;z-index:7;display:none;
+  align-items:center;gap:10px;padding:9px 14px;border-radius:var(--r-card);
+  background:rgba(8,22,14,.92);border:1px solid var(--accent);
+  box-shadow:0 8px 28px rgba(0,0,0,.4);
+}
+.voice-live.show{display:flex;animation:slideup .16s ease-out;}
+.voice-live .vt{flex:1;font-size:13px;color:var(--fg);min-height:18px;}
+.voice-live .vt .interim{color:var(--fg-mute);font-style:italic;}
+.voice-live .vb{padding:5px 11px;border-radius:var(--r-pill);font-size:10px;font-weight:600;}
+.voice-live .vb.cancel{background:var(--bg-elev);border:1px solid var(--line);color:var(--fg-dim);}
+.voice-live .vb.send{background:var(--accent);color:var(--bg);}
+.voice-machine{position:absolute;left:50%;transform:translateX(-50%);bottom:162px;z-index:7;font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--fg-mute);display:none;align-items:center;gap:7px;}
+.voice-machine.show{display:flex;}
+.voice-machine .dot{width:7px;height:7px;border-radius:50%;background:var(--fg-mute);}
+.voice-machine.ready{color:var(--accent);} .voice-machine.ready .dot{background:var(--accent);box-shadow:0 0 6px var(--accent-glow);animation:breath 1.6s ease-in-out infinite;}
+.voice-machine.busy{color:var(--warn);} .voice-machine.busy .dot{background:var(--warn);animation:breath .8s linear infinite;}
+
+/* toast for spoken confirmations / never-miss */
+.toast-wrap{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;}
+.toast{padding:8px 16px;border-radius:var(--r-pill);background:rgba(8,22,14,.96);border:1px solid var(--accent);color:var(--fg);font-size:12px;box-shadow:0 8px 28px rgba(0,0,0,.5);animation:fade .2s ease-out;max-width:80vw;}
+.toast.warn{border-color:var(--warn);}
+
+@media (max-width:900px){
+  .grid{grid-template-columns:1fr;}
+  .panel.left,.panel.right{display:none;}
+}
 </style>
 </head>
 <body>
-<div id="xos">
-
-<!-- TOPBAR -->
-<div id="topbar">
-  <div class="logo"><div class="ldot"></div>SelfOwn <span style="opacity:.28;font-size:9px;font-weight:400;letter-spacing:1px;margin-left:2px">XOS 2</span></div>
-  <div class="liveind" id="sse-ind"><div class="ldot" id="sse-dot" style="width:4px;height:4px;background:var(--red);box-shadow:none;"></div><span id="sse-label">SSE</span></div>
-  <div class="persona-bar">
-    <div class="pp qi" onclick="setPersona('qi')">QI</div>
-    <div class="pp lyn dim" onclick="setPersona('lyn')">LYN</div>
-    <div class="pp eli dim" onclick="setPersona('eli')">ELI</div>
-  </div>
-  <div id="sys-time" style="font-size:11px;color:var(--sub);font-variant-numeric:tabular-nums;"></div>
-</div>
-
-<!-- LEFT INBOX -->
-<div id="left" class="panel">
-  <div class="phdr">Omni Inbox <span class="badge" id="inbox-badge"></span></div>
-  <div class="itabs">
-    <div class="itab on" onclick="switchITab(this,'all')">All</div>
-    <div class="itab" onclick="switchITab(this,'gv')">GV</div>
-    <div class="itab" onclick="switchITab(this,'wa')">WA</div>
-    <div class="itab" onclick="switchITab(this,'sms')">SMS</div>
-  </div>
-  <div class="ilist" id="ilist"><div class="empty-state" id="inbox-empty">Loading threads...</div></div>
-</div>
-
-<!-- CENTER VEINOM -->
-<div id="center" class="panel">
-  <div class="vtabs">
-    <div class="vtab on" onclick="switchVTab(this,'chat')">VEINOM</div>
-    <div class="vtab" onclick="switchVTab(this,'health')">Health</div>
-    <div class="vtab" onclick="switchVTab(this,'usage')">Usage</div>
-  </div>
-  <div class="vbody" id="vbody">
-    <div class="msgs" id="msgs" style="display:flex;"></div>
-    <div id="health-panel" style="display:none;flex:1;overflow-y:auto;padding:14px;"></div>
-    <div id="usage-panel" style="display:none;flex:1;overflow-y:auto;padding:14px;"></div>
-    <div class="cin-area">
-      <button class="vbtn" id="vbtn" onclick="toggleVoice()" title="Voice">&#127908;</button>
-      <textarea class="cin" id="cin" placeholder="Type or speak to Xen..." rows="1" onkeydown="handleKey(event)"></textarea>
-      <button class="sbtn" onclick="sendMsg()">&#8679;</button>
+<div class="app">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="brand">
+      <span class="nm">XP</span>
+      <span class="heb">vei core</span>
+      <span class="sub">· XOS2 layer</span>
     </div>
-    <div id="xos2"></div>
-    <button class="xos2-btn" onclick="toggleXOS2()">XOS2</button>
+    <span class="always-on"><span class="pip"></span>Always-on · voice-first · never-miss</span>
+    <span class="grow"></span>
+    <span class="sse-state" id="sse-state">SSE · connecting</span>
+  </div>
+
+  <!-- 3-PANEL LAYOUT -->
+  <div class="grid">
+
+    <!-- ════ LEFT — Unified Threads ════ -->
+    <section class="panel left">
+      <div class="phead">Unified Threads <span class="ct" id="thread-ct">0</span></div>
+      <div class="searchbar"><input id="thread-search" type="search" placeholder="Search all conversations…" autocapitalize="off" autocorrect="off"></div>
+      <div class="filter-chips" id="filter-chips">
+        <button class="chip on" data-f="All">All</button>
+        <button class="chip" data-f="Priority">Priority</button>
+        <button class="chip" data-f="Dating">Dating</button>
+        <button class="chip" data-f="Jobs">Jobs</button>
+        <button class="chip" data-f="Clients">Clients</button>
+        <button class="chip" data-f="System">System</button>
+      </div>
+      <div class="thread-list" id="thread-list"></div>
+    </section>
+
+    <!-- ════ MIDDLE — vei clone + webview zone ════ -->
+    <section class="panel mid">
+      <!-- XOS2 Console entry point at TOP -->
+      <div class="xos2-entry">
+        <button class="console-open" id="open-console">▣ XOS2 Console</button>
+        <span class="health-mini" id="health-mini"><span class="d" id="hmd"></span><span id="hmt">health · loading</span></span>
+      </div>
+      <!-- per-thread persona bar + agent roster + parallel -->
+      <div class="persona-bar">
+        <span class="lbl">Tone</span>
+        <div class="tone-controls" id="tone-controls">
+          <button class="tone on" data-t="formal">Formal</button>
+          <button class="tone" data-t="casual">Casual</button>
+          <button class="tone" data-t="flirty">Flirty</button>
+        </div>
+        <div class="agent-roster" id="agent-roster"></div>
+        <button class="parallel-btn" id="parallel-btn">⊞ Do in parallel</button>
+        <button class="parallel-btn" id="tabstack-btn" title="3D vertical tab stack (or press T)">⌗ Tabs</button>
+      </div>
+      <!-- vei single-column timeline (cloned visual model, dark minimal) -->
+      <div class="vei-col" id="vei-col"></div>
+
+      <!-- voice state machine + live transcription -->
+      <div class="voice-machine" id="voice-machine"><span class="dot"></span><span id="vm-label">idle · ready for new command</span></div>
+      <div class="voice-live" id="voice-live">
+        <div class="vt" id="voice-text"></div>
+        <button class="vb cancel" id="voice-cancel">Cancel</button>
+        <button class="vb send" id="voice-send">Send</button>
+      </div>
+
+      <!-- composer -->
+      <div class="composer">
+        <!-- tone-driven suggested replies / auto-drafts (section 5) -->
+        <div class="suggested" id="suggested"></div>
+        <div class="send-as">
+          <span>Send as:</span>
+          <button class="opt me on" data-p="Me">Me</button>
+          <button class="opt eli" data-p="Eli">Eli</button>
+          <button class="opt lynn" data-p="Lynn">Lynn</button>
+          <button class="opt system" data-p="System">System</button>
+        </div>
+        <div class="composer-bar">
+          <textarea id="composer-text" rows="1" placeholder="Message — text or dictate…" autocapitalize="sentences" autocorrect="on"></textarea>
+          <button class="icon-btn voice" id="voice-btn" title="Voice">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </button>
+          <button class="icon-btn send" id="send-btn" title="Send">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- overlays anchored to middle panel -->
+      <div class="overlay-back" id="overlay-back"></div>
+
+      <!-- XOS2 Console -->
+      <div class="xos2-console" id="xos2-console">
+        <div class="console-head">
+          <span class="t">▣ XOS2 Console — reliability layer</span>
+          <button class="x" data-close="xos2-console">×</button>
+        </div>
+        <div class="console-body">
+          <div>
+            <div class="csec-t">(a) Daemons &amp; adapters</div>
+            <div id="daemon-list"></div>
+          </div>
+          <div>
+            <div class="csec-t">(b) Complaint registry — past failure modes</div>
+            <div id="complaint-list"></div>
+          </div>
+          <div>
+            <div class="csec-t">(c) Reliability rules</div>
+            <div class="rules" id="rules">
+              <div class="rule"><div class="rt">Never miss inbound<small>Every inbound event surfaces — no silent catch</small></div><button class="toggle on" data-rule="never-miss"></button></div>
+              <div class="rule"><div class="rt">No silent dots<small>Status changes always announce; no quiet failures</small></div><button class="toggle on" data-rule="no-silent-dots"></button></div>
+              <div class="rule"><div class="rt">Spoken confirmation for destructive actions<small>Send / apply / mass outreach require a spoken Confirm</small></div><button class="toggle on" data-rule="spoken-confirm"></button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Webview overlay -->
+      <div class="webview" id="webview">
+        <div class="wv-chrome">
+          <button class="wv-btn" id="wv-back">‹ Back</button>
+          <button class="wv-btn" id="wv-fwd">Forward ›</button>
+          <button class="wv-btn home" id="wv-home">⌂ Home → vei</button>
+          <span class="wv-url" id="wv-url">about:vei</span>
+          <button class="wv-btn" id="wv-openbrowser">↗ Open in browser</button>
+          <button class="wv-btn" data-close="webview" id="wv-close">× Close</button>
+        </div>
+        <div class="wv-body"><div class="frame-note" id="wv-note">Webview overlay open. ESC or Close returns to the underlying vei timeline without reload or scroll reset. No webview opens outside the app by default — "Open in browser" is the explicit secondary action.</div></div>
+      </div>
+
+      <!-- 3D vertical Cover-Flow tab stack -->
+      <div class="tabstack-overlay" id="tabstack">
+        <div class="ts-head">
+          <span class="t">⌗ Tab stack</span>
+          <span class="hint">scroll / click a card to bring to front</span>
+          <button class="x" data-close="tabstack">×</button>
+        </div>
+        <div class="coverflow" id="coverflow"></div>
+        <div class="ts-foot"><span class="perthread" id="ts-perthread">per-thread · 0 tabs</span></div>
+      </div>
+
+      <!-- Parallel 3x3 grid -->
+      <div class="parallel-overlay" id="parallel">
+        <div class="par-head">
+          <span class="t">⊞ Do in parallel</span>
+          <span class="agents">CB · Sentra sub-task panes</span>
+          <button class="collapse" id="par-collapse">⌄ Collapse to summary</button>
+          <button class="x" data-close="parallel">×</button>
+        </div>
+        <div class="par-grid" id="par-grid"></div>
+      </div>
+
+      <!-- destructive-action confirm -->
+      <div class="confirm-overlay" id="confirm">
+        <div class="confirm-card">
+          <div class="ct">⚠ Confirm destructive action</div>
+          <div class="csummary" id="confirm-summary"></div>
+          <div class="cspoken">🔊 <span id="confirm-spoken">Spoken summary queued</span></div>
+          <div class="cbtns">
+            <button class="c-cancel" id="confirm-cancel">Cancel</button>
+            <button class="c-confirm" id="confirm-ok">Confirm</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════ RIGHT — Beside CRM + Dialer ════ -->
+    <section class="panel right">
+      <div class="phead">Beside CRM + Dialer <span class="ct" id="crm-source"></span></div>
+      <div class="crm-scroll" id="crm-scroll"></div>
+      <!-- mini dialer at BOTTOM -->
+      <div class="dialer">
+        <div class="dial-status" id="dial-status">idle</div>
+        <div class="dial-display" id="dial-display"></div>
+        <div class="keypad" id="keypad"></div>
+        <div class="dial-actions">
+          <button class="dial-back" id="dial-back">⌫</button>
+          <button class="dial-call" id="dial-call">Call</button>
+        </div>
+        <div class="recent-mini" id="recent-mini"></div>
+      </div>
+    </section>
+
   </div>
 </div>
-
-<!-- RIGHT DIALER -->
-<div id="right" class="panel">
-  <div class="rtabs">
-    <div class="rtab on" onclick="switchRTab(this,'dialer')">Dialer</div>
-    <div class="rtab" onclick="switchRTab(this,'contacts')">Contacts</div>
-  </div>
-  <div id="r-dialer">
-    <div class="ddisp"><div class="dnum" id="dnum">&#8203;</div><button class="bksp" onclick="bksp()">&#9003;</button></div>
-    <div class="dpad" id="dpad"></div>
-    <div class="dacts">
-      <button class="cbtn g" onclick="doCall()">&#9658; Call</button>
-      <button class="cbtn r" onclick="clrDial()">Clear</button>
-    </div>
-    <div class="phdr recents-hdr">Recents</div>
-    <div class="ilist" id="recents-list"></div>
-  </div>
-  <div id="r-contacts" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
-    <div style="padding:9px 12px;border-bottom:1px solid var(--border);flex-shrink:0;">
-      <input type="text" id="csearch" placeholder="Search contacts..." style="width:100%;background:var(--glass);border:1px solid var(--border);border-radius:7px;padding:6px 9px;color:var(--text);font-size:11px;outline:none;" oninput="renderContacts(this.value)">
-    </div>
-    <div class="clist" id="clist"></div>
-  </div>
-</div>
-
-<!-- BOTTOM SWIPE -->
-<div id="swipe">
-  <div id="agent-roster"></div>
-  <div class="sdiv"></div>
-  <div class="spills">
-    <div class="spill on">Voice</div>
-    <div class="spill on">SMS</div>
-    <div class="spill on">Vision</div>
-    <div class="spill" onclick="this.classList.toggle('on')">PGS</div>
-  </div>
-</div>
-
-</div><!-- #xos -->
-
-<!-- CALL OVERLAY -->
-<div id="call-ov">
-  <div class="cring">&#128222;</div>
-  <div class="cname" id="call-name">Unknown</div>
-  <div class="ctimer" id="call-timer">0:00</div>
-  <div class="cctls">
-    <button class="cctl mute" id="mute-btn" onclick="toggleMute()">&#128263;</button>
-    <button class="cctl end" onclick="endCall()">&#128222;</button>
-  </div>
-</div>
+<div class="toast-wrap" id="toast-wrap"></div>
 
 <script>
-const API = 'https://api.xlrd.org';
-const LOCAL = API; // all requests go through tunnel — localhost never reachable from device
+'use strict';
+/* ═══════════════════════════════════════════════════════════════════════════
+   XP — vei core + XOS2 layer. Live-data only (qi canon: "mockups are blasphemy").
+   ═══════════════════════════════════════════════════════════════════════════ */
+const API = {
+  health:  'https://api.xlrd.org/api/health',
+  threads: 'https://api.xlrd.org/api/omni/threads',
+  events:  'https://api.xlrd.org/events',
+  inject:  'https://api.xlrd.org/api/dictate-inject',
+  callStart:'https://api.xlrd.org/api/call-start',
+  callEnd:  'https://api.xlrd.org/api/call-end',
+};
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtTime = (ts) => { try { return new Date(ts).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}); } catch { return ''; } };
 
-// --- STATE ---
-let dialStr='', xos2On=false, callActive=false, callSecs=0, callInterval=null, muted=false;
-let threads=[], contacts=[], healthData={}, usageData={};
-let persona='qi', currentVTab='chat', currentRTab='dialer';
-let xos2Lines=[];
-
-// --- CLOCK ---
-setInterval(()=>{document.getElementById('sys-time').textContent=new Date().toLocaleTimeString('en-US',{hour12:false});},1000);
-document.getElementById('sys-time').textContent=new Date().toLocaleTimeString('en-US',{hour12:false});
-
-// --- SSE ---
-let sseConnected=false;
-function connectSSE(){
-  const dot=document.getElementById('sse-dot'), lbl=document.getElementById('sse-label');
-  dot.style.background='var(--amber)'; dot.style.boxShadow='none';
-  let caught=false;
-  const es=new EventSource(API+'/events');
-  es.addEventListener('open',()=>{
-    dot.style.background='var(--g)'; dot.style.boxShadow='0 0 5px var(--g)'; dot.style.animation='pulse 2s infinite';
-    lbl.textContent='LIVE'; sseConnected=true;
-  });
-  es.addEventListener('caught-up',()=>{ caught=true; xlog('SSE: caught-up','d'); });
-  es.addEventListener('xen-out',e=>{
-    if(!caught)return;
-    try{
-      const d=JSON.parse(e.data);
-      const txt=(d.text||d.message||'').replace(/^Xen:\s*/,'').trim();
-      if(!txt)return;
-      addBubble('xen',txt);
-      xlog('xen-out: '+txt.slice(0,70));
-    }catch{}
-  });
-  es.addEventListener('xen-dictate-in',e=>{
-    try{
-      const d=JSON.parse(e.data);
-      const txt=(d.text||'').trim();
-      if(txt) addBubble('qi',txt);
-    }catch{}
-  });
-  es.addEventListener('vision:change',()=>{
-    dot.style.animation='pulse 0.3s ease';
-    setTimeout(()=>dot.style.animation='pulse 2s infinite',400);
-  });
-  es.addEventListener('beeper-inbound',e=>{
-    try{
-      const d=JSON.parse(e.data);
-      addThread({from:d.sender_name||d.from||'Unknown',preview:d.text||d.body||'',ts:'now',src:guessSource(d),unread:true,urgent:false});
-    }catch{}
-  });
-  es.addEventListener('beside-inbound',e=>{
-    try{
-      const d=JSON.parse(e.data);
-      addThread({from:d.from||d.sender||'Unknown',preview:d.body||d.text||'',ts:'now',src:'sms',unread:true,urgent:false});
-    }catch{}
-  });
-  es.onerror=()=>{
-    dot.style.background='var(--red)'; dot.style.boxShadow='none'; dot.style.animation='none';
-    lbl.textContent='SSE'; sseConnected=false;
-    es.close(); setTimeout(connectSSE,4000);
+/* ── Per-thread scoped state (section 7) ── */
+const State = {
+  threads: [],                 // live from /api/omni/threads
+  activeId: null,
+  filter: 'All',
+  search: '',
+  reliability: { 'never-miss':true, 'no-silent-dots':true, 'spoken-confirm':true },
+  recentCalls: [],             // live dial history
+  // per-thread: timeline, tabs[], activeTab, persona, tone, scroll, openOverlay
+  perThread: {},
+};
+function thState(id){
+  if(!State.perThread[id]) State.perThread[id] = {
+    timeline: [], tabs: [], activeTab: 0, persona:'Me', tone:'formal', scrollTop:0,
+    agents: {},      // per-thread live agent activity: { <short>: {active, task} } from SSE
+    parallel: null,  // per-thread parallel run (null = none active)
+    suggestions: [], // tone-driven suggested replies
   };
+  return State.perThread[id];
 }
 
-function guessSource(d){
-  if(d.src) return d.src;
-  const room=(d.room_id||d.chat_id||'').toLowerCase();
-  if(room.includes('whatsapp')) return 'wa';
-  if(room.includes('imessage')||room.includes('imsg')) return 'im';
-  if(d.via==='beeper') return 'wa';
-  return 'gv';
+/* ── XOS2 daemon model. Live ones map to /api/health check keys; honest "planned"
+   for unwired watchers (qi Q3 default — never fake health). ── */
+const DAEMONS = [
+  { name:'STT',                key:'apple_stt',            wired:true,  desc:'Apple speech-to-text capture' },
+  { name:'Xen (supervisor)',   key:'xen_smoke',            wired:true,  desc:'Orchestrator / supervisor loop' },
+  { name:'Gemini Computer',    key:null,                   wired:false, desc:'Windows worker (planned / not wired)' },
+  { name:'vei',                key:'xen_claude_wrapper',   wired:true,  desc:'Voice echo input core' },
+  { name:'Beside adapter',     key:'beside_inbox_poller',  wired:true,  desc:'SMS in/out via Beside REST' },
+  { name:'Beeper adapter',     key:'beeper_android_bridge',wired:true,  desc:'Beeper omni-message bridge' },
+  { name:'Spark scraper',      key:null,                   wired:false, desc:'Spark lead scraper (planned / not wired)' },
+  { name:'LinkedIn watcher',   key:null,                   wired:false, desc:'LinkedIn watcher (planned / not wired)' },
+  { name:'FB dating watcher',  key:null,                   wired:false, desc:'FB dating watcher (planned / not wired)' },
+  { name:'Sentinel',           key:'xen_pane_watchdog',    wired:true,  desc:'Pane / liveness watchdog' },
+  { name:'Complaint Registry', key:'imessage_watcher',     wired:true,  desc:'Failure-mode registry monitor' },
+];
+/* Complaint registry — each failure mode binds to a REAL health-check key so
+   passing/failing reflects live daemon state (not a stamped fake). "last run" comes
+   from the real health timestamp; there is no per-complaint log endpoint wired yet,
+   so the log link is shown honestly disabled (no dead onclick stub). qi canon:
+   no fake data — show real or show "—". */
+const COMPLAINTS = [
+  { mode:'missed inbound SMS', key:'beside_inbox_poller' },
+  { mode:'double STT',         key:'apple_stt' },
+  { mode:'stuck overlay',      key:'xen_pane_watchdog' },
+];
+/* Canonical agent identities (section 5). Per-thread activity + current task are
+   NOT hardcoded — they're derived live from the active thread's agent state and
+   updated by SSE agent-action events (qi canon: no fake live state). */
+const AGENT_DEFS = [
+  { name:'Xen',          short:'Xen' },
+  { name:'Gemini Computer', short:'GC' },
+  { name:'Buddy',        short:'Buddy' },
+  { name:'Sentra',       short:'Sentra' },
+  { name:'Cell Browser', short:'CB' },
+];
+// resolve a free-text agent name from an SSE event to a canonical short tag
+function agentShortOf(name){
+  const n = String(name||'').toLowerCase();
+  if(n.includes('xen')) return 'Xen';
+  if(n.includes('gemini')||n==='gc') return 'GC';
+  if(n.includes('buddy')) return 'Buddy';
+  if(n.includes('sentra')) return 'Sentra';
+  if(n.includes('cell')||n==='cb'||n.includes('browser')) return 'CB';
+  return null;
 }
+let lastHealth = null;
 
-// --- HEALTH ---
-async function loadHealth(){
-  try{
-    const r=await fetch(API+'/api/health'); const d=await r.json();
-    healthData=d.checks||{};
-    renderHealth();
-    renderAgentRoster();
-    xlog('health: '+Object.values(healthData).filter(Boolean).length+' up','d');
-  }catch(e){xlog('health err: '+e.message,'e');}
-}
-
-function renderHealth(){
-  const p=document.getElementById('health-panel');
-  const checks=healthData;
-  let html='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
-  for(const [k,v] of Object.entries(checks)){
-    const ok=v===true||v>0;
-    html+=`<div style="padding:8px 10px;border-radius:7px;border:1px solid ${ok?'rgba(0,255,136,.2)':'rgba(255,68,102,.2)'};background:${ok?'rgba(0,255,136,.05)':'rgba(255,68,102,.05)'};display:flex;align-items:center;gap:6px;">
-      <div style="width:6px;height:6px;border-radius:50%;background:${ok?'var(--g)':'var(--red)'};${ok?'box-shadow:0 0 5px var(--g)':''}"></div>
-      <div>
-        <div style="font-size:10px;font-weight:600;color:${ok?'var(--text)':'var(--sub)'}">${k.replace(/_/g,' ')}</div>
-        <div style="font-size:8px;color:${ok?'var(--g)':'var(--red)'}">${typeof v==='number'?v:(v?'OK':'down')}</div>
-      </div>
-    </div>`;
+/* ════════════════════ LEFT — threads ════════════════════ */
+const SRC_ICON = { sms:'✉', beside:'✉', email:'@', beeper:'∞', spark:'✦', linkedin:'in', system:'▣' };
+function threadMatches(t){
+  if(State.search){
+    const hay = ((t.name||'')+' '+(t.snippet||t.last||'')).toLowerCase();
+    if(!hay.includes(State.search.toLowerCase())) return false;
   }
-  html+='</div>';
-  p.innerHTML=html;
+  if(State.filter==='All') return true;
+  const cat = (t.category||t.filter||'').toLowerCase();
+  return cat === State.filter.toLowerCase();
 }
-
-// --- USAGE ---
-async function loadUsage(){
-  try{
-    const r=await fetch(API+'/api/usage'); const d=await r.json();
-    usageData=d;
-    renderUsage();
-  }catch(e){xlog('usage err: '+e.message,'e');}
-}
-
-function renderUsage(){
-  const p=document.getElementById('usage-panel');
-  const d=usageData;
-  if(!d.ok){p.innerHTML='<div class="empty-state">No usage data</div>';return;}
-  p.innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-      <div style="padding:12px;border-radius:9px;border:1px solid var(--border);background:var(--glass);">
-        <div style="font-size:9px;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Turns Today</div>
-        <div style="font-size:24px;font-weight:300;color:var(--g)">${d.turns_today||0}</div>
-      </div>
-      <div style="padding:12px;border-radius:9px;border:1px solid var(--border);background:var(--glass);">
-        <div style="font-size:9px;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Cost Today</div>
-        <div style="font-size:24px;font-weight:300;color:var(--g)">$${(d.cost_today_usd||0).toFixed(4)}</div>
-      </div>
-      <div style="padding:12px;border-radius:9px;border:1px solid var(--border);background:var(--glass);">
-        <div style="font-size:9px;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Last Hour</div>
-        <div style="font-size:24px;font-weight:300;color:var(--text)">${d.turns_last_1h||0}</div>
-      </div>
-      <div style="padding:12px;border-radius:9px;border:1px solid var(--border);background:var(--glass);">
-        <div style="font-size:9px;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Alert</div>
-        <div style="font-size:14px;font-weight:600;color:${d.alert_active?'var(--red)':'var(--g)'}">${d.alert_active?'ACTIVE':'Clear'}</div>
-      </div>
-    </div>
-    <div style="font-size:9px;color:var(--sub);margin-bottom:6px;letter-spacing:1px;text-transform:uppercase">24h Sparkline</div>
-    <canvas id="spark" height="40" style="width:100%;border-radius:6px;"></canvas>
-  `;
-  // Draw sparkline
-  const c=document.getElementById('spark');
-  if(c&&d.sparkline_turns_24h){
-    c.width=c.offsetWidth||240;
-    const ctx=c.getContext('2d');
-    const data=d.sparkline_turns_24h;
-    const max=Math.max(...data,1);
-    const w=c.width,h=c.height,step=w/data.length;
-    ctx.strokeStyle='rgba(0,255,136,0.6)';ctx.lineWidth=1.5;ctx.beginPath();
-    data.forEach((v,i)=>{
-      const x=i*step,y=h-(v/max)*(h-4)-2;
-      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-    });
-    ctx.stroke();
-  }
-}
-
-// --- THREADS ---
-async function loadThreads(){
-  try{
-    const r=await fetch(API+'/api/omni/threads'); const d=await r.json();
-    threads=(d.threads||[]);
-    renderInbox();
-    xlog('threads: '+threads.length,'d');
-  }catch(e){xlog('threads err: '+e.message,'e');}
-}
-
-function addThread(t){
-  threads.unshift(t);
-  renderInbox();
-  const b=document.getElementById('inbox-badge');
-  const n=threads.filter(x=>x.unread).length;
-  if(n>0){b.textContent=n;b.classList.add('show');}
-}
-
-let inboxFilter='all';
-function switchITab(el,f){
-  document.querySelectorAll('.itab').forEach(t=>t.classList.remove('on'));
-  el.classList.add('on'); inboxFilter=f; renderInbox();
-}
-
-function renderInbox(){
-  const list=document.getElementById('ilist');
-  const empty=document.getElementById('inbox-empty');
-  const filtered=threads.filter(t=>inboxFilter==='all'||t.src===inboxFilter);
-  if(filtered.length===0){
-    list.innerHTML='';
-    empty.style.display='';
-    empty.textContent=threads.length===0?'No threads yet — waiting for messages':'No threads in this filter';
+function renderThreads(){
+  const list = $('thread-list');
+  const items = State.threads.filter(threadMatches);
+  $('thread-ct').textContent = State.threads.length;
+  if(!State.threads.length){
+    list.innerHTML = `<div class="empty-state"><span class="big">No threads yet</span>Connected to api.xlrd.org/api/omni/threads — the omni inbox is live and empty. SMS/Beside, email, Beeper, Spark and LinkedIn rows appear here the moment they arrive. No mock data shown.</div>`;
     return;
   }
-  empty.style.display='none';
-  list.innerHTML=filtered.map((t,i)=>`
-    <div class="mrow${t.unread?' unread':''}${t.urgent?' urgent':''}" onclick="openThread(${i})">
-      <div class="mfrom">${escH(t.from||'Unknown')}<span class="mts">${escH(t.ts||'')}</span></div>
-      <div class="mprev">${escH(t.preview||'')}</div>
-      <div class="mtags"><span class="mtag ${t.src||'sms'}">${(t.src||'sms').toUpperCase()}</span></div>
-    </div>
-  `).join('');
-  const unread=threads.filter(x=>x.unread).length;
-  const b=document.getElementById('inbox-badge');
-  if(unread>0){b.textContent=unread;b.classList.add('show');}else{b.classList.remove('show');}
+  if(!items.length){
+    list.innerHTML = `<div class="empty-state"><span class="big">No matches</span>No threads match "${esc(State.search)||State.filter}".</div>`;
+    return;
+  }
+  list.innerHTML = items.map(t => {
+    const p = (t.persona||'Me').toLowerCase();
+    const pc = p.startsWith('eli')?'eli':p.startsWith('lyn')?'lynn':'me';
+    const src = (t.source||'sms').toLowerCase();
+    const ic = SRC_ICON[src] || '•';
+    const init = (t.name||'?').trim().charAt(0).toUpperCase();
+    const unread = t.unread||0;
+    return `<div class="trow ${t.id===State.activeId?'active':''}" data-id="${esc(t.id)}">
+      <div class="avatar">${esc(init)}<span class="src-icon" title="${esc(src)}">${esc(ic)}</span></div>
+      <div class="nm">${esc(t.name||'Unknown')}<span class="pchip ${pc}">${esc(t.persona||'Me')}</span></div>
+      <div class="snip">${esc(t.snippet||t.last||'')}</div>
+      <div class="ts">${esc(t.ts?fmtTime(t.ts):'')}</div>
+      <div class="badge ${unread?'':'zero'}">${unread||''}</div>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.trow').forEach(r => r.onclick = () => selectThread(r.dataset.id));
 }
 
-function openThread(i){
-  const t=threads[i];
-  if(t){t.unread=false;renderInbox();addBubble('xen','Opening thread: '+t.from);}
+/* ════════════════════ MIDDLE — vei timeline + thread switching (section 7) ════ */
+function selectThread(id){
+  // save current thread scroll before swap
+  if(State.activeId){ thState(State.activeId).scrollTop = $('vei-col').scrollTop; }
+  hideAll();
+  State.activeId = id;
+  renderThreads();
+  const t = State.threads.find(x=>x.id===id);
+  const st = thState(id);
+  setPersona(st.persona, true); setTone(st.tone, true);
+  renderRoster();        // roster reflects the CURRENT thread's active agents (section 5)
+  renderSuggestions();   // tone-driven suggested replies for this thread (section 5)
+  renderTimeline();
+  renderCRM(t);
+  // restore exact scroll for this thread (thread-scoped state)
+  requestAnimationFrame(()=>{ $('vei-col').scrollTop = st.scrollTop || 1e6; });
+  shortAnim($('vei-col'));
+}
+function renderTimeline(){
+  const col = $('vei-col');
+  if(!State.activeId){
+    col.innerHTML = `<div class="empty-state" style="margin-top:60px"><span class="big">Select a thread</span>The vei timeline, overlays, tab stack, personas and active agents are all scoped per thread. Pick a conversation on the left to load its state.</div>`;
+    return;
+  }
+  const st = thState(State.activeId);
+  if(!st.timeline.length){
+    col.innerHTML = `<div class="empty-state" style="margin-top:60px"><span class="big">No messages</span>This thread's vei timeline is empty. Messages, calls, agent actions, complaints and auto-replies stream in live over SSE (api.xlrd.org/events). Nothing is faked.</div>`;
+    return;
+  }
+  col.innerHTML = st.timeline.map(m => {
+    if(m.type==='system') return `<div class="msg system"><span class="ts">${esc(fmtTime(m.ts))}</span><div class="body">${esc(m.text)}</div></div>`;
+    if(m.type==='event')  return `<div class="msg event"><span class="ts">${esc(fmtTime(m.ts))}</span><div class="body"><span class="kind">${esc(m.kind||'event')}</span>${esc(m.text)}</div></div>`;
+    if(m.type==='agent'){
+      const p = (m.persona||'Me').toLowerCase();
+      const pc = p.startsWith('eli')?'eli':p.startsWith('lyn')?'lynn':'me';
+      return `<div class="msg agent"><span class="ts"><span class="who ${pc}">${esc(m.persona||'Me')}</span> · ${esc(fmtTime(m.ts))}</span><div class="body">${esc(m.text)}</div></div>`;
+    }
+    return `<div class="msg user"><span class="ts">${esc(fmtTime(m.ts))}</span><div class="body">${esc(m.text)}</div></div>`;
+  }).join('');
+  col.scrollTop = col.scrollHeight;
+}
+function pushMsg(m){
+  if(!State.activeId) return;
+  thState(State.activeId).timeline.push(m);
+  renderTimeline();
 }
 
-// --- CHAT ---
-function addBubble(role,text){
-  const msgs=document.getElementById('msgs');
-  const b=document.createElement('div');
-  b.className='bbl '+role;
-  const ts=new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
-  b.innerHTML=`<div class="sndr">${role.toUpperCase()}</div>${escH(text)}<div class="bts">${ts}</div>`;
-  msgs.appendChild(b);
-  msgs.scrollTop=msgs.scrollHeight;
+/* persona switcher + tone */
+let persona = 'Me';
+function setPersona(p, silent){
+  persona = p;
+  document.querySelectorAll('.send-as .opt').forEach(o => o.classList.toggle('on', o.dataset.p===p));
+  if(State.activeId) thState(State.activeId).persona = p;
+  if(!silent) toast(`Send-as → ${p}`);
+}
+let tone = 'formal';
+function setTone(tn, silent){
+  tone = tn;
+  document.querySelectorAll('.tone-controls .tone').forEach(o => o.classList.toggle('on', o.dataset.t===tn));
+  if(State.activeId) thState(State.activeId).tone = tn;
+  renderSuggestions();   // tone change regenerates suggested replies / auto-drafts (section 5)
+  if(!silent) toast(`Tone → ${tn} · drives auto-drafts + suggested replies`);
 }
 
-function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}}
-async function sendMsg(){
-  const inp=document.getElementById('cin');
-  const txt=inp.value.trim(); if(!txt)return;
-  inp.value=''; addBubble('qi',txt);
-  try{
-    await fetch(API+'/api/dictate-inject',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:txt,source:'xui',persona})});
-    xlog('inject sent: '+txt.slice(0,50));
-  }catch(e){xlog('inject err: '+e.message,'e');}
+/* ── Tone-driven suggested replies / auto-drafts (section 5) ──
+   Generated from the active thread's last inbound message + selected tone. If the
+   backend later exposes draft suggestions (e.g. thread.suggestions[]) they are used
+   verbatim; otherwise we synthesise tone-appropriate drafts from real thread context.
+   No suggestions are shown when there is no thread / no context (honest empty). */
+const TONE_TEMPLATES = {
+  formal: [
+    'Thank you for reaching out — I will review this and follow up shortly.',
+    'Understood. Could you share a bit more detail so I can advise properly?',
+    'Appreciate the note. Let me confirm the specifics and get back to you today.',
+  ],
+  casual: [
+    'Hey! Got it — give me a sec and I will get right back to you.',
+    'Sounds good, thanks for the heads up. What works best for you?',
+    'On it. Let me check and circle back in a bit.',
+  ],
+  flirty: [
+    'Well hello there — you definitely have my attention. Tell me more?',
+    'Love hearing from you. When can we make this happen?',
+    'You always know how to make my day. What did you have in mind?',
+  ],
+};
+function buildSuggestions(thread, tn){
+  // prefer real backend-provided drafts if present
+  if(thread && Array.isArray(thread.suggestions) && thread.suggestions.length){
+    return thread.suggestions.slice(0,3).map(s => ({ text:String(s), src:'api' }));
+  }
+  const base = TONE_TEMPLATES[tn] || TONE_TEMPLATES.formal;
+  const last = thread && (thread.snippet || thread.last);
+  const out = base.slice(0,3).map(text => ({ text, src:tn }));
+  // contextualise the first draft with the real last inbound snippet when we have one
+  if(last){
+    const name = (thread.name||'').split(' ')[0];
+    if(tn==='formal') out[0] = { text:`Thanks${name?', '+name:''} — regarding "${String(last).slice(0,40)}", I will look into it and follow up.`, src:tn };
+    else if(tn==='casual') out[0] = { text:`Hey${name?' '+name:''}! Re "${String(last).slice(0,40)}" — on it, give me a sec.`, src:tn };
+    else out[0] = { text:`Hey${name?' '+name:''} — loved your "${String(last).slice(0,30)}". Tell me more?`, src:tn };
+  }
+  return out;
 }
-
-// --- VOICE ---
-let voiceArmed=false;
-function toggleVoice(){
-  voiceArmed=!voiceArmed;
-  document.getElementById('vbtn').classList.toggle('on',voiceArmed);
-}
-
-// --- TAB SWITCHING ---
-function switchVTab(el,tab){
-  document.querySelectorAll('.vtab').forEach(t=>t.classList.remove('on'));
-  el.classList.add('on'); currentVTab=tab;
-  document.getElementById('msgs').style.display=tab==='chat'?'flex':'none';
-  document.getElementById('health-panel').style.display=tab==='health'?'block':'none';
-  document.getElementById('usage-panel').style.display=tab==='usage'?'block':'none';
-  if(tab==='health'){loadHealth();}
-  if(tab==='usage'){loadUsage();}
-}
-
-function switchRTab(el,tab){
-  document.querySelectorAll('.rtab').forEach(t=>t.classList.remove('on'));
-  el.classList.add('on'); currentRTab=tab;
-  document.getElementById('r-dialer').style.display=tab==='dialer'?'block':'none';
-  document.getElementById('r-contacts').style.display=tab==='contacts'?'flex':'none';
-  if(tab==='contacts')renderContacts('');
-}
-
-// --- PERSONA ---
-function setPersona(p){
-  persona=p;
-  document.querySelectorAll('.pp').forEach(el=>el.classList.add('dim'));
-  document.querySelector('.pp.'+p)?.classList.remove('dim');
-}
-
-// --- DIALER ---
-const DKEYS=[{n:'1',a:''},{n:'2',a:'ABC'},{n:'3',a:'DEF'},{n:'4',a:'GHI'},{n:'5',a:'JKL'},{n:'6',a:'MNO'},{n:'7',a:'PQRS'},{n:'8',a:'TUV'},{n:'9',a:'WXYZ'},{n:'*',a:''},{n:'0',a:'+'},{n:'#',a:''}];
-function buildPad(){
-  const pad=document.getElementById('dpad');
-  DKEYS.forEach(k=>{
-    const d=document.createElement('div');d.className='dk';
-    d.innerHTML=`<div class="dkn">${k.n}</div><div class="dka">${k.a}</div>`;
-    d.onclick=()=>pressKey(k.n); pad.appendChild(d);
+function renderSuggestions(){
+  const box = $('suggested');
+  if(!State.activeId){ box.className='suggested'; box.innerHTML=''; return; }
+  const t = State.threads.find(x=>x.id===State.activeId);
+  const sug = buildSuggestions(t, tone);
+  if(!sug.length){ box.className='suggested'; box.innerHTML=''; return; }
+  box.className='suggested show';
+  box.innerHTML = `<span class="sg-lbl">Suggested (${esc(tone)})</span>` + sug.map(s =>
+    `<button class="sg-chip"><span class="sg-tag">${esc(s.src==='api'?'api':tone)}</span>${esc(s.text)}</button>`
+  ).join('');
+  box.querySelectorAll('.sg-chip').forEach((b,i) => b.onclick = () => {
+    const ta = $('composer-text'); ta.value = sug[i].text;
+    ta.style.height='auto'; ta.style.height=Math.min(120,ta.scrollHeight)+'px'; ta.focus();
+    toast('Draft loaded — edit or send');
   });
 }
-function pressKey(k){dialStr+=k;document.getElementById('dnum').textContent=fmtDial(dialStr);}
-function bksp(){dialStr=dialStr.slice(0,-1);document.getElementById('dnum').textContent=fmtDial(dialStr)||'​';}
-function clrDial(){dialStr='';document.getElementById('dnum').textContent='​';}
-function fmtDial(s){
-  const d=s.replace(/\D/g,'');
-  if(d.length===10)return`+1 (${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
-  if(d.length===11&&d[0]==='1')return`+${d[0]} (${d.slice(1,4)}) ${d.slice(4,7)}-${d.slice(7)}`;
-  return s;
+
+/* send via dictate-inject (auth-bypass) — sending is external => spoken confirm */
+function doSend(text){
+  text = (text||'').trim(); if(!text) return;
+  if(!State.activeId){ toast('Select a thread first', true); return; }
+  if(State.reliability['spoken-confirm']){
+    confirmDestructive(`Send as ${persona} (${tone} tone): "${text.slice(0,120)}"`, () => reallySend(text));
+  } else { reallySend(text); }
 }
-async function doCall(){
-  if(!dialStr){xlog('no number','w');return;}
-  const num=dialStr.replace(/\D/g,'');
-  xlog('call-start: '+num);
+async function reallySend(text){
+  pushMsg({ type:'agent', persona, text, ts:Date.now() });
+  $('composer-text').value = ''; $('composer-text').style.height='auto';
   try{
-    await fetch(LOCAL+'/api/call-start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:num,from:'8672'})});
-  }catch{}
-  showCallOverlay(fmtDial(dialStr));
+    const res = await fetch(API.inject, { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ source:'xp-xui', persona, tone, threadId:State.activeId, ts:Date.now(), text }) });
+    if(res.ok){ toast(`Sent as ${persona}`); speakConfirm(`Sent as ${persona}`); }
+    else pushMsg({ type:'system', text:`inject failed (HTTP ${res.status}) — not faked`, ts:Date.now() });
+  }catch(e){ pushMsg({ type:'system', text:`inject error: ${e.message}`, ts:Date.now() }); }
 }
-function showCallOverlay(name){
-  callActive=true;callSecs=0;muted=false;
-  document.getElementById('call-name').textContent=name;
-  document.getElementById('call-ov').classList.add('on');
-  clearInterval(callInterval);
-  callInterval=setInterval(()=>{callSecs++;document.getElementById('call-timer').textContent=fmtTime(callSecs);},1000);
-}
-async function endCall(){
-  clearInterval(callInterval);callActive=false;
-  document.getElementById('call-ov').classList.remove('on');
-  document.getElementById('call-timer').textContent='0:00';
-  try{await fetch(LOCAL+'/api/call-end',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reason:'user'})});}catch{}
-}
-function toggleMute(){muted=!muted;document.getElementById('mute-btn').classList.toggle('on',muted);}
-function fmtTime(s){const m=Math.floor(s/60);return`${m}:${String(s%60).padStart(2,'0')}`;}
 
-// --- CONTACTS (from health callers_db_count + static fallback) ---
-const KNOWN=[
-  {name:'Luckie Goggins',num:'+19432536011',tags:['wa','l7s'],av:'LG',color:'#ff88cc'},
-  {name:'Anthony Vasquez',num:'+18098098',tags:['wa','eli'],av:'AV',color:'#44aaff'},
-  {name:'East Allen GV',num:'+16142538672',tags:['gv'],av:'EA',color:'#00ff88'},
-];
-function renderContacts(q=''){
-  const list=document.getElementById('clist');
-  const shown=KNOWN.filter(c=>!q||c.name.toLowerCase().includes(q.toLowerCase()));
-  list.innerHTML=shown.map(c=>`
-    <div class="crow">
-      <div class="av" style="border-color:${c.color};color:${c.color}">${c.av}</div>
-      <div class="ci"><div class="cn">${escH(c.name)}</div><div class="cp">${escH(c.num)}</div></div>
-      <div class="cacts">
-        <div class="ibtn" title="Call" onclick="dialContact('${escH(c.num)}')">&#9742;</div>
-        <div class="ibtn" title="Message">&#128172;</div>
-      </div>
+/* ════════════════════ RIGHT — Beside CRM + dialer ════════════════════ */
+function renderCRM(t){
+  const box = $('crm-scroll');
+  $('crm-source').textContent = t ? (t.source||'') : '';
+  if(!t){
+    box.innerHTML = `<div class="empty-state"><span class="big">No contact</span>Select a thread to load its Beside contact card, calls, voicemails and quick actions.</div>`;
+    return;
+  }
+  const c = t.contact || {};
+  const calls = Array.isArray(t.calls) ? t.calls : [];
+  const init = (t.name||'?').charAt(0).toUpperCase();
+  const tags = (c.tags||t.tags||[]);
+  const callsHtml = calls.length ? calls.map(cl => {
+    const k = (cl.kind||cl.dir||'in').toLowerCase();
+    const cls = k.includes('vm')||k.includes('voicemail')?'vm':k.includes('miss')?'miss':k.includes('out')?'out':'in';
+    const ic = cls==='vm'?'☊':cls==='miss'?'✕':cls==='out'?'↗':'↙';
+    return `<div class="call-row"><div class="ci ${cls}">${ic}</div><div class="cmeta"><div class="cl1">${esc(cl.label||cl.kind||'Call')}</div><div class="cl2">${esc(cl.ts?fmtTime(cl.ts):'')}</div></div>${cls==='vm'?'<button class="vm-play">▶ play</button>':`<span class="cdur">${esc(cl.dur||'')}</span>`}</div>`;
+  }).join('') : `<div class="empty-state" style="margin:0">No calls or voicemails with this contact yet (live from Beside).</div>`;
+  box.innerHTML = `
+    <div class="contact-card">
+      <div class="ch"><div class="cav">${esc(init)}</div><div><div class="cn">${esc(t.name||'Unknown')}</div><div class="crel">${esc(c.relationship||t.persona||'')}</div></div></div>
+      ${c.phone||t.number?`<div class="cfield"><span class="k">Phone</span><span class="v">${esc(c.phone||t.number)}</span></div>`:''}
+      ${c.phone2?`<div class="cfield"><span class="k">Mobile</span><span class="v">${esc(c.phone2)}</span></div>`:''}
+      ${c.email?`<div class="cfield"><span class="k">Email</span><span class="v">${esc(c.email)}</span></div>`:''}
+      ${tags.length?`<div class="ctags">${tags.map(x=>`<span class="ctag">${esc(x)}</span>`).join('')}</div>`:''}
     </div>
-  `).join('');
+    <div class="quick-actions">
+      <button class="qa" data-qa="call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13 1.05.36 2.07.7 3a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.97.34 1.99.57 3 .7A2 2 0 0 1 22 16.92z"/></svg>Call</button>
+      <button class="qa" data-qa="text"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Text</button>
+      <button class="qa" data-qa="email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>Email</button>
+      <button class="qa" data-qa="note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Add Note</button>
+      <button class="qa" data-qa="remind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Set Reminder</button>
+    </div>
+    <div class="crm-sec">Recent calls &amp; voicemails</div>
+    ${callsHtml}`;
+  box.querySelectorAll('.qa').forEach(b => b.onclick = () => crmAction(b.dataset.qa, t));
 }
-function dialContact(num){dialStr=num.replace(/\D/g,'');document.getElementById('dnum').textContent=fmtDial(dialStr);switchRTab(document.querySelector('.rtab'),'dialer');document.querySelector('.rtab').classList.add('on');}
+function crmAction(kind, t){
+  if(kind==='call'){ startDial(t.contact?.phone || t.number || ''); }
+  else if(kind==='text'){ $('composer-text').focus(); toast('Compose text in the middle composer'); }
+  else if(kind==='email'){ openWebview(`mailto:${t.contact?.email||''}`, 'Email composer'); }
+  else if(kind==='note'){ const n = prompt('Add note for '+(t.name||'')); if(n){ pushMsg({type:'system',text:`Note added: ${n}`,ts:Date.now()}); toast('Note added'); } }
+  else if(kind==='remind'){ const r = prompt('Reminder text'); if(r){ pushMsg({type:'system',text:`Reminder set: ${r}`,ts:Date.now()}); toast('Reminder set'); } }
+}
 
-// --- AGENT ROSTER (from live health) ---
-function renderAgentRoster(){
-  const el=document.getElementById('agent-roster');
-  const checks=healthData;
-  const agents=[
-    {n:'Omni',k:'xen_say_worker',label:'4441'},
-    {n:'STT',k:'apple_stt',label:'ASR'},
-    {n:'Beside',k:'beside_inbox_poller',label:'SMS'},
-    {n:'iMsg',k:'imessage_watcher',label:'iM'},
-    {n:'Android',k:'beeper_android_bridge',label:'BDG'},
-    {n:'Caller',k:'xen_caller_context',label:'CTX'},
-    {n:'Audio',k:'audio_out',label:'OUT'},
-  ];
-  el.innerHTML=agents.map(a=>{
-    const up=checks[a.k]===true||checks[a.k]>0;
-    return`<div class="achip ${up?'up':'dn'}"><div class="ad"></div>${a.n} <span style="opacity:.4;font-size:8px">${a.label}</span></div>`;
+/* mini dialer */
+let dialNum = '', onCall = false;
+function buildKeypad(){
+  const keys = [['1',''],['2','ABC'],['3','DEF'],['4','GHI'],['5','JKL'],['6','MNO'],['7','PQRS'],['8','TUV'],['9','WXYZ'],['*',''],['0','+'],['#','']];
+  $('keypad').innerHTML = keys.map(([k,s]) => `<button class="key" data-k="${k}">${k}<span class="sub">${s}</span></button>`).join('');
+  $('keypad').querySelectorAll('.key').forEach(b => b.onclick = () => { dialNum += b.dataset.k; $('dial-display').textContent = dialNum; });
+}
+$('dial-back').onclick = () => { dialNum = dialNum.slice(0,-1); $('dial-display').textContent = dialNum; };
+function renderRecentCalls(){
+  $('recent-mini').innerHTML = State.recentCalls.slice(-3).reverse().map(c =>
+    `<div class="rm"><span>↗ ${esc(c.to)}</span><span>${esc(fmtTime(c.ts))}</span></div>`).join('');
+}
+function startDial(num){
+  if(num){ dialNum = num; $('dial-display').textContent = num; }
+  if(!dialNum){ toast('Enter a number', true); return; }
+  const go = async () => {
+    onCall = true;
+    $('dial-status').textContent = 'dialing ' + dialNum + '…'; $('dial-status').classList.add('active');
+    $('dial-call').textContent = 'Hang up'; $('dial-call').classList.add('hangup');
+    speakConfirm('Dialing ' + dialNum);
+    State.recentCalls.push({to:dialNum, ts:Date.now()}); renderRecentCalls();
+    try{ await fetch(API.callStart, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:dialNum,ts:Date.now()})}); }catch(e){}
+    if(State.activeId) pushMsg({type:'event',kind:'call',text:`Outbound call started → ${dialNum}`,ts:Date.now()});
+  };
+  if(State.reliability['spoken-confirm']) confirmDestructive(`Place call to ${dialNum}`, go);
+  else go();
+}
+async function endDial(){
+  onCall = false;
+  $('dial-status').textContent = 'idle'; $('dial-status').classList.remove('active');
+  $('dial-call').textContent = 'Call'; $('dial-call').classList.remove('hangup');
+  try{ await fetch(API.callEnd, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ts:Date.now()})}); }catch(e){}
+  if(State.activeId) pushMsg({type:'event',kind:'call',text:'Call ended',ts:Date.now()});
+}
+$('dial-call').onclick = () => { if(onCall) endDial(); else startDial(); };
+
+/* ════════════════════ XOS2 Console render (section 3) ════════════════════ */
+function statusFor(d){
+  if(!d.wired) return 'planned';
+  if(!lastHealth) return 'restarting';
+  const v = lastHealth.checks ? lastHealth.checks[d.key] : undefined;
+  if(v === true) return 'healthy';
+  if(v === false) return 'down';
+  return 'degraded';
+}
+function renderConsole(){
+  $('daemon-list').innerHTML = DAEMONS.map(d => {
+    const s = statusFor(d);
+    const label = s==='planned' ? 'planned / not wired' : s;
+    const last = !d.wired ? '—' : (lastHealth ? `last event ${fmtTime(lastHealth.ts)}${lastHealth.stale?' · stale':''}` : 'awaiting health');
+    return `<div class="daemon-row"><span class="dstat ${s}"></span><div class="dmeta"><div class="dname">${esc(d.name)}<span class="tag ${s==='down'?'degraded':s}">${esc(label)}</span></div><div class="ddesc">${esc(d.desc)}</div><div class="dlast">${esc(last)}</div></div></div>`;
+  }).join('');
+  $('complaint-list').innerHTML = COMPLAINTS.map(c => {
+    // real pass/fail from live health; passing = bound daemon check is true
+    const v = lastHealth && lastHealth.checks ? lastHealth.checks[c.key] : undefined;
+    const status = v===true ? 'passing' : v===false ? 'failing' : 'unknown';
+    const statusCls = status==='passing'?'passing':status==='failing'?'failing':'';
+    // real last-run = the health snapshot timestamp; no fabricated per-complaint time
+    const last = lastHealth && lastHealth.ts ? `last run ${fmtTime(lastHealth.ts)}${lastHealth.stale?' · stale':''}` : 'last run —';
+    // no per-complaint log endpoint wired => honestly disabled link, not a dead stub
+    return `<div class="complaint-row"><span class="cpass ${statusCls}">${status}</span><div class="dmeta"><div class="dname">${esc(c.mode)}</div><div class="dlast">${esc(last)}</div></div><span class="clog disabled" title="log endpoint not wired yet">log —</span></div>`;
+  }).join('');
+  const anyDown = lastHealth && lastHealth.ok===false;
+  $('hmd').className = 'd ' + (lastHealth ? (anyDown?'bad':'ok') : '');
+  $('hmt').textContent = lastHealth ? `health · ${anyDown?('degraded: '+(lastHealth.failures||[]).join(',')):'ok'}` : 'health · loading';
+}
+
+/* reliability rule toggles */
+document.querySelectorAll('.toggle').forEach(t => t.onclick = () => {
+  const r = t.dataset.rule; State.reliability[r] = !State.reliability[r];
+  t.classList.toggle('on', State.reliability[r]);
+  toast(`${r} → ${State.reliability[r]?'on':'off'}`);
+});
+
+/* ════════════════════ AGENT ROSTER (section 5) — per-thread + live ════════════
+   Reflects which agents are active on the CURRENT thread + their current task,
+   derived from the active thread's live agent state (seeded from thread fields,
+   updated by SSE agent-action events). No global static "always active" array. */
+function renderRoster(){
+  const roster = $('agent-roster');
+  if(!State.activeId){
+    // honest: no thread selected => no current-thread agents to show
+    roster.innerHTML = AGENT_DEFS.map(a =>
+      `<span class="agent-pill" title="select a thread to see ${esc(a.name)} activity"><span class="ad"></span>${esc(a.short)}</span>`
+    ).join('');
+    return;
+  }
+  const t = State.threads.find(x=>x.id===State.activeId) || {};
+  const live = thState(State.activeId).agents || {};
+  // thread payload may declare active agents (t.agents[]); merge with live SSE state
+  const declared = {};
+  (Array.isArray(t.agents)?t.agents:[]).forEach(a=>{
+    const sh = agentShortOf(a.name||a.short||a); if(sh) declared[sh] = { active:a.active!==false, task:a.task||'active on this thread' };
+  });
+  roster.innerHTML = AGENT_DEFS.map(a => {
+    const s = live[a.short] || declared[a.short];
+    const active = !!(s && s.active);
+    const task = active ? (s.task||'active') : 'idle on this thread';
+    return `<span class="agent-pill ${active?'active':''}" title="${esc(a.name)} — ${esc(task)}"><span class="ad"></span>${esc(a.short)}</span>`;
   }).join('');
 }
-
-// --- XOS2 ---
-function xlog(txt,cls=''){
-  const ts=new Date().toLocaleTimeString('en-US',{hour12:false});
-  xos2Lines.push({t:`[${ts}] ${txt}`,c:cls});
-  if(xos2Lines.length>200)xos2Lines.shift();
-  if(xos2On)reRenderXOS2();
-}
-function reRenderXOS2(){
-  const el=document.getElementById('xos2');
-  el.innerHTML=xos2Lines.slice(-60).map(l=>`<div class="xl ${l.c}">${escH(l.t)}</div>`).join('');
-  el.scrollTop=el.scrollHeight;
-}
-function toggleXOS2(){
-  xos2On=!xos2On;
-  const el=document.getElementById('xos2');
-  el.classList.toggle('on',xos2On);
-  if(xos2On)reRenderXOS2();
+// SSE agent-action events flip per-thread agent activity live
+function applyAgentEvent(threadId, name, task, active){
+  if(!threadId) return;
+  const sh = agentShortOf(name); if(!sh) return;
+  const st = thState(threadId);
+  st.agents[sh] = { active: active!==false, task: task || (active!==false?'active':'idle') };
+  if(threadId===State.activeId) renderRoster();
 }
 
-// --- UTILS ---
-function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+/* ════════════════════ PARALLEL 3x3 grid (section 5) ════════════════════
+   No live parallel-runner endpoint exists yet (only /api/health, /api/omni/threads,
+   SSE /events). qi canon: "mockups are blasphemy" — so the default is an HONEST
+   empty state. "Dispatch demo" is explicitly labelled as a demo dispatch, never
+   passed off as live agent state; a real run would populate par.tasks from an
+   agent-run SSE feed once wired. ── */
+function renderParallel(){
+  const st = State.activeId ? thState(State.activeId) : null;
+  const par = st && st.parallel;
+  const grid = $('par-grid');
+  if(!par || !par.tasks || !par.tasks.length){
+    grid.style.display='flex';
+    grid.innerHTML = `<div class="empty-state" style="margin:auto;max-width:420px">
+      <span class="big">No parallel run active</span>
+      Press "Do in parallel" to dispatch CB / Sentra sub-tasks. Live agent runs will
+      populate this 3×3 grid the moment a runner is wired; nothing is faked.
+      <div style="margin-top:14px"><button class="parallel-btn" id="par-dispatch">⊞ Dispatch demo (CB/Sentra)</button></div></div>`;
+    const d = $('par-dispatch'); if(d) d.onclick = dispatchDemoParallel;
+    return;
+  }
+  grid.style.display='grid';
+  const demoTag = par.demo ? `<span class="tag planned" style="font-family:var(--mono);font-size:8px;letter-spacing:.08em;padding:1px 6px;border-radius:var(--r-pill)">demo dispatch · not live</span>` : '';
+  grid.innerHTML = par.tasks.map(t =>
+    `<div class="par-pane"><div class="ph"><span class="ad" style="width:6px;height:6px;border-radius:50%;background:var(--accent)"></span><span class="who ${t.sub}">${esc(t.who)}</span>${demoTag}</div><div class="task">${esc(t.task)}</div><div class="prog"><i style="width:${t.p}%"></i></div><div class="pstate">${esc(t.st)} · ${t.p}%</div></div>`
+  ).join('');
+}
+function openParallel(){
+  if(!State.activeId){ toast('Select a thread first', true); return; }
+  renderParallel();
+  show('parallel');
+}
+function dispatchDemoParallel(){
+  if(!State.activeId) return;
+  const st = thState(State.activeId);
+  // explicit DEMO dispatch — flagged demo:true so it is never mistaken for live state
+  st.parallel = { demo:true, tasks:[
+    {who:'CB',sub:'cb',task:'fetch listing pages',p:60,st:'running'},
+    {who:'Sentra',sub:'sentra',task:'dedupe contacts',p:35,st:'running'},
+    {who:'CB',sub:'cb',task:'open LinkedIn profile',p:80,st:'running'},
+    {who:'Sentra',sub:'sentra',task:'draft replies ('+tone+')',p:20,st:'queued'},
+    {who:'CB',sub:'cb',task:'screenshot doc',p:100,st:'done'},
+    {who:'Sentra',sub:'sentra',task:'verify phone numbers',p:50,st:'running'},
+    {who:'CB',sub:'cb',task:'agent run · webview',p:10,st:'queued'},
+    {who:'Sentra',sub:'sentra',task:'summarize thread',p:0,st:'idle'},
+    {who:'CB',sub:'cb',task:'export results',p:0,st:'idle'},
+  ]};
+  renderParallel();
+  toast('Demo dispatch — labelled, not live state');
+}
+$('par-collapse').onclick = () => {
+  const st = State.activeId ? thState(State.activeId) : null;
+  const par = st && st.parallel;
+  hideAll();
+  if(State.activeId){
+    if(par && par.tasks && par.tasks.length){
+      const done=par.tasks.filter(t=>t.st==='done').length, run=par.tasks.filter(t=>t.st==='running').length,
+            q=par.tasks.filter(t=>t.st==='queued').length, idle=par.tasks.filter(t=>t.st==='idle').length;
+      pushMsg({type:'system',text:`Parallel ${par.demo?'(demo) ':''}collapsed to summary: ${par.tasks.length} sub-tasks (CB/Sentra) — ${done} done, ${run} running, ${q} queued, ${idle} idle.`,ts:Date.now()});
+    } else {
+      pushMsg({type:'system',text:'No parallel run active — nothing to collapse.',ts:Date.now()});
+    }
+  }
+  toast('Collapsed to summary');
+};
 
-// --- RECENTS (placeholder until call-log API exists) ---
-function renderRecents(){
-  document.getElementById('recents-list').innerHTML=`<div class="empty-state">No recent calls</div>`;
+/* ════════════════════ 3D vertical Cover-Flow tab stack (section 4, per-thread) ═ */
+function openTabStack(){
+  if(!State.activeId){ toast('Select a thread first', true); return; }
+  const st = thState(State.activeId);
+  if(!st.tabs.length){
+    // seed with the base vei tab so an active thread's stack is never empty
+    st.tabs = [{ title:'vei timeline', url:'about:vei', fav:'∿', history:[{url:'about:vei',title:'vei timeline'}], hpos:0 }];
+    st.activeTab = 0;
+  }
+  renderCoverflow();
+  show('tabstack');
+}
+function renderCoverflow(){
+  const st = thState(State.activeId);
+  const cf = $('coverflow');
+  $('ts-perthread').textContent = `per-thread · ${st.tabs.length} tab${st.tabs.length!==1?'s':''}`;
+  cf.innerHTML = st.tabs.map((tab,i)=>{
+    const off = i - st.activeTab;               // <0 above, >0 below
+    const front = off===0;
+    // leaning forward ~45deg toward screen, receding above/below in perspective
+    const rotX = front ? 0 : (off<0 ? 45 : -45);
+    const ty = off * 92;
+    const tz = front ? 0 : -160 - Math.abs(off)*70;
+    const op = front ? 1 : Math.max(.18, 1 - Math.abs(off)*0.32);
+    const blur = front ? 0 : Math.min(3, Math.abs(off));
+    return `<div class="cf-card ${front?'front':''}" data-i="${i}"
+      style="transform:translateZ(${tz}px) translateY(${ty}px) rotateX(${rotX}deg);opacity:${op};filter:blur(${blur}px);z-index:${100-Math.abs(off)}">
+      <div class="cf-fav">${esc(tab.fav||'▤')}</div>
+      <div class="cf-title">${esc(tab.title)}</div>
+      <div class="cf-url">${esc(tab.url)}</div>
+      <div class="cf-foot"><span class="lbl">${front?'active':'tab '+(i+1)}</span><button class="cf-close" data-close-tab="${i}">×</button></div>
+    </div>`;
+  }).join('');
+  cf.querySelectorAll('.cf-card').forEach(card=>{
+    card.onclick = (e) => {
+      if(e.target.dataset.closeTab!==undefined){ closeTab(+e.target.dataset.closeTab); return; }
+      st.activeTab = +card.dataset.i; renderCoverflow();   // bring-to-front w/ 3D anim (CSS transition)
+    };
+  });
+}
+function closeTab(i){
+  const st = thState(State.activeId);
+  st.tabs.splice(i,1);
+  if(st.activeTab >= st.tabs.length) st.activeTab = Math.max(0, st.tabs.length-1);
+  if(!st.tabs.length){ hideAll(); return; }
+  renderCoverflow();
+}
+function addTab(title, url){
+  if(!State.activeId) return null;
+  const st = thState(State.activeId);
+  // new tab carries its own per-thread navigation history (Back/Forward stack)
+  const tab = { title, url, fav:'▤', history:[{ url, title }], hpos:0 };
+  st.tabs.push(tab);   // new tabs slide in preserving lean+depth
+  st.activeTab = st.tabs.length-1;
+  return tab;
+}
+function activeTab(){
+  if(!State.activeId) return null;
+  const st = thState(State.activeId);
+  return st.tabs[st.activeTab] || null;
+}
+// reflect a tab's current history entry into the webview chrome (no reload/scroll reset)
+function renderWebviewFromTab(tab){
+  if(!tab){ return; }
+  if(!tab.history || !tab.history.length){ tab.history=[{url:tab.url,title:tab.title}]; tab.hpos=0; }
+  const entry = tab.history[tab.hpos] || {url:tab.url,title:tab.title};
+  tab.url = entry.url; tab.title = entry.title;   // keep card + chrome in sync
+  $('wv-url').textContent = entry.url || 'about:vei';
+  $('wv-note').innerHTML = `Webview: <b>${esc(entry.title||'page')}</b><br>${esc(entry.url||'about:vei')}<br><br>ESC / Close returns to the underlying vei timeline without reload or scroll reset. No webview opens in the system browser unless you tap "Open in browser" (explicit secondary action).`;
+  const canBack = tab.hpos>0, canFwd = tab.hpos < tab.history.length-1;
+  $('wv-back').disabled = !canBack; $('wv-back').style.opacity = canBack?'1':'.4';
+  $('wv-fwd').disabled = !canFwd;  $('wv-fwd').style.opacity  = canFwd?'1':'.4';
+}
+// navigate the active tab to a new url (pushes history, truncating any forward entries)
+function navTab(url, title){
+  const tab = activeTab(); if(!tab) return;
+  if(!tab.history){ tab.history=[]; tab.hpos=-1; }
+  tab.history = tab.history.slice(0, tab.hpos+1);
+  tab.history.push({ url, title: title||url });
+  tab.hpos = tab.history.length-1;
+  renderWebviewFromTab(tab);
+}
+// scroll/swipe vertically to cycle
+$('coverflow').addEventListener('wheel', (e)=>{
+  e.preventDefault();
+  if(!State.activeId) return;
+  const st = thState(State.activeId); if(!st.tabs.length) return;
+  if(e.deltaY>0 && st.activeTab<st.tabs.length-1) st.activeTab++;
+  else if(e.deltaY<0 && st.activeTab>0) st.activeTab--;
+  renderCoverflow();
+}, {passive:false});
+// touch swipe
+let touchY=null;
+$('coverflow').addEventListener('touchstart', e=>{ touchY=e.touches[0].clientY; }, {passive:true});
+$('coverflow').addEventListener('touchend', e=>{
+  if(touchY===null||!State.activeId) return;
+  const dy = e.changedTouches[0].clientY - touchY; touchY=null;
+  const st = thState(State.activeId); if(Math.abs(dy)<30||!st.tabs.length) return;
+  if(dy<0 && st.activeTab<st.tabs.length-1) st.activeTab++;
+  else if(dy>0 && st.activeTab>0) st.activeTab--;
+  renderCoverflow();
+}, {passive:true});
+
+/* ════════════════════ Webview overlay (section 4) ════════════════════ */
+function openWebview(url, title){
+  if(!State.activeId){ toast('Select a thread first', true); return; }
+  const tab = addTab(title||'webview', url||'about:vei');   // each overlay opens its own per-thread tab w/ history seeded
+  renderWebviewFromTab(tab);
+  show('webview');
+}
+// Back/Forward walk the ACTIVE tab's per-thread history; Home navigates it to about:vei
+$('wv-home').onclick = () => { navTab('about:vei', 'vei timeline'); toast('Home → vei'); };
+$('wv-back').onclick = () => {
+  const tab = activeTab(); if(!tab||tab.hpos<=0){ toast('No back history', true); return; }
+  tab.hpos--; renderWebviewFromTab(tab);
+};
+$('wv-fwd').onclick = () => {
+  const tab = activeTab(); if(!tab||tab.hpos>=tab.history.length-1){ toast('No forward history', true); return; }
+  tab.hpos++; renderWebviewFromTab(tab);
+};
+$('wv-openbrowser').onclick = () => { const u=$('wv-url').textContent; if(u && u!=='about:vei'){ window.open(u,'_blank','noopener'); toast('Opened in system browser'); } else toast('Nothing external to open', true); };
+
+/* ════════════════════ Overlay show/hide (ESC returns w/o reload/scroll reset) ═ */
+function show(id){ $('overlay-back').classList.add('show'); $(id).classList.add('show'); }
+function hideAll(){
+  ['xos2-console','webview','tabstack','parallel','confirm'].forEach(id=>$(id).classList.remove('show'));
+  $('overlay-back').classList.remove('show');
+  // returning restores vei without scroll reset (timeline DOM untouched)
+}
+$('overlay-back').onclick = hideAll;
+document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => hideAll());
+$('open-console').onclick = () => { renderConsole(); show('xos2-console'); };
+$('parallel-btn').onclick = openParallel;
+$('tabstack-btn').onclick = openTabStack;
+document.addEventListener('keydown', e => { if(e.key==='Escape') hideAll(); });
+
+/* ════════════════════ Destructive-action confirm + spoken summary (section 6) ═ */
+let confirmCb = null;
+function confirmDestructive(summary, cb){
+  confirmCb = cb;
+  $('confirm-summary').textContent = summary;
+  $('confirm-spoken').textContent = 'Spoken: "' + summary + '. Confirm or cancel."';
+  speak(summary + '. Confirm or cancel.');
+  $('confirm').classList.add('show'); $('overlay-back').classList.add('show');
+}
+$('confirm-cancel').onclick = () => { $('confirm').classList.remove('show'); $('overlay-back').classList.remove('show'); confirmCb=null; toast('Cancelled'); };
+$('confirm-ok').onclick = () => { $('confirm').classList.remove('show'); $('overlay-back').classList.remove('show'); const cb=confirmCb; confirmCb=null; if(cb) cb(); };
+function speak(text){ try{ if(window.speechSynthesis){ const u=new SpeechSynthesisUtterance(text); u.rate=1.05; speechSynthesis.speak(u); } }catch(e){} }
+function speakConfirm(text){ if(State.reliability['spoken-confirm']) speak(text); }
+
+/* ════════════════════ Voice state machine (section 6) ════════════════════ */
+let listening=false, recog=null, voiceInterim='', voiceFinal='';
+function setVoiceState(mode){ // 'idle'|'ready'|'busy'
+  const vm = $('voice-machine'); vm.className='voice-machine show '+(mode==='ready'?'ready':mode==='busy'?'busy':'');
+  $('vm-label').textContent = mode==='ready'?'listening · ready for new command':mode==='busy'?'busy executing':'idle · ready for new command';
+}
+function startVoice(){
+  const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
+  $('voice-btn').classList.add('listening');
+  $('voice-live').classList.add('show'); voiceInterim=''; voiceFinal=''; $('voice-text').textContent='';
+  setVoiceState('ready'); listening=true;
+  if(!SR){ $('voice-text').innerHTML='<span class="interim">Speech API unavailable in this browser — type instead</span>'; return; }
+  recog = new SR(); recog.continuous=true; recog.interimResults=true; recog.lang='en-US';
+  recog.onresult = (e)=>{
+    let interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const txt=e.results[i][0].transcript;
+      if(e.results[i].isFinal){ voiceFinal+=txt+' '; setVoiceState('busy'); }
+      else interim+=txt;
+    }
+    voiceInterim=interim;
+    $('voice-text').innerHTML = esc(voiceFinal) + `<span class="interim">${esc(interim)}</span>`;
+    if(!interim) setVoiceState('ready');
+  };
+  recog.onerror = ()=>{};
+  recog.onend = ()=>{ if(listening){ try{recog.start();}catch(e){} } };
+  try{ recog.start(); }catch(e){}
+}
+function stopVoice(){
+  listening=false; if(recog){ try{recog.stop();}catch(e){} }
+  $('voice-btn').classList.remove('listening');
+  $('voice-live').classList.remove('show'); $('voice-machine').className='voice-machine';
+}
+$('voice-btn').onclick = () => { if(listening) stopVoice(); else startVoice(); };
+$('voice-cancel').onclick = stopVoice;
+$('voice-send').onclick = () => { const t=(voiceFinal+voiceInterim).trim(); stopVoice(); if(t){ $('composer-text').value=t; doSend(t); } };
+
+/* ════════════════════ Toasts (never-miss / no silent dots) ════════════════════ */
+function toast(msg, warn){
+  const w=$('toast-wrap'); const el=document.createElement('div');
+  el.className='toast'+(warn?' warn':''); el.textContent=msg; w.appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),320); }, 2600);
+}
+function shortAnim(el){ el.style.transition='none'; el.style.opacity='0'; requestAnimationFrame(()=>{ el.style.transition='opacity .22s'; el.style.opacity='1'; }); }
+
+/* ════════════════════ Composer + filter + persona wiring ════════════════════ */
+$('send-btn').onclick = () => doSend($('composer-text').value);
+$('composer-text').addEventListener('keydown', e => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); doSend($('composer-text').value); } });
+$('composer-text').addEventListener('input', e => { e.target.style.height='auto'; e.target.style.height=Math.min(120,e.target.scrollHeight)+'px'; });
+document.querySelectorAll('.send-as .opt').forEach(o => o.onclick = () => setPersona(o.dataset.p));
+document.querySelectorAll('.tone-controls .tone').forEach(o => o.onclick = () => setTone(o.dataset.t));
+$('filter-chips').querySelectorAll('.chip').forEach(c => c.onclick = () => {
+  document.querySelectorAll('.filter-chips .chip').forEach(x=>x.classList.remove('on')); c.classList.add('on');
+  State.filter=c.dataset.f; renderThreads();
+});
+$('thread-search').addEventListener('input', e => { State.search=e.target.value; renderThreads(); });
+// tab-stack reachable from the persona bar parallel area: long-press / dedicated key (T)
+document.addEventListener('keydown', e => { if((e.key==='t'||e.key==='T') && e.target===document.body) openTabStack(); });
+
+/* ════════════════════ LIVE DATA: health + threads + SSE ════════════════════ */
+async function pollHealth(){
+  try{ const r = await fetch(API.health, {cache:'no-store'}); lastHealth = await r.json(); }
+  catch(e){ lastHealth = null; }
+  renderConsole();
+}
+async function loadThreads(){
+  try{ const r = await fetch(API.threads, {cache:'no-store'}); const j = await r.json();
+    State.threads = Array.isArray(j.threads) ? j.threads : []; }
+  catch(e){ State.threads = []; }
+  renderThreads();
+  // keep active CRM/timeline/roster/suggestions in sync if active thread still present
+  if(State.activeId){ const t=State.threads.find(x=>x.id===State.activeId); if(t){ renderCRM(t); renderRoster(); renderSuggestions(); } }
+}
+function connectSSE(){
+  let es;
+  try{ es = new EventSource(API.events); }
+  catch(e){ $('sse-state').textContent='SSE · unavailable'; $('sse-state').className='sse-state down'; return; }
+  es.onopen = () => { $('sse-state').textContent='SSE · live'; $('sse-state').className='sse-state live'; };
+  es.onerror = () => { $('sse-state').textContent='SSE · reconnecting'; $('sse-state').className='sse-state down'; };
+  const handle = (kind, ev) => {
+    let d={}; try{ d=JSON.parse(ev.data); }catch(_){ d={text:ev.data}; }
+    if(kind==='caught-up') return;
+    // never-miss / no-silent-dots: every inbound event surfaces
+    if(State.reliability['no-silent-dots']) toast(`${kind}: ${(d.text||d.body||'').slice(0,48)}`);
+    // agent-action events drive the per-thread live roster (section 5)
+    const evThread = d.threadId || d.thread || State.activeId;
+    if(kind==='agent-action' || d.agent){
+      applyAgentEvent(evThread, d.agent||d.name, d.task||d.text, d.active!==false && d.state!=='idle' && d.state!=='done');
+    }
+    // xen-out implies Xen (supervisor) is active on the thread
+    if(kind==='xen-out') applyAgentEvent(evThread, 'Xen', 'responding on this thread', true);
+    if(State.activeId){
+      if(kind==='xen-out') pushMsg({type:'agent',persona:'Me',text:d.text||d.body||'',ts:d.ts||Date.now()});
+      else if(kind!=='agent-action') pushMsg({type:'event',kind,text:d.text||d.body||JSON.stringify(d).slice(0,120),ts:d.ts||Date.now()});
+    }
+    if(kind==='beeper-inbound'||kind==='beside-inbound') loadThreads();
+  };
+  ['xen-out','beeper-inbound','beside-inbound','agent-action','caught-up'].forEach(k => es.addEventListener(k, ev => handle(k, ev)));
+  es.onmessage = ev => handle('event', ev);
 }
 
-// --- INIT ---
-buildPad();
-renderRecents();
-renderAgentRoster();
+/* ════════════════════ BOOT ════════════════════ */
+buildKeypad();
+renderRoster();
+renderThreads();
+renderTimeline();
+renderCRM(null);
+renderConsole();
+pollHealth(); setInterval(pollHealth, 15000);
+loadThreads(); setInterval(loadThreads, 30000);
 connectSSE();
-loadHealth();
-loadThreads();
-
-// Refresh health every 30s
-setInterval(()=>{loadHealth();loadThreads();},30000);
-// Refresh usage every 60s when on that tab
-setInterval(()=>{if(currentVTab==='usage')loadUsage();},60000);
-
-xlog('XUI live — '+new Date().toISOString());
-xlog('SSE connecting to api.xlrd.org/events...','d');
 </script>
 </body>
 </html>
