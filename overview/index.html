@@ -123,6 +123,12 @@
   .goal.warn .lit{background:var(--amber);box-shadow:0 0 8px var(--amber)}
   .goal.down .lit{background:var(--ox);box-shadow:0 0 8px var(--ox)}
   .goal .pct{font-family:'JetBrains Mono';font-weight:700;font-size:1.02rem;color:var(--gold-leaf);flex:none}
+  .goal .meta{display:flex;flex-direction:column;align-items:flex-end;gap:7px;flex:none}
+  .pill{font-family:'JetBrains Mono';font-size:.55rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;padding:3px 9px;border-radius:999px;border:1px solid;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;transition:color .4s,border-color .4s,background .4s}
+  .pill::before{content:"";width:4px;height:4px;border-radius:50%;background:currentColor;box-shadow:0 0 6px currentColor}
+  .pill.p1{color:var(--ox);border-color:rgba(194,91,74,.45);background:rgba(194,91,74,.10)}
+  .pill.p2{color:var(--amber);border-color:rgba(255,194,74,.38);background:rgba(255,194,74,.08)}
+  .pill.p3{color:var(--green);border-color:rgba(154,255,196,.32);background:rgba(154,255,196,.07)}
   .goal .cu{font-family:'JetBrains Mono';font-size:.62rem;color:var(--gold-deep);margin:5px 0 12px;letter-spacing:.02em}
   .goal .track{margin-bottom:11px}
   .goal .gap{font-family:'JetBrains Mono';font-size:.62rem;line-height:1.6;letter-spacing:.02em;min-height:1.2em}
@@ -252,6 +258,9 @@ function paint(el,g){
   el.classList.add(g.state||'warn');
   el.querySelector('.fill').style.width=(g.pct||0)+'%';
   el.querySelector('.pct').textContent=(g.pct||0)+'%';
+  // auto prioritization pill — derived live from completion state
+  const pri = g.pct>=100 ? {c:'p3',t:'P3 · stable'} : (g.pct>=70 ? {c:'p2',t:'P2 · active'} : {c:'p1',t:'P1 · priority'});
+  const pill=el.querySelector('.pill'); pill.className='pill '+pri.c; pill.textContent=pri.t;
   el.querySelector('.gap').className='gap'+(g.pct>=100?' complete':'');
   el.querySelector('.gap').innerHTML=renderGap(g);
 }
@@ -280,7 +289,7 @@ fetch('/sites.json').then(r=>r.json()).then(d=>{
     const g=document.createElement('div');g.className='grid';
     groups[cat].forEach(s=>{
       const a=document.createElement('a');a.className='goal';a.href=s.url;a.target='_blank';a.rel='noopener';
-      a.innerHTML='<div class="gh"><div class="ct"><span class="lit"></span>'+(s.title||s.slug)+'</div><div class="pct">··%</div></div>'+
+      a.innerHTML='<div class="gh"><div class="ct"><span class="lit"></span>'+(s.title||s.slug)+'</div><div class="meta"><span class="pill p2">P2 · queued</span><span class="pct">··%</span></div></div>'+
         '<div class="cu">hitthe.link'+s.url+'</div>'+
         '<div class="track"><div class="fill"></div></div>'+
         '<div class="gap"><span class="pend">queued…</span></div>';
