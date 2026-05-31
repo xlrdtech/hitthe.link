@@ -25,6 +25,11 @@ const SKIP_DIRS = new Set([
   'codepens', // keep curated category, has its own structure
   'icons',
   'mbv4', // qi 2026-05-31: /mb is the canonical M_B site, NOT /mbv4 (stale version). Excluded from index; dir kept for reversibility.
+  // qi 2026-05-31: L7S belongs to Luckie (manifesto isolation). The L7S product
+  // suite lives under the /luckie Operator Hub, NOT the main XLRD index. Dirs kept
+  // on disk + reachable via /luckie; just excluded from the main index listing.
+  'calculators', 'l7s', 'l7s-hero', 'l7shero', 'l7s-pulse', 'PriceHero',
+  'offers', 'eats', 'buzycred', 'autophone', 'growth', 'east-allen-growth-interface',
 ]);
 
 function extractMeta(htmlPath) {
