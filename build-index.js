@@ -24,6 +24,7 @@ const SKIP_DIRS = new Set([
   '.git', '.github', 'node_modules', '_shared', 'browser',
   'codepens', // keep curated category, has its own structure
   'icons',
+  'mbv4', // qi 2026-05-31: /mb is the canonical M_B site, NOT /mbv4 (stale version). Excluded from index; dir kept for reversibility.
 ]);
 
 function extractMeta(htmlPath) {
