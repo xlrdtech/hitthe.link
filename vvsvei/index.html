@@ -1495,17 +1495,18 @@ document.getElementById('tb-threads').addEventListener('click', () => {
 // DOM nodes (text + <a> nodes) that bubbles append in order. Stops the
 // "can't tap the link" friction.
 function linkifyTo(parent, text) {
-  const urlRe = /\bhttps?:\/\/[^\s<>"']+/gi;
+  // Match https?:// URLs AND bare domains (hitthe.link/... xlrd.org/... etc)
+  const urlRe = /\bhttps?:\/\/[^\s<>"']+|\b(?:[a-z0-9-]+\.)+(?:link|org|com|io|app|dev|net|ai)[/\w.?=&#%-]*/gi;
   let last = 0;
   let m;
   while ((m = urlRe.exec(text)) !== null) {
     if (m.index > last) parent.appendChild(document.createTextNode(text.slice(last, m.index)));
     const a = document.createElement('a');
-    a.href = m[0];
+    a.href = m[0].startsWith('http') ? m[0] : 'https://' + m[0];
     a.target = '_blank';
     a.rel = 'noopener noreferrer';
     a.textContent = m[0];
-    a.style.cssText = 'color:#0099ff;text-decoration:underline;word-break:break-all';
+    a.style.cssText = 'color:#00ff88;text-decoration:underline;font-weight:600;word-break:break-all';
     parent.appendChild(a);
     last = m.index + m[0].length;
   }
@@ -1825,6 +1826,19 @@ function _unlockAvaAudio() {
     if (_avaCtx.state === 'suspended') _avaCtx.resume();
     // Keep-alive removed - was causing second audio path
   } catch (_) {}
+  // MediaSession API — tells iOS this page is a media player so AudioContext
+  // stays alive when the page backgrounds (iOS background audio fix 2026-05-30).
+  if ('mediaSession' in navigator) {
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: 'Xen',
+        artist: 'SelfOwn OS',
+        album: 'VVS',
+      });
+      navigator.mediaSession.setActionHandler('play', function() {});
+      navigator.mediaSession.setActionHandler('pause', function() {});
+    } catch (_) {}
+  }
   // Also arm the <audio> element as a backup path.
   const a = _ensureAvaAudio();
   try { a.src = _AVA_SILENT; const p = a.play(); if (p && p.then) p.then(() => { _avaAudioUnlocked = true; _renderAvaPill(); }).catch(() => {}); } catch (_) {}
@@ -1871,16 +1885,17 @@ function _avaDrain() {
       _avaCurrentSource = src;  // track for barge-in
       src.buffer = decoded;
       src.connect(_avaCtx.destination);
-      src.onended = () => { if (_avaCurrentSource === src) _avaCurrentSource = null; _avaPlaying = false; _avaStatus = _avaQueue.length ? ('queued '+_avaQueue.length) : 'idle'; _hudSpoke++; _renderAvaPill(); _avaDrain(); };
+      src.onended = () => { if (_avaCurrentSource === src) _avaCurrentSource = null; _avaPlaying = false; _avaStatus = _avaQueue.length ? ('queued '+_avaQueue.length) : 'idle'; _hudSpoke++; _renderAvaPill(); try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; } catch (_) {} _avaDrain(); };
       src.start(0);
+      try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; } catch (_) {}
       _avaStatus = 'playing'; _hud('PLAYING via WebAudio'); _renderAvaPill();
     }).catch(e => {
       // Retry once on decode failure (transient TTS server partial chunk)
       if (e.message && e.message.includes('Decoding')) {
         fetch(url + '&_r=1', { cache: 'no-cache' }).then(r => r.arrayBuffer()).then(buf => _avaCtx.decodeAudioData(buf.slice(0))).then(decoded => {
           const src = _avaCtx.createBufferSource(); _avaCurrentSource = src; src.buffer = decoded; src.connect(_avaCtx.destination);
-          src.onended = () => { if (_avaCurrentSource === src) _avaCurrentSource = null; _avaPlaying = false; _avaStatus = 'idle'; _hudSpoke++; _renderAvaPill(); _avaDrain(); };
-          src.start(0); _avaStatus = 'playing(retry)'; _renderAvaPill();
+          src.onended = () => { if (_avaCurrentSource === src) _avaCurrentSource = null; _avaPlaying = false; _avaStatus = 'idle'; _hudSpoke++; _renderAvaPill(); try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; } catch (_) {} _avaDrain(); };
+          src.start(0); try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; } catch (_) {} _avaStatus = 'playing(retry)'; _renderAvaPill();
         }).catch(() => { _avaPlaying = false; _avaStatus = 'decode-err'; _avaTelemetry('WebAudio err(retry): '+e.message); _renderAvaPill(); _avaDrain(); });
         return;
       }
@@ -1888,8 +1903,8 @@ function _avaDrain() {
     });
   } else {
     const a = _ensureAvaAudio();
-    a.onplaying = () => { _avaStatus = 'playing'; _hudSpoke++; _renderAvaPill(); };
-    a.onended   = () => { _avaPlaying = false; _avaStatus = _avaQueue.length ? ('queued '+_avaQueue.length) : 'idle'; _renderAvaPill(); _avaDrain(); };
+    a.onplaying = () => { _avaStatus = 'playing'; _hudSpoke++; _renderAvaPill(); try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; } catch (_) {} };
+    a.onended   = () => { _avaPlaying = false; _avaStatus = _avaQueue.length ? ('queued '+_avaQueue.length) : 'idle'; _renderAvaPill(); try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; } catch (_) {} _avaDrain(); };
     a.onerror   = () => { _avaPlaying = false; _avaStatus = 'audio-err'; _avaTelemetry('audio-err fallback'); _renderAvaPill(); _avaDrain(); };
     a.src = url;
     const p = a.play();

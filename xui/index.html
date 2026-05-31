@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XUI — SelfOwn OS</title>
+<style>
+:root{--g:#00ff88;--g2:#00cc66;--glass:rgba(0,255,136,0.08);--glass2:rgba(0,255,136,0.14);--dark:#050a07;--panel:rgba(6,14,10,0.95);--border:rgba(0,255,136,0.18);--border2:rgba(0,255,136,0.35);--text:rgba(255,255,255,0.92);--sub:rgba(255,255,255,0.42);--red:#ff4466;--amber:#ffaa00;--blue:#44aaff;--purple:#aa44ff;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;background:var(--dark);font-family:'SF Pro Display','Segoe UI',system-ui,sans-serif;color:var(--text);overflow:hidden;}
+#xos{display:grid;grid-template-rows:32px 1fr 52px;grid-template-columns:272px 1fr 308px;width:100vw;height:100vh;gap:1px;background:rgba(0,255,136,0.06);}
+
+/* TOPBAR */
+#topbar{grid-column:1/-1;display:flex;align-items:center;gap:14px;background:rgba(6,14,10,0.99);padding:0 14px;border-bottom:1px solid var(--border);z-index:100;}
+.logo{font-size:13px;font-weight:700;letter-spacing:4px;color:var(--g);display:flex;align-items:center;gap:7px;}
+.ldot{width:6px;height:6px;border-radius:50%;background:var(--g);box-shadow:0 0 8px var(--g);animation:pulse 2s infinite;}
+.persona-bar{display:flex;gap:5px;margin-left:auto;}
+.pp{padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid transparent;transition:all .15s;letter-spacing:.5px;}
+.pp.qi{border-color:var(--g);color:var(--g);background:rgba(0,255,136,0.07);}
+.pp.lyn{border-color:#ff88cc;color:#ff88cc;background:rgba(255,136,204,0.07);}
+.pp.eli{border-color:#44aaff;color:#44aaff;background:rgba(68,170,255,0.07);}
+.pp.dim{opacity:.45;}
+#sys-time{font-size:11px;color:var(--sub);font-variant-numeric:tabular-nums;margin-left:10px;}
+.liveind{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--g);padding:3px 8px;border-radius:99px;border:1px solid rgba(0,255,136,0.18);background:rgba(0,255,136,0.04);}
+
+/* PANELS */
+.panel{background:var(--panel);display:flex;flex-direction:column;overflow:hidden;position:relative;}
+.phdr{padding:9px 13px 7px;font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--g);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.phdr .badge{margin-left:auto;background:var(--red);color:#fff;font-size:8px;font-weight:800;padding:1px 6px;border-radius:99px;min-width:16px;text-align:center;display:none;}
+.phdr .badge.show{display:inline-block;}
+.phdr .dot-ok{width:5px;height:5px;border-radius:50%;background:var(--g);}
+.phdr .dot-err{width:5px;height:5px;border-radius:50%;background:var(--red);}
+
+/* LEFT - INBOX */
+#left{grid-row:2;grid-column:1;border-right:1px solid var(--border);}
+.itabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;}
+.itab{flex:1;padding:6px 3px;text-align:center;font-size:8px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+.itab.on{color:var(--g);border-bottom-color:var(--g);}
+.ilist{flex:1;overflow-y:auto;}
+.ilist::-webkit-scrollbar{width:2px;}.ilist::-webkit-scrollbar-thumb{background:var(--border2);border-radius:1px;}
+.mrow{padding:9px 13px;border-bottom:1px solid rgba(0,255,136,0.05);cursor:pointer;transition:background .1s;display:flex;flex-direction:column;gap:3px;border-left:2px solid transparent;}
+.mrow:hover{background:var(--glass);}
+.mrow.unread{border-left-color:var(--g);}
+.mrow.urgent{border-left-color:var(--red);}
+.mfrom{font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px;}
+.mts{margin-left:auto;font-size:9px;color:var(--sub);font-weight:400;}
+.mprev{font-size:10px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mtags{display:flex;gap:3px;}
+.mtag{font-size:7px;padding:1px 4px;border-radius:2px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;}
+.mtag.gv{background:rgba(68,170,255,0.18);color:#44aaff;}
+.mtag.wa{background:rgba(0,255,136,0.12);color:#00cc66;}
+.mtag.sms{background:rgba(255,170,0,0.18);color:#ffaa00;}
+.mtag.im{background:rgba(170,68,255,0.18);color:#aa44ff;}
+.mtag.ai{background:rgba(0,255,136,0.25);color:#00ff88;}
+.empty-state{padding:24px;text-align:center;font-size:11px;color:var(--sub);}
+
+/* CENTER - VEINOM */
+#center{grid-row:2;grid-column:2;}
+.vtabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;padding:0 8px;flex-shrink:0;}
+.vtabs::-webkit-scrollbar{height:0;}
+.vtab{padding:7px 12px 5px;font-size:10px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--sub);transition:all .2s;white-space:nowrap;border-radius:4px 4px 0 0;margin-top:3px;}
+.vtab.on{color:var(--g);border-bottom-color:var(--g);background:var(--glass2);}
+.vtab:hover:not(.on){color:var(--text);}
+.vbody{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
+.msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;}
+.msgs::-webkit-scrollbar{width:2px;}.msgs::-webkit-scrollbar-thumb{background:var(--border2);border-radius:1px;}
+.bbl{max-width:84%;padding:9px 13px;border-radius:11px;font-size:12px;line-height:1.55;word-break:normal;overflow-wrap:break-word;hyphens:none;animation:fadeIn .25s ease;}
+.bbl.xen{background:var(--glass2);border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:3px;}
+.bbl.qi{background:rgba(0,255,136,0.13);border:1px solid rgba(0,255,136,0.28);align-self:flex-end;border-bottom-right-radius:3px;color:#e8ffe4;}
+.bbl .sndr{font-size:8px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;opacity:.6;}
+.bbl.xen .sndr{color:var(--g);}
+.bbl.qi .sndr{color:rgba(255,255,255,.65);text-align:right;}
+.bbl .bts{font-size:8px;opacity:.3;margin-top:3px;}
+.cin-area{padding:10px 13px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;}
+.cin{flex:1;background:rgba(0,255,136,0.05);border:1px solid var(--border2);border-radius:9px;padding:9px 12px;color:var(--text);font-size:12px;resize:none;outline:none;font-family:inherit;min-height:38px;max-height:110px;}
+.cin::placeholder{color:var(--sub);}
+.sbtn{width:34px;height:34px;border-radius:9px;background:var(--g);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;color:#000;font-weight:900;flex-shrink:0;transition:all .15s;}
+.sbtn:hover{background:#00ffaa;transform:scale(1.05);}
+.vbtn{width:34px;height:34px;border-radius:9px;background:var(--glass2);border:1px solid var(--border2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;transition:all .15s;color:var(--g);}
+.vbtn.on{background:rgba(255,68,102,.18);border-color:var(--red);animation:pulse 1s infinite;}
+
+/* XOS2 */
+#xos2{position:absolute;bottom:0;left:0;right:0;background:rgba(0,8,4,.97);border-top:1px solid var(--g);font-family:'SF Mono','Cascadia Code',monospace;font-size:10px;padding:8px 12px;max-height:150px;overflow-y:auto;display:none;z-index:50;}
+#xos2.on{display:block;}
+#xos2::-webkit-scrollbar{width:2px;}.#xos2::-webkit-scrollbar-thumb{background:var(--border2);}
+.xl{color:#00ff88;line-height:1.8;}
+.xl.d{color:rgba(0,255,136,.35);}
+.xl.w{color:var(--amber);}
+.xl.e{color:var(--red);}
+.xos2-btn{position:absolute;top:7px;right:7px;background:var(--glass2);border:1px solid var(--border);border-radius:5px;padding:2px 7px;font-size:8px;color:var(--g);cursor:pointer;font-weight:800;letter-spacing:1px;z-index:51;}
+
+/* RIGHT - DIALER */
+#right{grid-row:2;grid-column:3;border-left:1px solid var(--border);}
+.rtabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;}
+.rtab{flex:1;padding:7px 3px;text-align:center;font-size:8px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+.rtab.on{color:var(--g);border-bottom-color:var(--g);}
+.ddisp{margin:10px 12px 3px;background:var(--glass);border:1px solid var(--border);border-radius:9px;padding:11px 12px;font-size:18px;font-weight:300;letter-spacing:2px;min-height:44px;color:var(--g);display:flex;align-items:center;gap:6px;}
+.dnum{flex:1;}
+.bksp{background:none;border:none;color:var(--sub);font-size:16px;cursor:pointer;padding:3px;}
+.dpad{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:8px 12px;flex-shrink:0;}
+.dk{aspect-ratio:1;border-radius:10px;background:var(--glass2);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .1s;user-select:none;}
+.dk:hover{background:var(--glass);border-color:var(--border2);transform:scale(.97);}
+.dk:active{transform:scale(.9);background:rgba(0,255,136,.18);}
+.dkn{font-size:18px;font-weight:500;line-height:1;}
+.dka{font-size:6px;letter-spacing:1.2px;color:var(--sub);margin-top:1px;}
+.dacts{display:flex;gap:7px;padding:0 12px 10px;}
+.cbtn{flex:1;padding:11px;border-radius:10px;border:none;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;}
+.cbtn.g{background:var(--g);color:#000;}
+.cbtn.g:hover{background:#00ffaa;}
+.cbtn.r{background:rgba(255,68,102,.18);color:var(--red);border:1px solid var(--red);}
+.recents-hdr{border-top:1px solid var(--border);}
+.clist{flex:1;overflow-y:auto;}
+.clist::-webkit-scrollbar{width:2px;}.clist::-webkit-scrollbar-thumb{background:var(--border2);}
+.crow{padding:9px 12px;border-bottom:1px solid rgba(0,255,136,.05);cursor:pointer;transition:background .1s;display:flex;align-items:center;gap:9px;}
+.crow:hover{background:var(--glass);}
+.av{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;background:var(--glass2);}
+.ci .cn{font-size:12px;font-weight:600;}
+.ci .cp{font-size:9px;color:var(--sub);}
+.cacts{margin-left:auto;display:flex;gap:5px;}
+.ibtn{width:26px;height:26px;border-radius:7px;border:1px solid var(--border);background:var(--glass);display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;transition:all .15s;}
+.ibtn:hover{border-color:var(--g);background:var(--glass2);}
+
+/* BOTTOM SWIPE GLASS */
+#swipe{grid-column:1/-1;background:rgba(6,14,10,0.97);border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;padding:0 14px;position:relative;overflow:hidden;}
+#swipe::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--g),transparent);opacity:.35;}
+#agent-roster{display:flex;gap:7px;align-items:center;overflow-x:auto;flex:1;}
+#agent-roster::-webkit-scrollbar{height:0;}
+.achip{display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:99px;border:1px solid var(--border);background:var(--glass);font-size:9px;font-weight:700;cursor:default;white-space:nowrap;}
+.achip .ad{width:4px;height:4px;border-radius:50%;}
+.achip.up{border-color:rgba(0,255,136,.3);color:var(--g);}
+.achip.up .ad{background:var(--g);box-shadow:0 0 5px var(--g);animation:pulse 2s infinite;}
+.achip.dn{border-color:rgba(255,68,102,.2);color:var(--red);opacity:.7;}
+.achip.dn .ad{background:var(--red);}
+.sdiv{width:1px;height:28px;background:var(--border);flex-shrink:0;}
+.spills{display:flex;gap:6px;flex-shrink:0;}
+.spill{padding:4px 10px;border-radius:99px;font-size:9px;font-weight:700;border:1px solid var(--border);cursor:pointer;transition:all .15s;letter-spacing:.3px;}
+.spill:hover{border-color:var(--g);color:var(--g);}
+.spill.on{background:var(--g);color:#000;border-color:var(--g);}
+
+/* CALL OVERLAY */
+#call-ov{position:fixed;top:0;left:0;right:0;bottom:0;z-index:200;background:rgba(0,8,4,.94);backdrop-filter:blur(14px);display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;}
+#call-ov.on{display:flex;}
+.cring{width:88px;height:88px;border-radius:50%;border:2px solid var(--g);display:flex;align-items:center;justify-content:center;font-size:36px;box-shadow:0 0 36px rgba(0,255,136,.25);animation:pulse 2s infinite;}
+.cname{font-size:28px;font-weight:300;letter-spacing:1.5px;}
+.ctimer{font-size:13px;color:var(--sub);font-variant-numeric:tabular-nums;}
+.cctls{display:flex;gap:14px;}
+.cctl{width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;font-size:18px;transition:all .15s;}
+.cctl.end{background:var(--red);color:#fff;}
+.cctl.mute{background:var(--glass2);border:1px solid var(--border);}
+.cctl.mute.on{background:rgba(255,68,102,.18);border-color:var(--red);}
+
+/* ANIMATIONS */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+*{scrollbar-width:thin;scrollbar-color:rgba(0,255,136,.15) transparent;}
+</style>
+</head>
+<body>
+<div id="xos">
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <div class="logo"><div class="ldot"></div>SelfOwn <span style="opacity:.28;font-size:9px;font-weight:400;letter-spacing:1px;margin-left:2px">XOS 2</span></div>
+  <div class="liveind" id="sse-ind"><div class="ldot" id="sse-dot" style="width:4px;height:4px;background:var(--red);box-shadow:none;"></div><span id="sse-label">SSE</span></div>
+  <div class="persona-bar">
+    <div class="pp qi" onclick="setPersona('qi')">QI</div>
+    <div class="pp lyn dim" onclick="setPersona('lyn')">LYN</div>
+    <div class="pp eli dim" onclick="setPersona('eli')">ELI</div>
+  </div>
+  <div id="sys-time" style="font-size:11px;color:var(--sub);font-variant-numeric:tabular-nums;"></div>
+</div>
+
+<!-- LEFT INBOX -->
+<div id="left" class="panel">
+  <div class="phdr">Omni Inbox <span class="badge" id="inbox-badge"></span></div>
+  <div class="itabs">
+    <div class="itab on" onclick="switchITab(this,'all')">All</div>
+    <div class="itab" onclick="switchITab(this,'gv')">GV</div>
+    <div class="itab" onclick="switchITab(this,'wa')">WA</div>
+    <div class="itab" onclick="switchITab(this,'sms')">SMS</div>
+  </div>
+  <div class="ilist" id="ilist"><div class="empty-state" id="inbox-empty">Loading threads...</div></div>
+</div>
+
+<!-- CENTER VEINOM -->
+<div id="center" class="panel">
+  <div class="vtabs">
+    <div class="vtab on" onclick="switchVTab(this,'chat')">VEINOM</div>
+    <div class="vtab" onclick="switchVTab(this,'health')">Health</div>
+    <div class="vtab" onclick="switchVTab(this,'usage')">Usage</div>
+  </div>
+  <div class="vbody" id="vbody">
+    <div class="msgs" id="msgs" style="display:flex;"></div>
+    <div id="health-panel" style="display:none;flex:1;overflow-y:auto;padding:14px;"></div>
+    <div id="usage-panel" style="display:none;flex:1;overflow-y:auto;padding:14px;"></div>
+    <div class="cin-area">
+      <button class="vbtn" id="vbtn" onclick="toggleVoice()" title="Voice">&#127908;</button>
+      <textarea class="cin" id="cin" placeholder="Type or speak to Xen..." rows="1" onkeydown="handleKey(event)"></textarea>
+      <button class="sbtn" onclick="sendMsg()">&#8679;</button>
+    </div>
+    <div id="xos2"></div>
+    <button class="xos2-btn" onclick="toggleXOS2()">XOS2</button>
+  </div>
+</div>
+
+<!-- RIGHT DIALER -->
+<div id="right" class="panel">
+  <div class="rtabs">
+    <div class="rtab on" onclick="switchRTab(this,'dialer')">Dialer</div>
+    <div class="rtab" onclick="switchRTab(this,'contacts')">Contacts</div>
+  </div>
+  <div id="r-dialer">
+    <div class="ddisp"><div class="dnum" id="dnum">&#8203;</div><button class="bksp" onclick="bksp()">&#9003;</button></div>
+    <div class="dpad" id="dpad"></div>
+    <div class="dacts">
+      <button class="cbtn g" onclick="doCall()">&#9658; Call</button>
+      <button class="cbtn r" onclick="clrDial()">Clear</button>
+    </div>
+    <div class="phdr recents-hdr">Recents</div>
+    <div class="ilist" id="recents-list"></div>
+  </div>
+  <div id="r-contacts" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+    <div style="padding:9px 12px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <input type="text" id="csearch" placeholder="Search contacts..." style="width:100%;background:var(--glass);border:1px solid var(--border);border-radius:7px;padding:6px 9px;color:var(--text);font-size:11px;outline:none;" oninput="renderContacts(this.value)">
+    </div>
+    <div class="clist" id="clist"></div>
+  </div>
+</div>
+
+<!-- BOTTOM SWIPE -->
+<div id="swipe">
+  <div id="agent-roster"></div>
+  <div class="sdiv"></div>
+  <div class="spills">
+    <div class="spill on">Voice</div>
+    <div class="spill on">SMS</div>
+    <div class="spill on">Vision</div>
+    <div class="spill" onclick="this.classList.toggle('on')">PGS</div>
+  </div>
+</div>
+
+</div><!-- #xos -->
+
+<!-- CALL OVERLAY -->
+<div id="call-ov">
+  <div class="cring">&#128222;</div>
+  <div class="cname" id="call-name">Unknown</div>
+  <div class="ctimer" id="call-timer">0:00</div>
+  <div class="cctls">
+    <button class="cctl mute" id="mute-btn" onclick="toggleMute()">&#128263;</button>
+    <button class="cctl end" onclick="endCall()">&#128222;</button>
+  </div>
+</div>
+
+<script>
+const API = 'https://api.xlrd.org';
+const LOCAL = API; // all requests go through tunnel — localhost never reachable from device
+
+// --- STATE ---
+let dialStr='', xos2On=false, callActive=false, callSecs=0, callInterval=null, muted=false;
+let threads=[], contacts=[], healthData={}, usageData={};
+let persona='qi', currentVTab='chat', currentRTab='dialer';
+let xos2Lines=[];
+
+// --- CLOCK ---
+setInterval(()=>{document.getElementById('sys-time').textContent=new Date().toLocaleTimeString('en-US',{hour12:false});},1000);
+document.getElementById('sys-time').textContent=new Date().toLocaleTimeString('en-US',{hour12:false});
+
+// --- SSE ---
+let sseConnected=false;
+function connectSSE(){
+  const dot=document.getElementById('sse-dot'), lbl=document.getElementById('sse-label');
+  dot.style.background='var(--amber)'; dot.style.boxShadow='none';
+  let caught=false;
+  const es=new EventSource(API+'/events');
+  es.addEventListener('open',()=>{
+    dot.style.background='var(--g)'; dot.style.boxShadow='0 0 5px var(--g)'; dot.style.animation='pulse 2s infinite';
+    lbl.textContent='LIVE'; sseConnected=true;
+  });
+  es.addEventListener('caught-up',()=>{ caught=true; xlog('SSE: caught-up','d'); });
+  es.addEventListener('xen-out',e=>{
+    if(!caught)return;
+    try{
+      const d=JSON.parse(e.data);
+      const txt=(d.text||d.message||'').replace(/^Xen:\s*/,'').trim();
+      if(!txt)return;
+      addBubble('xen',txt);
+      xlog('xen-out: '+txt.slice(0,70));
+    }catch{}
+  });
+  es.addEventListener('xen-dictate-in',e=>{
+    try{
+      const d=JSON.parse(e.data);
+      const txt=(d.text||'').trim();
+      if(txt) addBubble('qi',txt);
+    }catch{}
+  });
+  es.addEventListener('vision:change',()=>{
+    dot.style.animation='pulse 0.3s ease';
+    setTimeout(()=>dot.style.animation='pulse 2s infinite',400);
+  });
+  es.addEventListener('beeper-inbound',e=>{
+    try{
+      const d=JSON.parse(e.data);
+      addThread({from:d.sender_name||d.from||'Unknown',preview:d.text||d.body||'',ts:'now',src:guessSource(d),unread:true,urgent:false});
+    }catch{}
+  });
+  es.addEventListener('beside-inbound',e=>{
+    try{
+      const d=JSON.parse(e.data);
+      addThread({from:d.from||d.sender||'Unknown',preview:d.body||d.text||'',ts:'now',src:'sms',unread:true,urgent:false});
+    }catch{}
+  });
+  es.onerror=()=>{
+    dot.style.background='var(--red)'; dot.style.boxShadow='none'; dot.style.animation='none';
+    lbl.textContent='SSE'; sseConnected=false;
+    es.close(); setTimeout(connectSSE,4000);
+  };
+}
+
+function guessSource(d){
+  if(d.src) return d.src;
+  const room=(d.room_id||d.chat_id||'').toLowerCase();
+  if(room.includes('whatsapp')) return 'wa';
+  if(room.includes('imessage')||room.includes('imsg')) return 'im';
+  if(d.via==='beeper') return 'wa';
+  return 'gv';
+}
+
+// --- HEALTH ---
+async function loadHealth(){
+  try{
+    const r=await fetch(API+'/api/health'); const d=await r.json();
+    healthData=d.checks||{};
+    renderHealth();
+    renderAgentRoster();
+    xlog('health: '+Object.values(healthData).filter(Boolean).length+' up','d');
+  }catch(e){xlog('health err: '+e.message,'e');}
+}
+
+function renderHealth(){
+  const p=document.getElementById('health-panel');
+  const checks=healthData;
+  let html='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
+  for(const [k,v] of Object.entries(checks)){
+    const ok=v===true||v>0;
+    html+=`<div style="padding:8px 10px;border-radius:7px;border:1px solid ${ok?'rgba(0,255,136,.2)':'rgba(255,68,102,.2)'};background:${ok?'rgba(0,255,136,.05)':'rgba(255,68,102,.05)'};display:flex;align-items:center;gap:6px;">
+      <div style="width:6px;height:6px;border-radius:50%;background:${ok?'var(--g)':'var(--red)'};${ok?'box-shadow:0 0 5px var(--g)':''}"></div>
+      <div>
+        <div style="font-size:10px;font-weight:600;color:${ok?'var(--text)':'var(--sub)'}">${k.replace(/_/g,' ')}</div>
+        <div style="font-size:8px;color:${ok?'var(--g)':'var(--red)'}">${typeof v==='number'?v:(v?'OK':'down')}</div>
+      </div>
+    </div>`;
+  }
+  html+='</div>';
+  p.innerHTML=html;
+}
+
+// --- USAGE ---
+async function loadUsage(){
+  try{
+    const r=await fetch(API+'/api/usage'); const d=await r.json();
+    usageData=d;
+    renderUsage();
+  }catch(e){xlog('usage err: '+e.message,'e');}
+}
+
+function renderUsage(){
+  const p=document.getElementById('usage-panel');
+  const d=usageData;
+  if(!d.ok){p.innerHTML='<div class="empty-state">No usage data</div>';return;}
+  p.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+      <div style="padding:12px;border-radius:9px;border:1px solid var(--border);background:var(--glass);">
+        <div style="font-size:9px;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Turns Today</div>
+        <div style="font-size:24px;font-weight:300;color:var(--g)">${d.turns_today||0}</div>
+      </div>
+      <div style="padding:12px;border-radius:9px;border:1px solid var(--border);background:var(--glass);">
+        <div style="font-size:9px;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Cost Today</div>
+        <div style="font-size:24px;font-weight:300;color:var(--g)">$${(d.cost_today_usd||0).toFixed(4)}</div>
+      </div>
+      <div style="padding:12px;border-radius:9px;border:1px solid var(--border);background:var(--glass);">
+        <div style="font-size:9px;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Last Hour</div>
+        <div style="font-size:24px;font-weight:300;color:var(--text)">${d.turns_last_1h||0}</div>
+      </div>
+      <div style="padding:12px;border-radius:9px;border:1px solid var(--border);background:var(--glass);">
+        <div style="font-size:9px;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Alert</div>
+        <div style="font-size:14px;font-weight:600;color:${d.alert_active?'var(--red)':'var(--g)'}">${d.alert_active?'ACTIVE':'Clear'}</div>
+      </div>
+    </div>
+    <div style="font-size:9px;color:var(--sub);margin-bottom:6px;letter-spacing:1px;text-transform:uppercase">24h Sparkline</div>
+    <canvas id="spark" height="40" style="width:100%;border-radius:6px;"></canvas>
+  `;
+  // Draw sparkline
+  const c=document.getElementById('spark');
+  if(c&&d.sparkline_turns_24h){
+    c.width=c.offsetWidth||240;
+    const ctx=c.getContext('2d');
+    const data=d.sparkline_turns_24h;
+    const max=Math.max(...data,1);
+    const w=c.width,h=c.height,step=w/data.length;
+    ctx.strokeStyle='rgba(0,255,136,0.6)';ctx.lineWidth=1.5;ctx.beginPath();
+    data.forEach((v,i)=>{
+      const x=i*step,y=h-(v/max)*(h-4)-2;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+  }
+}
+
+// --- THREADS ---
+async function loadThreads(){
+  try{
+    const r=await fetch(API+'/api/omni/threads'); const d=await r.json();
+    threads=(d.threads||[]);
+    renderInbox();
+    xlog('threads: '+threads.length,'d');
+  }catch(e){xlog('threads err: '+e.message,'e');}
+}
+
+function addThread(t){
+  threads.unshift(t);
+  renderInbox();
+  const b=document.getElementById('inbox-badge');
+  const n=threads.filter(x=>x.unread).length;
+  if(n>0){b.textContent=n;b.classList.add('show');}
+}
+
+let inboxFilter='all';
+function switchITab(el,f){
+  document.querySelectorAll('.itab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on'); inboxFilter=f; renderInbox();
+}
+
+function renderInbox(){
+  const list=document.getElementById('ilist');
+  const empty=document.getElementById('inbox-empty');
+  const filtered=threads.filter(t=>inboxFilter==='all'||t.src===inboxFilter);
+  if(filtered.length===0){
+    list.innerHTML='';
+    empty.style.display='';
+    empty.textContent=threads.length===0?'No threads yet — waiting for messages':'No threads in this filter';
+    return;
+  }
+  empty.style.display='none';
+  list.innerHTML=filtered.map((t,i)=>`
+    <div class="mrow${t.unread?' unread':''}${t.urgent?' urgent':''}" onclick="openThread(${i})">
+      <div class="mfrom">${escH(t.from||'Unknown')}<span class="mts">${escH(t.ts||'')}</span></div>
+      <div class="mprev">${escH(t.preview||'')}</div>
+      <div class="mtags"><span class="mtag ${t.src||'sms'}">${(t.src||'sms').toUpperCase()}</span></div>
+    </div>
+  `).join('');
+  const unread=threads.filter(x=>x.unread).length;
+  const b=document.getElementById('inbox-badge');
+  if(unread>0){b.textContent=unread;b.classList.add('show');}else{b.classList.remove('show');}
+}
+
+function openThread(i){
+  const t=threads[i];
+  if(t){t.unread=false;renderInbox();addBubble('xen','Opening thread: '+t.from);}
+}
+
+// --- CHAT ---
+function addBubble(role,text){
+  const msgs=document.getElementById('msgs');
+  const b=document.createElement('div');
+  b.className='bbl '+role;
+  const ts=new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  b.innerHTML=`<div class="sndr">${role.toUpperCase()}</div>${escH(text)}<div class="bts">${ts}</div>`;
+  msgs.appendChild(b);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}}
+async function sendMsg(){
+  const inp=document.getElementById('cin');
+  const txt=inp.value.trim(); if(!txt)return;
+  inp.value=''; addBubble('qi',txt);
+  try{
+    await fetch(API+'/api/dictate-inject',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:txt,source:'xui',persona})});
+    xlog('inject sent: '+txt.slice(0,50));
+  }catch(e){xlog('inject err: '+e.message,'e');}
+}
+
+// --- VOICE ---
+let voiceArmed=false;
+function toggleVoice(){
+  voiceArmed=!voiceArmed;
+  document.getElementById('vbtn').classList.toggle('on',voiceArmed);
+}
+
+// --- TAB SWITCHING ---
+function switchVTab(el,tab){
+  document.querySelectorAll('.vtab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on'); currentVTab=tab;
+  document.getElementById('msgs').style.display=tab==='chat'?'flex':'none';
+  document.getElementById('health-panel').style.display=tab==='health'?'block':'none';
+  document.getElementById('usage-panel').style.display=tab==='usage'?'block':'none';
+  if(tab==='health'){loadHealth();}
+  if(tab==='usage'){loadUsage();}
+}
+
+function switchRTab(el,tab){
+  document.querySelectorAll('.rtab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on'); currentRTab=tab;
+  document.getElementById('r-dialer').style.display=tab==='dialer'?'block':'none';
+  document.getElementById('r-contacts').style.display=tab==='contacts'?'flex':'none';
+  if(tab==='contacts')renderContacts('');
+}
+
+// --- PERSONA ---
+function setPersona(p){
+  persona=p;
+  document.querySelectorAll('.pp').forEach(el=>el.classList.add('dim'));
+  document.querySelector('.pp.'+p)?.classList.remove('dim');
+}
+
+// --- DIALER ---
+const DKEYS=[{n:'1',a:''},{n:'2',a:'ABC'},{n:'3',a:'DEF'},{n:'4',a:'GHI'},{n:'5',a:'JKL'},{n:'6',a:'MNO'},{n:'7',a:'PQRS'},{n:'8',a:'TUV'},{n:'9',a:'WXYZ'},{n:'*',a:''},{n:'0',a:'+'},{n:'#',a:''}];
+function buildPad(){
+  const pad=document.getElementById('dpad');
+  DKEYS.forEach(k=>{
+    const d=document.createElement('div');d.className='dk';
+    d.innerHTML=`<div class="dkn">${k.n}</div><div class="dka">${k.a}</div>`;
+    d.onclick=()=>pressKey(k.n); pad.appendChild(d);
+  });
+}
+function pressKey(k){dialStr+=k;document.getElementById('dnum').textContent=fmtDial(dialStr);}
+function bksp(){dialStr=dialStr.slice(0,-1);document.getElementById('dnum').textContent=fmtDial(dialStr)||'​';}
+function clrDial(){dialStr='';document.getElementById('dnum').textContent='​';}
+function fmtDial(s){
+  const d=s.replace(/\D/g,'');
+  if(d.length===10)return`+1 (${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
+  if(d.length===11&&d[0]==='1')return`+${d[0]} (${d.slice(1,4)}) ${d.slice(4,7)}-${d.slice(7)}`;
+  return s;
+}
+async function doCall(){
+  if(!dialStr){xlog('no number','w');return;}
+  const num=dialStr.replace(/\D/g,'');
+  xlog('call-start: '+num);
+  try{
+    await fetch(LOCAL+'/api/call-start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:num,from:'8672'})});
+  }catch{}
+  showCallOverlay(fmtDial(dialStr));
+}
+function showCallOverlay(name){
+  callActive=true;callSecs=0;muted=false;
+  document.getElementById('call-name').textContent=name;
+  document.getElementById('call-ov').classList.add('on');
+  clearInterval(callInterval);
+  callInterval=setInterval(()=>{callSecs++;document.getElementById('call-timer').textContent=fmtTime(callSecs);},1000);
+}
+async function endCall(){
+  clearInterval(callInterval);callActive=false;
+  document.getElementById('call-ov').classList.remove('on');
+  document.getElementById('call-timer').textContent='0:00';
+  try{await fetch(LOCAL+'/api/call-end',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reason:'user'})});}catch{}
+}
+function toggleMute(){muted=!muted;document.getElementById('mute-btn').classList.toggle('on',muted);}
+function fmtTime(s){const m=Math.floor(s/60);return`${m}:${String(s%60).padStart(2,'0')}`;}
+
+// --- CONTACTS (from health callers_db_count + static fallback) ---
+const KNOWN=[
+  {name:'Luckie Goggins',num:'+19432536011',tags:['wa','l7s'],av:'LG',color:'#ff88cc'},
+  {name:'Anthony Vasquez',num:'+18098098',tags:['wa','eli'],av:'AV',color:'#44aaff'},
+  {name:'East Allen GV',num:'+16142538672',tags:['gv'],av:'EA',color:'#00ff88'},
+];
+function renderContacts(q=''){
+  const list=document.getElementById('clist');
+  const shown=KNOWN.filter(c=>!q||c.name.toLowerCase().includes(q.toLowerCase()));
+  list.innerHTML=shown.map(c=>`
+    <div class="crow">
+      <div class="av" style="border-color:${c.color};color:${c.color}">${c.av}</div>
+      <div class="ci"><div class="cn">${escH(c.name)}</div><div class="cp">${escH(c.num)}</div></div>
+      <div class="cacts">
+        <div class="ibtn" title="Call" onclick="dialContact('${escH(c.num)}')">&#9742;</div>
+        <div class="ibtn" title="Message">&#128172;</div>
+      </div>
+    </div>
+  `).join('');
+}
+function dialContact(num){dialStr=num.replace(/\D/g,'');document.getElementById('dnum').textContent=fmtDial(dialStr);switchRTab(document.querySelector('.rtab'),'dialer');document.querySelector('.rtab').classList.add('on');}
+
+// --- AGENT ROSTER (from live health) ---
+function renderAgentRoster(){
+  const el=document.getElementById('agent-roster');
+  const checks=healthData;
+  const agents=[
+    {n:'Omni',k:'xen_say_worker',label:'4441'},
+    {n:'STT',k:'apple_stt',label:'ASR'},
+    {n:'Beside',k:'beside_inbox_poller',label:'SMS'},
+    {n:'iMsg',k:'imessage_watcher',label:'iM'},
+    {n:'Android',k:'beeper_android_bridge',label:'BDG'},
+    {n:'Caller',k:'xen_caller_context',label:'CTX'},
+    {n:'Audio',k:'audio_out',label:'OUT'},
+  ];
+  el.innerHTML=agents.map(a=>{
+    const up=checks[a.k]===true||checks[a.k]>0;
+    return`<div class="achip ${up?'up':'dn'}"><div class="ad"></div>${a.n} <span style="opacity:.4;font-size:8px">${a.label}</span></div>`;
+  }).join('');
+}
+
+// --- XOS2 ---
+function xlog(txt,cls=''){
+  const ts=new Date().toLocaleTimeString('en-US',{hour12:false});
+  xos2Lines.push({t:`[${ts}] ${txt}`,c:cls});
+  if(xos2Lines.length>200)xos2Lines.shift();
+  if(xos2On)reRenderXOS2();
+}
+function reRenderXOS2(){
+  const el=document.getElementById('xos2');
+  el.innerHTML=xos2Lines.slice(-60).map(l=>`<div class="xl ${l.c}">${escH(l.t)}</div>`).join('');
+  el.scrollTop=el.scrollHeight;
+}
+function toggleXOS2(){
+  xos2On=!xos2On;
+  const el=document.getElementById('xos2');
+  el.classList.toggle('on',xos2On);
+  if(xos2On)reRenderXOS2();
+}
+
+// --- UTILS ---
+function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// --- RECENTS (placeholder until call-log API exists) ---
+function renderRecents(){
+  document.getElementById('recents-list').innerHTML=`<div class="empty-state">No recent calls</div>`;
+}
+
+// --- INIT ---
+buildPad();
+renderRecents();
+renderAgentRoster();
+connectSSE();
+loadHealth();
+loadThreads();
+
+// Refresh health every 30s
+setInterval(()=>{loadHealth();loadThreads();},30000);
+// Refresh usage every 60s when on that tab
+setInterval(()=>{if(currentVTab==='usage')loadUsage();},60000);
+
+xlog('XUI live — '+new Date().toISOString());
+xlog('SSE connecting to api.xlrd.org/events...','d');
+</script>
+</body>
+</html>
