@@ -538,6 +538,8 @@
       entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } });
     }, { threshold: 0.12 });
     document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+    // fail-safe: nothing stays invisible — force-reveal any element still hidden after 2.5s (animation still plays on scroll before then)
+    setTimeout(function(){ document.querySelectorAll('.reveal:not(.in)').forEach(function(el){ el.classList.add('in'); }); }, 2500);
   });
 </script>
 </body>
