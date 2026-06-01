@@ -17,6 +17,12 @@
   <meta name="twitter:title" content="M_B · Southern Soul Artist">
   <meta name="twitter:description" content="M_B — Southern Soul Artist. Mane Family Mafia.">
 
+  <!-- Favicon · canonical · theme -->
+  <link rel="canonical" href="https://hitthe.link/mb/">
+  <meta name="theme-color" content="#050b1c">
+  <link rel="icon" type="image/jpeg" href="/mb/assets/mb-logo.jpg">
+  <link rel="apple-touch-icon" href="/mb/assets/mb-logo.jpg">
+
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
 
@@ -1015,7 +1021,7 @@
             <h3 class="text-2xl font-bold tracking-tight">King Of The Jungle</h3>
             <span class="font-mono text-xs text-subtle">09</span>
           </div>
-          <p class="text-base text-subtle mb-8">Statement of intent. Mane Family Mafia stomp.</p>
+          <p class="text-base text-subtle mb-8">Statement of intent.</p>
           <a href="https://distrokid.com/hyperfollow/mb64/king-of-the-jungle" target="_blank" class="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-widest border-b border-subtle pb-2 hover:text-white hover:border-white text-subtle transition-all w-max group-hover:gap-4">
             Listen
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.14645 3.14645C8.34171 2.95118 8.65829 2.95118 8.85355 3.14645L12.8536 7.14645C13.0488 7.34171 13.0488 7.65829 12.8536 7.85355L8.85355 11.8536C8.65829 12.0488 8.34171 12.0488 8.14645 11.8536C7.95118 11.6583 7.95118 11.3417 8.14645 11.1464L11.2929 8H2.5C2.22386 8 2 7.77614 2 7.5C2 7.22386 2.22386 7 2.5 7H11.2929L8.14645 3.85355C7.95118 3.65829 7.95118 3.34171 8.14645 3.14645Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
@@ -2200,5 +2206,23 @@
       </div>
     </div>
   </div>
+  <script>
+  /* Tour · auto-hide past dates so only upcoming shows display (2026 season). Fail-safe: show on any parse doubt — never hides a real upcoming gig. */
+  (function(){
+    var M={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+    var YEAR=2026, now=new Date(); now.setHours(0,0,0,0);
+    var rows=document.querySelectorAll('#tour .tour-row'), up=0, firstVisible=null;
+    rows.forEach(function(r){
+      var mEl=r.querySelector('.uppercase'), dEl=r.querySelector('.text-3xl');
+      if(!mEl||!dEl){ up++; if(!firstVisible)firstVisible=r; return; }
+      var mo=M[(mEl.textContent||'').trim().slice(0,3)], day=parseInt((dEl.textContent||'').trim(),10);
+      if(mo===undefined||isNaN(day)){ up++; if(!firstVisible)firstVisible=r; return; }
+      var d=new Date(YEAR,mo,day); d.setHours(23,59,59,0);
+      if(d<now){ r.style.display='none'; } else { up++; if(!firstVisible)firstVisible=r; }
+    });
+    if(firstVisible){ firstVisible.style.borderTop='none'; }
+    if(up===0){ var list=document.querySelector('#tour .divide-y'); if(list){ list.innerHTML='<div class="p-8 text-center text-subtle">New dates dropping soon &mdash; <a href="#book" class="underline text-white">book the show</a>.</div>'; } }
+  })();
+  </script>
 </body>
 </html>
