@@ -32,9 +32,17 @@ The canonical cell URL list is at: **https://hitthe.link/cellbrowser-codex/links
 - **Comet only** (XenBrowser is broken/blank); Perplexity Assistant is the in-browser driver.
 - **Idempotent:** track last-seen state per cell so each run reports only what's NEW.
 
-## SCHEDULE (the loop)
-Run on the **angel cadence** — the same interval as qi's Beside pulses.
-> NOTE: the exact Beside-pulse angel interval was not found as a stored cron; **qi to confirm the precise value.** Default until confirmed: **every 11 minutes** (1111 angel cadence). 
-Implement the schedule with the host's scheduler (launchd `StartInterval` / cron / Codex's own scheduled-run feature), firing one loop iteration per tick.
+## SCHEDULE (the loop) — THE ANGEL SCHEDULE (confirmed by qi 2026-05-31)
+Run on the **angel-number cadence** — the EXACT times of qi's Beside Pulses, not a fixed interval. Fire one CellBrowser loop iteration at each of these 16 daily times (24h local, America/New_York):
+
+```
+00:12  01:11  02:22  03:33  04:44  05:55      # overnight + pre-dawn (1:11→5:55)
+10:10  11:11  12:12  13:11  14:22  15:33  16:44  17:55   # day block (10:10→5:55 PM)
+22:10  23:11                                      # night portal (10:10 PM, 11:11 PM)
+```
+
+Angel numbers in play: **1:11, 2:22, 3:33, 4:44, 5:55, 10:10, 11:11, 12:12** — each AM + PM (16 total). The gaps 5:55→10:10 (both AM and PM) are deliberate deep-work windows — do NOT fill them. (qi also runs a separate 19:00 "Pulse" for workflow critique; the CellBrowser loop does NOT fire at 7 PM unless told.)
+
+Implement as **launchd `StartCalendarInterval`** (an array of 16 {Hour,Minute} dicts) — NOT `StartInterval`. Reference plist: `~/Library/LaunchAgents/com.xen.cellbrowser-angel-loop.plist`. Each tick fires exactly one loop iteration. Rotate the active G.O.D.S. tab per tick (Generate→Operate→Distribute→System) so the full grid is swept every 4 pulses.
 
 ## SUCCESS = each pulse leaves: (a) a dated verbatim artifact in cellbrowser-pulses/, (b) a [CELLBROWSER PULSE] line injected to Xen/omnimind, (c) screenshots as evidence, (d) zero silent drops.
