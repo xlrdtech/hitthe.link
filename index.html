@@ -3,875 +3,162 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>hitthe.link — Live Builds</title>
-<meta name="description" content="Live index of everything shipped on hitthe.link — auto-updating as new builds, sites, and apps go live.">
-<meta name="theme-color" content="#08080c">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800;900&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<title>hitthe.link — the store for everything we ship</title>
+<meta name="description" content="hitthe.link is the live store of every site, app, and tool shipped here — browse, search, and open them like apps. Auto-updating as new builds go live.">
+<meta name="theme-color" content="#0b0b0f">
+<meta property="og:title" content="hitthe.link">
+<meta property="og:description" content="The live store of everything we ship — browse and open builds like apps.">
+<meta property="og:type" content="website">
+<link rel="icon" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
 <style>
 :root{
-  --ink:#08080c;--ink2:#0f1016;--glass:rgba(20,22,30,.55);
-  --gold:#D2AC47;--gold-hi:#f7e08a;--gold-lo:#b9932d;
-  --text:#fff;--soft:#cdd4e0;--mute:#8b93a4;--line:rgba(210,172,71,.16);
+  --bg:#0b0b0f;--cell:#17171e;--cell-hi:#20202a;--text:#f5f6f8;--soft:#c4c8d2;--mute:#8a909e;
+  --line:rgba(255,255,255,.08);--accent:#0a84ff;--accent2:#5e9bff;--gold:#e6c25a;--r:22px;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--ink);color:var(--text);font-family:'Manrope',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+html{scroll-behavior:smooth}
+html,body{margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,"SF Pro Text","SF Pro Display","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 body{overflow-x:hidden}
 a{color:inherit;text-decoration:none}
-.mono{font-family:'JetBrains Mono',monospace}
-.amb{position:fixed;inset:0;z-index:-3;overflow:hidden;background:radial-gradient(130% 90% at 50% -10%,#15131d 0%,#0a0a0e 45%,#08080c 80%)}
-.amb i{position:absolute;border-radius:50%;filter:blur(100px);opacity:.5}
-.amb .a{width:60vw;height:60vw;left:-12vw;top:-18vw;background:radial-gradient(circle,#D2AC4733,transparent 70%);animation:d1 28s ease-in-out infinite}
-.amb .b{width:52vw;height:52vw;right:-15vw;top:32vh;background:radial-gradient(circle,#7b2cbf2e,transparent 70%);animation:d2 34s ease-in-out infinite}
-.amb .c{width:46vw;height:46vw;left:22vw;bottom:-20vw;background:radial-gradient(circle,#06b6d422,transparent 70%);animation:d1 40s ease-in-out infinite reverse}
-@keyframes d1{0%,100%{transform:translate(0,0)}50%{transform:translate(6vw,8vh)}}
-@keyframes d2{0%,100%{transform:translate(0,0)}50%{transform:translate(-7vw,-6vh)}}
-.grain{position:fixed;inset:0;z-index:-2;pointer-events:none;opacity:.04;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
-header{text-align:center;padding:64px 18px 8px calc(40px + env(safe-area-inset-top,0))}
-.kick{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.46em;text-transform:uppercase;color:var(--gold);font-weight:700;opacity:0;animation:up .8s ease .1s forwards}
-h1{font-family:'Cinzel',serif;font-weight:900;font-size:clamp(40px,10vw,82px);letter-spacing:.04em;line-height:1;margin:14px 0 0;
-  background:linear-gradient(180deg,#fff,var(--gold-hi) 50%,var(--gold-lo));-webkit-background-clip:text;background-clip:text;color:transparent;
-  text-shadow:0 0 50px rgba(210,172,71,.2);opacity:0;animation:up 1s ease .25s forwards}
-.sub{color:var(--soft);font-size:16px;max-width:560px;margin:16px auto 0;line-height:1.55;opacity:0;animation:up 1s ease .4s forwards}
-.live{display:inline-flex;align-items:center;gap:8px;margin-top:18px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700;opacity:0;animation:up 1s ease .55s forwards}
-.live .dot{width:8px;height:8px;border-radius:50%;background:#2effa0;box-shadow:0 0 10px #2effa0;animation:blink 2s ease-in-out infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
-@keyframes up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-.controls{max-width:1100px;margin:30px auto 0;padding:0 18px;display:flex;flex-direction:column;gap:14px;align-items:center}
-#q{width:min(560px,92vw);background:var(--glass);border:1px solid var(--line);border-radius:50px;color:#fff;font-family:'Manrope';font-size:15px;padding:14px 20px;backdrop-filter:blur(10px);outline:none;transition:.2s}
-#q:focus{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
-.cats{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-.cat{font-family:'JetBrains Mono',monospace;font-size:11.5px;padding:8px 15px;border-radius:50px;cursor:pointer;color:var(--mute);font-weight:700;background:var(--glass);border:1px solid var(--line);transition:.18s;letter-spacing:.04em}
-.cat:hover{color:#fff;border-color:var(--gold-lo)}
-.cat.on{background:linear-gradient(180deg,var(--gold-hi),var(--gold));color:#08080c;border-color:var(--gold-hi);box-shadow:0 0 20px -5px var(--gold)}
-main{max-width:1100px;margin:34px auto 0;padding:0 18px 90px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
-.card{position:relative;display:flex;flex-direction:column;min-height:148px;padding:22px;border-radius:18px;overflow:hidden;cursor:pointer;
-  background:var(--glass);backdrop-filter:blur(14px);border:1px solid var(--line);transition:transform .25s,border-color .25s,box-shadow .25s;
-  opacity:0;transform:translateY(16px);animation:up .5s ease forwards}
-.card:hover{transform:translateY(-4px);border-color:var(--gold);box-shadow:0 18px 44px -22px rgba(210,172,71,.4)}
-.card::before{content:'';position:absolute;inset:0;border-radius:18px;pointer-events:none;background:radial-gradient(120% 60% at 50% -10%,rgba(210,172,71,.08),transparent 60%)}
-.c-cat{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:11px}
-.c-title{font-size:18px;font-weight:800;letter-spacing:-.01em;line-height:1.2;margin-bottom:8px}
-.c-desc{font-size:12.5px;color:var(--mute);flex:1;line-height:1.5;margin-bottom:14px}
-.c-foot{display:flex;align-items:center;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--mute)}
-.c-go{color:var(--gold);font-weight:700}
-.c-new{font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:#08080c;background:linear-gradient(180deg,#2effa0,#16b870);padding:2px 7px;border-radius:50px;font-weight:700;position:absolute;top:16px;right:16px;box-shadow:0 0 12px -2px #2effa0}
-footer{text-align:center;color:var(--mute);font-family:'JetBrains Mono',monospace;font-size:10.5px;padding:30px 18px;letter-spacing:.1em;border-top:1px solid var(--line);max-width:1100px;margin:0 auto}
-footer .em{color:var(--gold)}
-.empty{text-align:center;color:var(--mute);padding:60px;font-family:'JetBrains Mono',monospace}
-@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+::-webkit-scrollbar{height:0;width:0}
+
+.bar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:14px;
+  padding:14px clamp(16px,5vw,40px);background:rgba(11,11,15,.72);backdrop-filter:saturate(160%) blur(20px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:-.02em}
+.brand .mk{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;overflow:hidden;
+  background:linear-gradient(145deg,#2a2a36,#0e0e14);border:1px solid var(--line);font-size:16px;color:var(--gold)}
+.brand .mk img{width:100%;height:100%;object-fit:cover}
+.brand .tld{color:var(--mute);font-weight:700}
+.bar .spacer{flex:1}
+.bar .count{font-size:12.5px;color:var(--mute);font-weight:600;display:flex;align-items:center;gap:7px}
+.bar .dot{width:7px;height:7px;border-radius:50%;background:#30d158;box-shadow:0 0 9px #30d158;animation:blink 2.4s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+
+.searchwrap{padding:18px clamp(16px,5vw,40px) 4px;max-width:1240px;margin:0 auto;width:100%}
+#q{width:100%;background:var(--cell);border:1px solid var(--line);border-radius:13px;color:#fff;font-size:16px;padding:13px 16px 13px 42px;outline:none;transition:.18s;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%238a909e' stroke-width='2'%3E%3Ccircle cx='8' cy='8' r='6'/%3E%3Cpath d='M13 13l4 4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:15px center}
+#q:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(10,132,255,.25)}
+
+main{max-width:1240px;margin:0 auto;padding:8px clamp(16px,5vw,40px) 90px}
+
+.feat{position:relative;display:flex;flex-direction:column;justify-content:flex-end;min-height:300px;border-radius:var(--r);overflow:hidden;padding:30px;margin:18px 0 8px;border:1px solid var(--line);isolation:isolate;color:#fff}
+.feat .lbl{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;opacity:.9;margin-bottom:8px}
+.feat h2{font-size:clamp(28px,5vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.04;margin:0 0 10px;max-width:16ch;text-shadow:0 2px 30px rgba(0,0,0,.4)}
+.feat p{font-size:15px;color:rgba(255,255,255,.9);max-width:54ch;margin:0 0 20px;line-height:1.5}
+.feat .ficon{position:absolute;top:26px;right:26px;width:74px;height:74px;border-radius:18px;display:grid;place-items:center;font-size:30px;font-weight:800;color:#fff;border:1px solid rgba(255,255,255,.25);box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden}
+.feat .ficon img{width:100%;height:100%;object-fit:cover}
+.feat .pill{display:inline-block;background:rgba(255,255,255,.95);color:#0b0b0f;font-weight:800;font-size:14px;padding:9px 22px;border-radius:50px}
+.feat::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.62))}
+
+.sec{margin-top:34px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;margin:0 0 14px}
+.sec-h h3{font-size:23px;font-weight:800;letter-spacing:-.02em;margin:0}
+.sec-h .all{font-size:13px;color:var(--mute);font-weight:600}
+.shelf{display:grid;grid-auto-flow:column;grid-auto-columns:300px;gap:14px;overflow-x:auto;scroll-snap-type:x proximity;padding:2px 1px 8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+
+.app{display:flex;align-items:center;gap:14px;background:var(--cell);border:1px solid var(--line);border-radius:18px;padding:14px;scroll-snap-align:start;transition:transform .2s,background .2s,border-color .2s;position:relative;min-width:0}
+.app:hover{background:var(--cell-hi);transform:translateY(-2px);border-color:rgba(255,255,255,.16)}
+.icon{flex:0 0 auto;width:60px;height:60px;border-radius:14px;display:grid;place-items:center;font-size:23px;font-weight:800;color:#fff;letter-spacing:-.02em;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 4px 12px rgba(0,0,0,.3);overflow:hidden}
+.icon img{width:100%;height:100%;object-fit:cover}
+.meta{flex:1;min-width:0}
+.meta .nm{font-size:15px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta .ds{font-size:12.5px;color:var(--mute);line-height:1.35;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.get{flex:0 0 auto;align-self:center;background:var(--cell-hi);color:var(--accent2);font-weight:800;font-size:13px;padding:7px 16px;border-radius:50px;border:1px solid var(--line);transition:.15s}
+.app:hover .get{background:var(--accent);color:#fff;border-color:var(--accent)}
+.new{position:absolute;top:9px;left:9px;font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#0b0b0f;background:#30d158;padding:2px 6px;border-radius:50px}
+
+.empty{text-align:center;color:var(--mute);padding:70px 0;font-size:15px}
+footer{text-align:center;color:var(--mute);font-size:12px;padding:34px 18px;border-top:1px solid var(--line);max-width:1240px;margin:0 auto}
+footer .em{color:var(--soft)}
+@media(max-width:640px){.shelf{grid-auto-columns:84vw}.feat .ficon{width:56px;height:56px;font-size:22px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<div class="amb"><i class="a"></i><i class="b"></i><i class="c"></i></div>
-<div class="grain"></div>
-<header>
-  <div class="kick">xlrd · Executive Leverage R&amp;D</div>
-  <h1>hitthe.link</h1>
-  <p class="sub">The live index of everything shipped here — auto-updating the moment a new build, site, or app goes live.</p>
-  <div class="live"><span class="dot"></span><span id="livecount">loading…</span></div>
-</header>
-<div class="controls">
-  <input id="q" type="search" placeholder="Search builds, sites, apps…" autocomplete="off">
-  <div class="cats" id="cats"></div>
+<div class="bar">
+  <a class="brand" href="/"><span class="mk" id="brandmk">↗</span><b>hitthe</b><span class="tld">.link</span></a>
+  <span class="spacer"></span>
+  <span class="count"><span class="dot"></span><span id="livecount">loading…</span></span>
 </div>
-<main><div class="grid" id="grid"></div><div class="empty" id="empty" style="display:none">No matches.</div></main>
-<footer>Auto-generated from <span class="em">sites.json</span> · regenerated on every deploy · <span class="em" id="gen"></span></footer>
-<script>
-let SITES=[],cat='All',q='';
-const grid=document.getElementById('grid'),cats=document.getElementById('cats'),empty=document.getElementById('empty');
-const recent=(iso)=>{ if(!iso)return false; return (Date.now()-new Date(iso).getTime()) < 5*864e5; };
-function esc(t){const d=document.createElement('div');d.textContent=t||'';return d.innerHTML;}
-function render(){
-  const f=SITES.filter(s=>(cat==='All'||s.category===cat)&&(q===''||(s.title+' '+s.desc+' '+s.slug).toLowerCase().includes(q)));
-  empty.style.display=f.length?'none':'block';
-  grid.innerHTML=f.map((s,i)=>'<a class="card" href="'+s.url+'" style="animation-delay:'+(Math.min(i,12)*.04)+'s">'+
-    (recent(s.updated)?'<span class="c-new">New</span>':'')+
-    '<div class="c-cat">'+esc(s.category)+'</div>'+
-    '<div class="c-title">'+esc(s.title)+'</div>'+
-    '<div class="c-desc">'+esc(s.desc)+'</div>'+
-    '<div class="c-foot"><span>'+esc(s.slug)+'</span><span class="c-go">open →</span></div>'+
-  '</a>').join('');
-}
-fetch('sites.json?v='+Date.now()).then(r=>r.json()).then(d=>{
-  SITES=d.sites||[];
-  document.getElementById('livecount').textContent=SITES.length+' live builds';
-  if(d.generated)document.getElementById('gen').textContent=new Date(d.generated).toLocaleDateString();
-  const cs=['All',...Array.from(new Set(SITES.map(s=>s.category))).sort()];
-  cats.innerHTML=cs.map(c=>'<span class="cat'+(c==='All'?' on':'')+'" data-c="'+esc(c)+'">'+esc(c)+'</span>').join('');
-  cats.querySelectorAll('.cat').forEach(el=>el.onclick=()=>{cat=el.dataset.c;cats.querySelectorAll('.cat').forEach(x=>x.classList.toggle('on',x===el));render();});
-  render();
-}).catch(()=>{document.getElementById('livecount').textContent='index unavailable';});
-document.getElementById('q').addEventListener('input',e=>{q=e.target.value.toLowerCase().trim();render();});
-</script>
 
-<!-- AUTO:PROJECTS:START -->
-    <section class="auto-projects" aria-label="All projects (auto-detected)">
-      <h2 class="auto-projects-heading">All Projects · 93 subpages</h2>
-      <div class="auto-projects-grid">
-      <a href="/12step/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">C.A.R.E. Sales Assessment ‚Äî 12-Step Call Form</h3>
-        </div>
-        
-        <span class="card-slug">/12step/</span>
-      </a>
-      <a href="/222church/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">222 Church | Presence-Based Worship Center</h3>
-        </div>
-        <p class="card-desc">A Presence-Based Worship Center and Sending Church. Rooted in Acts 2:42 and 2 Timothy 2:2.</p>
-        <span class="card-slug">/222church/</span>
-      </a>
-      <a href="/26thTemple/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">26th Temple | Non-Profit Compliance &amp; Education</h3>
-        </div>
-        
-        <span class="card-slug">/26thTemple/</span>
-      </a>
-      <a href="/8922/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Numerology Dynamics | 9-22-8 Paradigm</h3>
-        </div>
-        
-        <span class="card-slug">/8922/</span>
-      </a>
-      <a href="/abos/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Automated Business Operation System | Freedom Calculator</h3>
-        </div>
-        
-        <span class="card-slug">/abos/</span>
-      </a>
-      <a href="/agents/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">AGENTS · stress-bench · hitthe.link</h3>
-        </div>
-        <p class="card-desc">TUI agents stress-bench leaderboard — finds the OSS equivalent of Claude Opus 4.7. Self Exec · Universal Mesh.</p>
-        <span class="card-slug">/agents/</span>
-      </a>
-      <a href="/agyveinom/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">AGY Venom — Redirecting...</h3>
-        </div>
-        
-        <span class="card-slug">/agyveinom/</span>
-      </a>
-      <a href="/allendale/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Allendale Equine Services | Horse Boarding &amp; Riding in Palmetto, GA</h3>
-        </div>
-        <p class="card-desc">Premium horse boarding and riding lessons in Palmetto, GA. Reconnect with nature through our intimate equine services.</p>
-        <span class="card-slug">/allendale/</span>
-      </a>
-      <a href="/asana/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Asana Progress — hitthe.link</h3>
-        </div>
-        <p class="card-desc">Live Asana task + project progress for L7S, SEL, XLRD work. Inline-HTML single-file dashboard, polled live.</p>
-        <span class="card-slug">/asana/</span>
-      </a>
-      <a href="/aua/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">AUA — Agentic URL Manifesto</h3>
-        </div>
-        
-        <span class="card-slug">/aua/</span>
-      </a>
-      <a href="/audit/" class="project-card group">
-        <div class="card-head">
-          <img src="/audit/icon.svg" alt="" class="card-icon" loading="lazy">
-          <h3 class="card-title">Xen Audit Pack — qi</h3>
-        </div>
-        <p class="card-desc">Identity. Commandments. VoiceOS spine. Infrastructure. Comms routing. Daemon status. The full audit, in one pack.</p>
-        <span class="card-slug">/audit/</span>
-      </a>
-      <a href="/avatar/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Ophanim: Gemini Uplink</h3>
-        </div>
-        
-        <span class="card-slug">/avatar/</span>
-      </a>
-      <a href="/barnlights/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Barn Lights Payment Dashboard</h3>
-        </div>
-        
-        <span class="card-slug">/barnlights/</span>
-      </a>
-      <a href="/beside-proxy/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Beside AI · the only path to Twilio</h3>
-        </div>
-        <p class="card-desc">Beside AI proxy is the only allowed access to Twilio API while Twilio sits on the D.I.E. list. AI-layer interception, cost containment, qi sovereignty.</p>
-        <span class="card-slug">/beside-proxy/</span>
-      </a>
-      <a href="/check-hero/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">L7CheckMark: HERO</h3>
-        </div>
-        
-        <span class="card-slug">/check-hero/</span>
-      </a>
-      <a href="/claudeos/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">ClaudeOS — Live Swarm</h3>
-        </div>
-        <p class="card-desc">Live visibility into every goal swarm. Who</p>
-        <span class="card-slug">/claudeos/</span>
-      </a>
-      <a href="/commandments/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Xen Commandments v50 — One Canon, No Fallbacks</h3>
-        </div>
-        
-        <span class="card-slug">/commandments/</span>
-      </a>
-      <a href="/container/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Container Hub v5.4 | Direct Dial Build</h3>
-        </div>
-        
-        <span class="card-slug">/container/</span>
-      </a>
-      <a href="/context/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">PGS Context Tracker · never forget · 2026-05-23</h3>
-        </div>
-        <p class="card-desc">Comprehensive context tracker per canon_pgs_comprehensive_context_tracking_2026-05-23 — threads · devices · users · profiles · personas · brands · projects · platforms · apps · builds · deploys · open threads. Never miss anything.</p>
-        <span class="card-slug">/context/</span>
-      </a>
-      <a href="/cookbook/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">XLRD TUI / AUA Inject Cookbook</h3>
-        </div>
-        
-        <span class="card-slug">/cookbook/</span>
-      </a>
-      <a href="/costs/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Cost Breakdown Dashboard</h3>
-        </div>
-        
-        <span class="card-slug">/costs/</span>
-      </a>
-      <a href="/custom-er/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Custom ER | Emergency Software Response</h3>
-        </div>
-        
-        <span class="card-slug">/custom-er/</span>
-      </a>
-      <a href="/dcl-demo/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Terance x Designer Collaboration</h3>
-        </div>
-        
-        <span class="card-slug">/dcl-demo/</span>
-      </a>
-      <a href="/diamond-cut/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Diamond Cut Studios · Stal&#39;lyon</h3>
-        </div>
-        <p class="card-desc">Diamond Cut Studios — recording, production, and AI-powered studio operations. Powered by Self Exec.</p>
-        <span class="card-slug">/diamond-cut/</span>
-      </a>
-      <a href="/dictate/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Ruach · רוּחַ · live voice → pane</h3>
-        </div>
-        <p class="card-desc">Ruach (Hebrew רוּחַ — spirit/breath/wind). 0touch live dictation via Web Speech API. Browser-native, on-device STT. POSTs transcripts to omnimind /api/dictate-inject. Mac · iPhone · iPad · any browser.</p>
-        <span class="card-slug">/dictate/</span>
-      </a>
-      <a href="/die-list/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">The D.I.E. List · Exedus Xen canon</h3>
-        </div>
-        <p class="card-desc">Deprecated · Inactive · Eliminated tools. What</p>
-        <span class="card-slug">/die-list/</span>
-      </a>
-      <a href="/dirtyhawks/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Dirty Hawks Shooting Club | Shooting Dept.</h3>
-        </div>
-        
-        <span class="card-slug">/dirtyhawks/</span>
-      </a>
-      <a href="/docs/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Docs · hitthe.link</h3>
-        </div>
-        <p class="card-desc">All markdown docs across hitthe.link, rendered as sites.</p>
-        <span class="card-slug">/docs/</span>
-      </a>
-      <a href="/e/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Electric EATS</h3>
-        </div>
-        
-        <span class="card-slug">/e/</span>
-      </a>
-      <a href="/endpoints/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Catalog — Xen AUA Endpoints</h3>
-        </div>
-        
-        <span class="card-slug">/endpoints/</span>
-      </a>
-      <a href="/execpage/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Exec Page | Executive Web Presence in 7 Days</h3>
-        </div>
-        <p class="card-desc">Professional executive web presence. 7-day turnaround. $333 total.</p>
-        <span class="card-slug">/execpage/</span>
-      </a>
-      <a href="/extendlm/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">ExtendLM Optimizer | Advanced Scope Merger</h3>
-        </div>
-        
-        <span class="card-slug">/extendlm/</span>
-      </a>
-      <a href="/firehose/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Xen Firehose · live event stream</h3>
-        </div>
-        <p class="card-desc">Live SSE viewer for the Xen firehose at xen.xlrd.org/events — beeper, mail, notifications streaming in real-time, brand-aligned dark console.</p>
-        <span class="card-slug">/firehose/</span>
-      </a>
-      <a href="/flcheats/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">FL Studio Ultimate Cheatsheet</h3>
-        </div>
-        
-        <span class="card-slug">/flcheats/</span>
-      </a>
-      <a href="/ggv/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Google Grok Voice UI - Inline</h3>
-        </div>
-        
-        <span class="card-slug">/ggv/</span>
-      </a>
-      <a href="/god-sop-dashboard/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">G.O.D. SOP Dashboard | East Allen</h3>
-        </div>
-        
-        <span class="card-slug">/god-sop-dashboard/</span>
-      </a>
-      <a href="/godmode/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Godmode Siri — Xen</h3>
-        </div>
-        
-        <span class="card-slug">/godmode/</span>
-      </a>
-      <a href="/godsop/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">G.O.D. SOP Dashboard | East Allen</h3>
-        </div>
-        
-        <span class="card-slug">/godsop/</span>
-      </a>
-      <a href="/gov/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">GGV</h3>
-        </div>
-        
-        <span class="card-slug">/gov/</span>
-      </a>
-      <a href="/grok/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Grok Projects • hitthe.link</h3>
-        </div>
-        
-        <span class="card-slug">/grok/</span>
-      </a>
-      <a href="/grokveinom/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">GrokVeinom — Redirecting...</h3>
-        </div>
-        
-        <span class="card-slug">/grokveinom/</span>
-      </a>
-      <a href="/ifttt/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">IFTTT Ops Overhaul — Padre · Beside · PayPal · Square · Drive · Calendar</h3>
-        </div>
-        <p class="card-desc">IFTTT applet overhaul for Xen / Padre / Self Exec ops · Beside SMS triggers · PayPal + Square payment automations · Drive uploads → Shang Tsung absorb · daily Padre dialer queue · calendar reminders.</p>
-        <span class="card-slug">/ifttt/</span>
-      </a>
-      <a href="/ios-shortcut-deploy/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">iOS Shortcut deploy · 5 qi-only blocker commands</h3>
-        </div>
-        <p class="card-desc">Copy-paste recipe for the 5 qi-only blockers gating the Siri/Watch/NFC/Focus tool-router shortcut: wrangler login + CF service token + secret put + ingress route + iOS plist install.</p>
-        <span class="card-slug">/ios-shortcut-deploy/</span>
-      </a>
-      <a href="/itinerary/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Itinerary · pre-sunrise punch list + full 36-section scope · 2026-05-23</h3>
-        </div>
-        <p class="card-desc">Extracted action items from nblmthread.txt — 36 sections, status-tagged (DONE/IN-PROGRESS/PENDING/BANNED). Pre-sunrise punch list + Critical pre-sunrise + Architecture P0 + No-Auth + PWA + Vision/Voice + Knowledge/Docs + Future vision.</p>
-        <span class="card-slug">/itinerary/</span>
-      </a>
-      <a href="/ju/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Pable Ju · Fool For Love</h3>
-        </div>
-        <p class="card-desc">Stream and download — Fool For Love (all takes &amp;amp; the remastered mashup).</p>
-        <span class="card-slug">/ju/</span>
-      </a>
-      <a href="/lab/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">The Lab — Xen Build Telemetry</h3>
-        </div>
-        
-        <span class="card-slug">/lab/</span>
-      </a>
-      <a href="/links/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">hitthe.link · Link Index</h3>
-        </div>
-        <p class="card-desc">A live data-table index of the hitthe.link network — every link organized by purpose, category, and status. Searchable, sortable, filterable.</p>
-        <span class="card-slug">/links/</span>
-      </a>
-      <a href="/luckie/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Luckie &quot;Links&quot; Goggins · L7S INC · Operator Hub</h3>
-        </div>
-        <p class="card-desc">Luckie Links Goggins — Founder/CEO L7S, INC. Systems Superhero. ABC</p>
-        <span class="card-slug">/luckie/</span>
-      </a>
-      <a href="/mb/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">M_B · Southern Soul Artist</h3>
-        </div>
-        <p class="card-desc">M_B — Southern Soul Artist. Mane Family Mafia. Trail rides, field parties, rodeos across the South.</p>
-        <span class="card-slug">/mb/</span>
-      </a>
-      <a href="/mbv2/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">M_B · Urban King of Southern Soul</h3>
-        </div>
-        <p class="card-desc">Independent artist · Douglasville GA · R&amp;B · hip-hop · southern soul · Now booking.</p>
-        <span class="card-slug">/mbv2/</span>
-      </a>
-      <a href="/mbv3/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">M_B® — Studio</h3>
-        </div>
-        <p class="card-desc">Music, performance, and booking. By M_B®.</p>
-        <span class="card-slug">/mbv3/</span>
-      </a>
-      <a href="/menu/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Self Exec · $111 Menu · One Unit At A Time</h3>
-        </div>
-        <p class="card-desc">Self Exec — every unit, $111 each. AI receptionist, speed-build sites, automation, branding, music ops, voice agents. One unit at a time.</p>
-        <span class="card-slug">/menu/</span>
-      </a>
-      <a href="/mesh/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Universal Mesh — Self Exec</h3>
-        </div>
-        <p class="card-desc">Live status of the Self Exec universal mesh — vessels, surfaces, client landings, and VEI loops. Automate or die.</p>
-        <span class="card-slug">/mesh/</span>
-      </a>
-      <a href="/nblm/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">NBLM Thread — Full-Scope Build Doc · 2026-05-17/18</h3>
-        </div>
-        
-        <span class="card-slug">/nblm/</span>
-      </a>
-      <a href="/nblmaudit/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Notebook Archivist</h3>
-        </div>
-        
-        <span class="card-slug">/nblmaudit/</span>
-      </a>
-      <a href="/oss-sites/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">OSS VEINOM-SaaS Showdown · verbatim prompt</h3>
-        </div>
-        
-        <span class="card-slug">/oss-sites/</span>
-      </a>
-      <a href="/overview/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">hitthe.link · The Ledger</h3>
-        </div>
-        <p class="card-desc">Live parallel-goal-swarm tracker for the hitthe.link network — real-time completion + auto gap analysis.</p>
-        <span class="card-slug">/overview/</span>
-      </a>
-      <a href="/padre/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Padre Sales Ops · Local Business Sites Playbook</h3>
-        </div>
-        <p class="card-desc">Local business website generation workflow · lead sourcing · site gen · Padre closing · pricing · orchestrator · distilled prompts from the meeting.</p>
-        <span class="card-slug">/padre/</span>
-      </a>
-      <a href="/pgs/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Shang Tsung PGS · soul-steal the source</h3>
-        </div>
-        <p class="card-desc">Shang Tsung PGS absorbs the source code of any site or app and hosts it live for repurposing. Powered by monolith. Lives in the MK Swarms sibling lane.</p>
-        <span class="card-slug">/pgs/</span>
-      </a>
-      <a href="/pin-feed/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Pinterest Feed · Infinite Topic Swipe</h3>
-        </div>
-        
-        <span class="card-slug">/pin-feed/</span>
-      </a>
-      <a href="/pricing/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">XLRD · Executive Leverage — Engagements &amp; Pricing</h3>
-        </div>
-        <p class="card-desc">Builds, add-ons, edits, and administrative maintenance — fair-market value, plainly priced.</p>
-        <span class="card-slug">/pricing/</span>
-      </a>
-      <a href="/rays/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Ray&#39;s Courses — Learning Hub</h3>
-        </div>
-        
-        <span class="card-slug">/rays/</span>
-      </a>
-      <a href="/rays-home/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Ray&#39;s House of Fun</h3>
-        </div>
-        <p class="card-desc">Ray</p>
-        <span class="card-slug">/rays-home/</span>
-      </a>
-      <a href="/sao/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">SEMI-AUTO OPS // COMMAND DECK V8.3</h3>
-        </div>
-        
-        <span class="card-slug">/sao/</span>
-      </a>
-      <a href="/sao2/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">SEMI-AUTO OPS // COMMAND DECK</h3>
-        </div>
-        
-        <span class="card-slug">/sao2/</span>
-      </a>
-      <a href="/sel/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Self Exec | Enterprise Automation &amp;amp; Intelligent Systems</h3>
-        </div>
-        <p class="card-desc">Enterprise automation and intelligent systems driving efficiency and revenue for forward-thinking businesses.</p>
-        <span class="card-slug">/sel/</span>
-      </a>
-      <a href="/selfexec/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Self Exec | Automation Consulting &amp;amp; ROI Systems</h3>
-        </div>
-        
-        <span class="card-slug">/selfexec/</span>
-      </a>
-      <a href="/selfown/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">SelfOwn_ · the GHL / LeadConnector killer</h3>
-        </div>
-        <p class="card-desc">SelfOwn_ is the for-profit XOS — built on the canonical Xenphone OS surface, designed to replace GoHighLevel / LeadConnector with sovereignty, no vendor lock, angel-number pricing.</p>
-        <span class="card-slug">/selfown/</span>
-      </a>
-      <a href="/shang/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Shang Tsung PGS · Absorbed Sources</h3>
-        </div>
-        <p class="card-desc">Soul-stealer of source code. Sites absorbed and hosted live for qi repurposing.</p>
-        <span class="card-slug">/shang/</span>
-      </a>
-      <a href="/signing/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Digital Forms Portal</h3>
-        </div>
-        
-        <span class="card-slug">/signing/</span>
-      </a>
-      <a href="/slid/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Video Gallery</h3>
-        </div>
-        
-        <span class="card-slug">/slid/</span>
-      </a>
-      <a href="/spine/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">The Business Spine — entities · payments · roadmaps</h3>
-        </div>
-        <p class="card-desc">Self Exec · Executive Leverage (R&amp;D) · Slurtech · L7S · Padre · the business spine · entity map · PayPal + Square payment lane · 3 visual roadmaps (ops · sales · fulfillment).</p>
-        <span class="card-slug">/spine/</span>
-      </a>
-      <a href="/stal-lyon-populate/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Stal&#39;lyon · populate the 9 tokens · half-completion gate</h3>
-        </div>
-        <p class="card-desc">Token-fill form for Stal</p>
-        <span class="card-slug">/stal-lyon-populate/</span>
-      </a>
-      <a href="/status/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Status — Xen Live</h3>
-        </div>
-        
-        <span class="card-slug">/status/</span>
-      </a>
-      <a href="/stt/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">STT · VEI · Xen Voice Ingress</h3>
-        </div>
-        
-        <span class="card-slug">/stt/</span>
-      </a>
-      <a href="/studio/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Studio — Xen harness</h3>
-        </div>
-        
-        <span class="card-slug">/studio/</span>
-      </a>
-      <a href="/swarm/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">PGS — Parallel Goal Swarm · 2026-05-30</h3>
-        </div>
-        
-        <span class="card-slug">/swarm/</span>
-      </a>
-      <a href="/template-io-mission-control/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Template.io | Mission Control</h3>
-        </div>
-        
-        <span class="card-slug">/template-io-mission-control/</span>
-      </a>
-      <a href="/trackingtogether/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">TrackingTogether · automation agency</h3>
-        </div>
-        <p class="card-desc">TrackingTogether — automation agency, single-pane-of-glass scope. Eli operates against owned + client projects. 50/50 split at venture-revenue layer.</p>
-        <span class="card-slug">/trackingtogether/</span>
-      </a>
-      <a href="/uwi/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Omni-Stack Command Center</h3>
-        </div>
-        
-        <span class="card-slug">/uwi/</span>
-      </a>
-      <a href="/vectorgen/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Pro Client-Side SVG Converter</h3>
-        </div>
-        
-        <span class="card-slug">/vectorgen/</span>
-      </a>
-      <a href="/vei/" class="project-card group">
-        <div class="card-head">
-          <img src="/vei/icon.svg" alt="" class="card-icon" loading="lazy">
-          <h3 class="card-title">VEI · רוּחַ · voice echo input</h3>
-        </div>
-        <p class="card-desc">VEI (Voice Echo Input). Ruach-class STT, glass-over-video shell, omnimind dictate-inject pipeline. Public, no-auth, multi-device simultaneous.</p>
-        <span class="card-slug">/vei/</span>
-      </a>
-      <a href="/veinom/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">VEINOM · RUACH</h3>
-        </div>
-        
-        <span class="card-slug">/veinom/</span>
-      </a>
-      <a href="/VVS/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Variation Vault | East Allen Studios</h3>
-        </div>
-        
-        <span class="card-slug">/VVS/</span>
-      </a>
-      <a href="/vvsvei/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">VVSVEI · voice vision sms · Ava</h3>
-        </div>
-        <p class="card-desc">VEI (Voice Echo Input). Ruach-class STT, glass-over-video shell, omnimind dictate-inject pipeline. Public, no-auth, multi-device simultaneous.</p>
-        <span class="card-slug">/vvsvei/</span>
-      </a>
-      <a href="/vvsvei-voice/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Xen Voice -&gt; VEI (canon)</h3>
-        </div>
-        
-        <span class="card-slug">/vvsvei-voice/</span>
-      </a>
-      <a href="/wes/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Wesley Allen - Job Search Tracker</h3>
-        </div>
-        
-        <span class="card-slug">/wes/</span>
-      </a>
-      <a href="/wip/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">Selfown OS - Alpha</h3>
-        </div>
-        
-        <span class="card-slug">/wip/</span>
-      </a>
-      <a href="/xen/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">XEN — Tag It. It&#39;s There.</h3>
-        </div>
-        
-        <span class="card-slug">/xen/</span>
-      </a>
-      <a href="/xlrd-org/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">xlrd.org | Executive Leverage Research Development</h3>
-        </div>
-        <p class="card-desc">Open-source automation, AI, and digital systems designed to empower organizations. Transparent, accessible, and mission-driven.</p>
-        <span class="card-slug">/xlrd-org/</span>
-      </a>
-      <a href="/xlrd-tech/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">XLRD TECH — College of Letterman Wizardry</h3>
-        </div>
-        <p class="card-desc">XLRD TECH — College of Letterman Wizardry. Est. MMXXVI. House of Self Exec. Automate or die.</p>
-        <span class="card-slug">/xlrd-tech/</span>
-      </a>
-      <a href="/xos/" class="project-card group">
-        <div class="card-head">
-          <img src="/xos/icon.svg" alt="" class="card-icon" loading="lazy">
-          <h3 class="card-title">Xenphone OS — iOS 27 · dark</h3>
-        </div>
-        
-        <span class="card-slug">/xos/</span>
-      </a>
-      <a href="/xui/" class="project-card group">
-        <div class="card-head">
-          <div class="card-icon-placeholder"></div>
-          <h3 class="card-title">XP with vei core + XOS2 layer</h3>
-        </div>
-        <p class="card-desc">XP — desktop-class always-on voice-first PWA. vei core interaction model + XOS2 reliability layer. Unified threads, vei clone webview zone, Beside CRM dialer, 3D vertical tab stack, persona agents, never-miss.</p>
-        <span class="card-slug">/xui/</span>
-      </a>
-      </div>
-      <p class="auto-projects-meta">Generated by <code>build-index.js</code> at 2026-05-31T20:55:44.032Z — every subdir with an <code>index.html</code> appears here automatically.</p>
-    </section>
-    <style>
-      .auto-projects { padding: 48px 24px; max-width: 1280px; margin: 0 auto; }
-      .auto-projects-heading { font-size: 14px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin: 0 0 24px; }
-      .auto-projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
-      .project-card { display: block; padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; text-decoration: none; color: inherit; transition: all 0.18s ease; }
-      .project-card:hover { background: rgba(255,255,255,0.06); border-color: var(--theme-color, #D4AF37); transform: translateY(-2px); }
-      .card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
-      .card-icon, .card-icon-placeholder { width: 28px; height: 28px; border-radius: 6px; object-fit: contain; flex-shrink: 0; }
-      .card-icon-placeholder { background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(31,95,63,0.2)); }
-      .card-title { font-size: 14px; font-weight: 600; margin: 0; color: #fff; }
-      .card-desc { font-size: 12px; color: rgba(255,255,255,0.65); margin: 0 0 8px; line-height: 1.4; max-height: 3.6em; overflow: hidden; }
-      .card-slug { font-family: ui-monospace, 'SF Mono', monospace; font-size: 11px; color: rgba(255,255,255,0.4); }
-      .auto-projects-meta { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 24px; font-family: ui-monospace, 'SF Mono', monospace; }
-    </style>
-<!-- AUTO:PROJECTS:END -->
+<div class="searchwrap"><input id="q" type="search" placeholder="Search builds, sites & apps" autocomplete="off"></div>
+
+<main>
+  <div id="feat"></div>
+  <div id="sections"></div>
+  <div class="empty" id="empty" style="display:none">No matches.</div>
+</main>
+
+<footer>The live store of everything shipped on <span class="em">hitthe.link</span> · auto-updating from <span class="em">sites.json</span> · <span id="gen"></span></footer>
+
+<script>
+let SITES=[], q='';
+const sections=document.getElementById('sections'), feat=document.getElementById('feat'), empty=document.getElementById('empty');
+const CAT={
+  'Music & Studio':'linear-gradient(150deg,#b14cff,#ff4d8d)',
+  'Business & L7S':'linear-gradient(150deg,#e6c25a,#c8821f)',
+  'Xen / Voice OS':'linear-gradient(150deg,#22d3a8,#0a8f6a)',
+  'Client Sites':'linear-gradient(150deg,#38bdf8,#3155e8)',
+  'Tools & Calculators':'linear-gradient(150deg,#ff8a3d,#e0432f)',
+  'Builds & Apps':'linear-gradient(150deg,#7c8cff,#4b3bd6)'
+};
+const ORDER=['Music & Studio','Xen / Voice OS','Business & L7S','Client Sites','Tools & Calculators','Builds & Apps'];
+const grad=c=>CAT[c]||'linear-gradient(150deg,#6b7280,#374151)';
+const recent=iso=>iso && (Date.now()-new Date(iso).getTime()) < 7*864e5;
+function esc(t){const d=document.createElement('div');d.textContent=t||'';return d.innerHTML;}
+function mono(t){
+  const clean=(t||'').replace(/[·•|—-].*$/,'').replace(/[^A-Za-z0-9 ]/g,' ').trim();
+  const w=clean.split(/\s+/).filter(Boolean);
+  let m=w.length>=2?(w[0][0]+w[1][0]):clean.slice(0,2);
+  return esc((m||'??').toUpperCase());
+}
+// icon: use /<slug>/icon.{svg,png} if present (set via data attr fallback chain), else monogram on category gradient
+function iconHtml(s){
+  return '<span class="icon" style="background:'+grad(s.category)+'">'+mono(s.title)+'</span>';
+}
+function appCell(s){
+  return '<a class="app" href="'+s.url+'">'+
+    (recent(s.updated)?'<span class="new">New</span>':'')+
+    iconHtml(s)+
+    '<span class="meta"><span class="nm">'+esc(s.title)+'</span><span class="ds">'+esc(s.desc||s.category)+'</span></span>'+
+    '<span class="get">OPEN</span></a>';
+}
+function renderFeatured(){
+  const f=SITES.find(s=>recent(s.updated))||SITES[0];
+  if(!f){feat.innerHTML='';return;}
+  feat.innerHTML='<a class="feat" href="'+f.url+'" style="background:'+grad(f.category)+'">'+
+    '<span class="ficon" style="background:rgba(0,0,0,.25)">'+mono(f.title)+'</span>'+
+    '<span class="lbl">Featured · '+esc(f.category)+'</span>'+
+    '<h2>'+esc(f.title)+'</h2><p>'+esc(f.desc||'')+'</p>'+
+    '<span class="pill">OPEN</span></a>';
+}
+function renderSections(){
+  if(q){
+    const f=SITES.filter(s=>(s.title+' '+s.desc+' '+s.slug+' '+s.category).toLowerCase().includes(q));
+    feat.style.display='none';empty.style.display=f.length?'none':'block';
+    sections.innerHTML='<div class="grid">'+f.map(appCell).join('')+'</div>';return;
+  }
+  feat.style.display='';empty.style.display='none';
+  const cats=ORDER.filter(c=>SITES.some(s=>s.category===c))
+    .concat(Array.from(new Set(SITES.map(s=>s.category))).filter(c=>!ORDER.includes(c)));
+  sections.innerHTML=cats.map(c=>{
+    const items=SITES.filter(s=>s.category===c);
+    return '<section class="sec"><div class="sec-h"><h3>'+esc(c)+'</h3><span class="all">'+items.length+' apps</span></div>'+
+      '<div class="shelf">'+items.map(appCell).join('')+'</div></section>';
+  }).join('');
+}
+// swap brand mark to real icon if it exists
+(function(){const i=new Image();i.onload=()=>{document.getElementById('brandmk').innerHTML='<img src="/icon.png" alt="">';};i.src='/icon.png';})();
+fetch('sites.json?v='+Date.now()).then(r=>r.json()).then(d=>{
+  SITES=(d.sites||[]).filter(s=>s&&s.url&&s.title);
+  document.getElementById('livecount').textContent=SITES.length+' live builds';
+  if(d.generated)document.getElementById('gen').textContent='updated '+new Date(d.generated).toLocaleDateString();
+  renderFeatured();renderSections();
+}).catch(()=>{document.getElementById('livecount').textContent='index unavailable';});
+document.getElementById('q').addEventListener('input',e=>{q=e.target.value.toLowerCase().trim();renderSections();});
+</script>
 </body>
 </html>
