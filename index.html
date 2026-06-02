@@ -3,162 +3,172 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>hitthe.link — the store for everything we ship</title>
-<meta name="description" content="hitthe.link is the live store of every site, app, and tool shipped here — browse, search, and open them like apps. Auto-updating as new builds go live.">
-<meta name="theme-color" content="#0b0b0f">
-<meta property="og:title" content="hitthe.link">
-<meta property="og:description" content="The live store of everything we ship — browse and open builds like apps.">
-<meta property="og:type" content="website">
+<title>hitthe.link — App Catalog</title>
+<meta name="description" content="Every site, app, and tool shipped on hitthe.link. Browse the catalog.">
+<meta name="theme-color" content="#000000">
+<meta property="og:title" content="hitthe.link — App Catalog">
+<meta property="og:image" content="/icon.png">
 <link rel="icon" href="/favicon.png">
 <link rel="apple-touch-icon" href="/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#0b0b0f;--cell:#17171e;--cell-hi:#20202a;--text:#f5f6f8;--soft:#c4c8d2;--mute:#8a909e;
-  --line:rgba(255,255,255,.08);--accent:#0a84ff;--accent2:#5e9bff;--gold:#e6c25a;--r:22px;
-}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-html,body{margin:0;background:var(--bg);color:var(--text);
-  font-family:-apple-system,"SF Pro Text","SF Pro Display","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-body{overflow-x:hidden}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#000;color:#fff;font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
-::-webkit-scrollbar{height:0;width:0}
 
-.bar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:14px;
-  padding:14px clamp(16px,5vw,40px);background:rgba(11,11,15,.72);backdrop-filter:saturate(160%) blur(20px);border-bottom:1px solid var(--line)}
-.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:-.02em}
-.brand .mk{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;overflow:hidden;
-  background:linear-gradient(145deg,#2a2a36,#0e0e14);border:1px solid var(--line);font-size:16px;color:var(--gold)}
-.brand .mk img{width:100%;height:100%;object-fit:cover}
-.brand .tld{color:var(--mute);font-weight:700}
-.bar .spacer{flex:1}
-.bar .count{font-size:12.5px;color:var(--mute);font-weight:600;display:flex;align-items:center;gap:7px}
-.bar .dot{width:7px;height:7px;border-radius:50%;background:#30d158;box-shadow:0 0 9px #30d158;animation:blink 2.4s ease-in-out infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+/* ── Nav ── */
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 32px;position:sticky;top:0;z-index:50;background:rgba(0,0,0,.7);backdrop-filter:blur(16px)}
+.nav-brand{font-weight:700;font-size:18px;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+.nav-brand img{width:26px;height:26px;border-radius:7px}
+.nav-count{font-size:12px;color:rgba(255,255,255,.4);font-weight:500;display:flex;align-items:center;gap:6px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#30d158;box-shadow:0 0 8px #30d158;animation:blink 2s ease-in-out infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
-.searchwrap{padding:18px clamp(16px,5vw,40px) 4px;max-width:1240px;margin:0 auto;width:100%}
-#q{width:100%;background:var(--cell);border:1px solid var(--line);border-radius:13px;color:#fff;font-size:16px;padding:13px 16px 13px 42px;outline:none;transition:.18s;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%238a909e' stroke-width='2'%3E%3Ccircle cx='8' cy='8' r='6'/%3E%3Cpath d='M13 13l4 4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:15px center}
-#q:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(10,132,255,.25)}
+/* ── Hero ── */
+.hero{text-align:center;padding:60px 24px 0}
+.hero h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(36px,6vw,72px);font-weight:400;letter-spacing:-.02em;line-height:1.1;margin-bottom:16px}
+.hero p{color:rgba(255,255,255,.5);font-size:clamp(14px,2vw,17px);max-width:480px;margin:0 auto;line-height:1.6}
 
-main{max-width:1240px;margin:0 auto;padding:8px clamp(16px,5vw,40px) 90px}
+/* ── Floating icon cloud ── */
+.cloud{position:relative;height:260px;overflow:hidden;margin:0 auto;max-width:900px}
+.cloud-icon{position:absolute;border-radius:22%;background:#111;border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:rgba(255,255,255,.7);box-shadow:0 8px 32px rgba(0,0,0,.6);animation:float linear infinite;transform-style:preserve-3d;overflow:hidden}
+.cloud-icon img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+@keyframes float{0%{transform:translateY(0) scale(1)}50%{transform:translateY(-12px) scale(1.03)}100%{transform:translateY(0) scale(1)}}
+.cloud-grad{position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(to top,#000,transparent);pointer-events:none;z-index:2}
 
-.feat{position:relative;display:flex;flex-direction:column;justify-content:flex-end;min-height:300px;border-radius:var(--r);overflow:hidden;padding:30px;margin:18px 0 8px;border:1px solid var(--line);isolation:isolate;color:#fff}
-.feat .lbl{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;opacity:.9;margin-bottom:8px}
-.feat h2{font-size:clamp(28px,5vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.04;margin:0 0 10px;max-width:16ch;text-shadow:0 2px 30px rgba(0,0,0,.4)}
-.feat p{font-size:15px;color:rgba(255,255,255,.9);max-width:54ch;margin:0 0 20px;line-height:1.5}
-.feat .ficon{position:absolute;top:26px;right:26px;width:74px;height:74px;border-radius:18px;display:grid;place-items:center;font-size:30px;font-weight:800;color:#fff;border:1px solid rgba(255,255,255,.25);box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden}
-.feat .ficon img{width:100%;height:100%;object-fit:cover}
-.feat .pill{display:inline-block;background:rgba(255,255,255,.95);color:#0b0b0f;font-weight:800;font-size:14px;padding:9px 22px;border-radius:50px}
-.feat::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.62))}
+/* ── Filter bar ── */
+.filterbar{max-width:1100px;margin:32px auto 0;padding:0 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.pills{display:flex;gap:8px;flex-wrap:wrap;flex:1}
+.pill{font-size:12px;font-weight:600;letter-spacing:.02em;padding:7px 15px;border-radius:50px;cursor:pointer;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.55);background:transparent;transition:.15s;white-space:nowrap}
+.pill:hover{color:#fff;border-color:rgba(255,255,255,.4)}
+.pill.on{background:#fff;color:#000;border-color:#fff}
+.search-wrap{position:relative}
+.search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none}
+#q{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#fff;font-size:14px;padding:9px 14px 9px 36px;outline:none;width:220px;transition:.15s}
+#q:focus{border-color:rgba(255,255,255,.4);background:rgba(255,255,255,.1)}
+#q::placeholder{color:rgba(255,255,255,.3)}
 
-.sec{margin-top:34px}
-.sec-h{display:flex;align-items:baseline;justify-content:space-between;margin:0 0 14px}
-.sec-h h3{font-size:23px;font-weight:800;letter-spacing:-.02em;margin:0}
-.sec-h .all{font-size:13px;color:var(--mute);font-weight:600}
-.shelf{display:grid;grid-auto-flow:column;grid-auto-columns:300px;gap:14px;overflow-x:auto;scroll-snap-type:x proximity;padding:2px 1px 8px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+/* ── Grid ── */
+.grid-wrap{max-width:1100px;margin:28px auto 90px;padding:0 24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:2px}
+.app{display:flex;align-items:flex-start;gap:14px;padding:18px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:0;transition:.15s;cursor:pointer}
+.app:hover{background:rgba(255,255,255,.06)}
+.grid .app:first-child{border-radius:12px 12px 0 0}
+.grid .app:last-child{border-radius:0 0 12px 12px}
+.app-icon{flex:0 0 46px;width:46px;height:46px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.app-icon img{width:100%;height:100%;object-fit:cover}
+.app-body{flex:1;min-width:0}
+.app-name{font-size:15px;font-weight:600;letter-spacing:-.01em;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app-desc{font-size:12.5px;color:rgba(255,255,255,.4);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.app-new{display:inline-block;font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#000;background:#30d158;padding:2px 6px;border-radius:50px;margin-left:7px;vertical-align:middle}
 
-.app{display:flex;align-items:center;gap:14px;background:var(--cell);border:1px solid var(--line);border-radius:18px;padding:14px;scroll-snap-align:start;transition:transform .2s,background .2s,border-color .2s;position:relative;min-width:0}
-.app:hover{background:var(--cell-hi);transform:translateY(-2px);border-color:rgba(255,255,255,.16)}
-.icon{flex:0 0 auto;width:60px;height:60px;border-radius:14px;display:grid;place-items:center;font-size:23px;font-weight:800;color:#fff;letter-spacing:-.02em;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 4px 12px rgba(0,0,0,.3);overflow:hidden}
-.icon img{width:100%;height:100%;object-fit:cover}
-.meta{flex:1;min-width:0}
-.meta .nm{font-size:15px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.meta .ds{font-size:12.5px;color:var(--mute);line-height:1.35;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.get{flex:0 0 auto;align-self:center;background:var(--cell-hi);color:var(--accent2);font-weight:800;font-size:13px;padding:7px 16px;border-radius:50px;border:1px solid var(--line);transition:.15s}
-.app:hover .get{background:var(--accent);color:#fff;border-color:var(--accent)}
-.new{position:absolute;top:9px;left:9px;font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#0b0b0f;background:#30d158;padding:2px 6px;border-radius:50px}
-
-.empty{text-align:center;color:var(--mute);padding:70px 0;font-size:15px}
-footer{text-align:center;color:var(--mute);font-size:12px;padding:34px 18px;border-top:1px solid var(--line);max-width:1240px;margin:0 auto}
-footer .em{color:var(--soft)}
-@media(max-width:640px){.shelf{grid-auto-columns:84vw}.feat .ficon{width:56px;height:56px;font-size:22px}}
+.empty{text-align:center;color:rgba(255,255,255,.25);padding:80px 0;font-size:15px}
+footer{text-align:center;color:rgba(255,255,255,.2);font-size:11.5px;padding:28px;border-top:1px solid rgba(255,255,255,.06);max-width:1100px;margin:0 auto}
+@media(max-width:600px){.cloud{height:200px}.hero h1{font-size:36px}#q{width:160px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<div class="bar">
-  <a class="brand" href="/"><span class="mk" id="brandmk">↗</span><b>hitthe</b><span class="tld">.link</span></a>
-  <span class="spacer"></span>
-  <span class="count"><span class="dot"></span><span id="livecount">loading…</span></span>
+
+<nav>
+  <div class="nav-brand"><img src="/icon.png" id="navicon" onerror="this.style.display='none'"><span>hitthe.link</span></div>
+  <div class="nav-count"><span class="live-dot"></span><span id="livecount">loading…</span></div>
+</nav>
+
+<section class="hero">
+  <h1>App catalog</h1>
+  <p>Every site, app, and tool shipped here — live and open.</p>
+</section>
+
+<div class="cloud" id="cloud">
+  <div class="cloud-grad"></div>
 </div>
 
-<div class="searchwrap"><input id="q" type="search" placeholder="Search builds, sites & apps" autocomplete="off"></div>
+<div class="filterbar">
+  <div class="pills" id="pills"></div>
+  <div class="search-wrap">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/><path d="M10 10l2.5 2.5" stroke="rgba(255,255,255,.3)" stroke-width="1.5" stroke-linecap="round"/></svg>
+    <input id="q" type="search" placeholder="Search…" autocomplete="off">
+  </div>
+</div>
 
-<main>
-  <div id="feat"></div>
-  <div id="sections"></div>
-  <div class="empty" id="empty" style="display:none">No matches.</div>
-</main>
-
-<footer>The live store of everything shipped on <span class="em">hitthe.link</span> · auto-updating from <span class="em">sites.json</span> · <span id="gen"></span></footer>
+<div class="grid-wrap"><div class="grid" id="grid"></div><div class="empty" id="empty" style="display:none">No matches.</div></div>
+<footer id="gen"></footer>
 
 <script>
-let SITES=[], q='';
-const sections=document.getElementById('sections'), feat=document.getElementById('feat'), empty=document.getElementById('empty');
+let SITES=[], cat='All', q='';
 const CAT={
-  'Music & Studio':'linear-gradient(150deg,#b14cff,#ff4d8d)',
-  'Business & L7S':'linear-gradient(150deg,#e6c25a,#c8821f)',
-  'Xen / Voice OS':'linear-gradient(150deg,#22d3a8,#0a8f6a)',
-  'Client Sites':'linear-gradient(150deg,#38bdf8,#3155e8)',
-  'Tools & Calculators':'linear-gradient(150deg,#ff8a3d,#e0432f)',
-  'Builds & Apps':'linear-gradient(150deg,#7c8cff,#4b3bd6)'
+  'Music & Studio':'linear-gradient(145deg,#9b3fe8,#e8388a)',
+  'Business & L7S':'linear-gradient(145deg,#c8901a,#e8c84a)',
+  'Xen / Voice OS':'linear-gradient(145deg,#0fa86e,#22d3a8)',
+  'Client Sites':'linear-gradient(145deg,#1a6ee8,#38b2f8)',
+  'Tools & Calculators':'linear-gradient(145deg,#e85a1a,#f8a838)',
+  'Builds & Apps':'linear-gradient(145deg,#3b5be8,#7c8cff)'
 };
 const ORDER=['Music & Studio','Xen / Voice OS','Business & L7S','Client Sites','Tools & Calculators','Builds & Apps'];
-const grad=c=>CAT[c]||'linear-gradient(150deg,#6b7280,#374151)';
-const recent=iso=>iso && (Date.now()-new Date(iso).getTime()) < 7*864e5;
+const g=c=>CAT[c]||'linear-gradient(145deg,#444,#222)';
+const recent=iso=>iso&&(Date.now()-new Date(iso).getTime())<7*864e5;
 function esc(t){const d=document.createElement('div');d.textContent=t||'';return d.innerHTML;}
 function mono(t){
-  const clean=(t||'').replace(/[·•|—-].*$/,'').replace(/[^A-Za-z0-9 ]/g,' ').trim();
-  const w=clean.split(/\s+/).filter(Boolean);
-  let m=w.length>=2?(w[0][0]+w[1][0]):clean.slice(0,2);
-  return esc((m||'??').toUpperCase());
+  const w=(t||'').replace(/[·•|—\-].*$/,'').replace(/[^A-Za-z0-9 ]/g,' ').trim().split(/\s+/).filter(Boolean);
+  return esc((w.length>=2?w[0][0]+w[1][0]:(t||'').slice(0,2)||'??').toUpperCase());
 }
-// icon: use /<slug>/icon.{svg,png} if present (set via data attr fallback chain), else monogram on category gradient
-function iconHtml(s){
-  return '<span class="icon" style="background:'+grad(s.category)+'">'+mono(s.title)+'</span>';
+function iconEl(s,sz){
+  const sz2=sz||46,r=Math.round(sz2*.24);
+  return `<span class="app-icon" style="width:${sz2}px;height:${sz2}px;border-radius:${r}px;background:${g(s.category)}">${mono(s.title)}</span>`;
 }
-function appCell(s){
-  return '<a class="app" href="'+s.url+'">'+
-    (recent(s.updated)?'<span class="new">New</span>':'')+
-    iconHtml(s)+
-    '<span class="meta"><span class="nm">'+esc(s.title)+'</span><span class="ds">'+esc(s.desc||s.category)+'</span></span>'+
-    '<span class="get">OPEN</span></a>';
+
+// Build floating cloud
+function buildCloud(){
+  const cloud=document.getElementById('cloud');
+  const picks=SITES.slice(0,18);
+  const W=cloud.offsetWidth||900, H=cloud.offsetHeight||260;
+  picks.forEach((s,i)=>{
+    const angle=(i/picks.length)*Math.PI;
+    const cx=W/2, spread=W*.42;
+    const x=cx+Math.cos(angle-(Math.PI/2)+(i%2?-.3:.3))*spread*(0.5+Math.random()*.5)-30;
+    const y=H*.18+Math.sin(angle)*H*.55+Math.random()*30;
+    const sz=40+Math.floor(Math.random()*28);
+    const delay=(Math.random()*4).toFixed(1);
+    const dur=(3+Math.random()*3).toFixed(1);
+    const el=document.createElement('a');
+    el.className='cloud-icon';
+    el.href=s.url;
+    el.style.cssText=`left:${x}px;top:${y}px;width:${sz}px;height:${sz}px;border-radius:${Math.round(sz*.24)}px;background:${g(s.category)};font-size:${Math.round(sz*.38)}px;animation-duration:${dur}s;animation-delay:-${delay}s;z-index:${i}`;
+    el.innerHTML=mono(s.title);
+    cloud.insertBefore(el,cloud.querySelector('.cloud-grad'));
+  });
 }
-function renderFeatured(){
-  const f=SITES.find(s=>recent(s.updated))||SITES[0];
-  if(!f){feat.innerHTML='';return;}
-  feat.innerHTML='<a class="feat" href="'+f.url+'" style="background:'+grad(f.category)+'">'+
-    '<span class="ficon" style="background:rgba(0,0,0,.25)">'+mono(f.title)+'</span>'+
-    '<span class="lbl">Featured · '+esc(f.category)+'</span>'+
-    '<h2>'+esc(f.title)+'</h2><p>'+esc(f.desc||'')+'</p>'+
-    '<span class="pill">OPEN</span></a>';
+
+function renderGrid(){
+  const f=SITES.filter(s=>(cat==='All'||s.category===cat)&&(q===''||(s.title+' '+s.desc+' '+s.slug+' '+s.category).toLowerCase().includes(q)));
+  document.getElementById('empty').style.display=f.length?'none':'block';
+  document.getElementById('grid').innerHTML=f.map(s=>`<a class="app" href="${s.url}">
+    ${iconEl(s)}
+    <span class="app-body">
+      <span class="app-name">${esc(s.title)}${recent(s.updated)?'<span class="app-new">New</span>':''}</span>
+      <span class="app-desc">${esc(s.desc||s.category)}</span>
+    </span></a>`).join('');
 }
-function renderSections(){
-  if(q){
-    const f=SITES.filter(s=>(s.title+' '+s.desc+' '+s.slug+' '+s.category).toLowerCase().includes(q));
-    feat.style.display='none';empty.style.display=f.length?'none':'block';
-    sections.innerHTML='<div class="grid">'+f.map(appCell).join('')+'</div>';return;
-  }
-  feat.style.display='';empty.style.display='none';
-  const cats=ORDER.filter(c=>SITES.some(s=>s.category===c))
-    .concat(Array.from(new Set(SITES.map(s=>s.category))).filter(c=>!ORDER.includes(c)));
-  sections.innerHTML=cats.map(c=>{
-    const items=SITES.filter(s=>s.category===c);
-    return '<section class="sec"><div class="sec-h"><h3>'+esc(c)+'</h3><span class="all">'+items.length+' apps</span></div>'+
-      '<div class="shelf">'+items.map(appCell).join('')+'</div></section>';
-  }).join('');
+
+function renderPills(){
+  const cats=['All',...ORDER.filter(c=>SITES.some(s=>s.category===c)),...Array.from(new Set(SITES.map(s=>s.category))).filter(c=>!ORDER.includes(c))];
+  document.getElementById('pills').innerHTML=cats.map(c=>`<span class="pill${c===cat?' on':''}" data-c="${esc(c)}">${esc(c)}</span>`).join('');
+  document.querySelectorAll('.pill').forEach(el=>el.onclick=()=>{
+    cat=el.dataset.c;
+    document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p===el));
+    renderGrid();
+  });
 }
-// swap brand mark to real icon if it exists
-(function(){const i=new Image();i.onload=()=>{document.getElementById('brandmk').innerHTML='<img src="/icon.png" alt="">';};i.src='/icon.png';})();
+
 fetch('sites.json?v='+Date.now()).then(r=>r.json()).then(d=>{
   SITES=(d.sites||[]).filter(s=>s&&s.url&&s.title);
-  document.getElementById('livecount').textContent=SITES.length+' live builds';
-  if(d.generated)document.getElementById('gen').textContent='updated '+new Date(d.generated).toLocaleDateString();
-  renderFeatured();renderSections();
-}).catch(()=>{document.getElementById('livecount').textContent='index unavailable';});
-document.getElementById('q').addEventListener('input',e=>{q=e.target.value.toLowerCase().trim();renderSections();});
+  document.getElementById('livecount').textContent=SITES.length+' apps';
+  document.getElementById('gen').textContent='Auto-updating from sites.json · '+new Date(d.generated||Date.now()).toLocaleDateString();
+  buildCloud();renderPills();renderGrid();
+}).catch(()=>{document.getElementById('livecount').textContent='catalog unavailable';});
+document.getElementById('q').addEventListener('input',e=>{q=e.target.value.toLowerCase().trim();renderGrid();});
 </script>
 </body>
 </html>
