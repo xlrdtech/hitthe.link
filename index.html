@@ -278,6 +278,8 @@ function buildCloud(){
   ];
   const mirror=document.getElementById('cloud-mirror');
   mirror.innerHTML='';
+  // clear previous icons on rebuild (resize/mq) — original missed this for main rows
+  rows.forEach(r=>{ if(r.el) r.el.innerHTML=''; });
   // compute current container width; scale positions around center so cloud stays centered + icons never clip/overflow
   const persEl=document.querySelector('.cloud-perspective');
   let cw = mobile ? 360 : 920;
