@@ -5,89 +5,113 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>hitthe.link — App Catalog</title>
 <meta name="description" content="Every site, app, and tool shipped on hitthe.link.">
-<meta name="theme-color" content="#000">
+<meta name="theme-color" content="#000000">
 <link rel="icon" href="/favicon.png">
 <link rel="apple-touch-icon" href="/icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{background:#000;color:#fff;font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
 
-/* ── NAV ── */
-.nav{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;position:sticky;top:0;z-index:100;background:rgba(0,0,0,.8);backdrop-filter:blur(20px)}
-.nav-logo{font-size:17px;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
-.nav-logo img{width:24px;height:24px;border-radius:6px;object-fit:cover}
-.nav-links{display:flex;align-items:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:50px;padding:6px 8px;gap:2px}
-.nav-links a{font-size:12.5px;font-weight:500;color:rgba(255,255,255,.6);padding:6px 14px;border-radius:50px;transition:.15s;white-space:nowrap}
-.nav-links a:hover{color:#fff;background:rgba(255,255,255,.08)}
-.nav-right{display:flex;align-items:center;gap:16px}
-.nav-right .sign-in{font-size:13px;font-weight:500;color:rgba(255,255,255,.7)}
-.nav-right .get-started{font-size:13px;font-weight:600;background:#fff;color:#000;padding:8px 18px;border-radius:8px;transition:.15s}
-.nav-right .get-started:hover{background:#e8e8e8}
+/* NAV */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:14px 32px;position:sticky;top:0;z-index:200;background:rgba(0,0,0,.72);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.05)}
+.nav-logo{font-size:17px;font-weight:700;letter-spacing:-.03em;display:flex;align-items:center;gap:8px}
+.nav-logo img{width:26px;height:26px;border-radius:7px;object-fit:cover}
+.nav-pill{display:flex;align-items:center;gap:2px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:4px 6px}
+.nav-pill a{font-size:13px;font-weight:500;color:rgba(255,255,255,.55);padding:7px 16px;border-radius:999px;transition:.2s;white-space:nowrap}
+.nav-pill a:hover{color:#fff;background:rgba(255,255,255,.06)}
+.nav-right{display:flex;align-items:center;gap:18px}
+.nav-right .book{font-size:13px;font-weight:500;color:rgba(255,255,255,.65);transition:color .15s}
+.nav-right .book:hover{color:#fff}
+.nav-right .cta{font-size:13px;font-weight:600;background:#fff;color:#000;padding:9px 20px;border-radius:999px;transition:.15s}
+.nav-right .cta:hover{background:#e4e4e4}
 
-/* ── HERO ── */
-.hero{text-align:center;padding:56px 24px 0;position:relative;z-index:1}
-.hero h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(38px,5.5vw,70px);font-weight:400;letter-spacing:-.02em;line-height:1.08;margin-bottom:14px}
-.hero p{color:rgba(255,255,255,.45);font-size:15px;max-width:440px;margin:0 auto;line-height:1.65}
+/* HERO */
+.hero{text-align:center;padding:52px 24px 0;position:relative;z-index:2}
+.hero h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(40px,5.2vw,68px);font-weight:400;letter-spacing:-.02em;line-height:1.1;margin-bottom:12px}
+.hero p{color:rgba(255,255,255,.42);font-size:15px;max-width:460px;margin:0 auto;line-height:1.6}
 
-/* ── ICON CLOUD ── */
-.cloud-outer{position:relative;height:290px;overflow:hidden;margin:-10px auto 0;max-width:1000px}
-.cloud-stage{position:absolute;left:50%;top:0;transform:translateX(-50%);width:860px;height:260px;perspective:1000px}
-.cloud-inner{width:100%;height:100%;transform-style:preserve-3d;position:relative}
-.ci{position:absolute;border-radius:22%;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;overflow:hidden;
-  box-shadow:0 12px 40px rgba(0,0,0,.7),0 2px 8px rgba(0,0,0,.5);
-  animation:bob ease-in-out infinite;
-  transform-origin:center center}
-.ci img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
-@keyframes bob{0%,100%{transform:translateY(0) var(--rx,rotateX(0)) var(--s,scale(1))}50%{transform:translateY(-10px) var(--rx,rotateX(0)) var(--s,scale(1))}}
-.cloud-reflect{position:absolute;bottom:0;left:0;right:0;height:100px;
-  background:linear-gradient(to top,#000 40%,transparent);
-  pointer-events:none;z-index:10}
-/* Reflection layer */
-.cloud-mirror{position:absolute;left:50%;transform:translateX(-50%);width:860px;height:80px;top:190px;
-  opacity:.28;filter:blur(3px);transform:translateX(-50%) scaleY(-1);pointer-events:none;overflow:hidden}
+/* ICON CLOUD */
+.cloud-wrap{position:relative;max-width:1040px;margin:0 auto;height:320px;overflow:hidden}
+.cloud-perspective{position:absolute;left:50%;transform:translateX(-50%);width:920px;height:280px;perspective:1200px;perspective-origin:50% 20%}
+.cloud-scene{position:relative;width:100%;height:100%;transform-style:preserve-3d}
+.cloud-row{position:absolute;left:0;right:0;height:100%;pointer-events:none}
+.cloud-row a{pointer-events:auto}
+.ci{position:absolute;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;overflow:hidden;
+  border-radius:22%;box-shadow:0 8px 32px rgba(0,0,0,.55);
+  animation:bob ease-in-out infinite;transform-origin:center center;transition:transform .2s}
+.ci:hover{transform:translateY(-4px) scale(1.04)!important;z-index:20!important}
+.ci img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
+.row-back .ci{filter:brightness(.6)}
+.row-mid .ci{filter:brightness(.8)}
+.row-front .ci{filter:brightness(1);box-shadow:0 20px 56px rgba(0,0,0,.75),0 4px 12px rgba(0,0,0,.4)}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-11px)}}
 
-/* ── FILTER BAR ── */
-.filterbar{max-width:1100px;margin:28px auto 0;padding:0 28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+/* Reflection — duplicate cloud, flipped */
+.cloud-mirror-wrap{position:absolute;left:50%;top:168px;transform:translateX(-50%);width:920px;height:140px;overflow:hidden;pointer-events:none;z-index:1}
+.cloud-mirror{position:absolute;left:0;top:0;width:100%;height:280px;transform:scaleY(-1);opacity:.2;filter:blur(4px);
+  -webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.5) 0%,transparent 72%);
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,.5) 0%,transparent 72%)}
+.cloud-fade{position:absolute;left:0;right:0;bottom:0;height:120px;
+  background:linear-gradient(to bottom,transparent 0%,#000 78%);pointer-events:none;z-index:5}
+
+/* FILTER */
+.filterbar{max-width:1100px;margin:36px auto 0;padding:0 28px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
 .filter-pills{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.fp{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:6px 14px;border-radius:50px;cursor:pointer;border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.5);background:transparent;transition:.15s;white-space:nowrap}
-.fp:hover{color:#fff;border-color:rgba(255,255,255,.4)}
+.fp{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:7px 14px;border-radius:999px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.45);background:transparent;transition:.15s;white-space:nowrap}
+.fp:hover{color:#fff;border-color:rgba(255,255,255,.45)}
 .fp.on{background:#fff;color:#000;border-color:#fff}
 .search-box{position:relative;flex-shrink:0}
-.search-box svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;opacity:.4}
-#q{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;color:#fff;font-size:13px;padding:8px 14px 8px 34px;outline:none;width:200px;transition:.15s}
-#q::placeholder{color:rgba(255,255,255,.3)}
-#q:focus{border-color:rgba(255,255,255,.35);background:rgba(255,255,255,.09)}
+.search-box svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.35;pointer-events:none}
+#q{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#fff;font-size:13px;
+  padding:10px 14px 10px 36px;outline:none;width:220px;transition:.15s;font-family:inherit}
+#q::placeholder{color:rgba(255,255,255,.28)}
+#q:focus{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.07)}
 
-/* ── APP GRID ── */
-.grid-wrap{max-width:1100px;margin:22px auto 80px;padding:0 28px}
+/* GRID */
+.grid-wrap{max-width:1100px;margin:20px auto 72px;padding:0 28px}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.app{display:flex;align-items:flex-start;gap:13px;background:#1c1c1e;border-radius:12px;padding:16px;cursor:pointer;transition:.15s;border:1px solid rgba(255,255,255,.04)}
-.app:hover{background:#242428;border-color:rgba(255,255,255,.09)}
-.aicon{flex:0 0 44px;width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;overflow:hidden;flex-shrink:0}
+.app{display:flex;align-items:flex-start;gap:12px;background:#1c1c1e;border-radius:12px;padding:16px;cursor:pointer;
+  transition:background .15s,border-color .15s;border:1px solid transparent}
+.app:hover{background:#252528;border-color:rgba(255,255,255,.06)}
+.aicon{flex:0 0 44px;width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:800;color:#fff;overflow:hidden;flex-shrink:0}
 .aicon img{width:100%;height:100%;object-fit:cover;border-radius:10px}
 .abody{flex:1;min-width:0}
-.aname{font-size:14.5px;font-weight:600;letter-spacing:-.01em;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:7px}
+.aname{font-size:15px;font-weight:700;letter-spacing:-.02em;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  display:flex;align-items:center;gap:6px}
 .adesc{font-size:12px;color:rgba(255,255,255,.38);line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .anew{font-size:8px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#000;background:#30d158;padding:2px 6px;border-radius:50px;flex-shrink:0}
+.empty{text-align:center;color:rgba(255,255,255,.22);padding:72px 0;font-size:14px;display:none}
+footer{text-align:center;color:rgba(255,255,255,.16);font-size:11px;padding:20px 28px 32px;border-top:1px solid rgba(255,255,255,.05);max-width:1100px;margin:0 auto}
 
-.empty{text-align:center;color:rgba(255,255,255,.2);padding:80px;font-size:14px}
-footer{text-align:center;color:rgba(255,255,255,.18);font-size:11px;padding:24px;border-top:1px solid rgba(255,255,255,.05);max-width:1100px;margin:0 auto}
-@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.nav-links{display:none}}
-@media(max-width:560px){.grid{grid-template-columns:1fr}.cloud-outer{height:200px}}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media(max-width:1024px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:768px){
+  .nav-pill{display:none}
+  .grid{grid-template-columns:repeat(2,1fr)}
+  .nav{padding:14px 20px}
+  .filterbar,.grid-wrap{padding:0 20px}
+  .cloud-wrap{height:260px}
+  .cloud-perspective,.cloud-mirror-wrap{width:100%;max-width:640px}
+  #q{width:100%}
+  .filterbar{flex-direction:column;align-items:stretch}
+  .search-box{width:100%}
+}
+@media(prefers-reduced-motion:reduce){*,.ci{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 
 <nav class="nav">
-  <div class="nav-logo">
-    <img src="/icon.png" onerror="this.style.display='none'">
+  <a class="nav-logo" href="/">
+    <img src="/icon.png" alt="" width="26" height="26" onerror="this.remove()">
     <span>hitthe.link</span>
-  </div>
-  <div class="nav-links">
+  </a>
+  <div class="nav-pill">
     <a href="/sel/">Self Exec</a>
     <a href="/xlrd-org/">XLRD</a>
     <a href="/vvsvei/">VVS</a>
@@ -95,8 +119,8 @@ footer{text-align:center;color:rgba(255,255,255,.18);font-size:11px;padding:24px
     <a href="/pricing/">Pricing</a>
   </div>
   <div class="nav-right">
-    <a class="sign-in" href="https://cal.com/ctoeast">Book</a>
-    <a class="get-started" href="/sel/">Get Started</a>
+    <a class="book" href="https://cal.com/ctoeast">Book</a>
+    <a class="cta" href="/sel/">Get Started</a>
   </div>
 </nav>
 
@@ -105,32 +129,40 @@ footer{text-align:center;color:rgba(255,255,255,.18);font-size:11px;padding:24px
   <p>Every site, app, and tool shipped on hitthe.link — live, open, and auto-updating.</p>
 </section>
 
-<div class="cloud-outer">
-  <div class="cloud-stage">
-    <div class="cloud-inner" id="cloud"></div>
+<div class="cloud-wrap">
+  <div class="cloud-perspective">
+    <div class="cloud-scene" id="cloud-main">
+      <div class="cloud-row row-back" id="cloud-back"></div>
+      <div class="cloud-row row-mid" id="cloud-mid"></div>
+      <div class="cloud-row row-front" id="cloud-front"></div>
+    </div>
   </div>
-  <div class="cloud-reflect"></div>
+  <div class="cloud-mirror-wrap">
+    <div class="cloud-mirror" id="cloud-mirror"></div>
+  </div>
+  <div class="cloud-fade"></div>
 </div>
 
 <div class="filterbar">
   <div class="filter-pills" id="pills"></div>
   <div class="search-box">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
       <circle cx="6" cy="6" r="4.5" stroke="white" stroke-width="1.4"/>
       <path d="M10 10l2.5 2.5" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
     </svg>
-    <input id="q" type="search" placeholder="Search" autocomplete="off">
+    <input id="q" type="search" placeholder="Search" autocomplete="off" spellcheck="false">
   </div>
 </div>
 
 <div class="grid-wrap">
   <div class="grid" id="grid"></div>
-  <div class="empty" id="empty" style="display:none">No matches.</div>
+  <div class="empty" id="empty">No matches.</div>
 </div>
 <footer id="foot"></footer>
 
 <script>
-let SITES=[],cat='All',q='';
+let SITES=[],cat='ALL',q='';
+
 const CAT={
   'Music & Studio':'linear-gradient(145deg,#9b3fe8,#e8388a)',
   'Business & L7S':'linear-gradient(145deg,#c8901a,#e8c84a)',
@@ -140,74 +172,106 @@ const CAT={
   'Builds & Apps':'linear-gradient(145deg,#3b5be8,#7c8cff)'
 };
 const ORDER=['Music & Studio','Xen / Voice OS','Business & L7S','Client Sites','Tools & Calculators','Builds & Apps'];
+const SHORT={'Music & Studio':'Music','Xen / Voice OS':'Xen','Business & L7S':'Business','Client Sites':'Client','Tools & Calculators':'Tools','Builds & Apps':'Builds'};
 const g=c=>CAT[c]||'linear-gradient(145deg,#333,#1a1a1a)';
 const recent=iso=>iso&&(Date.now()-new Date(iso).getTime())<7*864e5;
+
 function esc(t){const d=document.createElement('div');d.textContent=t||'';return d.innerHTML;}
 function mono(t){
   const w=(t||'').replace(/[·•|—\-].*$/,'').replace(/[^A-Za-z0-9 ]/g,' ').trim().split(/\s+/).filter(Boolean);
   return((w.length>=2?w[0][0]+w[1][0]:(t||'').slice(0,2)||'??').toUpperCase());
 }
+function iconPath(slug){return slug?'/'+slug+'/icon.png':'';}
 
-// ── 3D ICON CLOUD (Clay-style) ──
+function iconHtml(slug,title,category,px){
+  const path=iconPath(slug);
+  const m=esc(mono(title));
+  const bg=g(category);
+  const fs=px?Math.round(px*.34):14;
+  return`<span class="aicon" style="background:${bg};font-size:${fs}px">${m}<img src="${path}" alt="" loading="lazy" onload="this.previousSibling.style.display='none'" onerror="this.remove()"></span>`;
+}
+
+function makeCloudIcon(s,p,size,delay,dur){
+  const a=document.createElement('a');
+  a.className='ci';
+  a.href=s.url;
+  a.title=s.title;
+  const br=Math.round(size*.22);
+  a.style.cssText=`left:${p.x}px;top:${p.y}px;width:${size}px;height:${size}px;border-radius:${br}px;background:${g(s.category)};`+
+    `font-size:${Math.round(size*.36)}px;animation-duration:${dur}s;animation-delay:-${delay}s;z-index:${p.z};`;
+  a.textContent=mono(s.title);
+  const img=new Image();
+  img.src=iconPath(s.slug);
+  img.alt='';
+  img.onload=()=>{a.textContent='';a.appendChild(img);};
+  return a;
+}
+
+const BACK=[
+  {x:40,y:8,z:1},{x:155,y:2,z:1},{x:280,y:0,z:1},{x:405,y:4,z:1},{x:530,y:6,z:1},{x:655,y:10,z:1},{x:780,y:14,z:1}
+];
+const MID=[
+  {x:90,y:72,z:2},{x:230,y:62,z:2},{x:370,y:58,z:2},{x:510,y:60,z:2},{x:650,y:66,z:2}
+];
+const FRONT=[
+  {x:30,y:148,z:3},{x:175,y:138,z:3},{x:325,y:128,z:3},{x:475,y:132,z:3},{x:625,y:136,z:3},{x:770,y:142,z:3}
+];
+
 function buildCloud(){
-  const el=document.getElementById('cloud');
-  const picks=[...SITES].sort(()=>Math.random()-.5).slice(0,16);
-  // Positions: arc from left to right, back to front
-  const positions=[
-    // back row (smaller, higher)
-    {x:80,y:20,z:-2,s:52},{x:200,y:10,z:-2,s:58},{x:340,y:5,z:-2,s:54},
-    {x:480,y:8,z:-2,s:56},{x:620,y:12,z:-2,s:52},{x:740,y:18,z:-2,s:55},
-    // mid row
-    {x:120,y:80,z:-1,s:64},{x:260,y:68,z:-1,s:70},{x:400,y:60,z:-1,s:68},
-    {x:540,y:65,z:-1,s:66},{x:680,y:72,z:-1,s:64},
-    // front row (larger, lower)
-    {x:50,y:145,z:0,s:82},{x:185,y:132,z:0,s:88},{x:330,y:122,z:0,s:84},
-    {x:480,y:126,z:0,s:90},{x:630,y:130,z:0,s:86}
+  const picks=[...SITES].sort(()=>Math.random()-.5);
+  const back=picks.slice(0,7);
+  const mid=picks.slice(7,12);
+  const front=picks.slice(12,18);
+  const rows=[
+    {el:document.getElementById('cloud-back'),sites:back,pos:BACK,size:52},
+    {el:document.getElementById('cloud-mid'),sites:mid,pos:MID,size:68},
+    {el:document.getElementById('cloud-front'),sites:front,pos:FRONT,size:88}
   ];
-  positions.forEach((p,i)=>{
-    if(!picks[i])return;
-    const s=picks[i];
-    const delay=(i*0.35).toFixed(1);
-    const dur=(3.5+i%3*.8).toFixed(1);
-    const brightness=p.z===0?1:p.z===-1?.82:.65;
-    const a=document.createElement('a');
-    a.className='ci';
-    a.href=s.url;
-    a.style.cssText=`left:${p.x}px;top:${p.y}px;width:${p.s}px;height:${p.s}px;`+
-      `border-radius:${Math.round(p.s*.22)}px;background:${g(s.category)};`+
-      `font-size:${Math.round(p.s*.36)}px;`+
-      `animation-duration:${dur}s;animation-delay:-${delay}s;`+
-      `filter:brightness(${brightness});`+
-      `box-shadow:0 ${p.z===0?16:8}px ${p.z===0?48:24}px rgba(0,0,0,${p.z===0?.8:.6});`+
-      `z-index:${p.z+3};`;
-    a.textContent=mono(s.title);
-    el.appendChild(a);
+  const mirror=document.getElementById('cloud-mirror');
+  mirror.innerHTML='';
+  let i=0;
+  rows.forEach(({el,sites,pos,size})=>{
+    sites.forEach((s,idx)=>{
+      if(!pos[idx])return;
+      const delay=(i*.32).toFixed(2);
+      const dur=(3.4+(i%5)*.65).toFixed(1);
+      const icon=makeCloudIcon(s,pos[idx],size,delay,dur);
+      el.appendChild(icon);
+      const clone=icon.cloneNode(true);
+      clone.removeAttribute('href');
+      clone.style.pointerEvents='none';
+      mirror.appendChild(clone);
+      i++;
+    });
   });
 }
 
-// ── FILTER PILLS ──
-const CAT_ORDER=['All',...ORDER];
 function renderPills(){
-  const seen=new Set(SITES.map(s=>s.category));
-  const cats=['All',...ORDER.filter(c=>seen.has(c)),...Array.from(seen).filter(c=>!ORDER.includes(c))];
-  document.getElementById('pills').innerHTML=cats.map(c=>
-    `<span class="fp${c===cat?' on':''}" data-c="${esc(c)}">${esc(c)}</span>`
-  ).join('');
-  document.querySelectorAll('.fp').forEach(el=>el.onclick=()=>{
-    cat=el.dataset.c;
-    document.querySelectorAll('.fp').forEach(p=>p.classList.toggle('on',p===el));
-    renderGrid();
+  const seen=new Set(SITES.map(s=>s.category).filter(Boolean));
+  const cats=['ALL',...ORDER.filter(c=>seen.has(c)),...Array.from(seen).filter(c=>!ORDER.includes(c))];
+  document.getElementById('pills').innerHTML=cats.map(c=>{
+    const label=c==='ALL'?'ALL':(SHORT[c]||c).toUpperCase();
+    return`<button type="button" class="fp${c===cat?' on':''}" data-c="${esc(c)}">${esc(label)}</button>`;
+  }).join('');
+  document.querySelectorAll('.fp').forEach(el=>{
+    el.onclick=()=>{
+      cat=el.dataset.c;
+      document.querySelectorAll('.fp').forEach(p=>p.classList.toggle('on',p===el));
+      renderGrid();
+    };
   });
 }
 
-// ── APP GRID ──
 function renderGrid(){
-  const f=SITES.filter(s=>(cat==='All'||s.category===cat)&&
-    (q===''||(s.title+' '+s.desc+' '+s.slug+' '+s.category).toLowerCase().includes(q)));
-  document.getElementById('empty').style.display=f.length?'none':'block';
+  const f=SITES.filter(s=>
+    (cat==='ALL'||s.category===cat)&&
+    (q===''||(s.title+' '+s.desc+' '+s.slug+' '+s.category).toLowerCase().includes(q))
+  );
+  const empty=document.getElementById('empty');
+  empty.style.display=f.length?'none':'block';
   document.getElementById('grid').innerHTML=f.map(s=>`
-    <a class="app" href="${s.url}">
-      <span class="aicon" style="background:${g(s.category)}">${esc(mono(s.title))}</span>
+    <a class="app" href="${esc(s.url)}">
+      ${iconHtml(s.slug,s.title,s.category)}
       <span class="abody">
         <span class="aname">${esc(s.title)}${recent(s.updated)?'<span class="anew">New</span>':''}</span>
         <span class="adesc">${esc(s.desc||s.category)}</span>
@@ -215,15 +279,23 @@ function renderGrid(){
     </a>`).join('');
 }
 
-fetch('sites.json?v='+Date.now()).then(r=>r.json()).then(d=>{
-  SITES=(d.sites||[]).filter(s=>s&&s.url&&s.title);
-  document.getElementById('foot').textContent=
-    SITES.length+' apps · auto-updating · '+new Date(d.generated||Date.now()).toLocaleDateString();
-  buildCloud();renderPills();renderGrid();
-}).catch(()=>{});
+fetch('/sites.json?v='+Date.now())
+  .then(r=>{if(!r.ok)throw new Error(r.status);return r.json();})
+  .then(d=>{
+    SITES=(d.sites||[]).filter(s=>s&&s.url&&s.title);
+    document.getElementById('foot').textContent=
+      SITES.length+' apps · auto-updating · '+new Date(d.generated||Date.now()).toLocaleDateString();
+    buildCloud();
+    renderPills();
+    renderGrid();
+  })
+  .catch(()=>{
+    document.getElementById('foot').textContent='Catalog unavailable — check sites.json';
+  });
 
 document.getElementById('q').addEventListener('input',e=>{
-  q=e.target.value.toLowerCase().trim();renderGrid();
+  q=e.target.value.toLowerCase().trim();
+  renderGrid();
 });
 </script>
 </body>
