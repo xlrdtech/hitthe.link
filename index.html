@@ -4,100 +4,133 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>hitthe.link — App Catalog</title>
-<meta name="description" content="Every site, app, and tool shipped on hitthe.link. Browse the catalog.">
-<meta name="theme-color" content="#000000">
-<meta property="og:title" content="hitthe.link — App Catalog">
-<meta property="og:image" content="/icon.png">
+<meta name="description" content="Every site, app, and tool shipped on hitthe.link.">
+<meta name="theme-color" content="#000">
 <link rel="icon" href="/favicon.png">
 <link rel="apple-touch-icon" href="/icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:#000;color:#fff;font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
 
-/* ── Nav ── */
-nav{display:flex;align-items:center;justify-content:space-between;padding:18px 32px;position:sticky;top:0;z-index:50;background:rgba(0,0,0,.7);backdrop-filter:blur(16px)}
-.nav-brand{font-weight:700;font-size:18px;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
-.nav-brand img{width:26px;height:26px;border-radius:7px}
-.nav-count{font-size:12px;color:rgba(255,255,255,.4);font-weight:500;display:flex;align-items:center;gap:6px}
-.live-dot{width:6px;height:6px;border-radius:50%;background:#30d158;box-shadow:0 0 8px #30d158;animation:blink 2s ease-in-out infinite;flex-shrink:0}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+/* ── NAV ── */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;position:sticky;top:0;z-index:100;background:rgba(0,0,0,.8);backdrop-filter:blur(20px)}
+.nav-logo{font-size:17px;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+.nav-logo img{width:24px;height:24px;border-radius:6px;object-fit:cover}
+.nav-links{display:flex;align-items:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:50px;padding:6px 8px;gap:2px}
+.nav-links a{font-size:12.5px;font-weight:500;color:rgba(255,255,255,.6);padding:6px 14px;border-radius:50px;transition:.15s;white-space:nowrap}
+.nav-links a:hover{color:#fff;background:rgba(255,255,255,.08)}
+.nav-right{display:flex;align-items:center;gap:16px}
+.nav-right .sign-in{font-size:13px;font-weight:500;color:rgba(255,255,255,.7)}
+.nav-right .get-started{font-size:13px;font-weight:600;background:#fff;color:#000;padding:8px 18px;border-radius:8px;transition:.15s}
+.nav-right .get-started:hover{background:#e8e8e8}
 
-/* ── Hero ── */
-.hero{text-align:center;padding:60px 24px 0}
-.hero h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(36px,6vw,72px);font-weight:400;letter-spacing:-.02em;line-height:1.1;margin-bottom:16px}
-.hero p{color:rgba(255,255,255,.5);font-size:clamp(14px,2vw,17px);max-width:480px;margin:0 auto;line-height:1.6}
+/* ── HERO ── */
+.hero{text-align:center;padding:56px 24px 0;position:relative;z-index:1}
+.hero h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(38px,5.5vw,70px);font-weight:400;letter-spacing:-.02em;line-height:1.08;margin-bottom:14px}
+.hero p{color:rgba(255,255,255,.45);font-size:15px;max-width:440px;margin:0 auto;line-height:1.65}
 
-/* ── Floating icon cloud ── */
-.cloud{position:relative;height:260px;overflow:hidden;margin:0 auto;max-width:900px}
-.cloud-icon{position:absolute;border-radius:22%;background:#111;border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:rgba(255,255,255,.7);box-shadow:0 8px 32px rgba(0,0,0,.6);animation:float linear infinite;transform-style:preserve-3d;overflow:hidden}
-.cloud-icon img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
-@keyframes float{0%{transform:translateY(0) scale(1)}50%{transform:translateY(-12px) scale(1.03)}100%{transform:translateY(0) scale(1)}}
-.cloud-grad{position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(to top,#000,transparent);pointer-events:none;z-index:2}
+/* ── ICON CLOUD ── */
+.cloud-outer{position:relative;height:290px;overflow:hidden;margin:-10px auto 0;max-width:1000px}
+.cloud-stage{position:absolute;left:50%;top:0;transform:translateX(-50%);width:860px;height:260px;perspective:1000px}
+.cloud-inner{width:100%;height:100%;transform-style:preserve-3d;position:relative}
+.ci{position:absolute;border-radius:22%;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;overflow:hidden;
+  box-shadow:0 12px 40px rgba(0,0,0,.7),0 2px 8px rgba(0,0,0,.5);
+  animation:bob ease-in-out infinite;
+  transform-origin:center center}
+.ci img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+@keyframes bob{0%,100%{transform:translateY(0) var(--rx,rotateX(0)) var(--s,scale(1))}50%{transform:translateY(-10px) var(--rx,rotateX(0)) var(--s,scale(1))}}
+.cloud-reflect{position:absolute;bottom:0;left:0;right:0;height:100px;
+  background:linear-gradient(to top,#000 40%,transparent);
+  pointer-events:none;z-index:10}
+/* Reflection layer */
+.cloud-mirror{position:absolute;left:50%;transform:translateX(-50%);width:860px;height:80px;top:190px;
+  opacity:.28;filter:blur(3px);transform:translateX(-50%) scaleY(-1);pointer-events:none;overflow:hidden}
 
-/* ── Filter bar ── */
-.filterbar{max-width:1100px;margin:32px auto 0;padding:0 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.pills{display:flex;gap:8px;flex-wrap:wrap;flex:1}
-.pill{font-size:12px;font-weight:600;letter-spacing:.02em;padding:7px 15px;border-radius:50px;cursor:pointer;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.55);background:transparent;transition:.15s;white-space:nowrap}
-.pill:hover{color:#fff;border-color:rgba(255,255,255,.4)}
-.pill.on{background:#fff;color:#000;border-color:#fff}
-.search-wrap{position:relative}
-.search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none}
-#q{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#fff;font-size:14px;padding:9px 14px 9px 36px;outline:none;width:220px;transition:.15s}
-#q:focus{border-color:rgba(255,255,255,.4);background:rgba(255,255,255,.1)}
+/* ── FILTER BAR ── */
+.filterbar{max-width:1100px;margin:28px auto 0;padding:0 28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.filter-pills{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.fp{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:6px 14px;border-radius:50px;cursor:pointer;border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.5);background:transparent;transition:.15s;white-space:nowrap}
+.fp:hover{color:#fff;border-color:rgba(255,255,255,.4)}
+.fp.on{background:#fff;color:#000;border-color:#fff}
+.search-box{position:relative;flex-shrink:0}
+.search-box svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;opacity:.4}
+#q{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;color:#fff;font-size:13px;padding:8px 14px 8px 34px;outline:none;width:200px;transition:.15s}
 #q::placeholder{color:rgba(255,255,255,.3)}
+#q:focus{border-color:rgba(255,255,255,.35);background:rgba(255,255,255,.09)}
 
-/* ── Grid ── */
-.grid-wrap{max-width:1100px;margin:28px auto 90px;padding:0 24px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:2px}
-.app{display:flex;align-items:flex-start;gap:14px;padding:18px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:0;transition:.15s;cursor:pointer}
-.app:hover{background:rgba(255,255,255,.06)}
-.grid .app:first-child{border-radius:12px 12px 0 0}
-.grid .app:last-child{border-radius:0 0 12px 12px}
-.app-icon{flex:0 0 46px;width:46px;height:46px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.4)}
-.app-icon img{width:100%;height:100%;object-fit:cover}
-.app-body{flex:1;min-width:0}
-.app-name{font-size:15px;font-weight:600;letter-spacing:-.01em;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.app-desc{font-size:12.5px;color:rgba(255,255,255,.4);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.app-new{display:inline-block;font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#000;background:#30d158;padding:2px 6px;border-radius:50px;margin-left:7px;vertical-align:middle}
+/* ── APP GRID ── */
+.grid-wrap{max-width:1100px;margin:22px auto 80px;padding:0 28px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.app{display:flex;align-items:flex-start;gap:13px;background:#1c1c1e;border-radius:12px;padding:16px;cursor:pointer;transition:.15s;border:1px solid rgba(255,255,255,.04)}
+.app:hover{background:#242428;border-color:rgba(255,255,255,.09)}
+.aicon{flex:0 0 44px;width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;overflow:hidden;flex-shrink:0}
+.aicon img{width:100%;height:100%;object-fit:cover;border-radius:10px}
+.abody{flex:1;min-width:0}
+.aname{font-size:14.5px;font-weight:600;letter-spacing:-.01em;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:7px}
+.adesc{font-size:12px;color:rgba(255,255,255,.38);line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.anew{font-size:8px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#000;background:#30d158;padding:2px 6px;border-radius:50px;flex-shrink:0}
 
-.empty{text-align:center;color:rgba(255,255,255,.25);padding:80px 0;font-size:15px}
-footer{text-align:center;color:rgba(255,255,255,.2);font-size:11.5px;padding:28px;border-top:1px solid rgba(255,255,255,.06);max-width:1100px;margin:0 auto}
-@media(max-width:600px){.cloud{height:200px}.hero h1{font-size:36px}#q{width:160px}}
+.empty{text-align:center;color:rgba(255,255,255,.2);padding:80px;font-size:14px}
+footer{text-align:center;color:rgba(255,255,255,.18);font-size:11px;padding:24px;border-top:1px solid rgba(255,255,255,.05);max-width:1100px;margin:0 auto}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.nav-links{display:none}}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.cloud-outer{height:200px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 
-<nav>
-  <div class="nav-brand"><img src="/icon.png" id="navicon" onerror="this.style.display='none'"><span>hitthe.link</span></div>
-  <div class="nav-count"><span class="live-dot"></span><span id="livecount">loading…</span></div>
+<nav class="nav">
+  <div class="nav-logo">
+    <img src="/icon.png" onerror="this.style.display='none'">
+    <span>hitthe.link</span>
+  </div>
+  <div class="nav-links">
+    <a href="/sel/">Self Exec</a>
+    <a href="/xlrd-org/">XLRD</a>
+    <a href="/vvsvei/">VVS</a>
+    <a href="/mb/">M_B</a>
+    <a href="/pricing/">Pricing</a>
+  </div>
+  <div class="nav-right">
+    <a class="sign-in" href="https://cal.com/ctoeast">Book</a>
+    <a class="get-started" href="/sel/">Get Started</a>
+  </div>
 </nav>
 
 <section class="hero">
   <h1>App catalog</h1>
-  <p>Every site, app, and tool shipped here — live and open.</p>
+  <p>Every site, app, and tool shipped on hitthe.link — live, open, and auto-updating.</p>
 </section>
 
-<div class="cloud" id="cloud">
-  <div class="cloud-grad"></div>
+<div class="cloud-outer">
+  <div class="cloud-stage">
+    <div class="cloud-inner" id="cloud"></div>
+  </div>
+  <div class="cloud-reflect"></div>
 </div>
 
 <div class="filterbar">
-  <div class="pills" id="pills"></div>
-  <div class="search-wrap">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/><path d="M10 10l2.5 2.5" stroke="rgba(255,255,255,.3)" stroke-width="1.5" stroke-linecap="round"/></svg>
-    <input id="q" type="search" placeholder="Search…" autocomplete="off">
+  <div class="filter-pills" id="pills"></div>
+  <div class="search-box">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <circle cx="6" cy="6" r="4.5" stroke="white" stroke-width="1.4"/>
+      <path d="M10 10l2.5 2.5" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
+    </svg>
+    <input id="q" type="search" placeholder="Search" autocomplete="off">
   </div>
 </div>
 
-<div class="grid-wrap"><div class="grid" id="grid"></div><div class="empty" id="empty" style="display:none">No matches.</div></div>
-<footer id="gen"></footer>
+<div class="grid-wrap">
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none">No matches.</div>
+</div>
+<footer id="foot"></footer>
 
 <script>
-let SITES=[], cat='All', q='';
+let SITES=[],cat='All',q='';
 const CAT={
   'Music & Studio':'linear-gradient(145deg,#9b3fe8,#e8388a)',
   'Business & L7S':'linear-gradient(145deg,#c8901a,#e8c84a)',
@@ -107,68 +140,91 @@ const CAT={
   'Builds & Apps':'linear-gradient(145deg,#3b5be8,#7c8cff)'
 };
 const ORDER=['Music & Studio','Xen / Voice OS','Business & L7S','Client Sites','Tools & Calculators','Builds & Apps'];
-const g=c=>CAT[c]||'linear-gradient(145deg,#444,#222)';
+const g=c=>CAT[c]||'linear-gradient(145deg,#333,#1a1a1a)';
 const recent=iso=>iso&&(Date.now()-new Date(iso).getTime())<7*864e5;
 function esc(t){const d=document.createElement('div');d.textContent=t||'';return d.innerHTML;}
 function mono(t){
   const w=(t||'').replace(/[·•|—\-].*$/,'').replace(/[^A-Za-z0-9 ]/g,' ').trim().split(/\s+/).filter(Boolean);
-  return esc((w.length>=2?w[0][0]+w[1][0]:(t||'').slice(0,2)||'??').toUpperCase());
-}
-function iconEl(s,sz){
-  const sz2=sz||46,r=Math.round(sz2*.24);
-  return `<span class="app-icon" style="width:${sz2}px;height:${sz2}px;border-radius:${r}px;background:${g(s.category)}">${mono(s.title)}</span>`;
+  return((w.length>=2?w[0][0]+w[1][0]:(t||'').slice(0,2)||'??').toUpperCase());
 }
 
-// Build floating cloud
+// ── 3D ICON CLOUD (Clay-style) ──
 function buildCloud(){
-  const cloud=document.getElementById('cloud');
-  const picks=SITES.slice(0,18);
-  const W=cloud.offsetWidth||900, H=cloud.offsetHeight||260;
-  picks.forEach((s,i)=>{
-    const angle=(i/picks.length)*Math.PI;
-    const cx=W/2, spread=W*.42;
-    const x=cx+Math.cos(angle-(Math.PI/2)+(i%2?-.3:.3))*spread*(0.5+Math.random()*.5)-30;
-    const y=H*.18+Math.sin(angle)*H*.55+Math.random()*30;
-    const sz=40+Math.floor(Math.random()*28);
-    const delay=(Math.random()*4).toFixed(1);
-    const dur=(3+Math.random()*3).toFixed(1);
-    const el=document.createElement('a');
-    el.className='cloud-icon';
-    el.href=s.url;
-    el.style.cssText=`left:${x}px;top:${y}px;width:${sz}px;height:${sz}px;border-radius:${Math.round(sz*.24)}px;background:${g(s.category)};font-size:${Math.round(sz*.38)}px;animation-duration:${dur}s;animation-delay:-${delay}s;z-index:${i}`;
-    el.innerHTML=mono(s.title);
-    cloud.insertBefore(el,cloud.querySelector('.cloud-grad'));
+  const el=document.getElementById('cloud');
+  const picks=[...SITES].sort(()=>Math.random()-.5).slice(0,16);
+  // Positions: arc from left to right, back to front
+  const positions=[
+    // back row (smaller, higher)
+    {x:80,y:20,z:-2,s:52},{x:200,y:10,z:-2,s:58},{x:340,y:5,z:-2,s:54},
+    {x:480,y:8,z:-2,s:56},{x:620,y:12,z:-2,s:52},{x:740,y:18,z:-2,s:55},
+    // mid row
+    {x:120,y:80,z:-1,s:64},{x:260,y:68,z:-1,s:70},{x:400,y:60,z:-1,s:68},
+    {x:540,y:65,z:-1,s:66},{x:680,y:72,z:-1,s:64},
+    // front row (larger, lower)
+    {x:50,y:145,z:0,s:82},{x:185,y:132,z:0,s:88},{x:330,y:122,z:0,s:84},
+    {x:480,y:126,z:0,s:90},{x:630,y:130,z:0,s:86}
+  ];
+  positions.forEach((p,i)=>{
+    if(!picks[i])return;
+    const s=picks[i];
+    const delay=(i*0.35).toFixed(1);
+    const dur=(3.5+i%3*.8).toFixed(1);
+    const brightness=p.z===0?1:p.z===-1?.82:.65;
+    const a=document.createElement('a');
+    a.className='ci';
+    a.href=s.url;
+    a.style.cssText=`left:${p.x}px;top:${p.y}px;width:${p.s}px;height:${p.s}px;`+
+      `border-radius:${Math.round(p.s*.22)}px;background:${g(s.category)};`+
+      `font-size:${Math.round(p.s*.36)}px;`+
+      `animation-duration:${dur}s;animation-delay:-${delay}s;`+
+      `filter:brightness(${brightness});`+
+      `box-shadow:0 ${p.z===0?16:8}px ${p.z===0?48:24}px rgba(0,0,0,${p.z===0?.8:.6});`+
+      `z-index:${p.z+3};`;
+    a.textContent=mono(s.title);
+    el.appendChild(a);
   });
 }
 
-function renderGrid(){
-  const f=SITES.filter(s=>(cat==='All'||s.category===cat)&&(q===''||(s.title+' '+s.desc+' '+s.slug+' '+s.category).toLowerCase().includes(q)));
-  document.getElementById('empty').style.display=f.length?'none':'block';
-  document.getElementById('grid').innerHTML=f.map(s=>`<a class="app" href="${s.url}">
-    ${iconEl(s)}
-    <span class="app-body">
-      <span class="app-name">${esc(s.title)}${recent(s.updated)?'<span class="app-new">New</span>':''}</span>
-      <span class="app-desc">${esc(s.desc||s.category)}</span>
-    </span></a>`).join('');
-}
-
+// ── FILTER PILLS ──
+const CAT_ORDER=['All',...ORDER];
 function renderPills(){
-  const cats=['All',...ORDER.filter(c=>SITES.some(s=>s.category===c)),...Array.from(new Set(SITES.map(s=>s.category))).filter(c=>!ORDER.includes(c))];
-  document.getElementById('pills').innerHTML=cats.map(c=>`<span class="pill${c===cat?' on':''}" data-c="${esc(c)}">${esc(c)}</span>`).join('');
-  document.querySelectorAll('.pill').forEach(el=>el.onclick=()=>{
+  const seen=new Set(SITES.map(s=>s.category));
+  const cats=['All',...ORDER.filter(c=>seen.has(c)),...Array.from(seen).filter(c=>!ORDER.includes(c))];
+  document.getElementById('pills').innerHTML=cats.map(c=>
+    `<span class="fp${c===cat?' on':''}" data-c="${esc(c)}">${esc(c)}</span>`
+  ).join('');
+  document.querySelectorAll('.fp').forEach(el=>el.onclick=()=>{
     cat=el.dataset.c;
-    document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p===el));
+    document.querySelectorAll('.fp').forEach(p=>p.classList.toggle('on',p===el));
     renderGrid();
   });
 }
 
+// ── APP GRID ──
+function renderGrid(){
+  const f=SITES.filter(s=>(cat==='All'||s.category===cat)&&
+    (q===''||(s.title+' '+s.desc+' '+s.slug+' '+s.category).toLowerCase().includes(q)));
+  document.getElementById('empty').style.display=f.length?'none':'block';
+  document.getElementById('grid').innerHTML=f.map(s=>`
+    <a class="app" href="${s.url}">
+      <span class="aicon" style="background:${g(s.category)}">${esc(mono(s.title))}</span>
+      <span class="abody">
+        <span class="aname">${esc(s.title)}${recent(s.updated)?'<span class="anew">New</span>':''}</span>
+        <span class="adesc">${esc(s.desc||s.category)}</span>
+      </span>
+    </a>`).join('');
+}
+
 fetch('sites.json?v='+Date.now()).then(r=>r.json()).then(d=>{
   SITES=(d.sites||[]).filter(s=>s&&s.url&&s.title);
-  document.getElementById('livecount').textContent=SITES.length+' apps';
-  document.getElementById('gen').textContent='Auto-updating from sites.json · '+new Date(d.generated||Date.now()).toLocaleDateString();
+  document.getElementById('foot').textContent=
+    SITES.length+' apps · auto-updating · '+new Date(d.generated||Date.now()).toLocaleDateString();
   buildCloud();renderPills();renderGrid();
-}).catch(()=>{document.getElementById('livecount').textContent='catalog unavailable';});
-document.getElementById('q').addEventListener('input',e=>{q=e.target.value.toLowerCase().trim();renderGrid();});
+}).catch(()=>{});
+
+document.getElementById('q').addEventListener('input',e=>{
+  q=e.target.value.toLowerCase().trim();renderGrid();
+});
 </script>
 </body>
 </html>
