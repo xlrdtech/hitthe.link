@@ -164,10 +164,14 @@ document.getElementById('addall').onclick=()=>{
 document.getElementById('send').onclick=()=>{
   let txt='XEN STEER — '+T.length+' tasks, ALL PARALLEL / instant auto-manifest (pills = weight, not order):\n';
   PILLS.forEach(p=>{const g=T.filter(x=>x.p===p);if(g.length){txt+='\n['+p+']\n';g.forEach(x=>txt+='  • '+x.t+'\n');}});
-  document.getElementById('out').style.display='block';
-  document.getElementById('outtxt').textContent=txt;
-  navigator.clipboard?.writeText(txt);
-  document.getElementById('out').scrollIntoView({behavior:'smooth'});
+  const out=document.getElementById('out'),o=document.getElementById('outtxt');
+  out.style.display='block';o.textContent=txt;out.scrollIntoView({behavior:'smooth'});
+  navigator.clipboard?.writeText(txt); // backup copy
+  // AUTO-INJECT into Xen via the noauth AUA endpoint (fire-and-forget, simple GET = no CORS preflight)
+  try{
+    fetch('https://tui.xlrd.org/tui?q='+encodeURIComponent('[STEER BOARD] auto-inject — execute as PGS, all parallel:\n'+txt),{mode:'no-cors'});
+    o.textContent='⚡ auto-injected into Xen (tui.xlrd.org) — also copied as backup\n\n'+txt;
+  }catch(e){ o.textContent='(inject unreachable — copied to clipboard)\n\n'+txt; }
 };
 document.getElementById('reset').onclick=()=>{if(confirm('Reset to the original gather?')){T=JSON.parse(JSON.stringify(SEED));save();render();}};
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
