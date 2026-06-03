@@ -153,9 +153,9 @@ function esc(t){const d=document.createElement('div');d.textContent=t||'';return
 function mono(t){const w=(t||'').replace(/[·•|—\-].*$/,'').replace(/[^A-Za-z0-9 ]/g,' ').trim().split(/\s+/).filter(Boolean);return((w.length>=2?w[0][0]+w[1][0]:(t||'').slice(0,2)||'??').toUpperCase());}
 function iconHtml(slug,title,category){
   const m=esc(mono(title)),bg=g(category);
-  if(!slug)return`<span class="aicon" style="background:${bg}">${m}</span>`;
+  if(!slug)return`<span class="aicon" style="background:${bg}"><b class="mono">${m}</b></span>`;
   const png='/'+slug+'/icon.png',svg='/'+slug+'/icon.svg';
-  return`<span class="aicon" style="background:${bg}">${m}<img src="${png}" alt="" loading="lazy" onload="this.previousSibling.style.display='none'" onerror="this.onerror=null;this.src='${svg}';this.onerror=function(){this.remove()}"></span>`;
+  return`<span class="aicon" style="background:${bg}"><b class="mono">${m}</b><img src="${png}" alt="" loading="lazy" onload="var p=this.previousElementSibling;if(p)p.style.display='none'" onerror="this.onerror=null;this.src='${svg}';this.onerror=function(){this.remove()}"></span>`;
 }
 function renderPills(){
   const counts={};SITES.forEach(s=>{counts[s.category]=(counts[s.category]||0)+1;});
