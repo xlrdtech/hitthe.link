@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>hitthe.link — App Catalog</title>
 <meta name="description" content="Every site, app, and tool shipped on hitthe.link.">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#000001">
 <link rel="icon" href="/favicon.png">
 <link rel="apple-touch-icon" href="/icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,373 +13,231 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{background:#000;color:#fff;font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+html,body{background:#000001;color:#fff;font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
 
+/* COSMIC SWARM — fixed full-bleed background */
+#swarm-bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+#swarm-bg canvas{display:block}
+.vignette{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(circle at 50% 38%,transparent 12%,rgba(0,0,1,.62) 78%,#000001 115%)}
+.page{position:relative;z-index:2}
+
 /* NAV */
-.nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:clamp(12px,2vw,14px) clamp(16px,4vw,32px);background:rgba(0,0,0,.72);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.05);gap:12px}
+.nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:clamp(12px,2vw,14px) clamp(16px,4vw,32px);background:rgba(0,0,1,.55);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.06);gap:12px}
 .nav-left{display:flex;align-items:center;gap:8px}
 .nav-logo{font-size:clamp(15px,2.2vw,17px);font-weight:700;letter-spacing:-.03em;display:flex;align-items:center;gap:8px;min-height:44px}
 .nav-logo img{width:26px;height:26px;border-radius:7px;object-fit:cover}
-.nav-pill{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:10;display:flex;align-items:center;gap:2px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:4px 6px}
-.nav-pill a{font-size:clamp(12px,1.6vw,13px);font-weight:500;color:rgba(255,255,255,.55);padding:10px 16px;border-radius:999px;transition:.2s;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center}
-.nav-pill a:hover{color:#fff;background:rgba(255,255,255,.06)}
+.nav-pill{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:10;display:flex;align-items:center;gap:2px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:999px;padding:4px 6px;backdrop-filter:blur(12px)}
+.nav-pill a{font-size:clamp(12px,1.6vw,13px);font-weight:500;color:rgba(255,255,255,.6);padding:10px 16px;border-radius:999px;transition:.2s;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center}
+.nav-pill a:hover{color:#fff;background:rgba(255,255,255,.08)}
 .nav-right{display:flex;align-items:center;gap:clamp(10px,2vw,18px);margin-left:auto}
-.nav-right .book{font-size:clamp(12px,1.6vw,13px);font-weight:500;color:rgba(255,255,255,.65);transition:color .15s;padding:10px 4px;min-height:44px;display:inline-flex;align-items:center}
+.nav-right .book{font-size:clamp(12px,1.6vw,13px);font-weight:500;color:rgba(255,255,255,.7);padding:10px 4px;min-height:44px;display:inline-flex;align-items:center}
 .nav-right .book:hover{color:#fff}
 .nav-right .cta{font-size:clamp(12px,1.6vw,13px);font-weight:600;background:#fff;color:#000;padding:10px 20px;border-radius:999px;transition:.15s;min-height:44px;display:inline-flex;align-items:center}
-.nav-right .cta:hover{background:#e4e4e4}
-.nav-menu-btn{display:none;align-items:center;justify-content:center;width:44px;height:44px;padding:0;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:rgba(255,255,255,.04);color:#fff;cursor:pointer}
-.nav-menu-btn svg{display:block}
-.nav-drawer{display:none;position:fixed;inset:0;top:calc(clamp(12px,2vw,14px)*2 + 44px);z-index:190;background:rgba(0,0,0,.55);backdrop-filter:blur(8px)}
+.nav-right .cta:hover{background:#cfe8ff}
+.nav-menu-btn{display:none;align-items:center;justify-content:center;width:44px;height:44px;padding:0;border:1px solid rgba(255,255,255,.14);border-radius:10px;background:rgba(255,255,255,.05);color:#fff;cursor:pointer}
+.nav-drawer{display:none;position:fixed;inset:0;top:calc(clamp(12px,2vw,14px)*2 + 44px);z-index:190;background:rgba(0,0,1,.6);backdrop-filter:blur(10px)}
 .nav-drawer.open{display:block}
-.nav-drawer-inner{background:#0a0a0a;border-top:1px solid rgba(255,255,255,.08);padding:12px 20px 20px;display:flex;flex-direction:column;gap:4px}
-.nav-drawer a{font-size:clamp(14px,2vw,15px);font-weight:500;color:rgba(255,255,255,.75);padding:14px 12px;border-radius:10px;min-height:44px;display:flex;align-items:center}
-.nav-drawer a:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav-drawer-inner{background:rgba(6,10,16,.96);border-top:1px solid rgba(255,255,255,.08);padding:12px 20px 20px;display:flex;flex-direction:column;gap:4px}
+.nav-drawer a{font-size:clamp(14px,2vw,15px);font-weight:500;color:rgba(255,255,255,.8);padding:14px 12px;border-radius:10px;min-height:44px;display:flex;align-items:center}
+.nav-drawer a:hover{background:rgba(255,255,255,.07);color:#fff}
 
-/* HERO */
-.hero{text-align:center;padding:clamp(28px,5vw,52px) clamp(16px,4vw,24px) 0;position:relative;z-index:2}
-.hero h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(32px,5.2vw,68px);font-weight:400;letter-spacing:-.02em;line-height:1.08;margin-bottom:clamp(10px,1.5vw,14px)}
-.hero p{color:rgba(255,255,255,.42);font-size:clamp(13px,2vw,15px);max-width:460px;margin:0 auto;line-height:1.5;text-wrap:balance}
-
-/* ICON CLOUD */
-.cloud-wrap{position:relative;max-width:min(1040px,100vw);margin:0 auto;margin-bottom:clamp(6px,1.2vw,12px);height:clamp(200px,38vw,300px);overflow:hidden}
-.cloud-perspective{position:absolute;top:0;left:50%;transform:translateX(-50%);width:min(920px,100vw);height:clamp(200px,38vw,280px);perspective:1200px;perspective-origin:50% 22%}
-.cloud-scene{position:relative;width:100%;height:100%;transform-style:preserve-3d}
-.cloud-row{position:absolute;left:0;right:0;height:100%;pointer-events:none}
-.cloud-row a{pointer-events:auto}
-.ci{position:absolute;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;overflow:hidden;
-  border-radius:22%;box-shadow:0 8px 32px rgba(0,0,0,.55);
-  animation:bob ease-in-out infinite;transform-origin:center center;transition:transform .2s}
-.ci:hover{transform:translateY(-4px) scale(1.04)!important;z-index:20!important}
-.ci img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
-.row-back .ci{filter:brightness(.6)}
-.row-mid .ci{filter:brightness(.8)}
-.row-front .ci{filter:brightness(1);box-shadow:0 20px 56px rgba(0,0,0,.75),0 4px 12px rgba(0,0,0,.4)}
-@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
-
-/* Reflection — duplicate cloud, flipped */
-.cloud-mirror-wrap{position:absolute;left:50%;top:44%;transform:translateX(-50%);width:min(920px,100vw);height:clamp(80px,18vw,130px);overflow:hidden;pointer-events:none;z-index:1}
-.cloud-mirror{position:absolute;left:0;top:0;width:100%;height:clamp(200px,38vw,280px);transform:scaleY(-1);transform-origin:top center;opacity:.18;filter:blur(3.5px);
-  -webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.55) 0%,transparent 78%);
-  mask-image:linear-gradient(to bottom,rgba(0,0,0,.55) 0%,transparent 78%)}
-.cloud-fade{position:absolute;left:0;right:0;bottom:0;height:120px;
-  background:linear-gradient(to bottom,transparent 0%,#000 78%);pointer-events:none;z-index:5}
+/* HERO (over swarm — no icon cloud) */
+.hero{text-align:center;padding:clamp(56px,12vh,140px) clamp(16px,4vw,24px) clamp(40px,9vh,90px)}
+.hero .kick{font-size:11px;font-weight:600;letter-spacing:.4em;text-transform:uppercase;color:#7dd3fc;margin-bottom:18px;text-shadow:0 0 18px rgba(0,240,255,.4)}
+.hero h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(34px,6vw,76px);font-weight:400;letter-spacing:-.02em;line-height:1.06;margin-bottom:14px;text-shadow:0 2px 40px rgba(0,0,1,.9)}
+.hero h1 i{font-style:italic;color:#cfe2ff}
+.hero p{color:rgba(224,242,254,.62);font-size:clamp(13px,2vw,15px);max-width:480px;margin:0 auto;line-height:1.55;text-wrap:balance;text-shadow:0 1px 16px rgba(0,0,1,.9)}
 
 /* FILTER */
-.filterbar{max-width:1100px;margin:clamp(16px,3vw,28px) auto 0;padding:0 clamp(16px,4vw,28px);display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:nowrap}
-.filter-pills{display:flex;align-items:center;gap:6px;flex:1;min-width:0;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
+.filterbar{max-width:1140px;margin:0 auto;padding:0 clamp(16px,4vw,28px);display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:nowrap;position:sticky;top:64px;z-index:150}
+.filter-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;background:rgba(4,9,16,.66);border:1px solid rgba(125,211,252,.14);border-radius:14px;padding:8px 10px;backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%)}
+.filter-pills{display:flex;align-items:center;gap:6px;flex:1;min-width:0;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .filter-pills::-webkit-scrollbar{display:none}
-.fp{font-size:clamp(10px,1.4vw,11px);font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:10px 14px;border-radius:999px;cursor:pointer;
-  border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.45);background:transparent;transition:.15s;white-space:nowrap;min-height:44px;flex-shrink:0}
-.fp:hover{color:#fff;border-color:rgba(255,255,255,.45)}
+.fp{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;padding:9px 14px;border-radius:999px;cursor:pointer;border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.5);background:transparent;transition:.15s;white-space:nowrap;min-height:40px;flex-shrink:0;display:inline-flex;align-items:center;gap:7px}
+.fp:hover{color:#fff;border-color:rgba(125,211,252,.5)}
 .fp.on{background:#fff;color:#000;border-color:#fff}
+.fp .ct{font-size:10px;opacity:.6;font-weight:700}
+.fp.on .ct{opacity:.55}
 .search-box{position:relative;flex-shrink:0}
-.search-box svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.35;pointer-events:none}
-#q{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#fff;font-size:clamp(13px,1.8vw,14px);
-  padding:12px 14px 12px 36px;outline:none;width:min(220px,100%);min-height:44px;transition:.15s;font-family:inherit}
-#q::placeholder{color:rgba(255,255,255,.28)}
-#q:focus{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.07)}
+.search-box svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.4;pointer-events:none}
+#q{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#fff;font-size:14px;padding:11px 30px 11px 36px;outline:none;width:min(220px,42vw);min-height:40px;transition:.15s;font-family:inherit}
+#q::placeholder{color:rgba(255,255,255,.32)}
+#q:focus{border-color:rgba(125,211,252,.5);background:rgba(255,255,255,.08);width:min(260px,52vw)}
+#qx{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:22px;height:22px;border:0;border-radius:50%;background:rgba(255,255,255,.1);color:#fff;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:13px;line-height:1}
+#qx.show{display:flex}
 
-/* GRID */
-.grid-wrap{max-width:1100px;margin:clamp(10px,1.5vw,20px) auto clamp(40px,6vw,72px);padding:0 clamp(16px,4vw,28px)}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(10px,2vw,12px);align-items:stretch}
-.app{display:flex;align-items:flex-start;gap:12px;background:#1c1c1e;border-radius:12px;padding:clamp(14px,2.5vw,16px);cursor:pointer;min-height:106px;
-  transition:background .15s,border-color .15s;border:1px solid transparent;height:100%}
-.app:hover{background:#252528;border-color:rgba(255,255,255,.06)}
-.aicon{flex:0 0 44px;width:44px;height:44px;min-width:44px;min-height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;
-  font-size:13px;font-weight:800;color:#fff;overflow:hidden;flex-shrink:0}
+/* GRID — auto-fill, no fixed breakpoints, no orphan centering */
+.grid-wrap{max-width:1140px;margin:clamp(20px,3vw,30px) auto clamp(40px,6vw,72px);padding:0 clamp(16px,4vw,28px)}
+.section-label{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgba(125,211,252,.7);margin:clamp(20px,3vw,30px) 2px 12px;display:flex;align-items:center;gap:10px}
+.section-label::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(125,211,252,.3),transparent)}
+.section-label .n{color:rgba(255,255,255,.3)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(252px,1fr));gap:clamp(10px,1.5vw,13px);align-items:stretch}
+.app{display:flex;align-items:flex-start;gap:12px;background:rgba(16,20,28,.62);border-radius:13px;padding:clamp(14px,2.5vw,16px);cursor:pointer;min-height:104px;transition:background .15s,border-color .15s,transform .15s;border:1px solid rgba(255,255,255,.06);height:100%;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.app:hover{background:rgba(24,30,42,.8);border-color:rgba(125,211,252,.35);transform:translateY(-2px)}
+.aicon{flex:0 0 44px;width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;overflow:hidden;flex-shrink:0}
 .aicon img,.aicon svg{width:100%;height:100%;object-fit:cover;border-radius:10px;display:block}
 .abody{flex:1;min-width:0}
-.aname{font-size:clamp(14px,2vw,15px);font-weight:700;letter-spacing:-.02em;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  display:flex;align-items:center;gap:6px}
-.adesc{font-size:clamp(11px,1.6vw,12px);color:rgba(255,255,255,.38);line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.anew{font-size:clamp(7px,1vw,8px);font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#000;background:#30d158;padding:2px 6px;border-radius:50px;flex-shrink:0}
-.empty{text-align:center;color:rgba(255,255,255,.22);padding:clamp(48px,8vw,72px) 0;font-size:clamp(12px,1.8vw,14px);display:none}
-footer{text-align:center;color:rgba(255,255,255,.16);font-size:clamp(10px,1.4vw,11px);padding:clamp(16px,3vw,20px) clamp(16px,4vw,28px) clamp(24px,4vw,32px);border-top:1px solid rgba(255,255,255,.05);max-width:1100px;margin:0 auto}
+.aname{font-size:15px;font-weight:700;letter-spacing:-.02em;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+.adesc{font-size:12px;color:rgba(224,242,254,.5);line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.anew{font-size:8px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#001;background:#5dffb0;padding:2px 6px;border-radius:50px;flex-shrink:0}
+.empty{text-align:center;color:rgba(255,255,255,.3);padding:clamp(48px,8vw,72px) 0;font-size:14px;display:none}
+footer{text-align:center;color:rgba(255,255,255,.32);font-size:11px;padding:clamp(16px,3vw,20px) clamp(16px,4vw,28px) clamp(28px,5vw,44px);max-width:1140px;margin:0 auto}
 
-/* RESPONSIVE GRID: 4@>=1100, 3@768-1099, 2@480-767, 1@<480 */
-@media(max-width:1099px){.grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:767px){.grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:479px){.grid{grid-template-columns:1fr}}
-
-/* MOBILE FILTER + NAV (stack filter, hide pill) */
 @media(max-width:768px){
   .nav-right .book{display:none}
-  .nav-left{gap:6px}
-  .nav-right{gap:8px}
-  .filterbar{flex-direction:column;align-items:stretch;gap:10px}
-  .filter-pills{flex:0 0 auto;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
-  .search-box{width:100%;flex:none}
-  #q{width:100%}
   .nav-pill{display:none}
   .nav-menu-btn{display:inline-flex}
+  .filterbar{top:60px;flex-direction:column;align-items:stretch}
+  .filter-inner{flex-direction:column;gap:10px}
+  .filter-pills{width:100%}
+  .search-box{width:100%}#q,#q:focus{width:100%}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+  .hero{padding-top:clamp(40px,9vh,80px)}
 }
-
-/* no more cloud scale hacks; JS handles fitting + centering */
-@media(prefers-reduced-motion:reduce){*,.ci{animation:none!important;transition:none!important}}
-
-/* ACCESSIBILITY: focus rings on ALL interactive (2px solid white @0.6) */
-:focus-visible{outline:2px solid rgba(255,255,255,.6);outline-offset:2px;border-radius:4px}
-a:focus-visible,button:focus-visible,input:focus-visible,.nav-logo:focus-visible,.nav-pill a:focus-visible,.nav-right a:focus-visible,.nav-drawer a:focus-visible,.nav-menu-btn:focus-visible,.app:focus-visible,.ci:focus-visible,.fp:focus-visible{outline:2px solid rgba(255,255,255,.6);outline-offset:2px}
+@media(max-width:430px){.grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+:focus-visible{outline:2px solid rgba(125,211,252,.7);outline-offset:2px;border-radius:6px}
 </style>
 </head>
 <body>
 
+<div id="swarm-bg"></div>
+<div class="vignette"></div>
+
+<div class="page">
 <nav class="nav">
   <div class="nav-left">
-    <a class="nav-logo" href="/">
-      <img src="/icon.png" alt="" width="26" height="26" onerror="this.remove()">
-      <span>hitthe.link</span>
-    </a>
+    <a class="nav-logo" href="/"><img src="/icon.png" alt="" width="26" height="26" onerror="this.remove()"><span>hitthe.link</span></a>
     <button type="button" class="nav-menu-btn" id="nav-menu-btn" aria-label="Open menu" aria-expanded="false">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-        <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-      </svg>
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
     </button>
   </div>
   <div class="nav-pill" aria-hidden="true">
-    <a href="/sel/">Self Exec</a>
-    <a href="/xlrd-org/">XLRD</a>
-    <a href="/vvsvei/">VVS</a>
-    <a href="/mb/">M_B</a>
-    <a href="/pricing/">Pricing</a>
+    <a href="/sel/">Self Exec</a><a href="/xlrd-org/">XLRD</a><a href="/vvsvei/">VVS</a><a href="/mb/">M_B</a><a href="/pricing/">Pricing</a>
   </div>
-  <div class="nav-right">
-    <a class="book" href="https://cal.com/ctoeast">Book</a>
-    <a class="cta" href="/sel/">Start</a>
-  </div>
+  <div class="nav-right"><a class="book" href="https://cal.com/ctoeast">Book</a><a class="cta" href="/sel/">Start</a></div>
 </nav>
-<div class="nav-drawer" id="nav-drawer" hidden>
-  <div class="nav-drawer-inner">
-    <a href="/sel/">Self Exec</a>
-    <a href="/xlrd-org/">XLRD</a>
-    <a href="/vvsvei/">VVS</a>
-    <a href="/mb/">M_B</a>
-    <a href="/pricing/">Pricing</a>
-  </div>
-</div>
+<div class="nav-drawer" id="nav-drawer" hidden><div class="nav-drawer-inner">
+  <a href="/sel/">Self Exec</a><a href="/xlrd-org/">XLRD</a><a href="/vvsvei/">VVS</a><a href="/mb/">M_B</a><a href="/pricing/">Pricing</a>
+</div></div>
 
 <section class="hero">
-  <h1>App catalog</h1>
+  <div class="kick">The hitthe.link Estate</div>
+  <h1>App <i>catalog</i></h1>
   <p>Every site, app, and tool shipped on hitthe.link — live, open, and&nbsp;auto-updating.</p>
 </section>
 
-<div class="cloud-wrap">
-  <div class="cloud-perspective">
-    <div class="cloud-scene" id="cloud-main">
-      <div class="cloud-row row-back" id="cloud-back"></div>
-      <div class="cloud-row row-mid" id="cloud-mid"></div>
-      <div class="cloud-row row-front" id="cloud-front"></div>
-    </div>
-  </div>
-  <div class="cloud-mirror-wrap">
-    <div class="cloud-mirror" id="cloud-mirror"></div>
-  </div>
-  <div class="cloud-fade"></div>
-</div>
-
-<div class="filterbar">
+<div class="filterbar"><div class="filter-inner">
   <div class="filter-pills" id="pills"></div>
   <div class="search-box">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-      <circle cx="6" cy="6" r="4.5" stroke="white" stroke-width="1.4"/>
-      <path d="M10 10l2.5 2.5" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
-    </svg>
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="4.5" stroke="white" stroke-width="1.4"/><path d="M10 10l2.5 2.5" stroke="white" stroke-width="1.4" stroke-linecap="round"/></svg>
     <input id="q" type="search" placeholder="Search" autocomplete="off" spellcheck="false">
+    <button id="qx" aria-label="Clear search">×</button>
   </div>
-</div>
+</div></div>
 
-<div class="grid-wrap">
-  <div class="grid" id="grid"></div>
-  <div class="empty" id="empty">No matches.</div>
-</div>
+<div class="grid-wrap"><div class="grid" id="grid"></div><div class="empty" id="empty">No matches.</div></div>
 <footer id="foot"></footer>
+</div>
 
 <script>
 let SITES=[],cat='ALL',q='';
-
-const CAT={
-  'Music & Studio':'linear-gradient(145deg,#9b3fe8,#e8388a)',
-  'Business & L7S':'linear-gradient(145deg,#c8901a,#e8c84a)',
-  'Xen / Voice OS':'linear-gradient(145deg,#0fa86e,#22d3a8)',
-  'Client Sites':'linear-gradient(145deg,#1a6ee8,#38b2f8)',
-  'Tools & Calculators':'linear-gradient(145deg,#e85a1a,#f8a838)',
-  'Builds & Apps':'linear-gradient(145deg,#3b5be8,#7c8cff)'
-};
+const CAT={'Music & Studio':'linear-gradient(145deg,#9b3fe8,#e8388a)','Business & L7S':'linear-gradient(145deg,#c8901a,#e8c84a)','Xen / Voice OS':'linear-gradient(145deg,#0fa86e,#22d3a8)','Client Sites':'linear-gradient(145deg,#1a6ee8,#38b2f8)','Tools & Calculators':'linear-gradient(145deg,#e85a1a,#f8a838)','Builds & Apps':'linear-gradient(145deg,#3b5be8,#7c8cff)'};
 const ORDER=['Music & Studio','Xen / Voice OS','Business & L7S','Client Sites','Tools & Calculators','Builds & Apps'];
 const SHORT={'Music & Studio':'Music','Xen / Voice OS':'Xen','Business & L7S':'Business','Client Sites':'Client','Tools & Calculators':'Tools','Builds & Apps':'Builds'};
 const g=c=>CAT[c]||'linear-gradient(145deg,#333,#1a1a1a)';
 const recent=iso=>iso&&(Date.now()-new Date(iso).getTime())<7*864e5;
-
 function esc(t){const d=document.createElement('div');d.textContent=t||'';return d.innerHTML;}
-function mono(t){
-  const w=(t||'').replace(/[·•|—\-].*$/,'').replace(/[^A-Za-z0-9 ]/g,' ').trim().split(/\s+/).filter(Boolean);
-  return((w.length>=2?w[0][0]+w[1][0]:(t||'').slice(0,2)||'??').toUpperCase());
+function mono(t){const w=(t||'').replace(/[·•|—\-].*$/,'').replace(/[^A-Za-z0-9 ]/g,' ').trim().split(/\s+/).filter(Boolean);return((w.length>=2?w[0][0]+w[1][0]:(t||'').slice(0,2)||'??').toUpperCase());}
+function iconHtml(slug,title,category){
+  const m=esc(mono(title)),bg=g(category);
+  if(!slug)return`<span class="aicon" style="background:${bg}">${m}</span>`;
+  const png='/'+slug+'/icon.png',svg='/'+slug+'/icon.svg';
+  return`<span class="aicon" style="background:${bg}">${m}<img src="${png}" alt="" loading="lazy" onload="this.previousSibling.style.display='none'" onerror="this.onerror=null;this.src='${svg}';this.onerror=function(){this.remove()}"></span>`;
 }
-function iconPaths(slug){
-  if(!slug)return{png:'',svg:''};
-  return{png:'/'+slug+'/icon.png',svg:'/'+slug+'/icon.svg'};
-}
-
-function iconHtml(slug,title,category,px){
-  const {png,svg}=iconPaths(slug);
-  const m=esc(mono(title));
-  const bg=g(category);
-  const fs=px?Math.round(px*.34):13;
-  const err=svg?`this.onerror=null;this.src='${svg}'`:`this.remove()`;
-  return`<span class="aicon" style="background:${bg};font-size:${fs}px">${m}<img src="${png}" alt="" loading="lazy" onload="this.previousSibling.style.display='none'" onerror="${err}"></span>`;
-}
-
-function makeCloudIcon(s,p,size,delay,dur){
-  const a=document.createElement('a');
-  a.className='ci';
-  a.href=s.url;
-  a.title=s.title;
-  const br=Math.round(size*.22);
-  a.style.cssText=`left:${p.x}px;top:${p.y}px;width:${size}px;height:${size}px;border-radius:${br}px;background:${g(s.category)};`+
-    `font-size:${Math.round(size*.36)}px;animation-duration:${dur}s;animation-delay:-${delay}s;z-index:${p.z};`;
-  a.textContent=mono(s.title);
-  const {png,svg}=iconPaths(s.slug);
-  const img=new Image();
-  img.src=png;
-  img.alt='';
-  img.onload=()=>{a.textContent='';a.appendChild(img);};
-  if(svg)img.onerror=()=>{img.onerror=null;img.src=svg;};
-  return a;
-}
-
-const BACK=[
-  {x:40,y:8,z:1},{x:155,y:2,z:1},{x:280,y:0,z:1},{x:405,y:4,z:1},{x:530,y:6,z:1},{x:655,y:10,z:1},{x:780,y:14,z:1}
-];
-const MID=[
-  {x:90,y:72,z:2},{x:230,y:62,z:2},{x:370,y:58,z:2},{x:510,y:60,z:2},{x:650,y:66,z:2}
-];
-const FRONT=[
-  {x:30,y:148,z:3},{x:175,y:138,z:3},{x:325,y:128,z:3},{x:475,y:132,z:3},{x:625,y:136,z:3},{x:770,y:142,z:3}
-];
-
-const MOBILE_CLOUD=matchMedia('(max-width:768px)');
-// mobile base ~360 to fit <768 exactly (scaled in JS around center); max x chosen to leave room for icon size
-const MOBILE_BACK=[{x:18,y:12,z:1},{x:106,y:8,z:1},{x:194,y:10,z:1},{x:282,y:14,z:1}];
-const MOBILE_MID=[{x:48,y:70,z:2},{x:160,y:62,z:2},{x:272,y:66,z:2}];
-const MOBILE_FRONT=[{x:22,y:140,z:3},{x:112,y:128,z:3},{x:202,y:132,z:3},{x:280,y:136,z:3}];
-
-function buildCloud(){
-  const mobile=MOBILE_CLOUD.matches;
-  const picks=[...SITES].sort(()=>Math.random()-.5);
-  const back=picks.slice(0,mobile?2:7);
-  const mid=picks.slice(mobile?2:7,mobile?5:12);
-  const front=picks.slice(mobile?5:12,mobile?8:18);
-  const rows=[
-    {el:document.getElementById('cloud-back'),sites:back,pos:mobile?MOBILE_BACK:BACK,size:mobile?44:52},
-    {el:document.getElementById('cloud-mid'),sites:mid,pos:mobile?MOBILE_MID:MID,size:mobile?56:68},
-    {el:document.getElementById('cloud-front'),sites:front,pos:mobile?MOBILE_FRONT:FRONT,size:mobile?72:88}
-  ];
-  const mirror=document.getElementById('cloud-mirror');
-  mirror.innerHTML='';
-  // clear previous icons on rebuild (resize/mq) — original missed this for main rows
-  rows.forEach(r=>{ if(r.el) r.el.innerHTML=''; });
-  // compute current container width; scale positions around center so cloud stays centered + icons never clip/overflow
-  const persEl=document.querySelector('.cloud-perspective');
-  let cw = mobile ? 360 : 920;
-  if(persEl){
-    cw = persEl.offsetWidth || persEl.clientWidth || cw;
-  }
-  const baseW = mobile ? 360 : 920;
-  const sx = cw / baseW;
-  let i=0;
-  rows.forEach(({el,sites,pos,size})=>{
-    sites.forEach((s,idx)=>{
-      if(!pos[idx])return;
-      const p=pos[idx];
-      const dx = p.x - (baseW / 2);
-      const left = Math.round( (cw / 2) + dx * sx );
-      const sz = Math.round(size * sx);
-      const delay=(i*.32).toFixed(2);
-      const dur=(3.4+(i%5)*.65).toFixed(1);
-      const icon=makeCloudIcon(s,{x:left,y:p.y,z:p.z},sz,delay,dur);
-      el.appendChild(icon);
-      const clone=icon.cloneNode(true);
-      clone.removeAttribute('href');
-      clone.style.pointerEvents='none';
-      mirror.appendChild(clone);
-      i++;
-    });
-  });
-}
-
 function renderPills(){
+  const counts={};SITES.forEach(s=>{counts[s.category]=(counts[s.category]||0)+1;});
   const seen=new Set(SITES.map(s=>s.category).filter(Boolean));
   const cats=['ALL',...ORDER.filter(c=>seen.has(c)),...Array.from(seen).filter(c=>!ORDER.includes(c))];
   document.getElementById('pills').innerHTML=cats.map(c=>{
-    const label=c==='ALL'?'ALL':(SHORT[c]||c).toUpperCase();
-    return`<button type="button" class="fp${c===cat?' on':''}" data-c="${esc(c)}">${esc(label)}</button>`;
+    const label=c==='ALL'?'All':(SHORT[c]||c);const n=c==='ALL'?SITES.length:(counts[c]||0);
+    return`<button type="button" class="fp${c===cat?' on':''}" data-c="${esc(c)}">${esc(label)}<span class="ct">${n}</span></button>`;
   }).join('');
-  document.querySelectorAll('.fp').forEach(el=>{
-    el.onclick=()=>{
-      cat=el.dataset.c;
-      document.querySelectorAll('.fp').forEach(p=>p.classList.toggle('on',p===el));
-      renderGrid();
-    };
-  });
+  document.querySelectorAll('.fp').forEach(el=>{el.onclick=()=>{cat=el.dataset.c;document.querySelectorAll('.fp').forEach(p=>p.classList.toggle('on',p===el));renderGrid();};});
 }
-
 function renderGrid(){
-  const f=SITES.filter(s=>
-    (cat==='ALL'||s.category===cat)&&
-    (q===''||(s.title+' '+s.desc+' '+s.slug+' '+s.category).toLowerCase().includes(q))
-  );
-  const empty=document.getElementById('empty');
-  empty.style.display=f.length?'none':'block';
-  document.getElementById('grid').innerHTML=f.map(s=>`
-    <a class="app" href="${esc(s.url)}">
-      ${iconHtml(s.slug,s.title,s.category)}
-      <span class="abody">
-        <span class="aname">${esc(s.title)}${recent(s.updated)?'<span class="anew">New</span>':''}</span>
-        <span class="adesc">${esc(s.desc||s.category)}</span>
-      </span>
-    </a>`).join('');
+  const f=SITES.filter(s=>(cat==='ALL'||s.category===cat)&&(q===''||(s.title+' '+s.desc+' '+s.slug+' '+s.category).toLowerCase().includes(q)));
+  document.getElementById('empty').style.display=f.length?'none':'block';
+  document.getElementById('grid').innerHTML=f.map(s=>`<a class="app" href="${esc(s.url)}">${iconHtml(s.slug,s.title,s.category)}<span class="abody"><span class="aname">${esc(s.title)}${recent(s.updated)?'<span class="anew">New</span>':''}</span><span class="adesc">${esc(s.desc||s.category)}</span></span></a>`).join('');
 }
-
-fetch('/sites.json?v='+Date.now())
-  .then(r=>{if(!r.ok)throw new Error(r.status);return r.json();})
-  .then(d=>{
-    SITES=(d.sites||[]).filter(s=>s&&s.url&&s.title);
-    document.getElementById('foot').textContent=
-      SITES.length+' apps · auto-updating · '+new Date(d.generated||Date.now()).toLocaleDateString();
-    buildCloud();
-    renderPills();
-    renderGrid();
-  })
-  .catch(()=>{
-    document.getElementById('foot').textContent='Catalog unavailable — check sites.json';
-  });
-
-document.getElementById('q').addEventListener('input',e=>{
-  q=e.target.value.toLowerCase().trim();
-  renderGrid();
-});
-
-const navBtn=document.getElementById('nav-menu-btn');
-const navDrawer=document.getElementById('nav-drawer');
-function setNavOpen(open){
-  navDrawer.classList.toggle('open',open);
-  navDrawer.hidden=!open;
-  navBtn.setAttribute('aria-expanded',open?'true':'false');
-  navBtn.setAttribute('aria-label',open?'Close menu':'Open menu');
-}
+fetch('/sites.json?v='+Date.now()).then(r=>{if(!r.ok)throw 0;return r.json();}).then(d=>{
+  SITES=(d.sites||[]).filter(s=>s&&s.url&&s.title);
+  document.getElementById('foot').textContent=SITES.length+' apps · auto-updating · '+new Date(d.generated||Date.now()).toLocaleDateString();
+  renderPills();renderGrid();
+}).catch(()=>{document.getElementById('foot').textContent='Catalog unavailable — check sites.json';});
+const qIn=document.getElementById('q'),qX=document.getElementById('qx');
+qIn.addEventListener('input',e=>{q=e.target.value.toLowerCase().trim();qX.classList.toggle('show',!!q);renderGrid();});
+qX.onclick=()=>{qIn.value='';q='';qX.classList.remove('show');renderGrid();qIn.focus();};
+const navBtn=document.getElementById('nav-menu-btn'),navDrawer=document.getElementById('nav-drawer');
+function setNavOpen(o){navDrawer.classList.toggle('open',o);navDrawer.hidden=!o;navBtn.setAttribute('aria-expanded',o?'true':'false');}
 navBtn.addEventListener('click',()=>setNavOpen(!navDrawer.classList.contains('open')));
 navDrawer.addEventListener('click',e=>{if(e.target===navDrawer)setNavOpen(false);});
 navDrawer.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>setNavOpen(false)));
+</script>
 
-function onCloudMq(){
-  if(SITES.length)buildCloud();
-}
-if(MOBILE_CLOUD.addEventListener){
-  MOBILE_CLOUD.addEventListener('change',onCloudMq);
-}else{
-  MOBILE_CLOUD.addListener(onCloudMq);
+<script type="module">
+// Cosmic Anomaly swarm — ambient full-bleed background (no UI, auto-cycling). Fails silent if WebGL/reduced-motion.
+if(!matchMedia('(prefers-reduced-motion:reduce)').matches){
+try{
+  const THREE = await import('https://esm.sh/three');
+  const { OrbitControls } = await import('https://esm.sh/three/addons/controls/OrbitControls.js');
+  const { EffectComposer } = await import('https://esm.sh/three/addons/postprocessing/EffectComposer.js');
+  const { RenderPass } = await import('https://esm.sh/three/addons/postprocessing/RenderPass.js');
+  const { UnrealBloomPass } = await import('https://esm.sh/three/addons/postprocessing/UnrealBloomPass.js');
+  const container=document.getElementById('swarm-bg');
+  const MOBILE=matchMedia('(max-width:768px)').matches;
+  const TOTAL_SHAPES=3; let currentShape=0,targetShape=0,isTransitioning=false,morphProgress=0;
+  const scene=new THREE.Scene(); scene.fog=new THREE.FogExp2(0x000001,0.0025);
+  const camera=new THREE.PerspectiveCamera(50,innerWidth/innerHeight,0.1,1000);
+  function updateCameraZ(){const a=innerWidth/innerHeight;const fov=(camera.fov*Math.PI)/180;let z=55/Math.tan(fov/2);if(a<1)z/=a;camera.position.set(0,z*0.35,z);}
+  updateCameraZ();
+  const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'high-performance'});
+  renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,MOBILE?1.4:1.8));
+  renderer.setClearColor(0x000001,0);renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
+  container.appendChild(renderer.domElement);
+  const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=0.03;controls.enablePan=false;controls.enableZoom=false;controls.autoRotate=true;controls.autoRotateSpeed=0.45;controls.enabled=false;
+  const composer=new EffectComposer(renderer);composer.addPass(new RenderPass(scene,camera));
+  composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),MOBILE?1.3:1.6,0.65,0.25));
+  const N=MOBILE?42000:120000;
+  const geo=new THREE.BufferGeometry();const pos=new Float32Array(N*3),ids=new Float32Array(N),rnd=new Float32Array(N*3);
+  for(let i=0;i<N;i++){ids[i]=i/N;rnd[i*3]=Math.random();rnd[i*3+1]=Math.random();rnd[i*3+2]=Math.random();}
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));geo.setAttribute('aId',new THREE.BufferAttribute(ids,1));geo.setAttribute('aRandom',new THREE.BufferAttribute(rnd,3));
+  const vert=`uniform float uTime;uniform float uMorphProgress;uniform int uCurrentShape;uniform int uTargetShape;attribute float aId;attribute vec3 aRandom;varying vec3 vColor;varying float vAlpha;varying float vDepth;varying float vGlowMult;
+  #define PI 3.14159265359
+  #define TAU 6.28318530718
+  float sp(float b,float e){return pow(max(abs(b),0.00001),e);} vec3 sn(vec3 v){float l=length(v);return l>0.00001?v/l:vec3(0.,1.,0.);}
+  float ci(float t){return t<0.5?4.*t*t*t:1.-sp(-2.*t+2.,3.)/2.;}
+  mat3 rY(float a){float s=sin(a),c=cos(a);return mat3(c,0.,s,0.,1.,0.,-s,0.,c);}
+  vec3 pulsar(float id,vec3 r){float t=uTime*2.5;if(r.x<0.1){float u=r.y*TAU,v=acos(2.*r.z-1.),rr=2.+sin(u*12.+t)*0.15+cos(v*8.-t)*0.15;return vec3(rr*sin(v)*cos(u),rr*cos(v),rr*sin(v)*sin(u));}else if(r.x<0.25){float top=(r.y>0.5)?1.:-1.,h=sp(abs(r.y*2.-1.),3.)*70.,tp=sp(1.-(h/70.),2.),rr=r.z*1.5*tp,u=id*TAU*150.,w=sin(h*0.15-t*8.)*0.8*tp;return vec3(rr*cos(u)+w,h*top,rr*sin(u)+w);}else{float ln=42.,li=floor((r.x-0.25)/0.75*ln),la=(li/ln)*TAU,v=r.y*PI,mx=12.+fract(li*17.5)*25.,rr=mx*sp(sin(v),2.),tw=sin(v*PI-t)*0.8;la+=t*2.+tw;float no=sin(v*15.-t*4.)*0.4;return vec3((rr+no)*cos(la),(mx*0.6)*cos(v),(rr+no)*sin(la));}}
+  vec3 galaxy(float id,vec3 r){float t=uTime*0.2;if(r.x<0.2){float u=r.y*TAU,v=acos(2.*r.z-1.),rr=5.*sp(r.y,2.5);return vec3(rr*sin(v)*cos(u),rr*cos(v)*0.25,rr*sin(v)*sin(u));}else{float arms=(r.x>0.8)?4.:2.,ai=floor(fract(r.x*23.)*arms),u=r.y*TAU*1.8,br=2.5*exp(0.32*u),cl=sign(r.z-0.5)*sp(abs(r.z-0.5)*2.,2.),sp2=cl*br*0.25,cm=sin(br*3.)*0.5,rr=br+sp2+cm,an=u+(ai*TAU/arms)-t;an+=sin(rr*2.-t*3.)*0.1*cl;float yt=exp(-rr*0.12)*2.,y=cl*yt+sin(an*4.)*0.3;return vec3(rr*cos(an),y,rr*sin(an))*0.85;}}
+  vec3 blackhole(float id,vec3 r){float t=uTime*1.5,eh=5.,md=38.;vec3 p;if(r.x<0.7){float u=r.y*TAU,rr=eh+sqrt(r.z)*(md-eh),vel=t*(55./sp(rr,1.2)),an=u+vel,ts=exp(-(rr-eh)*0.25)*3.5,cy=sign(r.x-0.35)*sp(abs(r.x-0.35)*2.8,2.),y=cy*ts;y+=sin(rr*5.-t*4.)*cos(an*8.)*0.4;p=vec3(rr*cos(an),y,rr*sin(an));}else if(r.x<0.9){float u=r.y*TAU,v=r.z*PI,rr=eh*(1.+0.05*r.z),a1=u+t*18.,a2=v+t*8.,ds=sin(a1*3.+t)*0.5;p=vec3((rr+ds)*cos(a1)*sin(a2),(rr+ds)*cos(a2)*1.5,(rr+ds)*sin(a1)*sin(a2));}else{float u=r.y*TAU,h=(r.z-0.5)*2.,hs=sign(h)*sp(abs(h),1.5)*25.,rr=eh+0.2+sp(abs(h),2.)*8.,an=u+t*12.-hs*0.4;p=vec3(rr*cos(an),hs,rr*sin(an));}return p*1.35;}
+  vec3 gp(int s,float id,vec3 r){if(s==0)return pulsar(id,r);if(s==1)return galaxy(id,r);if(s==2)return blackhole(id,r);return vec3(0.);}
+  vec3 gc(int s,float id,vec3 r,vec3 p){if(s==0){if(r.x<0.1)return vec3(1.,0.2,1.);if(r.x<0.25)return vec3(0.,0.9,1.);float li=floor((r.x-0.25)/0.75*42.);return mix(vec3(0.4,0.,1.),vec3(0.1,0.5,1.),fract(li*0.3));}if(s==1){if(r.x<0.2)return mix(vec3(1.,0.8,0.2),vec3(1.,0.3,0.),r.y);vec3 ba=mix(vec3(0.,1.,0.8),vec3(0.,0.5,1.),r.y);return mix(ba,vec3(0.02,0.,0.15),sp(abs(r.z-0.5)*2.,1.5));}if(s==2){vec3 hot=vec3(1.,0.5,0.1),md=vec3(0.8,0.1,0.),cd=vec3(0.2,0.,0.1),bc;if(r.x>0.7&&r.x<0.9)bc=mix(vec3(1.,0.8,0.3),hot,r.y);else if(r.x>=0.9)bc=mix(hot,md,r.z);else{float dn=length(p.xz)/38.;bc=dn<0.3?mix(hot,md,dn*3.33):mix(md,cd,(dn-0.3)*1.42);}float db=clamp(p.x/20.,-1.,1.);if(db>0.){bc=mix(bc,vec3(0.,0.4,1.),db*0.8);bc*=(1.+db*0.5);}else{bc=mix(bc,vec3(1.,0.,0.),abs(db)*0.8);bc*=(1.-abs(db)*0.5);}return bc;}return vec3(1.);}
+  float ga(int s,vec3 r){if(s==0){if(r.x<0.1)return 1.;if(r.x<0.25)return 0.7;return 0.25;}if(s==1){if(r.x<0.2)return 0.8;return mix(0.6,0.15,sp(abs(r.z-0.5)*2.,1.5));}if(s==2){if(r.x>0.7&&r.x<0.9)return 0.9;if(r.x>=0.9)return 0.4;return 0.5;}return 0.5;}
+  float gm(int s){if(s==0)return 2.2;if(s==1)return 1.4;if(s==2)return 1.1;return 1.;}
+  void main(){vec3 p1=gp(uCurrentShape,aId,aRandom),p2=gp(uTargetShape,aId,aRandom),c1=gc(uCurrentShape,aId,aRandom,p1),c2=gc(uTargetShape,aId,aRandom,p2);float a1=ga(uCurrentShape,aRandom),a2=ga(uTargetShape,aRandom),g1=gm(uCurrentShape),g2=gm(uTargetShape),m=ci(uMorphProgress);vGlowMult=mix(g1,g2,m);vAlpha=mix(a1,a2,m);vColor=mix(c1,c2,m);vec3 fp=mix(p1,p2,m);float bm=sin(uMorphProgress*PI),dc=length(fp),sv=(20./(dc+1.))*bm;fp=rY(sv+bm*PI*2.)*fp;vec3 cv=sn(fp+vec3(sin(aId*PI),cos(aId*TAU),sin(aId*PI*1.5)));fp+=cv*bm*(15.+aRandom.y*20.);float tw=0.7+0.3*sin(uTime*10.+aId*TAU*100.);vAlpha*=tw*(1.-bm*0.5);vec4 mv=modelViewMatrix*vec4(fp,1.);gl_Position=projectionMatrix*mv;vDepth=-mv.z;gl_PointSize=(4.+aRandom.x*6.)*(65./max(vDepth,0.1));}`;
+  const frag=`varying vec3 vColor;varying float vAlpha;varying float vDepth;varying float vGlowMult;void main(){vec2 uv=gl_PointCoord.xy-vec2(0.5);float d=length(uv);if(d>0.5)discard;float co=exp(-d*14.),ha=exp(-d*4.);vec3 c=vColor*vGlowMult;c=mix(c,vec3(1.),co*0.6);float df=smoothstep(250.,15.,vDepth),fa=vAlpha*(ha*0.5+co)*df;gl_FragColor=vec4(c,fa);}`;
+  const mat=new THREE.ShaderMaterial({uniforms:{uTime:{value:0},uMorphProgress:{value:0},uCurrentShape:{value:0},uTargetShape:{value:0}},vertexShader:vert,fragmentShader:frag,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending});
+  scene.add(new THREE.Points(geo,mat));
+  setInterval(()=>{if(!isTransitioning){targetShape=(currentShape+1)%TOTAL_SHAPES;isTransitioning=true;morphProgress=0;}},13000);
+  addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();updateCameraZ();renderer.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight);});
+  const clock=new THREE.Clock();
+  // manual slow auto-rotate (controls.enabled=false so no input capture)
+  function animate(){requestAnimationFrame(animate);const dt=clock.getDelta();camera.position.applyAxisAngle(new THREE.Vector3(0,1,0),dt*0.06);camera.lookAt(0,0,0);if(isTransitioning){morphProgress+=dt*0.45;if(morphProgress>=1){morphProgress=0;currentShape=targetShape;isTransitioning=false;}}mat.uniforms.uTime.value=clock.elapsedTime;mat.uniforms.uMorphProgress.value=morphProgress;mat.uniforms.uCurrentShape.value=currentShape;mat.uniforms.uTargetShape.value=targetShape;composer.render();}
+  animate();
+}catch(e){/* WebGL unavailable — catalog still works on black */}
 }
 </script>
 </body>
