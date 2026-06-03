@@ -4,158 +4,177 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
-<title>XEN · STEER BOARD</title>
+<title>XEN · STEER</title>
 <style>
 :root{
   --ink:#05070a;--ink2:#0a0f14;--panel:#0c141b;--line:#163842;
-  --green:#34d17a;--green-hi:#5dffa0;--cyan:#00e0ff;--irid:#7b2cbf;--amber:#d9a441;
-  --text:#e8f4ee;--dim:#7e9aa0;--warn:#ff6b6b;
-  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;--disp:"Chakra Petch","Saira",system-ui,sans-serif;
+  --green:#34d17a;--green-hi:#5dffa0;--cyan:#00e0ff;--irid:#7b2cbf;
+  --p0:#ff5c5c;--p1:#d9a441;--p2:#00e0ff;--p3:#5f7a82;
+  --text:#e8f4ee;--dim:#7e9aa0;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace;--disp:"Chakra Petch","Saira",system-ui,sans-serif;
 }
 *{box-sizing:border-box}
-body{margin:0;background:radial-gradient(1200px 700px at 72% -10%,rgba(52,209,122,.10),transparent 60%),radial-gradient(900px 600px at 8% 110%,rgba(0,224,255,.08),transparent 55%),var(--ink);color:var(--text);font-family:var(--disp)}
-.wrap{max-width:1340px;margin:0 auto;padding:26px 18px 110px}
-header{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--line);padding-bottom:14px}
-h1{margin:0;font-size:clamp(24px,3.6vw,40px);letter-spacing:.16em;font-weight:700;background:linear-gradient(100deg,#fff,var(--green-hi) 38%,var(--cyan) 72%,var(--irid));-webkit-background-clip:text;background-clip:text;color:transparent}
-.sub{color:var(--dim);font-family:var(--mono);font-size:12px;margin-top:4px}
-.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:16px 0 6px}
-.btn{cursor:pointer;border:1px solid var(--line);background:rgba(255,255,255,.02);color:var(--text);font-family:var(--disp);font-weight:600;letter-spacing:.05em;padding:9px 16px;border-radius:24px;font-size:13px;transition:.16s}
-.btn:hover{border-color:var(--green);box-shadow:0 6px 22px rgba(52,209,122,.12)}
-.btn.primary{background:linear-gradient(100deg,var(--green),var(--cyan));color:#03110a;border:none}
-.btn.primary:hover{filter:brightness(1.12)}
-.hint{color:var(--dim);font-family:var(--mono);font-size:11.5px}
-.board{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:14px}
-@media(max-width:1000px){.board{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:560px){.board{grid-template-columns:1fr}}
-.col{background:linear-gradient(180deg,var(--panel),var(--ink2));border:1px solid var(--line);border-radius:14px;padding:12px 11px 60px;min-height:240px;transition:.15s}
-.col.over{border-color:var(--green-hi);box-shadow:0 0 0 1px var(--green-hi) inset,0 10px 40px rgba(52,209,122,.14)}
-.col h2{margin:4px 4px 12px;font-size:12px;letter-spacing:.2em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
-.col .cnt{font-family:var(--mono);font-size:11px;color:var(--dim);background:rgba(255,255,255,.04);border-radius:20px;padding:1px 8px}
-.c-now h2{color:var(--warn)} .c-next h2{color:var(--green-hi)} .c-later h2{color:var(--cyan)} .c-park h2{color:var(--dim)}
-.card{background:#0e161d;border:1px solid var(--line);border-left:3px solid var(--green);border-radius:9px;padding:10px 11px;margin:8px 0;cursor:grab;transition:.12s;position:relative}
-.card:hover{border-color:var(--green);transform:translateY(-1px)}
-.card.dragging{opacity:.4;cursor:grabbing}
-.card .t{font-size:13.5px;line-height:1.35;letter-spacing:.01em}
-.card .m{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:6px;line-height:1.4}
-.src{font-family:var(--mono);font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:12px;color:#03110a}
-.s-mac{background:var(--cyan)} .s-win{background:var(--amber)} .s-xen{background:var(--green)} .s-rev{background:var(--irid);color:#fff}
-.card.blk{border-left-color:var(--warn)} .card.blk .t::after{content:" ⚠";color:var(--warn)}
-.drop-line{height:2px;background:var(--green-hi);margin:2px 0;border-radius:2px;box-shadow:0 0 8px var(--green-hi)}
-.addrow{margin-top:8px}
-.addrow input{width:100%;background:#0a1117;border:1px dashed var(--line);color:var(--text);font-family:var(--mono);font-size:12px;padding:8px 9px;border-radius:8px}
-.addrow input:focus{outline:none;border-color:var(--green)}
-#out{margin-top:22px;border:1px dashed var(--line);border-radius:12px;padding:14px 16px;background:rgba(0,224,255,.03);display:none}
-#out .lbl{font-family:var(--mono);font-size:11px;color:var(--cyan);letter-spacing:.16em}
-#out pre{white-space:pre-wrap;font-family:var(--mono);font-size:12.5px;color:var(--green-hi);margin:8px 0 0;line-height:1.5}
-footer{margin-top:30px;text-align:center;color:var(--dim);font-family:var(--mono);font-size:11px}
+body{margin:0;background:radial-gradient(1100px 640px at 75% -12%,rgba(52,209,122,.10),transparent 60%),radial-gradient(900px 600px at 6% 112%,rgba(0,224,255,.08),transparent 55%),var(--ink);color:var(--text);font-family:var(--disp)}
+.wrap{max-width:760px;margin:0 auto;padding:26px 16px 120px}
+h1{margin:0;font-size:clamp(24px,5vw,38px);letter-spacing:.18em;font-weight:700;background:linear-gradient(100deg,#fff,var(--green-hi) 40%,var(--cyan) 74%,var(--irid));-webkit-background-clip:text;background-clip:text;color:transparent}
+.ethos{margin-top:6px;font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--green);text-transform:uppercase}
+.ethos b{color:var(--cyan)}
+.note{color:var(--dim);font-family:var(--mono);font-size:11.5px;margin:3px 0 0}
+.bulk{margin:18px 0 8px;border:1px dashed var(--line);border-radius:12px;padding:12px;background:rgba(255,255,255,.012)}
+textarea{width:100%;min-height:64px;resize:vertical;background:#0a1117;border:1px solid var(--line);color:var(--text);font-family:var(--mono);font-size:13px;padding:10px;border-radius:9px;line-height:1.5}
+textarea:focus{outline:none;border-color:var(--green)}
+.row{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.btn{cursor:pointer;border:1px solid var(--line);background:rgba(255,255,255,.02);color:var(--text);font-family:var(--disp);font-weight:600;letter-spacing:.05em;padding:9px 15px;border-radius:22px;font-size:12.5px;transition:.15s}
+.btn:hover{border-color:var(--green)}
+.btn.go{background:linear-gradient(100deg,var(--green),var(--cyan));color:#03110a;border:none}
+.btn.go:hover{filter:brightness(1.12)}
+.hint{color:var(--dim);font-family:var(--mono);font-size:11px}
+#list{margin-top:14px;display:flex;flex-direction:column;gap:7px}
+.task{display:flex;align-items:flex-start;gap:9px;background:#0e161d;border:1px solid var(--line);border-radius:10px;padding:10px 11px;cursor:grab;transition:.12s}
+.task:hover{border-color:var(--green)} .task.dragging{opacity:.4}
+.grip{color:var(--dim);font-family:var(--mono);font-size:14px;line-height:1.2;cursor:grab;user-select:none;padding-top:1px}
+.pill{flex:0 0 auto;font-family:var(--mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;cursor:pointer;user-select:none;letter-spacing:.04em;border:1px solid transparent;transition:.12s}
+.pill.P0{background:rgba(255,92,92,.16);color:var(--p0);border-color:var(--p0)}
+.pill.P1{background:rgba(217,164,65,.14);color:var(--p1);border-color:var(--p1)}
+.pill.P2{background:rgba(0,224,255,.12);color:var(--p2);border-color:var(--p2)}
+.pill.P3{background:rgba(95,122,130,.14);color:var(--p3);border-color:var(--p3)}
+.pill:hover{filter:brightness(1.25)}
+.txt{flex:1;font-size:13.5px;line-height:1.4;letter-spacing:.01em;word-break:break-word}
+.txt[contenteditable]:focus{outline:1px solid var(--green);border-radius:4px}
+.src{font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 6px;border-radius:11px;color:#03110a;align-self:center}
+.s-mac{background:var(--cyan)}.s-win{background:var(--p1)}.s-xen{background:var(--green)}.s-rev{background:var(--irid);color:#fff}.s-qi{background:#fff;color:#000}
+.del{color:var(--dim);cursor:pointer;font-size:15px;line-height:1;padding:2px 4px;align-self:center}
+.del:hover{color:var(--p0)}
+.mic{cursor:pointer;font-size:13px;align-self:center;opacity:.55;padding:2px 4px;user-select:none}.mic:hover{opacity:1}
+.mic.rec,.btn.rec{color:var(--p0)!important;border-color:var(--p0)!important;animation:recp .9s infinite}
+@keyframes recp{0%,100%{opacity:.45}50%{opacity:1}}
+.fire{margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--green);align-self:center;animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+#out{margin-top:20px;border:1px dashed var(--line);border-radius:12px;padding:13px 15px;background:rgba(0,224,255,.03);display:none}
+#out pre{white-space:pre-wrap;font-family:var(--mono);font-size:12.5px;color:var(--green-hi);margin:6px 0 0;line-height:1.5}
+footer{margin-top:26px;text-align:center;color:var(--dim);font-family:var(--mono);font-size:10.5px}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div><h1>XEN · STEER BOARD</h1><div class="sub">drag tasks across priority · order = the plan · "Send to Xen" exports it · saved to this browser</div></div>
-    <div class="hint" id="sync">SYNC 2026-06-03 · nitro11 + mac-xen</div>
-  </header>
+  <h1>XEN · STEER</h1>
+  <div class="ethos">ALL PARALLEL · <b>AUTO-MANIFEST</b> · PGS BACKGROUNDS · ZERO DELAY · EVERY TIME</div>
+  <div class="note">one list. pills weight attention — they do NOT sequence. everything fires at once, immediately.</div>
 
-  <div class="toolbar">
-    <button class="btn primary" id="send">⬡ SEND PLAN TO XEN</button>
-    <button class="btn" id="reset">↺ reset to gather</button>
-    <span class="hint">drag a card → drop in NOW / NEXT / LATER / PARKED · reorder within a column</span>
+  <div class="bulk">
+    <textarea id="bulk" placeholder="bulk paste — one task per line (paste a whole block, then ⊕ Add all)"></textarea>
+    <div class="row">
+      <button class="btn go" id="addall">⊕ ADD ALL</button>
+      <button class="btn" id="dictate">🎙 DICTATE</button>
+      <button class="btn" id="send">⬡ SEND TO XEN</button>
+      <button class="btn" id="reset">↺ reset to gather</button>
+      <span class="hint">click a pill to cycle P0→P3 · drag ⋮ to group · click text to edit</span>
+    </div>
   </div>
 
-  <div class="board" id="board"></div>
-
-  <div id="out"><div class="lbl">▶ PLAN — copied to clipboard, paste back to Xen</div><pre id="outtxt"></pre></div>
-  <footer>XEN STEER BOARD · noindex · drag-drop persists to localStorage · gathered from win grok + xen + mac grok</footer>
+  <div id="list"></div>
+  <div id="out"><pre id="outtxt"></pre></div>
+  <footer>XEN STEER · noindex · single-column weighted firing array · persists to localStorage</footer>
 </div>
 
 <script>
-const COLS=[{k:'now',t:'🔥 Now'},{k:'next',t:'⏭ Next'},{k:'later',t:'🗓 Later'},{k:'park',t:'⏸ Parked'}];
+const PILLS=['P0','P1','P2','P3'];
 const SEED=[
-  // MAC grok infra
-  {id:'nats',  t:'Fix NATS omni-bridge blocker (create omni-nats-bridge.js)', src:'mac', col:'now', blk:true, m:'Mac grok mid-blocker · center-mesh omni-inbox'},
-  {id:'beep',  t:'Wire Beeper-beside + voice into XOS2 inbox panel', src:'mac', col:'next', m:'omni-inbox composer'},
-  {id:'meshwm',t:'Bridge Win↔Mac inbox state over NATS (symmetric)', src:'mac', col:'later', m:'cross-device omni-inbox'},
-  {id:'xos2',  t:'Deploy XOS2 / XUI 3-panel live', src:'mac', col:'next', m:'omni-inbox + VEI composer + CRM'},
-  {id:'xskin', t:'Skin XUI to green-iridescent stylism', src:'mac', col:'later', m:'xlrd HUD tokens'},
-  {id:'phtcr', t:'Phound: finish TCR + submit', src:'mac', col:'later', m:'48MB session · CF deploy done'},
-  {id:'phdom', t:'Phound: domain swap + Nitro file-upload polish', src:'mac', col:'park', m:''},
-  {id:'exmig', t:'Confirm Exedus canonical-root migration (/Volumes/qi_)', src:'mac', col:'later', m:''},
-  {id:'p0',    t:'Audit P0 lifelines — what must survive if you step away', src:'mac', col:'now', m:'"Pre-Hosp hardening" · continuity-critical'},
-  {id:'p0harden',t:'Harden autonomous loops (EGBOps + comms + memory, lights-out)', src:'mac', col:'next', m:''},
-  {id:'statusdash',t:'Single live status dashboard (every system green/red)', src:'xen', col:'later', m:''},
-  // XEN-win
-  {id:'distill',t:'Build grok-CLI memory distiller → _candidates/ (no auto-canonize)', src:'xen', col:'next', m:'finishes the memory engine'},
-  {id:'maccanon',t:'Point Mac-Xen at the synced /Users/qi/xen-memory vault', src:'xen', col:'later', m:'Syncthing already live'},
-  {id:'ctx',   t:'SessionStart CONTEXT.md deterministic inject + heartbeat', src:'xen', col:'park', m:''},
-  {id:'xlrd',  t:'xlrd.org apex → the xlrd-org 3D-mascot landing (fix 525)', src:'xen', col:'later', m:'un-breaks 3 frame-forwards'},
-  // WIN grok + revenue
-  {id:'egbship',t:'Ship queued EGBOps/Padre prospect sites (grok assets ready)', src:'rev', col:'next', m:'win grok logos+hero done'},
-  {id:'egbbatch',t:'Run fresh EGBOps batch (EGBO local + XGBO remote)', src:'rev', col:'later', m:''},
-  {id:'closer',t:'Work the Closer OS / outreach to prospects', src:'rev', col:'later', m:'turn assets → revenue'},
-  {id:'selgold',t:'/sel gold — final pass (grok photoreal if wanted)', src:'win', col:'park', m:'v4 clean live'},
-  {id:'icons', t:'Place the 10 grok chrome icons on hitthe.link', src:'win', col:'park', m:''},
+  {id:'nats',p:'P0',s:'mac',t:'Fix NATS omni-bridge blocker (create omni-nats-bridge.js)'},
+  {id:'p0life',p:'P0',s:'mac',t:'Audit P0 lifelines — what must survive if you step away (pre-hosp hardening)'},
+  {id:'cred',p:'P0',s:'mac',t:'Rotate default 0000 password + credential-redaction pass (omnimind/Xen-MCP/CF/PWA)'},
+  {id:'vault',p:'P0',s:'xen',t:'Unify vault into qi sync_ structure (Win + Mac → one canonical vault)'},
+  {id:'spog',p:'P0',s:'xen',t:'SPOG — every TUI/terminal event surfaces VERBOSE in chat, nothing hidden'},
+  {id:'distill',p:'P1',s:'xen',t:'grok-CLI memory distiller → _candidates/ (no auto-canonize)'},
+  {id:'macvault',p:'P1',s:'xen',t:'Point Mac-Xen at the unified synced vault'},
+  {id:'mesh',p:'P1',s:'mac',t:'Bridge Win↔Mac inbox state over NATS (symmetric omni-inbox)'},
+  {id:'beep',p:'P1',s:'mac',t:'Wire Beeper-beside + voice into XOS2 inbox panel'},
+  {id:'dash',p:'P1',s:'xen',t:'Single live status dashboard — every system green/red'},
+  {id:'ctx',p:'P1',s:'xen',t:'SessionStart CONTEXT.md deterministic inject + heartbeat'},
+  {id:'icons',p:'P2',s:'win',t:'Place the 10 grok chrome icons on hitthe.link'},
+  {id:'xos2',p:'P2',s:'mac',t:'Deploy XOS2 / XUI 3-panel live'},
+  {id:'harden',p:'P2',s:'xen',t:'Harden autonomous loops (EGBOps + comms + memory, lights-out)'},
+  {id:'egbship',p:'P2',s:'rev',t:'Ship queued EGBOps/Padre prospect sites (grok assets ready)'},
+  {id:'stylism',p:'P2',s:'win',t:'Confirm 700+ Pinterest stylism scrape → ready for training'},
+  {id:'exmig',p:'P2',s:'mac',t:'Confirm Exedus canonical-root migration (/Volumes/qi_)'},
+  {id:'skin',p:'P3',s:'mac',t:'Skin XUI to green-iridescent stylism'},
+  {id:'xlrd',p:'P3',s:'xen',t:'xlrd.org apex → xlrd-org 3D-mascot landing (fix 525)'},
+  {id:'selgold',p:'P3',s:'win',t:'/sel gold — final pass (grok photoreal if wanted)'},
+  {id:'phound',p:'P3',s:'mac',t:'Phound — TCR submit + domain swap + API/programmatic efficiencies'},
+  {id:'egbbatch',p:'P3',s:'rev',t:'Run fresh EGBOps batch (EGBO local + XGBO remote) + Closer outreach'},
 ];
-const KEY='xen-steer-board-v1';
-let cards = load();
-function load(){ try{ const s=JSON.parse(localStorage.getItem(KEY)); if(s&&s.length) return s; }catch(e){} return JSON.parse(JSON.stringify(SEED)); }
-function save(){ localStorage.setItem(KEY, JSON.stringify(cards)); }
-const board=document.getElementById('board');
+const KEY='xen-steer-v3';
+let T=load();
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.length)return s;}catch(e){}return JSON.parse(JSON.stringify(SEED));}
+function save(){localStorage.setItem(KEY,JSON.stringify(T));}
+const listEl=document.getElementById('list');
 function render(){
-  board.innerHTML='';
-  COLS.forEach(c=>{
-    const col=document.createElement('div'); col.className='col c-'+c.k; col.dataset.col=c.k;
-    const list=cards.filter(x=>x.col===c.k);
-    col.innerHTML=`<h2>${c.t}<span class="cnt">${list.length}</span></h2>`;
-    list.forEach(card=>col.appendChild(mkCard(card)));
-    // add-card row
-    const ar=document.createElement('div'); ar.className='addrow';
-    const inp=document.createElement('input'); inp.placeholder='+ add task…';
-    inp.onkeydown=e=>{ if(e.key==='Enter'&&inp.value.trim()){ cards.push({id:'u'+Date.now(),t:inp.value.trim(),src:'xen',col:c.k,m:'(added by qi)'}); save(); render(); } };
-    ar.appendChild(inp); col.appendChild(ar);
-    col.addEventListener('dragover',onDragOver); col.addEventListener('drop',onDrop);
-    col.addEventListener('dragleave',e=>{ if(!col.contains(e.relatedTarget)) col.classList.remove('over'); });
-    board.appendChild(col);
+  listEl.innerHTML='';
+  T.forEach(task=>{
+    const el=document.createElement('div'); el.className='task'; el.draggable=true; el.dataset.id=task.id;
+    const srcLbl={mac:'MAC',win:'WIN',xen:'XEN',rev:'REV',qi:'QI'}[task.s]||'QI';
+    el.innerHTML=`<span class="grip">⋮⋮</span>
+      <span class="pill ${task.p}" title="click to cycle priority">${task.p}</span>
+      <span class="txt" contenteditable spellcheck="false">${escapeHtml(task.t)}</span>
+      <span class="src s-${task.s}">${srcLbl}</span>
+      <span class="fire">▶ firing</span>
+      <span class="mic" title="dictate into this task">🎙</span>
+      <span class="del" title="remove">×</span>`;
+    el.querySelector('.pill').onclick=e=>{e.stopPropagation();task.p=PILLS[(PILLS.indexOf(task.p)+1)%PILLS.length];save();render();};
+    el.querySelector('.del').onclick=e=>{e.stopPropagation();T=T.filter(x=>x.id!==task.id);save();render();};
+    el.querySelector('.mic').onclick=e=>{e.stopPropagation();const m=e.currentTarget;const tx=el.querySelector('.txt');dictate((txt,fin)=>{tx.textContent=txt;if(fin){task.t=txt.trim();save();}},m);};
+    const tx=el.querySelector('.txt');
+    tx.onblur=()=>{task.t=tx.textContent.trim();save();};
+    el.addEventListener('dragstart',e=>{el.classList.add('dragging');e.dataTransfer.setData('text/plain',task.id);});
+    el.addEventListener('dragend',()=>{el.classList.remove('dragging');save();});
+    listEl.appendChild(el);
   });
 }
-function mkCard(card){
-  const el=document.createElement('div'); el.className='card'+(card.blk?' blk':''); el.draggable=true; el.dataset.id=card.id;
-  const srcLbl={mac:'MAC',win:'WIN',xen:'XEN',rev:'REV'}[card.src]||'XEN';
-  el.innerHTML=`<div class="t"><span class="src s-${card.src}">${srcLbl}</span> &nbsp;${card.t}</div>${card.m?`<div class="m">${card.m}</div>`:''}`;
-  el.addEventListener('dragstart',e=>{ el.classList.add('dragging'); e.dataTransfer.setData('text/plain',card.id); e.dataTransfer.effectAllowed='move'; });
-  el.addEventListener('dragend',()=>{ el.classList.remove('dragging'); document.querySelectorAll('.drop-line').forEach(d=>d.remove()); document.querySelectorAll('.col').forEach(c=>c.classList.remove('over')); });
-  return el;
+listEl.addEventListener('dragover',e=>{
+  e.preventDefault();
+  const dragging=listEl.querySelector('.dragging'); if(!dragging)return;
+  const after=getAfter(e.clientY);
+  if(after==null) listEl.appendChild(dragging); else listEl.insertBefore(dragging,after);
+});
+listEl.addEventListener('drop',e=>{
+  e.preventDefault();
+  // rebuild T order from DOM
+  const ids=[...listEl.querySelectorAll('.task')].map(n=>n.dataset.id);
+  T.sort((a,b)=>ids.indexOf(a.id)-ids.indexOf(b.id)); save();
+});
+function getAfter(y){
+  const els=[...listEl.querySelectorAll('.task:not(.dragging)')];
+  return els.reduce((c,ch)=>{const b=ch.getBoundingClientRect();const o=y-b.top-b.height/2;return(o<0&&o>c.offset)?{offset:o,element:ch}:c;},{offset:-Infinity}).element||null;
 }
-function onDragOver(e){ e.preventDefault(); const col=e.currentTarget; col.classList.add('over');
-  document.querySelectorAll('.drop-line').forEach(d=>d.remove());
-  const after=getAfter(col,e.clientY); const line=document.createElement('div'); line.className='drop-line';
-  const dragging=document.querySelector('.dragging');
-  if(after==null){ const ar=col.querySelector('.addrow'); col.insertBefore(line,ar); } else { col.insertBefore(line,after); } }
-function getAfter(col,y){ const els=[...col.querySelectorAll('.card:not(.dragging)')];
-  return els.reduce((closest,child)=>{ const box=child.getBoundingClientRect(); const off=y-box.top-box.height/2;
-    if(off<0&&off>closest.offset) return {offset:off,element:child}; else return closest; },{offset:-Infinity}).element||null; }
-function onDrop(e){ e.preventDefault(); const col=e.currentTarget; col.classList.remove('over');
-  const id=e.dataTransfer.getData('text/plain'); const card=cards.find(c=>c.id===id); if(!card) return;
-  const after=getAfter(col,e.clientY);
-  cards=cards.filter(c=>c.id!==id); card.col=col.dataset.col;
-  if(after==null){ // append to end of this column
-    let idx=cards.length; for(let i=cards.length-1;i>=0;i--){ if(cards[i].col===card.col){ idx=i+1; break; } }
-    // place after last of column, else end
-    const lastIdx=[...cards].map((c,i)=>c.col===card.col?i:-1).filter(i=>i>=0).pop();
-    cards.splice(lastIdx==null?cards.length:lastIdx+1,0,card);
-  } else {
-    const aid=after.dataset.id; const ai=cards.findIndex(c=>c.id===aid); cards.splice(ai,0,card);
-  }
-  document.querySelectorAll('.drop-line').forEach(d=>d.remove()); save(); render();
-}
+function escapeHtml(s){return s.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));}
+document.getElementById('addall').onclick=()=>{
+  const lines=document.getElementById('bulk').value.split('\n').map(l=>l.replace(/^\s*[\d.\-•*]+\s*/,'').trim()).filter(Boolean);
+  lines.forEach(l=>T.unshift({id:'q'+Date.now()+Math.floor(Math.random()*999),p:'P0',s:'qi',t:l}));
+  document.getElementById('bulk').value=''; save(); render();
+};
 document.getElementById('send').onclick=()=>{
-  let txt='XEN STEER — prioritized plan ('+new Date().toISOString().slice(0,16).replace('T',' ')+'):\n';
-  COLS.forEach(c=>{ const list=cards.filter(x=>x.col===c.k); if(list.length){ txt+='\n'+c.t.toUpperCase()+':\n'; list.forEach((x,i)=>txt+=`  ${i+1}. ${x.t}\n`); } });
-  document.getElementById('out').style.display='block'; document.getElementById('outtxt').textContent=txt;
+  let txt='XEN STEER — '+T.length+' tasks, ALL PARALLEL / instant auto-manifest (pills = weight, not order):\n';
+  PILLS.forEach(p=>{const g=T.filter(x=>x.p===p);if(g.length){txt+='\n['+p+']\n';g.forEach(x=>txt+='  • '+x.t+'\n');}});
+  document.getElementById('out').style.display='block';
+  document.getElementById('outtxt').textContent=txt;
   navigator.clipboard?.writeText(txt);
   document.getElementById('out').scrollIntoView({behavior:'smooth'});
 };
-document.getElementById('reset').onclick=()=>{ if(confirm('Reset board to the original gather?')){ cards=JSON.parse(JSON.stringify(SEED)); save(); render(); } };
+document.getElementById('reset').onclick=()=>{if(confirm('Reset to the original gather?')){T=JSON.parse(JSON.stringify(SEED));save();render();}};
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+function dictate(onText,btn){
+  if(btn&&btn._rec){btn._rec.stop();btn._rec=null;btn.classList.remove('rec');return;}
+  if(!SR){alert('Dictation needs Chrome / Edge / Comet (Web Speech API + mic permission).');return;}
+  const r=new SR();r.lang='en-US';r.interimResults=true;r.continuous=true;let fin='';
+  r.onresult=e=>{let it='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)fin+=t+' ';else it+=t;}onText((fin+it).trim(),false);};
+  r.onend=()=>{if(btn){btn.classList.remove('rec');btn._rec=null;}onText(fin.trim(),true);};
+  r.onerror=()=>{if(btn){btn.classList.remove('rec');btn._rec=null;}};
+  if(btn){btn.classList.add('rec');btn._rec=r;}
+  r.start();
+}
+document.getElementById('dictate').onclick=e=>{
+  const ta=document.getElementById('bulk');const base=ta.value;
+  dictate((txt)=>{ta.value=(base?base+'\n':'')+txt;},e.currentTarget);
+};
 render();
 </script>
 </body>
