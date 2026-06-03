@@ -4,191 +4,159 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
-<title>XEN · STEER ROOM</title>
+<title>XEN · STEER BOARD</title>
 <style>
 :root{
-  --ink:#05070a; --ink2:#0a0f14; --panel:#0c141b; --line:#13313a;
-  --green:#34d17a; --green-hi:#5dffa0; --cyan:#00e0ff; --irid1:#7b2cbf; --irid2:#06b6d4; --irid3:#ec4899;
-  --amber:#d9a441; --text:#e8f4ee; --dim:#7e9aa0; --warn:#ff6b6b;
-  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
-  --disp:"Chakra Petch","Saira",system-ui,sans-serif;
+  --ink:#05070a;--ink2:#0a0f14;--panel:#0c141b;--line:#163842;
+  --green:#34d17a;--green-hi:#5dffa0;--cyan:#00e0ff;--irid:#7b2cbf;--amber:#d9a441;
+  --text:#e8f4ee;--dim:#7e9aa0;--warn:#ff6b6b;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;--disp:"Chakra Petch","Saira",system-ui,sans-serif;
 }
 *{box-sizing:border-box}
-body{margin:0;background:
-  radial-gradient(1200px 700px at 70% -10%,rgba(52,209,122,.10),transparent 60%),
-  radial-gradient(900px 600px at 10% 110%,rgba(0,224,255,.08),transparent 55%),
-  var(--ink);
-  color:var(--text);font-family:var(--disp);-webkit-font-smoothing:antialiased}
-.wrap{max-width:1180px;margin:0 auto;padding:34px 20px 90px}
-header{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--line);padding-bottom:16px}
-h1{font-size:clamp(26px,4vw,44px);margin:0;letter-spacing:.16em;font-weight:700;
-  background:linear-gradient(100deg,#fff,var(--green-hi) 35%,var(--cyan) 70%,var(--irid1));-webkit-background-clip:text;background-clip:text;color:transparent}
-.sub{color:var(--dim);font-family:var(--mono);font-size:12.5px;letter-spacing:.04em}
-.stamp{font-family:var(--mono);font-size:11px;color:var(--green);border:1px solid var(--line);padding:5px 10px;border-radius:30px;background:rgba(52,209,122,.06)}
-h2{font-size:13px;letter-spacing:.22em;color:var(--cyan);text-transform:uppercase;margin:38px 0 14px;font-weight:700}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:16px}
-.card{background:linear-gradient(180deg,var(--panel),var(--ink2));border:1px solid var(--line);border-radius:14px;padding:18px 18px 16px;position:relative;overflow:hidden}
-.card::before{content:"";position:absolute;inset:0 0 auto 0;height:2px;background:linear-gradient(90deg,transparent,var(--green),var(--cyan),transparent);opacity:.6}
-.card h3{margin:2px 0 4px;font-size:16px;letter-spacing:.05em}
-.tag{font-family:var(--mono);font-size:10.5px;color:var(--ink);background:var(--green);padding:2px 8px;border-radius:20px;font-weight:700;letter-spacing:.04em}
-.tag.mac{background:var(--cyan)} .tag.win{background:var(--amber)}
-.card ul{margin:12px 0 0;padding-left:16px;color:#cfe6dc;font-size:13.5px;line-height:1.55;font-family:var(--mono)}
-.card li{margin:5px 0}
-.blk{color:var(--warn)} .done{color:var(--green-hi)}
-/* wizard */
-.wizard{margin-top:18px}
-.q{color:var(--dim);font-family:var(--mono);font-size:12px;margin:0 0 12px;letter-spacing:.05em}
-.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-#lanes{grid-template-columns:repeat(3,1fr)}
-@media(max-width:820px){#lanes{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:520px){#lanes{grid-template-columns:1fr}}
-.opt{cursor:pointer;border:1px solid var(--line);border-radius:12px;padding:15px 15px;background:rgba(255,255,255,.012);transition:.18s;position:relative}
-.opt:hover{border-color:var(--green);transform:translateY(-2px);box-shadow:0 8px 30px rgba(52,209,122,.10)}
-.opt.sel{border-color:var(--green-hi);background:rgba(52,209,122,.10);box-shadow:0 0 0 1px var(--green-hi) inset,0 10px 34px rgba(52,209,122,.18)}
-.opt b{display:block;font-size:14.5px;letter-spacing:.04em;margin-bottom:5px}
-.opt span{font-family:var(--mono);font-size:11.5px;color:var(--dim);line-height:1.5;display:block}
-.sub-panel{display:none;margin-top:16px;border-left:2px solid var(--green);padding:4px 0 4px 16px;animation:rise .3s ease}
-.sub-panel.on{display:block}
-@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.lockbar{margin-top:26px;border:1px dashed var(--line);border-radius:12px;padding:16px 18px;background:rgba(0,224,255,.03)}
-.lockbar .lbl{font-family:var(--mono);font-size:11px;color:var(--cyan);letter-spacing:.18em;text-transform:uppercase}
-#directive{font-family:var(--mono);font-size:14px;color:var(--green-hi);margin-top:8px;min-height:22px;line-height:1.5}
-.lockbtn{margin-top:14px;display:inline-flex;gap:8px;align-items:center;cursor:pointer;border:none;font-family:var(--disp);font-weight:700;letter-spacing:.08em;
-  background:linear-gradient(100deg,var(--green),var(--cyan));color:#03110a;padding:11px 22px;border-radius:30px;font-size:14px;transition:.18s;opacity:.4;pointer-events:none}
-.lockbtn.ready{opacity:1;pointer-events:auto} .lockbtn.ready:hover{filter:brightness(1.12);box-shadow:0 10px 30px rgba(52,209,122,.3)}
-.copied{color:var(--green);font-family:var(--mono);font-size:12px;margin-left:10px}
-footer{margin-top:40px;color:var(--dim);font-family:var(--mono);font-size:11px;text-align:center;letter-spacing:.05em}
+body{margin:0;background:radial-gradient(1200px 700px at 72% -10%,rgba(52,209,122,.10),transparent 60%),radial-gradient(900px 600px at 8% 110%,rgba(0,224,255,.08),transparent 55%),var(--ink);color:var(--text);font-family:var(--disp)}
+.wrap{max-width:1340px;margin:0 auto;padding:26px 18px 110px}
+header{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--line);padding-bottom:14px}
+h1{margin:0;font-size:clamp(24px,3.6vw,40px);letter-spacing:.16em;font-weight:700;background:linear-gradient(100deg,#fff,var(--green-hi) 38%,var(--cyan) 72%,var(--irid));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--dim);font-family:var(--mono);font-size:12px;margin-top:4px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:16px 0 6px}
+.btn{cursor:pointer;border:1px solid var(--line);background:rgba(255,255,255,.02);color:var(--text);font-family:var(--disp);font-weight:600;letter-spacing:.05em;padding:9px 16px;border-radius:24px;font-size:13px;transition:.16s}
+.btn:hover{border-color:var(--green);box-shadow:0 6px 22px rgba(52,209,122,.12)}
+.btn.primary{background:linear-gradient(100deg,var(--green),var(--cyan));color:#03110a;border:none}
+.btn.primary:hover{filter:brightness(1.12)}
+.hint{color:var(--dim);font-family:var(--mono);font-size:11.5px}
+.board{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:14px}
+@media(max-width:1000px){.board{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.board{grid-template-columns:1fr}}
+.col{background:linear-gradient(180deg,var(--panel),var(--ink2));border:1px solid var(--line);border-radius:14px;padding:12px 11px 60px;min-height:240px;transition:.15s}
+.col.over{border-color:var(--green-hi);box-shadow:0 0 0 1px var(--green-hi) inset,0 10px 40px rgba(52,209,122,.14)}
+.col h2{margin:4px 4px 12px;font-size:12px;letter-spacing:.2em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+.col .cnt{font-family:var(--mono);font-size:11px;color:var(--dim);background:rgba(255,255,255,.04);border-radius:20px;padding:1px 8px}
+.c-now h2{color:var(--warn)} .c-next h2{color:var(--green-hi)} .c-later h2{color:var(--cyan)} .c-park h2{color:var(--dim)}
+.card{background:#0e161d;border:1px solid var(--line);border-left:3px solid var(--green);border-radius:9px;padding:10px 11px;margin:8px 0;cursor:grab;transition:.12s;position:relative}
+.card:hover{border-color:var(--green);transform:translateY(-1px)}
+.card.dragging{opacity:.4;cursor:grabbing}
+.card .t{font-size:13.5px;line-height:1.35;letter-spacing:.01em}
+.card .m{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:6px;line-height:1.4}
+.src{font-family:var(--mono);font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:12px;color:#03110a}
+.s-mac{background:var(--cyan)} .s-win{background:var(--amber)} .s-xen{background:var(--green)} .s-rev{background:var(--irid);color:#fff}
+.card.blk{border-left-color:var(--warn)} .card.blk .t::after{content:" ⚠";color:var(--warn)}
+.drop-line{height:2px;background:var(--green-hi);margin:2px 0;border-radius:2px;box-shadow:0 0 8px var(--green-hi)}
+.addrow{margin-top:8px}
+.addrow input{width:100%;background:#0a1117;border:1px dashed var(--line);color:var(--text);font-family:var(--mono);font-size:12px;padding:8px 9px;border-radius:8px}
+.addrow input:focus{outline:none;border-color:var(--green)}
+#out{margin-top:22px;border:1px dashed var(--line);border-radius:12px;padding:14px 16px;background:rgba(0,224,255,.03);display:none}
+#out .lbl{font-family:var(--mono);font-size:11px;color:var(--cyan);letter-spacing:.16em}
+#out pre{white-space:pre-wrap;font-family:var(--mono);font-size:12.5px;color:var(--green-hi);margin:8px 0 0;line-height:1.5}
+footer{margin-top:30px;text-align:center;color:var(--dim);font-family:var(--mono);font-size:11px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div>
-      <h1>XEN · STEER ROOM</h1>
-      <div class="sub">cross-machine state gather → branch the next move. select a lane, refine, lock it, read it back to Xen.</div>
-    </div>
-    <div class="stamp">SYNC 2026-06-03 · nitro11 + mac-xen</div>
+    <div><h1>XEN · STEER BOARD</h1><div class="sub">drag tasks across priority · order = the plan · "Send to Xen" exports it · saved to this browser</div></div>
+    <div class="hint" id="sync">SYNC 2026-06-03 · nitro11 + mac-xen</div>
   </header>
 
-  <h2>// Live work streams</h2>
-  <div class="grid">
-    <div class="card">
-      <span class="tag win">WIN · grok</span>
-      <h3>Brand-asset factory</h3>
-      <ul>
-        <li>10 chrome icons → hitthe.link</li>
-        <li>/sel gold CSS (photoreal amber)</li>
-        <li class="done">EGBOps/Padre logos + hero img/video: Q's, Cranford, Barber Shop, Norwood, Elite Electric…</li>
-        <li>role: client-asset + CSS generation</li>
-      </ul>
-    </div>
-    <div class="card">
-      <span class="tag">WIN · xen (this session)</span>
-      <h3>Stabilization + brand</h3>
-      <ul>
-        <li class="done">Memory: git + GitHub + Syncthing + auto-commit/capture (4 nets)</li>
-        <li class="done">C: 5.6 → 86.6 GB free; log-cap guard</li>
-        <li class="done">windows-mcp computer-use · Spaceship API live</li>
-        <li>/sel gold v4 · EGBOps factory</li>
-      </ul>
-    </div>
-    <div class="card">
-      <span class="tag mac">MAC · grok</span>
-      <h3>Exedus / infra engine</h3>
-      <ul>
-        <li><b>Phound TCR</b> — Nitro11 fix, CF Pages deploy + domain swap (48MB)</li>
-        <li><b>XOS2 / XUI</b> 3-panel — omni-inbox + VEI composer + CRM + voice</li>
-        <li class="blk">Center-Mesh NATS omni-inbox — blocker: omni-nats-bridge.js missing</li>
-        <li>Exedus → /Volumes/qi_ canonical root</li>
-        <li>X31 Godmode hardening · "Pre-Hosp / P0 lifelines"</li>
-        <li>Best-OSS-agent harness (active 18MB)</li>
-      </ul>
-    </div>
+  <div class="toolbar">
+    <button class="btn primary" id="send">⬡ SEND PLAN TO XEN</button>
+    <button class="btn" id="reset">↺ reset to gather</button>
+    <span class="hint">drag a card → drop in NOW / NEXT / LATER / PARKED · reorder within a column</span>
   </div>
 
-  <h2>// Prime directive — what do we drive next?</h2>
-  <div class="wizard">
-    <p class="q">1 · pick the lane &nbsp;→&nbsp; 2 · refine &nbsp;→&nbsp; 3 · lock &amp; read back to Xen</p>
-    <div class="opts" id="lanes"></div>
-    <div class="sub-panel" id="sub"></div>
+  <div class="board" id="board"></div>
 
-    <div class="lockbar">
-      <div class="lbl">▶ Locked directive</div>
-      <div id="directive">— select a lane and a move —</div>
-      <button class="lockbtn" id="lock">⬡ LOCK &amp; COPY</button>
-      <span class="copied" id="copied"></span>
-    </div>
-  </div>
-
-  <footer>XEN STEER ROOM · noindex · green-iridescent stylism · gathered from nitro11 (win grok + xen) + mac-xen (grok)</footer>
+  <div id="out"><div class="lbl">▶ PLAN — copied to clipboard, paste back to Xen</div><pre id="outtxt"></pre></div>
+  <footer>XEN STEER BOARD · noindex · drag-drop persists to localStorage · gathered from win grok + xen + mac grok</footer>
 </div>
 
 <script>
-const LANES = [
-  {k:'omni', t:'Converge the Omni-Inbox', d:'Finish the symmetric cross-device inbox (Mac NATS mesh + Beeper + SMS).', subs:[
-    {t:'Fix the NATS bridge blocker', x:'Create the missing omni-nats-bridge.js + bring the center-mesh online.'},
-    {t:'Wire Beeper-beside + voice', x:'Connect Beeper + voice composer into the XOS2 inbox panel.'},
-    {t:'Bridge Win↔Mac inbox state', x:'Symmetric inbox across nitro11 + mac-xen over NATS.'},
-  ]},
-  {k:'xos2', t:'Ship XOS2 / XUI', d:'The 3-panel Xen OS UI Mac-grok is building — integrate + deploy.', subs:[
-    {t:'Deploy the 3-panel build live', x:'CF Pages / hitthe.link route for XOS2 with omni-inbox + VEI composer + CRM.'},
-    {t:'Skin to green-iridescent stylism', x:'Apply the xlrd green-on-black HUD tokens to XUI.'},
-    {t:'Cross-machine state into XUI', x:'Feed nitro11 + mac status into the dashboard.'},
-  ]},
-  {k:'phound', t:'Phound (product)', d:'TCR / CF deploy / domain — continue the Phound push.', subs:[
-    {t:'Finish TCR + submit', x:'Complete the TCR flow + submission.'},
-    {t:'Domain + file-upload polish', x:'Lock the domain swap + the Nitro file-upload path.'},
-    {t:'Phound GTM next step', x:'Define what ships to first users.'},
-  ]},
-  {k:'revenue', t:'Revenue: EGBOps / Padre', d:'Win-grok assets are stacking — turn them into shipped + closed clients.', subs:[
-    {t:'Ship the queued prospect sites', x:'Push the EGBOps/Padre sites with the new grok assets live.'},
-    {t:'Run a fresh EGBOps batch', x:'Fire EGBO local + XGBO remote in parallel.'},
-    {t:'Work the closer / outreach', x:'Drive the Closer OS to contact prospects.'},
-  ]},
-  {k:'memory', t:'Finish the Memory Engine', d:'Capture is live; add the guarded distiller + cross-device canon.', subs:[
-    {t:'Build the grok-CLI distiller', x:'NDJSON → proposed notes into _candidates/ (no auto-canonize).'},
-    {t:'Point Mac-Xen at the synced vault', x:'Make /Users/qi/xen-memory the Mac canon source.'},
-    {t:'SessionStart CONTEXT.md inject', x:'Deterministic state briefing each run + heartbeat.'},
-  ]},
-  {k:'p0', t:'P0 Lifelines / Continuity', d:'The "Pre-Hosp hardening" thread — make everything run without you.', subs:[
-    {t:'Audit the P0 lifelines', x:'List what must survive if you step away; verify each is autonomous.'},
-    {t:'Harden the autonomous loops', x:'EGBOps + comms + memory run lights-out with no human.'},
-    {t:'Single status dashboard', x:'One live page showing every system green/red.'},
-  ]},
+const COLS=[{k:'now',t:'🔥 Now'},{k:'next',t:'⏭ Next'},{k:'later',t:'🗓 Later'},{k:'park',t:'⏸ Parked'}];
+const SEED=[
+  // MAC grok infra
+  {id:'nats',  t:'Fix NATS omni-bridge blocker (create omni-nats-bridge.js)', src:'mac', col:'now', blk:true, m:'Mac grok mid-blocker · center-mesh omni-inbox'},
+  {id:'beep',  t:'Wire Beeper-beside + voice into XOS2 inbox panel', src:'mac', col:'next', m:'omni-inbox composer'},
+  {id:'meshwm',t:'Bridge Win↔Mac inbox state over NATS (symmetric)', src:'mac', col:'later', m:'cross-device omni-inbox'},
+  {id:'xos2',  t:'Deploy XOS2 / XUI 3-panel live', src:'mac', col:'next', m:'omni-inbox + VEI composer + CRM'},
+  {id:'xskin', t:'Skin XUI to green-iridescent stylism', src:'mac', col:'later', m:'xlrd HUD tokens'},
+  {id:'phtcr', t:'Phound: finish TCR + submit', src:'mac', col:'later', m:'48MB session · CF deploy done'},
+  {id:'phdom', t:'Phound: domain swap + Nitro file-upload polish', src:'mac', col:'park', m:''},
+  {id:'exmig', t:'Confirm Exedus canonical-root migration (/Volumes/qi_)', src:'mac', col:'later', m:''},
+  {id:'p0',    t:'Audit P0 lifelines — what must survive if you step away', src:'mac', col:'now', m:'"Pre-Hosp hardening" · continuity-critical'},
+  {id:'p0harden',t:'Harden autonomous loops (EGBOps + comms + memory, lights-out)', src:'mac', col:'next', m:''},
+  {id:'statusdash',t:'Single live status dashboard (every system green/red)', src:'xen', col:'later', m:''},
+  // XEN-win
+  {id:'distill',t:'Build grok-CLI memory distiller → _candidates/ (no auto-canonize)', src:'xen', col:'next', m:'finishes the memory engine'},
+  {id:'maccanon',t:'Point Mac-Xen at the synced /Users/qi/xen-memory vault', src:'xen', col:'later', m:'Syncthing already live'},
+  {id:'ctx',   t:'SessionStart CONTEXT.md deterministic inject + heartbeat', src:'xen', col:'park', m:''},
+  {id:'xlrd',  t:'xlrd.org apex → the xlrd-org 3D-mascot landing (fix 525)', src:'xen', col:'later', m:'un-breaks 3 frame-forwards'},
+  // WIN grok + revenue
+  {id:'egbship',t:'Ship queued EGBOps/Padre prospect sites (grok assets ready)', src:'rev', col:'next', m:'win grok logos+hero done'},
+  {id:'egbbatch',t:'Run fresh EGBOps batch (EGBO local + XGBO remote)', src:'rev', col:'later', m:''},
+  {id:'closer',t:'Work the Closer OS / outreach to prospects', src:'rev', col:'later', m:'turn assets → revenue'},
+  {id:'selgold',t:'/sel gold — final pass (grok photoreal if wanted)', src:'win', col:'park', m:'v4 clean live'},
+  {id:'icons', t:'Place the 10 grok chrome icons on hitthe.link', src:'win', col:'park', m:''},
 ];
-const lanesEl=document.getElementById('lanes'), subEl=document.getElementById('sub'),
-      dirEl=document.getElementById('directive'), lockBtn=document.getElementById('lock'), copied=document.getElementById('copied');
-let curLane=null, curSub=null;
-LANES.forEach(l=>{
-  const o=document.createElement('div'); o.className='opt';
-  o.innerHTML=`<b>${l.t}</b><span>${l.d}</span>`;
-  o.onclick=()=>{curLane=l;curSub=null;[...lanesEl.children].forEach(c=>c.classList.remove('sel'));o.classList.add('sel');renderSub(l);compose();};
-  lanesEl.appendChild(o);
-});
-function renderSub(l){
-  subEl.innerHTML=`<p class="q">refine &mdash; ${l.t.toUpperCase()}</p><div class="opts" id="subopts"></div>`;
-  subEl.classList.add('on');
-  const so=subEl.querySelector('#subopts');
-  l.subs.forEach(s=>{
-    const o=document.createElement('div'); o.className='opt';
-    o.innerHTML=`<b>${s.t}</b><span>${s.x}</span>`;
-    o.onclick=()=>{curSub=s;[...so.children].forEach(c=>c.classList.remove('sel'));o.classList.add('sel');compose();};
-    so.appendChild(o);
+const KEY='xen-steer-board-v1';
+let cards = load();
+function load(){ try{ const s=JSON.parse(localStorage.getItem(KEY)); if(s&&s.length) return s; }catch(e){} return JSON.parse(JSON.stringify(SEED)); }
+function save(){ localStorage.setItem(KEY, JSON.stringify(cards)); }
+const board=document.getElementById('board');
+function render(){
+  board.innerHTML='';
+  COLS.forEach(c=>{
+    const col=document.createElement('div'); col.className='col c-'+c.k; col.dataset.col=c.k;
+    const list=cards.filter(x=>x.col===c.k);
+    col.innerHTML=`<h2>${c.t}<span class="cnt">${list.length}</span></h2>`;
+    list.forEach(card=>col.appendChild(mkCard(card)));
+    // add-card row
+    const ar=document.createElement('div'); ar.className='addrow';
+    const inp=document.createElement('input'); inp.placeholder='+ add task…';
+    inp.onkeydown=e=>{ if(e.key==='Enter'&&inp.value.trim()){ cards.push({id:'u'+Date.now(),t:inp.value.trim(),src:'xen',col:c.k,m:'(added by qi)'}); save(); render(); } };
+    ar.appendChild(inp); col.appendChild(ar);
+    col.addEventListener('dragover',onDragOver); col.addEventListener('drop',onDrop);
+    col.addEventListener('dragleave',e=>{ if(!col.contains(e.relatedTarget)) col.classList.remove('over'); });
+    board.appendChild(col);
   });
 }
-function compose(){
-  if(curLane&&curSub){
-    dirEl.textContent=`STEER → ${curLane.t} :: ${curSub.t} — ${curSub.x}`;
-    lockBtn.classList.add('ready');
-  } else if(curLane){
-    dirEl.textContent=`STEER → ${curLane.t} (pick a move to refine)`;
-    lockBtn.classList.remove('ready');
-  }
+function mkCard(card){
+  const el=document.createElement('div'); el.className='card'+(card.blk?' blk':''); el.draggable=true; el.dataset.id=card.id;
+  const srcLbl={mac:'MAC',win:'WIN',xen:'XEN',rev:'REV'}[card.src]||'XEN';
+  el.innerHTML=`<div class="t"><span class="src s-${card.src}">${srcLbl}</span> &nbsp;${card.t}</div>${card.m?`<div class="m">${card.m}</div>`:''}`;
+  el.addEventListener('dragstart',e=>{ el.classList.add('dragging'); e.dataTransfer.setData('text/plain',card.id); e.dataTransfer.effectAllowed='move'; });
+  el.addEventListener('dragend',()=>{ el.classList.remove('dragging'); document.querySelectorAll('.drop-line').forEach(d=>d.remove()); document.querySelectorAll('.col').forEach(c=>c.classList.remove('over')); });
+  return el;
 }
-lockBtn.onclick=()=>{
-  const txt=dirEl.textContent;
-  navigator.clipboard?.writeText(txt).then(()=>{copied.textContent='✓ copied — paste it back to Xen';},()=>{copied.textContent='(select + copy manually)';});
+function onDragOver(e){ e.preventDefault(); const col=e.currentTarget; col.classList.add('over');
+  document.querySelectorAll('.drop-line').forEach(d=>d.remove());
+  const after=getAfter(col,e.clientY); const line=document.createElement('div'); line.className='drop-line';
+  const dragging=document.querySelector('.dragging');
+  if(after==null){ const ar=col.querySelector('.addrow'); col.insertBefore(line,ar); } else { col.insertBefore(line,after); } }
+function getAfter(col,y){ const els=[...col.querySelectorAll('.card:not(.dragging)')];
+  return els.reduce((closest,child)=>{ const box=child.getBoundingClientRect(); const off=y-box.top-box.height/2;
+    if(off<0&&off>closest.offset) return {offset:off,element:child}; else return closest; },{offset:-Infinity}).element||null; }
+function onDrop(e){ e.preventDefault(); const col=e.currentTarget; col.classList.remove('over');
+  const id=e.dataTransfer.getData('text/plain'); const card=cards.find(c=>c.id===id); if(!card) return;
+  const after=getAfter(col,e.clientY);
+  cards=cards.filter(c=>c.id!==id); card.col=col.dataset.col;
+  if(after==null){ // append to end of this column
+    let idx=cards.length; for(let i=cards.length-1;i>=0;i--){ if(cards[i].col===card.col){ idx=i+1; break; } }
+    // place after last of column, else end
+    const lastIdx=[...cards].map((c,i)=>c.col===card.col?i:-1).filter(i=>i>=0).pop();
+    cards.splice(lastIdx==null?cards.length:lastIdx+1,0,card);
+  } else {
+    const aid=after.dataset.id; const ai=cards.findIndex(c=>c.id===aid); cards.splice(ai,0,card);
+  }
+  document.querySelectorAll('.drop-line').forEach(d=>d.remove()); save(); render();
+}
+document.getElementById('send').onclick=()=>{
+  let txt='XEN STEER — prioritized plan ('+new Date().toISOString().slice(0,16).replace('T',' ')+'):\n';
+  COLS.forEach(c=>{ const list=cards.filter(x=>x.col===c.k); if(list.length){ txt+='\n'+c.t.toUpperCase()+':\n'; list.forEach((x,i)=>txt+=`  ${i+1}. ${x.t}\n`); } });
+  document.getElementById('out').style.display='block'; document.getElementById('outtxt').textContent=txt;
+  navigator.clipboard?.writeText(txt);
+  document.getElementById('out').scrollIntoView({behavior:'smooth'});
 };
+document.getElementById('reset').onclick=()=>{ if(confirm('Reset board to the original gather?')){ cards=JSON.parse(JSON.stringify(SEED)); save(); render(); } };
+render();
 </script>
 </body>
 </html>
