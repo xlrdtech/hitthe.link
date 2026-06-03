@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>@stylism_ Visual Reference</title>
+<meta name="theme-color" content="#0a0a0e">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0a0a0e;color:#fbf9f4;font-family:-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.bar{padding:18px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.07);position:sticky;top:0;background:rgba(10,10,14,.85);backdrop-filter:blur(16px);z-index:10}
+.bar .brand{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.bar .brand span{color:rgba(255,255,255,.35)}
+.bar .count{font-size:12px;color:rgba(255,255,255,.4)}
+.hero{padding:40px 24px 24px;text-align:center}
+.hero h1{font-size:clamp(28px,5vw,48px);font-weight:700;letter-spacing:-.03em;margin-bottom:8px}
+.hero p{color:rgba(255,255,255,.42);font-size:14px;max-width:480px;margin:0 auto}
+.grid{columns:2;column-gap:8px;padding:16px;max-width:1400px;margin:0 auto}
+@media(min-width:600px){.grid{columns:3}}
+@media(min-width:900px){.grid{columns:4}}
+@media(min-width:1200px){.grid{columns:5}}
+.pin{break-inside:avoid;margin-bottom:8px;border-radius:12px;overflow:hidden;background:#15151c;display:block}
+.pin img{width:100%;display:block;border-radius:12px;transition:transform .2s;loading:lazy}
+.pin:hover img{transform:scale(1.02)}
+.loading{text-align:center;padding:60px;color:rgba(255,255,255,.3);font-size:14px}
+footer{text-align:center;padding:32px;color:rgba(255,255,255,.2);font-size:11px;border-top:1px solid rgba(255,255,255,.05)}
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="brand">@stylism_<span> · visual reference</span></div>
+  <div class="count" id="cnt">loading…</div>
+</div>
+<div class="hero">
+  <h1>The Reference Board</h1>
+  <p>@stylism_ Pinterest aesthetic — hyper-realistic metallic, iridescent, 3D on black. Every pin that shaped the visual language.</p>
+</div>
+<div class="grid" id="grid"><div class="loading">Loading pins…</div></div>
+<footer>@stylism_ · @xlrd999 · pinterest.com/stylism_ · hitthe.link</footer>
+<script>
+fetch('/stylism/pinterest-pins.json?v='+Date.now())
+  .then(r=>r.json()).then(d=>{
+    const pins=d.urls||[];
+    document.getElementById('cnt').textContent=pins.length+' pins';
+    document.getElementById('grid').innerHTML=pins.map(url=>`
+      <a class="pin" href="${url}" target="_blank" rel="noopener">
+        <img src="${url}" alt="" loading="lazy" onerror="this.closest('.pin').remove()">
+      </a>`).join('');
+  }).catch(()=>{document.getElementById('grid').innerHTML='<div class="loading">Could not load pins.</div>';});
+</script>
+</body>
+</html>
