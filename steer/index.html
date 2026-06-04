@@ -190,6 +190,66 @@ document.getElementById('dictate').onclick=e=>{
   dictate((txt)=>{ta.value=(base?base+'\n':'')+txt;},e.currentTarget);
 };
 render();
+
+// ── SUGGESTED PROMPTS panel ─────────────────────────────────────────────────
+// Reads ~/.xen/prompt-suggestions.jsonl via the omnimind API (api.xlrd.org)
+// and renders the last 15 captured suggestions as one-click fire buttons.
+const SUGG_KEY = 'xen-suggestions-v1';
+let SUGG = [];
+
+async function loadSuggestions() {
+  try {
+    const r = await fetch('https://api.xlrd.org/api/suggestions', {method:'GET', signal: AbortSignal.timeout(4000)});
+    if (r.ok) { SUGG = await r.json(); renderSugg(); return; }
+  } catch(e) {}
+  // Fallback: read from localStorage cache
+  try { SUGG = JSON.parse(localStorage.getItem(SUGG_KEY) || '[]'); } catch(e) { SUGG=[]; }
+  renderSugg();
+}
+
+function renderSugg() {
+  const el = document.getElementById('sugg-list');
+  if (!el) return;
+  if (!SUGG.length) { el.innerHTML='<span style="color:var(--faint);font-size:11px">No suggestions captured yet — runs after each session turn</span>'; return; }
+  // Flatten all suggestions from all entries, most recent first
+  const all = [];
+  [...SUGG].reverse().forEach(entry => {
+    (entry.suggestions||[]).forEach(s => { if(s && !all.includes(s)) all.push(s); });
+  });
+  el.innerHTML = all.slice(0,20).map(s => `
+    <button class="sugg-btn" onclick="firesugg(this)" data-s="${escapeHtml(s)}" title="Click to add to tasks or fire to Xen">
+      ${escapeHtml(s)}
+    </button>`).join('');
+}
+
+function firesugg(btn) {
+  const s = btn.dataset.s;
+  // Add to top of task list as P0
+  T.unshift({id:'s'+Date.now(),p:'P0',s:'qi',t:s});
+  save(); render();
+  // Also auto-inject
+  try { fetch('https://tui.xlrd.org/tui?q='+encodeURIComponent(s),{mode:'no-cors'}); } catch(e) {}
+  btn.style.opacity='0.4';
+}
+
+loadSuggestions();
+// Refresh every 30s in case a new turn just completed
+setInterval(loadSuggestions, 30000);
 </script>
+
+<style>
+.sugg-panel{margin:36px 0 0;border:1px solid rgba(45,240,163,.18);border-radius:10px;background:rgba(10,14,14,.55);padding:16px 16px 14px;backdrop-filter:blur(8px)}
+.sugg-panel h3{font-family:var(--mono);font-size:10px;letter-spacing:.38em;text-transform:uppercase;color:var(--gold);margin:0 0 12px;opacity:.8}
+#sugg-list{display:flex;flex-wrap:wrap;gap:8px}
+.sugg-btn{font-family:var(--body);font-size:12.5px;font-weight:400;background:rgba(22,217,137,.07);border:1px solid rgba(22,217,137,.22);border-radius:20px;color:var(--bone);padding:7px 14px;cursor:pointer;text-align:left;transition:.15s;max-width:100%}
+.sugg-btn:hover{background:rgba(22,217,137,.18);border-color:var(--gold);color:#fff;box-shadow:0 0 12px rgba(22,217,137,.2)}
+</style>
+
+<div class="wrap" style="padding-top:0">
+  <div class="sugg-panel">
+    <h3>⚡ Suggested next prompts</h3>
+    <div id="sugg-list"><span style="color:var(--faint);font-size:11px">Loading…</span></div>
+  </div>
+</div>
 </body>
 </html>
