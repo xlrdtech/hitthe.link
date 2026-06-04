@@ -18,6 +18,7 @@ const DENY = new Set([
   'mbv2','mbv3','e','growth','east-allen-growth-interface','god-sop-dashboard','sao2','l7s-hero','l7s-pulse',
   'check-hero','container','extendlm','dcl-demo','stal-lyon','stal-lyon-populate','rays-home','signing',
   'scripts','assets','_shared','codepens','nblmaudit',
+  'eliops', // client lead PII (Tracking Together) — live at /eliops but noindex + hidden from public index
 ]);
 
 // Category inference by slug/title keywords (for grouping in the gallery).

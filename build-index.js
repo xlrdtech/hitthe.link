@@ -30,6 +30,7 @@ const SKIP_DIRS = new Set([
   // on disk + reachable via /luckie; just excluded from the main index listing.
   'calculators', 'l7s', 'l7s-hero', 'l7shero', 'l7s-pulse', 'PriceHero',
   'offers', 'eats', 'buzycred', 'autophone', 'growth', 'east-allen-growth-interface',
+  'eliops', // client lead PII (Tracking Together) — noindex, excluded from card grid
 ]);
 
 function extractMeta(htmlPath) {
