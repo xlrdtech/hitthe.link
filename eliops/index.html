@@ -15,13 +15,12 @@
     --bg:#0A0A0F; --bg-modal:rgba(11,13,22,.97); --bg-sticky:rgba(10,10,15,.94); --bg-input:rgba(0,0,0,.36);
     --glass:rgba(17,19,30,.62); --glass-2:rgba(24,27,42,.58);
     --line:rgba(255,255,255,.09); --line-2:rgba(255,255,255,.16);
-    --fg:#F0F0F2; --mut:#8b93ad; --faint:#5b6478;
+    --fg:#F0F0F2; --mut:#8b93ad;
     --primary:#DC143C; --primary-2:#9B111E; --primary-glow:rgba(220,20,60,.28);
     --btn-bg:linear-gradient(180deg,#DC143C,#9B111E); --btn-border:rgba(220,20,60,.45); --btn-shadow:0 4px 18px rgba(220,20,60,.32);
     --blue:#DC143C; --blue-rgb:220,20,60;
     --emerald:#34d399; --purple:#c084fc; --amber:#fbbf24; --orange:#fb923c; --red:#f87171; --slate:#94a3b8;
     --tt-arc-top:#DC143C; --tt-bar-l:#DC143C; --tt-bar-r:#9B111E; --tt-stem-l:#C8102E; --tt-stem-r:#7A0C1C; --tt-arc-bot:#9B111E;
-    --tt-bg:rgba(30,4,8,.85); --tt-border:rgba(220,20,60,.5);
     --vig:radial-gradient(120% 90% at 50% -10%,transparent 30%,rgba(10,10,15,.65) 78%,#0A0A0F 110%);
     --canvas-op:.34;
   }
@@ -30,17 +29,15 @@
     --bg:#FAF8F4; --bg-modal:rgba(255,255,255,.98); --bg-sticky:rgba(250,248,244,.96); --bg-input:rgba(0,0,0,.04);
     --glass:rgba(255,255,255,.78); --glass-2:rgba(255,255,255,.95);
     --line:rgba(0,0,0,.08); --line-2:rgba(0,0,0,.16);
-    --fg:#0A0A0A; --mut:#55566A; --faint:#9A9AAA;
+    --fg:#0A0A0A; --mut:#55566A;
     --primary:#D4AF37; --primary-2:#C9A84C; --primary-glow:rgba(212,175,55,.25);
     --btn-bg:linear-gradient(180deg,#D4AF37,#C9A84C); --btn-border:rgba(212,175,55,.5); --btn-shadow:0 4px 18px rgba(212,175,55,.3);
     --blue:#C9A84C; --blue-rgb:201,168,76;
     --emerald:#16A34A; --purple:#7C3AED; --amber:#D97706; --orange:#EA580C; --red:#DC2626; --slate:#64748B;
     --tt-arc-top:#C0C0C0; --tt-bar-l:#D4AF37; --tt-bar-r:#C0C0C0; --tt-stem-l:#C9A84C; --tt-stem-r:#A8A8B8; --tt-arc-bot:#D4AF37;
-    --tt-bg:rgba(255,250,235,.9); --tt-border:rgba(212,175,55,.4);
     --vig:radial-gradient(120% 90% at 50% -10%,transparent 40%,rgba(250,248,244,.5) 80%,#FAF8F4 105%);
     --canvas-op:0;
   }
-  :root{ --mono:ui-monospace,'SF Mono',Menlo,monospace; }
 
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);
@@ -150,7 +147,6 @@
     display:flex;flex-direction:column;padding:12px 16px;border-radius:14px;
     background:var(--bg-modal);border:1px solid var(--line-2);box-shadow:0 8px 32px rgba(0,0,0,.38);
     font-size:14px;font-weight:600;color:var(--fg);transition:transform .25s cubic-bezier(.4,0,.2,1);white-space:nowrap}
-  #undo-toast .tr{display:flex;align-items:center;gap:12px}
   #undo-toast.show{transform:translateX(-50%) translateY(0)}
   #undo-toast button{height:30px;padding:0 13px;border-radius:8px;border:1px solid var(--btn-border);background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary);font-size:13px;font-weight:800;cursor:pointer}
   #undo-toast button:hover{background:color-mix(in srgb,var(--primary) 26%,transparent)}
@@ -201,17 +197,17 @@
     font-size:13px;font-weight:700;color:var(--mut);backdrop-filter:blur(10px)}
   .siteview iframe{flex:1;width:100%;border:0;background:#05060a}
   .brand{cursor:pointer;user-select:none}
-  @media (max-width:560px){ .filters select{max-width:100%;flex:1} .brand .sub{display:none} }
+  @media (max-width:560px){ .filters select{max-width:100%;flex:1} }
 
   /* GUIDED TOUR */
   #tour-overlay{position:fixed;inset:0;z-index:200;pointer-events:none;transition:opacity .25s;opacity:0}
   #tour-overlay.active{opacity:1;pointer-events:auto}
   #tour-spot{position:fixed;border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,.78);transition:all .28s cubic-bezier(.4,0,.2,1);z-index:201;pointer-events:none}
-  #tour-tip{position:fixed;z-index:202;width:min(320px,calc(100vw - 28px));background:rgba(14,16,26,.98);
-    border:1px solid rgba(96,165,250,.35);border-radius:16px;padding:18px;box-shadow:0 8px 40px rgba(0,0,0,.6);
+  #tour-tip{position:fixed;z-index:202;width:min(320px,calc(100vw - 28px));background:var(--bg-modal);
+    border:1px solid var(--line-2);border-radius:16px;padding:18px;box-shadow:0 8px 40px rgba(0,0,0,.6);
     transition:all .28s cubic-bezier(.4,0,.2,1)}
-  #tour-tip h4{margin:0 0 7px;font-size:15px;font-weight:800;color:#fff}
-  #tour-tip p{margin:0 0 14px;font-size:13.5px;line-height:1.55;color:rgba(233,236,245,.8)}
+  #tour-tip h4{margin:0 0 7px;font-size:15px;font-weight:800;color:var(--fg)}
+  #tour-tip p{margin:0 0 14px;font-size:13.5px;line-height:1.55;color:var(--mut)}
   .tour-nav{display:flex;align-items:center;gap:8px}
   .tour-nav .tstep{font-size:11px;font-weight:700;color:var(--mut);flex:1;letter-spacing:.08em}
   .tbtn{height:34px;padding:0 14px;border-radius:9px;font-size:13px;font-weight:700;border:1px solid var(--line-2);background:transparent;color:var(--fg);cursor:pointer}
@@ -647,10 +643,10 @@ const TOUR=[
 ];
 let TSTEP=0;
 function tourRect(sel){
-  const el=document.querySelector(sel);
-  if(!el)return null;
-  el.scrollIntoView({block:'center',behavior:'smooth'});
-  return ()=>el.getBoundingClientRect();
+  const node=document.querySelector(sel);
+  if(!node)return null;
+  node.scrollIntoView({block:'center',behavior:'smooth'});
+  return ()=>node.getBoundingClientRect();
 }
 function tourShow(i){
   TSTEP=i;
