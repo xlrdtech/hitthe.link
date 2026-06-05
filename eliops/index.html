@@ -97,6 +97,24 @@
   .phone-link{font-variant-numeric:tabular-nums}
   .empty{text-align:center;padding:60px 20px;color:var(--mut);font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:13px}
 
+  /* FILTER ACTIVE BANNER */
+  #filter-banner{display:none;align-items:center;gap:10px;padding:9px 14px;border-radius:12px;
+    background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.4);margin-bottom:10px;font-size:13px;font-weight:700;color:#fbbf24}
+  #filter-banner.on{display:flex}
+  #filter-banner button{margin-left:auto;height:30px;padding:0 12px;border-radius:8px;border:1px solid rgba(251,191,36,.5);background:transparent;color:#fbbf24;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+  #filter-banner button:hover{background:rgba(251,191,36,.18)}
+
+  /* UNDO TOAST */
+  #undo-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);z-index:300;
+    display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;
+    background:rgba(14,16,26,.97);border:1px solid var(--line-2);box-shadow:0 8px 32px rgba(0,0,0,.55);
+    font-size:14px;font-weight:600;color:var(--fg);transition:transform .25s cubic-bezier(.4,0,.2,1);white-space:nowrap}
+  #undo-toast.show{transform:translateX(-50%) translateY(0)}
+  #undo-toast button{height:30px;padding:0 13px;border-radius:8px;border:1px solid rgba(96,165,250,.5);background:rgba(96,165,250,.14);color:var(--blue);font-size:13px;font-weight:800;cursor:pointer}
+  #undo-toast button:hover{background:rgba(96,165,250,.26)}
+  #undo-bar{height:2px;background:var(--blue);border-radius:1px;margin-top:6px;transform-origin:left;animation:none}
+  @keyframes shrink{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+
   /* MODALS / SLIDEOVER */
   .scrim{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:.25s;display:grid;place-items:center;padding:14px}
   .scrim.open{opacity:1;pointer-events:auto}
@@ -189,8 +207,18 @@
     <button class="clearf" id="f-clear">Clear</button>
   </div>
 
+  <div id="filter-banner">
+    <span id="filter-banner-text"></span>
+    <button id="filter-banner-clear">Show all leads</button>
+  </div>
   <div class="count" id="count"></div>
   <div class="list" id="list"></div>
+</div>
+
+<!-- UNDO TOAST -->
+<div id="undo-toast">
+  <span id="undo-msg"></span>
+  <button id="undo-btn">Undo</button>
 </div>
 
 <!-- ADD/EDIT MODAL -->
@@ -298,20 +326,37 @@ function badge(status){
   const col='var(--'+(STATUS_COLOR[status]||'slate')+')';
   return `<span class="badge" style="color:${col};border-color:${col};background:color-mix(in srgb,${col} 16%,transparent)" data-act="status">${esc(status)}</span>`;
 }
+function renderFilterBanner(){
+  const b=$('#filter-banner'), isFiltered=FILT.chip!=='all'||FILT.q||FILT.event||FILT.rep;
+  if(!isFiltered){ b.classList.remove('on'); return; }
+  b.classList.add('on');
+  const parts=[];
+  if(FILT.chip!=='all') parts.push(`Status: ${FILT.chip}`);
+  if(FILT.event) parts.push(`Event: ${FILT.event}`);
+  if(FILT.rep) parts.push(`Rep: ${FILT.rep}`);
+  if(FILT.q) parts.push(`Search: "${FILT.q}"`);
+  const hidden=leads().length-filtered().length;
+  $('#filter-banner-text').textContent=`⚠ Filter active — ${parts.join(' · ')} · ${hidden} lead${hidden!==1?'s':''} hidden`;
+}
 function render(){
   renderChips();
+  renderFilterBanner();
   const rows=filtered(), list=$('#list'); list.innerHTML='';
-  $('#count').textContent=`${rows.length} of ${leads().length} leads`+(FILT.chip!=='STOP'?` · ${counts(leads()).STOP} STOP suppressed`:'');
-  if(!rows.length){ list.innerHTML='<div class="empty">No matching leads</div>'; return; }
+  const c=counts(leads());
+  $('#count').textContent=`${rows.length} of ${leads().length} leads`+(FILT.chip!=='STOP'?` · ${c.STOP} STOP suppressed`:'');
+  if(!rows.length){ list.innerHTML='<div class="empty">No matching leads — tap "Show all leads" above to clear filters</div>'; return; }
   const frag=document.createDocumentFragment();
   rows.forEach(l=>{
     const stop=isStop(l), cls='card '+(stop?'stop':(STATUS_CLASS[l.status]||l.status||''));
     const c=el('div',cls); c.dataset.id=l.id;
     const ph=hasPhone(l.phone);
+    const order=['New','Attempted','Follow Up','Interested','Booked','Not Interested','STOP'];
+    const nextStatus=order[(order.indexOf(l.status)+1)%order.length];
+    const nextWarn=nextStatus==='STOP'?' title="⚠ Next tap will mark STOP (hidden from list)"':' title="Tap to advance status"';
     c.innerHTML=`
       <div class="crow">
         <div class="cmain">
-          <div class="cname">${esc(l.name)} ${badge(l.status)}</div>
+          <div class="cname">${esc(l.name)} <span class="badge" style="color:var(--${STATUS_COLOR[l.status]||'slate'});border-color:var(--${STATUS_COLOR[l.status]||'slate'});background:color-mix(in srgb,var(--${STATUS_COLOR[l.status]||'slate'}) 16%,transparent)" data-act="status"${nextWarn}>${esc(l.status)}</span>${nextStatus==='STOP'?'<span style="font-size:10px;color:var(--red);opacity:.7;margin-left:2px" title="One more tap = STOP">⚠</span>':''}</div>
           <div class="cmeta">
             ${ph?`📞 <a class="phone-link" href="${telHref(l.phone)}">${esc(l.phone)}</a>`:`<span style="opacity:.6">no phone</span>`}
             &nbsp;·&nbsp; <b>${esc(l.service||'—')}</b><br>
@@ -329,11 +374,39 @@ function render(){
   });
   list.appendChild(frag);
 }
+
+/* undo toast */
+let _undoTimer=null;
+function showUndo(msg, undoFn){
+  clearTimeout(_undoTimer);
+  const toast=$('#undo-toast'); $('#undo-msg').textContent=msg;
+  toast.classList.add('show');
+  const bar=document.createElement('div'); bar.id='undo-bar'; bar.style.cssText='height:2px;background:var(--blue);border-radius:1px;margin-top:6px;transform-origin:left';
+  const old=toast.querySelector('#undo-bar'); if(old)old.remove(); toast.appendChild(bar);
+  bar.style.animation='shrink 5s linear forwards';
+  $('#undo-btn').onclick=()=>{ clearTimeout(_undoTimer); toast.classList.remove('show'); undoFn(); };
+  _undoTimer=setTimeout(()=>toast.classList.remove('show'),5000);
+}
+
 function cycleStatus(l){
   const order=['New','Attempted','Follow Up','Interested','Booked','Not Interested','STOP'];
   const i=order.indexOf(l.status); const next=order[(i+1)%order.length];
-  if(String(l.id).startsWith('add-')){ const a=lsGet(LS.added,[]); const t=a.find(x=>x.id===l.id); if(t){t.status=next;lsSet(LS.added,a);render();} }
-  else patch(l.id,{status:next});
+  const prev=l.status;
+  if(next==='STOP'){
+    if(!confirm(`Mark "${l.name}" as STOP?\n\nSTOP leads are hidden from the main list. You can still see them by tapping the STOP chip.\n\nTap OK to confirm, Cancel to go back.`)) return;
+  }
+  if(String(l.id).startsWith('add-')){
+    const a=lsGet(LS.added,[]); const t=a.find(x=>x.id===l.id);
+    if(t){ t.status=next; lsSet(LS.added,a); render(); }
+  } else {
+    patch(l.id,{status:next});
+  }
+  const hidden=next==='STOP'?' — now hidden (tap STOP chip to find them)':'';
+  showUndo(`${l.name}: ${prev} → ${next}${hidden}`, ()=>{
+    if(String(l.id).startsWith('add-')){
+      const a=lsGet(LS.added,[]); const t=a.find(x=>x.id===l.id); if(t){t.status=prev;lsSet(LS.added,a);render();}
+    } else { patch(l.id,{status:prev}); }
+  });
 }
 
 /* ---------- modal ---------- */
@@ -369,7 +442,9 @@ $('#m-del').onclick=()=>{ const id=$('#m-id').value; let a=lsGet(LS.added,[]); a
 $('#q').oninput=e=>{FILT.q=e.target.value;render();};
 $('#f-event').onchange=e=>{FILT.event=e.target.value;render();};
 $('#f-rep').onchange=e=>{FILT.rep=e.target.value;render();};
-$('#f-clear').onclick=()=>{FILT={chip:'all',q:'',event:'',rep:''};$('#q').value='';$('#f-event').value='';$('#f-rep').value='';render();};
+const clearFilters=()=>{FILT={chip:'all',q:'',event:'',rep:''};$('#q').value='';$('#f-event').value='';$('#f-rep').value='';render();};
+$('#f-clear').onclick=clearFilters;
+$('#filter-banner-clear').onclick=clearFilters;
 
 /* ---------- second view: embedded site (passcode 0) ---------- */
 const SITE_URL='/';                 // qi's site, literally embedded
@@ -457,7 +532,7 @@ const TOUR=[
    body:'Clicking anywhere on the card body (except the badge and phone link) opens the full edit form. Edit name, phone, service, status, event, rep, or notes. Changes save as patches on top of the original data — the source file is never overwritten.'},
   {sel:'.badge',
    title:'Status Badge — tap to cycle',
-   body:'Tap the colored status pill on any card to advance to the next status without opening a modal. Order: New → Attempted → Follow Up → Interested → Booked → Not Interested → STOP → back to New. One tap per call outcome keeps momentum.'},
+   body:'Tap the colored status pill on any card to advance to the next status. Order: New → Attempted → Follow Up → Interested → Booked → Not Interested → STOP → back to New. A ⚠ icon appears on the badge when the next tap would mark STOP. Cycling to STOP asks for confirmation and shows a 5-second Undo toast. STOP leads disappear from the main list — find them via the STOP chip.'},
   {sel:'.act.call',
    title:'📞 Call + 💬 Text buttons',
    body:'The call button fires a tel: URI — on mobile it dials immediately, on desktop it opens your default phone/call app. The text button fires an sms: URI. The phone number in the card meta is also a direct tap-to-call link.'},
