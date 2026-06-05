@@ -142,6 +142,24 @@
   .siteview iframe{flex:1;width:100%;border:0;background:#05060a}
   .brand{cursor:pointer;user-select:none}
   @media (max-width:560px){ .filters select{max-width:100%;flex:1} .brand .sub{display:none} }
+
+  /* GUIDED TOUR */
+  #tour-overlay{position:fixed;inset:0;z-index:200;pointer-events:none;transition:opacity .25s;opacity:0}
+  #tour-overlay.active{opacity:1;pointer-events:auto}
+  #tour-spot{position:fixed;border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,.78);transition:all .28s cubic-bezier(.4,0,.2,1);z-index:201;pointer-events:none}
+  #tour-tip{position:fixed;z-index:202;width:min(320px,calc(100vw - 28px));background:rgba(14,16,26,.98);
+    border:1px solid rgba(96,165,250,.35);border-radius:16px;padding:18px;box-shadow:0 8px 40px rgba(0,0,0,.6);
+    transition:all .28s cubic-bezier(.4,0,.2,1)}
+  #tour-tip h4{margin:0 0 7px;font-size:15px;font-weight:800;color:#fff}
+  #tour-tip p{margin:0 0 14px;font-size:13.5px;line-height:1.55;color:rgba(233,236,245,.8)}
+  .tour-nav{display:flex;align-items:center;gap:8px}
+  .tour-nav .tstep{font-size:11px;font-weight:700;color:var(--mut);flex:1;letter-spacing:.08em}
+  .tbtn{height:34px;padding:0 14px;border-radius:9px;font-size:13px;font-weight:700;border:1px solid var(--line-2);background:transparent;color:var(--fg);cursor:pointer}
+  .tbtn.primary{background:linear-gradient(180deg,#3b82f6,#4f46e5);border-color:rgba(96,165,250,.4);color:#fff}
+  .tbtn:hover{filter:brightness(1.1)}
+  .tour-progress{display:flex;gap:4px;margin-bottom:12px}
+  .tour-progress span{height:3px;border-radius:2px;background:var(--line-2);flex:1;transition:.25s}
+  .tour-progress span.done{background:var(--blue)}
 </style>
 </head>
 <body>
@@ -152,6 +170,7 @@
   <header class="top">
     <div class="brand"><span class="dot">◎</span> Eli Ops <span class="sub">Tracking Together</span></div>
     <div class="spacer"></div>
+    <button class="iconbtn" id="btn-tour" title="Guided tour">?</button>
     <button class="iconbtn" id="btn-3d" title="Toggle 3D background">✦</button>
     <button class="iconbtn" id="btn-export" title="Export CSV">⭳</button>
     <button class="iconbtn" id="btn-agent" title="Ask Eli (AI)">✷</button>
@@ -195,6 +214,21 @@
 <div class="siteview" id="siteview">
   <div class="sv-bar"><button class="iconbtn" id="sv-back" style="width:36px;height:36px">←</button><span id="sv-label">hitthe.link</span></div>
   <iframe id="sv-frame" src="about:blank" title="site" referrerpolicy="no-referrer"></iframe>
+</div>
+
+<!-- GUIDED TOUR OVERLAY -->
+<div id="tour-overlay">
+  <div id="tour-spot"></div>
+  <div id="tour-tip">
+    <div class="tour-progress" id="tour-progress"></div>
+    <h4 id="tour-title"></h4>
+    <p id="tour-body"></p>
+    <div class="tour-nav">
+      <span class="tstep" id="tour-step"></span>
+      <button class="tbtn" id="tour-prev">← Back</button>
+      <button class="tbtn primary" id="tour-next">Next →</button>
+    </div>
+  </div>
 </div>
 
 <!-- AGENT SLIDEOVER -->
@@ -403,6 +437,84 @@ $('#ainput').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$
 const QUICK=['Who should Anthony call first?','Insights on all the leads','Best events by booking rate','Make the cards bigger and bolder','Switch to a warmer color theme'];
 $('#quick').innerHTML=QUICK.map(q=>`<button>${q}</button>`).join('');
 $('#quick').querySelectorAll('button').forEach((b,i)=>b.onclick=()=>send(QUICK[i]));
+
+/* ---------- GUIDED TOUR ---------- */
+const TOUR=[
+  {sel:'#chips',
+   title:'Status Chips — instant filters',
+   body:'Click any chip to filter the list to that status. The number shows the live count. STOP chip reveals leads marked STOP (suppressed by default so they never pollute your active pipeline). Active filter lights up white.'},
+  {sel:'#chips .chip[data-k="STOP"]',
+   title:'STOP chip',
+   body:'STOP leads are hidden from all other views. Tap this chip to see them — useful for auditing or re-engagement. The count is the true suppressed total.'},
+  {sel:'.filters',
+   title:'Filter Bar — stack any combination',
+   body:'Search box does a live substring match across name, phone, service, notes, event, and rep simultaneously. Combine with the Event and Rep dropdowns to drill into a single rep\'s leads at one event. Clear resets everything at once.'},
+  {sel:'#btn-add',
+   title:'＋ Lead — add a new contact',
+   body:'Opens the form to add a lead locally. New leads persist in your browser (localStorage) and survive page refreshes. They appear at the top of the list.'},
+  {sel:'.card',
+   title:'Lead Card — tap to edit',
+   body:'Clicking anywhere on the card body (except the badge and phone link) opens the full edit form. Edit name, phone, service, status, event, rep, or notes. Changes save as patches on top of the original data — the source file is never overwritten.'},
+  {sel:'.badge',
+   title:'Status Badge — tap to cycle',
+   body:'Tap the colored status pill on any card to advance to the next status without opening a modal. Order: New → Attempted → Follow Up → Interested → Booked → Not Interested → STOP → back to New. One tap per call outcome keeps momentum.'},
+  {sel:'.act.call',
+   title:'📞 Call + 💬 Text buttons',
+   body:'The call button fires a tel: URI — on mobile it dials immediately, on desktop it opens your default phone/call app. The text button fires an sms: URI. The phone number in the card meta is also a direct tap-to-call link.'},
+  {sel:'#btn-export',
+   title:'⭳ Export CSV',
+   body:'Downloads the currently filtered view as a .csv file — whatever you\'re looking at is what you get. Use the chips and dropdowns to scope your export before clicking. Columns: name, phone, service, event, status, rep, added date, notes.'},
+  {sel:'#btn-agent',
+   title:'✷ Ask Eli — AI analyst',
+   body:'Opens the AI panel. Without a key it runs instantly as a local snapshot (no API call). With an Anthropic API key it sends your question + a sample of the current filtered leads to Claude. You can ask who to call first, for event performance, or say "make the cards bigger" and it will generate and apply live CSS overrides.'},
+  {sel:'#btn-3d',
+   title:'✦ 3D Background toggle',
+   body:'Toggles the animated WebGL wave behind the UI. Turn it off on older devices or when screen-sharing to reduce visual noise. Setting persists in localStorage.'},
+  {sel:'.brand',
+   title:'◎ Brand Logo — second view',
+   body:'Tap the logo and enter passcode 0 to open a full-screen embedded view of hitthe.link inside this app. Use the ← button to return. The passcode prevents accidental activation.'},
+];
+let TSTEP=0;
+function tourRect(sel){
+  const el=document.querySelector(sel);
+  if(!el)return null;
+  el.scrollIntoView({block:'center',behavior:'smooth'});
+  return ()=>el.getBoundingClientRect();
+}
+function tourShow(i){
+  TSTEP=i;
+  const t=TOUR[i], getR=tourRect(t.sel);
+  if(!getR){TSTEP===TOUR.length-1?tourEnd():tourShow(i+1);return;}
+  const overlay=$('#tour-overlay'), spot=$('#tour-spot'), tip=$('#tour-tip');
+  overlay.classList.add('active');
+  // progress bar
+  $('#tour-progress').innerHTML=TOUR.map((_,j)=>`<span class="${j<=i?'done':''}"></span>`).join('');
+  $('#tour-title').textContent=t.title;
+  $('#tour-body').textContent=t.body;
+  $('#tour-step').textContent=`${i+1} / ${TOUR.length}`;
+  $('#tour-prev').style.display=i===0?'none':'';
+  $('#tour-next').textContent=i===TOUR.length-1?'Done ✓':'Next →';
+  // position after scroll settles
+  setTimeout(()=>{
+    const r=getR();
+    const pad=8;
+    spot.style.cssText=`left:${r.left-pad}px;top:${r.top-pad}px;width:${r.width+pad*2}px;height:${r.height+pad*2}px`;
+    // place tip: prefer below, fall back above if near bottom
+    const tipH=200, tipW=320;
+    const spaceBelow=window.innerHeight-(r.bottom+pad);
+    const left=Math.max(10,Math.min(r.left,window.innerWidth-tipW-10));
+    if(spaceBelow>tipH+20||r.top<200){
+      tip.style.cssText=`left:${left}px;top:${r.bottom+pad+10}px`;
+    } else {
+      tip.style.cssText=`left:${left}px;top:${r.top-pad-tipH-10}px`;
+    }
+  },320);
+}
+function tourEnd(){$('#tour-overlay').classList.remove('active');lsSet('eliops.toured',true);}
+$('#tour-next').onclick=()=>TSTEP<TOUR.length-1?tourShow(TSTEP+1):tourEnd();
+$('#tour-prev').onclick=()=>TSTEP>0&&tourShow(TSTEP-1);
+$('#tour-overlay').onclick=e=>{if(e.target===$('#tour-overlay'))tourEnd();};
+$('#btn-tour').onclick=()=>tourShow(0);
 
 /* ---------- boot ---------- */
 function initSelects(){
