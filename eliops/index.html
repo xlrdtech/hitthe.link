@@ -20,7 +20,7 @@
     --btn-bg:linear-gradient(180deg,#DC143C,#9B111E); --btn-border:rgba(220,20,60,.45); --btn-shadow:0 4px 18px rgba(220,20,60,.32);
     --blue:#DC143C; --blue-rgb:220,20,60;
     --emerald:#34d399; --purple:#c084fc; --amber:#fbbf24; --orange:#fb923c; --red:#f87171; --slate:#94a3b8;
-    --tt-arc-top:#DC143C; --tt-bar:#DC143C; --tt-stem:#9B111E; --tt-arc-bot:#B91C1C;
+    --tt-arc-top:#DC143C; --tt-bar-l:#DC143C; --tt-bar-r:#9B111E; --tt-stem-l:#C8102E; --tt-stem-r:#7A0C1C; --tt-arc-bot:#9B111E;
     --tt-bg:rgba(30,4,8,.85); --tt-border:rgba(220,20,60,.5);
     --vig:radial-gradient(120% 90% at 50% -10%,transparent 30%,rgba(10,10,15,.65) 78%,#0A0A0F 110%);
     --canvas-op:.34;
@@ -35,7 +35,7 @@
     --btn-bg:linear-gradient(180deg,#D4AF37,#C9A84C); --btn-border:rgba(212,175,55,.5); --btn-shadow:0 4px 18px rgba(212,175,55,.3);
     --blue:#C9A84C; --blue-rgb:201,168,76;
     --emerald:#16A34A; --purple:#7C3AED; --amber:#D97706; --orange:#EA580C; --red:#DC2626; --slate:#64748B;
-    --tt-arc-top:#C0C0C0; --tt-bar:#D4AF37; --tt-stem:#C9A84C; --tt-arc-bot:#D4AF37;
+    --tt-arc-top:#C0C0C0; --tt-bar-l:#D4AF37; --tt-bar-r:#C0C0C0; --tt-stem-l:#C9A84C; --tt-stem-r:#A8A8B8; --tt-arc-bot:#D4AF37;
     --tt-bg:rgba(255,250,235,.9); --tt-border:rgba(212,175,55,.4);
     --vig:radial-gradient(120% 90% at 50% -10%,transparent 40%,rgba(250,248,244,.5) 80%,#FAF8F4 105%);
     --canvas-op:0;
@@ -59,13 +59,19 @@
     background:linear-gradient(180deg,var(--bg-sticky),color-mix(in srgb,var(--bg) 55%,transparent) 80%,transparent)}
   .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:-.02em}
   /* T-mark brand logo */
-  .tt-mark{display:block;flex-shrink:0;filter:drop-shadow(0 2px 6px var(--primary-glow))}
-  .tt-mark .arc-top{stroke:var(--tt-arc-top);fill:none;stroke-width:2.8;stroke-linecap:round}
-  .tt-mark .t-bar{fill:var(--tt-bar)}
-  .tt-mark .t-stem{fill:var(--tt-stem)}
-  .tt-mark .arc-bot{stroke:var(--tt-arc-bot);fill:none;stroke-width:2.8;stroke-linecap:round}
-  html.light .tt-mark .arc-top{stroke:url(#silver-grad)}
-  html.light .tt-mark .t-bar{fill:url(#gold-grad)}
+  .tt-mark{display:block;flex-shrink:0;filter:drop-shadow(0 2px 8px var(--primary-glow))}
+  .tt-mark .arc-top{stroke:var(--tt-arc-top);fill:none;stroke-width:4.5;stroke-linecap:round}
+  .tt-mark .t-bar-l{fill:var(--tt-bar-l)}
+  .tt-mark .t-bar-r{fill:var(--tt-bar-r)}
+  .tt-mark .t-stem-l{fill:var(--tt-stem-l)}
+  .tt-mark .t-stem-r{fill:var(--tt-stem-r)}
+  .tt-mark .arc-bot{stroke:var(--tt-arc-bot);fill:none;stroke-width:4;stroke-linecap:round}
+  html.light .tt-mark .arc-top{stroke:url(#ttga)}
+  html.light .tt-mark .t-bar-l{fill:url(#ttgl)}
+  html.light .tt-mark .t-bar-r{fill:url(#ttgr)}
+  html.light .tt-mark .t-stem-l{fill:url(#ttgl)}
+  html.light .tt-mark .t-stem-r{fill:url(#ttgr)}
+  html.light .tt-mark .arc-bot{stroke:url(#ttgb)}
   .brand-name{display:flex;flex-direction:column;line-height:1}
   .brand-name .n1{font-size:15px;font-weight:900;letter-spacing:-.01em}
   .brand-name .n2{font-size:8.5px;font-weight:700;letter-spacing:.25em;color:var(--primary);text-transform:uppercase;opacity:.8}
@@ -224,25 +230,45 @@
 <div class="page">
   <header class="top">
     <div class="brand">
-      <svg class="tt-mark" width="34" height="34" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+      <svg class="tt-mark" width="44" height="44" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <linearGradient id="silver-grad" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stop-color="#8C8C9C"/>
-            <stop offset="40%" stop-color="#E2E2EE"/>
-            <stop offset="70%" stop-color="#C0C0CC"/>
-            <stop offset="100%" stop-color="#7A7A8A"/>
+          <!-- gold shimmer — left face & stem (light mode) -->
+          <linearGradient id="ttgl" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#F5DE70"/>
+            <stop offset="40%" stop-color="#D4AF37"/>
+            <stop offset="100%" stop-color="#9A7520"/>
           </linearGradient>
-          <linearGradient id="gold-grad" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stop-color="#B8922E"/>
-            <stop offset="40%" stop-color="#F0D060"/>
-            <stop offset="70%" stop-color="#D4AF37"/>
-            <stop offset="100%" stop-color="#A87828"/>
+          <!-- silver shimmer — right face & stem (light mode) -->
+          <linearGradient id="ttgr" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#F0F0F8"/>
+            <stop offset="45%" stop-color="#C8C8D8"/>
+            <stop offset="100%" stop-color="#888898"/>
+          </linearGradient>
+          <!-- silver arc top (light mode) -->
+          <linearGradient id="ttga" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#9090A0"/>
+            <stop offset="50%" stop-color="#E8E8F4"/>
+            <stop offset="100%" stop-color="#9090A0"/>
+          </linearGradient>
+          <!-- gold arc bottom (light mode) -->
+          <linearGradient id="ttgb" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#C9A030"/>
+            <stop offset="50%" stop-color="#F0D060"/>
+            <stop offset="100%" stop-color="#C9A030"/>
           </linearGradient>
         </defs>
-        <path class="arc-top" d="M 4,13 Q 18,2 32,13"/>
-        <rect class="t-bar" x="5" y="14" width="26" height="4.5" rx="2"/>
-        <rect class="t-stem" x="13.5" y="18.5" width="9" height="13.5" rx="2"/>
-        <path class="arc-bot" d="M 11,33 Q 18,36.5 25,33"/>
+        <!-- Top arc: open semicircle above T -->
+        <path class="arc-top" d="M 11,42 A 29,29 0 0 1 69,42"/>
+        <!-- T crossbar: left face (front) -->
+        <polygon class="t-bar-l" points="21,31 39,26 39,40 21,45"/>
+        <!-- T crossbar: right face (side) -->
+        <polygon class="t-bar-r" points="39,26 57,31 57,45 39,40"/>
+        <!-- T stem: left face (front) -->
+        <polygon class="t-stem-l" points="30,40 40,35 40,64 30,69"/>
+        <!-- T stem: right face (side) -->
+        <polygon class="t-stem-r" points="40,35 50,40 50,69 40,64"/>
+        <!-- Bottom arc: open arc below stem -->
+        <path class="arc-bot" d="M 27,67 A 13,13 0 0 0 53,67"/>
       </svg>
       <div class="brand-name"><span class="n1">Eli Ops</span><span class="n2">Tracking Together</span></div>
     </div>
