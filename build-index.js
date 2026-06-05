@@ -20,13 +20,12 @@ const path = require('path');
 
 const ROOT = __dirname;
 const INDEX_PATH = path.join(ROOT, 'index.html');
-// qi 2026-06-04: root index displays EVERY site in the repo. Only genuine
-// non-page infra (build dirs, shared partials, icon assets, the codepens
-// collection) and client-PII dirs are excluded. Everything else is shown.
+// qi 2026-06-05: NOTHING HIDDEN. Every page shows in the root index — full count.
+// Only genuine non-page infra is skipped. elios is just a redirect stub to /eliops,
+// kept out to avoid a duplicate card; eliops itself IS shown.
 const SKIP_DIRS = new Set([
   '.git', '.github', 'node_modules', '_shared', 'browser', 'icons',
-  'codepens', // collection of pens, no top-level page of its own
-  'eliops', 'elios', // client lead PII (Tracking Together) — noindex, must stay unlisted
+  'elios', // redirect stub -> /eliops (avoid duplicate card)
 ]);
 
 function extractMeta(htmlPath) {

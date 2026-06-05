@@ -9,12 +9,13 @@ const ROOT = process.cwd();
 
 // Internal / ops / experimental / redirect / duplicate dirs — NOT shown on the public root.
 // Add a dir name here to hide it. Everything else with an index.html is auto-showcased.
-// qi 2026-06-04: root index showcases EVERY site in the repo. Only non-site
-// infra and client-PII dirs are denied; everything else with an index.html
-// is auto-listed. (dot/underscore dirs + redirect stubs are auto-skipped below.)
+// qi 2026-06-05: NOTHING HIDDEN. Owner reads his entire ecosystem through this
+// index via voiceOS, so every page must be listed at full count. Only build/infra
+// dirs that have no page of their own are denied. (dot/underscore dirs + redirect
+// stubs are still auto-skipped below.) eliops stays robots-noindex on its own page
+// but IS listed here so qi can navigate to it.
 const DENY = new Set([
-  'scripts','assets','_shared','codepens', // build/infra, not standalone sites
-  'eliops','elios', // client lead PII (Tracking Together) — live but noindex + must stay unlisted
+  'scripts','assets','_shared', // build/infra only — no standalone page
 ]);
 
 // Category inference by slug/title keywords (for grouping in the gallery).
