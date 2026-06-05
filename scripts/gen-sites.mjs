@@ -9,16 +9,12 @@ const ROOT = process.cwd();
 
 // Internal / ops / experimental / redirect / duplicate dirs — NOT shown on the public root.
 // Add a dir name here to hide it. Everything else with an index.html is auto-showcased.
+// qi 2026-06-04: root index showcases EVERY site in the repo. Only non-site
+// infra and client-PII dirs are denied; everything else with an index.html
+// is auto-listed. (dot/underscore dirs + redirect stubs are auto-skipped below.)
 const DENY = new Set([
-  'audit','commandments','godmode','godsop','god-sop-dashboard','lab','status','firehose','context',
-  'itinerary','nblm','nblmaudit','die-list','endpoints','cookbook','pgs','shang','mesh','spine','sao','sao2',
-  'uwi','studio','xen','stt','vei','dictate','ggv','agents','asana','costs','docs','growth','oss-sites',
-  'ifttt','ios-shortcut-deploy','template-io-mission-control','pin-feed','stal-lyon-populate','vectorgen',
-  'beside-proxy','agyveinom','grokveinom','avatar','gov','cellbrowser','wip','slid','grok','firehose',
-  'mbv2','mbv3','e','growth','east-allen-growth-interface','god-sop-dashboard','sao2','l7s-hero','l7s-pulse',
-  'check-hero','container','extendlm','dcl-demo','stal-lyon','stal-lyon-populate','rays-home','signing',
-  'scripts','assets','_shared','codepens','nblmaudit',
-  'elios', // client lead PII (Tracking Together) — live at /elios but noindex + hidden from public index
+  'scripts','assets','_shared','codepens', // build/infra, not standalone sites
+  'eliops','elios', // client lead PII (Tracking Together) — live but noindex + must stay unlisted
 ]);
 
 // Category inference by slug/title keywords (for grouping in the gallery).

@@ -20,17 +20,13 @@ const path = require('path');
 
 const ROOT = __dirname;
 const INDEX_PATH = path.join(ROOT, 'index.html');
+// qi 2026-06-04: root index displays EVERY site in the repo. Only genuine
+// non-page infra (build dirs, shared partials, icon assets, the codepens
+// collection) and client-PII dirs are excluded. Everything else is shown.
 const SKIP_DIRS = new Set([
-  '.git', '.github', 'node_modules', '_shared', 'browser',
-  'codepens', // keep curated category, has its own structure
-  'icons',
-  'mbv4', // qi 2026-05-31: /mb is the canonical M_B site, NOT /mbv4 (stale version). Excluded from index; dir kept for reversibility.
-  // qi 2026-05-31: L7S belongs to Luckie (manifesto isolation). The L7S product
-  // suite lives under the /luckie Operator Hub, NOT the main XLRD index. Dirs kept
-  // on disk + reachable via /luckie; just excluded from the main index listing.
-  'calculators', 'l7s', 'l7s-hero', 'l7shero', 'l7s-pulse', 'PriceHero',
-  'offers', 'eats', 'buzycred', 'autophone', 'growth', 'east-allen-growth-interface',
-  'elios', // client lead PII (Tracking Together) — noindex, excluded from card grid
+  '.git', '.github', 'node_modules', '_shared', 'browser', 'icons',
+  'codepens', // collection of pens, no top-level page of its own
+  'eliops', 'elios', // client lead PII (Tracking Together) — noindex, must stay unlisted
 ]);
 
 function extractMeta(htmlPath) {
