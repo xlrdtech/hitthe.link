@@ -332,6 +332,7 @@
       <input type="hidden" id="m-id">
       <div class="fld"><label>Name</label><input id="m-name" required></div>
       <div class="fld"><label>Phone</label><input id="m-phone" inputmode="tel"></div>
+      <div class="fld"><label>Address</label><input id="m-address" placeholder="Street, City, State ZIP"></div>
       <div class="fld"><label>Service</label><input id="m-service"></div>
       <div class="fld" style="display:flex;gap:10px"><div style="flex:1"><label>Status</label><select id="m-status"></select></div><div style="flex:1"><label>Event</label><select id="m-event"></select></div></div>
       <div class="fld"><label>Rep</label><select id="m-rep"></select></div>
@@ -441,7 +442,7 @@ function filtered(){
     if(FILT.chip!=='all' && l.status!==FILT.chip) return false;
     if(FILT.event && l.event!==FILT.event) return false;
     if(FILT.rep && l.rep!==FILT.rep) return false;
-    if(FILT.q){const q=FILT.q.toLowerCase(); if(!((l.name||'')+ (l.phone||'')+(l.service||'')+(l.notes||'')+(l.event||'')+(l.rep||'')).toLowerCase().includes(q)) return false;}
+    if(FILT.q){const q=FILT.q.toLowerCase(); if(!((l.name||'')+(l.phone||'')+(l.address||'')+(l.service||'')+(l.notes||'')+(l.event||'')+(l.rep||'')).toLowerCase().includes(q)) return false;}
     return true;
   });
 }
@@ -493,6 +494,7 @@ function render(){
           <div class="cname">${esc(l.name)} <span class="badge" style="color:var(--${STATUS_COLOR[l.status]||'slate'});border-color:var(--${STATUS_COLOR[l.status]||'slate'});background:color-mix(in srgb,var(--${STATUS_COLOR[l.status]||'slate'}) 16%,transparent)" data-act="status"${nextWarn}>${esc(l.status)}</span>${nextStatus==='STOP'?'<span style="font-size:10px;color:var(--red);opacity:.7;margin-left:2px" title="One more tap = STOP">⚠</span>':''}</div>
           <div class="cmeta">
             ${ph?`📞 <a class="phone-link" href="${telHref(l.phone)}">${esc(l.phone)}</a>`:`<span style="opacity:.6">no phone</span>`}
+            ${l.address?`<br><span style="font-size:11px;opacity:.65">📍 ${esc(l.address)}</span>`:''}
             &nbsp;·&nbsp; <b>${esc(l.service||'—')}</b><br>
             ${esc(l.event||'—')} &nbsp;·&nbsp; ${esc(l.rep||'Unassigned')}${l.added?` &nbsp;·&nbsp; ${esc(l.added)}`:''}
           </div>
@@ -548,7 +550,7 @@ function fillSelect(sel,opts,val){ sel.innerHTML=opts.map(o=>`<option ${o===val?
 function openModal(l){
   $('#modal-title').textContent=l?'Edit Lead':'New Lead';
   $('#m-id').value=l?l.id:'';
-  $('#m-name').value=l?l.name:''; $('#m-phone').value=l?(l.phone||''):''; $('#m-service').value=l?(l.service||''):'';
+  $('#m-name').value=l?l.name:''; $('#m-phone').value=l?(l.phone||''):''; $('#m-address').value=l?(l.address||''):''; $('#m-service').value=l?(l.service||''):'';
   fillSelect($('#m-status'),SETTINGS.statuses,l?l.status:'New');
   fillSelect($('#m-event'),SETTINGS.events,l?l.event:'Unknown');
   fillSelect($('#m-rep'),SETTINGS.reps,l?l.rep:'Unassigned');
@@ -562,7 +564,7 @@ $('#modal-x').onclick=$('#m-cancel').onclick=closeModal;
 $('#modal-scrim').onclick=e=>{if(e.target===$('#modal-scrim'))closeModal();};
 $('#m-save').onclick=()=>{
   const id=$('#m-id').value;
-  const data={name:$('#m-name').value.trim(),phone:$('#m-phone').value.trim()||'Not provided',service:$('#m-service').value.trim()||'Unknown',
+  const data={name:$('#m-name').value.trim(),phone:$('#m-phone').value.trim()||'Not provided',address:$('#m-address').value.trim(),service:$('#m-service').value.trim()||'Unknown',
     status:$('#m-status').value,event:$('#m-event').value,rep:$('#m-rep').value,notes:$('#m-notes').value.trim()};
   if(!data.name)return;
   if(!id){ const a=lsGet(LS.added,[]); a.unshift({id:'add-'+Date.now(),added:new Date().toISOString().slice(0,10),...data}); lsSet(LS.added,a); }
@@ -675,7 +677,7 @@ syncThemeBtn();
 
 /* ---------- export ---------- */
 $('#btn-export').onclick=()=>{
-  const rows=filtered(); const cols=['name','phone','service','event','status','rep','added','notes'];
+  const rows=filtered(); const cols=['name','phone','address','service','event','status','rep','added','notes'];
   const csv=[cols.join(',')].concat(rows.map(l=>cols.map(k=>`"${String(l[k]==null?'':l[k]).replace(/"/g,'""')}"`).join(','))).join('\n');
   const a=el('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download='eliops-leads.csv'; a.click();
 };
