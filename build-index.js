@@ -27,6 +27,10 @@ const SKIP_DIRS = new Set([
   '.git', '.github', 'node_modules', '_shared', 'browser', 'icons',
   'elios', // redirect stub -> /eliops (avoid duplicate card)
 ]);
+// Friendly URL overrides: card href + slug display uses alias, actual dir stays canonical
+const SLUG_ALIAS = {
+  'eliops': 'elios',
+};
 
 function extractMeta(htmlPath) {
   const html = fs.readFileSync(htmlPath, 'utf8');
@@ -66,14 +70,17 @@ subpages.sort((a, b) => a.slug.localeCompare(b.slug));
 
 console.log(`detected ${subpages.length} subpages`);
 
-const cards = subpages.map(s => `      <a href="/${s.slug}/" class="project-card group">
+const cards = subpages.map(s => {
+  const link = SLUG_ALIAS[s.slug] || s.slug;
+  return `      <a href="/${link}/" class="project-card group">
         <div class="card-head">
           ${s.iconHref ? `<img src="/${s.slug}/${s.iconHref}" alt="" class="card-icon" loading="lazy">` : `<div class="card-icon-placeholder"></div>`}
           <h3 class="card-title">${escapeHtml(s.title)}</h3>
         </div>
         ${s.description ? `<p class="card-desc">${escapeHtml(s.description)}</p>` : ''}
-        <span class="card-slug">/${s.slug}/</span>
-      </a>`).join('\n');
+        <span class="card-slug">/${link}/</span>
+      </a>`;
+}).join('\n');
 
 const block = `<!-- AUTO:PROJECTS:START -->
     <section class="auto-projects" aria-label="All projects (auto-detected)">
