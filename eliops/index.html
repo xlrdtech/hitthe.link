@@ -190,6 +190,26 @@
   .keyrow a{color:var(--primary);cursor:pointer;text-decoration:underline}
   .spin{display:inline-block;width:13px;height:13px;border:2px solid var(--line-2);border-top-color:var(--primary);border-radius:50%;animation:sp .7s linear infinite}
   @keyframes sp{to{transform:rotate(360deg)}}
+  /* PORTAL VIEW */
+  .portal-view{position:fixed;inset:0;z-index:120;background:var(--bg);display:none;flex-direction:column}
+  .portal-view.open{display:flex}
+  .pv-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13px;font-weight:700;color:var(--mut);backdrop-filter:blur(10px)}
+  .pv-breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700}
+  .pv-breadcrumb .sep{opacity:.35}
+  .pv-tabs{display:flex;gap:4px;padding:10px 14px 0;border-bottom:1px solid var(--line)}
+  .pv-tab{height:32px;padding:0 16px;border-radius:8px 8px 0 0;border:1px solid var(--line);border-bottom:none;font-size:12px;font-weight:700;background:transparent;color:var(--mut);cursor:pointer;letter-spacing:.04em}
+  .pv-tab.active{background:var(--glass-2);color:var(--fg);border-color:var(--line-2)}
+  .pv-login{flex:1;display:flex;align-items:center;justify-content:center;padding:24px}
+  .pv-login-box{background:var(--glass-2);border:1px solid var(--line-2);border-radius:16px;padding:28px 24px;width:min(340px,100%)}
+  .pv-login-box h3{margin:0 0 4px;font-size:18px;font-weight:800;letter-spacing:-.02em}
+  .pv-login-box p{margin:0 0 20px;font-size:12.5px;color:var(--mut)}
+  .pv-login-box input{width:100%;height:40px;border-radius:9px;border:1px solid var(--line-2);background:var(--bg-input);color:var(--fg);padding:0 12px;font-size:14px;margin-bottom:10px;font-family:inherit}
+  .pv-login-box input:focus{outline:none;border-color:var(--primary)}
+  .pv-login-btn{width:100%;height:40px;border-radius:9px;border:1px solid var(--btn-border);background:var(--btn-bg);color:#fff;font-weight:700;font-size:14px;cursor:pointer;margin-top:4px;font-family:inherit}
+  .pv-login-err{color:var(--red);font-size:12px;margin-top:8px;text-align:center;min-height:16px}
+  .pv-content{flex:1;overflow-y:auto;padding:16px clamp(10px,3vw,22px) 60px}
+  .pv-inner{max-width:1180px;margin:0 auto}
+  .pv-rep-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:var(--glass);border:1px solid var(--line-2);font-size:11.5px;font-weight:700;margin-bottom:14px;letter-spacing:.04em}
   /* SECOND VIEW — embedded site behind passcode */
   .siteview{position:fixed;inset:0;z-index:120;background:#05060a;display:none;flex-direction:column}
   .siteview.open{display:flex}
@@ -273,6 +293,7 @@
     <button class="iconbtn" id="btn-3d" title="Toggle 3D background">✦</button>
     <button class="iconbtn" id="btn-theme" title="Toggle light/dark">☀</button>
     <button class="iconbtn" id="btn-export" title="Export CSV">⭳</button>
+    <button class="iconbtn" id="btn-portal" title="Portal — dealer login">⊙</button>
     <button class="iconbtn" id="btn-agent" title="Ask Eli (AI)">✷</button>
     <button class="addbtn" id="btn-add">＋ Lead</button>
   </header>
@@ -317,6 +338,37 @@
       <div class="fld"><label>Notes</label><textarea id="m-notes" rows="3"></textarea></div>
     </form>
     <div class="mfoot"><button class="btn" id="m-del" style="margin-right:auto;border-color:rgba(248,113,113,.4);color:var(--red);display:none">Delete</button><button class="btn" id="m-cancel">Cancel</button><button class="btn primary" id="m-save">Save</button></div>
+  </div>
+</div>
+
+<!-- PORTAL VIEW -->
+<div class="portal-view" id="portal-view">
+  <div class="pv-bar">
+    <button class="iconbtn" id="pv-back" style="width:36px;height:36px">←</button>
+    <div class="pv-breadcrumb"><span>Portal</span><span class="sep">›</span><span id="pv-crumb">—</span></div>
+    <div style="flex:1"></div>
+    <button class="iconbtn" id="pv-logout" style="width:36px;height:36px;font-size:11px;display:none">Sign Out</button>
+  </div>
+  <div class="pv-tabs">
+    <button class="pv-tab active" id="pv-tab-luminescent">LUMINESCENT</button>
+  </div>
+  <div id="pv-login-panel" class="pv-login">
+    <div class="pv-login-box">
+      <h3>Luminescent</h3>
+      <p>Dealer Portal — sign in to continue</p>
+      <input type="text" id="pv-user" placeholder="Username" autocomplete="username" spellcheck="false">
+      <input type="password" id="pv-pass" placeholder="Password" autocomplete="current-password">
+      <button class="pv-login-btn" id="pv-login-btn">Sign In →</button>
+      <div class="pv-login-err" id="pv-login-err"></div>
+    </div>
+  </div>
+  <div id="pv-content-panel" class="pv-content" style="display:none">
+    <div class="pv-inner">
+      <div class="pv-rep-badge">⊙ Luminescent · Dealer Portal</div>
+      <div class="chips" id="pv-chips"></div>
+      <div class="count" id="pv-count"></div>
+      <div class="list" id="pv-list"></div>
+    </div>
   </div>
 </div>
 
@@ -527,6 +579,75 @@ $('#f-rep').onchange=e=>{FILT.rep=e.target.value;render();};
 const clearFilters=()=>{FILT={chip:'all',q:'',event:'',rep:''};$('#q').value='';$('#f-event').value='';$('#f-rep').value='';render();};
 $('#f-clear').onclick=clearFilters;
 $('#filter-banner-clear').onclick=clearFilters;
+
+/* ---------- portal view ---------- */
+const PORTAL_CREDS={luminescent:'TheCrew2026$'};
+let PV_CHIP='all';
+function pvLeads(){return leads().filter(l=>(l.rep||'').toLowerCase()==='luminescent');}
+function pvRender(){
+  const all=pvLeads();
+  const c=counts(all);
+  const box=$('#pv-chips'); box.innerHTML='';
+  [['all','All'],['New','New'],['Booked','Booked'],['Follow Up','Follow Up'],['Attempted','Attempted'],['STOP','STOP']].forEach(([v,label])=>{
+    const chip=el('button','chip'+(v===PV_CHIP?' active':''));
+    chip.innerHTML=`<span class="l">${label}</span><span class="n">${v==='all'?c.all:(c[v]||0)}</span>`;
+    chip.onclick=()=>{PV_CHIP=v;pvRender();};
+    box.appendChild(chip);
+  });
+  const rows=all.filter(l=>{
+    if(PV_CHIP==='STOP')return isStop(l);
+    if(isStop(l))return false;
+    if(PV_CHIP!=='all'&&l.status!==PV_CHIP)return false;
+    return true;
+  });
+  $('#pv-count').textContent=`${rows.length} lead${rows.length===1?'':'s'}`;
+  const list=$('#pv-list'); list.innerHTML='';
+  if(!rows.length){list.innerHTML='<div class="empty">No leads assigned to Luminescent yet.</div>';return;}
+  const frag=document.createDocumentFragment();
+  const order=['New','Attempted','Follow Up','Interested','Booked','Not Interested','STOP'];
+  rows.forEach(l=>{
+    const stop=isStop(l), cls='card '+(stop?'stop':(STATUS_CLASS[l.status]||l.status||''));
+    const c=el('div',cls); c.dataset.id=l.id;
+    const ph=hasPhone(l.phone);
+    const nextStatus=order[(order.indexOf(l.status)+1)%order.length];
+    const nextWarn=nextStatus==='STOP'?' title="⚠ Next tap will mark STOP"':' title="Tap to advance status"';
+    c.innerHTML=`<div class="crow"><div class="cmain">
+      <div class="cname">${esc(l.name)} <span class="badge" style="color:var(--${STATUS_COLOR[l.status]||'slate'});border-color:var(--${STATUS_COLOR[l.status]||'slate'});background:color-mix(in srgb,var(--${STATUS_COLOR[l.status]||'slate'}) 16%,transparent)" data-act="status"${nextWarn}>${esc(l.status)}</span></div>
+      <div class="cmeta">${ph?`📞 <a class="phone-link" href="${telHref(l.phone)}">${esc(l.phone)}</a>`:'<span style="opacity:.6">no phone</span>'} &nbsp;·&nbsp; <b>${esc(l.service||'—')}</b><br>${esc(l.event||'—')}${l.added?` &nbsp;·&nbsp; ${esc(l.added)}`:''}</div>
+      ${l.notes?`<div class="notes">${esc(l.notes)}</div>`:''}
+    </div><div class="actions">${ph?`<a class="act call" href="${telHref(l.phone)}">📞</a><a class="act text" href="${smsHref(l.phone)}">💬</a>`:''}</div></div>`;
+    c.querySelector('[data-act="status"]').onclick=e=>{e.stopPropagation();cycleStatus(l);pvRender();};
+    c.addEventListener('click',ev=>{if(ev.target.closest('a')||ev.target.closest('.badge'))return;openModal(l);});
+    frag.appendChild(c);
+  });
+  list.appendChild(frag);
+}
+function pvShowLogin(){
+  $('#pv-login-panel').style.display='flex';
+  $('#pv-content-panel').style.display='none';
+  $('#pv-logout').style.display='none';
+  $('#pv-crumb').textContent='Luminescent';
+  $('#pv-user').value='';$('#pv-pass').value='';$('#pv-login-err').textContent='';
+}
+function pvShowContent(){
+  $('#pv-login-panel').style.display='none';
+  $('#pv-content-panel').style.display='';
+  $('#pv-logout').style.display='';
+  $('#pv-crumb').textContent='Luminescent';
+  PV_CHIP='all'; pvRender();
+}
+$('#btn-portal').onclick=()=>{
+  $('#portal-view').classList.add('open');
+  sessionStorage.getItem('eliops.pv')==='luminescent'?pvShowContent():pvShowLogin();
+};
+$('#pv-back').onclick=()=>$('#portal-view').classList.remove('open');
+$('#pv-logout').onclick=()=>{sessionStorage.removeItem('eliops.pv');pvShowLogin();};
+$('#pv-login-btn').onclick=()=>{
+  const u=$('#pv-user').value.trim().toLowerCase(), p=$('#pv-pass').value;
+  if(PORTAL_CREDS[u]&&PORTAL_CREDS[u]===p){sessionStorage.setItem('eliops.pv',u);pvShowContent();}
+  else{$('#pv-login-err').textContent='Invalid credentials.';}
+};
+$('#pv-pass').addEventListener('keydown',e=>{if(e.key==='Enter')$('#pv-login-btn').click();});
 
 /* ---------- second view: embedded site (passcode 0) ---------- */
 const SITE_URL='/';                 // qi's site, literally embedded
