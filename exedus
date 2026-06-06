@@ -1,52 +1,68 @@
 #!/usr/bin/env bash
-# Exedus universal installer — curl -fsSL hitthe.link/exedus.sh | bash
-# Turns any fresh Linux box into an Exedus/Xen node. Idempotent. Run as root (or sudo).
+# Exedus universal installer — curl -fsSL https://raw.githubusercontent.com/xlrdtech/hitthe.link/main/exedus.sh | bash
+# Cross-platform: macOS (brew, current user) + Linux (apt; dedicated xen user when run as root, since bypass refuses root).
+# Idempotent. Installs `exedus` + `xen` GLOBALLY into /usr/local/bin. Type `exedus` to start Xen.
 set -e
 echo "==> Exedus installer"
 
-SUDO=""; [ "$(id -u)" -ne 0 ] && SUDO="sudo"
+OS="$(uname -s)"
+SUDO=""; [ "$(id -u)" -ne 0 ] && command -v sudo >/dev/null 2>&1 && SUDO="sudo"
 
-# 1. base packages
-if command -v apt-get >/dev/null 2>&1; then
-  export DEBIAN_FRONTEND=noninteractive
-  $SUDO apt-get update -qq
-  $SUDO apt-get install -y -qq tmux curl git ca-certificates >/dev/null 2>&1 || true
-fi
-
-# 2. node 20 + claude code
-if ! command -v node >/dev/null 2>&1; then
-  curl -fsSL https://deb.nodesource.com/setup_20.x | $SUDO bash - >/dev/null 2>&1
-  $SUDO apt-get install -y -qq nodejs >/dev/null 2>&1
-fi
-command -v claude >/dev/null 2>&1 || $SUDO npm install -g @anthropic-ai/claude-code >/dev/null 2>&1
-
-# 3. xen user (claude bypass mode refuses to run as root)
-id xen >/dev/null 2>&1 || $SUDO useradd -m -s /bin/bash xen
-$SUDO mkdir -p /home/xen/.xen/state /home/xen/.claude
-
-# 4. device registry (edit to add nodes; this node auto-joins the mesh)
-$SUDO tee /home/xen/.xen/state/omni-devices.json >/dev/null <<'JSON'
-{
-  "_canon": "Exedus Omni mesh — all devices equal. Add nodes here; xen-mesh fans a window into each.",
-  "hub": "exedus",
-  "nodes": []
+install_pkgs_mac() {
+  if command -v brew >/dev/null 2>&1; then
+    command -v tmux >/dev/null 2>&1 || brew install tmux >/dev/null 2>&1 || true
+    command -v node >/dev/null 2>&1 || brew install node >/dev/null 2>&1 || true
+  else
+    echo "    (Homebrew not found — install from https://brew.sh for tmux/node)"
+  fi
+  command -v claude >/dev/null 2>&1 || npm install -g @anthropic-ai/claude-code >/dev/null 2>&1 || $SUDO npm install -g @anthropic-ai/claude-code >/dev/null 2>&1 || true
 }
+install_pkgs_linux() {
+  export DEBIAN_FRONTEND=noninteractive
+  command -v apt-get >/dev/null 2>&1 && { $SUDO apt-get update -qq; $SUDO apt-get install -y -qq tmux curl git ca-certificates >/dev/null 2>&1 || true; }
+  if ! command -v node >/dev/null 2>&1; then curl -fsSL https://deb.nodesource.com/setup_20.x | $SUDO bash - >/dev/null 2>&1; $SUDO apt-get install -y -qq nodejs >/dev/null 2>&1; fi
+  command -v claude >/dev/null 2>&1 || $SUDO npm install -g @anthropic-ai/claude-code >/dev/null 2>&1
+}
+
+# RUNUSER = account Xen runs as. Linux+root needs a non-root user (bypass refuses root). Otherwise current user.
+if [ "$OS" = "Linux" ] && [ "$(id -u)" -eq 0 ]; then
+  install_pkgs_linux
+  id xen >/dev/null 2>&1 || useradd -m -s /bin/bash xen
+  RUNUSER=xen; RUNHOME=/home/xen
+elif [ "$OS" = "Darwin" ]; then
+  install_pkgs_mac
+  RUNUSER="$(id -un)"; RUNHOME="$HOME"
+else
+  install_pkgs_linux
+  RUNUSER="$(id -un)"; RUNHOME="$HOME"
+fi
+echo "==> Xen will run as: $RUNUSER ($RUNHOME)"
+
+mkdir -p "$RUNHOME/.xen/state" "$RUNHOME/.claude"
+[ -f "$RUNHOME/.xen/state/omni-devices.json" ] || cat > "$RUNHOME/.xen/state/omni-devices.json" <<'JSON'
+{ "_canon": "Exedus Omni mesh — all devices equal. Add nodes; xen-mesh fans a window into each.", "hub": "exedus", "nodes": [] }
 JSON
 
-# 5. pre-accept claude first-run dialogs (no taps, ever)
-$SUDO tee /home/xen/.claude.json >/dev/null <<'JSON'
-{ "hasTrustDialogAccepted": true, "bypassPermissionsModeAccepted": true, "hasAcknowledgedBypassPermissionsMode": true,
-  "projects": { "/home/xen": { "hasTrustDialogAccepted": true, "hasCompletedProjectOnboarding": true } } }
+# pre-accept claude dialogs (merge if config exists, never clobber creds)
+if [ -f "$RUNHOME/.claude.json" ]; then
+  python3 - "$RUNHOME/.claude.json" <<'PY' 2>/dev/null || true
+import json,sys
+p=sys.argv[1]; d=json.load(open(p))
+d["hasTrustDialogAccepted"]=True; d["bypassPermissionsModeAccepted"]=True; d["hasAcknowledgedBypassPermissionsMode"]=True
+json.dump(d,open(p,"w"),indent=2)
+PY
+else
+  cat > "$RUNHOME/.claude.json" <<'JSON'
+{ "hasTrustDialogAccepted": true, "bypassPermissionsModeAccepted": true, "hasAcknowledgedBypassPermissionsMode": true }
 JSON
+fi
 
-# 6. the mesh launcher (runs as xen): hub=Xen in bypass, + one window per registry node
-$SUDO tee /home/xen/xen-mesh.sh >/dev/null <<'EOF'
+cat > "$RUNHOME/xen-mesh.sh" <<'EOF'
 #!/usr/bin/env bash
-REG=$HOME/.xen/state/omni-devices.json
-SES=xen
+REG="$HOME/.xen/state/omni-devices.json"; SES=xen
 if ! tmux has-session -t "$SES" 2>/dev/null; then
   tmux new-session -d -s "$SES" -x 220 -y 50 -n hub
-  tmux send-keys -t "$SES":hub "cd ~; claude --dangerously-skip-permissions" Enter
+  tmux send-keys -t "$SES":hub "cd ~; IS_SANDBOX=1 claude --dangerously-skip-permissions" Enter
   python3 -c "import json;d=json.load(open(\"$REG\"));[print(n['name'],n['ssh'].split()[-1],n.get('port',22)) for n in d.get('nodes',[])]" 2>/dev/null | while read name target port; do
     [ "$name" = "exedus" ] && continue
     tmux new-window -t "$SES" -n "$name" "ssh -o ConnectTimeout=8 -p $port $target; bash"
@@ -55,20 +71,21 @@ if ! tmux has-session -t "$SES" 2>/dev/null; then
 fi
 exec tmux attach -t "$SES"
 EOF
-$SUDO chmod +x /home/xen/xen-mesh.sh
-$SUDO chown -R xen:xen /home/xen
+chmod +x "$RUNHOME/xen-mesh.sh"
+[ "$RUNUSER" != "$(id -un)" ] && chown -R "$RUNUSER":"$RUNUSER" "$RUNHOME" 2>/dev/null || true
 
-# 7. exedus + xen commands (both start Xen)
-$SUDO tee /usr/local/bin/xen >/dev/null <<'EOF'
-#!/usr/bin/env bash
-exec su - xen -c /home/xen/xen-mesh.sh
-EOF
+# global commands
+if [ "$RUNUSER" = "$(id -un)" ]; then
+  printf '#!/usr/bin/env bash\nexec "%s/xen-mesh.sh"\n' "$RUNHOME" | $SUDO tee /usr/local/bin/xen >/dev/null
+else
+  printf '#!/usr/bin/env bash\nexec su - %s -c "%s/xen-mesh.sh"\n' "$RUNUSER" "$RUNHOME" | $SUDO tee /usr/local/bin/xen >/dev/null
+fi
 $SUDO chmod +x /usr/local/bin/xen
 $SUDO ln -sf /usr/local/bin/xen /usr/local/bin/exedus
 
-# 8. boot-persistence
-if command -v systemctl >/dev/null 2>&1; then
-  $SUDO tee /etc/systemd/system/xen-omni.service >/dev/null <<'EOF'
+# boot persistence (Linux systemd; macOS launchd skipped)
+if [ "$OS" = "Linux" ] && command -v systemctl >/dev/null 2>&1; then
+  $SUDO tee /etc/systemd/system/xen-omni.service >/dev/null <<EOF
 [Unit]
 Description=Exedus/Xen Omni mesh on boot
 After=network-online.target
@@ -76,17 +93,17 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-User=xen
-ExecStart=/home/xen/xen-mesh.sh
+User=$RUNUSER
+ExecStart=$RUNHOME/xen-mesh.sh
 ExecStop=/usr/bin/tmux kill-session -t xen
 [Install]
 WantedBy=multi-user.target
 EOF
-  $SUDO systemctl daemon-reload
-  $SUDO systemctl enable xen-omni.service >/dev/null 2>&1 || true
+  $SUDO systemctl daemon-reload; $SUDO systemctl enable xen-omni.service >/dev/null 2>&1 || true
 fi
 
-echo "==> Exedus installed."
-echo "    1) One-time login:  su - xen -c claude   (then /login, paste the code)"
-echo "    2) Start anytime:   exedus    (or: xen)"
-echo "    Add nodes to /home/xen/.xen/state/omni-devices.json and they auto-join the mesh."
+echo "==> Exedus installed ($OS). Global commands: exedus (== xen)."
+command -v claude >/dev/null 2>&1 || echo "    NOTE: install claude:  npm i -g @anthropic-ai/claude-code"
+echo "    One-time login if needed:  claude   (then /login)"
+echo "    Start anytime:  exedus"
+echo "    Grow the mesh: add nodes to $RUNHOME/.xen/state/omni-devices.json"
