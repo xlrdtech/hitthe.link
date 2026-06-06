@@ -1,109 +1,96 @@
 #!/usr/bin/env bash
 # Exedus universal installer — curl -fsSL https://raw.githubusercontent.com/xlrdtech/hitthe.link/main/exedus.sh | bash
-# Cross-platform: macOS (brew, current user) + Linux (apt; dedicated xen user when run as root, since bypass refuses root).
-# Idempotent. Installs `exedus` + `xen` GLOBALLY into /usr/local/bin. Type `exedus` to start Xen.
+#
+# ONE Xen, ONE session. The M4 Mac HOSTS the single voice-enabled Xen tmux session.
+# Every other device is a CLIENT: `exedus` SSHes into the M4 and ATTACHES to that same
+# session — identical screen everywhere, you talk to the one Xen. Voice lives on the M4.
+#
+# Roles (auto-detected; override with XEN_ROLE=hub|client):
+#   hub    = the M4. `exedus` attaches LOCALLY to the live voice session (~/.xen_tmux_target).
+#   client = VM / nitro / any other box. `exedus` = ssh M4 + attach. Auto-attaches on login.
+#
+# Installs GLOBALLY into /usr/local/bin (falls back to ~/.local/bin without sudo).
 set -e
 echo "==> Exedus installer"
 
 OS="$(uname -s)"
 SUDO=""; [ "$(id -u)" -ne 0 ] && command -v sudo >/dev/null 2>&1 && SUDO="sudo"
 
-install_pkgs_mac() {
-  if command -v brew >/dev/null 2>&1; then
-    command -v tmux >/dev/null 2>&1 || brew install tmux >/dev/null 2>&1 || true
-    command -v node >/dev/null 2>&1 || brew install node >/dev/null 2>&1 || true
+# --- M4 hub coordinates (override via env at install time) ---
+M4_HOST="${XEN_M4_HOST:-100.97.145.50}"   # M4 tailnet IP
+M4_USER="${XEN_M4_USER:-qi}"
+
+# --- role detection ---
+ROLE="${XEN_ROLE:-}"
+if [ -z "$ROLE" ]; then
+  if [ "$OS" = "Darwin" ] && [ -x "/Users/qi/bin/xen-reply-vvs" ] && [ "$(id -un)" = "qi" ]; then
+    ROLE="hub"
   else
-    echo "    (Homebrew not found — install from https://brew.sh for tmux/node)"
+    ROLE="client"
   fi
-  command -v claude >/dev/null 2>&1 || npm install -g @anthropic-ai/claude-code >/dev/null 2>&1 || $SUDO npm install -g @anthropic-ai/claude-code >/dev/null 2>&1 || true
-}
-install_pkgs_linux() {
-  export DEBIAN_FRONTEND=noninteractive
-  command -v apt-get >/dev/null 2>&1 && { $SUDO apt-get update -qq; $SUDO apt-get install -y -qq tmux curl git ca-certificates >/dev/null 2>&1 || true; }
-  if ! command -v node >/dev/null 2>&1; then curl -fsSL https://deb.nodesource.com/setup_20.x | $SUDO bash - >/dev/null 2>&1; $SUDO apt-get install -y -qq nodejs >/dev/null 2>&1; fi
-  command -v claude >/dev/null 2>&1 || $SUDO npm install -g @anthropic-ai/claude-code >/dev/null 2>&1
-}
-
-# RUNUSER = account Xen runs as. Linux+root needs a non-root user (bypass refuses root). Otherwise current user.
-if [ "$OS" = "Linux" ] && [ "$(id -u)" -eq 0 ]; then
-  install_pkgs_linux
-  id xen >/dev/null 2>&1 || useradd -m -s /bin/bash xen
-  RUNUSER=xen; RUNHOME=/home/xen
-elif [ "$OS" = "Darwin" ]; then
-  install_pkgs_mac
-  RUNUSER="$(id -un)"; RUNHOME="$HOME"
-else
-  install_pkgs_linux
-  RUNUSER="$(id -un)"; RUNHOME="$HOME"
 fi
-echo "==> Xen will run as: $RUNUSER ($RUNHOME)"
+echo "==> Role: $ROLE  (M4 hub = ${M4_USER}@${M4_HOST})"
 
-mkdir -p "$RUNHOME/.xen/state" "$RUNHOME/.claude"
-[ -f "$RUNHOME/.xen/state/omni-devices.json" ] || cat > "$RUNHOME/.xen/state/omni-devices.json" <<'JSON'
-{ "_canon": "Exedus Omni mesh — all devices equal. Add nodes; xen-mesh fans a window into each.", "hub": "exedus", "nodes": [] }
-JSON
+# --- pick a global bin dir ---
+BIN=/usr/local/bin
+if ! { [ -w "$BIN" ] || [ -n "$SUDO" ]; }; then BIN="$HOME/.local/bin"; fi
+mkdir -p "$BIN" "$HOME/.xen"
+WT() { if [ "$BIN" = /usr/local/bin ] && [ -n "$SUDO" ]; then $SUDO tee "$1" >/dev/null; else tee "$1" >/dev/null; fi; }
 
-# pre-accept claude dialogs (merge if config exists, never clobber creds)
-if [ -f "$RUNHOME/.claude.json" ]; then
-  python3 - "$RUNHOME/.claude.json" <<'PY' 2>/dev/null || true
-import json,sys
-p=sys.argv[1]; d=json.load(open(p))
-d["hasTrustDialogAccepted"]=True; d["bypassPermissionsModeAccepted"]=True; d["hasAcknowledgedBypassPermissionsMode"]=True
-json.dump(d,open(p,"w"),indent=2)
-PY
-else
-  cat > "$RUNHOME/.claude.json" <<'JSON'
-{ "hasTrustDialogAccepted": true, "bypassPermissionsModeAccepted": true, "hasAcknowledgedBypassPermissionsMode": true }
-JSON
-fi
-
-cat > "$RUNHOME/xen-mesh.sh" <<'EOF'
+if [ "$ROLE" = "hub" ]; then
+  # ---- HUB: attach locally to the live voice session ----
+  cat > "$HOME/.xen/xen-attach-local.sh" <<'EOF'
 #!/usr/bin/env bash
-REG="$HOME/.xen/state/omni-devices.json"; SES=xen
-if ! tmux has-session -t "$SES" 2>/dev/null; then
-  tmux new-session -d -s "$SES" -x 220 -y 50 -n hub
-  tmux send-keys -t "$SES":hub "cd ~; IS_SANDBOX=1 claude --dangerously-skip-permissions" Enter
-  python3 -c "import json;d=json.load(open(\"$REG\"));[print(n['name'],n['ssh'].split()[-1],n.get('port',22)) for n in d.get('nodes',[])]" 2>/dev/null | while read name target port; do
-    [ "$name" = "exedus" ] && continue
-    tmux new-window -t "$SES" -n "$name" "ssh -o ConnectTimeout=8 -p $port $target; bash"
-  done
-  tmux select-window -t "$SES":hub
-fi
-exec tmux attach -t "$SES"
+# Attach the caller to the ONE live voice session (resolved from the voice-pane sentinel).
+set -euo pipefail
+TMUX_BIN="$(command -v tmux || echo /opt/homebrew/bin/tmux)"
+SENT="$HOME/.xen_tmux_target"
+PANE=""; [ -f "$SENT" ] && PANE="$(tr -d '[:space:]' < "$SENT")"
+SESS=""
+[ -n "$PANE" ] && SESS="$("$TMUX_BIN" display-message -p -t "$PANE" '#{session_name}' 2>/dev/null || true)"
+[ -z "$SESS" ] && SESS="$("$TMUX_BIN" list-panes -a -F '#{session_name} #{pane_current_command}' 2>/dev/null | awk '$2 ~ /^[0-9]+\.[0-9]+/ {print $1; exit}')"
+[ -z "$SESS" ] && SESS="$("$TMUX_BIN" list-sessions -F '#{session_name}' 2>/dev/null | head -1)"
+[ -z "$SESS" ] && { echo "xen-attach: no tmux session on hub" >&2; exit 1; }
+exec "$TMUX_BIN" attach-session -t "$SESS"
 EOF
-chmod +x "$RUNHOME/xen-mesh.sh"
-[ "$RUNUSER" != "$(id -un)" ] && chown -R "$RUNUSER":"$RUNUSER" "$RUNHOME" 2>/dev/null || true
-
-# global commands
-if [ "$RUNUSER" = "$(id -un)" ]; then
-  printf '#!/usr/bin/env bash\nexec "%s/xen-mesh.sh"\n' "$RUNHOME" | $SUDO tee /usr/local/bin/xen >/dev/null
+  chmod +x "$HOME/.xen/xen-attach-local.sh"
+  printf '#!/usr/bin/env bash\nexec "%s/.xen/xen-attach-local.sh"\n' "$HOME" | WT "$BIN/xen"
 else
-  printf '#!/usr/bin/env bash\nexec su - %s -c "%s/xen-mesh.sh"\n' "$RUNUSER" "$RUNHOME" | $SUDO tee /usr/local/bin/xen >/dev/null
-fi
-$SUDO chmod +x /usr/local/bin/xen
-$SUDO ln -sf /usr/local/bin/xen /usr/local/bin/exedus
-
-# boot persistence (Linux systemd; macOS launchd skipped)
-if [ "$OS" = "Linux" ] && command -v systemctl >/dev/null 2>&1; then
-  $SUDO tee /etc/systemd/system/xen-omni.service >/dev/null <<EOF
-[Unit]
-Description=Exedus/Xen Omni mesh on boot
-After=network-online.target
-Wants=network-online.target
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-User=$RUNUSER
-ExecStart=$RUNHOME/xen-mesh.sh
-ExecStop=/usr/bin/tmux kill-session -t xen
-[Install]
-WantedBy=multi-user.target
+  # ---- CLIENT: ssh into the M4 and attach to the one session ----
+  cat > "$HOME/.xen/xen-client-launcher.sh" <<EOF
+#!/usr/bin/env bash
+M4_HOST="\${XEN_M4_HOST:-$M4_HOST}"; M4_USER="\${XEN_M4_USER:-$M4_USER}"
+M4_KEY="\${XEN_M4_KEY:-\$HOME/.ssh/id_ed25519}"
+KEYOPT=""; [ -f "\$M4_KEY" ] && KEYOPT="-i \$M4_KEY"
+exec ssh -tt \$KEYOPT -o ConnectTimeout=10 -o ServerAliveInterval=20 -o ServerAliveCountMax=3 \\
+  -o StrictHostKeyChecking=accept-new "\${M4_USER}@\${M4_HOST}" 'bash -lc "\$HOME/.xen/xen-attach-local.sh"'
 EOF
-  $SUDO systemctl daemon-reload; $SUDO systemctl enable xen-omni.service >/dev/null 2>&1 || true
+  chmod +x "$HOME/.xen/xen-client-launcher.sh"
+  printf '#!/usr/bin/env bash\nexec "%s/.xen/xen-client-launcher.sh"\n' "$HOME" | WT "$BIN/xen"
+
+  # login auto-attach (guarded so it never breaks scp / non-interactive ssh)
+  RC="$HOME/.bashrc"; touch "$RC"
+  if ! grep -q "XEN-AUTO-ATTACH" "$RC"; then
+    cat >> "$RC" <<EOF
+
+# XEN-AUTO-ATTACH — drop straight into the one Xen on interactive login.
+if [[ \$- == *i* ]] && [ -t 1 ] && [ -z "\$TMUX" ] && [ -z "\$XEN_NO_AUTOATTACH" ]; then
+  "$BIN/xen" || true
+fi
+EOF
+  fi
+  PF="$HOME/.bash_profile"; touch "$PF"
+  grep -q 'source ~/.bashrc' "$PF" 2>/dev/null || echo '[ -f ~/.bashrc ] && source ~/.bashrc' >> "$PF"
 fi
 
-echo "==> Exedus installed ($OS). Global commands: exedus (== xen)."
-command -v claude >/dev/null 2>&1 || echo "    NOTE: install claude:  npm i -g @anthropic-ai/claude-code"
-echo "    One-time login if needed:  claude   (then /login)"
-echo "    Start anytime:  exedus"
-echo "    Grow the mesh: add nodes to $RUNHOME/.xen/state/omni-devices.json"
+if [ "$BIN" = /usr/local/bin ] && [ -n "$SUDO" ]; then $SUDO chmod +x "$BIN/xen"; $SUDO ln -sf "$BIN/xen" "$BIN/exedus";
+else chmod +x "$BIN/xen"; ln -sf "$BIN/xen" "$BIN/exedus"; fi
+
+echo "==> Installed ($OS, role=$ROLE). Commands: exedus == xen  (in $BIN)"
+if [ "$ROLE" = "client" ]; then
+  echo "    Client attaches to the M4 hub at ${M4_USER}@${M4_HOST}."
+  echo "    ONE-TIME: this device's SSH pubkey (~/.ssh/id_ed25519.pub) must be in the M4's ~/.ssh/authorized_keys."
+  echo "    Then: type  exedus  (or just log in) -> you land in the one Xen, same screen as every device."
+else
+  echo "    Hub: type  exedus  -> attaches to the live voice session locally."
+fi
