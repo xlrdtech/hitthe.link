@@ -1940,19 +1940,39 @@ function _avaBargeIn() {
 // failure catches, so it never double-speaks alongside a working /api/tts clip.
 // Returns true if it began speaking (so the caller does NOT also bump _hudSpoke).
 function _avaSpeakDevice(clip, genAtStart) {
-  // DISABLED 2026-06-06 (qi live): the browser window.speechSynthesis ("device-tts")
-  // voice is NOT good and was OVERLAPPING the canonical macOS `say` voice on the Mac
-  // — qi heard two voices, the second one ugly, and said "that voice is not good...
-  // we should not use that voice." So the device-tts fallback no longer speaks: when
-  // /api/tts (the good Ava MP3) fails, the page stays SILENT instead of speaking with
-  // the ugly browser engine. Ava MP3 is the single page voice; on the Mac, macOS
-  // `say` (via xen-reply-vvs) covers any gap. This returns false so callers drain the
-  // queue cleanly. Re-enable by restoring the speechSynthesis body from git history.
+  // NATIVE-AUDIO FALLBACK 2026-06-06 (qi): the GOOD voice is the Ava MP3. WebAudio
+  // decodeAudioData is strict and chokes on the edge-tts MPEG-2 MP3 ("Unable to
+  // decode audio data"), but the native <audio> element decodes the SAME url fine.
+  // So when the WebAudio path fails we do NOT go silent and do NOT use the ugly
+  // browser speechSynthesis (qi: "that voice is not good") — we replay the same Ava
+  // MP3 through <audio>. One good voice, reliable on every device/reload. Barge-in
+  // (_avaGen) still cancels it. (Replaces the old device-tts speechSynthesis path.)
   try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (_) {}
-  _avaPlaying = false;
-  _avaStatus = 'tts-unavailable (device voice off)';
-  _renderAvaPill();
-  return false;
+  if (genAtStart !== _avaGen) { _avaPlaying = false; _avaStatus = 'you spoke'; _renderAvaPill(); return false; }
+  try {
+    const url = AVA_TTS_URL + '?voice=ava&text=' + encodeURIComponent(String(clip));
+    const a = _ensureAvaAudio();
+    a.onplaying = () => {
+      if (genAtStart !== _avaGen) { try { a.pause(); a.currentTime = 0; } catch (_) {} return; }
+      _avaStatus = 'playing(native)'; _hud('PLAYING via native audio'); _renderAvaPill();
+      try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; } catch (_) {}
+    };
+    a.onended = () => {
+      _avaPlaying = false; _hudSpoke++;
+      _avaStatus = _avaQueue.length ? ('queued '+_avaQueue.length) : 'idle';
+      _renderAvaPill();
+      try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; } catch (_) {}
+      _avaDrain();
+    };
+    a.onerror = () => { _avaPlaying = false; _avaStatus = 'native-err'; _renderAvaPill(); _avaDrain(); };
+    a.src = url;
+    const p = a.play();
+    if (p && p.catch) p.catch(() => { _avaPlaying = false; _avaStatus = 'native-blocked'; _renderAvaPill(); _avaDrain(); });
+    return true;  // we own the playback lifecycle now (onended drains)
+  } catch (_) {
+    _avaPlaying = false; _avaStatus = 'native-err'; _renderAvaPill(); _avaDrain();
+    return false;
+  }
 }
 // QUEUE, never drop (qi 2026-05-30: "I haven't heard you the last 3-5 outputs").
 // Old cancel-and-replace meant rapid xen-out replies killed each other so none
