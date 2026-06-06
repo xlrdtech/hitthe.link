@@ -1940,44 +1940,19 @@ function _avaBargeIn() {
 // failure catches, so it never double-speaks alongside a working /api/tts clip.
 // Returns true if it began speaking (so the caller does NOT also bump _hudSpoke).
 function _avaSpeakDevice(clip, genAtStart) {
-  if (!_avaOn) { _avaPlaying = false; return false; }
-  if (!('speechSynthesis' in window)) { _avaPlaying = false; return false; }
-  // Gen-guard: qi barged in while /api/tts was failing — do NOT speak the stale clip.
-  if (genAtStart !== _avaGen) { _avaPlaying = false; _avaStatus = 'you spoke'; _renderAvaPill(); return false; }
-  try {
-    const v = _avaVoice || pickAvaVoice();
-    if (v) _avaVoice = v;
-    const u = new SpeechSynthesisUtterance(String(clip));
-    if (v) { u.voice = v; if (v.lang) u.lang = v.lang; }
-    u.rate = 1.0;
-    u.onstart = () => {
-      // Re-check the gen at the moment speech actually starts (cancel any stale).
-      if (genAtStart !== _avaGen) { try { window.speechSynthesis.cancel(); } catch (_) {} return; }
-      _avaStatus = 'playing(device)'; _hud('PLAYING via speechSynthesis'); _renderAvaPill();
-      try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; } catch (_) {}
-    };
-    u.onend = () => {
-      _avaPlaying = false;
-      _hudSpoke++;
-      _avaStatus = _avaQueue.length ? ('queued '+_avaQueue.length) : 'idle';
-      _renderAvaPill();
-      try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; } catch (_) {}
-      _avaDrain();
-    };
-    u.onerror = () => {
-      _avaPlaying = false; _avaStatus = 'device-err';
-      _renderAvaPill();
-      try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; } catch (_) {}
-      _avaDrain();
-    };
-    // Cancel any leftover utterance before queueing the new one (no overlap).
-    try { window.speechSynthesis.cancel(); } catch (_) {}
-    window.speechSynthesis.speak(u);
-    return true;
-  } catch (_) {
-    _avaPlaying = false; _avaStatus = 'device-err'; _renderAvaPill(); _avaDrain();
-    return false;
-  }
+  // DISABLED 2026-06-06 (qi live): the browser window.speechSynthesis ("device-tts")
+  // voice is NOT good and was OVERLAPPING the canonical macOS `say` voice on the Mac
+  // — qi heard two voices, the second one ugly, and said "that voice is not good...
+  // we should not use that voice." So the device-tts fallback no longer speaks: when
+  // /api/tts (the good Ava MP3) fails, the page stays SILENT instead of speaking with
+  // the ugly browser engine. Ava MP3 is the single page voice; on the Mac, macOS
+  // `say` (via xen-reply-vvs) covers any gap. This returns false so callers drain the
+  // queue cleanly. Re-enable by restoring the speechSynthesis body from git history.
+  try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (_) {}
+  _avaPlaying = false;
+  _avaStatus = 'tts-unavailable (device voice off)';
+  _renderAvaPill();
+  return false;
 }
 // QUEUE, never drop (qi 2026-05-30: "I haven't heard you the last 3-5 outputs").
 // Old cancel-and-replace meant rapid xen-out replies killed each other so none
