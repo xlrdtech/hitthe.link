@@ -116,6 +116,38 @@ html,body{
 }
 .card-cta a:hover{text-decoration:underline}
 
+/* Copy link button */
+.copy-link{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 10px;border-radius:6px;border:1px solid var(--border);
+  background:rgba(255,255,255,.04);color:var(--wht3);
+  font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  cursor:pointer;transition:border-color .12s,color .12s;margin-top:8px;
+  width:100%;justify-content:center;
+}
+.copy-link:hover{border-color:var(--card-accent,var(--red));color:var(--wht)}
+.copy-link.copied{color:#22c55e;border-color:#22c55e}
+
+/* 7 Persona System nav */
+.persona-nav{
+  max-width:800px;margin:0 auto 28px;padding:0 16px;
+}
+.persona-nav-label{
+  font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--wht3);margin-bottom:10px;
+}
+.persona-nav-row{
+  display:flex;flex-wrap:wrap;gap:6px;
+}
+.persona-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:6px 12px;border-radius:20px;
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  font-size:11px;font-weight:600;color:var(--wht2);text-decoration:none;
+  transition:border-color .12s,color .12s;
+}
+.persona-chip:hover{border-color:var(--red);color:#fff}
+
 /* Founder card - full width */
 .card.founder{
   grid-column:1/-1;
@@ -171,6 +203,20 @@ html,body{
   <p>L7S Hero identity cards — all 7 personas, scopes of work, and levels. Bio-ready, shareable, linkable.</p>
 </div>
 
+<!-- 7 Persona System Nav -->
+<div class="persona-nav">
+  <div class="persona-nav-label">7 Persona System — Direct Links</div>
+  <div class="persona-nav-row">
+    <a class="persona-chip" href="#hit-hero">🥉 H.I.T. Hero</a>
+    <a class="persona-chip" href="#eon-hero">🥈 E.O.N. Hero</a>
+    <a class="persona-chip" href="#real-hero">🥇 R.E.A.L. Hero</a>
+    <a class="persona-chip" href="#omni-hero">💎 O.M.N.I. Hero</a>
+    <a class="persona-chip" href="#credit-hero">⚡ Credit Hero</a>
+    <a class="persona-chip" href="#clone-hero">🤖 Clone Hero</a>
+    <a class="persona-chip" href="#partner-hero">🤝 Partner Hero</a>
+  </div>
+</div>
+
 <div class="grid">
 
   <!-- Founder Card -->
@@ -199,7 +245,7 @@ html,body{
   </div>
 
   <!-- Level 1: H.I.T HERO -->
-  <div class="card" style="--card-accent:#cd7f32">
+  <div class="card" id="hit-hero" style="--card-accent:#cd7f32">
     <div class="tier"><span class="tier-icon">🥉</span>Level 1 · Bronze</div>
     <div>
       <div class="card-name">H.I.T. HERO</div>
@@ -220,10 +266,11 @@ html,body{
       <span>Membership · Tier 1</span>
       <a href="https://l7sinc.com" target="_blank" rel="noopener">Get Started →</a>
     </div>
+    <button class="copy-link" onclick="copyLink('hit-hero',this)">🔗 Copy Persona Link</button>
   </div>
 
   <!-- Level 2: E.O.N HERO -->
-  <div class="card" style="--card-accent:#aaa9ad">
+  <div class="card" id="eon-hero" style="--card-accent:#aaa9ad">
     <div class="tier"><span class="tier-icon">🥈</span>Level 2 · Silver</div>
     <div>
       <div class="card-name">E.O.N. HERO</div>
@@ -244,10 +291,11 @@ html,body{
       <span>Membership · Tier 2</span>
       <a href="https://l7sinc.com" target="_blank" rel="noopener">Upgrade →</a>
     </div>
+    <button class="copy-link" onclick="copyLink('eon-hero',this)">🔗 Copy Persona Link</button>
   </div>
 
   <!-- Level 3: R.E.A.L HERO -->
-  <div class="card" style="--card-accent:#ffd700">
+  <div class="card" id="real-hero" style="--card-accent:#ffd700">
     <div class="tier"><span class="tier-icon">🥇</span>Level 3 · Gold</div>
     <div>
       <div class="card-name">R.E.A.L. HERO</div>
@@ -269,10 +317,11 @@ html,body{
       <span>Membership · Tier 3</span>
       <a href="https://l7sinc.com" target="_blank" rel="noopener">Apply →</a>
     </div>
+    <button class="copy-link" onclick="copyLink('real-hero',this)">🔗 Copy Persona Link</button>
   </div>
 
   <!-- Level 4: O.M.N.I HERO -->
-  <div class="card" style="--card-accent:#b9f2ff">
+  <div class="card" id="omni-hero" style="--card-accent:#b9f2ff">
     <div class="tier"><span class="tier-icon">💎</span>Level 4 · Diamond</div>
     <div>
       <div class="card-name">O.M.N.I. HERO</div>
@@ -294,10 +343,11 @@ html,body{
       <span>Membership · Tier 4</span>
       <a href="https://l7sinc.com" target="_blank" rel="noopener">Apply →</a>
     </div>
+    <button class="copy-link" onclick="copyLink('omni-hero',this)">🔗 Copy Persona Link</button>
   </div>
 
   <!-- Credit Hero H.O.T.7 -->
-  <div class="card" style="--card-accent:#ff6b35">
+  <div class="card" id="credit-hero" style="--card-accent:#ff6b35">
     <div class="tier"><span class="tier-icon">⚡</span>1st Sprint · Track</div>
     <div>
       <div class="card-name">Credit Hero</div>
@@ -319,10 +369,11 @@ html,body{
       <span>Hero Track · #7</span>
       <a href="https://l7sinc.com" target="_blank" rel="noopener">Start Track →</a>
     </div>
+    <button class="copy-link" onclick="copyLink('credit-hero',this)">🔗 Copy Persona Link</button>
   </div>
 
   <!-- L7S AI Clone Hero -->
-  <div class="card" style="--card-accent:#a855f7">
+  <div class="card" id="clone-hero" style="--card-accent:#a855f7">
     <div class="tier"><span class="tier-icon">🤖</span>AI Clone · F.A.M.O.U.S</div>
     <div>
       <div class="card-name">Clone Hero</div>
@@ -344,10 +395,11 @@ html,body{
       <span>Coming Soon</span>
       <a href="https://l7sinc.com" target="_blank" rel="noopener">Waitlist →</a>
     </div>
+    <button class="copy-link" onclick="copyLink('clone-hero',this)">🔗 Copy Persona Link</button>
   </div>
 
   <!-- L7X Partner Hero -->
-  <div class="card" style="--card-accent:#22d3ee">
+  <div class="card" id="partner-hero" style="--card-accent:#22d3ee">
     <div class="tier"><span class="tier-icon">🤝</span>Partnership · L7X</div>
     <div>
       <div class="card-name">Partner Hero</div>
@@ -368,6 +420,7 @@ html,body{
       <span>Partnership Program</span>
       <a href="mailto:SUPPORT@L7SINC.COM">Apply →</a>
     </div>
+    <button class="copy-link" onclick="copyLink('partner-hero',this)">🔗 Copy Persona Link</button>
   </div>
 
 </div>
@@ -381,5 +434,16 @@ html,body{
   <a class="contact-chip" href="http://cal.com/L7SINC" target="_blank" rel="noopener"><span class="ci">⚡</span>C.A.R.E Calls — Cal.com/L7SINC</a>
 </div>
 
+<script>
+function copyLink(id, btn) {
+  const url = location.origin + location.pathname + '#' + id;
+  navigator.clipboard.writeText(url).then(function() {
+    var orig = btn.textContent;
+    btn.textContent = '✅ Copied!';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+  });
+}
+</script>
 </body>
 </html>
