@@ -114,13 +114,13 @@
     <div class="bar">
       <span class="stat"><b id="cTotal">0</b> leads live</span>
       <span class="stat"><b id="cPadre">0</b> Padre</span>
-      <span class="stat"><b id="cEgbo">0</b> EGBO</span>
+      <span class="stat"><b id="cEgbo">0</b> East</span>
       <span class="stat">$2,000 build · 50% deposit to start</span>
     </div>
     <div class="filters">
       <button class="fbtn on" data-f="all">All</button>
       <button class="fbtn" data-f="padre">Padre</button>
-      <button class="fbtn" data-f="egbo">EGBO</button>
+      <button class="fbtn" data-f="egbo">East</button>
       <select id="sortSel" class="sortpill" aria-label="Sort leads">
         <option value="today">⚡ Most likely to pay today</option>
         <option value="email">✉ Has email first</option>
@@ -221,7 +221,7 @@ function render(){
     const ah=afterHours(l), hot=payScore(l)>=3;
     el.innerHTML=`
       <div class="lhead">
-        <span class="tag tag-${l.t}">${l.t}</span>
+        <span class="tag tag-${l.t}">${({padre:'Padre',egbo:'East'})[l.t]||l.t}</span>
         <div class="lmeta"><div class="lname">${l.n} ${hot?'<span class="flag hot">HOT</span>':''}${ah?'<span class="flag night">🌙 after-hrs</span>':''}${l.e?'<span class="flag mail">✉</span>':''}</div><div class="lcat">${l.c}</div></div>
         <button class="expand">Expand ▾</button>
       </div>
