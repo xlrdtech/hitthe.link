@@ -58,12 +58,14 @@
   .lead.open .frame iframe{height:1400px}
   .frame .scrim{position:absolute;inset:0;cursor:pointer;background:linear-gradient(180deg,transparent 60%,rgba(5,7,13,.04))}
   .lead.open .frame .scrim{display:none}
-  .actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;padding:.9rem 1.1rem}
+  .actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:.6rem;padding:.9rem 1.1rem}
   .act{display:flex;align-items:center;justify-content:center;gap:.45rem;font:inherit;font-weight:700;font-size:.92rem;text-decoration:none;padding:.8rem;border-radius:10px;border:1px solid var(--line);transition:transform .12s,box-shadow .12s}
   .act:hover{transform:translateY(-1px)}
   .call{background:linear-gradient(135deg,#f4e3a1,#d4af37 55%,#9a7b2e);color:#1a1304;border-color:transparent;box-shadow:0 5px 20px rgba(212,175,55,.35)}
   .text{background:transparent;color:var(--gold-pale);border-color:var(--line-gold)}
   .text:hover{background:rgba(212,175,55,.1);border-color:var(--gold)}
+  .email{background:transparent;color:var(--gold-pale);border-color:var(--line-gold)}
+  .email:hover{background:rgba(212,175,55,.1);border-color:var(--gold)}
   .open{background:transparent;color:var(--dim)}
   .open:hover{color:var(--gold);border-color:var(--gold)}
   .phone{display:block;text-align:center;font-family:"JetBrains Mono",monospace;font-size:.74rem;color:var(--faint);padding:0 1.1rem 1rem}
@@ -149,11 +151,11 @@
 const LEADS = [
   // PADRE — base /padre/<slug>/
   {t:'padre',n:"Andy & Leo Auto Repair",s:"padre/andy-leo-auto-repair-jonesboro",p:"+14046444470",c:"Auto Repair · Jonesboro GA"},
-  {t:'padre',n:"Bridges Fencing",s:"padre/bridges-fencing-locust-grove",p:"+17709607300",c:"Fencing · Locust Grove GA"},
+  {t:'padre',n:"Bridges Fencing",s:"padre/bridges-fencing-locust-grove",p:"+17709607300",e:"Bridgesfencing@yahoo.com",c:"Fencing · Locust Grove GA"},
   {t:'padre',n:"Elite Electric Solutions",s:"padre/elite-electric-solutions-conyers",p:"+17707607777",c:"Electrical · Conyers GA"},
   {t:'padre',n:"Griffins Automotive",s:"padre/griffins-automotive-jonesboro",p:"+17704779800",c:"Auto · Jonesboro GA"},
-  {t:'padre',n:"Hampton Family Dental",s:"padre/hampton-family-dental",p:"+17708676543",c:"Dental · Hampton GA"},
-  {t:'padre',n:"KDC Electrical Services",s:"padre/kdc-electrical-services-stockbridge",p:"+14048676527",c:"Electrical · Stockbridge GA"},
+  {t:'padre',n:"Hampton Family Dental",s:"padre/hampton-family-dental",p:"+17708676543",e:"info@hamptonfamilydental.com",c:"Dental · Hampton GA"},
+  {t:'padre',n:"KDC Electrical Services",s:"padre/kdc-electrical-services-stockbridge",p:"+14048676527",e:"kdcelectricalservice@gmail.com",c:"Electrical · Stockbridge GA"},
   {t:'padre',n:"Lott's Lawn Care Service",s:"padre/lotts-lawn-care-service-jonesboro",p:"+16784684952",c:"Lawn Care · Jonesboro GA"},
   {t:'padre',n:"Lyfe Lawn Care",s:"padre/lyfe-lawn-care-jonesboro",p:"+14043909963",c:"Lawn Care · Jonesboro GA"},
   {t:'padre',n:"Norwood Pressure Washing",s:"padre/norwood-pressure-washing-stockbridge",p:"+17705726435",c:"Pressure Wash + Detail · Stockbridge GA"},
@@ -165,10 +167,10 @@ const LEADS = [
   // EGBO — base /egbops/local/<slug>/
   {t:'egbo',n:"Chaeis Tax Associates, LLC",s:"egbops/local/chaeis-tax-associates-riverdale",p:"+14048383591",c:"Tax · Riverdale GA"},
   {t:'egbo',n:"Charlie's Angels Hair Salon",s:"egbops/local/charlies-angels-hair-salon-college-park",p:"+14045148719",c:"Salon · College Park GA"},
-  {t:'egbo',n:"Cranford Homes & Realty Co.",s:"egbops/local/cranford-homes-realty-hapeville",p:"+14047666223",c:"Realty · Hapeville GA"},
+  {t:'egbo',n:"Cranford Homes & Realty Co.",s:"egbops/local/cranford-homes-realty-hapeville",p:"+14047666223",e:"info@cranfordhomesrealty.com",c:"Realty · Hapeville GA"},
   {t:'egbo',n:"DLS Income Tax",s:"egbops/local/dls-income-tax-riverdale",p:"+16785453853",c:"Tax · Riverdale GA"},
-  {t:'egbo',n:"Fortitude Ed. & Cultural Center",s:"egbops/local/fortitude-educational-cultural-development-center-red-oak",p:"+14045782532",c:"Education · Red Oak GA"},
-  {t:'egbo',n:"Q's Restaurant",s:"egbops/local/qs-restaurant-east-point",p:"+14047679894",c:"Restaurant · East Point GA"},
+  {t:'egbo',n:"Fortitude Ed. & Cultural Center",s:"egbops/local/fortitude-educational-cultural-development-center-red-oak",p:"+14045782532",e:"info@fecdc.com",c:"Education · Red Oak GA"},
+  {t:'egbo',n:"Q's Restaurant",s:"egbops/local/qs-restaurant-east-point",p:"+14047679894",e:"hello@qsrestaurant-eastpoint.com",c:"Restaurant · East Point GA"},
   {t:'egbo',n:"Queendom Ascensions Luxury Salon",s:"egbops/local/queendom-ascensions-luxury-salon-college-park",p:"+14708831573",c:"Salon · College Park GA"},
   {t:'egbo',n:"RL Ingram Construction",s:"egbops/local/rl-ingram-construction-atlanta",p:"+14042723603",c:"Construction · Atlanta GA"},
   {t:'egbo',n:"South Fulton Event Hall",s:"egbops/local/south-fulton-event-hall-south-fulton",p:"+14046174288",c:"Events · South Fulton GA"},
@@ -194,9 +196,10 @@ function render(filter){
       <div class="actions">
         <a class="act call" href="tel:${l.p}">📞 Call</a>
         <a class="act text" href="sms:${l.p}">💬 Text</a>
+        ${l.e?`<a class="act email" href="mailto:${l.e}?subject=${encodeURIComponent('Your new website is live — '+l.n)}">✉ Email</a>`:''}
         <a class="act open" href="/${l.s}/" target="_blank" rel="noopener">↗ Site</a>
       </div>
-      <span class="phone">${fmt(l.p)} · hitthe.link/${l.s}</span>`;
+      <span class="phone">${fmt(l.p)}${l.e?' · '+l.e:''} · hitthe.link/${l.s}</span>`;
     const toggle=()=>{el.classList.toggle('open');el.querySelector('.expand').textContent=el.classList.contains('open')?'Collapse ▴':'Expand ▾';};
     el.querySelector('.expand').addEventListener('click',toggle);
     el.querySelector('.scrim').addEventListener('click',toggle);
