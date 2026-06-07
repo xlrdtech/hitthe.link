@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>ELSO · Executive Leverage Site Offers</title>
+<meta name="theme-color" content="#05070d">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#05070d;--panel:#0b1018;--panel2:#0f1420;--line:rgba(170,190,230,.13);
+    --ink:#eaf0fb;--dim:#9fb0cc;--faint:#5f6e87;
+    --accent:#7dd3fc;--green:#16d989;--amber:#ffb84d;
+    --chrome:linear-gradient(135deg,#e3ebf8,#9fb3d6 45%,#cdd9ef 60%,#8097c0);
+  }
+  body{background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5}
+  .glow{position:fixed;border-radius:50%;filter:blur(110px);opacity:.45;z-index:0;pointer-events:none}
+  .g1{top:-160px;right:-120px;width:500px;height:500px;background:radial-gradient(circle,rgba(125,211,252,.16),transparent)}
+  .g2{bottom:-180px;left:-140px;width:560px;height:560px;background:radial-gradient(circle,rgba(22,217,137,.12),transparent)}
+  .wrap{position:relative;z-index:1;max-width:920px;margin:0 auto;padding:clamp(1.5rem,4vw,3rem) clamp(.9rem,3vw,2rem) 5rem}
+  header{margin-bottom:1.6rem}
+  .kicker{font-family:"JetBrains Mono",monospace;font-size:.7rem;letter-spacing:.3em;text-transform:uppercase;color:var(--faint);margin-bottom:.7rem}
+  h1{font-size:clamp(1.8rem,5vw,2.7rem);font-weight:800;letter-spacing:-.03em;line-height:1.04;background:var(--chrome);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .sub{color:var(--dim);margin-top:.5rem;font-size:.97rem}
+  .bar{display:flex;flex-wrap:wrap;gap:.6rem;margin:1.3rem 0 .5rem;align-items:center}
+  .stat{font-family:"JetBrains Mono",monospace;font-size:.72rem;color:var(--faint);border:1px solid var(--line);border-radius:999px;padding:.35rem .8rem}
+  .stat b{color:var(--accent)}
+  .filters{display:flex;gap:.5rem;margin:1rem 0 1.6rem;flex-wrap:wrap}
+  .fbtn{font:inherit;font-size:.82rem;font-weight:600;color:var(--dim);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:.45rem 1rem;cursor:pointer;transition:all .15s}
+  .fbtn.on{color:var(--bg);background:var(--accent);border-color:var(--accent)}
+  .lead{background:var(--panel);border:1px solid var(--line);border-radius:16px;margin-bottom:1rem;overflow:hidden}
+  .lhead{display:flex;align-items:center;gap:.9rem;padding:1rem 1.1rem}
+  .tag{flex:none;font-family:"JetBrains Mono",monospace;font-size:.6rem;letter-spacing:.1em;font-weight:600;padding:.25rem .5rem;border-radius:5px;text-transform:uppercase}
+  .tag-padre{background:rgba(125,211,252,.14);color:var(--accent)}
+  .tag-egbo{background:rgba(22,217,137,.14);color:var(--green)}
+  .tag-xgbo{background:rgba(255,184,77,.14);color:var(--amber)}
+  .lmeta{flex:1;min-width:0}
+  .lname{font-weight:700;font-size:1.02rem;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lcat{color:var(--faint);font-size:.8rem;font-family:"JetBrains Mono",monospace}
+  .expand{flex:none;font:inherit;font-size:.78rem;font-weight:600;color:var(--dim);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:.45rem .7rem;cursor:pointer;white-space:nowrap}
+  .expand:hover{border-color:var(--accent);color:var(--accent)}
+  .frame{position:relative;border-top:1px solid var(--line);background:#fff;height:200px;overflow:hidden;transition:height .25s ease}
+  .lead.open .frame{height:660px;overflow:auto}
+  .frame iframe{width:100%;height:1200px;border:0;display:block}
+  .lead.open .frame iframe{height:1400px}
+  .frame .scrim{position:absolute;inset:0;cursor:pointer;background:linear-gradient(180deg,transparent 60%,rgba(5,7,13,.04))}
+  .lead.open .frame .scrim{display:none}
+  .actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;padding:.9rem 1.1rem}
+  .act{display:flex;align-items:center;justify-content:center;gap:.45rem;font:inherit;font-weight:700;font-size:.92rem;text-decoration:none;padding:.8rem;border-radius:10px;border:1px solid var(--line);transition:transform .12s,box-shadow .12s}
+  .act:hover{transform:translateY(-1px)}
+  .call{background:linear-gradient(135deg,var(--green),#0fb874);color:#04140d;box-shadow:0 5px 18px rgba(22,217,137,.28)}
+  .text{background:linear-gradient(135deg,var(--accent),#38bdf8);color:#04121d;box-shadow:0 5px 18px rgba(56,189,248,.28)}
+  .open{background:transparent;color:var(--dim)}
+  .open:hover{color:var(--accent);border-color:var(--accent)}
+  .phone{display:block;text-align:center;font-family:"JetBrains Mono",monospace;font-size:.74rem;color:var(--faint);padding:0 1.1rem 1rem}
+  footer{margin-top:2.5rem;padding-top:1.3rem;border-top:1px solid var(--line);color:var(--faint);font-size:.78rem;font-family:"JetBrains Mono",monospace}
+  @media(max-width:520px){.actions{grid-template-columns:1fr 1fr}.open{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<div class="glow g1"></div><div class="glow g2"></div>
+<div class="wrap">
+  <header>
+    <div class="kicker">Executive Leverage · Self Exec</div>
+    <h1>Site Offers · Closing Board</h1>
+    <p class="sub">Every lead, live. Tap a card to expand the real site, then <b>Call</b> or <b>Text</b> straight from the working number to validate and pitch. Built for fast closes.</p>
+    <div class="bar">
+      <span class="stat"><b id="cTotal">0</b> leads live</span>
+      <span class="stat"><b id="cPadre">0</b> Padre</span>
+      <span class="stat"><b id="cEgbo">0</b> EGBO</span>
+      <span class="stat">$2,000 build · 50% deposit to start</span>
+    </div>
+    <div class="filters">
+      <button class="fbtn on" data-f="all">All</button>
+      <button class="fbtn" data-f="padre">Padre</button>
+      <button class="fbtn" data-f="egbo">EGBO</button>
+    </div>
+  </header>
+
+  <div id="list"></div>
+
+  <footer>ELSO · Executive Leverage Site Offers · noindex · client contact data — internal use only</footer>
+</div>
+
+<script>
+const LEADS = [
+  // PADRE — base /padre/<slug>/
+  {t:'padre',n:"Andy & Leo Auto Repair",s:"padre/andy-leo-auto-repair-jonesboro",p:"+14046444470",c:"Auto Repair · Jonesboro GA"},
+  {t:'padre',n:"Bridges Fencing",s:"padre/bridges-fencing-locust-grove",p:"+17709607300",c:"Fencing · Locust Grove GA"},
+  {t:'padre',n:"Elite Electric Solutions",s:"padre/elite-electric-solutions-conyers",p:"+17707607777",c:"Electrical · Conyers GA"},
+  {t:'padre',n:"Griffins Automotive",s:"padre/griffins-automotive-jonesboro",p:"+17704779800",c:"Auto · Jonesboro GA"},
+  {t:'padre',n:"Hampton Family Dental",s:"padre/hampton-family-dental",p:"+17708676543",c:"Dental · Hampton GA"},
+  {t:'padre',n:"KDC Electrical Services",s:"padre/kdc-electrical-services-stockbridge",p:"+14048676527",c:"Electrical · Stockbridge GA"},
+  {t:'padre',n:"Lott's Lawn Care Service",s:"padre/lotts-lawn-care-service-jonesboro",p:"+16784684952",c:"Lawn Care · Jonesboro GA"},
+  {t:'padre',n:"Lyfe Lawn Care",s:"padre/lyfe-lawn-care-jonesboro",p:"+14043909963",c:"Lawn Care · Jonesboro GA"},
+  {t:'padre',n:"Norwood Pressure Washing",s:"padre/norwood-pressure-washing-stockbridge",p:"+17705726435",c:"Pressure Wash + Detail · Stockbridge GA"},
+  {t:'padre',n:"One Stop Car Care Center",s:"padre/one-stop-car-care-center-hampton",p:"+17707072646",c:"Auto · Hampton GA"},
+  {t:'padre',n:"Perfect Touch Painting",s:"padre/perfect-touch-painting-locust-grove",p:"+16786151202",c:"Painting · Locust Grove GA"},
+  {t:'padre',n:"Russel's Automotive, Inc.",s:"padre/russels-automotive-hampton",p:"+17709464848",c:"Auto · Hampton GA"},
+  {t:'padre',n:"Star Towing",s:"padre/star-towing-riverdale",p:"+14707769345",c:"Towing · Riverdale GA"},
+  {t:'padre',n:"T & G Plumbing",s:"padre/t-and-g-plumbing-locust-grove",p:"+16787825514",c:"Plumbing · Locust Grove GA"},
+  // EGBO — base /egbops/local/<slug>/
+  {t:'egbo',n:"Chaeis Tax Associates, LLC",s:"egbops/local/chaeis-tax-associates-riverdale",p:"+14048383591",c:"Tax · Riverdale GA"},
+  {t:'egbo',n:"Charlie's Angels Hair Salon",s:"egbops/local/charlies-angels-hair-salon-college-park",p:"+14045148719",c:"Salon · College Park GA"},
+  {t:'egbo',n:"Cranford Homes & Realty Co.",s:"egbops/local/cranford-homes-realty-hapeville",p:"+14047666223",c:"Realty · Hapeville GA"},
+  {t:'egbo',n:"DLS Income Tax",s:"egbops/local/dls-income-tax-riverdale",p:"+16785453853",c:"Tax · Riverdale GA"},
+  {t:'egbo',n:"Fortitude Ed. & Cultural Center",s:"egbops/local/fortitude-educational-cultural-development-center-red-oak",p:"+14045782532",c:"Education · Red Oak GA"},
+  {t:'egbo',n:"Q's Restaurant",s:"egbops/local/qs-restaurant-east-point",p:"+14047679894",c:"Restaurant · East Point GA"},
+  {t:'egbo',n:"Queendom Ascensions Luxury Salon",s:"egbops/local/queendom-ascensions-luxury-salon-college-park",p:"+14708831573",c:"Salon · College Park GA"},
+  {t:'egbo',n:"RL Ingram Construction",s:"egbops/local/rl-ingram-construction-atlanta",p:"+14042723603",c:"Construction · Atlanta GA"},
+  {t:'egbo',n:"South Fulton Event Hall",s:"egbops/local/south-fulton-event-hall-south-fulton",p:"+14046174288",c:"Events · South Fulton GA"},
+  {t:'egbo',n:"The Barber Shop Lounge",s:"egbops/local/the-barber-shop-lounge-college-park",p:"+17063528339",c:"Barber · College Park GA"},
+  {t:'egbo',n:"Undeniable Healthcare",s:"egbops/local/undeniable-healthcare-fairburn",p:"+16782500323",c:"Healthcare · Fairburn GA"},
+];
+function fmt(p){var m=p.replace(/^\+1/,'').match(/(\d{3})(\d{3})(\d{4})/);return m?'('+m[1]+') '+m[2]+'-'+m[3]:p;}
+const list=document.getElementById('list');
+function render(filter){
+  list.innerHTML='';
+  LEADS.filter(l=>filter==='all'||l.t===filter).forEach(l=>{
+    const el=document.createElement('div'); el.className='lead'; el.dataset.t=l.t;
+    el.innerHTML=`
+      <div class="lhead">
+        <span class="tag tag-${l.t}">${l.t}</span>
+        <div class="lmeta"><div class="lname">${l.n}</div><div class="lcat">${l.c}</div></div>
+        <button class="expand">Expand ▾</button>
+      </div>
+      <div class="frame">
+        <iframe loading="lazy" src="/${l.s}/" title="${l.n}"></iframe>
+        <div class="scrim"></div>
+      </div>
+      <div class="actions">
+        <a class="act call" href="tel:${l.p}">📞 Call</a>
+        <a class="act text" href="sms:${l.p}">💬 Text</a>
+        <a class="act open" href="/${l.s}/" target="_blank" rel="noopener">↗ Site</a>
+      </div>
+      <span class="phone">${fmt(l.p)} · hitthe.link/${l.s}</span>`;
+    const toggle=()=>{el.classList.toggle('open');el.querySelector('.expand').textContent=el.classList.contains('open')?'Collapse ▴':'Expand ▾';};
+    el.querySelector('.expand').addEventListener('click',toggle);
+    el.querySelector('.scrim').addEventListener('click',toggle);
+    list.appendChild(el);
+  });
+}
+document.getElementById('cTotal').textContent=LEADS.length;
+document.getElementById('cPadre').textContent=LEADS.filter(l=>l.t==='padre').length;
+document.getElementById('cEgbo').textContent=LEADS.filter(l=>l.t==='egbo').length;
+document.querySelectorAll('.fbtn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.fbtn').forEach(x=>x.classList.remove('on'));b.classList.add('on');render(b.dataset.f);
+}));
+render('all');
+</script>
+</body>
+</html>
