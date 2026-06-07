@@ -14,19 +14,20 @@
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   :root{
-    --bg:#000000;
-    --panel:rgba(12,12,12,.62);--panel2:rgba(20,18,12,.72);
-    --line:rgba(255,255,255,.12);--line-gold:rgba(212,175,55,.32);
-    --ink:#ffffff;--dim:#a8a29a;--faint:#7c7565;
-    --accent:#d4af37;--green:#d4af37;--amber:#f4e3a1;
-    --gold:#d4af37;--gold-pale:#f4e3a1;--gold-deep:#9a7b2e;
-    --chrome:linear-gradient(135deg,#fbe9a8,#d4af37 42%,#fff6da 58%,#9a7b2e);
+    --bg:#070503;
+    --panel:rgba(20,17,11,.58);--panel2:rgba(30,25,15,.74);
+    --line:rgba(255,238,196,.13);--line-gold:rgba(220,182,77,.42);
+    --ink:#fdfbf3;--dim:#bcb39c;--faint:#8a8068;
+    --accent:#ecc862;--green:#ecc862;--amber:#f7e8b0;
+    --gold:#ecc862;--gold-pale:#fbeec2;--gold-deep:#a8842f;
+    --chrome:linear-gradient(135deg,#fff8da 0%,#f2d586 24%,#cda23a 48%,#fff3c6 62%,#b08c33 84%,#8a6a26 100%);
     --blur:30px;
   }
-  body{background:var(--bg);color:var(--dim);font-family:Manrope,system-ui,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5}
-  .glow{position:fixed;border-radius:50%;filter:blur(140px);opacity:.2;z-index:0;pointer-events:none;mix-blend-mode:screen;background:var(--gold)}
-  .g1{top:-20%;left:-20%;width:70vw;height:70vw}
-  .g2{bottom:-10%;right:-10%;width:60vw;height:60vw}
+  body{background:radial-gradient(120% 80% at 50% -10%,#1a140a 0%,#0c0805 38%,#070503 100%) fixed;color:var(--dim);font-family:Manrope,system-ui,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5}
+  .glow{position:fixed;border-radius:50%;filter:blur(150px);z-index:0;pointer-events:none;mix-blend-mode:screen}
+  .g1{top:-20%;left:-20%;width:70vw;height:70vw;background:radial-gradient(circle,#e8c45a 0%,transparent 70%);opacity:.22}
+  .g2{bottom:-10%;right:-15%;width:62vw;height:62vw;background:radial-gradient(circle,#caa033 0%,transparent 70%);opacity:.18}
+  .g3{top:35%;right:30%;width:38vw;height:38vw;background:radial-gradient(circle,#fff3c6 0%,transparent 70%);opacity:.07}
   /* glassmorphism panels (execpage style) */
   .lead,.offer{backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur))}
   .wrap{position:relative;z-index:1;max-width:920px;margin:0 auto;padding:clamp(1.5rem,4vw,3rem) clamp(.9rem,3vw,2rem) 5rem;text-align:center}
@@ -52,6 +53,20 @@
   .flag.hot{background:linear-gradient(135deg,#f4e3a1,#d4af37);color:#1a1304}
   .flag.night{background:rgba(212,175,55,.14);color:var(--gold-pale);border:1px solid var(--line-gold)}
   .flag.mail{background:rgba(212,175,55,.1);color:var(--gold-deep)}
+  .flag.s-none{background:rgba(120,200,140,.14);color:#9fe0b4;border:1px solid rgba(120,200,140,.3)}
+  .flag.s-weak{background:rgba(247,232,176,.14);color:var(--gold-pale);border:1px solid var(--line-gold)}
+  .flag.s-real{background:rgba(168,132,47,.2);color:#e8c45a;border:1px solid var(--line-gold)}
+  .flag.open{background:rgba(120,200,140,.18);color:#9fe0b4;border:1px solid rgba(120,200,140,.4)}
+  .flag.closed{background:rgba(180,80,80,.16);color:#e7a3a3;border:1px solid rgba(180,80,80,.32)}
+  /* click-to-copy single-line scroll chips */
+  .copyrow{display:flex;flex-wrap:wrap;gap:.45rem;padding:0 1.1rem 1rem;justify-content:center}
+  .chip{display:inline-flex;align-items:center;gap:.4rem;max-width:100%;font-family:"JetBrains Mono",monospace;font-size:.72rem;color:var(--dim);background:rgba(0,0,0,.4);border:1px solid var(--line);border-radius:8px;padding:.4rem .55rem;cursor:pointer;transition:border-color .15s,color .15s}
+  .chip:hover{border-color:var(--gold);color:var(--gold-pale)}
+  .chip .ico{flex:none;opacity:.7}
+  .chip .val{overflow-x:auto;white-space:nowrap;-ms-overflow-style:none;scrollbar-width:none}
+  .chip .val::-webkit-scrollbar{display:none}
+  .chip.copied{border-color:var(--gold);color:var(--gold)}
+  .chip.cur{border-style:dashed}
   .lead{background:var(--panel);border:1px solid var(--line);border-radius:16px;margin-bottom:1rem;overflow:hidden}
   .lhead{display:flex;align-items:center;gap:.9rem;padding:1rem 1.1rem}
   .tag{flex:none;font-family:"JetBrains Mono",monospace;font-size:.6rem;letter-spacing:.1em;font-weight:600;padding:.25rem .5rem;border-radius:5px;text-transform:uppercase}
@@ -104,7 +119,7 @@
 </style>
 </head>
 <body>
-<div class="glow g1"></div><div class="glow g2"></div>
+<div class="glow g1"></div><div class="glow g2"></div><div class="glow g3"></div>
 <div class="wrap">
   <header>
     <img class="emblem" src="assets/el-emblem.png" alt="Executive Leverage" width="96" height="96">
@@ -115,16 +130,35 @@
       <span class="stat"><b id="cTotal">0</b> leads live</span>
       <span class="stat"><b id="cPadre">0</b> Padre</span>
       <span class="stat"><b id="cEgbo">0</b> EGBO</span>
-      <span class="stat">$2,000 build · 50% deposit to start</span>
+      <span class="stat">🟢 <b id="cNone">0</b> siteless</span>
+      <span class="stat">🟡 <b id="cWeak">0</b> builder pg</span>
+      <span class="stat">🟤 <b id="cReal">0</b> has site</span>
     </div>
     <div class="filters">
       <button class="fbtn on" data-f="all">All</button>
       <button class="fbtn" data-f="padre">Padre</button>
       <button class="fbtn" data-f="egbo">EGBO</button>
       <select id="sortSel" class="sortpill" aria-label="Sort leads">
-        <option value="today">⚡ Most likely to pay today</option>
-        <option value="email">✉ Has email first</option>
-        <option value="night">🌙 After-hours reachable</option>
+        <optgroup label="Likelihood">
+          <option value="today">⚡ Most likely to pay today</option>
+          <option value="email">✉ Has email first</option>
+          <option value="night">🌙 After-hours reachable</option>
+        </optgroup>
+        <optgroup label="Hours — call who's open">
+          <option value="open">🟢 Open right now</option>
+          <option value="late">🌃 Open latest (close time)</option>
+        </optgroup>
+        <optgroup label="Site status — the pitch">
+          <option value="none">🟢 Siteless first · first-site pitch</option>
+          <option value="weak">🟡 Weak builder site · upgrade pitch</option>
+          <option value="real">🟤 Has real site · redesign pitch</option>
+        </optgroup>
+        <optgroup label="Organize">
+          <option value="type">▦ Source · Padre then EGBO</option>
+          <option value="cat">🏷 Category A–Z</option>
+          <option value="city">📍 City A–Z</option>
+          <option value="name">🔤 Name A–Z</option>
+        </optgroup>
       </select>
     </div>
   </header>
@@ -155,6 +189,7 @@
       <b>＋ Care Plan — $333/mo</b> (optional): 3 edits/month + priority support &amp; quick turnarounds. Saves $111/mo vs per-edit. On the monthly plan, edits &amp; support stay active as long as payments are on time.
     </div>
     <div class="script">Pitch order: <b>Full $2,000</b> → if not, <b>$1,000 deposit</b> → if still hesitating, <b>$222/mo BNPL</b> so they start today. Always offer the <b>$333 Care Plan</b> on top.</div>
+    <div class="script">Open by site status: <b>🟢 Siteless</b> → "you've got no website — here's the one I already built you." <b>🟡 Builder page</b> → "you're on a Wix/Google free page — here's your real branded upgrade." <b>🟤 Has site</b> → "your site's dated — here's the redesign." Tap <b>👁 Current site</b> to show before/after live.</div>
     <a class="menu-link" href="/menu/" target="_blank" rel="noopener">＋ Add-on units · $111 each → full Service Menu</a>
   </section>
 
@@ -164,34 +199,36 @@
 </div>
 
 <script>
+// w = web status: 'none' siteless (first-site pitch) · 'weak' free builder page (upgrade pitch) · 'real' own-domain site (redesign pitch)
+// u = their CURRENT site (for before/after pitch). Verified by web search 2026-06-07.
 const LEADS = [
   // PADRE — base /padre/<slug>/
-  {t:'padre',n:"Andy & Leo Auto Repair",s:"padre/andy-leo-auto-repair-jonesboro",p:"+14046444470",c:"Auto Repair · Jonesboro GA"},
-  {t:'padre',n:"Bridges Fencing",s:"padre/bridges-fencing-locust-grove",p:"+17709607300",e:"Bridgesfencing@yahoo.com",c:"Fencing · Locust Grove GA"},
-  {t:'padre',n:"Elite Electric Solutions",s:"padre/elite-electric-solutions-conyers",p:"+17707607777",c:"Electrical · Conyers GA"},
-  {t:'padre',n:"Griffins Automotive",s:"padre/griffins-automotive-jonesboro",p:"+17704779800",c:"Auto · Jonesboro GA"},
-  {t:'padre',n:"Hampton Family Dental",s:"padre/hampton-family-dental",p:"+17708676543",e:"info@hamptonfamilydental.com",c:"Dental · Hampton GA"},
-  {t:'padre',n:"KDC Electrical Services",s:"padre/kdc-electrical-services-stockbridge",p:"+14048676527",e:"kdcelectricalservice@gmail.com",c:"Electrical · Stockbridge GA"},
-  {t:'padre',n:"Lott's Lawn Care Service",s:"padre/lotts-lawn-care-service-jonesboro",p:"+16784684952",c:"Lawn Care · Jonesboro GA"},
-  {t:'padre',n:"Lyfe Lawn Care",s:"padre/lyfe-lawn-care-jonesboro",p:"+14043909963",c:"Lawn Care · Jonesboro GA"},
-  {t:'padre',n:"Norwood Pressure Washing",s:"padre/norwood-pressure-washing-stockbridge",p:"+17705726435",c:"Pressure Wash + Detail · Stockbridge GA"},
-  {t:'padre',n:"One Stop Car Care Center",s:"padre/one-stop-car-care-center-hampton",p:"+17707072646",c:"Auto · Hampton GA"},
-  {t:'padre',n:"Perfect Touch Painting",s:"padre/perfect-touch-painting-locust-grove",p:"+16786151202",c:"Painting · Locust Grove GA"},
-  {t:'padre',n:"Russel's Automotive, Inc.",s:"padre/russels-automotive-hampton",p:"+17709464848",c:"Auto · Hampton GA"},
-  {t:'padre',n:"Star Towing",s:"padre/star-towing-riverdale",p:"+14707769345",c:"Towing · Riverdale GA"},
-  {t:'padre',n:"T & G Plumbing",s:"padre/t-and-g-plumbing-locust-grove",p:"+16787825514",c:"Plumbing · Locust Grove GA"},
+  {t:'padre',n:"Andy & Leo Auto Repair",s:"padre/andy-leo-auto-repair-jonesboro",p:"+14046444470",c:"Auto Repair · Jonesboro GA",w:'none'},
+  {t:'padre',n:"Bridges Fencing",s:"padre/bridges-fencing-locust-grove",p:"+17709607300",e:"Bridgesfencing@yahoo.com",c:"Fencing · Locust Grove GA",w:'real',u:"bridgesfencing.com"},
+  {t:'padre',n:"Elite Electric Solutions",s:"padre/elite-electric-solutions-conyers",p:"+17707607777",c:"Electrical · Conyers GA",w:'real',u:"eliteelectricsolutions.com"},
+  {t:'padre',n:"Griffins Automotive",s:"padre/griffins-automotive-jonesboro",p:"+17704779800",c:"Auto · Jonesboro GA",w:'weak',u:"griffinsautomotive.business.site"},
+  {t:'padre',n:"Hampton Family Dental",s:"padre/hampton-family-dental",p:"+17708676543",e:"info@hamptonfamilydental.com",c:"Dental · Hampton GA",w:'real',u:"hamptoncosmeticdental.com"},
+  {t:'padre',n:"KDC Electrical Services",s:"padre/kdc-electrical-services-stockbridge",p:"+14048676527",e:"kdcelectricalservice@gmail.com",c:"Electrical · Stockbridge GA",w:'none'},
+  {t:'padre',n:"Lott's Lawn Care Service",s:"padre/lotts-lawn-care-service-jonesboro",p:"+16784684952",c:"Lawn Care · Jonesboro GA",w:'weak',u:"lotts-lawn-care-service.business.site"},
+  {t:'padre',n:"Lyfe Lawn Care",s:"padre/lyfe-lawn-care-jonesboro",p:"+14043909963",c:"Lawn Care · Jonesboro GA",w:'none'},
+  {t:'padre',n:"Norwood Pressure Washing",s:"padre/norwood-pressure-washing-stockbridge",p:"+17705726435",c:"Pressure Wash + Detail · Stockbridge GA",w:'none'},
+  {t:'padre',n:"One Stop Car Care Center",s:"padre/one-stop-car-care-center-hampton",p:"+17707072646",c:"Auto · Hampton GA",w:'weak',u:"1stopcarcare.com"},
+  {t:'padre',n:"Perfect Touch Painting",s:"padre/perfect-touch-painting-locust-grove",p:"+16786151202",c:"Painting · Locust Grove GA",w:'weak',u:"perfecttouchpainting.godaddysites.com"},
+  {t:'padre',n:"Russel's Automotive, Inc.",s:"padre/russels-automotive-hampton",p:"+17709464848",c:"Auto · Hampton GA",w:'none'},
+  {t:'padre',n:"Star Towing",s:"padre/star-towing-riverdale",p:"+14707769345",c:"Towing · Riverdale GA",w:'weak',u:"startowing.weebly.com"},
+  {t:'padre',n:"T & G Plumbing",s:"padre/t-and-g-plumbing-locust-grove",p:"+16787825514",c:"Plumbing · Locust Grove GA",w:'weak',u:"t-g-plumbing.placeid.site"},
   // EGBO — base /egbops/local/<slug>/
-  {t:'egbo',n:"Chaeis Tax Associates, LLC",s:"egbops/local/chaeis-tax-associates-riverdale",p:"+14048383591",c:"Tax · Riverdale GA"},
-  {t:'egbo',n:"Charlie's Angels Hair Salon",s:"egbops/local/charlies-angels-hair-salon-college-park",p:"+14045148719",c:"Salon · College Park GA"},
-  {t:'egbo',n:"Cranford Homes & Realty Co.",s:"egbops/local/cranford-homes-realty-hapeville",p:"+14047666223",e:"info@cranfordhomesrealty.com",c:"Realty · Hapeville GA"},
-  {t:'egbo',n:"DLS Income Tax",s:"egbops/local/dls-income-tax-riverdale",p:"+16785453853",c:"Tax · Riverdale GA"},
-  {t:'egbo',n:"Fortitude Ed. & Cultural Center",s:"egbops/local/fortitude-educational-cultural-development-center-red-oak",p:"+14045782532",e:"info@fecdc.com",c:"Education · Red Oak GA"},
-  {t:'egbo',n:"Q's Restaurant",s:"egbops/local/qs-restaurant-east-point",p:"+14047679894",e:"hello@qsrestaurant-eastpoint.com",c:"Restaurant · East Point GA"},
-  {t:'egbo',n:"Queendom Ascensions Luxury Salon",s:"egbops/local/queendom-ascensions-luxury-salon-college-park",p:"+14708831573",c:"Salon · College Park GA"},
-  {t:'egbo',n:"RL Ingram Construction",s:"egbops/local/rl-ingram-construction-atlanta",p:"+14042723603",c:"Construction · Atlanta GA"},
-  {t:'egbo',n:"South Fulton Event Hall",s:"egbops/local/south-fulton-event-hall-south-fulton",p:"+14046174288",c:"Events · South Fulton GA"},
-  {t:'egbo',n:"The Barber Shop Lounge",s:"egbops/local/the-barber-shop-lounge-college-park",p:"+17063528339",c:"Barber · College Park GA"},
-  {t:'egbo',n:"Undeniable Healthcare",s:"egbops/local/undeniable-healthcare-fairburn",p:"+16782500323",c:"Healthcare · Fairburn GA"},
+  {t:'egbo',n:"Chaeis Tax Associates, LLC",s:"egbops/local/chaeis-tax-associates-riverdale",p:"+14048383591",c:"Tax · Riverdale GA",w:'none'},
+  {t:'egbo',n:"Charlie's Angels Hair Salon",s:"egbops/local/charlies-angels-hair-salon-college-park",p:"+14045148719",c:"Salon · College Park GA",w:'weak',u:"charlies-angels-hair-salon.ueniweb.com"},
+  {t:'egbo',n:"Cranford Homes & Realty Co.",s:"egbops/local/cranford-homes-realty-hapeville",p:"+14047666223",e:"info@cranfordhomesrealty.com",c:"Realty · Hapeville GA",w:'real',u:"cranfordhomesrealty.com"},
+  {t:'egbo',n:"DLS Income Tax",s:"egbops/local/dls-income-tax-riverdale",p:"+16785453853",c:"Tax · Riverdale GA",w:'none'},
+  {t:'egbo',n:"Fortitude Ed. & Cultural Center",s:"egbops/local/fortitude-educational-cultural-development-center-red-oak",p:"+14045782532",e:"info@fecdc.com",c:"Education · Red Oak GA",w:'real',u:"fecdc.org"},
+  {t:'egbo',n:"Q's Restaurant",s:"egbops/local/qs-restaurant-east-point",p:"+14047679894",e:"hello@qsrestaurant-eastpoint.com",c:"Restaurant · East Point GA",w:'none',hr:{o:10.5,c:15,d:[1,2,3,4,5]}},
+  {t:'egbo',n:"Queendom Ascensions Luxury Salon",s:"egbops/local/queendom-ascensions-luxury-salon-college-park",p:"+14708831573",c:"Salon · College Park GA",w:'weak',u:"queendom-ascensions-luxury-salon.square.site"},
+  {t:'egbo',n:"RL Ingram Construction",s:"egbops/local/rl-ingram-construction-atlanta",p:"+14042723603",c:"Construction · Atlanta GA",w:'real',u:"rlingramconstruction.com"},
+  {t:'egbo',n:"South Fulton Event Hall",s:"egbops/local/south-fulton-event-hall-south-fulton",p:"+14046174288",c:"Events · South Fulton GA",w:'weak',u:"southfultonevents1.wixsite.com/website"},
+  {t:'egbo',n:"The Barber Shop Lounge",s:"egbops/local/the-barber-shop-lounge-college-park",p:"+17063528339",c:"Barber · College Park GA",w:'none'},
+  {t:'egbo',n:"Undeniable Healthcare",s:"egbops/local/undeniable-healthcare-fairburn",p:"+16782500323",c:"Healthcare · Fairburn GA",w:'real',u:"undeniablehealthcare.com"},
 ];
 function fmt(p){var m=p.replace(/^\+1/,'').match(/(\d{3})(\d{3})(\d{4})/);return m?'('+m[1]+') '+m[2]+'-'+m[3]:p;}
 // derive "pay-today" score + after-hours reachability from category text
@@ -204,11 +241,40 @@ function payScore(l){var c=l.c.toLowerCase();var s=0;
   if(l.e)s+=0.6;  // reachable by email = warmer
   return s;}
 function afterHours(l){return /towing|plumb|restaurant|salon|barber|event|realty/.test(l.c.toLowerCase());}
+// open/closed (Eastern time). o/c = decimal hours, d = open weekdays [0=Sun..6=Sat]. Category defaults; l.hr overrides where verified.
+const CAT_HOURS=[
+  [/tow|plumb/,{o:0,c:24,d:[0,1,2,3,4,5,6]}],
+  [/lawn|pressure/,{o:7,c:18,d:[1,2,3,4,5,6]}],
+  [/auto|car/,{o:8,c:18,d:[1,2,3,4,5,6]}],
+  [/electric|fenc|paint/,{o:8,c:17,d:[1,2,3,4,5]}],
+  [/salon|barber/,{o:9,c:19,d:[1,2,3,4,5,6]}],
+  [/restaurant/,{o:11,c:21,d:[1,2,3,4,5,6]}],
+  [/event|realty/,{o:9,c:20,d:[1,2,3,4,5,6]}],
+  [/tax/,{o:9,c:18,d:[1,2,3,4,5]}],
+  [/dental|education/,{o:8,c:17,d:[1,2,3,4,5]}],
+  [/healthcare/,{o:8,c:20,d:[0,1,2,3,4,5,6]}],
+];
+function hoursOf(l){ if(l.hr) return l.hr; const c=l.c.toLowerCase(); for(const[re,h]of CAT_HOURS) if(re.test(c)) return h; return {o:9,c:17,d:[1,2,3,4,5]}; }
+function nowET(){ const d=new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'})); return {day:d.getDay(), h:d.getHours()+d.getMinutes()/60}; }
+function isOpen(l){ const H=hoursOf(l),n=nowET(); return H.d.indexOf(n.day)>-1 && n.h>=H.o && n.h<H.c; }
+function closesAt(l){ return hoursOf(l).c; }
+function hrLabel(l){ const H=hoursOf(l); if(H.o===0&&H.c===24) return '24/7'; const f=x=>{const hr=Math.floor(x),m=Math.round((x-hr)*60);const ap=hr>=12?'p':'a';let h12=hr%12;if(h12===0)h12=12;return h12+(m?':'+String(m).padStart(2,'0'):'')+ap;}; return f(H.o)+'–'+f(H.c); }
+function cityOf(l){return (l.c.split('·').pop()||'').trim();}
+function catOf(l){return (l.c.split('·')[0]||'').trim();}
+const SITE_LABEL={none:'Siteless',weak:'Builder page',real:'Has site'};
 function sortLeads(arr,mode){
   const a=[...arr];
   if(mode==='today')a.sort((x,y)=>payScore(y)-payScore(x));
   else if(mode==='email')a.sort((x,y)=>(!!y.e-!!x.e)||payScore(y)-payScore(x));
   else if(mode==='night')a.sort((x,y)=>(afterHours(y)-afterHours(x))||payScore(y)-payScore(x));
+  else if(mode==='none'||mode==='weak'||mode==='real')
+    a.sort((x,y)=>((y.w===mode)-(x.w===mode))||payScore(y)-payScore(x));
+  else if(mode==='type')a.sort((x,y)=>(x.t>y.t?1:x.t<y.t?-1:0)||payScore(y)-payScore(x));
+  else if(mode==='cat')a.sort((x,y)=>catOf(x).localeCompare(catOf(y)));
+  else if(mode==='city')a.sort((x,y)=>cityOf(x).localeCompare(cityOf(y)));
+  else if(mode==='name')a.sort((x,y)=>x.n.localeCompare(y.n));
+  else if(mode==='open')a.sort((x,y)=>(isOpen(y)-isOpen(x))||payScore(y)-payScore(x));
+  else if(mode==='late')a.sort((x,y)=>(closesAt(y)-closesAt(x))||(isOpen(y)-isOpen(x)));
   return a;}
 const list=document.getElementById('list');
 let curFilter='all', curSort='today';
@@ -218,11 +284,14 @@ function render(){
   rows=sortLeads(rows,curSort);
   rows.forEach(l=>{
     const el=document.createElement('div'); el.className='lead'; el.dataset.t=l.t;
-    const ah=afterHours(l), hot=payScore(l)>=3;
+    const ah=afterHours(l), hot=payScore(l)>=3, op=isOpen(l);
+    const siteBadge={none:'🟢 SITELESS',weak:'🟡 BUILDER PAGE',real:'🟤 HAS SITE'}[l.w]||'';
+    const ourURL='https://hitthe.link/'+l.s+'/';
+    const curURL=l.u?(l.u.indexOf('http')===0?l.u:'https://'+l.u):'';
     el.innerHTML=`
       <div class="lhead">
         <span class="tag tag-${l.t}">${l.t}</span>
-        <div class="lmeta"><div class="lname">${l.n} ${hot?'<span class="flag hot">HOT</span>':''}${ah?'<span class="flag night">🌙 after-hrs</span>':''}${l.e?'<span class="flag mail">✉</span>':''}</div><div class="lcat">${l.c}</div></div>
+        <div class="lmeta"><div class="lname">${l.n} <span class="flag ${op?'open':'closed'}">${op?'OPEN':'CLOSED'}</span><span class="flag s-${l.w}">${siteBadge}</span>${hot?'<span class="flag hot">HOT</span>':''}${ah?'<span class="flag night">🌙 after-hrs</span>':''}${l.e?'<span class="flag mail">✉</span>':''}</div><div class="lcat">${l.c} · ${hrLabel(l)} ET</div></div>
         <button class="expand">Expand ▾</button>
       </div>
       <div class="frame">
@@ -233,9 +302,15 @@ function render(){
         <a class="act call" href="tel:${l.p}">📞 Call</a>
         <a class="act text" href="sms:${l.p}">💬 Text</a>
         ${l.e?`<a class="act email" href="mailto:${l.e}?subject=${encodeURIComponent('Your new website is live — '+l.n)}">✉ Email</a>`:''}
-        <a class="act open" href="/${l.s}/" target="_blank" rel="noopener">↗ Site</a>
+        <a class="act open" href="${ourURL}" target="_blank" rel="noopener">↗ Their new site</a>
+        ${curURL?`<a class="act open" href="${curURL}" target="_blank" rel="noopener">👁 Current site</a>`:''}
       </div>
-      <span class="phone">${fmt(l.p)}${l.e?' · '+l.e:''} · hitthe.link/${l.s}</span>`;
+      <div class="copyrow">
+        <button type="button" class="chip" data-copy="${fmt(l.p)}"><span class="ico">📞</span><span class="val">${fmt(l.p)}</span></button>
+        ${l.e?`<button type="button" class="chip" data-copy="${l.e}"><span class="ico">✉</span><span class="val">${l.e}</span></button>`:''}
+        <button type="button" class="chip" data-copy="${ourURL}"><span class="ico">🔗</span><span class="val">hitthe.link/${l.s}</span></button>
+        ${curURL?`<button type="button" class="chip cur" data-copy="${curURL}"><span class="ico">👁</span><span class="val">${l.u}</span></button>`:''}
+      </div>`;
     const toggle=()=>{el.classList.toggle('open');el.querySelector('.expand').textContent=el.classList.contains('open')?'Collapse ▴':'Expand ▾';};
     el.querySelector('.expand').addEventListener('click',toggle);
     el.querySelector('.scrim').addEventListener('click',toggle);
@@ -245,10 +320,21 @@ function render(){
 document.getElementById('cTotal').textContent=LEADS.length;
 document.getElementById('cPadre').textContent=LEADS.filter(l=>l.t==='padre').length;
 document.getElementById('cEgbo').textContent=LEADS.filter(l=>l.t==='egbo').length;
+document.getElementById('cNone').textContent=LEADS.filter(l=>l.w==='none').length;
+document.getElementById('cWeak').textContent=LEADS.filter(l=>l.w==='weak').length;
+document.getElementById('cReal').textContent=LEADS.filter(l=>l.w==='real').length;
 document.querySelectorAll('.fbtn').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.fbtn').forEach(x=>x.classList.remove('on'));b.classList.add('on');curFilter=b.dataset.f;render();
 }));
 document.getElementById('sortSel').addEventListener('change',e=>{curSort=e.target.value;render();});
+// click-to-copy chips (single-line scroll boxes)
+list.addEventListener('click',e=>{
+  const c=e.target.closest('.chip'); if(!c) return;
+  const v=c.dataset.copy, val=c.querySelector('.val'), o=val.textContent;
+  const done=()=>{c.classList.add('copied');val.textContent='✓ copied';setTimeout(()=>{c.classList.remove('copied');val.textContent=o;},1100);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(v).then(done).catch(()=>{});}
+  else{const ta=document.createElement('textarea');ta.value=v;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(_){}document.body.removeChild(ta);}
+});
 render();
 </script>
 
