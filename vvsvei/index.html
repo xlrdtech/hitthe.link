@@ -1384,7 +1384,6 @@ let _avaLive = false;
 // real audio state aloud. Shows armed?, queue depth, replies received, last status.
 let _hudRx = 0, _hudSpoke = 0, _hudLast = 'init', _hudEl = null;
 let _xenNode = '';
-let _xenNode = '';
 function _hud(last) {
   // qi 2026-05-30: HUD overlay REMOVED from the UI (diagnostic scaffolding, did
   // its job, qi didn't want it overlaying the chat). Console-only now.
@@ -1814,7 +1813,6 @@ function pickAvaVoice() {
 // silence). qi 2026-05-30: "your voice in, my voice out, same page, no taps".
 // Ava = en-US-AvaMultilingualNeural ("edge tts Ava neural English").
 const AVA_TTS_URL = 'https://xen.xlrd.org/api/tts';
-fetch(AVA_TTS_URL + '?voice=ava&text=.').then(r => { const n = r.headers.get('X-Xen-Node'); if (n) { _xenNode = n; const el = document.getElementById('ava-node'); if (el) el.textContent = n; _renderAvaPill(); } }).catch(() => {});
 // Probe the TTS server on page load to read X-Xen-Node (M4 vs VM tag).
 // HEAD with ?probe=1 avoids generating audio; retry once on fail.
 (function _probeXenNode() {
