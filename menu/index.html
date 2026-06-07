@@ -3,467 +3,477 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>XLRD TECH · $111 Menu · One Unit At A Time</title>
-<meta name="description" content="XLRD TECH — every unit, $111 flat. AI receptionist, speed-build sites, automation, branding, music ops, voice agents. Billable time, rush premiums, consulting.">
+<title>XLRD TECH · $111 Menu · Build Your Operation One Unit At A Time</title>
+<meta name="description" content="XLRD TECH — every unit $111 flat. AI receptionist, speed-build sites, automation, branding, music ops, voice agents. Add what you need to the cart and order.">
 <meta name="theme-color" content="#000000">
-
-<!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-
-<!-- Phosphor Icons -->
 <script src="https://unpkg.com/@phosphor-icons/web"></script>
-
-<!-- Tailwind CSS -->
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
-  tailwind.config = {
-    darkMode: 'class',
-    theme: { extend: {
-      colors: { background: '#000000', surface: '#0A0A0A' },
-      fontFamily: { sans: ['Inter','sans-serif'], heading: ['Figtree','sans-serif'] }
-    }}
-  }
+  tailwind.config = { darkMode:'class', theme:{ extend:{
+    colors:{ background:'#000000', surface:'#0A0A0A' },
+    fontFamily:{ sans:['Inter','sans-serif'], heading:['Figtree','sans-serif'] }
+  }}}
 </script>
-
 <style>
-  body { background-color: transparent; color: #fff; font-family: 'Inter', sans-serif; overflow-x: hidden; margin: 0; padding: 0; }
-  html { background-color: #000; scroll-behavior: smooth; scroll-padding-top: 92px; }
+  body { background-color: transparent; color:#fff; font-family:'Inter',sans-serif; overflow-x:hidden; margin:0; padding:0; }
+  html { background-color:#000; scroll-behavior:smooth; scroll-padding-top:92px; }
 
-  /* --- SCROLL-SCRUBBED VIDEO BACKGROUND (replaces xlrd 3D canvas) --- */
-  .bgv { position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -2; display: block; pointer-events: none; }
-  .bg-scrim { position: fixed; inset: 0; z-index: -1; pointer-events: none;
-    background: radial-gradient(ellipse 1200px 600px at 50% 0%, rgba(255,255,255,0.05), transparent 60%),
-      linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.68) 45%, rgba(0,0,0,0.8)); }
+  .bgv { position:fixed; inset:0; width:100vw; height:100vh; object-fit:cover; z-index:-2; display:block; pointer-events:none; }
+  .bg-scrim { position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:radial-gradient(ellipse 1200px 600px at 50% 0%, rgba(255,255,255,0.05), transparent 60%),
+      linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.72) 45%, rgba(0,0,0,0.84)); }
 
-  /* --- FIXED-SECTION SCROLL ENGINE (xlrd.org) --- */
-  .scroll-spacer { display: none; }
-  /* normal-flow sections with a smooth scroll-paced reveal (fade + rise + blur-to-sharp) */
-  .section-container { scroll-margin-top: 92px; padding: 30px 0; }
-  body.reveal-on .section-container { opacity: 0; transform: translateY(38px); filter: blur(6px);
-    transition: opacity 0.75s cubic-bezier(0.16,1,0.3,1), transform 0.75s cubic-bezier(0.16,1,0.3,1), filter 0.75s ease;
-    will-change: opacity, transform, filter; }
-  body.reveal-on .section-container.in { opacity: 1; transform: none; filter: none; }
-  .section-inner { max-width: 1080px; width: 100%; margin: 0 auto; padding: 0 24px; }
+  /* nav */
+  nav { position:fixed; top:0; left:0; width:100%; z-index:50;
+    background:rgba(0,0,0,0.28); backdrop-filter:blur(30px); -webkit-backdrop-filter:blur(30px);
+    border-bottom:1px solid rgba(255,255,255,0.08); }
+  .nav-in { max-width:1180px; margin:0 auto; padding:0 20px; height:72px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .brand { font-family:'Figtree',sans-serif; font-weight:900; font-size:20px; letter-spacing:-0.01em; color:#fff; text-decoration:none; white-space:nowrap; }
+  .nav-links { display:flex; align-items:center; gap:4px; }
+  .nav-links button.link { background:none; border:0; color:#9ca3af; font:inherit; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; padding:8px 12px; cursor:pointer; transition:color .2s; }
+  .nav-links button.link:hover { color:#fff; }
+  .cart-btn { display:inline-flex; align-items:center; gap:8px; font-family:'Inter',sans-serif; font-weight:700; font-size:13px; color:#fff; cursor:pointer;
+    background:linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04)); border:1px solid rgba(255,255,255,0.18); border-radius:999px; padding:9px 16px; transition:all .25s; white-space:nowrap; }
+  .cart-btn:hover { border-color:rgba(255,255,255,0.4); transform:translateY(-1px); box-shadow:0 8px 30px rgba(0,191,255,0.15); }
+  .cart-btn .ct { font-family:'JetBrains Mono',monospace; font-size:12px; color:#A5F3FC; }
+  .hamb { display:none; width:42px; height:42px; align-items:center; justify-content:center; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:10px; color:#fff; cursor:pointer; }
+  .hamb i { font-size:20px; }
+  @media (max-width:860px){ .nav-links .link { display:none; } .hamb { display:inline-flex; } }
 
-  /* --- NAVIGATION --- */
-  nav { position: fixed; top: 0; left: 0; width: 100%; z-index: 50;
-    background: rgba(0,0,0,0.2); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-    border-bottom: 1px solid rgba(255,255,255,0.08); }
-  .progress-bar { position: fixed; right: 18px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 9px; z-index: 40; }
-  .dot { width: 8px; height: 8px; background: rgba(255,255,255,0.2); border-radius: 50%; transition: all 0.3s; cursor: pointer; }
-  .dot.active { background: #fff; box-shadow: 0 0 10px #fff; transform: scale(1.25); }
-  @media (max-width: 768px) { .progress-bar { display: none; } }
-  #mobile-menu { position: fixed; inset: 0; background: rgba(0,0,0,0.96); z-index: 60; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 2rem; }
-  #mobile-menu.open { display: flex; }
+  /* mobile sheet */
+  #msheet { position:fixed; inset:0; z-index:70; display:none; }
+  #msheet.open { display:block; }
+  #msheet .mbg { position:absolute; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(6px); }
+  #msheet .mcard { position:absolute; top:0; right:0; height:100%; width:min(82vw,340px);
+    background:#0A0A0A; border-left:1px solid rgba(255,255,255,0.1); box-shadow:-20px 0 60px rgba(0,0,0,0.6);
+    transform:translateX(100%); transition:transform .35s cubic-bezier(0.16,1,0.3,1); padding:84px 26px 26px; display:flex; flex-direction:column; gap:6px; }
+  #msheet.open .mcard { transform:translateX(0); }
+  #msheet .mcard button { background:none; border:0; color:#e5e7eb; font:inherit; font-size:18px; font-weight:700; text-align:left; padding:14px 0; border-bottom:1px solid rgba(255,255,255,0.07); cursor:pointer; }
+  #msheet .mclose { position:absolute; top:22px; right:22px; width:40px; height:40px; border-radius:10px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:#fff; font-size:18px; cursor:pointer; }
 
-  /* --- GLASS UI (xlrd.org) --- */
-  .glass-panel { position: relative; overflow: hidden; background: rgba(0,0,0,0.2);
-    backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-    border: 1px solid rgba(255,255,255,0.08); border-radius: 24px;
-    box-shadow: 0 8px 32px 0 rgba(0,0,0,0.3); transition: all 0.4s cubic-bezier(0.4,0,0.2,1); }
-  .glass-panel::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-    background: linear-gradient(to right, transparent, rgba(255,255,255,0.03), transparent);
-    transform: skewX(-25deg); pointer-events: none; animation: panelGlare 8s infinite ease-in-out; }
-  @keyframes panelGlare { 0%,40% { left: -100%; opacity: 0; } 50% { opacity: 1; } 60%,100% { left: 200%; opacity: 0; } }
+  /* side dots */
+  .progress-bar { position:fixed; right:16px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:9px; z-index:40; }
+  .dot { width:8px; height:8px; background:rgba(255,255,255,0.2); border-radius:50%; transition:all .3s; cursor:pointer; }
+  .dot.active { background:#fff; box-shadow:0 0 10px #fff; transform:scale(1.25); }
+  @media (max-width:980px){ .progress-bar { display:none; } }
 
-  .glass-button { position: relative; font-weight: 600; letter-spacing: 0.08em; color: #fff;
-    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
-    border: 1.5px solid transparent; backdrop-filter: blur(30px); border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(255,255,255,0.05);
-    overflow: hidden; transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
-    display: inline-flex; align-items: center; justify-content: center; cursor: pointer; text-decoration: none; }
-  .glass-button::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px;
-    background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(138,43,226,0.4) 25%, rgba(0,191,255,0.4) 50%, rgba(255,255,255,0.4) 100%);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
-    opacity: 0.6; transition: opacity 0.5s ease; pointer-events: none; }
-  .glass-button::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-    background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);
-    transform: skewX(-25deg); pointer-events: none; animation: panelGlare 8s infinite ease-in-out; }
-  .glass-button:hover { background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
-    box-shadow: 0 12px 48px rgba(138,43,226,0.3), 0 0 80px rgba(0,191,255,0.2), inset 0 1px 0 rgba(255,255,255,0.3);
-    transform: translateY(-3px) scale(1.02); }
-  .glass-button:hover::before { opacity: 1; }
+  /* glass */
+  .glass-panel { position:relative; overflow:hidden; background:rgba(0,0,0,0.22);
+    backdrop-filter:blur(30px); -webkit-backdrop-filter:blur(30px);
+    border:1px solid rgba(255,255,255,0.08); border-radius:24px; box-shadow:0 8px 32px rgba(0,0,0,0.3); }
+  .glass-panel::after { content:''; position:absolute; top:0; left:-100%; width:50%; height:100%;
+    background:linear-gradient(to right, transparent, rgba(255,255,255,0.03), transparent); transform:skewX(-25deg); pointer-events:none; animation:panelGlare 9s infinite ease-in-out; }
+  @keyframes panelGlare { 0%,42%{ left:-100%; opacity:0; } 50%{ opacity:1; } 60%,100%{ left:200%; opacity:0; } }
+  .glass-button { position:relative; overflow:hidden; font-weight:600; letter-spacing:0.06em; color:#fff; cursor:pointer; text-decoration:none;
+    background:linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03)); border:1.5px solid transparent; border-radius:12px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.2); transition:all .4s cubic-bezier(0.4,0,0.2,1);
+    display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+  .glass-button::before { content:''; position:absolute; inset:0; border-radius:inherit; padding:1.5px;
+    background:linear-gradient(135deg, rgba(255,255,255,0.4), rgba(138,43,226,0.4) 25%, rgba(0,191,255,0.4) 50%, rgba(255,255,255,0.4));
+    -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask-composite:exclude; opacity:0.6; transition:opacity .4s; pointer-events:none; }
+  .glass-button:hover { background:linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.05)); transform:translateY(-2px); box-shadow:0 12px 44px rgba(138,43,226,0.25), 0 0 70px rgba(0,191,255,0.15); }
+  .glass-button:hover::before { opacity:1; }
+  .glow-text { color:rgba(255,255,255,0.96); text-shadow:0 0 5px rgba(255,255,255,0.5), 0 0 30px rgba(255,255,255,0.12); animation:glowPulse 3.4s ease-in-out infinite alternate; }
+  @keyframes glowPulse { 0%{ filter:drop-shadow(0 0 18px rgba(255,255,255,0.1)); } 100%{ filter:drop-shadow(0 0 42px rgba(255,255,255,0.26)); } }
+  .text-liquid-steel { background-image:linear-gradient(180deg,#FFFFFF 0%,#E4E4E7 45%,#71717A 50%,#E4E4E7 55%,#FFFFFF 100%); background-size:200% auto; color:white; background-clip:text; -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 
-  .glow-text { color: rgba(255,255,255,0.95); text-shadow: 0 0 5px rgba(255,255,255,0.6), 0 0 30px rgba(255,255,255,0.15);
-    animation: glowPulse 3s ease-in-out infinite alternate; }
-  @keyframes glowPulse { 0% { filter: drop-shadow(0 0 20px rgba(255,255,255,0.12)); } 100% { filter: drop-shadow(0 0 45px rgba(255,255,255,0.28)); } }
-  .text-liquid-steel { background-image: linear-gradient(180deg, #FFFFFF 0%, #E4E4E7 45%, #71717A 50%, #E4E4E7 55%, #FFFFFF 100%);
-    background-size: 200% auto; color: white; background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  #preloader { position:fixed; inset:0; background:#000; z-index:9999; display:flex; align-items:center; justify-content:center; transition:opacity .8s; }
+  #preloader.loaded { opacity:0; visibility:hidden; }
+  .hidden { display:none !important; }
+  ::-webkit-scrollbar { width:8px; } ::-webkit-scrollbar-track { background:#000; } ::-webkit-scrollbar-thumb { background:#333; border-radius:4px; }
 
-  /* --- PRELOADER --- */
-  #preloader { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.8s; }
-  #preloader.loaded { opacity: 0; visibility: hidden; }
-  .hidden { display: none !important; }
+  /* layout */
+  .wrap { max-width:1180px; margin:0 auto; padding:0 20px 60px; position:relative; z-index:1; }
+  .section-container { scroll-margin-top:92px; padding:34px 0; }
+  body.reveal-on .section-container { opacity:0; transform:translateY(34px); filter:blur(6px);
+    transition:opacity .7s cubic-bezier(0.16,1,0.3,1), transform .7s cubic-bezier(0.16,1,0.3,1), filter .7s ease; will-change:opacity,transform,filter; }
+  body.reveal-on .section-container.in { opacity:1; transform:none; filter:none; }
 
-  ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: #000; }
-  ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; } ::-webkit-scrollbar-thumb:hover { background: #555; }
-  select { background-color: #000; color: white; }
+  .hero { min-height:86vh; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; }
+  .hero .kicker { font-family:'Figtree',sans-serif; font-style:italic; font-size:clamp(15px,2vw,21px); color:#A5F3FC; letter-spacing:0.03em; margin-bottom:20px; }
+  .hero h1 { font-family:'Figtree',sans-serif; font-weight:900; font-size:clamp(58px,12vw,160px); line-height:0.9; letter-spacing:-0.02em; margin-bottom:14px; }
+  .hero .lede { color:#cbd5e1; font-size:clamp(16px,2.2vw,21px); max-width:620px; margin:10px auto 0; line-height:1.5; }
+  .hero .lede b { color:#fff; }
+  .pricetag { display:inline-flex; align-items:center; margin:24px auto 0; padding:12px 30px; font-family:'Inter',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.22em; text-transform:uppercase; border-radius:12px; }
+  .hero-cta { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:30px; }
+  .hero-cta .glass-button { padding:15px 26px; font-size:12px; letter-spacing:0.12em; text-transform:uppercase; }
+  .law { margin-top:28px; font-family:'Inter',sans-serif; font-size:11px; letter-spacing:0.32em; color:#71717A; text-transform:uppercase; }
+  .law span { color:#fff; }
 
-  /* --- CONTACT / ORDER MODAL (xlrd.org) --- */
-  #order-modal { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 1rem; }
-  #order-modal .om-bg { position: absolute; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); }
-  #order-modal .om-card { position: relative; width: 100%; max-width: 520px; padding: 2.2rem; border-radius: 28px; background: #0A0A0A; }
-  #order-modal label { display: block; font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
-  #order-modal input, #order-modal select, #order-modal textarea { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; color: #fff; font-family: 'Inter',sans-serif; margin-bottom: 14px; }
+  .bucket { padding:8px 24px 22px; }
+  .bucket-header { display:flex; align-items:baseline; gap:16px; padding:20px 2px 6px; flex-wrap:wrap; }
+  .bucket-header .num { font-family:'Figtree',sans-serif; font-weight:900; font-size:34px; }
+  .bucket-header .name { font-family:'Figtree',sans-serif; font-weight:700; font-size:clamp(18px,2.4vw,26px); letter-spacing:0.01em; color:#fff; }
+  .bucket-header .count { font-family:'Inter',sans-serif; font-size:10px; letter-spacing:0.28em; color:#A5F3FC; text-transform:uppercase; margin-left:auto; }
+  .bucket-blurb { color:#9aa3af; font-size:14px; font-style:italic; font-family:'Figtree',sans-serif; padding:0 2px 16px; border-bottom:1px solid rgba(255,255,255,0.08); margin-bottom:18px; }
 
-  /* --- MENU CONTENT --- */
-  .hero { text-align: center; min-height: 80vh; display: flex; flex-direction: column; justify-content: center; }
-  .hero .kicker { font-family: 'Figtree',sans-serif; font-style: italic; font-size: clamp(15px,2vw,21px); color: #A5F3FC; letter-spacing: 0.04em; margin-bottom: 22px; }
-  .hero h1 { font-family: 'Figtree',sans-serif; font-weight: 900; font-size: clamp(60px,12vw,170px); line-height: 0.9; letter-spacing: -0.02em; margin-bottom: 16px; }
-  .hero h2 { font-family: 'Figtree',sans-serif; font-style: italic; font-weight: 400; font-size: clamp(20px,2.6vw,30px); color: #d4d4d8; margin-top: 10px; }
-  .pricetag { display: inline-flex; align-items: center; margin: 26px auto 0; padding: 13px 34px; font-family: 'Inter',sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.22em; text-transform: uppercase; }
-  .law { margin-top: 26px; font-family: 'Inter',sans-serif; font-size: 11px; letter-spacing: 0.34em; color: #71717A; text-transform: uppercase; }
-  .law span { color: #fff; }
-  .hero-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 34px; }
-  .hero-cta a, .hero-cta button { padding: 15px 28px; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
+  /* ITEM CARDS — caption stacked UNDERNEATH the title */
+  .items { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:14px; }
+  .item { display:flex; flex-direction:column; background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:16px 16px 14px; transition:border-color .2s, background .2s; }
+  .item:hover { border-color:rgba(255,255,255,0.2); background:rgba(255,255,255,0.05); }
+  .item .iid { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em; color:#52525B; margin-bottom:7px; }
+  .item .ititle { font-family:'Figtree',sans-serif; font-weight:700; font-size:16px; color:#fff; line-height:1.2; }
+  .item .icap { color:#A5F3FC; font-size:13px; line-height:1.45; margin-top:6px; flex:1; }   /* caption underneath */
+  .item .ifoot { display:flex; align-items:center; justify-content:space-between; margin-top:14px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.07); }
+  .item .iprice { font-family:'Figtree',sans-serif; font-weight:800; font-size:17px; color:#fff; }
+  .item .iprice::before { content:'$'; opacity:0.55; font-weight:600; margin-right:1px; }
+  .add-btn { display:inline-flex; align-items:center; gap:6px; font-family:'Inter',sans-serif; font-weight:700; font-size:12px; letter-spacing:0.04em; color:#0A0A0A;
+    background:linear-gradient(135deg,#ffffff,#d1d5db); border:0; border-radius:9px; padding:9px 14px; cursor:pointer; transition:transform .15s, box-shadow .2s; white-space:nowrap; }
+  .add-btn:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(255,255,255,0.18); }
+  .add-btn.added { background:linear-gradient(135deg,#A5F3FC,#22d3ee); color:#04222b; }
 
-  .bucket { padding: 6px 26px 18px; }
-  .bucket-header { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 18px; padding: 20px 0 14px; border-bottom: 1px solid rgba(255,255,255,0.08); }
-  .bucket-header .num { font-family: 'Figtree',sans-serif; font-weight: 900; font-size: 36px; min-width: 54px; }
-  .bucket-header .name { font-family: 'Figtree',sans-serif; font-weight: 600; font-size: clamp(17px,2.4vw,25px); letter-spacing: 0.16em; text-transform: uppercase; color: #fff; }
-  .bucket-header .count { font-family: 'Inter',sans-serif; font-size: 10px; letter-spacing: 0.3em; color: #A5F3FC; text-transform: uppercase; }
-  .unit { display: grid; grid-template-columns: 60px 1fr auto; align-items: baseline; gap: 18px; padding: 13px 4px; border-bottom: 1px solid rgba(255,255,255,0.06); }
-  .unit:hover { background: rgba(255,255,255,0.03); }
-  .unit .id { font-family: 'Inter',sans-serif; font-size: 12px; letter-spacing: 0.15em; color: #52525B; font-weight: 500; }
-  .unit .what { font-family: 'Inter',sans-serif; font-size: 14px; color: #d4d4d8; line-height: 1.4; }
-  .unit .what strong { color: #fff; font-weight: 700; }
-  .unit .what em { color: #A5F3FC; font-style: italic; font-family: 'Figtree',sans-serif; font-size: 14.5px; }
-  .unit .price { font-family: 'Figtree',sans-serif; font-weight: 800; font-size: 15px; letter-spacing: 0.03em; white-space: nowrap; }
-  .unit .price::before { content: '$'; opacity: 0.6; margin-right: 1px; font-weight: 600; }
+  .panel-pad { padding:34px 30px; }
+  .panel-pad h3 { font-family:'Figtree',sans-serif; font-weight:800; font-size:clamp(26px,4vw,44px); margin-bottom:8px; }
+  .panel-pad p.sub { color:#a1a1aa; font-size:14px; margin-bottom:22px; }
+  .rows { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
+  .row { display:flex; flex-direction:column; gap:4px; padding:16px 18px; border:1px solid rgba(255,255,255,0.1); border-radius:14px; }
+  .row.best { border-color:rgba(165,243,252,0.35); background:rgba(165,243,252,0.04); }
+  .row .k { font-family:'Figtree',sans-serif; font-weight:700; font-size:15px; color:#fff; }
+  .row .d { color:#9aa3af; font-size:13px; line-height:1.4; }
 
-  .panel-pad { padding: 36px 32px; }
-  .panel-pad h3 { font-family: 'Figtree',sans-serif; font-weight: 800; font-size: clamp(26px,4vw,46px); margin-bottom: 8px; }
-  .panel-pad p.sub { color: #a1a1aa; font-size: 14px; margin-bottom: 24px; }
-  .rows { display: flex; flex-direction: column; gap: 12px; }
-  .row { display: flex; justify-content: space-between; align-items: center; padding: 16px 18px; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; transition: all 0.25s; }
-  .row.click { cursor: pointer; } .row.click:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.25); }
-  .row.best { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); }
-  .row .k { font-family: 'JetBrains Mono','Inter',monospace; color: #d4d4d8; font-size: 14px; }
-  .row .v { font-weight: 800; color: #fff; font-size: 15px; }
-  .ruleline-p { font-family: 'Figtree',sans-serif; font-style: italic; font-size: clamp(19px,2.6vw,30px); color: #d4d4d8; line-height: 1.4; text-align: center; }
-  .cta-foot { text-align: center; }
-  .cta-foot h2 { font-family: 'Figtree',sans-serif; font-weight: 800; font-size: clamp(28px,4.5vw,52px); margin-bottom: 18px; }
-  .cta-foot h2 em { font-weight: 400; font-style: italic; color: #A5F3FC; }
-  .cta-row { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
-  .cta-row a { padding: 16px 26px; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; gap: 10px; }
-  .foot-line { margin-top: 40px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,0.08); font-family: 'Inter',sans-serif; font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase; color: #52525B; text-align: center; }
-  .foot-line .tag { display: block; margin-bottom: 12px; font-family: 'Figtree',sans-serif; font-style: italic; font-size: 14px; color: #d4d4d8; letter-spacing: 0.02em; text-transform: none; }
-  .foot-line a { color: #A5F3FC; text-decoration: none; }
+  .cta-foot { text-align:center; }
+  .cta-foot h2 { font-family:'Figtree',sans-serif; font-weight:800; font-size:clamp(28px,4.5vw,50px); margin-bottom:16px; }
+  .cta-foot h2 em { font-weight:400; font-style:italic; color:#A5F3FC; }
+  .cta-row { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; }
+  .cta-row .glass-button { padding:16px 26px; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; }
+  .foot-line { margin-top:38px; padding-top:22px; border-top:1px solid rgba(255,255,255,0.08); font-family:'Inter',sans-serif; font-size:10px; letter-spacing:0.3em; text-transform:uppercase; color:#52525B; text-align:center; }
+  .foot-line .tag { display:block; margin-bottom:12px; font-family:'Figtree',sans-serif; font-style:italic; font-size:14px; color:#cbd5e1; letter-spacing:0.01em; text-transform:none; }
+  .foot-line a { color:#A5F3FC; text-decoration:none; }
 
-  @media (max-width: 680px) {
-    .unit { grid-template-columns: 44px 1fr auto; gap: 10px; } .unit .id { font-size: 11px; }
-    .bucket { padding: 6px 16px 14px; } .section-container { padding: 84px 0 30px; }
-  }
+  /* CART / ORDER MODAL — sized to fit, scroll list + sticky footer */
+  #cart-modal { position:fixed; inset:0; z-index:100; display:none; align-items:center; justify-content:center; padding:16px; }
+  #cart-modal.open { display:flex; }
+  #cart-modal .cbg { position:absolute; inset:0; background:rgba(0,0,0,0.82); backdrop-filter:blur(10px); }
+  #cart-modal .ccard { position:relative; width:100%; max-width:520px; max-height:88vh; display:flex; flex-direction:column; background:#0A0A0A; border:1px solid rgba(255,255,255,0.12); border-radius:24px; overflow:hidden; }
+  .ccard-head { padding:24px 26px 16px; border-bottom:1px solid rgba(255,255,255,0.08); }
+  .ccard-head h3 { font-family:'Figtree',sans-serif; font-weight:800; font-size:24px; color:#fff; }
+  .ccard-head p { color:#9aa3af; font-size:13px; margin-top:4px; }
+  .ccard-x { position:absolute; top:20px; right:20px; width:38px; height:38px; border-radius:10px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); color:#fff; font-size:16px; cursor:pointer; }
+  .cart-list { overflow-y:auto; padding:10px 26px; flex:1; }
+  .cart-empty { color:#71717A; text-align:center; padding:40px 0; font-style:italic; }
+  .cline { display:flex; align-items:center; gap:12px; padding:13px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
+  .cline .cn { flex:1; min-width:0; }
+  .cline .cn .t { font-family:'Figtree',sans-serif; font-weight:600; font-size:14px; color:#fff; }
+  .cline .cn .s { font-size:11px; color:#71717A; font-family:'JetBrains Mono',monospace; margin-top:2px; }
+  .qty { display:flex; align-items:center; gap:8px; }
+  .qty button { width:26px; height:26px; border-radius:7px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); color:#fff; font-size:14px; cursor:pointer; line-height:1; }
+  .qty span { min-width:18px; text-align:center; font-family:'JetBrains Mono',monospace; font-size:13px; color:#fff; }
+  .cline .cp { font-family:'Figtree',sans-serif; font-weight:700; font-size:14px; color:#fff; min-width:54px; text-align:right; }
+  .ccard-foot { padding:18px 26px 22px; border-top:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.02); }
+  .ctot { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; }
+  .ctot .lbl { color:#9aa3af; font-size:13px; text-transform:uppercase; letter-spacing:0.12em; }
+  .ctot .amt { font-family:'Figtree',sans-serif; font-weight:900; font-size:30px; color:#fff; }
+  .checkout { width:100%; padding:16px; border-radius:14px; font-family:'Inter',sans-serif; font-weight:800; font-size:14px; letter-spacing:0.04em;
+    background:linear-gradient(135deg,#ffffff,#cbd5e1); color:#0A0A0A; border:0; cursor:pointer; transition:transform .15s, box-shadow .2s; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .checkout:hover { transform:translateY(-2px); box-shadow:0 10px 34px rgba(255,255,255,0.2); }
+  .checkout.disabled { opacity:0.4; pointer-events:none; }
+  .ccard-foot .alt { display:flex; gap:10px; margin-top:10px; }
+  .ccard-foot .alt a { flex:1; text-align:center; padding:12px; border-radius:11px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#e5e7eb; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); text-decoration:none; }
+  .ccard-foot .note { color:#71717A; font-size:11px; text-align:center; margin-top:12px; line-height:1.4; }
+
+  @media (max-width:600px){ .bucket { padding:8px 14px 18px; } .items { grid-template-columns:1fr; } }
 </style>
 </head>
 <body class="antialiased selection:bg-white selection:text-black">
 
-<!-- PRELOADER -->
-<div id="preloader">
-  <div class="flex flex-col items-center">
-    <div class="font-heading font-black text-3xl tracking-[0.3em] text-liquid-steel">XLRD TECH</div>
-    <div class="mt-5 w-32 h-1 bg-white/10 rounded-full overflow-hidden"><div class="h-full bg-white w-full animate-pulse"></div></div>
-    <p class="mt-4 text-[10px] font-bold tracking-[0.3em] text-gray-500 uppercase">Initializing Menu</p>
-  </div>
-</div>
+<div id="preloader"><div style="text-align:center">
+  <div class="font-heading font-black text-3xl tracking-[0.3em] text-liquid-steel">XLRD TECH</div>
+  <div class="mt-5 w-32 h-1 bg-white/10 rounded-full overflow-hidden mx-auto"><div class="h-full bg-white w-full animate-pulse"></div></div>
+  <p class="mt-4 text-[10px] font-bold tracking-[0.3em] text-gray-500 uppercase">Initializing Menu</p>
+</div></div>
 
-<!-- SCROLL-SCRUBBED VIDEO BACKGROUND -->
 <video class="bgv" data-scrub-video data-mode="page" data-ease="0.22" muted playsinline webkit-playsinline preload="auto" poster="assets/menu-bg-poster.jpg" src="assets/menu-bg-v2.mp4"></video>
 <div class="bg-scrim"></div>
 
-<!-- NAVIGATION -->
 <nav>
-  <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-    <a href="#" onclick="scrollToSection(0);return false;" class="font-heading font-black text-xl tracking-tight text-white">XLRD <span class="text-liquid-steel">TECH</span></a>
-    <div class="hidden md:flex items-center gap-2">
-      <button onclick="scrollToSection(0)" class="px-4 py-2 text-xs font-bold text-gray-400 hover:text-white transition-colors uppercase tracking-widest">Top</button>
-      <button onclick="scrollToSection(1)" class="px-4 py-2 text-xs font-bold text-gray-400 hover:text-white transition-colors uppercase tracking-widest">Menu</button>
-      <button onclick="scrollToSection(11)" class="px-4 py-2 text-xs font-bold text-gray-400 hover:text-white transition-colors uppercase tracking-widest">The Model</button>
-      <button onclick="toggleOrderModal()" class="px-5 py-2 glass-button text-xs uppercase tracking-widest">Order</button>
+  <div class="nav-in">
+    <a href="#top" class="brand" onclick="jump(0)">XLRD <span class="text-liquid-steel">TECH</span></a>
+    <div class="nav-links">
+      <button class="link" onclick="jump(0)">Top</button>
+      <button class="link" onclick="jump(1)">Menu</button>
+      <button class="link" onclick="jumpId('model')">The Model</button>
+      <button class="cart-btn" onclick="openCart()"><i class="ph ph-shopping-cart-simple"></i> Cart <span class="ct" id="navCt">0 · $0</span></button>
+      <button class="hamb" id="hamb" aria-label="Menu"><i class="ph ph-list"></i></button>
     </div>
-    <button id="mobile-menu-btn" class="md:hidden text-white p-2 glass-button"><i class="ph ph-list text-xl"></i></button>
-  </div>
-  <div id="mobile-menu">
-    <button onclick="scrollToSection(0)" class="text-2xl font-bold text-white">Top</button>
-    <button onclick="scrollToSection(1)" class="text-2xl font-bold text-white">Menu</button>
-    <button onclick="scrollToSection(11)" class="text-2xl font-bold text-white">The Model</button>
-    <button onclick="toggleOrderModal()" class="text-2xl font-bold text-white">Order</button>
-    <button id="close-mobile-menu" class="absolute top-6 right-6 text-white p-2"><i class="ph ph-x text-2xl"></i></button>
   </div>
 </nav>
 
-<!-- SIDE DOTS -->
-<div class="progress-bar" id="dots"></div>
-
-<!-- ORDER MODAL (xlrd contact-modal pattern) -->
-<div id="order-modal" class="hidden">
-  <div class="om-bg" onclick="toggleOrderModal()"></div>
-  <div class="om-card glass-panel">
-    <button onclick="toggleOrderModal()" class="absolute top-5 right-5 text-gray-400 hover:text-white"><i class="ph ph-x text-2xl"></i></button>
-    <h3 class="text-2xl font-heading font-bold text-white mb-1">Order units</h3>
-    <p class="text-gray-400 text-sm mb-6">$111 each. Pick how many — I confirm your turnaround window (and any rush option) before the clock starts.</p>
-    <label>How many units</label>
-    <select id="unitSel" onchange="syncSend()"><option value="">Choose…</option></select>
-    <label>What you need</label>
-    <textarea id="orderNote" rows="3" placeholder="Briefly, what do you want built?"></textarea>
-    <a class="send glass-button w-full" id="sendOrder" style="padding:15px;border-radius:12px;font-size:13px;letter-spacing:.12em;text-transform:uppercase" href="mailto:east@xlrd.org?subject=Unit%20order">Send the order →</a>
+<!-- mobile sheet -->
+<div id="msheet">
+  <div class="mbg" data-mclose></div>
+  <div class="mcard">
+    <button class="mclose" data-mclose><i class="ph ph-x"></i></button>
+    <button onclick="jump(0)">Top</button>
+    <button onclick="jump(1)">The Menu</button>
+    <button onclick="jumpId('model')">The Model</button>
+    <button onclick="openCart()">View Cart (<span id="mCt">0</span>)</button>
+    <a href="tel:+17709999934" style="margin-top:14px;color:#A5F3FC;text-decoration:none;font-weight:700;font-size:16px"><i class="ph ph-phone"></i> (770) 999-9934</a>
   </div>
 </div>
 
-<!-- ============ FIXED CROSSFADE SECTIONS ============ -->
+<div class="progress-bar" id="dots"></div>
 
-<!-- 0 HOME -->
-<div class="section-container in" data-dot="Top"><div class="section-inner">
-  <section class="hero">
+<!-- CART MODAL -->
+<div id="cart-modal">
+  <div class="cbg" onclick="closeCart()"></div>
+  <div class="ccard">
+    <div class="ccard-head">
+      <h3>Your order</h3>
+      <p>$111 per unit. Add what you need — I confirm your turnaround window before the clock starts.</p>
+      <button class="ccard-x" onclick="closeCart()"><i class="ph ph-x"></i></button>
+    </div>
+    <div class="cart-list" id="cartList"></div>
+    <div class="ccard-foot">
+      <div class="ctot"><span class="lbl">Total</span><span class="amt" id="cartTotal">$0</span></div>
+      <a class="checkout disabled" id="checkoutBtn" href="#"><i class="ph ph-paper-plane-tilt"></i> Send my order</a>
+      <div class="alt">
+        <a href="tel:+17709999934"><i class="ph ph-phone"></i> Call</a>
+        <a id="rushBtn" href="#" onclick="return false"><i class="ph ph-lightning"></i> Add rush note</a>
+      </div>
+      <div class="note">Subscriptions (Care Plan, monthly retainer) via PayPal — coming online shortly. Rush premiums move your order to the front.</div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="section-container in" id="top" data-dot="Top"><div class="hero">
     <div class="kicker">No bundles. No retainers. Flat per unit — billed for the time it takes.</div>
     <h1 class="glow-text">One unit.<br><span class="text-liquid-steel">$111</span>.</h1>
-    <h2>Every XLRD TECH deliverable, <em>priced flat</em>.</h2>
-    <div class="pricetag glass-button">$111 / UNIT</div>
+    <p class="lede">Build your whole operation one <b>$111 unit</b> at a time — AI receptionist, speed-built sites, automation, brand, music ops. <b>Add what you need to the cart</b> and send the order.</p>
     <div class="hero-cta">
-      <button class="glass-button" onclick="scrollToSection(1)">Browse the Menu <i class="ph-bold ph-arrow-right"></i></button>
-      <button class="glass-button" onclick="toggleOrderModal()">Order Now <i class="ph-bold ph-lightning"></i></button>
+      <button class="glass-button" onclick="jump(1)">Browse the Menu <i class="ph-bold ph-arrow-down"></i></button>
+      <button class="glass-button" onclick="openCart()"><i class="ph ph-shopping-cart-simple"></i> View Cart</button>
     </div>
     <div class="law"><span>◆</span>&nbsp; AUTOMATE OR DIE &nbsp;<span>◆</span>&nbsp; QUALITY BEFORE THE CLOCK &nbsp;<span>◆</span></div>
-  </section>
-</div></div>
+  </div></div>
 
-<!-- 1 FRONT LINE -->
-<div class="section-container" data-dot="Front Line"><div class="section-inner">
-  <section class="bucket glass-panel">
-    <div class="bucket-header"><div class="num text-liquid-steel">01</div><div class="name">Front Line · Receptionist</div><div class="count">5 units</div></div>
-    <div class="unit"><div class="id">F-01</div><div class="what"><strong>AI voice receptionist line</strong> — <em>your number, your persona, your script, 24/7 answer</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">F-02</div><div class="what"><strong>Custom voice persona</strong> — <em>name, tone, opening line, escalation rules</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">F-03</div><div class="what"><strong>Inbound capture → CRM</strong> — <em>every call transcribed, named, routed to a lead file</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">F-04</div><div class="what"><strong>After-hours flow</strong> — <em>night/weekend behavior, callback windows, on-call routing</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">F-05</div><div class="what"><strong>Caller-to-text bridge</strong> — <em>caller leaves a message, you read it in SMS within 60 seconds</em></div><div class="price">111</div></div>
-  </section>
-</div></div>
+  <!-- MENU (rendered) -->
+  <div id="menuRoot"></div>
 
-<!-- 2 WEB -->
-<div class="section-container" data-dot="Web"><div class="section-inner">
-  <section class="bucket glass-panel">
-    <div class="bucket-header"><div class="num text-liquid-steel">02</div><div class="name">Web · Pages · Hosting</div><div class="count">10 units</div></div>
-    <div class="unit"><div class="id">W-01</div><div class="what"><strong>Speed-build landing page</strong> — <em>single-page, deployed in ~2 hours, like the Diamond Cut / MB drops</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">W-02</div><div class="what"><strong>Custom domain + tunnel</strong> — <em>DNS, SSL, Cloudflare ingress, your subdomain live</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">W-03</div><div class="what"><strong>Logo + brand asset placement</strong> — <em>swap your logo, color from logo, retina-ready</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">W-04</div><div class="what"><strong>SEO + OG metadata pass</strong> — <em>title, description, social cards, schema</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">W-05</div><div class="what"><strong>Newsletter capture form</strong> — <em>email-in, list wired to your provider</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">W-06</div><div class="what"><strong>Booking widget embed</strong> — <em>calendar slot picker tied to your phone/email</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">W-07</div><div class="what"><strong>Press kit / EPK page</strong> — <em>bio, photos, tracks, tech rider, links, downloadable</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">W-08</div><div class="what"><strong>Music streaming strip</strong> — <em>Spotify + Apple + DistroKid hyperfollow on one page</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">W-09</div><div class="what"><strong>Mobile responsiveness audit</strong> — <em>iPhone / Android / iPad ironed flat</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">W-10</div><div class="what"><strong>Color/aesthetic pivot</strong> — <em>swap palette across whole page (like pink→blue on MB)</em></div><div class="price">111</div></div>
-  </section>
-</div></div>
-
-<!-- 3 BRAND -->
-<div class="section-container" data-dot="Brand"><div class="section-inner">
-  <section class="bucket glass-panel">
-    <div class="bucket-header"><div class="num text-liquid-steel">03</div><div class="name">Brand · Identity</div><div class="count">6 units</div></div>
-    <div class="unit"><div class="id">B-01</div><div class="what"><strong>Logo concept (1 brief)</strong> — <em>monogram, wordmark, or seal, your call</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">B-02</div><div class="what"><strong>Color palette + type system</strong> — <em>5 colors, 2 fonts, usage rules</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">B-03</div><div class="what"><strong>Social banner pack</strong> — <em>IG, FB, X, YouTube — sized + delivered</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">B-04</div><div class="what"><strong>Avatar / profile photo prep</strong> — <em>background out, color correct, square + circular</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">B-05</div><div class="what"><strong>One-pager (HTML + PDF)</strong> — <em>elevator pitch, services, contact, printable</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">B-06</div><div class="what"><strong>Single artwork / cover art</strong> — <em>3:3 + 16:9 + 9:16 sizes for the same piece</em></div><div class="price">111</div></div>
-  </section>
-</div></div>
-
-<!-- 4 COMMS -->
-<div class="section-container" data-dot="Comms"><div class="section-inner">
-  <section class="bucket glass-panel">
-    <div class="bucket-header"><div class="num text-liquid-steel">04</div><div class="name">Comms · Email · SMS · Calendar</div><div class="count">7 units</div></div>
-    <div class="unit"><div class="id">C-01</div><div class="what"><strong>Email auto-reply flow</strong> — <em>1 trigger → 1 templated response, routed</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">C-02</div><div class="what"><strong>SMS auto-reply flow</strong> — <em>same shape, SMS-side</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">C-03</div><div class="what"><strong>Dual-fire lead routing</strong> — <em>one inbound creates email + SMS + calendar event at once</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">C-04</div><div class="what"><strong>Inbox triage pack</strong> — <em>5 rules, labels, auto-archive, priority lifts</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">C-05</div><div class="what"><strong>Daily digest summary</strong> — <em>your inbox in 5 bullets, every morning, via email or SMS</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">C-06</div><div class="what"><strong>Follow-up sequence</strong> — <em>3-touch outreach: day 0, day 3, day 7</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">C-07</div><div class="what"><strong>Voice-to-text intake</strong> — <em>you talk, it turns into structured text in your CRM</em></div><div class="price">111</div></div>
-  </section>
-</div></div>
-
-<!-- 5 AUTOMATION -->
-<div class="section-container" data-dot="Automation"><div class="section-inner">
-  <section class="bucket glass-panel">
-    <div class="bucket-header"><div class="num text-liquid-steel">05</div><div class="name">Automation · Integrations</div><div class="count">6 units</div></div>
-    <div class="unit"><div class="id">A-01</div><div class="what"><strong>Cross-app webhook bridge</strong> — <em>1 hook connecting 2 apps (PayPal→Asana, Calendly→Notion, etc.)</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">A-02</div><div class="what"><strong>Calendar auto-create from inbound</strong> — <em>"book me Wed 7pm" → event lands in Spark/Google Cal</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">A-03</div><div class="what"><strong>Cron / scheduled job</strong> — <em>1 recurring task, daily/weekly, your spec</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">A-04</div><div class="what"><strong>Webhook receiver endpoint</strong> — <em>your URL accepts POSTs and routes to action</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">A-05</div><div class="what"><strong>Form-to-everywhere</strong> — <em>1 form posts to email + SMS + sheet + CRM at once</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">A-06</div><div class="what"><strong>Spreadsheet pipeline</strong> — <em>Sheet → enrichment → outbound, automated</em></div><div class="price">111</div></div>
-  </section>
-</div></div>
-
-<!-- 6 AI AGENTS -->
-<div class="section-container" data-dot="AI Agents"><div class="section-inner">
-  <section class="bucket glass-panel">
-    <div class="bucket-header"><div class="num text-liquid-steel">06</div><div class="name">AI Agents · Voice · Possession</div><div class="count">7 units</div></div>
-    <div class="unit"><div class="id">X-01</div><div class="what"><strong>Custom AI assistant skill</strong> — <em>1 capability bolted onto your Claude/ChatGPT</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">X-02</div><div class="what"><strong>Claude Code hook script</strong> — <em>1 lifecycle event (Stop, PostToolUse, etc.) wired to your behavior</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">X-03</div><div class="what"><strong>MCP server install + wire-up</strong> — <em>1 server, registered, scoped, ready</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">X-04</div><div class="what"><strong>Voice Gate page (STT page)</strong> — <em>talk to your stack from any browser, anywhere</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">X-05</div><div class="what"><strong>Siri Possession shortcut</strong> — <em>iOS shortcut that runs your stack hands-free</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">X-06</div><div class="what"><strong>Local LLM swap (Ollama)</strong> — <em>install + register one local model for sovereignty</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">X-07</div><div class="what"><strong>KB ingestion (1 source)</strong> — <em>repo, folder, drive, or site → searchable memory</em></div><div class="price">111</div></div>
-  </section>
-</div></div>
-
-<!-- 7 SOCIAL -->
-<div class="section-container" data-dot="Social"><div class="section-inner">
-  <section class="bucket glass-panel">
-    <div class="bucket-header"><div class="num text-liquid-steel">07</div><div class="name">Social · Content</div><div class="count">5 units</div></div>
-    <div class="unit"><div class="id">S-01</div><div class="what"><strong>Social post pack (5 posts)</strong> — <em>copy + image direction, drop-ready</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">S-02</div><div class="what"><strong>Caption + hashtag set</strong> — <em>10 captions, 30 hashtags, tone-matched</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">S-03</div><div class="what"><strong>Cross-platform schedule (1 platform)</strong> — <em>2 weeks queued, auto-post, tracked</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">S-04</div><div class="what"><strong>Bio + Linktree pass</strong> — <em>rewrite + reorder for conversion</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">S-05</div><div class="what"><strong>Auto-DM responder</strong> — <em>1 platform, 1 trigger phrase, 1 response chain</em></div><div class="price">111</div></div>
-  </section>
-</div></div>
-
-<!-- 8 MUSIC -->
-<div class="section-container" data-dot="Music"><div class="section-inner">
-  <section class="bucket glass-panel">
-    <div class="bucket-header"><div class="num text-liquid-steel">08</div><div class="name">Music · Production</div><div class="count">5 units</div></div>
-    <div class="unit"><div class="id">M-01</div><div class="what"><strong>Track mastering pass</strong> — <em>1 song, loudness + EQ + spatial polish</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">M-02</div><div class="what"><strong>Mix revision</strong> — <em>1 song, 1 round of changes from your notes</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">M-03</div><div class="what"><strong>Beat selection + arrangement</strong> — <em>3 beats curated to your direction + map</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">M-04</div><div class="what"><strong>DistroKid wire-up</strong> — <em>release set up, metadata, art, scheduled drop</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">M-05</div><div class="what"><strong>Hyperfollow / smart link</strong> — <em>1 link that opens in Spotify/Apple/Amazon/Tidal</em></div><div class="price">111</div></div>
-  </section>
-</div></div>
-
-<!-- 9 OPS -->
-<div class="section-container" data-dot="Ops"><div class="section-inner">
-  <section class="bucket glass-panel">
-    <div class="bucket-header"><div class="num text-liquid-steel">09</div><div class="name">Ops · CRM · Docs</div><div class="count">6 units</div></div>
-    <div class="unit"><div class="id">O-01</div><div class="what"><strong>Lead capture sheet</strong> — <em>structured intake form → contact record</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">O-02</div><div class="what"><strong>Onboarding doc scaffold</strong> — <em>welcome → intake → kickoff, your tone</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">O-03</div><div class="what"><strong>Booking pipeline (kanban)</strong> — <em>lead → qualified → booked → done, on a board</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">O-04</div><div class="what"><strong>Invoice template (your brand)</strong> — <em>reusable, fillable, sendable</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">O-05</div><div class="what"><strong>Contract template</strong> — <em>service agreement skeleton, ready for fill</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">O-06</div><div class="what"><strong>Quote → invoice flow</strong> — <em>send a quote, on accept it auto-bills</em></div><div class="price">111</div></div>
-  </section>
-</div></div>
-
-<!-- 10 INFRA -->
-<div class="section-container" data-dot="Infra"><div class="section-inner">
-  <section class="bucket glass-panel">
-    <div class="bucket-header"><div class="num text-liquid-steel">10</div><div class="name">Infra · Build · Deploy</div><div class="count">5 units</div></div>
-    <div class="unit"><div class="id">I-01</div><div class="what"><strong>Cloudflare tunnel hostname</strong> — <em>add 1 subdomain to your tunnel</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">I-02</div><div class="what"><strong>GitHub Pages repo wire-up</strong> — <em>repo created, branch pushed, custom domain bound</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">I-03</div><div class="what"><strong>FastAPI/Express service boot</strong> — <em>1 backend, dockered, started, tunneled</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">I-04</div><div class="what"><strong>File explorer surface</strong> — <em>1 drive folder → public/private URL</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">I-05</div><div class="what"><strong>Backup snapshot rule</strong> — <em>1 folder mirrored to remote on schedule</em></div><div class="price">111</div></div>
-  </section>
-</div></div>
-
-<!-- 11 THE MODEL (terms) -->
-<div class="section-container" data-dot="The Model"><div class="section-inner">
-  <section class="glass-panel panel-pad">
+  <!-- THE MODEL -->
+  <div class="section-container" id="model" data-dot="The Model"><section class="glass-panel panel-pad">
     <h3 class="glow-text">How the <span class="text-liquid-steel">clock</span> works.</h3>
     <p class="sub">$111 is the unit. Time is the variable. Read this before you order.</p>
     <div class="rows">
-      <div class="row"><span class="k"><i class="ph ph-clock" style="margin-right:8px"></i>Turnaround = ~2× the work</span><span class="v">buffered</span></div>
-      <div class="row"><span class="k"><i class="ph ph-shield-check" style="margin-right:8px"></i>No on-time guarantee · quality first</span><span class="v">my discretion</span></div>
-      <div class="row best"><span class="k"><i class="ph ph-lightning" style="margin-right:8px"></i>Rush premium · jump the queue</span><span class="v">+ fee</span></div>
-      <div class="row"><span class="k"><i class="ph ph-brain" style="margin-right:8px"></i>Consulting / strategy · on the clock</span><span class="v">billable</span></div>
+      <div class="row"><span class="k"><i class="ph ph-clock"></i> Turnaround = ~2× the work</span><span class="d">Every item's window is quoted at roughly twice the time the work should take. That buffer is deliberate.</span></div>
+      <div class="row"><span class="k"><i class="ph ph-shield-check"></i> Quality before the clock</span><span class="d">No on-time guarantee — final timing stays at my discretion to protect the quality of the build.</span></div>
+      <div class="row best"><span class="k"><i class="ph ph-lightning"></i> Rush premium</span><span class="d">Need it faster? A rush fee moves your order to the front and compresses the turnaround.</span></div>
+      <div class="row"><span class="k"><i class="ph ph-brain"></i> Consulting is billable</span><span class="d">Strategy, advice and direction are charged like any other unit — time on my brain is on the clock.</span></div>
     </div>
-    <p class="sub" style="margin:20px 0 0">Every item's turnaround is quoted at roughly <strong style="color:#fff">twice the time the work should take</strong> — that buffer is deliberate, and timing stays at my discretion to protect the quality. Need it faster? A <strong style="color:#fff">rush premium</strong> moves your unit to the front. Strategy, advice and direction are <strong style="color:#fff">billable</strong> like any other unit.</p>
-  </section>
-</div></div>
+  </section></div>
 
-<!-- 12 ORDER / CTA / FOOTER -->
-<div class="section-container" data-dot="Order"><div class="section-inner">
-  <section class="glass-panel panel-pad cta-foot">
-    <p class="ruleline-p" style="margin-bottom:30px">Sixty-two units. Every one of them <span class="text-liquid-steel" style="font-style:normal">$111</span>. <em>One unit at a time</em> until you're handling more than you can carry.</p>
-    <h2>Pick one. <em>Or pick ten.</em></h2>
-    <div class="cta-row" style="margin-top:8px">
-      <button class="glass-button" onclick="toggleOrderModal()"><i class="ph ph-lightning"></i> Order Units</button>
+  <!-- ORDER / FOOTER -->
+  <div class="section-container" id="order" data-dot="Order"><section class="glass-panel panel-pad cta-foot">
+    <h2>Build your stack. <em>One unit at a time.</em></h2>
+    <div class="cta-row">
+      <button class="glass-button" onclick="openCart()"><i class="ph ph-shopping-cart-simple"></i> Review &amp; Order</button>
       <a class="glass-button" href="tel:+17709999934"><i class="ph ph-phone"></i> Call · (770) 999-9934</a>
-      <a class="glass-button" href="mailto:east@xlrd.org?subject=Unit%20order"><i class="ph ph-envelope"></i> Email the Order</a>
     </div>
     <div class="foot-line">
       <span class="tag">"Billable time. Turnaround quoted long, quality kept high. Rush costs more. Consulting's on the clock."</span>
       ◆ XLRD TECH · $111 / unit · East Allen · east@xlrd.org · <a href="https://hitthe.link/">hitthe.link</a> ◆
     </div>
-  </section>
-</div></div>
+  </section></div>
 
-<!-- SCROLL SPACER (drives the fixed-section engine) -->
-<div class="scroll-spacer"></div>
+</div>
 
 <script src="https://hitthe.link/lib/scroll-scrub-video.js" defer></script>
 <script>
-  // preloader
-  window.addEventListener('load', () => setTimeout(() => document.getElementById('preloader').classList.add('loaded'), 700));
+  // ---------- MENU DATA ----------
+  const MENU = [
+    { n:'01', name:'Front Line · Receptionist', blurb:'Never miss a call again.', items:[
+      ['F-01','AI voice receptionist line','Your number, your persona, your script — answered 24/7.'],
+      ['F-02','Custom voice persona','Name, tone, opening line and escalation rules, built to match you.'],
+      ['F-03','Inbound capture → CRM','Every call transcribed, named, and routed to a lead file.'],
+      ['F-04','After-hours flow','Night/weekend behavior, callback windows, on-call routing.'],
+      ['F-05','Caller-to-text bridge','Caller leaves a message — you read it in SMS within 60 seconds.'],
+    ]},
+    { n:'02', name:'Web · Pages · Hosting', blurb:'Your storefront, live in hours.', items:[
+      ['W-01','Speed-build landing page','Single-page, deployed in ~2 hours — like the Diamond Cut / MB drops.'],
+      ['W-02','Custom domain + tunnel','DNS, SSL, Cloudflare ingress — your subdomain live and secure.'],
+      ['W-03','Logo + brand placement','Swap your logo, pull color from it, retina-ready throughout.'],
+      ['W-04','SEO + OG metadata pass','Title, description, social cards and schema, done right.'],
+      ['W-05','Newsletter capture form','Email-in, wired straight to your list provider.'],
+      ['W-06','Booking widget embed','Calendar slot picker tied to your phone and email.'],
+      ['W-07','Press kit / EPK page','Bio, photos, tracks, tech rider, links — downloadable.'],
+      ['W-08','Music streaming strip','Spotify + Apple + DistroKid hyperfollow on one page.'],
+      ['W-09','Mobile responsiveness audit','iPhone / Android / iPad ironed flat.'],
+      ['W-10','Color / aesthetic pivot','Swap the palette across the whole page (like pink→blue on MB).'],
+    ]},
+    { n:'03', name:'Brand · Identity', blurb:'Look like the brand you are.', items:[
+      ['B-01','Logo concept (1 brief)','Monogram, wordmark, or seal — your call.'],
+      ['B-02','Color palette + type system','5 colors, 2 fonts, and the usage rules to keep it consistent.'],
+      ['B-03','Social banner pack','IG, FB, X, YouTube — sized and delivered.'],
+      ['B-04','Avatar / profile photo prep','Background out, color corrected, square + circular.'],
+      ['B-05','One-pager (HTML + PDF)','Elevator pitch, services, contact — printable.'],
+      ['B-06','Single artwork / cover art','3:3 + 16:9 + 9:16 sizes of the same piece.'],
+    ]},
+    { n:'04', name:'Comms · Email · SMS · Calendar', blurb:'Every message, handled.', items:[
+      ['C-01','Email auto-reply flow','One trigger → one templated response, routed.'],
+      ['C-02','SMS auto-reply flow','Same shape, SMS-side.'],
+      ['C-03','Dual-fire lead routing','One inbound creates email + SMS + calendar event at once.'],
+      ['C-04','Inbox triage pack','5 rules, labels, auto-archive, priority lifts.'],
+      ['C-05','Daily digest summary','Your inbox in 5 bullets every morning, by email or SMS.'],
+      ['C-06','Follow-up sequence','3-touch outreach: day 0, day 3, day 7.'],
+      ['C-07','Voice-to-text intake','You talk, it becomes structured text in your CRM.'],
+    ]},
+    { n:'05', name:'Automation · Integrations', blurb:'Wire your tools together.', items:[
+      ['A-01','Cross-app webhook bridge','One hook connecting two apps (PayPal→Asana, Calendly→Notion).'],
+      ['A-02','Calendar auto-create','"Book me Wed 7pm" → event lands in your calendar.'],
+      ['A-03','Cron / scheduled job','One recurring task, daily or weekly, your spec.'],
+      ['A-04','Webhook receiver endpoint','Your URL accepts POSTs and routes them to an action.'],
+      ['A-05','Form-to-everywhere','One form posts to email + SMS + sheet + CRM at once.'],
+      ['A-06','Spreadsheet pipeline','Sheet → enrichment → outbound, automated.'],
+    ]},
+    { n:'06', name:'AI Agents · Voice · Possession', blurb:'Put an AI on it.', items:[
+      ['X-01','Custom AI assistant skill','One capability bolted onto your Claude / ChatGPT.'],
+      ['X-02','Claude Code hook script','One lifecycle event wired to your behavior.'],
+      ['X-03','MCP server install + wire-up','One server, registered, scoped, ready.'],
+      ['X-04','Voice Gate page (STT)','Talk to your stack from any browser, anywhere.'],
+      ['X-05','Siri Possession shortcut','iOS shortcut that runs your stack hands-free.'],
+      ['X-06','Local LLM swap (Ollama)','Install + register one local model for sovereignty.'],
+      ['X-07','KB ingestion (1 source)','Repo, folder, drive or site → searchable memory.'],
+    ]},
+    { n:'07', name:'Social · Content', blurb:'Show up everywhere.', items:[
+      ['S-01','Social post pack (5 posts)','Copy + image direction, drop-ready.'],
+      ['S-02','Caption + hashtag set','10 captions, 30 hashtags, tone-matched.'],
+      ['S-03','Cross-platform schedule','One platform, 2 weeks queued, auto-post, tracked.'],
+      ['S-04','Bio + Linktree pass','Rewrite + reorder for conversion.'],
+      ['S-05','Auto-DM responder','One platform, one trigger phrase, one response chain.'],
+    ]},
+    { n:'08', name:'Music · Production', blurb:'Studio-grade, shipped.', items:[
+      ['M-01','Track mastering pass','One song — loudness + EQ + spatial polish.'],
+      ['M-02','Mix revision','One song, one round of changes from your notes.'],
+      ['M-03','Beat selection + arrangement','3 beats curated to your direction + a map.'],
+      ['M-04','DistroKid wire-up','Release set up — metadata, art, scheduled drop.'],
+      ['M-05','Hyperfollow / smart link','One link that opens in Spotify/Apple/Amazon/Tidal.'],
+    ]},
+    { n:'09', name:'Ops · CRM · Docs', blurb:'Run the back office.', items:[
+      ['O-01','Lead capture sheet','Structured intake form → contact record.'],
+      ['O-02','Onboarding doc scaffold','Welcome → intake → kickoff, in your tone.'],
+      ['O-03','Booking pipeline (kanban)','Lead → qualified → booked → done, on a board.'],
+      ['O-04','Invoice template (your brand)','Reusable, fillable, sendable.'],
+      ['O-05','Contract template','Service-agreement skeleton, ready to fill.'],
+      ['O-06','Quote → invoice flow','Send a quote; on accept it auto-bills.'],
+    ]},
+    { n:'10', name:'Infra · Build · Deploy', blurb:'Ship it and keep it up.', items:[
+      ['I-01','Cloudflare tunnel hostname','Add one subdomain to your tunnel.'],
+      ['I-02','GitHub Pages wire-up','Repo created, branch pushed, custom domain bound.'],
+      ['I-03','FastAPI / Express boot','One backend — dockered, started, tunneled.'],
+      ['I-04','File explorer surface','One drive folder → public/private URL.'],
+      ['I-05','Backup snapshot rule','One folder mirrored to remote on a schedule.'],
+    ]},
+  ];
+  const PRICE = 111;
+  const NAMES = {}; MENU.forEach(b => b.items.forEach(it => NAMES[it[0]] = it[1]));
 
-  // --- SCANNABLE SCROLL + SMOOTH REVEAL + DOT SCROLLSPY (xlrd look, lint-corrected) ---
-  const sections = Array.from(document.querySelectorAll('.section-container'));
-  const N = sections.length;
-
-  // build side dots (jump-nav + scrollspy, not page-flip)
-  const dotsWrap = document.getElementById('dots');
-  sections.forEach((s, i) => {
-    const d = document.createElement('div');
-    d.className = 'dot' + (i === 0 ? ' active' : '');
-    d.title = s.getAttribute('data-dot') || ('Section ' + i);
-    d.onclick = () => scrollToSection(i);
-    dotsWrap.appendChild(d);
+  // ---------- RENDER MENU ----------
+  const root = document.getElementById('menuRoot');
+  MENU.forEach((b, bi) => {
+    const sec = document.createElement('div');
+    sec.className = 'section-container'; sec.id = 'b'+b.n; sec.setAttribute('data-dot', b.name.split('·')[0].trim());
+    let cards = b.items.map(it => `
+      <div class="item">
+        <div class="iid">${it[0]}</div>
+        <div class="ititle">${it[1]}</div>
+        <div class="icap">${it[2]}</div>
+        <div class="ifoot"><span class="iprice">111</span><button class="add-btn" data-id="${it[0]}"><i class="ph ph-plus"></i> Add</button></div>
+      </div>`).join('');
+    sec.innerHTML = `<section class="bucket glass-panel">
+      <div class="bucket-header"><span class="num text-liquid-steel">${b.n}</span><span class="name">${b.name}</span><span class="count">${b.items.length} units</span></div>
+      <div class="bucket-blurb">${b.blurb}</div>
+      <div class="items">${cards}</div>
+    </section>`;
+    root.appendChild(sec);
   });
+
+  // ---------- CART ----------
+  let cart = {};
+  try { cart = JSON.parse(localStorage.getItem('xlrdcart')||'{}'); } catch(e){ cart = {}; }
+  const save = () => { try { localStorage.setItem('xlrdcart', JSON.stringify(cart)); } catch(e){} };
+  const count = () => Object.values(cart).reduce((a,b)=>a+b,0);
+  const total = () => count()*PRICE;
+
+  function addToCart(id){ cart[id]=(cart[id]||0)+1; save(); paintCart(); }
+  function setQty(id,d){ cart[id]=(cart[id]||0)+d; if(cart[id]<=0) delete cart[id]; save(); paintCart(); }
+
+  function paintCart(){
+    const c = count(), t = total();
+    document.getElementById('navCt').textContent = c + ' · $' + t.toLocaleString();
+    document.getElementById('mCt').textContent = c;
+    // list
+    const list = document.getElementById('cartList');
+    const ids = Object.keys(cart);
+    if(!ids.length){ list.innerHTML = '<div class="cart-empty">Your order is empty. Tap <b>Add</b> on any unit.</div>'; }
+    else {
+      list.innerHTML = ids.map(id => `
+        <div class="cline">
+          <div class="cn"><div class="t">${NAMES[id]||id}</div><div class="s">${id} · $${PRICE} ea</div></div>
+          <div class="qty"><button onclick="setQty('${id}',-1)">−</button><span>${cart[id]}</span><button onclick="setQty('${id}',1)">+</button></div>
+          <div class="cp">$${(cart[id]*PRICE).toLocaleString()}</div>
+        </div>`).join('');
+    }
+    document.getElementById('cartTotal').textContent = '$' + t.toLocaleString();
+    // checkout
+    const co = document.getElementById('checkoutBtn');
+    if(c){
+      co.classList.remove('disabled');
+      const lines = ids.map(id => `• ${cart[id]}× ${NAMES[id]||id} (${id}) — $${(cart[id]*PRICE).toLocaleString()}`).join('\n');
+      const body = `My XLRD TECH order (${c} unit${c>1?'s':''}, total $${t.toLocaleString()}):\n\n${lines}\n\nWhat I need / context:\n`;
+      co.href = 'mailto:east@xlrd.org?subject=' + encodeURIComponent('Order · '+c+' units ($'+t.toLocaleString()+')') + '&body=' + encodeURIComponent(body);
+      co.innerHTML = '<i class="ph ph-paper-plane-tilt"></i> Send my order · $' + t.toLocaleString();
+    } else {
+      co.classList.add('disabled'); co.removeAttribute('href');
+      co.innerHTML = '<i class="ph ph-paper-plane-tilt"></i> Send my order';
+    }
+  }
+
+  // add-button delegation
+  document.addEventListener('click', e => {
+    const b = e.target.closest('.add-btn'); if(!b) return;
+    addToCart(b.dataset.id);
+    b.classList.add('added'); const o = b.innerHTML; b.innerHTML = '<i class="ph ph-check"></i> Added';
+    setTimeout(()=>{ b.classList.remove('added'); b.innerHTML = o; }, 900);
+  });
+
+  window.openCart = () => { document.getElementById('cart-modal').classList.add('open'); closeSheet(); };
+  window.closeCart = () => document.getElementById('cart-modal').classList.remove('open');
+  document.getElementById('rushBtn').addEventListener('click', () => {
+    const co = document.getElementById('checkoutBtn'); if(co.classList.contains('disabled')) return;
+    const u = new URL(co.href); u.searchParams.set('subject', u.searchParams.get('subject')+' · RUSH');
+    co.href = u.toString(); document.getElementById('rushBtn').innerHTML = '<i class="ph ph-check"></i> Rush added';
+  });
+
+  // ---------- NAV / SHEET ----------
+  const sheet = document.getElementById('msheet');
+  function closeSheet(){ sheet.classList.remove('open'); }
+  document.getElementById('hamb').addEventListener('click', () => sheet.classList.add('open'));
+  sheet.querySelectorAll('[data-mclose]').forEach(el => el.addEventListener('click', closeSheet));
+  sheet.querySelectorAll('.mcard button:not(.mclose), .mcard a').forEach(b => b.addEventListener('click', closeSheet));
+
+  // ---------- SCROLL: reveal + scrollspy dots ----------
+  const sections = Array.from(document.querySelectorAll('.section-container'));
+  const dotsWrap = document.getElementById('dots');
+  sections.forEach((s,i) => { const d=document.createElement('div'); d.className='dot'+(i===0?' active':''); d.title=s.getAttribute('data-dot')||('Section '+i); d.onclick=()=>jump(i); dotsWrap.appendChild(d); });
   const dots = Array.from(dotsWrap.children);
-  window.scrollToSection = (i) => sections[i] && sections[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
+  window.jump = (i) => sections[i] && sections[i].scrollIntoView({behavior:'smooth',block:'start'});
+  window.jumpId = (id) => { const el=document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); };
 
-  // progressive enhancement: only hide-for-reveal once JS is live (content never stuck hidden)
   document.body.classList.add('reveal-on');
-
-  // smooth reveal as each section enters (once)
-  const revealIO = new IntersectionObserver((es) => {
-    es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); revealIO.unobserve(e.target); } });
-  }, { threshold: 0.1, rootMargin: '0px 0px -6% 0px' });
-  sections.forEach(s => revealIO.observe(s));
-  sections[0].classList.add('in');
-
-  // dot scrollspy (active = section in the middle band)
-  const spyIO = new IntersectionObserver((es) => {
-    es.forEach(e => { if (e.isIntersecting) { const i = sections.indexOf(e.target); dots.forEach((d, j) => d.classList.toggle('active', j === i)); } });
-  }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
+  const revealIO = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); revealIO.unobserve(e.target); } }), { threshold:0.08, rootMargin:'0px 0px -5% 0px' });
+  sections.forEach(s => revealIO.observe(s)); sections[0].classList.add('in');
+  const spyIO = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting){ const i=sections.indexOf(e.target); dots.forEach((d,j)=>d.classList.toggle('active',j===i)); } }), { rootMargin:'-45% 0px -45% 0px', threshold:0 });
   sections.forEach(s => spyIO.observe(s));
 
-  // --- MOBILE MENU ---
-  const mm = document.getElementById('mobile-menu');
-  document.getElementById('mobile-menu-btn').addEventListener('click', () => mm.classList.add('open'));
-  document.getElementById('close-mobile-menu').addEventListener('click', () => mm.classList.remove('open'));
-  mm.querySelectorAll('button').forEach(b => b.addEventListener('click', () => mm.classList.remove('open')));
-
-  // --- ORDER MODAL ---
-  window.toggleOrderModal = () => { document.getElementById('order-modal').classList.toggle('hidden'); };
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('order-modal').classList.add('hidden'); });
-
-  // --- ORDER SELECTOR ($111 increments, 1–100) ---
-  (function(){
-    const sel = document.getElementById('unitSel');
-    for (let i = 1; i <= 100; i++) {
-      const o = document.createElement('option');
-      o.value = i; o.textContent = i + (i===1?' unit':' units') + ' · $' + (i*111).toLocaleString();
-      sel.appendChild(o);
-    }
-  })();
-  window.syncSend = () => {
-    const n = document.getElementById('unitSel').value;
-    const note = (document.getElementById('orderNote').value || '').trim();
-    const a = document.getElementById('sendOrder');
-    if (n) {
-      const total = (n*111).toLocaleString();
-      a.textContent = 'Send order · ' + n + (n==1?' unit':' units') + ' · $' + total + ' →';
-      a.href = 'mailto:east@xlrd.org?subject=' + encodeURIComponent('Unit order · '+n+' units ($'+total+')') +
-        '&body=' + encodeURIComponent('I want to order '+n+' unit(s) from the XLRD TECH $111 menu (total $'+total+').\n\n'+note);
-    }
-  };
-  document.getElementById('orderNote').addEventListener('input', () => { if (document.getElementById('unitSel').value) window.syncSend(); });
+  // ---------- INIT ----------
+  paintCart();
+  window.addEventListener('load', () => setTimeout(() => document.getElementById('preloader').classList.add('loaded'), 650));
+  document.addEventListener('keydown', e => { if(e.key==='Escape'){ closeCart(); closeSheet(); } });
 </script>
 </body>
 </html>
