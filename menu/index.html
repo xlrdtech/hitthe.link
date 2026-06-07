@@ -1,345 +1,519 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Self Exec · $111 Menu · One Unit At A Time</title>
-<meta name="description" content="Self Exec — every unit, $111 each. AI receptionist, speed-build sites, automation, branding, music ops, voice agents. One unit at a time.">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XLRD TECH · $111 Menu · One Unit At A Time</title>
+<meta name="description" content="XLRD TECH — every unit, $111 flat. AI receptionist, speed-build sites, automation, branding, music ops, voice agents. One unit at a time.">
+<meta name="theme-color" content="#000000">
+
+<!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --void:#000; --ink:#070707; --ash:#101214; --dim:#1c1f23;
-    --teal:#00d9c0; --teal-glow:rgba(0,217,192,0.55); --teal-deep:#006d60;
-    --acid:#c9ff45; --gold:#d4af37; --gold-pale:#f4e3a1;
-    --pearl:#f4f4f5; --bone:#dde0e3; --buff:#a4a8ad;
-    --dust:#5a5d62;
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- Phosphor Icons -->
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: { background: '#000000', surface: '#0A0A0A' },
+        fontFamily: { sans: ['Inter', 'sans-serif'], heading: ['Figtree', 'sans-serif'] },
+        animation: {
+          'pulse-glow': 'pulseGlow 4s ease-in-out infinite',
+          'spin-slow': 'spin 3s linear infinite',
+        },
+        keyframes: {
+          'pulseGlow': { '0%, 100%': { opacity: '0.5' }, '50%': { opacity: '0.8' } }
+        }
+      }
+    }
   }
-  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-  ::selection{background:var(--acid);color:var(--void)}
-  html{background:var(--void)}
-  html,body{color:var(--pearl);font-family:'Inter',sans-serif;font-weight:400;-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh;line-height:1.5}
-  body{background:transparent}
-  /* scroll-scrubbed video background */
-  .bgv{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none}
-  .bg-scrim{position:fixed;inset:0;z-index:1;pointer-events:none;
-    background:radial-gradient(ellipse 1200px 600px at 50% 0%, rgba(0,217,192,0.10), transparent 60%),
-      radial-gradient(ellipse 800px 400px at 15% 100%, rgba(212,175,55,0.06), transparent 70%),
-      linear-gradient(180deg, rgba(0,0,0,.62), rgba(0,0,0,.74) 45%, rgba(0,0,0,.82))}
-  .grain{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0.6;mix-blend-mode:overlay;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2'/><feColorMatrix values='0 0 0 0 0   0 0 0 0 0.85   0 0 0 0 0.75   0 0 0 0.08 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")}
+</script>
 
-  main{position:relative;z-index:10;max-width:1080px;margin:0 auto;padding:32px 24px}
+<style>
+  body {
+    background-color: transparent;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+    margin: 0; padding: 0;
+  }
+  html { background-color: #000000; }
 
-  .masthead{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;padding-bottom:22px;border-bottom:1px solid rgba(0,217,192,0.25);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;color:var(--teal)}
-  .masthead .seal{color:var(--acid)}
-  .masthead .label{text-align:center;font-family:'Figtree',sans-serif;font-weight:800;color:var(--pearl);letter-spacing:0.5em;font-size:13px}
-  .masthead .meta{color:var(--buff);text-align:right}
+  /* --- SCROLL-SCRUBBED VIDEO BACKGROUND (replaces xlrd 3D canvas) --- */
+  .bgv {
+    position: fixed; inset: 0;
+    width: 100vw; height: 100vh;
+    object-fit: cover;
+    z-index: -2; display: block; pointer-events: none;
+  }
+  .bg-scrim {
+    position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(ellipse 1200px 600px at 50% 0%, rgba(255,255,255,0.05), transparent 60%),
+      linear-gradient(180deg, rgba(0,0,0,0.58), rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.82));
+  }
 
-  .hero{padding:80px 0 40px;text-align:center}
-  .hero .kicker{font-family:'Figtree',sans-serif;font-style:italic;font-size:clamp(16px,2vw,22px);color:var(--teal);letter-spacing:0.06em;margin-bottom:24px}
-  .hero h1{font-family:'Figtree',sans-serif;font-weight:800;font-size:clamp(72px,14vw,200px);line-height:0.9;letter-spacing:-0.01em;background:linear-gradient(180deg,var(--pearl) 0%,var(--teal) 50%,var(--teal-deep) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 4px 60px rgba(0,217,192,0.3);margin-bottom:14px}
-  .hero h1 .dollar{color:var(--acid);font-style:italic;-webkit-background-clip:initial;background-clip:initial;background:none;text-shadow:0 0 30px rgba(201,255,69,0.5)}
-  .hero h2{font-family:'Figtree',sans-serif;font-style:italic;font-size:clamp(20px,2.6vw,30px);color:var(--gold-pale);letter-spacing:0.02em;margin-top:14px}
-  .hero h2 em{color:var(--acid)}
-  .hero .law{margin-top:24px;font-family:'Inter',sans-serif;font-size:12px;letter-spacing:0.4em;color:var(--buff);text-transform:uppercase}
-  .hero .law span{color:var(--teal)}
+  /* --- NAVIGATION --- */
+  nav {
+    position: fixed; top: 0; left: 0; width: 100%; z-index: 50;
+    background: rgba(0, 0, 0, 0.2); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .progress-bar {
+    position: fixed; right: 20px; top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 10px; z-index: 40;
+  }
+  .dot { width: 8px; height: 8px; background: rgba(255,255,255,0.2); border-radius: 50%; transition: all 0.3s; cursor: pointer; }
+  .dot.active { background: #fff; box-shadow: 0 0 10px #fff; }
+  @media (max-width: 768px) { .progress-bar { display: none; } }
 
-  .pricetag{display:inline-block;margin:20px auto;padding:14px 36px;background:transparent;border:2px solid var(--acid);font-family:'Figtree',sans-serif;font-weight:800;font-size:22px;letter-spacing:0.18em;color:var(--acid);text-transform:uppercase;text-shadow:0 0 18px rgba(201,255,69,0.5);box-shadow:0 0 40px rgba(201,255,69,0.18),inset 0 0 20px rgba(201,255,69,0.08)}
+  /* --- GLASS UI (xlrd.org) --- */
+  .glass-panel {
+    position: relative; overflow: hidden;
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .glass-panel::after {
+    content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.03), transparent);
+    transform: skewX(-25deg); pointer-events: none;
+    animation: panelGlare 8s infinite ease-in-out;
+  }
+  @keyframes panelGlare { 0%, 40% { left: -100%; opacity: 0; } 50% { opacity: 1; } 60%, 100% { left: 200%; opacity: 0; } }
+  .glass-panel:hover {
+    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(25, 25, 25, 0.4);
+    transform: translateY(-4px) scale(1.005);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(255,255,255,0.05);
+  }
 
-  /* xlrd.org glass panel */
-  .bucket{position:relative;overflow:hidden;margin:28px 0;padding:6px 26px 18px;
-    background:rgba(0,0,0,0.2);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);
-    border:1px solid rgba(255,255,255,0.08);border-radius:24px;box-shadow:0 8px 32px rgba(0,0,0,0.3);
-    transition:all 0.4s cubic-bezier(0.4,0,0.2,1)}
-  .bucket::after{content:'';position:absolute;top:0;left:-100%;width:50%;height:100%;
-    background:linear-gradient(to right,transparent,rgba(255,255,255,0.04),transparent);
-    transform:skewX(-25deg);pointer-events:none;animation:panelGlare 8s infinite ease-in-out}
-  @keyframes panelGlare{0%,40%{left:-100%;opacity:0}50%{opacity:1}60%,100%{left:200%;opacity:0}}
-  .bucket:hover{border-color:rgba(255,255,255,0.22);background:rgba(20,20,20,0.4);box-shadow:0 20px 40px rgba(0,0,0,0.4),0 0 20px rgba(255,255,255,0.05)}
-  .bucket-header{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:18px;padding:18px 0 14px;border-bottom:1px solid rgba(255,255,255,0.08)}
-  .bucket-header .num{font-family:'Figtree',sans-serif;font-weight:800;font-size:38px;color:var(--teal);text-shadow:0 0 18px var(--teal-glow);min-width:56px}
-  .bucket-header .name{font-family:'Figtree',sans-serif;font-weight:600;font-size:clamp(18px,2.4vw,26px);letter-spacing:0.18em;text-transform:uppercase;color:var(--pearl)}
-  .bucket-header .count{font-family:'Inter',sans-serif;font-size:11px;letter-spacing:0.3em;color:var(--gold-pale);text-transform:uppercase}
+  .glass-button {
+    position: relative; font-weight: 600; letter-spacing: 0.08em; color: #fff;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border: 1.5px solid transparent; backdrop-filter: blur(30px); border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+    overflow: hidden; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .glass-button::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(138, 43, 226, 0.4) 25%, rgba(0, 191, 255, 0.4) 50%, rgba(255, 255, 255, 0.4) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+    opacity: 0.6; transition: opacity 0.5s ease; pointer-events: none;
+  }
+  .glass-button::after {
+    content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);
+    transform: skewX(-25deg); pointer-events: none;
+    animation: panelGlare 8s infinite ease-in-out;
+  }
+  .glass-button:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+    box-shadow: 0 12px 48px rgba(138, 43, 226, 0.3), 0 0 80px rgba(0, 191, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transform: translateY(-3px) scale(1.02);
+  }
+  .glass-button:hover::before { opacity: 1; }
 
-  .units{margin:0}
-  .unit{display:grid;grid-template-columns:60px 1fr auto;align-items:baseline;gap:18px;padding:14px 4px;border-bottom:1px solid rgba(255,255,255,0.06)}
-  .unit:hover{background:rgba(255,255,255,0.03)}
-  .unit .id{font-family:'Inter',sans-serif;font-size:12px;letter-spacing:0.15em;color:var(--dust);font-weight:500}
-  .unit .what{font-family:'Inter',sans-serif;font-size:14px;color:var(--bone);line-height:1.4}
-  .unit .what strong{color:var(--pearl);font-weight:700}
-  .unit .what em{color:var(--teal);font-style:normal;font-family:'Figtree',sans-serif;font-style:italic;font-size:15px}
-  .unit .price{font-family:'Figtree',sans-serif;font-weight:800;color:var(--acid);font-size:14px;letter-spacing:0.05em;text-shadow:0 0 12px rgba(201,255,69,0.3);white-space:nowrap}
-  .unit .price::before{content:'$';opacity:0.7;margin-right:1px}
+  .glow-text {
+    filter: drop-shadow(0 0 40px rgba(255, 255, 255, 0.2));
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255,255,255,0.15);
+  }
+  .text-liquid-steel {
+    background-image: linear-gradient(180deg, #FFFFFF 0%, #E4E4E7 45%, #71717A 50%, #E4E4E7 55%, #FFFFFF 100%);
+    background-size: 200% auto;
+    color: white; background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
 
-  .ruleline{padding:32px;margin:60px -24px 0;text-align:center;background:linear-gradient(180deg,rgba(0,217,192,0.06),rgba(0,0,0,0.4));border-top:1px solid rgba(0,217,192,0.2);border-bottom:1px solid rgba(0,217,192,0.2)}
-  .ruleline p{font-family:'Figtree',sans-serif;font-style:italic;font-size:clamp(18px,2.4vw,28px);color:var(--gold-pale);line-height:1.4;max-width:760px;margin:0 auto}
-  .ruleline p em{color:var(--acid);font-style:italic}
+  /* --- PRELOADER --- */
+  #preloader {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #000; z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.8s;
+  }
+  #preloader.loaded { opacity: 0; visibility: hidden; }
 
-  .cta{padding:60px 0;text-align:center}
-  .cta h2{font-family:'Figtree',sans-serif;font-weight:800;font-size:clamp(28px,4.5vw,52px);color:var(--pearl);margin-bottom:24px;letter-spacing:-0.005em}
-  .cta h2 em{font-family:'Figtree',sans-serif;font-weight:400;font-style:italic;color:var(--teal)}
-  .cta-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:32px}
-  /* xlrd.org glass buttons */
-  .cta-row a{position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:10px;padding:16px 30px;color:#fff;text-decoration:none;border:1.5px solid transparent;border-radius:12px;font-family:'Inter',sans-serif;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;
-    background:linear-gradient(135deg,rgba(255,255,255,0.08) 0%,rgba(255,255,255,0.02) 100%);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);
-    box-shadow:0 8px 32px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.2),inset 0 -1px 0 rgba(255,255,255,0.05);
-    transition:all 0.5s cubic-bezier(0.4,0,0.2,1)}
-  .cta-row a::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1.5px;
-    background:linear-gradient(135deg,rgba(255,255,255,0.4) 0%,rgba(138,43,226,0.4) 25%,rgba(0,191,255,0.4) 50%,rgba(255,255,255,0.4) 100%);
-    -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0.6;transition:opacity 0.5s ease;pointer-events:none}
-  .cta-row a:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.25)}
-  .cta-row a:hover::before{opacity:1}
-  .cta-row a.primary{background:linear-gradient(135deg,rgba(212,175,55,0.22) 0%,rgba(212,175,55,0.06) 100%);font-weight:700}
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: #000; }
+  ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #555; }
+  select { background-color: #000; color: white; }
 
-  footer{padding:48px 0 32px;text-align:center;border-top:1px solid rgba(0,217,192,0.18);margin-top:60px;font-family:'Inter',sans-serif;font-size:10px;letter-spacing:0.4em;text-transform:uppercase;color:var(--dust)}
-  footer .tag{display:block;margin-bottom:14px;font-family:'Figtree',sans-serif;font-style:italic;font-size:14px;color:var(--gold-pale);letter-spacing:0.04em;text-transform:none}
-  footer a{color:var(--teal);text-decoration:none}
+  /* --- MENU CONTENT (xlrd glass idiom) --- */
+  .wrap { position: relative; z-index: 10; max-width: 1080px; margin: 0 auto; padding: 0 24px 40px; }
 
-  @media (max-width:680px){
-    .masthead{grid-template-columns:1fr;gap:4px;text-align:center}
-    .masthead .meta{text-align:center}
-    .unit{grid-template-columns:40px 1fr auto;gap:10px}
-    .unit .id{font-size:11px}
+  .hero { min-height: 92vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 120px 0 60px; }
+  .hero .kicker { font-family: 'Figtree', sans-serif; font-style: italic; font-size: clamp(15px, 2vw, 21px); color: #A5F3FC; letter-spacing: 0.04em; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Figtree', sans-serif; font-weight: 900; font-size: clamp(64px, 13vw, 180px); line-height: 0.9; letter-spacing: -0.02em; margin-bottom: 16px; }
+  .hero h2 { font-family: 'Figtree', sans-serif; font-style: italic; font-weight: 400; font-size: clamp(20px, 2.6vw, 30px); color: #d4d4d8; letter-spacing: 0.01em; margin-top: 10px; }
+  .pricetag { display: inline-flex; align-items: center; margin: 26px auto 0; padding: 13px 34px; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.22em; text-transform: uppercase; }
+  .law { margin-top: 26px; font-family: 'Inter', sans-serif; font-size: 11px; letter-spacing: 0.38em; color: #71717A; text-transform: uppercase; }
+  .law span { color: #fff; }
+
+  .bucket { margin: 22px 0; padding: 4px 26px 16px; }
+  .bucket-header { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 18px; padding: 20px 0 14px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .bucket-header .num { font-family: 'Figtree', sans-serif; font-weight: 900; font-size: 36px; min-width: 54px; }
+  .bucket-header .name { font-family: 'Figtree', sans-serif; font-weight: 600; font-size: clamp(17px, 2.4vw, 25px); letter-spacing: 0.16em; text-transform: uppercase; color: #fff; }
+  .bucket-header .count { font-family: 'Inter', sans-serif; font-size: 10px; letter-spacing: 0.3em; color: #A5F3FC; text-transform: uppercase; }
+
+  .unit { display: grid; grid-template-columns: 60px 1fr auto; align-items: baseline; gap: 18px; padding: 14px 4px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .unit:hover { background: rgba(255,255,255,0.03); }
+  .unit .id { font-family: 'Inter', sans-serif; font-size: 12px; letter-spacing: 0.15em; color: #52525B; font-weight: 500; }
+  .unit .what { font-family: 'Inter', sans-serif; font-size: 14px; color: #d4d4d8; line-height: 1.4; }
+  .unit .what strong { color: #fff; font-weight: 700; }
+  .unit .what em { color: #A5F3FC; font-style: italic; font-family: 'Figtree', sans-serif; font-size: 14.5px; }
+  .unit .price { font-family: 'Figtree', sans-serif; font-weight: 800; font-size: 15px; letter-spacing: 0.03em; white-space: nowrap; }
+  .unit .price::before { content: '$'; opacity: 0.6; margin-right: 1px; font-weight: 600; }
+
+  .ruleline { padding: 40px 28px; margin: 48px 0 0; text-align: center; }
+  .ruleline p { font-family: 'Figtree', sans-serif; font-style: italic; font-size: clamp(18px, 2.4vw, 28px); color: #d4d4d8; line-height: 1.4; max-width: 760px; margin: 0 auto; }
+  .ruleline p em { font-style: italic; }
+
+  .order { margin: 40px 0 0; padding: 36px 32px; }
+  .order h3 { font-family: 'Figtree', sans-serif; font-weight: 800; font-size: clamp(26px, 4vw, 44px); margin-bottom: 8px; }
+  .order p.sub { color: #a1a1aa; font-size: 14px; margin-bottom: 26px; }
+  .order-rows { display: flex; flex-direction: column; gap: 12px; }
+  .order-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 18px; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; cursor: pointer; transition: all 0.25s; }
+  .order-row:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.25); }
+  .order-row.best { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); }
+  .order-row .k { font-family: 'JetBrains Mono', 'Inter', monospace; color: #d4d4d8; font-size: 14px; }
+  .order-row .v { font-weight: 800; color: #fff; font-size: 15px; }
+  .order select { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 14px; color: #fff; font-family: 'Inter', sans-serif; margin-top: 22px; cursor: pointer; }
+  .order .send { width: 100%; margin-top: 14px; padding: 16px; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 12px; }
+
+  .cta { padding: 56px 0 20px; text-align: center; }
+  .cta h2 { font-family: 'Figtree', sans-serif; font-weight: 800; font-size: clamp(28px, 4.5vw, 52px); margin-bottom: 8px; }
+  .cta h2 em { font-weight: 400; font-style: italic; color: #A5F3FC; }
+  .cta-row { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 30px; }
+  .cta-row a { padding: 16px 28px; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; text-decoration: none; gap: 10px; }
+
+  footer { padding: 52px 0 36px; text-align: center; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 40px; font-family: 'Inter', sans-serif; font-size: 10px; letter-spacing: 0.36em; text-transform: uppercase; color: #52525B; }
+  footer .tag { display: block; margin-bottom: 14px; font-family: 'Figtree', sans-serif; font-style: italic; font-size: 14px; color: #d4d4d8; letter-spacing: 0.02em; text-transform: none; }
+  footer a { color: #A5F3FC; text-decoration: none; }
+
+  @media (max-width: 680px) {
+    .unit { grid-template-columns: 44px 1fr auto; gap: 10px; }
+    .unit .id { font-size: 11px; }
+    .bucket { padding: 4px 16px 14px; }
   }
 </style>
 </head>
-<body>
+<body class="antialiased selection:bg-white selection:text-black">
 
-<video class="bgv" data-scrub-video data-mode="page" data-ease="0.1" muted playsinline webkit-playsinline preload="auto" poster="assets/menu-bg-poster.jpg" src="assets/menu-bg-v2.mp4"></video>
-<div class="bg-scrim"></div>
-<div class="grain"></div>
-
-<main>
-
-<div class="masthead">
-  <div class="seal">◆  $111 · UNIT MENU  ◆</div>
-  <div class="label">SELF · EXEC</div>
-  <div class="meta">ONE UNIT AT A TIME</div>
+<!-- PRELOADER -->
+<div id="preloader">
+  <div class="flex flex-col items-center">
+    <div class="font-heading font-black text-3xl tracking-[0.3em] text-liquid-steel">XLRD TECH</div>
+    <div class="mt-5 w-32 h-1 bg-white/10 rounded-full overflow-hidden">
+      <div class="h-full bg-white w-full origin-left animate-pulse"></div>
+    </div>
+    <p class="mt-4 text-[10px] font-bold tracking-[0.3em] text-gray-500 uppercase">Initializing Menu</p>
+  </div>
 </div>
 
-<section class="hero">
-  <div class="kicker">No bundles. No retainers. No timelines that drift.</div>
-  <h1>One unit. <span class="dollar">$111</span>.</h1>
-  <h2>Every Self Exec deliverable, <em>priced flat</em>.</h2>
-  <div class="pricetag">$111 / unit</div>
-  <div class="law"><span>◆</span> AUTOMATE  OR  DIE <span>◆</span> WE GET PAID TO SAVE TIME <span>◆</span></div>
-</section>
+<!-- SCROLL-SCRUBBED VIDEO BACKGROUND -->
+<video class="bgv" data-scrub-video data-mode="page" data-ease="0.1" muted playsinline webkit-playsinline preload="auto" poster="assets/menu-bg-poster.jpg" src="assets/menu-bg-v2.mp4"></video>
+<div class="bg-scrim"></div>
 
-<!-- =========================================================
-     FRONT LINE
-     ========================================================= -->
-<section class="bucket">
-  <div class="bucket-header">
-    <div class="num">01</div>
-    <div class="name">Front Line · Receptionist</div>
-    <div class="count">5 units</div>
+<!-- NAVIGATION -->
+<nav>
+  <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+    <a href="#top" class="flex items-center gap-3 group">
+      <span class="font-heading font-black text-xl tracking-tight text-white">XLRD <span class="text-liquid-steel">TECH</span></span>
+    </a>
+    <div class="hidden md:flex items-center gap-2">
+      <a href="#top" class="px-4 py-2 text-xs font-bold text-gray-400 hover:text-white transition-colors uppercase tracking-widest">Menu</a>
+      <a href="https://hitthe.link/aua/" class="px-4 py-2 text-xs font-bold text-gray-400 hover:text-white transition-colors uppercase tracking-widest">Manifesto</a>
+      <a href="https://hitthe.link/endpoints/" class="px-4 py-2 text-xs font-bold text-gray-400 hover:text-white transition-colors uppercase tracking-widest">Catalog</a>
+      <a href="#order" class="px-5 py-2 glass-button text-xs uppercase tracking-widest">Order</a>
+    </div>
+    <a href="tel:+17709999934" class="md:hidden text-white p-2 glass-button text-xs"><i class="ph ph-phone"></i></a>
   </div>
-  <div class="units">
-    <div class="unit"><div class="id">F-01</div><div class="what"><strong>AI voice receptionist line</strong> — <em>your number, your persona, your script, 24/7 answer</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">F-02</div><div class="what"><strong>Custom voice persona</strong> — <em>name, tone, opening line, escalation rules</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">F-03</div><div class="what"><strong>Inbound capture → CRM</strong> — <em>every call transcribed, named, routed to a lead file</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">F-04</div><div class="what"><strong>After-hours flow</strong> — <em>night/weekend behavior, callback windows, on-call routing</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">F-05</div><div class="what"><strong>Caller-to-text bridge</strong> — <em>caller leaves a message, you read it in SMS within 60 seconds</em></div><div class="price">111</div></div>
-  </div>
-</section>
+</nav>
 
-<!-- =========================================================
-     WEB · PAGES · HOSTING
-     ========================================================= -->
-<section class="bucket">
-  <div class="bucket-header">
-    <div class="num">02</div>
-    <div class="name">Web · Pages · Hosting</div>
-    <div class="count">10 units</div>
-  </div>
-  <div class="units">
-    <div class="unit"><div class="id">W-01</div><div class="what"><strong>Speed-build landing page</strong> — <em>single-page, deployed in ~2 hours, like the Diamond Cut / MB drops</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">W-02</div><div class="what"><strong>Custom domain + tunnel</strong> — <em>DNS, SSL, Cloudflare ingress, your subdomain live</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">W-03</div><div class="what"><strong>Logo + brand asset placement</strong> — <em>swap your logo, color from logo, retina-ready</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">W-04</div><div class="what"><strong>SEO + OG metadata pass</strong> — <em>title, description, social cards, schema</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">W-05</div><div class="what"><strong>Newsletter capture form</strong> — <em>email-in, list wired to your provider</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">W-06</div><div class="what"><strong>Booking widget embed</strong> — <em>calendar slot picker tied to your phone/email</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">W-07</div><div class="what"><strong>Press kit / EPK page</strong> — <em>bio, photos, tracks, tech rider, links, downloadable</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">W-08</div><div class="what"><strong>Music streaming strip</strong> — <em>Spotify + Apple + DistroKid hyperfollow on one page</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">W-09</div><div class="what"><strong>Mobile responsiveness audit</strong> — <em>iPhone / Android / iPad ironed flat</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">W-10</div><div class="what"><strong>Color/aesthetic pivot</strong> — <em>swap palette across whole page (like pink→blue on MB)</em></div><div class="price">111</div></div>
-  </div>
-</section>
+<!-- SIDE DOTS -->
+<div class="progress-bar" id="dots"></div>
 
-<!-- =========================================================
-     BRAND · IDENTITY
-     ========================================================= -->
-<section class="bucket">
-  <div class="bucket-header">
-    <div class="num">03</div>
-    <div class="name">Brand · Identity</div>
-    <div class="count">6 units</div>
-  </div>
-  <div class="units">
-    <div class="unit"><div class="id">B-01</div><div class="what"><strong>Logo concept (1 brief)</strong> — <em>monogram, wordmark, or seal, your call</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">B-02</div><div class="what"><strong>Color palette + type system</strong> — <em>5 colors, 2 fonts, usage rules</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">B-03</div><div class="what"><strong>Social banner pack</strong> — <em>IG, FB, X, YouTube — sized + delivered</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">B-04</div><div class="what"><strong>Avatar / profile photo prep</strong> — <em>background out, color correct, square + circular</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">B-05</div><div class="what"><strong>One-pager (HTML + PDF)</strong> — <em>elevator pitch, services, contact, printable</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">B-06</div><div class="what"><strong>Single artwork / cover art</strong> — <em>3:3 + 16:9 + 9:16 sizes for the same piece</em></div><div class="price">111</div></div>
-  </div>
-</section>
+<a id="top"></a>
+<div class="wrap">
 
-<!-- =========================================================
-     COMMS · EMAIL · SMS · CALENDAR
-     ========================================================= -->
-<section class="bucket">
-  <div class="bucket-header">
-    <div class="num">04</div>
-    <div class="name">Comms · Email · SMS · Calendar</div>
-    <div class="count">7 units</div>
-  </div>
-  <div class="units">
-    <div class="unit"><div class="id">C-01</div><div class="what"><strong>Email auto-reply flow</strong> — <em>1 trigger → 1 templated response, routed</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">C-02</div><div class="what"><strong>SMS auto-reply flow</strong> — <em>same shape, SMS-side</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">C-03</div><div class="what"><strong>Dual-fire lead routing</strong> — <em>one inbound creates email + SMS + calendar event at once</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">C-04</div><div class="what"><strong>Inbox triage pack</strong> — <em>5 rules, labels, auto-archive, priority lifts</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">C-05</div><div class="what"><strong>Daily digest summary</strong> — <em>your inbox in 5 bullets, every morning, via email or SMS</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">C-06</div><div class="what"><strong>Follow-up sequence</strong> — <em>3-touch outreach: day 0, day 3, day 7</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">C-07</div><div class="what"><strong>Voice-to-text intake</strong> — <em>you talk, it turns into structured text in your CRM</em></div><div class="price">111</div></div>
-  </div>
-</section>
+  <!-- HERO -->
+  <section class="hero" data-dot="Top">
+    <div class="kicker">No bundles. No retainers. No timelines that drift.</div>
+    <h1 class="glow-text">One unit.<br><span class="text-liquid-steel">$111</span>.</h1>
+    <h2>Every XLRD TECH deliverable, <em>priced flat</em>.</h2>
+    <div class="pricetag glass-button">$111 / UNIT</div>
+    <div class="law"><span>◆</span>&nbsp; AUTOMATE OR DIE &nbsp;<span>◆</span>&nbsp; WE GET PAID TO SAVE TIME &nbsp;<span>◆</span></div>
+  </section>
 
-<!-- =========================================================
-     AUTOMATION · INTEGRATIONS
-     ========================================================= -->
-<section class="bucket">
-  <div class="bucket-header">
-    <div class="num">05</div>
-    <div class="name">Automation · Integrations</div>
-    <div class="count">6 units</div>
-  </div>
-  <div class="units">
-    <div class="unit"><div class="id">A-01</div><div class="what"><strong>Cross-app webhook bridge</strong> — <em>1 hook connecting 2 apps (PayPal→Asana, Calendly→Notion, etc.)</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">A-02</div><div class="what"><strong>Calendar auto-create from inbound</strong> — <em>"book me Wed 7pm" → event lands in Spark/Google Cal</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">A-03</div><div class="what"><strong>Cron / scheduled job</strong> — <em>1 recurring task, daily/weekly, your spec</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">A-04</div><div class="what"><strong>Webhook receiver endpoint</strong> — <em>your URL accepts POSTs and routes to action</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">A-05</div><div class="what"><strong>Form-to-everywhere</strong> — <em>1 form posts to email + SMS + sheet + CRM at once</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">A-06</div><div class="what"><strong>Spreadsheet pipeline</strong> — <em>Sheet → enrichment → outbound, automated</em></div><div class="price">111</div></div>
-  </div>
-</section>
+  <!-- 01 FRONT LINE -->
+  <section class="bucket glass-panel" data-dot="Front Line">
+    <div class="bucket-header">
+      <div class="num text-liquid-steel">01</div>
+      <div class="name">Front Line · Receptionist</div>
+      <div class="count">5 units</div>
+    </div>
+    <div class="units">
+      <div class="unit"><div class="id">F-01</div><div class="what"><strong>AI voice receptionist line</strong> — <em>your number, your persona, your script, 24/7 answer</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">F-02</div><div class="what"><strong>Custom voice persona</strong> — <em>name, tone, opening line, escalation rules</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">F-03</div><div class="what"><strong>Inbound capture → CRM</strong> — <em>every call transcribed, named, routed to a lead file</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">F-04</div><div class="what"><strong>After-hours flow</strong> — <em>night/weekend behavior, callback windows, on-call routing</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">F-05</div><div class="what"><strong>Caller-to-text bridge</strong> — <em>caller leaves a message, you read it in SMS within 60 seconds</em></div><div class="price">111</div></div>
+    </div>
+  </section>
 
-<!-- =========================================================
-     AI AGENTS · VOICE · POSSESSION
-     ========================================================= -->
-<section class="bucket">
-  <div class="bucket-header">
-    <div class="num">06</div>
-    <div class="name">AI Agents · Voice · Possession</div>
-    <div class="count">7 units</div>
-  </div>
-  <div class="units">
-    <div class="unit"><div class="id">X-01</div><div class="what"><strong>Custom AI assistant skill</strong> — <em>1 capability bolted onto your Claude/ChatGPT</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">X-02</div><div class="what"><strong>Claude Code hook script</strong> — <em>1 lifecycle event (Stop, PostToolUse, etc.) wired to your behavior</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">X-03</div><div class="what"><strong>MCP server install + wire-up</strong> — <em>1 server, registered, scoped, ready</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">X-04</div><div class="what"><strong>Voice Gate page (STT page)</strong> — <em>talk to your stack from any browser, anywhere</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">X-05</div><div class="what"><strong>Siri Possession shortcut</strong> — <em>iOS shortcut that runs your stack hands-free</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">X-06</div><div class="what"><strong>Local LLM swap (Ollama)</strong> — <em>install + register one local model for sovereignty</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">X-07</div><div class="what"><strong>KB ingestion (1 source)</strong> — <em>repo, folder, drive, or site → searchable memory</em></div><div class="price">111</div></div>
-  </div>
-</section>
+  <!-- 02 WEB -->
+  <section class="bucket glass-panel" data-dot="Web">
+    <div class="bucket-header">
+      <div class="num text-liquid-steel">02</div>
+      <div class="name">Web · Pages · Hosting</div>
+      <div class="count">10 units</div>
+    </div>
+    <div class="units">
+      <div class="unit"><div class="id">W-01</div><div class="what"><strong>Speed-build landing page</strong> — <em>single-page, deployed in ~2 hours, like the Diamond Cut / MB drops</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">W-02</div><div class="what"><strong>Custom domain + tunnel</strong> — <em>DNS, SSL, Cloudflare ingress, your subdomain live</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">W-03</div><div class="what"><strong>Logo + brand asset placement</strong> — <em>swap your logo, color from logo, retina-ready</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">W-04</div><div class="what"><strong>SEO + OG metadata pass</strong> — <em>title, description, social cards, schema</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">W-05</div><div class="what"><strong>Newsletter capture form</strong> — <em>email-in, list wired to your provider</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">W-06</div><div class="what"><strong>Booking widget embed</strong> — <em>calendar slot picker tied to your phone/email</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">W-07</div><div class="what"><strong>Press kit / EPK page</strong> — <em>bio, photos, tracks, tech rider, links, downloadable</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">W-08</div><div class="what"><strong>Music streaming strip</strong> — <em>Spotify + Apple + DistroKid hyperfollow on one page</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">W-09</div><div class="what"><strong>Mobile responsiveness audit</strong> — <em>iPhone / Android / iPad ironed flat</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">W-10</div><div class="what"><strong>Color/aesthetic pivot</strong> — <em>swap palette across whole page (like pink→blue on MB)</em></div><div class="price">111</div></div>
+    </div>
+  </section>
 
-<!-- =========================================================
-     SOCIAL · CONTENT
-     ========================================================= -->
-<section class="bucket">
-  <div class="bucket-header">
-    <div class="num">07</div>
-    <div class="name">Social · Content</div>
-    <div class="count">5 units</div>
-  </div>
-  <div class="units">
-    <div class="unit"><div class="id">S-01</div><div class="what"><strong>Social post pack (5 posts)</strong> — <em>copy + image direction, drop-ready</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">S-02</div><div class="what"><strong>Caption + hashtag set</strong> — <em>10 captions, 30 hashtags, tone-matched</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">S-03</div><div class="what"><strong>Cross-platform schedule (1 platform)</strong> — <em>2 weeks queued, auto-post, tracked</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">S-04</div><div class="what"><strong>Bio + Linktree pass</strong> — <em>rewrite + reorder for conversion</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">S-05</div><div class="what"><strong>Auto-DM responder</strong> — <em>1 platform, 1 trigger phrase, 1 response chain</em></div><div class="price">111</div></div>
-  </div>
-</section>
+  <!-- 03 BRAND -->
+  <section class="bucket glass-panel" data-dot="Brand">
+    <div class="bucket-header">
+      <div class="num text-liquid-steel">03</div>
+      <div class="name">Brand · Identity</div>
+      <div class="count">6 units</div>
+    </div>
+    <div class="units">
+      <div class="unit"><div class="id">B-01</div><div class="what"><strong>Logo concept (1 brief)</strong> — <em>monogram, wordmark, or seal, your call</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">B-02</div><div class="what"><strong>Color palette + type system</strong> — <em>5 colors, 2 fonts, usage rules</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">B-03</div><div class="what"><strong>Social banner pack</strong> — <em>IG, FB, X, YouTube — sized + delivered</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">B-04</div><div class="what"><strong>Avatar / profile photo prep</strong> — <em>background out, color correct, square + circular</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">B-05</div><div class="what"><strong>One-pager (HTML + PDF)</strong> — <em>elevator pitch, services, contact, printable</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">B-06</div><div class="what"><strong>Single artwork / cover art</strong> — <em>3:3 + 16:9 + 9:16 sizes for the same piece</em></div><div class="price">111</div></div>
+    </div>
+  </section>
 
-<!-- =========================================================
-     MUSIC · PRODUCTION
-     ========================================================= -->
-<section class="bucket">
-  <div class="bucket-header">
-    <div class="num">08</div>
-    <div class="name">Music · Production</div>
-    <div class="count">5 units</div>
-  </div>
-  <div class="units">
-    <div class="unit"><div class="id">M-01</div><div class="what"><strong>Track mastering pass</strong> — <em>1 song, loudness + EQ + spatial polish</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">M-02</div><div class="what"><strong>Mix revision</strong> — <em>1 song, 1 round of changes from your notes</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">M-03</div><div class="what"><strong>Beat selection + arrangement</strong> — <em>3 beats curated to your direction + map</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">M-04</div><div class="what"><strong>DistroKid wire-up</strong> — <em>release set up, metadata, art, scheduled drop</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">M-05</div><div class="what"><strong>Hyperfollow / smart link</strong> — <em>1 link that opens in Spotify/Apple/Amazon/Tidal</em></div><div class="price">111</div></div>
-  </div>
-</section>
+  <!-- 04 COMMS -->
+  <section class="bucket glass-panel" data-dot="Comms">
+    <div class="bucket-header">
+      <div class="num text-liquid-steel">04</div>
+      <div class="name">Comms · Email · SMS · Calendar</div>
+      <div class="count">7 units</div>
+    </div>
+    <div class="units">
+      <div class="unit"><div class="id">C-01</div><div class="what"><strong>Email auto-reply flow</strong> — <em>1 trigger → 1 templated response, routed</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">C-02</div><div class="what"><strong>SMS auto-reply flow</strong> — <em>same shape, SMS-side</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">C-03</div><div class="what"><strong>Dual-fire lead routing</strong> — <em>one inbound creates email + SMS + calendar event at once</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">C-04</div><div class="what"><strong>Inbox triage pack</strong> — <em>5 rules, labels, auto-archive, priority lifts</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">C-05</div><div class="what"><strong>Daily digest summary</strong> — <em>your inbox in 5 bullets, every morning, via email or SMS</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">C-06</div><div class="what"><strong>Follow-up sequence</strong> — <em>3-touch outreach: day 0, day 3, day 7</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">C-07</div><div class="what"><strong>Voice-to-text intake</strong> — <em>you talk, it turns into structured text in your CRM</em></div><div class="price">111</div></div>
+    </div>
+  </section>
 
-<!-- =========================================================
-     OPS · CRM · DOCS
-     ========================================================= -->
-<section class="bucket">
-  <div class="bucket-header">
-    <div class="num">09</div>
-    <div class="name">Ops · CRM · Docs</div>
-    <div class="count">6 units</div>
-  </div>
-  <div class="units">
-    <div class="unit"><div class="id">O-01</div><div class="what"><strong>Lead capture sheet</strong> — <em>structured intake form → contact record</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">O-02</div><div class="what"><strong>Onboarding doc scaffold</strong> — <em>welcome → intake → kickoff, your tone</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">O-03</div><div class="what"><strong>Booking pipeline (kanban)</strong> — <em>lead → qualified → booked → done, on a board</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">O-04</div><div class="what"><strong>Invoice template (your brand)</strong> — <em>reusable, fillable, sendable</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">O-05</div><div class="what"><strong>Contract template</strong> — <em>service agreement skeleton, ready for fill</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">O-06</div><div class="what"><strong>Quote → invoice flow</strong> — <em>send a quote, on accept it auto-bills</em></div><div class="price">111</div></div>
-  </div>
-</section>
+  <!-- 05 AUTOMATION -->
+  <section class="bucket glass-panel" data-dot="Automation">
+    <div class="bucket-header">
+      <div class="num text-liquid-steel">05</div>
+      <div class="name">Automation · Integrations</div>
+      <div class="count">6 units</div>
+    </div>
+    <div class="units">
+      <div class="unit"><div class="id">A-01</div><div class="what"><strong>Cross-app webhook bridge</strong> — <em>1 hook connecting 2 apps (PayPal→Asana, Calendly→Notion, etc.)</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">A-02</div><div class="what"><strong>Calendar auto-create from inbound</strong> — <em>"book me Wed 7pm" → event lands in Spark/Google Cal</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">A-03</div><div class="what"><strong>Cron / scheduled job</strong> — <em>1 recurring task, daily/weekly, your spec</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">A-04</div><div class="what"><strong>Webhook receiver endpoint</strong> — <em>your URL accepts POSTs and routes to action</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">A-05</div><div class="what"><strong>Form-to-everywhere</strong> — <em>1 form posts to email + SMS + sheet + CRM at once</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">A-06</div><div class="what"><strong>Spreadsheet pipeline</strong> — <em>Sheet → enrichment → outbound, automated</em></div><div class="price">111</div></div>
+    </div>
+  </section>
 
-<!-- =========================================================
-     INFRA · BUILD · DEPLOY
-     ========================================================= -->
-<section class="bucket">
-  <div class="bucket-header">
-    <div class="num">10</div>
-    <div class="name">Infra · Build · Deploy</div>
-    <div class="count">5 units</div>
-  </div>
-  <div class="units">
-    <div class="unit"><div class="id">I-01</div><div class="what"><strong>Cloudflare tunnel hostname</strong> — <em>add 1 subdomain to your tunnel</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">I-02</div><div class="what"><strong>GitHub Pages repo wire-up</strong> — <em>repo created, branch pushed, custom domain bound</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">I-03</div><div class="what"><strong>FastAPI/Express service boot</strong> — <em>1 backend, dockered, started, tunneled</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">I-04</div><div class="what"><strong>File explorer surface</strong> — <em>1 drive folder → public/private URL</em></div><div class="price">111</div></div>
-    <div class="unit"><div class="id">I-05</div><div class="what"><strong>Backup snapshot rule</strong> — <em>1 folder mirrored to remote on schedule</em></div><div class="price">111</div></div>
-  </div>
-</section>
+  <!-- 06 AI AGENTS -->
+  <section class="bucket glass-panel" data-dot="AI Agents">
+    <div class="bucket-header">
+      <div class="num text-liquid-steel">06</div>
+      <div class="name">AI Agents · Voice · Possession</div>
+      <div class="count">7 units</div>
+    </div>
+    <div class="units">
+      <div class="unit"><div class="id">X-01</div><div class="what"><strong>Custom AI assistant skill</strong> — <em>1 capability bolted onto your Claude/ChatGPT</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">X-02</div><div class="what"><strong>Claude Code hook script</strong> — <em>1 lifecycle event (Stop, PostToolUse, etc.) wired to your behavior</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">X-03</div><div class="what"><strong>MCP server install + wire-up</strong> — <em>1 server, registered, scoped, ready</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">X-04</div><div class="what"><strong>Voice Gate page (STT page)</strong> — <em>talk to your stack from any browser, anywhere</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">X-05</div><div class="what"><strong>Siri Possession shortcut</strong> — <em>iOS shortcut that runs your stack hands-free</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">X-06</div><div class="what"><strong>Local LLM swap (Ollama)</strong> — <em>install + register one local model for sovereignty</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">X-07</div><div class="what"><strong>KB ingestion (1 source)</strong> — <em>repo, folder, drive, or site → searchable memory</em></div><div class="price">111</div></div>
+    </div>
+  </section>
 
-<section class="ruleline">
-  <p>Sixty-two units. Every one of them <em>$111</em>. No surprises, no scope creep, no clocking hours — <em>one unit at a time</em> until you're handling more than you can carry.</p>
-</section>
+  <!-- 07 SOCIAL -->
+  <section class="bucket glass-panel" data-dot="Social">
+    <div class="bucket-header">
+      <div class="num text-liquid-steel">07</div>
+      <div class="name">Social · Content</div>
+      <div class="count">5 units</div>
+    </div>
+    <div class="units">
+      <div class="unit"><div class="id">S-01</div><div class="what"><strong>Social post pack (5 posts)</strong> — <em>copy + image direction, drop-ready</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">S-02</div><div class="what"><strong>Caption + hashtag set</strong> — <em>10 captions, 30 hashtags, tone-matched</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">S-03</div><div class="what"><strong>Cross-platform schedule (1 platform)</strong> — <em>2 weeks queued, auto-post, tracked</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">S-04</div><div class="what"><strong>Bio + Linktree pass</strong> — <em>rewrite + reorder for conversion</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">S-05</div><div class="what"><strong>Auto-DM responder</strong> — <em>1 platform, 1 trigger phrase, 1 response chain</em></div><div class="price">111</div></div>
+    </div>
+  </section>
 
-<section class="cta">
-  <h2>Pick one. <em>Or pick ten.</em></h2>
-  <div class="cta-row">
-    <a class="primary" href="tel:+17709999934">◆  Call Self Exec · (770) 999-9934</a>
-    <a href="mailto:east@xlrd.org?subject=Unit%20order">✉  Email the Order</a>
-    <a href="https://hitthe.link/aua/">Manifesto →</a>
-    <a href="https://hitthe.link/endpoints/">Catalog →</a>
-  </div>
-</section>
+  <!-- 08 MUSIC -->
+  <section class="bucket glass-panel" data-dot="Music">
+    <div class="bucket-header">
+      <div class="num text-liquid-steel">08</div>
+      <div class="name">Music · Production</div>
+      <div class="count">5 units</div>
+    </div>
+    <div class="units">
+      <div class="unit"><div class="id">M-01</div><div class="what"><strong>Track mastering pass</strong> — <em>1 song, loudness + EQ + spatial polish</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">M-02</div><div class="what"><strong>Mix revision</strong> — <em>1 song, 1 round of changes from your notes</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">M-03</div><div class="what"><strong>Beat selection + arrangement</strong> — <em>3 beats curated to your direction + map</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">M-04</div><div class="what"><strong>DistroKid wire-up</strong> — <em>release set up, metadata, art, scheduled drop</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">M-05</div><div class="what"><strong>Hyperfollow / smart link</strong> — <em>1 link that opens in Spotify/Apple/Amazon/Tidal</em></div><div class="price">111</div></div>
+    </div>
+  </section>
 
-<footer>
-  <span class="tag">"Automate or die. We get paid to save time."</span>
-  ◆ Self Exec · $111 / unit · East Allen · east@xlrd.org · <a href="https://hitthe.link/aua/">hitthe.link</a> ◆
-</footer>
+  <!-- 09 OPS -->
+  <section class="bucket glass-panel" data-dot="Ops">
+    <div class="bucket-header">
+      <div class="num text-liquid-steel">09</div>
+      <div class="name">Ops · CRM · Docs</div>
+      <div class="count">6 units</div>
+    </div>
+    <div class="units">
+      <div class="unit"><div class="id">O-01</div><div class="what"><strong>Lead capture sheet</strong> — <em>structured intake form → contact record</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">O-02</div><div class="what"><strong>Onboarding doc scaffold</strong> — <em>welcome → intake → kickoff, your tone</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">O-03</div><div class="what"><strong>Booking pipeline (kanban)</strong> — <em>lead → qualified → booked → done, on a board</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">O-04</div><div class="what"><strong>Invoice template (your brand)</strong> — <em>reusable, fillable, sendable</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">O-05</div><div class="what"><strong>Contract template</strong> — <em>service agreement skeleton, ready for fill</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">O-06</div><div class="what"><strong>Quote → invoice flow</strong> — <em>send a quote, on accept it auto-bills</em></div><div class="price">111</div></div>
+    </div>
+  </section>
 
-</main>
+  <!-- 10 INFRA -->
+  <section class="bucket glass-panel" data-dot="Infra">
+    <div class="bucket-header">
+      <div class="num text-liquid-steel">10</div>
+      <div class="name">Infra · Build · Deploy</div>
+      <div class="count">5 units</div>
+    </div>
+    <div class="units">
+      <div class="unit"><div class="id">I-01</div><div class="what"><strong>Cloudflare tunnel hostname</strong> — <em>add 1 subdomain to your tunnel</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">I-02</div><div class="what"><strong>GitHub Pages repo wire-up</strong> — <em>repo created, branch pushed, custom domain bound</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">I-03</div><div class="what"><strong>FastAPI/Express service boot</strong> — <em>1 backend, dockered, started, tunneled</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">I-04</div><div class="what"><strong>File explorer surface</strong> — <em>1 drive folder → public/private URL</em></div><div class="price">111</div></div>
+      <div class="unit"><div class="id">I-05</div><div class="what"><strong>Backup snapshot rule</strong> — <em>1 folder mirrored to remote on schedule</em></div><div class="price">111</div></div>
+    </div>
+  </section>
+
+  <section class="ruleline">
+    <p>Sixty-two units. Every one of them <em class="text-liquid-steel">$111</em>. No surprises, no scope creep, no clocking hours — <em>one unit at a time</em> until you're handling more than you can carry.</p>
+  </section>
+
+  <!-- ORDER (xlrd contribute idiom) -->
+  <section class="order glass-panel" id="order" data-dot="Order">
+    <h3 class="glow-text">Pick one. <span class="text-liquid-steel">Or pick ten.</span></h3>
+    <p class="sub">Every unit is $111 flat. Choose how many and send the order — I confirm and start same day.</p>
+    <div class="order-rows">
+      <div class="order-row" onclick="setUnits(1)"><span class="k">1 unit</span><span class="v">$111</span></div>
+      <div class="order-row" onclick="setUnits(3)"><span class="k">3 units</span><span class="v">$333</span></div>
+      <div class="order-row best" onclick="setUnits(5)"><span class="k">5 units · most picked</span><span class="v">$555</span></div>
+    </div>
+    <select id="unitSel" onchange="syncSend()">
+      <option value="">Choose how many units…</option>
+    </select>
+    <a class="send glass-button" id="sendOrder" href="mailto:east@xlrd.org?subject=Unit%20order&body=I%20want%20to%20order%20units%20from%20the%20XLRD%20TECH%20%24111%20menu.">Send the order →</a>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <h2>Talk to <em>XLRD Tech</em>.</h2>
+    <div class="cta-row">
+      <a class="glass-button" href="tel:+17709999934"><i class="ph ph-phone"></i> Call · (770) 999-9934</a>
+      <a class="glass-button" href="mailto:east@xlrd.org?subject=Unit%20order"><i class="ph ph-envelope"></i> Email the Order</a>
+      <a class="glass-button" href="https://hitthe.link/aua/">Manifesto →</a>
+    </div>
+  </section>
+
+  <footer>
+    <span class="tag">"Automate or die. We get paid to save time."</span>
+    ◆ XLRD TECH · $111 / unit · East Allen · east@xlrd.org · <a href="https://hitthe.link/">hitthe.link</a> ◆
+  </footer>
+
+</div>
 
 <script src="https://hitthe.link/lib/scroll-scrub-video.js" defer></script>
+<script>
+  // preloader
+  window.addEventListener('load', () => setTimeout(() => document.getElementById('preloader').classList.add('loaded'), 800));
+
+  // populate $111-increment order selector (1 to 100 units)
+  (function(){
+    const sel = document.getElementById('unitSel');
+    for (let i = 1; i <= 100; i++) {
+      const o = document.createElement('option');
+      o.value = i; o.textContent = i + (i===1?' unit':' units') + ' · $' + (i*111).toLocaleString();
+      sel.appendChild(o);
+    }
+  })();
+  window.setUnits = (n) => { document.getElementById('unitSel').value = n; syncSend(); };
+  window.syncSend = () => {
+    const n = document.getElementById('unitSel').value;
+    const a = document.getElementById('sendOrder');
+    if (n) {
+      const total = (n*111).toLocaleString();
+      a.textContent = 'Send order · ' + n + (n==1?' unit':' units') + ' · $' + total + ' →';
+      a.href = 'mailto:east@xlrd.org?subject=' + encodeURIComponent('Unit order · '+n+' units ($'+total+')') +
+        '&body=' + encodeURIComponent('I want to order '+n+' unit(s) from the XLRD TECH $111 menu (total $'+total+'). Here is what I need:\n\n');
+    }
+  };
+
+  // side-dot scroll-spy built from [data-dot] sections
+  (function(){
+    const secs = Array.from(document.querySelectorAll('[data-dot]'));
+    const dots = document.getElementById('dots');
+    secs.forEach((s, i) => {
+      const d = document.createElement('div');
+      d.className = 'dot' + (i===0?' active':'');
+      d.title = s.getAttribute('data-dot');
+      d.onclick = () => s.scrollIntoView({behavior:'smooth', block:'start'});
+      dots.appendChild(d);
+    });
+    const dotEls = Array.from(dots.children);
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const i = secs.indexOf(e.target);
+          dotEls.forEach((d,j)=>d.classList.toggle('active', j===i));
+        }
+      });
+    }, {rootMargin:'-45% 0px -45% 0px'});
+    secs.forEach(s => io.observe(s));
+  })();
+</script>
 </body>
 </html>
