@@ -1382,6 +1382,8 @@ let _avaLive = false;
 // Visible status HUD (qi 2026-05-30): ends the blind-patch loop — qi can read the
 // real audio state aloud. Shows armed?, queue depth, replies received, last status.
 let _hudRx = 0, _hudSpoke = 0, _hudLast = 'init', _hudEl = null;
+let _xenNode = '';
+let _xenNode = '';
 function _hud(last) {
   // qi 2026-05-30: HUD overlay REMOVED from the UI (diagnostic scaffolding, did
   // its job, qi didn't want it overlaying the chat). Console-only now.
@@ -1811,6 +1813,16 @@ function pickAvaVoice() {
 // silence). qi 2026-05-30: "your voice in, my voice out, same page, no taps".
 // Ava = en-US-AvaMultilingualNeural ("edge tts Ava neural English").
 const AVA_TTS_URL = 'https://xen.xlrd.org/api/tts';
+fetch(AVA_TTS_URL + '?voice=ava&text=.').then(r => { const n = r.headers.get('X-Xen-Node'); if (n) { _xenNode = n; const el = document.getElementById('ava-node'); if (el) el.textContent = n; _renderAvaPill(); } }).catch(() => {});
+// Probe the TTS server on page load to read X-Xen-Node (M4 vs VM tag).
+// HEAD with ?probe=1 avoids generating audio; retry once on fail.
+(function _probeXenNode() {
+  const probe = () => fetch('https://xen.xlrd.org/api/node', { cache: 'no-store' })
+    .then(r => { const n = r.headers.get('x-xen-node'); if (n) { _xenNode = n; _renderAvaPill(); } })
+    .catch(() => {});
+  probe();
+  setTimeout(probe, 15000);  // re-probe after 15s in case server just started
+})();
 const _AVA_SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=';
 let _avaAudio = null, _avaAudioUnlocked = false, _avaStatus = '';
 // Web Audio API context — once unlocked by a gesture, can play audio at any time
@@ -2019,10 +2031,25 @@ function _avaDrain() {
     });
   } else {
     const a = _ensureAvaAudio();
+    // Clear stale handlers BEFORE resetting src — prevents the previous drain's
+    // onerror from firing when this drain aborts it by changing a.src.
+    a.onerror = null; a.oncanplay = null;
+    try { a.pause(); } catch(_) {}
+    a.src = '';   // abort any in-flight load cleanly
+    // Per-drain dedup: both onerror and play AbortError fire for the same
+    // underlying failure — only the first triggers fallback.
+    let _aErr = false;
+    const _fallback = (label) => {
+      if (_aErr) return; _aErr = true;
+      a.oncanplay = null;
+      _avaStatus = label.startsWith('play blocked') ? 'blocked:'+label.slice(13) : 'audio-err';
+      _avaTelemetry(label + ' -> device-tts');
+      _renderAvaPill();
+      if (!_avaSpeakDevice(clip, _genAtStart)) { _avaPlaying = false; _avaDrain(); }
+    };
     a.onplaying = () => { _avaStatus = 'playing'; _hudSpoke++; _renderAvaPill(); try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; } catch (_) {} };
     a.onended   = () => { _avaPlaying = false; _avaStatus = _avaQueue.length ? ('queued '+_avaQueue.length) : 'idle'; _renderAvaPill(); try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; } catch (_) {} _avaDrain(); };
-    let _aErr = false;
-    a.onerror   = () => { if (_aErr) return; _aErr = true; _avaStatus = 'audio-err'; _avaTelemetry('audio-err fallback -> device-tts'); _renderAvaPill(); if (!_avaSpeakDevice(clip, _genAtStart)) { _avaPlaying = false; _avaDrain(); } };
+    a.onerror   = () => _fallback('audio-err fallback');
     a.src = url;
     // Gate play() on canplay — prevents AbortError on Orion/iOS where calling
     // play() immediately after setting src rejects every time (load not ready).
@@ -2033,7 +2060,7 @@ function _avaDrain() {
       if (p && p.then) p.then(() => {
         if (_genAtStart !== _avaGen) { try { a.pause(); a.currentTime = 0; } catch (_) {} _avaPlaying = false; _avaStatus = 'you spoke'; _renderAvaPill(); }
       });
-      if (p && p.catch) p.catch(e => { if (_aErr) return; _aErr = true; _avaStatus = 'blocked:'+e.name; _avaTelemetry('play blocked: '+e.name+' -> device-tts'); _renderAvaPill(); if (!_avaSpeakDevice(clip, _genAtStart)) { _avaPlaying = false; _avaDrain(); } });
+      if (p && p.catch) p.catch(e => _fallback('play blocked: '+e.name));
     };
     a.oncanplay = _doPlay;
     // Safety: if canplay never fires within 3s (already-cached src), play anyway
@@ -2074,9 +2101,11 @@ function _renderAvaPill() {
   const on = _avaOn && _avaAudioUnlocked;
   ic.classList.toggle('active', on);            // green glow when armed + on
   ic.style.opacity = !_avaAudioUnlocked ? '.6' : (_avaOn ? '1' : '.4');
+  const _nodeTag = _xenNode ? ' [' + _xenNode + ']' : '';
   ic.title = !_avaAudioUnlocked ? 'Tap to enable Ava voice'
-           : (_avaOn ? ('Ava voice ON' + (_avaStatus ? ' · ' + _avaStatus : '') + ' — tap to mute')
-                     : 'Ava voice OFF — tap to unmute');
+           : (_avaOn ? ('Ava voice ON' + (_avaStatus ? ' · ' + _avaStatus : '') + _nodeTag + ' — tap to mute')
+                     : 'Ava voice OFF' + _nodeTag + ' — tap to unmute');
+  ic.dataset.node = _xenNode || '';
 }
 (function avaToggleUI() {
   // Speaker icon in the header (left of the mic), same style — no bottom pill.
