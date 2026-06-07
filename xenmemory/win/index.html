@@ -1,161 +1,390 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="robots" content="noindex,nofollow">
-<title>Xen · Windows Memory System — Handoff</title>
-<meta name="description" content="Architecture handoff for Xen's Windows long-term memory: a plain-markdown Obsidian vault wired to Claude Code lifecycle hooks.">
-<meta name="theme-color" content="#05070d">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>xenmemory · win · Xen Omni Mesh</title>
 <style>
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  :root{
-    --bg:#05070d; --panel:#0b1018; --line:rgba(170,190,230,.12);
-    --ink:#e9eefb; --dim:#9fb0cc; --faint:#67748f;
-    --chrome:linear-gradient(135deg,#dfe7f5 0%,#9fb3d6 30%,#c9d6ee 50%,#7e93bd 70%,#e7eefb 100%);
-    --irid:linear-gradient(120deg,#7df9ff,#a78bfa 40%,#67e8f9 70%,#c4b5fd);
+  :root {
+    --bg: #0a0a0c;
+    --bg2: #111116;
+    --bg3: #18181f;
+    --border: #2a2a35;
+    --green: #00ff88;
+    --green2: #00cc66;
+    --amber: #ffb800;
+    --red: #ff4444;
+    --blue: #4488ff;
+    --purple: #9966ff;
+    --text: #e0e0e8;
+    --text2: #888899;
+    --text3: #555566;
   }
-  html{scroll-behavior:smooth}
-  body{background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-  .glow{position:fixed;border-radius:50%;filter:blur(90px);opacity:.5;z-index:0;pointer-events:none}
-  .g1{top:-120px;left:-80px;width:420px;height:420px;background:radial-gradient(circle,rgba(125,249,255,.18),transparent)}
-  .g2{bottom:-140px;right:-100px;width:480px;height:480px;background:radial-gradient(circle,rgba(167,139,250,.16),transparent)}
-  .wrap{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:clamp(2rem,6vw,5rem) clamp(1.2rem,5vw,3rem)}
-  header{margin-bottom:3rem}
-  .kicker{font-family:"JetBrains Mono",monospace;font-size:.72rem;letter-spacing:.32em;text-transform:uppercase;color:var(--faint);margin-bottom:1rem}
-  h1{font-size:clamp(2.1rem,6vw,3.6rem);font-weight:800;letter-spacing:-.03em;line-height:1.04;
-     background:var(--chrome);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-  .lede{margin-top:1.1rem;color:var(--dim);font-size:clamp(1rem,2.4vw,1.2rem);max-width:62ch}
-  .lede b{color:var(--ink);font-weight:600}
-  .verified{display:inline-flex;align-items:center;gap:.5rem;margin-top:1.4rem;font-family:"JetBrains Mono",monospace;font-size:.72rem;color:#7df9ff;border:1px solid rgba(125,249,255,.3);border-radius:999px;padding:.4rem .9rem}
-  .dot{width:7px;height:7px;border-radius:50%;background:#7df9ff;box-shadow:0 0 10px #7df9ff}
-  section{margin-top:2.6rem}
-  h2{font-size:1.5rem;font-weight:700;letter-spacing:-.02em;margin-bottom:.4rem;display:flex;align-items:baseline;gap:.7rem}
-  h2 .n{font-family:"JetBrains Mono",monospace;font-size:.85rem;color:var(--faint);font-weight:500}
-  .sec-sub{color:var(--faint);font-size:.92rem;margin-bottom:1.2rem}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:1.4rem 1.5rem;margin-top:1rem}
-  .card h3{font-size:1.02rem;font-weight:600;margin-bottom:.5rem}
-  p.dim{color:var(--dim)}
-  code,.mono{font-family:"JetBrains Mono",monospace;font-size:.82em;background:rgba(125,249,255,.08);border:1px solid var(--line);border-radius:6px;padding:.12em .45em;color:#bfe9ff;word-break:break-word}
-  table{width:100%;border-collapse:collapse;margin-top:1rem;font-size:.9rem}
-  th,td{text-align:left;padding:.7rem .8rem;border-bottom:1px solid var(--line);vertical-align:top}
-  th{font-family:"JetBrains Mono",monospace;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);font-weight:500}
-  td:first-child{white-space:nowrap}
-  ul{list-style:none;margin-top:.6rem}
-  li{padding-left:1.4rem;position:relative;margin:.5rem 0;color:var(--dim)}
-  li::before{content:"";position:absolute;left:0;top:.62em;width:8px;height:8px;border-radius:2px;background:var(--irid)}
-  li b{color:var(--ink);font-weight:600}
-  .warn{border-left:3px solid #fbbf24;background:rgba(251,191,36,.06)}
-  .warn h3{color:#fcd34d}
-  .pend{border-left:3px solid #a78bfa;background:rgba(167,139,250,.06)}
-  .grid2{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-top:1rem}
-  .stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1.1rem 1.2rem}
-  .stat .v{font-size:1.6rem;font-weight:800;background:var(--irid);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-  .stat .l{font-size:.78rem;color:var(--faint);margin-top:.25rem}
-  footer{margin-top:3.5rem;padding-top:1.6rem;border-top:1px solid var(--line);color:var(--faint);font-size:.82rem;font-family:"JetBrains Mono",monospace}
-  a{color:#7df9ff;text-decoration:none}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 32px 24px;
+  }
+  .page { max-width: 860px; margin: 0 auto; }
+  .header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+    margin-bottom: 32px;
+  }
+  .breadcrumb { color: var(--text3); font-size: 11px; margin-bottom: 8px; }
+  .breadcrumb a { color: var(--text2); text-decoration: none; }
+  .breadcrumb a:hover { color: var(--green); }
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--green);
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+  .subtitle { color: var(--text2); font-size: 12px; }
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .badge-open { background: rgba(255,184,0,0.12); border: 1px solid rgba(255,184,0,0.3); color: var(--amber); }
+  .badge-live { background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.25); color: var(--green); }
+  .badge-nitro { background: rgba(68,136,255,0.1); border: 1px solid rgba(68,136,255,0.25); color: var(--blue); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .dot-amber { background: var(--amber); }
+  .dot-green { background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  section { margin-bottom: 36px; }
+  h2 {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text2);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .card-desc { color: var(--text2); font-size: 12px; line-height: 1.7; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th {
+    text-align: left;
+    color: var(--text3);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 9px 10px;
+    border-bottom: 1px solid rgba(42,42,53,0.6);
+    vertical-align: top;
+    color: var(--text2);
+  }
+  td:first-child { color: var(--text); font-weight: 500; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .node {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 12px 16px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 8px;
+  }
+  .node-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .node-icon-green { background: rgba(0,255,136,0.1); }
+  .node-icon-blue { background: rgba(68,136,255,0.1); }
+  .node-icon-amber { background: rgba(255,184,0,0.1); }
+  .node-body { flex: 1; }
+  .node-name { font-weight: 600; color: var(--text); font-size: 13px; margin-bottom: 2px; }
+  .node-meta { color: var(--text2); font-size: 11px; line-height: 1.6; }
+  .node-status { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
+  .status-live { color: var(--green); }
+  .status-open { color: var(--amber); }
+  .status-offline { color: var(--text3); }
+
+  code {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-size: 11px;
+    color: var(--green2);
+  }
+  pre {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 16px;
+    font-size: 11px;
+    color: var(--text2);
+    overflow-x: auto;
+    margin-top: 10px;
+    line-height: 1.7;
+  }
+  pre .comment { color: var(--text3); }
+  pre .key { color: var(--blue); }
+  pre .val { color: var(--green2); }
+
+  .alert {
+    border-left: 3px solid var(--amber);
+    background: rgba(255,184,0,0.05);
+    padding: 10px 14px;
+    border-radius: 0 4px 4px 0;
+    margin-bottom: 10px;
+    color: var(--text2);
+    font-size: 12px;
+    line-height: 1.7;
+  }
+  .alert strong { color: var(--amber); }
+
+  .tag {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 2px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-left: 6px;
+  }
+  .tag-candidate { background: rgba(153,102,255,0.15); color: var(--purple); border: 1px solid rgba(153,102,255,0.3); }
+  .tag-mac { background: rgba(0,255,136,0.1); color: var(--green2); border: 1px solid rgba(0,255,136,0.2); }
+  .tag-win { background: rgba(68,136,255,0.1); color: var(--blue); border: 1px solid rgba(68,136,255,0.2); }
+
+  footer {
+    margin-top: 48px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    color: var(--text3);
+    font-size: 11px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  footer a { color: var(--text2); text-decoration: none; }
+  footer a:hover { color: var(--green); }
 </style>
 </head>
 <body>
-<div class="glow g1"></div><div class="glow g2"></div>
-<div class="wrap">
-  <header>
-    <div class="kicker">Xen · Windows · nitro</div>
-    <h1>Memory System Handoff</h1>
-    <p class="lede">A plain-markdown <b>Obsidian vault</b> wired to <b>Claude Code lifecycle hooks</b>. The hooks — not the storage engine — are why it works: fire-and-forget capture, deterministic inject, git-synced durability. NotebookLM is a research feeder, not the store.</p>
-    <span class="verified"><span class="dot"></span>Verified live 2026-06-07</span>
-  </header>
+<div class="page">
 
-  <div class="grid2">
-    <div class="stat"><div class="v">36</div><div class="l">notes in vault</div></div>
-    <div class="stat"><div class="v">4</div><div class="l">durability safety nets</div></div>
-    <div class="stat"><div class="v">793</div><div class="l">lines in capture log</div></div>
-    <div class="stat"><div class="v">100%</div><div class="l">integrity (no dead/orphan)</div></div>
+  <div class="header">
+    <div class="breadcrumb">
+      <a href="https://hitthe.link/">hitthe.link</a> / <a href="../">xenmemory</a> / win
+    </div>
+    <h1>xenmemory · win</h1>
+    <div class="subtitle">Windows Nitro memory system canon — cross-session recall for Xen on Windows</div>
+    <div class="status-row">
+      <span class="badge badge-open"><span class="dot dot-amber"></span>OPEN</span>
+      <span class="badge badge-nitro">NITRO · Windows</span>
+      <span style="color:var(--text3);font-size:11px;">node: selfexec@NITRO11 · tailnet 100.80.76.79</span>
+    </div>
   </div>
 
   <section>
-    <h2><span class="n">01</span> The store</h2>
-    <p class="sec-sub">This folder <em>is</em> the memory — and an Obsidian vault.</p>
-    <div class="card">
-      <ul>
-        <li><b>Location</b> — the Claude project memory dir on nitro (registered Obsidian vault with graph + backlinks).</li>
-        <li><b>One note = one fact.</b> Frontmatter carries <code>name · description · type · tags</code>; <code>[[wikilinks]]</code> connect facts.</li>
-        <li><b>Types</b> (color-grouped in Graph View): <code>user · feedback · project · reference · system</code>.</li>
-        <li><b>MEMORY.md</b> — the index (one line per note) and the always-auto-loaded session context. The graph hub.</li>
-      </ul>
+    <h2>Omni Mesh — Memory Layer</h2>
+    <div class="node">
+      <div class="node-icon node-icon-green">M4</div>
+      <div class="node-body">
+        <div class="node-name">Mac — M4 Mini</div>
+        <div class="node-meta">
+          bastra-recall MCP &bull; vault at <code>/Volumes/X31/xen-vault/root/</code> &bull; X31 PSSD<br>
+          Persistent cross-session recall via <code>/remember</code> skill. Recall before multi-step plans.
+        </div>
+        <div class="node-status status-live">LIVE</div>
+      </div>
+    </div>
+    <div class="node">
+      <div class="node-icon node-icon-amber">VM</div>
+      <div class="node-body">
+        <div class="node-name">Starlight VM — 209.74.83.78</div>
+        <div class="node-meta">
+          VEIN bridge :4441 &bull; SSE xen:hub stream &bull; always-on fallback<br>
+          Memory: none yet — stateless relay node
+        </div>
+        <div class="node-status status-live">LIVE</div>
+      </div>
+    </div>
+    <div class="node">
+      <div class="node-icon node-icon-blue">WIN</div>
+      <div class="node-body">
+        <div class="node-name">Nitro — Windows</div>
+        <div class="node-meta">
+          <code>selfexec@NITRO11</code> &bull; tailnet <code>100.80.76.79</code><br>
+          Memory system: <strong style="color:var(--amber)">TBD</strong> — see candidate matrix below
+        </div>
+        <div class="node-status status-open">OPEN ITEM</div>
+      </div>
     </div>
   </section>
 
   <section>
-    <h2><span class="n">02</span> Harness wiring</h2>
-    <p class="sec-sub">Why it works where a bare vector store produced ~nothing: hooks remove the "remember to save" burden.</p>
+    <h2>Candidate Matrix</h2>
+    <div class="alert">
+      <strong>Decision pending.</strong> qi to identify the canonical tool for Windows memory. Goal: same cross-session recall qi gets from bastra-recall on M4 — durable, queryable, no manual steps.
+    </div>
     <table>
-      <thead><tr><th>Lifecycle</th><th>Hook</th><th>Action</th></tr></thead>
-      <tbody>
-        <tr><td><code>SessionStart</code></td><td>ensure-inject-daemon</td><td>deterministic context inject layer</td></tr>
-        <tr><td><code>UserPromptSubmit</code></td><td>memory-capture · IN</td><td>LLM-free append every prompt → NDJSON</td></tr>
-        <tr><td><code>PostToolUse</code></td><td>memory-capture · TOOL</td><td>append tool events → NDJSON</td></tr>
-        <tr><td><code>Stop</code></td><td>memory-autosave + capture · OUT</td><td>git commit + push vault; capture final output</td></tr>
-      </tbody>
+      <tr>
+        <th>Candidate</th>
+        <th>Mechanism</th>
+        <th>Windows?</th>
+        <th>Vault path</th>
+        <th>Notes</th>
+      </tr>
+      <tr>
+        <td>bastra-recall<span class="tag tag-candidate">CANDIDATE</span></td>
+        <td>MCP server + local JSON/markdown vault</td>
+        <td>Yes — Node.js, cross-platform</td>
+        <td>configurable</td>
+        <td>Same tool as Mac — highest parity. Run as Windows service or nssm.</td>
+      </tr>
+      <tr>
+        <td>basic-memory<span class="tag tag-candidate">CANDIDATE</span></td>
+        <td>MCP server + SQLite + markdown files</td>
+        <td>Yes — Python, pip install</td>
+        <td><code>~/basic-memory/</code></td>
+        <td>Simple, file-based. Good for xen-vault style storage.</td>
+      </tr>
+      <tr>
+        <td>mem0<span class="tag tag-candidate">CANDIDATE</span></td>
+        <td>Hybrid vector + graph store</td>
+        <td>Yes — Python</td>
+        <td>local or cloud</td>
+        <td>More powerful but heavier. Overkill if vault is small.</td>
+      </tr>
+      <tr>
+        <td>cipher<span class="tag tag-candidate">CANDIDATE</span></td>
+        <td>Encrypted markdown vault MCP</td>
+        <td>Yes</td>
+        <td>configurable</td>
+        <td>Adds encryption layer. Relevant if Nitro vaults sensitive data.</td>
+      </tr>
     </table>
-    <div class="card"><p class="dim">Capture log self-caps at 25 MB (→ last 2000 lines). Context is never lost even when no note is written — a detached distiller can later propose notes from the log.</p></div>
   </section>
 
   <section>
-    <h2><span class="n">03</span> Durability — 4 safety nets</h2>
+    <h2>Mac Reference — bastra-recall Pattern</h2>
     <div class="card">
-      <ul>
-        <li><b>git</b> at the memory dir — Stop-hook auto-commits + pushes every session.</li>
-        <li><b>Offsite DR</b> — private GitHub repo (SSH, <code>main</code>), auto-pushed by the hook.</li>
-        <li><b>Syncthing</b> peer to Mac-Xen — <code>.stignore</code> excludes <code>.git</code> to avoid git↔Syncthing collision. <span class="mono">re-launch if sync needed</span>.</li>
-        <li><b>Integrity</b> — frontmatter validation + dead/orphan-link check.</li>
-      </ul>
+      <div class="card-title">How memory works on M4</div>
+      <div class="card-desc">
+        bastra-recall MCP runs as a daemon. Memories saved via <code>save_memory()</code> / <code>load_memory(id)</code> / <code>recall(query)</code>.<br>
+        Vault: <code>/Volumes/X31/xen-vault/root/</code> on X31 PSSD.<br>
+        Recall happens before any multi-step plan and at session start.<br>
+        Save triggers: durable rules, finalized decisions, recurring frustrations, completed milestones.
+      </div>
     </div>
+    <pre><span class="comment"># MCP config entry (claude_desktop_config.json / .claude.json)</span>
+<span class="key">"bastra-recall"</span>: {
+  <span class="key">"command"</span>: <span class="val">"node"</span>,
+  <span class="key">"args"</span>: [<span class="val">"/path/to/bastra-recall/server.js"</span>],
+  <span class="key">"env"</span>: { <span class="key">"VAULT_PATH"</span>: <span class="val">"/Volumes/X31/xen-vault/root"</span> }
+}</pre>
   </section>
 
   <section>
-    <h2><span class="n">04</span> Obsidian — viewing</h2>
+    <h2>Windows Setup — Once Candidate Chosen</h2>
     <div class="card">
-      <ul>
-        <li>Installer access-violates headless — working path is to <b>extract the app</b> (7-Zip the setup → <code>app-64.7z</code> → run <code>Obsidian.exe --disable-gpu</code>).</li>
-        <li><b>Browser fallback</b> — a generator emits a self-contained interactive force-graph. <b>Local-only — never published</b> (the notes hold PII + secret names).</li>
-      </ul>
+      <div class="card-title">Step 1 — Install and wire MCP</div>
+      <div class="card-desc">
+        Clone / install chosen tool. Configure vault path (prefer dedicated SSD if available).<br>
+        Add to <code>%APPDATA%\Claude\claude_desktop_config.json</code> MCP block.
+      </div>
     </div>
-  </section>
-
-  <section>
-    <h2><span class="n">05</span> NotebookLM</h2>
-    <p class="sec-sub">A research feeder — <b>not</b> the memory store.</p>
     <div class="card">
-      <ul>
-        <li>Wired via the <code>yt-pipeline</code> skill + <code>notebooklm-mcp</code> (persistent auth).</li>
-        <li><b>Flow:</b> YouTube search → NotebookLM notebook → analysis → <b>saves a markdown report</b> that lands in Obsidian.</li>
-        <li>Upstream of the vault — produces research notes, does not hold canonical memory.</li>
-      </ul>
+      <div class="card-title">Step 2 — Run as Windows service</div>
+      <div class="card-desc">
+        Use <code>nssm</code> (Non-Sucking Service Manager) or <code>sc.exe</code> to install as auto-start service.<br>
+        Restart policy: always. Log to <code>C:\xen\logs\memory.log</code>.
+      </div>
     </div>
-    <div class="card warn"><h3>⚠ Open discrepancy</h3><p class="dim">yt-pipeline writes research to <code>~/Documents/obsidian/</code>, while the canonical memory vault is the Claude project dir. Two Obsidian locations — decide whether research should land in the canonical vault.</p></div>
+    <div class="card">
+      <div class="card-title">Step 3 — Sync vault to mesh</div>
+      <div class="card-desc">
+        Mirror vault to Tailscale-accessible path so M4 can read Nitro memories and vice versa.<br>
+        SyncThing or SMB share over Tailnet are canonical options (per OTLP/NATS mesh canon).
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Step 4 — Verify cross-session recall</div>
+      <div class="card-desc">
+        Save a test memory in Claude on Nitro. Kill + restart Claude. Recall the memory.<br>
+        Only mark LIVE when qi confirms by voice or visual evidence — HTTP 200 is not verified.
+      </div>
+    </div>
   </section>
 
   <section>
-    <h2><span class="n">06</span> Known-open (not yet built)</h2>
-    <div class="card pend">
-      <ul>
-        <li><b>Detached distiller</b> — scheduled pass that reads the NDJSON and <em>proposes</em> candidate notes into <code>_candidates/</code> for review (must not auto-canonize → belief-poisoning guard).</li>
-        <li><b>SessionStart CONTEXT.md inject</b> — hard-capped state briefing (today MEMORY.md auto-loads, covering most of it).</li>
-        <li><b>Freshness heartbeat</b> — alert if capture goes stale.</li>
-      </ul>
-    </div>
+    <h2>Vault Path Convention (proposed)</h2>
+    <pre><span class="comment"># Mac (live)</span>
+<span class="val">/Volumes/X31/xen-vault/root/</span>
+
+<span class="comment"># Windows Nitro (TBD)</span>
+<span class="val">C:\xen-vault\root\</span>   <span class="comment"># or D:\ if secondary drive present</span>
+
+<span class="comment"># Tailnet sync endpoint</span>
+<span class="val">\\100.80.76.79\xen-vault\</span>   <span class="comment"># SMB over Tailscale</span></pre>
   </section>
 
-  <section>
-    <h2><span class="n">07</span> Mac counterpart</h2>
-    <div class="card"><p class="dim">Mac-Xen uses <b>bastra-recall</b> (an opaque MCP vector store). Verdict: demote it to an optional secondary index pointing <em>at</em> the markdown — the vault is the source of truth, never the vector DB.</p></div>
-  </section>
+  <footer>
+    <span>xenmemory &middot; win &mdash; Xen Omni Mesh canon page</span>
+    <span>
+      <a href="https://hitthe.link/vvsvei">vvsvei</a> &middot;
+      <a href="http://209.74.83.78:4441/">vein</a> &middot;
+      updated 2026-06-07
+    </span>
+  </footer>
 
-  <footer>Xen Windows Memory · architecture handoff · noindex · hitthe.link/xenmemory/win</footer>
 </div>
 </body>
 </html>
