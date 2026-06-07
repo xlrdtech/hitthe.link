@@ -56,6 +56,8 @@
   .flag.s-none{background:rgba(120,200,140,.14);color:#9fe0b4;border:1px solid rgba(120,200,140,.3)}
   .flag.s-weak{background:rgba(247,232,176,.14);color:var(--gold-pale);border:1px solid var(--line-gold)}
   .flag.s-real{background:rgba(168,132,47,.2);color:#e8c45a;border:1px solid var(--line-gold)}
+  .flag.open{background:rgba(120,200,140,.18);color:#9fe0b4;border:1px solid rgba(120,200,140,.4)}
+  .flag.closed{background:rgba(180,80,80,.16);color:#e7a3a3;border:1px solid rgba(180,80,80,.32)}
   /* click-to-copy single-line scroll chips */
   .copyrow{display:flex;flex-wrap:wrap;gap:.45rem;padding:0 1.1rem 1rem;justify-content:center}
   .chip{display:inline-flex;align-items:center;gap:.4rem;max-width:100%;font-family:"JetBrains Mono",monospace;font-size:.72rem;color:var(--dim);background:rgba(0,0,0,.4);border:1px solid var(--line);border-radius:8px;padding:.4rem .55rem;cursor:pointer;transition:border-color .15s,color .15s}
@@ -142,6 +144,10 @@
           <option value="email">✉ Has email first</option>
           <option value="night">🌙 After-hours reachable</option>
         </optgroup>
+        <optgroup label="Hours — call who's open">
+          <option value="open">🟢 Open right now</option>
+          <option value="late">🌃 Open latest (close time)</option>
+        </optgroup>
         <optgroup label="Site status — the pitch">
           <option value="none">🟢 Siteless first · first-site pitch</option>
           <option value="weak">🟡 Weak builder site · upgrade pitch</option>
@@ -217,7 +223,7 @@ const LEADS = [
   {t:'egbo',n:"Cranford Homes & Realty Co.",s:"egbops/local/cranford-homes-realty-hapeville",p:"+14047666223",e:"info@cranfordhomesrealty.com",c:"Realty · Hapeville GA",w:'real',u:"cranfordhomesrealty.com"},
   {t:'egbo',n:"DLS Income Tax",s:"egbops/local/dls-income-tax-riverdale",p:"+16785453853",c:"Tax · Riverdale GA",w:'none'},
   {t:'egbo',n:"Fortitude Ed. & Cultural Center",s:"egbops/local/fortitude-educational-cultural-development-center-red-oak",p:"+14045782532",e:"info@fecdc.com",c:"Education · Red Oak GA",w:'real',u:"fecdc.org"},
-  {t:'egbo',n:"Q's Restaurant",s:"egbops/local/qs-restaurant-east-point",p:"+14047679894",e:"hello@qsrestaurant-eastpoint.com",c:"Restaurant · East Point GA",w:'none'},
+  {t:'egbo',n:"Q's Restaurant",s:"egbops/local/qs-restaurant-east-point",p:"+14047679894",e:"hello@qsrestaurant-eastpoint.com",c:"Restaurant · East Point GA",w:'none',hr:{o:10.5,c:15,d:[1,2,3,4,5]}},
   {t:'egbo',n:"Queendom Ascensions Luxury Salon",s:"egbops/local/queendom-ascensions-luxury-salon-college-park",p:"+14708831573",c:"Salon · College Park GA",w:'weak',u:"queendom-ascensions-luxury-salon.square.site"},
   {t:'egbo',n:"RL Ingram Construction",s:"egbops/local/rl-ingram-construction-atlanta",p:"+14042723603",c:"Construction · Atlanta GA",w:'real',u:"rlingramconstruction.com"},
   {t:'egbo',n:"South Fulton Event Hall",s:"egbops/local/south-fulton-event-hall-south-fulton",p:"+14046174288",c:"Events · South Fulton GA",w:'weak',u:"southfultonevents1.wixsite.com/website"},
@@ -235,6 +241,24 @@ function payScore(l){var c=l.c.toLowerCase();var s=0;
   if(l.e)s+=0.6;  // reachable by email = warmer
   return s;}
 function afterHours(l){return /towing|plumb|restaurant|salon|barber|event|realty/.test(l.c.toLowerCase());}
+// open/closed (Eastern time). o/c = decimal hours, d = open weekdays [0=Sun..6=Sat]. Category defaults; l.hr overrides where verified.
+const CAT_HOURS=[
+  [/tow|plumb/,{o:0,c:24,d:[0,1,2,3,4,5,6]}],
+  [/lawn|pressure/,{o:7,c:18,d:[1,2,3,4,5,6]}],
+  [/auto|car/,{o:8,c:18,d:[1,2,3,4,5,6]}],
+  [/electric|fenc|paint/,{o:8,c:17,d:[1,2,3,4,5]}],
+  [/salon|barber/,{o:9,c:19,d:[1,2,3,4,5,6]}],
+  [/restaurant/,{o:11,c:21,d:[1,2,3,4,5,6]}],
+  [/event|realty/,{o:9,c:20,d:[1,2,3,4,5,6]}],
+  [/tax/,{o:9,c:18,d:[1,2,3,4,5]}],
+  [/dental|education/,{o:8,c:17,d:[1,2,3,4,5]}],
+  [/healthcare/,{o:8,c:20,d:[0,1,2,3,4,5,6]}],
+];
+function hoursOf(l){ if(l.hr) return l.hr; const c=l.c.toLowerCase(); for(const[re,h]of CAT_HOURS) if(re.test(c)) return h; return {o:9,c:17,d:[1,2,3,4,5]}; }
+function nowET(){ const d=new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'})); return {day:d.getDay(), h:d.getHours()+d.getMinutes()/60}; }
+function isOpen(l){ const H=hoursOf(l),n=nowET(); return H.d.indexOf(n.day)>-1 && n.h>=H.o && n.h<H.c; }
+function closesAt(l){ return hoursOf(l).c; }
+function hrLabel(l){ const H=hoursOf(l); if(H.o===0&&H.c===24) return '24/7'; const f=x=>{const hr=Math.floor(x),m=Math.round((x-hr)*60);const ap=hr>=12?'p':'a';let h12=hr%12;if(h12===0)h12=12;return h12+(m?':'+String(m).padStart(2,'0'):'')+ap;}; return f(H.o)+'–'+f(H.c); }
 function cityOf(l){return (l.c.split('·').pop()||'').trim();}
 function catOf(l){return (l.c.split('·')[0]||'').trim();}
 const SITE_LABEL={none:'Siteless',weak:'Builder page',real:'Has site'};
@@ -249,6 +273,8 @@ function sortLeads(arr,mode){
   else if(mode==='cat')a.sort((x,y)=>catOf(x).localeCompare(catOf(y)));
   else if(mode==='city')a.sort((x,y)=>cityOf(x).localeCompare(cityOf(y)));
   else if(mode==='name')a.sort((x,y)=>x.n.localeCompare(y.n));
+  else if(mode==='open')a.sort((x,y)=>(isOpen(y)-isOpen(x))||payScore(y)-payScore(x));
+  else if(mode==='late')a.sort((x,y)=>(closesAt(y)-closesAt(x))||(isOpen(y)-isOpen(x)));
   return a;}
 const list=document.getElementById('list');
 let curFilter='all', curSort='today';
@@ -258,14 +284,14 @@ function render(){
   rows=sortLeads(rows,curSort);
   rows.forEach(l=>{
     const el=document.createElement('div'); el.className='lead'; el.dataset.t=l.t;
-    const ah=afterHours(l), hot=payScore(l)>=3;
+    const ah=afterHours(l), hot=payScore(l)>=3, op=isOpen(l);
     const siteBadge={none:'🟢 SITELESS',weak:'🟡 BUILDER PAGE',real:'🟤 HAS SITE'}[l.w]||'';
     const ourURL='https://hitthe.link/'+l.s+'/';
     const curURL=l.u?(l.u.indexOf('http')===0?l.u:'https://'+l.u):'';
     el.innerHTML=`
       <div class="lhead">
         <span class="tag tag-${l.t}">${l.t}</span>
-        <div class="lmeta"><div class="lname">${l.n} <span class="flag s-${l.w}">${siteBadge}</span>${hot?'<span class="flag hot">HOT</span>':''}${ah?'<span class="flag night">🌙 after-hrs</span>':''}${l.e?'<span class="flag mail">✉</span>':''}</div><div class="lcat">${l.c}</div></div>
+        <div class="lmeta"><div class="lname">${l.n} <span class="flag ${op?'open':'closed'}">${op?'OPEN':'CLOSED'}</span><span class="flag s-${l.w}">${siteBadge}</span>${hot?'<span class="flag hot">HOT</span>':''}${ah?'<span class="flag night">🌙 after-hrs</span>':''}${l.e?'<span class="flag mail">✉</span>':''}</div><div class="lcat">${l.c} · ${hrLabel(l)} ET</div></div>
         <button class="expand">Expand ▾</button>
       </div>
       <div class="frame">
