@@ -1815,20 +1815,13 @@ function pickAvaVoice() {
 // Ava = en-US-AvaMultilingualNeural ("edge tts Ava neural English").
 const AVA_TTS_URL = 'https://xen-vm.xlrd.org/api/tts';
 (function _probeXenNode() {
-  fetch(AVA_TTS_URL + '?voice=ava&text=.', { method: 'HEAD', cache: 'no-store' })
+  const probe = () => fetch(AVA_TTS_URL + '?voice=ava&text=.', { method: 'HEAD', cache: 'no-store' })
     .then(function(r) {
       var n = r.headers.get('x-xen-node');
-      if (n) { _xenNode = n; var el = document.getElementById('ava-node'); if (el) el.textContent = n; }
+      if (n) { _xenNode = n; var el = document.getElementById('ava-node'); if (el) el.textContent = n; _renderAvaPill(); }
     }).catch(function(){});
-})();
-// Probe the TTS server on page load to read X-Xen-Node (M4 vs VM tag).
-// HEAD with ?probe=1 avoids generating audio; retry once on fail.
-(function _probeXenNode() {
-  const probe = () => fetch('https://xen.xlrd.org/api/node', { cache: 'no-store' })
-    .then(r => { const n = r.headers.get('x-xen-node'); if (n) { _xenNode = n; _renderAvaPill(); } })
-    .catch(() => {});
   probe();
-  setTimeout(probe, 15000);  // re-probe after 15s in case server just started
+  setTimeout(probe, 15000);
 })();
 const _AVA_SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=';
 let _avaAudio = null, _avaAudioUnlocked = false, _avaStatus = '';
