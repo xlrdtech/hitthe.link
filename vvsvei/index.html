@@ -1994,7 +1994,12 @@ function _avaDrain() {
   // Falls back to <audio> element if Web Audio not available.
   _avaStatus = 'fetching'; _renderAvaPill();
   const url = AVA_TTS_URL + '?voice=ava&text=' + encodeURIComponent(clip);
-  if (_avaCtx && _avaCtx.state !== 'closed') {
+  // WEBAUDIO DISABLED 2026-06-06 (qi): decodeAudioData reliably FAILS on the edge-tts
+  // MPEG-2 layer-III MP3, so this path always threw "Decoding failed -> device-tts"
+  // and only THEN fell through to the good voice — alarming log + wasted latency.
+  // Native <audio> (else branch) is the confirmed-good path (qi heard it 2026-05-30).
+  // Gate forced false; WebAudio block kept for reference / future re-enable.
+  if (false && _avaCtx && _avaCtx.state !== 'closed') {
     // Resume context (handles background state on iOS where it auto-suspends)
     if (_avaCtx.state === 'suspended') _avaCtx.resume();
     fetch(url, { cache: 'no-cache' }).then(r => {
