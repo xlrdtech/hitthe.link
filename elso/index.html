@@ -116,6 +116,14 @@
   .script b{color:var(--gold)}
   .menu-link{display:inline-block;margin-top:.9rem;font-size:.84rem;font-weight:700;color:var(--gold);text-decoration:none;border:1px solid var(--line-gold);border-radius:8px;padding:.55rem .9rem;transition:all .15s}
   .menu-link:hover{background:rgba(212,175,55,.1);border-color:var(--gold)}
+  /* The Close trigger + modal */
+  .closetrig{background:linear-gradient(135deg,#f4e3a1,#d4af37 55%,#9a7b2e)!important;color:#1a1304!important;border-color:transparent!important;font-weight:800!important;box-shadow:0 4px 16px rgba(212,175,55,.3)}
+  .cmodal{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:1rem}
+  .cmodal.hidden{display:none}
+  .cmodal-bg{position:absolute;inset:0;background:rgba(0,0,0,.82);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+  .cmodal-card{position:relative;z-index:1;max-width:680px;width:100%;max-height:88vh;overflow:auto;border-radius:18px}
+  .cmodal-x{position:absolute;top:.7rem;right:.9rem;z-index:3;font:inherit;font-size:1.1rem;line-height:1;color:var(--gold-pale);background:rgba(0,0,0,.5);border:1px solid var(--line-gold);border-radius:50%;width:34px;height:34px;cursor:pointer}
+  .cmodal-x:hover{background:rgba(212,175,55,.15);color:var(--gold)}
   footer{margin-top:2.5rem;padding-top:1.3rem;border-top:1px solid var(--line);color:var(--faint);font-size:.78rem;font-family:"JetBrains Mono",monospace}
   @media(max-width:520px){.actions{grid-template-columns:1fr 1fr}.open{grid-column:1/-1}}
 </style>
@@ -162,10 +170,15 @@
           <option value="name">🔤 Name A–Z</option>
         </optgroup>
       </select>
+      <button class="fbtn closetrig" id="openClose">💰 The Close · offer &amp; scripts</button>
     </div>
   </header>
 
-  <section class="offer">
+  <div id="closeModal" class="cmodal hidden" role="dialog" aria-modal="true" aria-label="The Close — offer and scripts">
+    <div class="cmodal-bg" id="closeBg"></div>
+    <div class="cmodal-card">
+      <button class="cmodal-x" id="closeX" aria-label="Close">✕</button>
+  <section class="offer" style="margin-bottom:0;backdrop-filter:none;-webkit-backdrop-filter:none">
     <div class="offer-h">The Close · $2,000 custom site — 3 ways to say yes</div>
     <div class="paths">
       <div class="path best">
@@ -194,6 +207,8 @@
     <div class="script">Open by site status: <b>🟢 Siteless</b> → "you've got no website — here's the one I already built you." <b>🟡 Builder page</b> → "you're on a Wix/Google free page — here's your real branded upgrade." <b>🟤 Has site</b> → "your site's dated — here's the redesign." Tap <b>👁 Current site</b> to show before/after live.</div>
     <a class="menu-link" href="/menu/" target="_blank" rel="noopener">＋ Add-on units · $111 each → full Service Menu</a>
   </section>
+    </div>
+  </div>
 
   <div id="list"></div>
 
@@ -329,6 +344,15 @@ document.querySelectorAll('.fbtn').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.fbtn').forEach(x=>x.classList.remove('on'));b.classList.add('on');curFilter=b.dataset.f;render();
 }));
 document.getElementById('sortSel').addEventListener('change',e=>{curSort=e.target.value;render();});
+// The Close modal
+(function(){
+  const m=document.getElementById('closeModal');
+  const open=()=>m.classList.remove('hidden'), close=()=>m.classList.add('hidden');
+  document.getElementById('openClose').addEventListener('click',open);
+  document.getElementById('closeBg').addEventListener('click',close);
+  document.getElementById('closeX').addEventListener('click',close);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+})();
 // click-to-copy chips (single-line scroll boxes)
 list.addEventListener('click',e=>{
   // clickable pills → apply matching sort
