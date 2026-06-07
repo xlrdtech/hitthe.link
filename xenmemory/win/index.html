@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Xen · Windows Memory System — Handoff</title>
+<meta name="description" content="Architecture handoff for Xen's Windows long-term memory: a plain-markdown Obsidian vault wired to Claude Code lifecycle hooks.">
+<meta name="theme-color" content="#05070d">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#05070d; --panel:#0b1018; --line:rgba(170,190,230,.12);
+    --ink:#e9eefb; --dim:#9fb0cc; --faint:#67748f;
+    --chrome:linear-gradient(135deg,#dfe7f5 0%,#9fb3d6 30%,#c9d6ee 50%,#7e93bd 70%,#e7eefb 100%);
+    --irid:linear-gradient(120deg,#7df9ff,#a78bfa 40%,#67e8f9 70%,#c4b5fd);
+  }
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .glow{position:fixed;border-radius:50%;filter:blur(90px);opacity:.5;z-index:0;pointer-events:none}
+  .g1{top:-120px;left:-80px;width:420px;height:420px;background:radial-gradient(circle,rgba(125,249,255,.18),transparent)}
+  .g2{bottom:-140px;right:-100px;width:480px;height:480px;background:radial-gradient(circle,rgba(167,139,250,.16),transparent)}
+  .wrap{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:clamp(2rem,6vw,5rem) clamp(1.2rem,5vw,3rem)}
+  header{margin-bottom:3rem}
+  .kicker{font-family:"JetBrains Mono",monospace;font-size:.72rem;letter-spacing:.32em;text-transform:uppercase;color:var(--faint);margin-bottom:1rem}
+  h1{font-size:clamp(2.1rem,6vw,3.6rem);font-weight:800;letter-spacing:-.03em;line-height:1.04;
+     background:var(--chrome);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .lede{margin-top:1.1rem;color:var(--dim);font-size:clamp(1rem,2.4vw,1.2rem);max-width:62ch}
+  .lede b{color:var(--ink);font-weight:600}
+  .verified{display:inline-flex;align-items:center;gap:.5rem;margin-top:1.4rem;font-family:"JetBrains Mono",monospace;font-size:.72rem;color:#7df9ff;border:1px solid rgba(125,249,255,.3);border-radius:999px;padding:.4rem .9rem}
+  .dot{width:7px;height:7px;border-radius:50%;background:#7df9ff;box-shadow:0 0 10px #7df9ff}
+  section{margin-top:2.6rem}
+  h2{font-size:1.5rem;font-weight:700;letter-spacing:-.02em;margin-bottom:.4rem;display:flex;align-items:baseline;gap:.7rem}
+  h2 .n{font-family:"JetBrains Mono",monospace;font-size:.85rem;color:var(--faint);font-weight:500}
+  .sec-sub{color:var(--faint);font-size:.92rem;margin-bottom:1.2rem}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:1.4rem 1.5rem;margin-top:1rem}
+  .card h3{font-size:1.02rem;font-weight:600;margin-bottom:.5rem}
+  p.dim{color:var(--dim)}
+  code,.mono{font-family:"JetBrains Mono",monospace;font-size:.82em;background:rgba(125,249,255,.08);border:1px solid var(--line);border-radius:6px;padding:.12em .45em;color:#bfe9ff;word-break:break-word}
+  table{width:100%;border-collapse:collapse;margin-top:1rem;font-size:.9rem}
+  th,td{text-align:left;padding:.7rem .8rem;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-family:"JetBrains Mono",monospace;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);font-weight:500}
+  td:first-child{white-space:nowrap}
+  ul{list-style:none;margin-top:.6rem}
+  li{padding-left:1.4rem;position:relative;margin:.5rem 0;color:var(--dim)}
+  li::before{content:"";position:absolute;left:0;top:.62em;width:8px;height:8px;border-radius:2px;background:var(--irid)}
+  li b{color:var(--ink);font-weight:600}
+  .warn{border-left:3px solid #fbbf24;background:rgba(251,191,36,.06)}
+  .warn h3{color:#fcd34d}
+  .pend{border-left:3px solid #a78bfa;background:rgba(167,139,250,.06)}
+  .grid2{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-top:1rem}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1.1rem 1.2rem}
+  .stat .v{font-size:1.6rem;font-weight:800;background:var(--irid);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .stat .l{font-size:.78rem;color:var(--faint);margin-top:.25rem}
+  footer{margin-top:3.5rem;padding-top:1.6rem;border-top:1px solid var(--line);color:var(--faint);font-size:.82rem;font-family:"JetBrains Mono",monospace}
+  a{color:#7df9ff;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="glow g1"></div><div class="glow g2"></div>
+<div class="wrap">
+  <header>
+    <div class="kicker">Xen · Windows · nitro</div>
+    <h1>Memory System Handoff</h1>
+    <p class="lede">A plain-markdown <b>Obsidian vault</b> wired to <b>Claude Code lifecycle hooks</b>. The hooks — not the storage engine — are why it works: fire-and-forget capture, deterministic inject, git-synced durability. NotebookLM is a research feeder, not the store.</p>
+    <span class="verified"><span class="dot"></span>Verified live 2026-06-07</span>
+  </header>
+
+  <div class="grid2">
+    <div class="stat"><div class="v">36</div><div class="l">notes in vault</div></div>
+    <div class="stat"><div class="v">4</div><div class="l">durability safety nets</div></div>
+    <div class="stat"><div class="v">793</div><div class="l">lines in capture log</div></div>
+    <div class="stat"><div class="v">100%</div><div class="l">integrity (no dead/orphan)</div></div>
+  </div>
+
+  <section>
+    <h2><span class="n">01</span> The store</h2>
+    <p class="sec-sub">This folder <em>is</em> the memory — and an Obsidian vault.</p>
+    <div class="card">
+      <ul>
+        <li><b>Location</b> — the Claude project memory dir on nitro (registered Obsidian vault with graph + backlinks).</li>
+        <li><b>One note = one fact.</b> Frontmatter carries <code>name · description · type · tags</code>; <code>[[wikilinks]]</code> connect facts.</li>
+        <li><b>Types</b> (color-grouped in Graph View): <code>user · feedback · project · reference · system</code>.</li>
+        <li><b>MEMORY.md</b> — the index (one line per note) and the always-auto-loaded session context. The graph hub.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">02</span> Harness wiring</h2>
+    <p class="sec-sub">Why it works where a bare vector store produced ~nothing: hooks remove the "remember to save" burden.</p>
+    <table>
+      <thead><tr><th>Lifecycle</th><th>Hook</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><code>SessionStart</code></td><td>ensure-inject-daemon</td><td>deterministic context inject layer</td></tr>
+        <tr><td><code>UserPromptSubmit</code></td><td>memory-capture · IN</td><td>LLM-free append every prompt → NDJSON</td></tr>
+        <tr><td><code>PostToolUse</code></td><td>memory-capture · TOOL</td><td>append tool events → NDJSON</td></tr>
+        <tr><td><code>Stop</code></td><td>memory-autosave + capture · OUT</td><td>git commit + push vault; capture final output</td></tr>
+      </tbody>
+    </table>
+    <div class="card"><p class="dim">Capture log self-caps at 25 MB (→ last 2000 lines). Context is never lost even when no note is written — a detached distiller can later propose notes from the log.</p></div>
+  </section>
+
+  <section>
+    <h2><span class="n">03</span> Durability — 4 safety nets</h2>
+    <div class="card">
+      <ul>
+        <li><b>git</b> at the memory dir — Stop-hook auto-commits + pushes every session.</li>
+        <li><b>Offsite DR</b> — private GitHub repo (SSH, <code>main</code>), auto-pushed by the hook.</li>
+        <li><b>Syncthing</b> peer to Mac-Xen — <code>.stignore</code> excludes <code>.git</code> to avoid git↔Syncthing collision. <span class="mono">re-launch if sync needed</span>.</li>
+        <li><b>Integrity</b> — frontmatter validation + dead/orphan-link check.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">04</span> Obsidian — viewing</h2>
+    <div class="card">
+      <ul>
+        <li>Installer access-violates headless — working path is to <b>extract the app</b> (7-Zip the setup → <code>app-64.7z</code> → run <code>Obsidian.exe --disable-gpu</code>).</li>
+        <li><b>Browser fallback</b> — a generator emits a self-contained interactive force-graph. <b>Local-only — never published</b> (the notes hold PII + secret names).</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">05</span> NotebookLM</h2>
+    <p class="sec-sub">A research feeder — <b>not</b> the memory store.</p>
+    <div class="card">
+      <ul>
+        <li>Wired via the <code>yt-pipeline</code> skill + <code>notebooklm-mcp</code> (persistent auth).</li>
+        <li><b>Flow:</b> YouTube search → NotebookLM notebook → analysis → <b>saves a markdown report</b> that lands in Obsidian.</li>
+        <li>Upstream of the vault — produces research notes, does not hold canonical memory.</li>
+      </ul>
+    </div>
+    <div class="card warn"><h3>⚠ Open discrepancy</h3><p class="dim">yt-pipeline writes research to <code>~/Documents/obsidian/</code>, while the canonical memory vault is the Claude project dir. Two Obsidian locations — decide whether research should land in the canonical vault.</p></div>
+  </section>
+
+  <section>
+    <h2><span class="n">06</span> Known-open (not yet built)</h2>
+    <div class="card pend">
+      <ul>
+        <li><b>Detached distiller</b> — scheduled pass that reads the NDJSON and <em>proposes</em> candidate notes into <code>_candidates/</code> for review (must not auto-canonize → belief-poisoning guard).</li>
+        <li><b>SessionStart CONTEXT.md inject</b> — hard-capped state briefing (today MEMORY.md auto-loads, covering most of it).</li>
+        <li><b>Freshness heartbeat</b> — alert if capture goes stale.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">07</span> Mac counterpart</h2>
+    <div class="card"><p class="dim">Mac-Xen uses <b>bastra-recall</b> (an opaque MCP vector store). Verdict: demote it to an optional secondary index pointing <em>at</em> the markdown — the vault is the source of truth, never the vector DB.</p></div>
+  </section>
+
+  <footer>Xen Windows Memory · architecture handoff · noindex · hitthe.link/xenmemory/win</footer>
+</div>
+</body>
+</html>
