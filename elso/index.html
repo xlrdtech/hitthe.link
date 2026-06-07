@@ -58,6 +58,8 @@
   .flag.s-real{background:rgba(168,132,47,.2);color:#e8c45a;border:1px solid var(--line-gold)}
   .flag.open{background:rgba(120,200,140,.18);color:#9fe0b4;border:1px solid rgba(120,200,140,.4)}
   .flag.closed{background:rgba(180,80,80,.16);color:#e7a3a3;border:1px solid rgba(180,80,80,.32)}
+  .flag[data-sort]{cursor:pointer;transition:filter .15s,transform .15s}
+  .flag[data-sort]:hover{filter:brightness(1.28);transform:translateY(-1px)}
   /* click-to-copy single-line scroll chips */
   .copyrow{display:flex;flex-wrap:wrap;gap:.45rem;padding:0 1.1rem 1rem;justify-content:center}
   .chip{display:inline-flex;align-items:center;gap:.4rem;max-width:100%;font-family:"JetBrains Mono",monospace;font-size:.72rem;color:var(--dim);background:rgba(0,0,0,.4);border:1px solid var(--line);border-radius:8px;padding:.4rem .55rem;cursor:pointer;transition:border-color .15s,color .15s}
@@ -291,7 +293,7 @@ function render(){
     el.innerHTML=`
       <div class="lhead">
         <span class="tag tag-${l.t}">${l.t}</span>
-        <div class="lmeta"><div class="lname">${l.n} <span class="flag ${op?'open':'closed'}">${op?'OPEN':'CLOSED'}</span><span class="flag s-${l.w}">${siteBadge}</span>${hot?'<span class="flag hot">HOT</span>':''}${ah?'<span class="flag night">🌙 after-hrs</span>':''}${l.e?'<span class="flag mail">✉</span>':''}</div><div class="lcat">${l.c} · ${hrLabel(l)} ET</div></div>
+        <div class="lmeta"><div class="lname">${l.n} <span class="flag ${op?'open':'closed'}" data-sort="open" title="Sort: open now">${op?'OPEN':'CLOSED'}</span><span class="flag s-${l.w}" data-sort="${l.w}" title="Sort: ${SITE_LABEL[l.w]} leads">${siteBadge}</span>${hot?'<span class="flag hot" data-sort="today" title="Sort: most likely to pay today">HOT</span>':''}${ah?'<span class="flag night" data-sort="night" title="Sort: after-hours reachable">🌙 after-hrs</span>':''}${l.e?'<span class="flag mail" data-sort="email" title="Sort: has email first">✉</span>':''}</div><div class="lcat">${l.c} · ${hrLabel(l)} ET</div></div>
         <button class="expand">Expand ▾</button>
       </div>
       <div class="frame">
@@ -329,6 +331,9 @@ document.querySelectorAll('.fbtn').forEach(b=>b.addEventListener('click',()=>{
 document.getElementById('sortSel').addEventListener('change',e=>{curSort=e.target.value;render();});
 // click-to-copy chips (single-line scroll boxes)
 list.addEventListener('click',e=>{
+  // clickable pills → apply matching sort
+  const fl=e.target.closest('.flag[data-sort]');
+  if(fl){ curSort=fl.dataset.sort; const sel=document.getElementById('sortSel'); if(sel) sel.value=curSort; render(); return; }
   const c=e.target.closest('.chip'); if(!c) return;
   const v=c.dataset.copy, val=c.querySelector('.val'), o=val.textContent;
   const done=()=>{c.classList.add('copied');val.textContent='✓ copied';setTimeout(()=>{c.classList.remove('copied');val.textContent=o;},1100);};

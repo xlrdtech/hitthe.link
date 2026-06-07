@@ -44,7 +44,9 @@
     overflow-x: hidden;
     margin: 0; padding: 0;
   }
-  html { background-color: #000000; }
+  html { background-color: #000000; scroll-snap-type: y proximity; scroll-padding-top: 88px; }
+  /* per-page section anchors (xlrd.org style) */
+  .hero, .bucket, .order, .ruleline, .cta { scroll-snap-align: start; scroll-margin-top: 88px; }
 
   /* --- SCROLL-SCRUBBED VIDEO BACKGROUND (replaces xlrd 3D canvas) --- */
   .bgv {
@@ -510,10 +512,12 @@
     const secs = Array.from(document.querySelectorAll('[data-dot]'));
     const dots = document.getElementById('dots');
     secs.forEach((s, i) => {
+      // give each section a stable id anchor (per-page, xlrd-style)
+      if (!s.id) s.id = 'sec-' + (s.getAttribute('data-dot')||('p'+i)).toLowerCase().replace(/[^a-z0-9]+/g,'-');
       const d = document.createElement('div');
       d.className = 'dot' + (i===0?' active':'');
       d.title = s.getAttribute('data-dot');
-      d.onclick = () => s.scrollIntoView({behavior:'smooth', block:'start'});
+      d.onclick = () => { s.scrollIntoView({behavior:'smooth', block:'start'}); history.replaceState(null,'','#'+s.id); };
       dots.appendChild(d);
     });
     const dotEls = Array.from(dots.children);
