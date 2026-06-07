@@ -42,9 +42,9 @@
   .section-container {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     pointer-events: none; display: flex; flex-direction: column; justify-content: center;
-    opacity: 0; transform: translateY(40px);
-    transition: opacity 0.8s cubic-bezier(0.2,0.8,0.2,1), transform 0.8s;
-    overflow-y: auto; padding: 96px 0 40px;
+    opacity: 0; transform: translateY(24px);
+    transition: opacity 0.45s cubic-bezier(0.22,1,0.36,1), transform 0.45s cubic-bezier(0.22,1,0.36,1);
+    will-change: opacity, transform; overflow-y: auto; padding: 96px 0 40px;
   }
   .section-container.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
   .section-inner { max-width: 1080px; width: 100%; margin: 0 auto; padding: 0 24px; }
@@ -172,7 +172,7 @@
 </div>
 
 <!-- SCROLL-SCRUBBED VIDEO BACKGROUND -->
-<video class="bgv" data-scrub-video data-mode="page" data-ease="0.1" muted playsinline webkit-playsinline preload="auto" poster="assets/menu-bg-poster.jpg" src="assets/menu-bg-v2.mp4"></video>
+<video class="bgv" data-scrub-video data-mode="page" data-ease="0.22" muted playsinline webkit-playsinline preload="auto" poster="assets/menu-bg-poster.jpg" src="assets/menu-bg-v2.mp4"></video>
 <div class="bg-scrim"></div>
 
 <!-- NAVIGATION -->
@@ -406,7 +406,8 @@
   // --- FIXED-SECTION SCROLL ENGINE (xlrd.org) ---
   const sections = Array.from(document.querySelectorAll('.section-container'));
   const N = sections.length;
-  document.querySelector('.scroll-spacer').style.height = (N * 100) + 'vh';
+  // ~0.72 viewport of scroll per page = faster traverse, still smooth
+  document.querySelector('.scroll-spacer').style.height = (N * 72) + 'vh';
 
   // build side dots
   const dotsWrap = document.getElementById('dots');
@@ -419,11 +420,11 @@
   });
   const dots = Array.from(dotsWrap.children);
 
-  let scrollProgress = 0, currentIdx = 0;
+  let scrollProgress = 0, currentIdx = -1;
   function tick() {
     const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
     const raw = window.scrollY / (maxScroll || 1);
-    scrollProgress += (raw - scrollProgress) * 0.1;
+    scrollProgress += (raw - scrollProgress) * 0.18;   // snappier catch-up
     const idx = Math.min(Math.floor(scrollProgress * N + 0.18), N - 1);
     if (idx !== currentIdx) {
       currentIdx = idx;
@@ -434,7 +435,11 @@
   }
   tick();
 
-  window.scrollToSection = (i) => window.scrollTo({ top: i * window.innerHeight, behavior: 'smooth' });
+  // proportional to actual scroll length (spacer is 0.72vp/page, not 1vp)
+  window.scrollToSection = (i) => {
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    window.scrollTo({ top: Math.round(i / (N - 1) * maxScroll), behavior: 'smooth' });
+  };
 
   // --- MOBILE MENU ---
   const mm = document.getElementById('mobile-menu');
