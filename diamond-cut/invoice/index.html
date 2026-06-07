@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invoice · Stal'lyon — Diamond Cut Studios Website (Deposit)</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#14110c;--paper:#fbfaf6;--line:rgba(20,17,12,.12);--muted:#6b6356;--gold:#9a7b2e;--green:#1f6f5c;--fd:"Fraunces",Georgia,serif;--fb:"Inter",system-ui,sans-serif;--fm:"JetBrains Mono",monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e9e6dd;color:var(--ink);font-family:var(--fb);line-height:1.55;-webkit-font-smoothing:antialiased;padding:32px 16px;display:flex;justify-content:center}
+.sheet{background:var(--paper);max-width:680px;width:100%;border:1px solid var(--line);border-radius:10px;box-shadow:0 20px 60px rgba(20,17,12,.14);overflow:hidden}
+.top{padding:34px 38px 26px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap}
+.from .biz{font-family:var(--fd);font-weight:600;font-size:22px;letter-spacing:-.01em}
+.from .sub{color:var(--muted);font-size:13px;margin-top:3px}
+.from a{color:var(--gold);text-decoration:none}
+.inv-tag{text-align:right}
+.inv-tag .w{font-family:var(--fm);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+.inv-tag .no{font-family:var(--fd);font-weight:600;font-size:24px;margin-top:4px}
+.inv-tag .dt{font-family:var(--fm);font-size:12px;color:var(--muted);margin-top:6px}
+.parties{padding:24px 38px;display:flex;gap:40px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.parties .lbl{font-family:var(--fm);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.parties .nm{font-weight:600;font-size:15px}
+.parties .ln{font-size:13px;color:var(--muted)}
+.parties a{color:var(--gold);text-decoration:none}
+.sec{padding:24px 38px;border-bottom:1px solid var(--line)}
+.sec-h{font-family:var(--fm);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+.items{padding:8px 38px 0}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-family:var(--fm);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:16px 0 10px;border-bottom:1px solid var(--line)}
+th.r,td.r{text-align:right}
+td{padding:16px 0;border-bottom:1px solid var(--line);font-size:14px;vertical-align:top}
+td .desc-sub{display:block;color:var(--muted);font-size:12.5px;margin-top:3px}
+.totals{padding:18px 38px 6px;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.trow{display:flex;justify-content:space-between;width:320px;font-size:14px}
+.trow .k{color:var(--muted)}
+.trow.due{border-top:1px solid var(--line);padding-top:12px;margin-top:4px}
+.trow.due .k{font-family:var(--fd);font-weight:600;font-size:18px;color:var(--ink)}
+.trow.due .v{font-family:var(--fd);font-weight:600;font-size:22px;color:var(--ink)}
+.pay{margin:22px 38px 0;padding:18px 20px;background:rgba(154,123,46,.07);border:1px solid var(--line);border-radius:8px}
+.pay .h{font-family:var(--fm);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.pay .row{font-size:14px;margin:4px 0}
+.steps{counter-reset:s;display:flex;flex-direction:column;gap:14px}
+.step{display:flex;gap:14px;align-items:flex-start}
+.step .n{counter-increment:s;flex:none;width:26px;height:26px;border-radius:50%;border:1px solid var(--gold);color:var(--gold);font-family:var(--fm);font-size:12px;display:flex;align-items:center;justify-content:center}
+.step .n::before{content:counter(s)}
+.step .t{font-weight:600;font-size:14.5px}
+.step .d{color:var(--muted);font-size:13px}
+.step .done{color:var(--green);font-family:var(--fm);font-size:11px;text-transform:uppercase;letter-spacing:.1em}
+.foot{padding:22px 38px 30px;color:var(--muted);font-size:12.5px}
+.foot .ty{font-family:var(--fd);font-style:italic;font-size:15px;color:var(--ink)}
+.deadline{margin:0 38px 0;padding:14px 20px;background:rgba(31,111,92,.08);border:1px solid var(--line);border-radius:8px;font-size:13.5px}
+.deadline b{color:var(--green)}
+@media print{body{background:#fff;padding:0}.sheet{box-shadow:none;border:none}}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="top">
+    <div class="from">
+      <div class="biz">East · Self Exec</div>
+      <div class="sub">Web design &amp; artist branding<br><a href="mailto:east@xlrd.org">east@xlrd.org</a> · xlrd.org</div>
+    </div>
+    <div class="inv-tag">
+      <div class="w">Invoice · Deposit</div>
+      <div class="no">INV&nbsp;DC‑001</div>
+      <div class="dt">Issued Jun 7, 2026<br>Due on receipt</div>
+    </div>
+  </div>
+
+  <div class="parties">
+    <div>
+      <div class="lbl">Billed to</div>
+      <div class="nm">Andre "Stal'lyon"</div>
+      <div class="ln">Diamond Cut Studios · Southern Soul</div>
+    </div>
+    <div>
+      <div class="lbl">Project</div>
+      <div class="nm">Custom artist website</div>
+      <div class="ln"><a href="https://hitthe.link/diamond-cut">hitthe.link/diamond-cut</a></div>
+    </div>
+  </div>
+
+  <div class="items">
+    <table>
+      <thead><tr><th>Scope</th><th class="r">Amount</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Custom Southern-Soul artist website — design, build &amp; revisions
+            <span class="desc-sub">Mobile-first · glass music players + per-track downloads · live-footage reel + line dances · flyer wall · promo gallery · tour/booking · color-theme switcher · hosted at hitthe.link/diamond-cut · all revisions through launch</span>
+          </td>
+          <td class="r">$111.00</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="totals">
+    <div class="trow"><span class="k">Project total (pre-launch rate)</span><span class="v">$111.00</span></div>
+    <div class="trow"><span class="k">Balance on completion (INV DC-002)</span><span class="v">$56.00</span></div>
+    <div class="trow due"><span class="k">Deposit due now (50%)</span><span class="v">$55.00</span></div>
+  </div>
+
+  <div class="pay">
+    <div class="h">Pay the deposit to start</div>
+    <div class="row" style="margin-bottom:14px"><b>$55.00</b> — this kicks off your 7-day build. Tap to pay securely with Cash App:</div>
+    <a href="https://cash.app/pay/link/qvs4xyj9" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:9px;background:#00d54b;color:#08130b;font-family:var(--fb);font-weight:700;font-size:15px;text-decoration:none;padding:13px 26px;border-radius:8px;box-shadow:0 6px 18px rgba(0,213,75,.3)">Pay $55 deposit with Cash App →</a>
+    <div class="row" style="margin-top:12px;color:var(--muted);font-size:12.5px">Or open: <a href="https://cash.app/pay/link/qvs4xyj9" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none">cash.app/pay/link/qvs4xyj9</a></div>
+  </div>
+
+  <div style="height:18px"></div>
+  <div class="deadline"><b>7-day delivery.</b> The clock starts the day your deposit clears — your site ships within 7 days, complete with every revision. Target launch: <b>by Jun 14, 2026</b>.</div>
+  <div style="height:6px"></div>
+
+  <div class="sec">
+    <div class="sec-h">How it works</div>
+    <div class="steps">
+      <div class="step"><div class="n"></div><div><div class="t">Pay the $55 deposit</div><div class="d">Starts your 7-day build clock today.</div></div></div>
+      <div class="step"><div class="n"></div><div><div class="t">Send your content</div><div class="d">Photos, tracks, flyers, show dates, socials — fill the quick intake at <a href="https://hitthe.link/intake" style="color:var(--gold);text-decoration:none">hitthe.link/intake</a> or just text it over.</div></div></div>
+      <div class="step"><div class="n"></div><div><div class="t">Site built &amp; live within 7 days</div><div class="d">Full custom site at hitthe.link/diamond-cut, with revisions.</div></div></div>
+      <div class="step"><div class="n"></div><div><div class="t">Settle the $56 balance + connect your domain</div><div class="d">Balance due on completion (INV DC-002). Domain connection included free — you cover only the registrar cost if you want a custom web address.</div></div></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="ty">Let's build something diamond-cut. 💎</div>
+    <div style="margin-top:6px">Deposit is 50% of the $111 pre-launch rate. Balance of $56 + any domain cost is due on completion — see INV DC-002.</div>
+  </div>
+</div>
+</body>
+</html>

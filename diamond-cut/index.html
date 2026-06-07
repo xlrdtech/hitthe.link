@@ -189,5 +189,40 @@
 
 </main>
 
+<!-- Theme randomizer (execpage-style) -->
+<button id="themeBtn" title="Shuffle theme color" aria-label="Shuffle theme color"
+  style="position:fixed;right:18px;bottom:18px;z-index:50;width:52px;height:52px;border-radius:50%;
+  border:1px solid rgba(168,216,255,.4);background:rgba(10,16,26,.7);backdrop-filter:blur(8px);
+  color:var(--diamond);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 24px rgba(0,0,0,.5);transition:transform .15s,box-shadow .2s">◆</button>
+<script>
+(function(){
+  // default "diamond" palette (re-applied on reset)
+  var DEF={d:'#a8d8ff',dd:'#3a7fc0',glow:'rgba(168,216,255,0.55)',gp:'#f4e3a1',gold:'#d4af37'};
+  function hsl(h,s,l){return 'hsl('+h+','+s+'%,'+l+'%)';}
+  function apply(h){
+    var r=document.documentElement.style;
+    if(h===null){ r.setProperty('--diamond',DEF.d);r.setProperty('--diamond-deep',DEF.dd);
+      r.setProperty('--diamond-glow',DEF.glow);r.setProperty('--gold-pale',DEF.gp);r.setProperty('--gold',DEF.gold); return; }
+    r.setProperty('--diamond',hsl(h,80,72));
+    r.setProperty('--diamond-deep',hsl(h,55,42));
+    r.setProperty('--diamond-glow','hsla('+h+',80%,72%,0.55)');
+    var comp=(h+40)%360;
+    r.setProperty('--gold-pale',hsl(comp,70,80));
+    r.setProperty('--gold',hsl(comp,60,55));
+  }
+  var states=[], i=-1; // cycle: diamond -> random hues, click again reshuffles
+  document.getElementById('themeBtn').addEventListener('click',function(){
+    var h=Math.floor(Math.random()*360);
+    apply(h);
+    this.style.color=hsl(h,80,72);
+    this.style.transform='rotate('+(Math.random()*180-90)+'deg) scale(1.1)';
+    var b=this; setTimeout(function(){b.style.transform='';},200);
+  });
+  // double-click resets to diamond
+  document.getElementById('themeBtn').addEventListener('dblclick',function(){apply(null);this.style.color='#a8d8ff';});
+})();
+</script>
+
 </body>
 </html>
