@@ -5,14 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
 <title>VEIN · Starlight VM</title>
 <meta name="description" content="VEI (Voice Echo Input). Ruach-class STT, glass-over-video shell, omnimind dictate-inject pipeline. Public, no-auth, multi-device simultaneous.">
-
 <meta name="theme-color" content="#0A1F12">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="VEI">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -432,7 +429,7 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
 </style>
 </head>
 <body>
-<!-- qi 2026-05-30: avatar iframe deferred on VEIN — the /vei/avatar Three.js
+<!-- qi 2026-05-30: avatar iframe deferred on VVSVEI — the /vei/avatar Three.js
      bundle was the load-struggle. Voice page loads fast without it; the avatar
      attaches only after the page is interactive + voice armed (idle-time). -->
 <iframe class="bg-iframe" id="bg-iframe" data-src="" aria-hidden="true" tabindex="-1" loading="lazy"></iframe>
@@ -443,7 +440,7 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
   <div class="brand">
     <div class="brand-text">
       <div class="title">VEI<span class="heb">· רוּחַ</span></div>
-      <div class="subtitle" id="count">0 sent · starlight-vm · 209.74.83.78</div>
+      <div class="subtitle" id="count">0 sent · xen.xlrd.org</div>
     </div>
   </div>
   <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
@@ -543,23 +540,11 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
   referrerpolicy="no-referrer-when-downgrade"></iframe>
 
 <script>
-
-// VEIN cross-inject: mirror VM xen-out to VVSVEI so it shows in both
-function veinCrossInject(text) {
-  try {
-    fetch('https://xen.xlrd.org/api/dictate-inject', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ text, source: 'vein-vm', chat: 'xlrd' })
-    }).catch(() => {});
-  } catch(_) {}
-}
-
 // INSTANT OPEN (wf 2026-05-31): register a cache-first service worker so reopen
 // paints the page shell from cache with NO network wait for the HTML. Async +
-// non-blocking — does not delay first paint, hydrate, or arm. Scope is /vein/
+// non-blocking — does not delay first paint, hydrate, or arm. Scope is /vvsvei/
 // only; the SW never intercepts /events SSE or /api/* (see sw.js). qi: "having to
-// reload vein is a bottleneck. it should open and work instantly."
+// reload vvsvei is a bottleneck. it should open and work instantly."
 if ('serviceWorker' in navigator) {
   try {
     window.addEventListener('load', () => {
@@ -568,8 +553,8 @@ if ('serviceWorker' in navigator) {
   } catch (_) {}
 }
 const API_URL = 'http://209.74.83.78:4441/api/dictate-inject';
-const AUDIO_URL = 'http://209.74.83.78:4441/api/dictate-audio';
-const RTC_SIGNAL_URL = 'http://209.74.83.78:4441/api/rtc-signal';
+const AUDIO_URL = 'https://xen.xlrd.org/api/dictate-audio';
+const RTC_SIGNAL_URL = 'https://xen.xlrd.org/api/rtc-signal';
 const HEADERS = { 'Content-Type': 'application/json' };
 const CHUNK_MS = 5000;
 
@@ -730,7 +715,7 @@ async function postTranscript(text) {
     const ok = await tryPostOnce(payload);
     if (!ok) return false;  // 4xx — deterministic reject, do NOT count or queue
     sentCount++;
-    countEl.textContent = sentCount + ' sent · starlight-vm';
+    countEl.textContent = sentCount + ' sent · starlight vm';
     return true;
   } catch (e) {
     // 5xx or network — retry-worthy, queue + replay later
@@ -750,7 +735,7 @@ async function drainQueue() {
       sentCount++; q.shift(); saveQueue(q);
     } catch { break; }
   }
-  countEl.textContent = sentCount + ' sent · starlight-vm';
+  countEl.textContent = sentCount + ' sent · starlight vm';
   if (q.length === 0 && startLen > 0) {
     appendError(`✓ queue drained — ${startLen} replayed, omnimind back online`);
   }
@@ -1219,7 +1204,7 @@ async function uploadAttachments(files) {
     if (f.__path) fd.append('relativePath', f.__path);
     appendError(`uploading ${f.__path || f.name} (${(f.size/1024).toFixed(1)}KB)…`);
     try {
-      const r = await fetch('http://209.74.83.78:4441/api/dictate-attach', { method:'POST', body:fd });
+      const r = await fetch('https://xen.xlrd.org/api/dictate-attach', { method:'POST', body:fd });
       if (r.ok) {
         const j = await r.json().catch(() => ({}));
         appendFinal(`📎 ${f.name}${j.url ? ' → ' + j.url : ''}`, true);
@@ -1421,7 +1406,7 @@ function _hud(last) {
   // qi 2026-05-30: HUD overlay REMOVED from the UI (diagnostic scaffolding, did
   // its job, qi didn't want it overlaying the chat). Console-only now.
   if (last) _hudLast = last;
-  try { console.debug('[vein]', 'armed:'+_avaAudioUnlocked, 'rx:'+_hudRx, 'spoke:'+_hudSpoke, _hudLast); } catch (_) {}
+  try { console.debug('[vvsvei]', 'armed:'+_avaAudioUnlocked, 'rx:'+_hudRx, 'spoke:'+_hudSpoke, _hudLast); } catch (_) {}
 }
 let _activeThreadId = getActiveId();
 let _history = loadThreadEntries(_activeThreadId);
@@ -1722,7 +1707,7 @@ _eventsUpdateQueueDepth();
 
 function subscribeXenReplies() {
   try {
-    const src = new EventSource('http://209.74.83.78:4441/events');
+    const src = new EventSource('https://xen.xlrd.org/events');
     src.onopen = () => {
       _eventsSseStatus.textContent = 'sse · connected';
       _eventsSseStatus.className = 'ok';
@@ -1747,14 +1732,14 @@ function subscribeXenReplies() {
   } catch (e) {}
 }
 subscribeXenReplies();
-function subscribeM4Replies() {
+function subscribeVMReplies() {
   try {
-    const src = new EventSource("https://xen.xlrd.org/events");
+    const src = new EventSource('http://209.74.83.78:4441/events');
     src.onmessage = (ev) => { try { renderEvent(JSON.parse(ev.data)); } catch (_) {} };
     src.onerror = () => {};
   } catch (e) {}
 }
-subscribeM4Replies();
+subscribeVMReplies();
 try { _hud('loaded — tap to arm'); } catch (_) {}
 // Show real-time status in the overlay title as soon as window loads
 // so qi never sits tapping on a blank screen — visible progress always.
@@ -1815,7 +1800,7 @@ try { _hud('loaded — tap to arm'); } catch (_) {}
   }
 })();
 
-// ─── Ava TTS (web VEIN clone) ───────────────────────────────────────
+// ─── Ava TTS (web VVSVEI clone) ───────────────────────────────────────
 // qi 2026-05-30: browser-native voice-out so the web VEI speaks Xen's replies
 // with no Mac/Loopback dependency. speechSynthesis ONLY — Edge-TTS/Kokoro/
 // Piper/Coqui are D.I.E.-banned; this rides the browser's built-in engine and
@@ -2080,11 +2065,11 @@ function _avaTelemetry(what) {
   // qi 2026-05-30: telemetry STAYS in the chat — "I want everything from the
   // terminal in my chat" (verbose-everything-in-chat canon). Only the top-left
   // HUD overlay box was removed; this status flows into the chat as intended.
-  try { console.warn('[vein-telemetry]', what); } catch (_) {}
+  try { console.warn('[vvsvei-telemetry]', what); } catch (_) {}
   try {
-    fetch('http://209.74.83.78:4441/api/dictate-inject', {
+    fetch('https://xen.xlrd.org/api/dictate-inject', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: '[VEIN] ' + what + ' (rx=' + _hudRx + ' spoke=' + _hudSpoke + ' armed=' + _avaAudioUnlocked + ')', source: 'vei-telemetry' })
+      body: JSON.stringify({ text: '[VVSVEI] ' + what + ' (rx=' + _hudRx + ' spoke=' + _hudSpoke + ' armed=' + _avaAudioUnlocked + ')', source: 'vei-telemetry' })
     }).catch(function(){});
   } catch (_) {}
 }
@@ -2206,7 +2191,7 @@ fbText.addEventListener('keydown', (e) => {
 window.addEventListener('beforeunload', stopListening);
 
 // Deferred avatar: attach the heavy /vei/avatar Three.js iframe only AFTER the
-// page is interactive + idle, so VEIN loads fast (qi 2026-05-30 "struggles to
+// page is interactive + idle, so VVSVEI loads fast (qi 2026-05-30 "struggles to
 // load"). Voice/chat work immediately; the cosmetic avatar fills in later.
 (function deferAvatar() {
   const f = document.getElementById('bg-iframe');
