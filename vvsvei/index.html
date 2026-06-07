@@ -781,34 +781,8 @@ async function postAudioChunk(blob) {
 }
 
 async function startMediaRecorder() {
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    appendError('MediaRecorder unavailable — falling to textarea');
-    showFallback('MediaRecorder not supported. Use keyboard mic.');
-    return;
-  }
-  try {
-    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-      ? 'audio/webm;codecs=opus'
-      : (MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '');
-    mediaRecorder = mimeType ? new MediaRecorder(mediaStream, { mimeType }) : new MediaRecorder(mediaStream);
-    mediaMode = true;
-    listening = true;
-    setStatus('listen', 'streaming audio');
-    startBtn.disabled = true;
-    stopBtn.disabled = false;
-    appendError('MediaRecorder active — server-side Whisper transcribes chunks');
-    mediaRecorder.ondataavailable = (e) => {
-      if (e.data && e.data.size > 0) postAudioChunk(e.data);
-    };
-    mediaRecorder.onerror = (e) => {
-      appendError('MediaRecorder error: ' + (e.error ? e.error.message : 'unknown'));
-    };
-    mediaRecorder.start(CHUNK_MS);
-  } catch (e) {
-    appendError('mic access denied or unavailable: ' + e.message);
-    showFallback('Mic access required. Use keyboard mic below or grant mic permission.');
-  }
+  // Permanently stubbed: Whisper + MediaRecorder are D.I.E. banned. Apple STT v2 is sole engine.
+  appendError('MediaRecorder path removed — use the text field below to send to Xen.');
 }
 
 function stopMediaRecorder() {
@@ -898,10 +872,13 @@ function startListening() {
         appendError('switching to non-continuous mode for compatibility...');
       }
       if (networkErrorCount >= 3) {
+        // Whisper/MediaRecorder path is permanently D.I.E. banned. Apple STT v2 is sole engine.
         listening = false;
         try { recognition.stop(); } catch (_) {}
-        appendError('Web Speech API blocked — switching to MediaRecorder + server Whisper');
-        startMediaRecorder();
+        appendError('Web Speech blocked on this browser — use the text field below to send to Xen.');
+        setStatus('err', 'use text field');
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
       }
     }
   };
