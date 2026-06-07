@@ -2023,12 +2023,20 @@ function _avaDrain() {
     a.onended   = () => { _avaPlaying = false; _avaStatus = _avaQueue.length ? ('queued '+_avaQueue.length) : 'idle'; _renderAvaPill(); try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; } catch (_) {} _avaDrain(); };
     a.onerror   = () => { _avaStatus = 'audio-err'; _avaTelemetry('audio-err fallback -> device-tts'); _renderAvaPill(); if (!_avaSpeakDevice(clip, _genAtStart)) { _avaPlaying = false; _avaDrain(); } };
     a.src = url;
-    const p = a.play();
-    if (p && p.then) p.then(() => {
-      // Gen-guard: qi barged in before <audio> playback actually started — kill it.
-      if (_genAtStart !== _avaGen) { try { a.pause(); a.currentTime = 0; } catch (_) {} _avaPlaying = false; _avaStatus = 'you spoke'; _renderAvaPill(); }
-    });
-    if (p && p.catch) p.catch(e => { _avaStatus = 'blocked:'+e.name; _avaTelemetry('play blocked: '+e.name+' -> device-tts'); _renderAvaPill(); if (!_avaSpeakDevice(clip, _genAtStart)) { _avaPlaying = false; _avaDrain(); } });
+    // Gate play() on canplay — prevents AbortError on Orion/iOS where calling
+    // play() immediately after setting src rejects every time (load not ready).
+    const _doPlay = () => {
+      a.oncanplay = null;
+      if (_genAtStart !== _avaGen) { _avaPlaying = false; _avaStatus = 'you spoke'; _renderAvaPill(); return; }
+      const p = a.play();
+      if (p && p.then) p.then(() => {
+        if (_genAtStart !== _avaGen) { try { a.pause(); a.currentTime = 0; } catch (_) {} _avaPlaying = false; _avaStatus = 'you spoke'; _renderAvaPill(); }
+      });
+      if (p && p.catch) p.catch(e => { _avaStatus = 'blocked:'+e.name; _avaTelemetry('play blocked: '+e.name+' -> device-tts'); _renderAvaPill(); if (!_avaSpeakDevice(clip, _genAtStart)) { _avaPlaying = false; _avaDrain(); } });
+    };
+    a.oncanplay = _doPlay;
+    // Safety: if canplay never fires within 3s (already-cached src), play anyway
+    setTimeout(() => { if (a.oncanplay === _doPlay) _doPlay(); }, 3000);
   }
 }
 // Page → omnimind telemetry so XEN AUTO-NOTICES failures without qi reading the
