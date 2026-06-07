@@ -41,6 +41,12 @@
   .filters{display:flex;gap:.5rem;margin:1rem 0 1.6rem;flex-wrap:wrap}
   .fbtn{font:inherit;font-size:.82rem;font-weight:600;color:var(--dim);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:.45rem 1rem;cursor:pointer;transition:all .15s}
   .fbtn.on{color:var(--bg);background:var(--accent);border-color:var(--accent)}
+  .sortpill{font:inherit;font-size:.82rem;font-weight:600;color:var(--gold-pale);background:var(--panel2);border:1px solid var(--line-gold);border-radius:999px;padding:.45rem 1rem;cursor:pointer;-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)}
+  .sortpill option{background:#111;color:#fff}
+  .flag{display:inline-block;font-family:"JetBrains Mono",monospace;font-size:.56rem;font-weight:700;letter-spacing:.06em;padding:.1rem .35rem;border-radius:4px;vertical-align:middle;margin-left:.35rem}
+  .flag.hot{background:linear-gradient(135deg,#f4e3a1,#d4af37);color:#1a1304}
+  .flag.night{background:rgba(212,175,55,.14);color:var(--gold-pale);border:1px solid var(--line-gold)}
+  .flag.mail{background:rgba(212,175,55,.1);color:var(--gold-deep)}
   .lead{background:var(--panel);border:1px solid var(--line);border-radius:16px;margin-bottom:1rem;overflow:hidden}
   .lhead{display:flex;align-items:center;gap:.9rem;padding:1rem 1.1rem}
   .tag{flex:none;font-family:"JetBrains Mono",monospace;font-size:.6rem;letter-spacing:.1em;font-weight:600;padding:.25rem .5rem;border-radius:5px;text-transform:uppercase}
@@ -110,6 +116,11 @@
       <button class="fbtn on" data-f="all">All</button>
       <button class="fbtn" data-f="padre">Padre</button>
       <button class="fbtn" data-f="egbo">EGBO</button>
+      <select id="sortSel" class="sortpill" aria-label="Sort leads">
+        <option value="today">⚡ Most likely to pay today</option>
+        <option value="email">✉ Has email first</option>
+        <option value="night">🌙 After-hours reachable</option>
+      </select>
     </div>
   </header>
 
@@ -178,15 +189,35 @@ const LEADS = [
   {t:'egbo',n:"Undeniable Healthcare",s:"egbops/local/undeniable-healthcare-fairburn",p:"+16782500323",c:"Healthcare · Fairburn GA"},
 ];
 function fmt(p){var m=p.replace(/^\+1/,'').match(/(\d{3})(\d{3})(\d{4})/);return m?'('+m[1]+') '+m[2]+'-'+m[3]:p;}
+// derive "pay-today" score + after-hours reachability from category text
+function payScore(l){var c=l.c.toLowerCase();var s=0;
+  if(/towing|plumb/.test(c))s=3.5;            // 24/7 owner-op, urgent cash
+  else if(/lawn|auto|pressure|paint|fenc|electric/.test(c))s=3; // owner-op trades, cash
+  else if(/salon|barber|construction|realty/.test(c))s=2.2;
+  else if(/restaurant|event|tax/.test(c))s=1.8;
+  else if(/dental|medical|healthcare|education/.test(c))s=1; // gatekept front desk
+  if(l.e)s+=0.6;  // reachable by email = warmer
+  return s;}
+function afterHours(l){return /towing|plumb|restaurant|salon|barber|event|realty/.test(l.c.toLowerCase());}
+function sortLeads(arr,mode){
+  const a=[...arr];
+  if(mode==='today')a.sort((x,y)=>payScore(y)-payScore(x));
+  else if(mode==='email')a.sort((x,y)=>(!!y.e-!!x.e)||payScore(y)-payScore(x));
+  else if(mode==='night')a.sort((x,y)=>(afterHours(y)-afterHours(x))||payScore(y)-payScore(x));
+  return a;}
 const list=document.getElementById('list');
-function render(filter){
+let curFilter='all', curSort='today';
+function render(){
   list.innerHTML='';
-  LEADS.filter(l=>filter==='all'||l.t===filter).forEach(l=>{
+  let rows=LEADS.filter(l=>curFilter==='all'||l.t===curFilter);
+  rows=sortLeads(rows,curSort);
+  rows.forEach(l=>{
     const el=document.createElement('div'); el.className='lead'; el.dataset.t=l.t;
+    const ah=afterHours(l), hot=payScore(l)>=3;
     el.innerHTML=`
       <div class="lhead">
         <span class="tag tag-${l.t}">${l.t}</span>
-        <div class="lmeta"><div class="lname">${l.n}</div><div class="lcat">${l.c}</div></div>
+        <div class="lmeta"><div class="lname">${l.n} ${hot?'<span class="flag hot">HOT</span>':''}${ah?'<span class="flag night">🌙 after-hrs</span>':''}${l.e?'<span class="flag mail">✉</span>':''}</div><div class="lcat">${l.c}</div></div>
         <button class="expand">Expand ▾</button>
       </div>
       <div class="frame">
@@ -210,9 +241,78 @@ document.getElementById('cTotal').textContent=LEADS.length;
 document.getElementById('cPadre').textContent=LEADS.filter(l=>l.t==='padre').length;
 document.getElementById('cEgbo').textContent=LEADS.filter(l=>l.t==='egbo').length;
 document.querySelectorAll('.fbtn').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('.fbtn').forEach(x=>x.classList.remove('on'));b.classList.add('on');render(b.dataset.f);
+  document.querySelectorAll('.fbtn').forEach(x=>x.classList.remove('on'));b.classList.add('on');curFilter=b.dataset.f;render();
 }));
-render('all');
+document.getElementById('sortSel').addEventListener('change',e=>{curSort=e.target.value;render();});
+render();
+</script>
+
+<!-- ===== GRIND MODE · aggressive call-cadence bully ===== -->
+<style>
+  #grind{position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(8,7,4,.92);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-top:1px solid var(--line-gold);box-shadow:0 -8px 30px rgba(0,0,0,.6);transform:translateY(calc(100% - 46px));transition:transform .3s ease}
+  #grind.up{transform:translateY(0)}
+  #grind.alarm{animation:gflash .7s steps(2) infinite}
+  @keyframes gflash{0%{background:rgba(40,8,4,.95)}100%{background:rgba(8,7,4,.92)}}
+  .g-tab{height:46px;display:flex;align-items:center;justify-content:center;gap:.6rem;cursor:pointer;font-family:"JetBrains Mono",monospace;font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+  .g-tab b{color:var(--gold-pale)}
+  .g-body{max-width:920px;margin:0 auto;padding:.4rem 1.1rem 1.2rem;display:flex;flex-wrap:wrap;align-items:center;gap:1rem}
+  .g-clock{font-family:"JetBrains Mono",monospace;font-weight:700;font-size:2rem;background:var(--chrome);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;min-width:120px}
+  .g-msg{flex:1;min-width:200px;font-weight:700;font-size:1.02rem;color:var(--ink);line-height:1.25}
+  .g-msg small{display:block;font-weight:500;font-size:.78rem;color:var(--faint);margin-top:.2rem;font-family:"JetBrains Mono",monospace}
+  .g-dialed{font:inherit;font-weight:800;font-size:1rem;color:#1a1304;background:linear-gradient(135deg,#f4e3a1,#d4af37 55%,#9a7b2e);border:none;border-radius:10px;padding:.85rem 1.4rem;cursor:pointer;box-shadow:0 5px 20px rgba(212,175,55,.35);white-space:nowrap}
+  .g-dialed:hover{transform:translateY(-1px)}
+  .g-count{font-family:"JetBrains Mono",monospace;font-size:.8rem;color:var(--gold-pale);white-space:nowrap}
+  .g-set{font-family:"JetBrains Mono",monospace;font-size:.72rem;color:var(--faint);background:transparent;border:1px solid var(--line);border-radius:7px;padding:.4rem .6rem;cursor:pointer}
+  @media(max-width:560px){.g-clock{font-size:1.5rem}.g-msg{font-size:.9rem}}
+  body{padding-bottom:60px}
+</style>
+<div id="grind">
+  <div class="g-tab" id="gTab">🔥 GRIND MODE · <b id="gTabClock">04:00</b> to next dial · tap to open</div>
+  <div class="g-body">
+    <div class="g-clock" id="gClock">04:00</div>
+    <div class="g-msg" id="gMsg">Lock in. First dial now — top of the list is your hottest pay-today lead.<small id="gSub">Cadence: a dial every 4 min · you close at night, so work the 🌙 after-hours leads</small></div>
+    <button class="g-dialed" id="gDialed">DIALED ✓ NEXT</button>
+    <div style="display:flex;flex-direction:column;gap:.4rem;align-items:center">
+      <span class="g-count" id="gCount">0 dials</span>
+      <button class="g-set" id="gSet">⏱ 4m</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  const G=document.getElementById('grind'),tab=document.getElementById('gTab'),
+    clk=document.getElementById('gClock'),tclk=document.getElementById('gTabClock'),
+    msg=document.getElementById('gMsg'),sub=document.getElementById('gSub'),
+    dialed=document.getElementById('gDialed'),cnt=document.getElementById('gCount'),setb=document.getElementById('gSet');
+  const NAG=[
+    "Pick up the phone. The board's right there.",
+    "Nobody's closing for you. Dial the next one.",
+    "Stop reading. Start ringing. NEXT LEAD.",
+    "That hesitation costs money. Call.",
+    "You're a closer or you're not. Prove it — dial.",
+    "The deposit's on the other end of a call you haven't made.",
+    "Money doesn't move until you do. GO.",
+    "Eyes on the hottest lead. Thumb on Call. NOW."
+  ];
+  const HYPE=["That's one. Don't stop.","Next. Keep the rhythm.","Momentum. Again.","Good. The next one's warmer.","Stack 'em. Dial again."];
+  let mins=4, t=mins*60, dials=0, open=true, alarmed=false;
+  const intervals=[2,3,4,6]; let ii=2;
+  function paint(){
+    const m=String(Math.floor(t/60)).padStart(2,'0'),s=String(t%60).padStart(2,'0');
+    clk.textContent=tclk.textContent=m+':'+s;
+  }
+  function fire(){
+    alarmed=true;G.classList.add('alarm','up');open=true;
+    msg.firstChild.textContent=NAG[Math.floor(Date.now()/1000)%NAG.length]+' ';
+    try{navigator.vibrate&&navigator.vibrate([200,80,200]);}catch(e){}
+  }
+  function reset(){t=mins*60;alarmed=false;G.classList.remove('alarm');paint();}
+  setInterval(()=>{ if(t>0){t--;paint(); if(t===0)fire();} },1000);
+  dialed.addEventListener('click',()=>{dials++;cnt.textContent=dials+(dials===1?' dial':' dials');msg.firstChild.textContent=HYPE[dials%HYPE.length]+' ';reset();});
+  tab.addEventListener('click',()=>{open=!open;G.classList.toggle('up',open);});
+  setb.addEventListener('click',()=>{ii=(ii+1)%intervals.length;mins=intervals[ii];setb.textContent='⏱ '+mins+'m';sub.textContent='Cadence: a dial every '+mins+' min · you close at night, so work the 🌙 after-hours leads';reset();});
+  G.classList.add('up');paint();
+})();
 </script>
 </body>
 </html>
