@@ -85,12 +85,18 @@
   .hidden { display:none !important; }
   ::-webkit-scrollbar { width:8px; } ::-webkit-scrollbar-track { background:#000; } ::-webkit-scrollbar-thumb { background:#333; border-radius:4px; }
 
-  /* layout */
+  /* layout — one anchor per page (xlrd.org-style scroll-snap, each bucket = one viewport) */
+  html { scroll-snap-type: y mandatory; }
   .wrap { max-width:1180px; margin:0 auto; padding:0 20px 60px; position:relative; z-index:1; }
-  .section-container { scroll-margin-top:92px; padding:34px 0; }
-  body.reveal-on .section-container { opacity:0; transform:translateY(34px); filter:blur(6px);
-    transition:opacity .7s cubic-bezier(0.16,1,0.3,1), transform .7s cubic-bezier(0.16,1,0.3,1), filter .7s ease; will-change:opacity,transform,filter; }
+  .section-container { scroll-margin-top:92px; scroll-snap-align:start; scroll-snap-stop:always;
+    min-height: calc(100vh - 72px); padding: 96px 0 40px; display:flex; flex-direction:column; justify-content:center; }
+  /* sections still fade in as they snap, but each one owns its own page */
+  body.reveal-on .section-container { opacity:0; transform:translateY(28px); filter:blur(6px);
+    transition: opacity .6s cubic-bezier(0.16,1,0.3,1), transform .6s cubic-bezier(0.16,1,0.3,1), filter .6s ease; will-change: opacity, transform, filter; }
   body.reveal-on .section-container.in { opacity:1; transform:none; filter:none; }
+  /* respect short content + small screens — don't trap a half-viewport bucket */
+  @media (max-height: 720px) { .section-container { min-height: auto; padding: 92px 0 36px; } html { scroll-snap-type: y proximity; } }
+  @media (prefers-reduced-motion: reduce) { html { scroll-snap-type: none; } .section-container { min-height: auto; } }
 
   .hero { min-height:86vh; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; }
   .hero .kicker { font-family:'Figtree',sans-serif; font-style:italic; font-size:clamp(15px,2vw,21px); color:#A5F3FC; letter-spacing:0.03em; margin-bottom:20px; }
