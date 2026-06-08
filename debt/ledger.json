@@ -22,7 +22,7 @@
       "root_cause": "Wrapper pipes Claude's stdin; a detached pane gives it no live input. Likely THE mechanism behind 'I wake up and catch Xen idle' — it dies when qi looks away.",
       "cost_usd": null,
       "status": "open",
-      "notes": "Highest-leverage idle fix. Needs a persistent-session design so Claude stays up 24/7 with zero client attached. Confirm whether it also exits while qi IS attached."
+      "notes": "ROOT CAUSE LOCATED (2026-06-08): the two 'permanently-alive' daemons are OFFLINE — com.exedus.xen-claude-launcher (warm socket-Claude on /tmp/xen-claude.sock, haiku) + com.xen.claude-keepalive (auto-relaunch `claude --resume` in XenV40). Scripts/paths intact (NOT migration-broken), just not loaded. Confirmed: Claude exits ~seconds after the tmux session goes unattended. Fix = deliberately bind ONE keepalive-managed Claude to the `xen` hub pane + write the sentinel + survive detach — NOT a blind `launchctl load` (would spawn colliding brains in the wrong places). Interim that works NOW: type `xen` then `claude` (Claude stays alive while qi is attached)."
     },
     {
       "id": "DEBT-002",
