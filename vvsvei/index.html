@@ -1710,7 +1710,10 @@ function subscribeXenReplies() {
       _eventsSseStatus.textContent = 'sse · reconnecting';
       _eventsSseStatus.className = 'warn';
       _eventsPip.classList.add('off');
-      /* CF/omnimind SSE auto-reconnects */
+      // Native EventSource retries on transient drops, but readyState===2 (CLOSED)
+      // means the browser gave up permanently — happens when omnimind restarts and
+      // CF/proxy returns a 502 mid-stream. Force manual reconnect in that case.
+      if (src.readyState === 2) { src.close(); setTimeout(subscribeXenReplies, 3000); }
     };
   } catch (e) {}
 }
