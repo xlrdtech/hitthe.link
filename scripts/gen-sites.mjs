@@ -16,6 +16,7 @@ const ROOT = process.cwd();
 // but IS listed here so qi can navigate to it.
 const DENY = new Set([
   'scripts','assets','_shared', // build/infra only — no standalone page
+  'xen-map', // internal Xen/Exedus architecture map — noindex, not for public grid
 ]);
 
 // Category inference by slug/title keywords (for grouping in the gallery).
