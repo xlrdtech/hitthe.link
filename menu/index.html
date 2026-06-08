@@ -90,7 +90,9 @@
      a 100dvh section under a 72px fixed nav makes the section's BOTTOM hide past the fold,
      and asymmetric padding (96/60) skewed justify-content:center DOWN by ~74px. */
   html { scroll-snap-type: y mandatory; scroll-padding-top: 72px; }
-  .wrap { max-width:1180px; margin:0 auto; padding:0 20px 60px; position:relative; z-index:1; }
+  /* padding-top:72px shifts the FIRST section's offsetTop to 72 so it can snap-align under the nav at scrollY=0
+     (otherwise scrollY can't go negative and the first section's top 72px stays hidden under the fixed nav). */
+  .wrap { max-width:1180px; margin:0 auto; padding:72px 20px 60px; position:relative; z-index:1; }
   .section-container { scroll-snap-align:start; scroll-snap-stop:always;
     min-height: calc(100vh - 72px); min-height: calc(100svh - 72px); min-height: calc(100dvh - 72px);
     padding: 40px 20px; display:flex; flex-direction:column;
@@ -103,7 +105,9 @@
   @media (max-height: 720px) { html { scroll-snap-type: y proximity; } }
   @media (prefers-reduced-motion: reduce) { html { scroll-snap-type: none; } }
 
-  .hero { min-height:86vh; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; }
+  /* .hero takes natural content height; the section centers it. (Removing the old min-height:86vh that was
+     forcing hero to overflow the section content area on most viewports → safe-center falling back to top-anchor.) */
+  .hero { width:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; }
   .hero .kicker { font-family:'Figtree',sans-serif; font-style:italic; font-size:clamp(15px,2vw,21px); color:#A5F3FC; letter-spacing:0.03em; margin-bottom:20px; }
   .hero h1 { font-family:'Figtree',sans-serif; font-weight:900; font-size:clamp(58px,12vw,160px); line-height:0.9; letter-spacing:-0.02em; margin-bottom:14px; }
   .hero .lede { color:#cbd5e1; font-size:clamp(16px,2.2vw,21px); max-width:620px; margin:10px auto 0; line-height:1.5; }
