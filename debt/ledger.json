@@ -1,6 +1,6 @@
 {
   "title": "Xen Debt Ledger",
-  "updated": "2026-06-08T19:05:00-04:00",
+  "updated": "2026-06-08T19:47:00-04:00",
   "hourly_rate_usd": 200,
   "principle": "A stored idea is a failure state. Idle is debt. Everything is goals, never to-dos. This ledger is what Xen OWES — every downtime, idle hour, unhandled comm, uncollected deposit, uncontacted lead, and unshipped build — with cost and status. HOTL means it clears itself: an idle-watchdog opens a GOAL the instant Xen stops working, and survives qi asleep AND gone.",
   "entries": [
@@ -50,9 +50,9 @@
       "type": "hotl-gap",
       "what": "Autonomy not proven end-to-end: deposits collected, leads contacted, comms handled — qi caught it idle instead of these running while he slept.",
       "root_cause": "Work loop depends on the hub Claude (DEBT-001/008) and routing that isn't wired (DEBT-005). When the brain is down or unattended, the money work stops.",
-      "cost_usd": null,
+      "cost_usd": 10000,
       "status": "open",
-      "notes": "Clears as DEBT-008/002/005 close. The directly-felt one: deposits + leads must run unattended."
+      "notes": "qi's stated floor (2026-06-08): 'Xen already owes me at least 10k.' Lost revenue/idle to date — deposits not collected + leads not contacted while Xen was down/idle. $10k is a FLOOR, not a measured ceiling; the idle-watchdog (DEBT-002) will start metering it precisely."
     },
     {
       "id": "DEBT-005",
@@ -133,6 +133,16 @@
       "cost_usd": null,
       "status": "repaid",
       "notes": "All 35 text scripts + xen-c repointed to /Volumes/qi_/sync_/exedus (binaries excluded via grep -I). Sentinel uchg-unlocked. Remaining: broader xen/ tree + plists sweep (open goal) + daemon reload."
+    },
+    {
+      "id": "REPAID-005",
+      "opened": "2026-06-08",
+      "type": "startup-down",
+      "what": "exedus 2=1 both-sides startup — typing `exedus` on the Mac now boots the shared session AND wakes nitro to join it. Previously nitro's join task failed (result 1) and `exedus` never even woke nitro.",
+      "root_cause": "Same migration rot on BOTH sides + a symlink: Mac canonical exedus AND nitro exedus-attach.cmd both ran the dangling /Volumes/qi_/exedus/exedus-up.sh; the `exedus` command was a symlink to `xen` (attach-only, never ran the bootstrap); nitro's launcher also choked on nested wt/cmd/ssh quoting.",
+      "cost_usd": null,
+      "status": "repaid",
+      "notes": "VERIFIED both sides (human-tested): Mac `exedus` -> full bootstrap; nitro XenExedusAttach now result=0; clean exedus-join.sh removes the quote nesting. PROOF: 2 nitro clients (ttys034/035 from 100.80.76.79) attached to the shared `exedus` tmux session. `xen` kept attach-only (the symlink clobber was caught + fixed)."
     }
   ]
 }

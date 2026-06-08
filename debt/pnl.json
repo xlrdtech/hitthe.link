@@ -80,17 +80,18 @@
       "category": "idle_loss",
       "description": "Idle is debt. Every idle hour bills against NET at the hourly rate, cross-referenced to open idle DEBT-* entries in debt/ledger.json.",
       "rate_usd_hr": 200,
-      "idle_hours": null,
-      "amount_usd": null,
+      "idle_hours": 50,
+      "amount_usd": 10000,
       "status": "open",
+      "basis": "qi-stated-floor",
       "cross_ref": ["DEBT-001", "DEBT-002", "DEBT-003", "DEBT-004"],
-      "notes": "amount_usd = rate_usd_hr × idle_hours; null until the idle-watchdog (DEBT-002) feeds measured idle time. The watchdog OPENS A GOAL on idle (BPGS), then appends the measured loss here."
+      "notes": "qi's stated floor 2026-06-08: 'Xen already owes me at least 10k.' Seeded at $10,000 (= 50 hr × $200) as a FLOOR, not a ceiling. The idle-watchdog (DEBT-002) replaces this with precisely-measured idle once wired; until then it's qi's conservative estimate."
     }
   ],
   "totals": {
     "revenue": 0,
-    "cost": 0,
-    "net": 0,
+    "cost": 10000,
+    "net": -10000,
     "open_receivable": 56
   },
   "autolog": "Xen appends here with zero human input (HOTL). COLLECTED DEPOSIT/INVOICE PAID -> push a revenue[] entry {id:REV-<source>-<n>, ts, source, kind:'deposit'|'invoice', ref, amount_collected_usd, status:'collected'}; add to totals.revenue and subtract from totals.open_receivable if it clears an existing receivable (e.g. MB-002 paid -> set REV-MB-002.amount_collected_usd=56, status:'collected', open_receivable 56->0). NEW INVOICE ISSUED (not yet paid) -> revenue[] entry status:'open-receivable' and add amount_invoiced_usd to totals.open_receivable. IDLE DETECTED by the watchdog (DEBT-002) -> open/append the idle_loss cost line: set idle_hours += measured, amount_usd = rate_usd_hr × idle_hours, add the originating DEBT id to cross_ref, and add to totals.cost. CONFIRMED BILL (infra/storage/subscription) -> append/raise COST-INFRA.amount_usd (must stay <= budget_ceiling_usd or open a budget DEBT). Recompute totals.net = totals.revenue − totals.cost on every write. Idle is a GOAL fed to the BPGS swarm, never a to-do. Bump updated to the write timestamp each time."
