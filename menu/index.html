@@ -85,15 +85,15 @@
   .hidden { display:none !important; }
   ::-webkit-scrollbar { width:8px; } ::-webkit-scrollbar-track { background:#000; } ::-webkit-scrollbar-thumb { background:#333; border-radius:4px; }
 
-  /* layout — one anchor per page (xlrd.org-style scroll-snap, each bucket = one viewport) */
-  html { scroll-snap-type: y mandatory; }
+  /* layout — one anchor per page (xlrd.org-style scroll-snap, each bucket = one viewport).
+     Section height = VISIBLE area (viewport - nav), not full viewport — that was the off-center bug:
+     a 100dvh section under a 72px fixed nav makes the section's BOTTOM hide past the fold,
+     and asymmetric padding (96/60) skewed justify-content:center DOWN by ~74px. */
+  html { scroll-snap-type: y mandatory; scroll-padding-top: 72px; }
   .wrap { max-width:1180px; margin:0 auto; padding:0 20px 60px; position:relative; z-index:1; }
-  /* every section is a full viewport, vertically centered at ALL resolutions.
-     - min-height pinned to dynamic viewport (dvh) so mobile URL-bar collapse doesn't break it; svh fallback for older browsers, vh fallback last.
-     - justify-content: safe center → centers when content fits, falls back to top-anchor when content overflows (so nothing gets cut off the top). */
-  .section-container { scroll-margin-top:92px; scroll-snap-align:start; scroll-snap-stop:always;
-    min-height: 100vh; min-height: 100svh; min-height: 100dvh;
-    padding: 96px 20px 60px; display:flex; flex-direction:column;
+  .section-container { scroll-snap-align:start; scroll-snap-stop:always;
+    min-height: calc(100vh - 72px); min-height: calc(100svh - 72px); min-height: calc(100dvh - 72px);
+    padding: 40px 20px; display:flex; flex-direction:column;
     justify-content: center; justify-content: safe center; align-items: center; box-sizing: border-box; }
   /* sections still fade in as they snap, but each one owns its own page */
   body.reveal-on .section-container { opacity:0; transform:translateY(28px); filter:blur(6px);
