@@ -126,9 +126,10 @@
   /* keep the section content centered horizontally inside its viewport */
   .section-container { align-items: center; }
 
-  /* ITEM CARDS — caption stacked UNDERNEATH the title */
-  .items { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:14px; }
-  .item { display:flex; flex-direction:column; background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:16px 16px 14px; transition:border-color .2s, background .2s; }
+  /* ITEM CARDS — caption stacked UNDERNEATH the title.
+     flex-wrap + justify-content:center solves the grid-orphan rule (last-row tiles center instead of stacking flush-left). */
+  .items { display:flex; flex-wrap:wrap; justify-content:center; gap:14px; width:100%; }
+  .item { flex: 1 1 280px; max-width: 340px; min-width: 0; display:flex; flex-direction:column; background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:16px 16px 14px; transition:border-color .2s, background .2s; }
   .item:hover { border-color:rgba(255,255,255,0.2); background:rgba(255,255,255,0.05); }
   .item .iid { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em; color:#52525B; margin-bottom:7px; }
   .item .ititle { font-family:'Figtree',sans-serif; font-weight:700; font-size:16px; color:#fff; line-height:1.2; }
@@ -144,8 +145,9 @@
   .panel-pad { padding:34px 30px; text-align:center; }
   .panel-pad h3 { font-family:'Figtree',sans-serif; font-weight:800; font-size:clamp(26px,4vw,44px); margin-bottom:8px; }
   .panel-pad p.sub { color:#a1a1aa; font-size:14px; margin-bottom:22px; }
-  .rows { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; text-align:left; }
-  .row { display:flex; flex-direction:column; gap:4px; padding:16px 18px; border:1px solid rgba(255,255,255,0.1); border-radius:14px; }
+  /* Model rows: same orphan-fix — flex-wrap centers any odd-count last row */
+  .rows { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; text-align:left; width:100%; }
+  .row { flex: 1 1 240px; max-width: 320px; display:flex; flex-direction:column; gap:4px; padding:16px 18px; border:1px solid rgba(255,255,255,0.1); border-radius:14px; }
   .row.best { border-color:rgba(165,243,252,0.35); background:rgba(165,243,252,0.04); }
   .row .k { font-family:'Figtree',sans-serif; font-weight:700; font-size:15px; color:#fff; }
   .row .d { color:#9aa3af; font-size:13px; line-height:1.4; }
