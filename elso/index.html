@@ -52,6 +52,13 @@
   .flag.hot{background:linear-gradient(135deg,#f4e3a1,#d4af37);color:#1a1304}
   .flag.night{background:rgba(212,175,55,.14);color:var(--gold-pale);border:1px solid var(--line-gold)}
   .flag.mail{background:rgba(212,175,55,.1);color:var(--gold-deep)}
+  .flag.s-none{background:rgba(120,200,140,.14);color:#9fe0b4;border:1px solid rgba(120,200,140,.3)}
+  .flag.s-weak{background:rgba(247,232,176,.14);color:var(--gold-pale);border:1px solid var(--line-gold)}
+  .flag.s-real{background:rgba(168,132,47,.2);color:#e8c45a;border:1px solid var(--line-gold)}
+  .flag.open-now{background:rgba(120,200,140,.18);color:#9fe0b4;border:1px solid rgba(120,200,140,.4)}
+  .flag.closed-now{background:rgba(180,80,80,.16);color:#e7a3a3;border:1px solid rgba(180,80,80,.32)}
+  .flag[data-sort]{cursor:pointer;transition:filter .15s,transform .15s}
+  .flag[data-sort]:hover{filter:brightness(1.28);transform:translateY(-1px)}
   .lead{background:var(--panel);border:1px solid var(--line);border-radius:16px;margin-bottom:1rem;overflow:hidden}
   .lhead{display:flex;align-items:center;gap:.9rem;padding:1rem 1.1rem}
   .tag{flex:none;font-family:"JetBrains Mono",monospace;font-size:.6rem;letter-spacing:.1em;font-weight:600;padding:.25rem .5rem;border-radius:5px;text-transform:uppercase}
@@ -115,6 +122,9 @@
       <span class="stat"><b id="cTotal">0</b> leads live</span>
       <span class="stat"><b id="cPadre">0</b> Padre</span>
       <span class="stat"><b id="cEgbo">0</b> East</span>
+      <span class="stat">🟢 <b id="cNone">0</b> siteless</span>
+      <span class="stat">🟡 <b id="cWeak">0</b> builder</span>
+      <span class="stat">🟤 <b id="cReal">0</b> has site</span>
       <span class="stat">$2,000 build · 50% deposit to start</span>
     </div>
     <div class="filters">
@@ -122,9 +132,26 @@
       <button class="fbtn" data-f="padre">Padre</button>
       <button class="fbtn" data-f="egbo">East</button>
       <select id="sortSel" class="sortpill" aria-label="Sort leads">
-        <option value="today">⚡ Most likely to pay today</option>
-        <option value="email">✉ Has email first</option>
-        <option value="night">🌙 After-hours reachable</option>
+        <optgroup label="Likelihood">
+          <option value="today">⚡ Most likely to pay today</option>
+          <option value="email">✉ Has email first</option>
+          <option value="night">🌙 After-hours reachable</option>
+        </optgroup>
+        <optgroup label="Hours — call who's open">
+          <option value="open">🟢 Open right now</option>
+          <option value="late">🌃 Open latest (close time)</option>
+        </optgroup>
+        <optgroup label="Site status — the pitch">
+          <option value="none">🟢 Siteless first · first-site pitch</option>
+          <option value="weak">🟡 Weak builder page · upgrade pitch</option>
+          <option value="real">🟤 Has real site · redesign pitch</option>
+        </optgroup>
+        <optgroup label="Organize">
+          <option value="type">▦ Source · Padre then East</option>
+          <option value="cat">🏷 Category A–Z</option>
+          <option value="city">📍 City A–Z</option>
+          <option value="name">🔤 Name A–Z</option>
+        </optgroup>
       </select>
     </div>
   </header>
@@ -155,7 +182,7 @@
       <b>＋ Care Plan — $333/mo</b> (optional): 3 edits/month + priority support &amp; quick turnarounds. Saves $111/mo vs per-edit. On the monthly plan, edits &amp; support stay active as long as payments are on time.
     </div>
     <div class="script">Pitch order: <b>Full $2,000</b> → if not, <b>$1,000 deposit</b> → if still hesitating, <b>$222/mo BNPL</b> so they start today. Always offer the <b>$333 Care Plan</b> on top.</div>
-    <a class="menu-link" href="/menu/" target="_blank" rel="noopener">＋ Add-on units · $111 each → full Service Menu</a>
+    <a class="menu-link" href="/menu/" target="_blank" rel="noopener">＋ Add-on units · $111 each → XLRD TECH Service Menu (62 units, add to cart)</a>
   </section>
 
   <div id="list"></div>
@@ -164,34 +191,36 @@
 </div>
 
 <script>
+// Site-status (w) and current site (u) verified by web search 2026-06-07.
+// w: 'none' siteless · 'weak' free builder page (Wix/Square/GBP/Weebly/etc) · 'real' own-domain site
 const LEADS = [
   // PADRE — base /padre/<slug>/
-  {t:'padre',n:"Andy & Leo Auto Repair",s:"padre/andy-leo-auto-repair-jonesboro",p:"+14046444470",c:"Auto Repair · Jonesboro GA"},
-  {t:'padre',n:"Bridges Fencing",s:"padre/bridges-fencing-locust-grove",p:"+17709607300",e:"Bridgesfencing@yahoo.com",c:"Fencing · Locust Grove GA"},
-  {t:'padre',n:"Elite Electric Solutions",s:"padre/elite-electric-solutions-conyers",p:"+17707607777",c:"Electrical · Conyers GA"},
-  {t:'padre',n:"Griffins Automotive",s:"padre/griffins-automotive-jonesboro",p:"+17704779800",c:"Auto · Jonesboro GA"},
-  {t:'padre',n:"Hampton Family Dental",s:"padre/hampton-family-dental",p:"+17708676543",e:"info@hamptonfamilydental.com",c:"Dental · Hampton GA"},
-  {t:'padre',n:"KDC Electrical Services",s:"padre/kdc-electrical-services-stockbridge",p:"+14048676527",e:"kdcelectricalservice@gmail.com",c:"Electrical · Stockbridge GA"},
-  {t:'padre',n:"Lott's Lawn Care Service",s:"padre/lotts-lawn-care-service-jonesboro",p:"+16784684952",c:"Lawn Care · Jonesboro GA"},
-  {t:'padre',n:"Lyfe Lawn Care",s:"padre/lyfe-lawn-care-jonesboro",p:"+14043909963",c:"Lawn Care · Jonesboro GA"},
-  {t:'padre',n:"Norwood Pressure Washing",s:"padre/norwood-pressure-washing-stockbridge",p:"+17705726435",c:"Pressure Wash + Detail · Stockbridge GA"},
-  {t:'padre',n:"One Stop Car Care Center",s:"padre/one-stop-car-care-center-hampton",p:"+17707072646",c:"Auto · Hampton GA"},
-  {t:'padre',n:"Perfect Touch Painting",s:"padre/perfect-touch-painting-locust-grove",p:"+16786151202",c:"Painting · Locust Grove GA"},
-  {t:'padre',n:"Russel's Automotive, Inc.",s:"padre/russels-automotive-hampton",p:"+17709464848",c:"Auto · Hampton GA"},
-  {t:'padre',n:"Star Towing",s:"padre/star-towing-riverdale",p:"+14707769345",c:"Towing · Riverdale GA"},
-  {t:'padre',n:"T & G Plumbing",s:"padre/t-and-g-plumbing-locust-grove",p:"+16787825514",c:"Plumbing · Locust Grove GA"},
+  {t:'padre',n:"Andy & Leo Auto Repair",s:"padre/andy-leo-auto-repair-jonesboro",p:"+14046444470",c:"Auto Repair · Jonesboro GA",w:'none'},
+  {t:'padre',n:"Bridges Fencing",s:"padre/bridges-fencing-locust-grove",p:"+17709607300",e:"Bridgesfencing@yahoo.com",c:"Fencing · Locust Grove GA",w:'real',u:"bridgesfencing.com"},
+  {t:'padre',n:"Elite Electric Solutions",s:"padre/elite-electric-solutions-conyers",p:"+17707607777",c:"Electrical · Conyers GA",w:'real',u:"eliteelectricsolutions.com"},
+  {t:'padre',n:"Griffins Automotive",s:"padre/griffins-automotive-jonesboro",p:"+17704779800",c:"Auto · Jonesboro GA",w:'weak',u:"griffinsautomotive.business.site"},
+  {t:'padre',n:"Hampton Family Dental",s:"padre/hampton-family-dental",p:"+17708676543",e:"info@hamptonfamilydental.com",c:"Dental · Hampton GA",w:'real',u:"hamptoncosmeticdental.com"},
+  {t:'padre',n:"KDC Electrical Services",s:"padre/kdc-electrical-services-stockbridge",p:"+14048676527",e:"kdcelectricalservice@gmail.com",c:"Electrical · Stockbridge GA",w:'none'},
+  {t:'padre',n:"Lott's Lawn Care Service",s:"padre/lotts-lawn-care-service-jonesboro",p:"+16784684952",c:"Lawn Care · Jonesboro GA",w:'weak',u:"lotts-lawn-care-service.business.site"},
+  {t:'padre',n:"Lyfe Lawn Care",s:"padre/lyfe-lawn-care-jonesboro",p:"+14043909963",c:"Lawn Care · Jonesboro GA",w:'none'},
+  {t:'padre',n:"Norwood Pressure Washing",s:"padre/norwood-pressure-washing-stockbridge",p:"+17705726435",c:"Pressure Wash + Detail · Stockbridge GA",w:'none'},
+  {t:'padre',n:"One Stop Car Care Center",s:"padre/one-stop-car-care-center-hampton",p:"+17707072646",c:"Auto · Hampton GA",w:'weak',u:"1stopcarcare.com"},
+  {t:'padre',n:"Perfect Touch Painting",s:"padre/perfect-touch-painting-locust-grove",p:"+16786151202",c:"Painting · Locust Grove GA",w:'weak',u:"perfecttouchpainting.godaddysites.com"},
+  {t:'padre',n:"Russel's Automotive, Inc.",s:"padre/russels-automotive-hampton",p:"+17709464848",c:"Auto · Hampton GA",w:'none'},
+  {t:'padre',n:"Star Towing",s:"padre/star-towing-riverdale",p:"+14707769345",c:"Towing · Riverdale GA",w:'weak',u:"startowing.weebly.com"},
+  {t:'padre',n:"T & G Plumbing",s:"padre/t-and-g-plumbing-locust-grove",p:"+16787825514",c:"Plumbing · Locust Grove GA",w:'weak',u:"t-g-plumbing.placeid.site"},
   // EGBO — base /egbops/local/<slug>/
-  {t:'egbo',n:"Chaeis Tax Associates, LLC",s:"egbops/local/chaeis-tax-associates-riverdale",p:"+14048383591",c:"Tax · Riverdale GA"},
-  {t:'egbo',n:"Charlie's Angels Hair Salon",s:"egbops/local/charlies-angels-hair-salon-college-park",p:"+14045148719",c:"Salon · College Park GA"},
-  {t:'egbo',n:"Cranford Homes & Realty Co.",s:"egbops/local/cranford-homes-realty-hapeville",p:"+14047666223",e:"info@cranfordhomesrealty.com",c:"Realty · Hapeville GA"},
-  {t:'egbo',n:"DLS Income Tax",s:"egbops/local/dls-income-tax-riverdale",p:"+16785453853",c:"Tax · Riverdale GA"},
-  {t:'egbo',n:"Fortitude Ed. & Cultural Center",s:"egbops/local/fortitude-educational-cultural-development-center-red-oak",p:"+14045782532",e:"info@fecdc.com",c:"Education · Red Oak GA"},
-  {t:'egbo',n:"Q's Restaurant",s:"egbops/local/qs-restaurant-east-point",p:"+14047679894",e:"hello@qsrestaurant-eastpoint.com",c:"Restaurant · East Point GA"},
-  {t:'egbo',n:"Queendom Ascensions Luxury Salon",s:"egbops/local/queendom-ascensions-luxury-salon-college-park",p:"+14708831573",c:"Salon · College Park GA"},
-  {t:'egbo',n:"RL Ingram Construction",s:"egbops/local/rl-ingram-construction-atlanta",p:"+14042723603",c:"Construction · Atlanta GA"},
-  {t:'egbo',n:"South Fulton Event Hall",s:"egbops/local/south-fulton-event-hall-south-fulton",p:"+14046174288",c:"Events · South Fulton GA"},
-  {t:'egbo',n:"The Barber Shop Lounge",s:"egbops/local/the-barber-shop-lounge-college-park",p:"+17063528339",c:"Barber · College Park GA"},
-  {t:'egbo',n:"Undeniable Healthcare",s:"egbops/local/undeniable-healthcare-fairburn",p:"+16782500323",c:"Healthcare · Fairburn GA"},
+  {t:'egbo',n:"Chaeis Tax Associates, LLC",s:"egbops/local/chaeis-tax-associates-riverdale",p:"+14048383591",c:"Tax · Riverdale GA",w:'none'},
+  {t:'egbo',n:"Charlie's Angels Hair Salon",s:"egbops/local/charlies-angels-hair-salon-college-park",p:"+14045148719",c:"Salon · College Park GA",w:'weak',u:"charlies-angels-hair-salon.ueniweb.com"},
+  {t:'egbo',n:"Cranford Homes & Realty Co.",s:"egbops/local/cranford-homes-realty-hapeville",p:"+14047666223",e:"info@cranfordhomesrealty.com",c:"Realty · Hapeville GA",w:'real',u:"cranfordhomesrealty.com"},
+  {t:'egbo',n:"DLS Income Tax",s:"egbops/local/dls-income-tax-riverdale",p:"+16785453853",c:"Tax · Riverdale GA",w:'none'},
+  {t:'egbo',n:"Fortitude Ed. & Cultural Center",s:"egbops/local/fortitude-educational-cultural-development-center-red-oak",p:"+14045782532",e:"info@fecdc.com",c:"Education · Red Oak GA",w:'real',u:"fecdc.org"},
+  {t:'egbo',n:"Q's Restaurant",s:"egbops/local/qs-restaurant-east-point",p:"+14047679894",e:"hello@qsrestaurant-eastpoint.com",c:"Restaurant · East Point GA",w:'none',hr:{o:10.5,c:15,d:[1,2,3,4,5]}},
+  {t:'egbo',n:"Queendom Ascensions Luxury Salon",s:"egbops/local/queendom-ascensions-luxury-salon-college-park",p:"+14708831573",c:"Salon · College Park GA",w:'weak',u:"queendom-ascensions-luxury-salon.square.site"},
+  {t:'egbo',n:"RL Ingram Construction",s:"egbops/local/rl-ingram-construction-atlanta",p:"+14042723603",c:"Construction · Atlanta GA",w:'real',u:"rlingramconstruction.com"},
+  {t:'egbo',n:"South Fulton Event Hall",s:"egbops/local/south-fulton-event-hall-south-fulton",p:"+14046174288",c:"Events · South Fulton GA",w:'weak',u:"southfultonevents1.wixsite.com/website"},
+  {t:'egbo',n:"The Barber Shop Lounge",s:"egbops/local/the-barber-shop-lounge-college-park",p:"+17063528339",c:"Barber · College Park GA",w:'none'},
+  {t:'egbo',n:"Undeniable Healthcare",s:"egbops/local/undeniable-healthcare-fairburn",p:"+16782500323",c:"Healthcare · Fairburn GA",w:'real',u:"undeniablehealthcare.com"},
 ];
 function fmt(p){var m=p.replace(/^\+1/,'').match(/(\d{3})(\d{3})(\d{4})/);return m?'('+m[1]+') '+m[2]+'-'+m[3]:p;}
 // derive "pay-today" score + after-hours reachability from category text
@@ -204,11 +233,40 @@ function payScore(l){var c=l.c.toLowerCase();var s=0;
   if(l.e)s+=0.6;  // reachable by email = warmer
   return s;}
 function afterHours(l){return /towing|plumb|restaurant|salon|barber|event|realty/.test(l.c.toLowerCase());}
+const SITE_LABEL={none:'Siteless',weak:'Builder page',real:'Has site'};
+function cityOf(l){return (l.c.split('·').pop()||'').trim();}
+function catOf(l){return (l.c.split('·')[0]||'').trim();}
+// open/closed (Eastern time). o/c = decimal hours, d = open weekdays [0=Sun..6=Sat]. Category defaults; l.hr overrides.
+const CAT_HOURS=[
+  [/tow|plumb/,{o:0,c:24,d:[0,1,2,3,4,5,6]}],
+  [/lawn|pressure/,{o:7,c:18,d:[1,2,3,4,5,6]}],
+  [/auto|car/,{o:8,c:18,d:[1,2,3,4,5,6]}],
+  [/electric|fenc|paint/,{o:8,c:17,d:[1,2,3,4,5]}],
+  [/salon|barber/,{o:9,c:19,d:[1,2,3,4,5,6]}],
+  [/restaurant/,{o:11,c:21,d:[1,2,3,4,5,6]}],
+  [/event|realty/,{o:9,c:20,d:[1,2,3,4,5,6]}],
+  [/tax/,{o:9,c:18,d:[1,2,3,4,5]}],
+  [/dental|education/,{o:8,c:17,d:[1,2,3,4,5]}],
+  [/healthcare/,{o:8,c:20,d:[0,1,2,3,4,5,6]}],
+];
+function hoursOf(l){ if(l.hr) return l.hr; const c=l.c.toLowerCase(); for(const[re,h]of CAT_HOURS) if(re.test(c)) return h; return {o:9,c:17,d:[1,2,3,4,5]}; }
+function nowET(){ const d=new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'})); return {day:d.getDay(), h:d.getHours()+d.getMinutes()/60}; }
+function isOpen(l){ const H=hoursOf(l),n=nowET(); return H.d.indexOf(n.day)>-1 && n.h>=H.o && n.h<H.c; }
+function closesAt(l){ return hoursOf(l).c; }
+function hrLabel(l){ const H=hoursOf(l); if(H.o===0&&H.c===24) return '24/7'; const f=x=>{const hr=Math.floor(x),m=Math.round((x-hr)*60);const ap=hr>=12?'p':'a';let h12=hr%12;if(h12===0)h12=12;return h12+(m?':'+String(m).padStart(2,'0'):'')+ap;}; return f(H.o)+'–'+f(H.c); }
 function sortLeads(arr,mode){
   const a=[...arr];
   if(mode==='today')a.sort((x,y)=>payScore(y)-payScore(x));
   else if(mode==='email')a.sort((x,y)=>(!!y.e-!!x.e)||payScore(y)-payScore(x));
   else if(mode==='night')a.sort((x,y)=>(afterHours(y)-afterHours(x))||payScore(y)-payScore(x));
+  else if(mode==='none'||mode==='weak'||mode==='real')
+    a.sort((x,y)=>((y.w===mode)-(x.w===mode))||payScore(y)-payScore(x));
+  else if(mode==='open')a.sort((x,y)=>(isOpen(y)-isOpen(x))||payScore(y)-payScore(x));
+  else if(mode==='late')a.sort((x,y)=>(closesAt(y)-closesAt(x))||(isOpen(y)-isOpen(x)));
+  else if(mode==='type')a.sort((x,y)=>(x.t>y.t?1:x.t<y.t?-1:0)||payScore(y)-payScore(x));
+  else if(mode==='cat')a.sort((x,y)=>catOf(x).localeCompare(catOf(y)));
+  else if(mode==='city')a.sort((x,y)=>cityOf(x).localeCompare(cityOf(y)));
+  else if(mode==='name')a.sort((x,y)=>x.n.localeCompare(y.n));
   return a;}
 const list=document.getElementById('list');
 let curFilter='all', curSort='today';
@@ -218,11 +276,12 @@ function render(){
   rows=sortLeads(rows,curSort);
   rows.forEach(l=>{
     const el=document.createElement('div'); el.className='lead'; el.dataset.t=l.t;
-    const ah=afterHours(l), hot=payScore(l)>=3;
+    const ah=afterHours(l), hot=payScore(l)>=3, op=isOpen(l);
+    const siteBadge={none:'🟢 SITELESS',weak:'🟡 BUILDER PAGE',real:'🟤 HAS SITE'}[l.w]||'';
     el.innerHTML=`
       <div class="lhead">
         <span class="tag tag-${l.t}">${({padre:'Padre',egbo:'East'})[l.t]||l.t}</span>
-        <div class="lmeta"><div class="lname">${l.n} ${hot?'<span class="flag hot">HOT</span>':''}${ah?'<span class="flag night">🌙 after-hrs</span>':''}${l.e?'<span class="flag mail">✉</span>':''}</div><div class="lcat">${l.c}</div></div>
+        <div class="lmeta"><div class="lname">${l.n} <span class="flag ${op?'open-now':'closed-now'}" data-sort="open" title="Sort: open now">${op?'OPEN':'CLOSED'}</span>${l.w?`<span class="flag s-${l.w}" data-sort="${l.w}" title="Sort: ${SITE_LABEL[l.w]} leads">${siteBadge}</span>`:''}${hot?'<span class="flag hot" data-sort="today" title="Sort: most likely to pay today">HOT</span>':''}${ah?'<span class="flag night" data-sort="night" title="Sort: after-hours reachable">🌙 after-hrs</span>':''}${l.e?'<span class="flag mail" data-sort="email" title="Sort: has email first">✉</span>':''}</div><div class="lcat">${l.c} · ${hrLabel(l)} ET</div></div>
         <button class="expand">Expand ▾</button>
       </div>
       <div class="frame">
@@ -245,10 +304,21 @@ function render(){
 document.getElementById('cTotal').textContent=LEADS.length;
 document.getElementById('cPadre').textContent=LEADS.filter(l=>l.t==='padre').length;
 document.getElementById('cEgbo').textContent=LEADS.filter(l=>l.t==='egbo').length;
+document.getElementById('cNone').textContent=LEADS.filter(l=>l.w==='none').length;
+document.getElementById('cWeak').textContent=LEADS.filter(l=>l.w==='weak').length;
+document.getElementById('cReal').textContent=LEADS.filter(l=>l.w==='real').length;
 document.querySelectorAll('.fbtn').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.fbtn').forEach(x=>x.classList.remove('on'));b.classList.add('on');curFilter=b.dataset.f;render();
 }));
 document.getElementById('sortSel').addEventListener('change',e=>{curSort=e.target.value;render();});
+// clickable pills → set matching sort
+list.addEventListener('click',e=>{
+  const fl=e.target.closest('.flag[data-sort]'); if(!fl) return;
+  e.stopPropagation(); // don't also toggle the lead
+  curSort=fl.dataset.sort;
+  const sel=document.getElementById('sortSel'); if(sel) sel.value=curSort;
+  render();
+});
 render();
 </script>
 
