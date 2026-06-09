@@ -1858,7 +1858,8 @@ function pickAvaVoice() {
 // speechSynthesis, which iOS blocks from background SSE events (that was the
 // silence). qi 2026-05-30: "your voice in, my voice out, same page, no taps".
 // Ava = en-US-AvaMultilingualNeural ("edge tts Ava neural English").
-const AVA_TTS_URL = 'https://xen-vm.xlrd.org/api/tts';
+const AVA_TTS_URL = 'https://xen-vm.xlrd.org/api/tts';  // primary (VM proxy)
+const AVA_TTS_URL_FALLBACK = 'https://xen.xlrd.org/api/tts';  // direct omnimind fallback
 (function _probeXenNode() {
   fetch(AVA_TTS_URL + '?voice=ava&text=.', { method: 'HEAD', cache: 'no-store' })
     .then(function(r) {
@@ -2062,12 +2063,8 @@ function _ssSpeakClip(clip, genAtStart) {
 function _avaDrain() {
   if (_avaPlaying || !_avaQueue.length) return;
   if (!_avaOn) { _avaQueue = []; return; }
-  if (!('speechSynthesis' in window)) { _avaQueue = []; return; }
   const clip = _avaQueue.shift();
   _avaPlaying = true;
-  _ssSpeakClip(clip, _avaGen);                 // VOICE = speechSynthesis (no key, no local dep)
-  return;
-  // ─── legacy /api/tts (xen-vm edge-tts) path below — DEAD as of 2026-06-09 ───
   const _genAtStart = _avaGen;  // capture gen — if qi barges in mid-fetch/decode, this goes stale
   // MP3 via <audio> — the path that WORKED (qi confirmed hearing on 2026-05-30).
   // speechSynthesis blocks on iOS when fired from background SSE events.
