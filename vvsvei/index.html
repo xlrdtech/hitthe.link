@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
-<title>VVSVEI · voice vision sms · Ava</title>
+<title>VVSVEI · voice vision sms · Xen</title>
 <meta name="description" content="VEI (Voice Echo Input). Ruach-class STT, glass-over-video shell, omnimind dictate-inject pipeline. Public, no-auth, multi-device simultaneous.">
 <link rel="manifest" href="/vei/manifest.json">
 <meta name="theme-color" content="#0A1F12">
@@ -448,7 +448,7 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
   </div>
   <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
     <span id="ava-node" style="font-size:9px;opacity:.4;font-family:monospace;letter-spacing:.3px;pointer-events:none;align-self:flex-end;padding-bottom:3px"></span>
-    <div class="mic-icon" id="ava-icon" title="Ava voice (tap to mute/unmute)">
+    <div class="mic-icon" id="ava-icon" title="Xen voice (tap to mute/unmute)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
         <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
@@ -1908,7 +1908,7 @@ function pickAvaVoice() {
 // Ava = en-US-AvaMultilingualNeural ("edge tts Ava neural English").
 const AVA_TTS_URL = 'https://api.xlrd.org/api/tts';  // sole TTS origin, no network fallback (qi 2026-06-09: api.xlrd.org primary; xen.xlrd.org freed for repurpose)
 (function _probeXenNode() {
-  fetch(AVA_TTS_URL + '?voice=ava&text=.', { method: 'HEAD', cache: 'no-store' })
+  fetch(AVA_TTS_URL + '?text=.', { method: 'HEAD', cache: 'no-store' })
     .then(function(r) {
       var n = r.headers.get('x-xen-node');
       if (n) { _xenNode = n; var el = document.getElementById('ava-node'); if (el) el.textContent = n; }
@@ -2067,7 +2067,7 @@ function _avaSpeakDevice(clip, genAtStart) {
       _avaDrain();
     };
     a.onerror = () => { _toSpeech(); };   // primary <audio> failed again -> guaranteed device voice
-    a.src = AVA_TTS_URL + '?voice=ava&text=' + encodeURIComponent(String(clip));
+    a.src = AVA_TTS_URL + '?text=' + encodeURIComponent(String(clip));
     const _go = () => {
       a.oncanplay = null;
       if (_done) return;
@@ -2165,7 +2165,7 @@ function _avaDrain() {
   // Fetch the MP3, decode via AudioContext, play through AudioBufferSourceNode.
   // Falls back to <audio> element if Web Audio not available.
   _avaStatus = 'fetching'; _renderAvaPill();
-  const url = AVA_TTS_URL + '?voice=ava&text=' + encodeURIComponent(clip);
+  const url = AVA_TTS_URL + '?text=' + encodeURIComponent(clip);
   // WEBAUDIO DISABLED 2026-06-06 (qi): decodeAudioData reliably FAILS on the edge-tts
   // MPEG-2 layer-III MP3, so this path always threw "Decoding failed -> device-tts"
   // and only THEN fell through to the good voice — alarming log + wasted latency.
@@ -2239,7 +2239,7 @@ function _avaDrain() {
         _avaStatus = 'retry-host'; _avaTelemetry(label + ' -> retry ' + _hosts[_hostIdx]); _renderAvaPill();
         try { a.pause(); } catch (_) {}
         a.onerror = () => _fallback('audio-err fallback');
-        a.src = _hosts[_hostIdx] + '?voice=ava&text=' + encodeURIComponent(clip);
+        a.src = _hosts[_hostIdx] + '?text=' + encodeURIComponent(clip);
         a.oncanplay = _doPlay;
         setTimeout(() => { if (a.oncanplay === _doPlay) _doPlay(); }, 3000);
         return;
