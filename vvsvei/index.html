@@ -1624,7 +1624,7 @@ function renderEvent(d) {
     _hudRx++;
     _hud('rx ' + (_avaLive ? 'LIVE' : 'backlog') + ' "' + txt.slice(0,24) + '"');
     if (!_avaLive) { try { if (window._avaSetLoad) window._avaSetLoad('Loading history…', _hudRx + ' messages', Math.min(99, Math.round(_hudRx / 50))); } catch (_) {} }
-    if (_avaLive) speakAva(txt);   // sentinel-gated: only live replies speak
+    if (_avaLive) { try { _avaTelemetry("speak-gate live=T armed="+_avaAudioUnlocked+" ctx="+!!_avaCtx); } catch(_){} speakAva(txt); } else { try { _avaTelemetry("speak-gate live=F armed="+_avaAudioUnlocked+" ctx="+!!_avaCtx); } catch(_){} }   // sentinel-gated: only live replies speak
   } else if (isUserDictate) {
     // Skip the SSE echo of qi's OWN dictation already rendered locally (Web
     // Speech) — that was the doubling. 30s window; consume the registry entry.
@@ -1741,7 +1741,7 @@ function subscribeXenReplies() {
       _hud('connected — awaiting caught-up');
       // FALLBACK (parallel swarm 2026-05-30): voice must NEVER hang on a sentinel
       // that may not arrive. 8s past the backlog-replay window, go live regardless.
-      setTimeout(() => { if (!_avaLive) { _avaLive = true; _hud('LIVE (grace timeout)'); if (window._avaDismissOverlay) window._avaDismissOverlay(); } }, 8000);
+      setTimeout(() => { if (!_avaLive) { _avaLive = true; _hud("LIVE (grace timeout)"); if (window._avaDismissOverlay) window._avaDismissOverlay(); } }, 1500);
     };
     src.onmessage = (ev) => {
       try { renderEvent(JSON.parse(ev.data)); } catch (_) {}
@@ -1970,6 +1970,7 @@ function _avaBargeIn() {
   // Cut the device speechSynthesis fallback too — if /api/tts was down and we were
   // mid-utterance on the browser engine, barge-in must silence it (qi 2026-05-31).
   try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (_) {}
+  try { _ssStopHeartbeat(); } catch (_) {}   // stop the resume-heartbeat on barge-in
   _avaQueue = []; _avaPlaying = false;
   _avaStatus = 'you spoke'; _renderAvaPill();
 }
@@ -2019,13 +2020,54 @@ function _avaSpeakDevice(clip, genAtStart) {
 // Old cancel-and-replace meant rapid xen-out replies killed each other so none
 // played. Now every reply enqueues + plays in order — one voice, zero drops.
 let _avaQueue = [], _avaPlaying = false;
+
+// ─── speechSynthesis voice engine — hardened for stability ────────────────
+// qi 2026-06-09: the voice IS the browser's built-in speechSynthesis. Free,
+// unlimited, no key, NO local dependency (no xen-vm/edge-tts, works even if all
+// of qi's infra is down). The hard part is keeping it STABLE — speechSynthesis
+// has well-known failure modes, each defused here:
+//  • Chrome silently stops speech after ~15s  -> chunk by sentence + resume() heartbeat
+//  • utterances get stuck (onend never fires) -> per-chunk watchdog force-advances
+//  • one onerror freezing the whole queue     -> onerror advances like onend
+//  • voices load async (esp. iOS)             -> pickAvaVoice() re-resolves lazily
+let _ssHeartbeat = null;
+function _ssStopHeartbeat() { if (_ssHeartbeat) { clearInterval(_ssHeartbeat); _ssHeartbeat = null; } }
+function _ssSpeakClip(clip, genAtStart) {
+  const ss = window.speechSynthesis;
+  if (!_avaVoice) _avaVoice = pickAvaVoice();                 // resolve / re-resolve voice
+  const chunks = String(clip).match(/[^.!?]+[.!?]*\s*/g) || [String(clip)];  // sentence-size
+  let i = 0;
+  try { ss.cancel(); } catch (_) {}                           // clear any stuck prior utterance
+  if (!_ssHeartbeat) _ssHeartbeat = setInterval(() => { try { if (ss.speaking && !ss.paused) { ss.pause(); ss.resume(); } } catch (_) {} }, 9000);
+  const finish = (status) => { _ssStopHeartbeat(); _avaPlaying = false; _avaStatus = status; _renderAvaPill(); try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; } catch (_) {} };
+  const next = () => {
+    if (genAtStart !== _avaGen) return finish('you spoke');   // barge-in happened
+    if (i >= chunks.length) { _hudSpoke++; finish(_avaQueue.length ? ('queued ' + _avaQueue.length) : 'idle'); _avaDrain(); return; }
+    const part = (chunks[i++] || '').trim();
+    if (!part) return next();
+    let advanced = false;
+    const go = () => { if (advanced) return; advanced = true; clearTimeout(wd); next(); };
+    const u = new SpeechSynthesisUtterance(part);
+    if (_avaVoice) { u.voice = _avaVoice; u.lang = _avaVoice.lang; } else { u.lang = 'en-US'; }
+    u.rate = 1.0; u.pitch = 1.0; u.volume = 1.0;
+    u.onend = go; u.onerror = go;                             // never block the queue on one utterance
+    const wd = setTimeout(() => { try { ss.cancel(); } catch (_) {} go(); }, part.length * 70 + 4000); // stuck watchdog
+    _avaStatus = 'speaking'; _renderAvaPill();
+    try { ss.speak(u); } catch (_) { clearTimeout(wd); go(); }
+  };
+  try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; } catch (_) {}
+  next();
+}
+
 function _avaDrain() {
   if (_avaPlaying || !_avaQueue.length) return;
   if (!_avaOn) { _avaQueue = []; return; }
-  // Drop queue if not armed yet — prevent speaking-over-self from retry floods.
-  if (!_avaAudioUnlocked || !_avaCtx) { return; }
+  if (!('speechSynthesis' in window)) { _avaQueue = []; return; }
   const clip = _avaQueue.shift();
   _avaPlaying = true;
+  _ssSpeakClip(clip, _avaGen);                 // VOICE = speechSynthesis (no key, no local dep)
+  return;
+  // ─── legacy /api/tts (xen-vm edge-tts) path below — DEAD as of 2026-06-09 ───
   const _genAtStart = _avaGen;  // capture gen — if qi barges in mid-fetch/decode, this goes stale
   // MP3 via <audio> — the path that WORKED (qi confirmed hearing on 2026-05-30).
   // speechSynthesis blocks on iOS when fired from background SSE events.
