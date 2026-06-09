@@ -1582,6 +1582,26 @@ function renderEvent(d) {
     try { if (window._avaDismissOverlay) setTimeout(window._avaDismissOverlay, 700); } catch (_) {}
     return;
   }
+  // SELF-UPDATE (qi 2026-06-09, C4 no-human-in-loop): omnimind emits a __reload__
+  // event after a deploy → the running tab purges its SW caches, unregisters, and
+  // hard-reloads itself. Makes a manual reload the LAST one ever — future deploys
+  // self-propagate to every open VVSVEI tab with zero taps. Gen-guarded so a stale
+  // sentinel replayed from backlog doesn't loop (only fires once _avaLive).
+  if ((d.event || d.kind || '').toString().toLowerCase() === '__reload__') {
+    if (!_avaLive) return;  // ignore backlog replays — only honor live reload commands
+    _hud('self-updating — reloading for fresh build');
+    try {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((rs) => {
+          Promise.all(rs.map((r) => r.unregister())).finally(() => {
+            if (window.caches) caches.keys().then((ks) => Promise.all(ks.map((k) => caches.delete(k)))).finally(() => location.reload(true));
+            else location.reload(true);
+          });
+        }).catch(() => location.reload(true));
+      } else { location.reload(true); }
+    } catch (_) { try { location.reload(true); } catch (__) {} }
+    return;
+  }
   const txt = (d.text || d.body || d.message || '').toString().trim();
   if (!txt) return;
   const tag = (d.event || d.kind || '').toString().toLowerCase();
