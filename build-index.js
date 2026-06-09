@@ -28,6 +28,7 @@ const SKIP_DIRS = new Set([
   'elios', // redirect stub -> /eliops (avoid duplicate card)
   'xen-map', // internal Xen/Exedus architecture map — noindex, not for public grid
   'debt', // internal Xen Ledger — noindex, not for public grid
+  'vision', // omni vision wall — qi's private device screens, noindex, never public
 ]);
 // Friendly URL overrides: card href + slug display uses alias, actual dir stays canonical
 const SLUG_ALIAS = {
