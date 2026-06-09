@@ -1,7 +1,7 @@
 // VVSVEI service worker (wf 2026-05-31) — cache-first shell so reopen is instant.
 // Scope: /vvsvei/ ONLY. Never caches /events SSE, /api/*, or cross-origin xen.xlrd.org.
 // qi: "having to reload vvsvei is a bottleneck. it should open and work instantly."
-const VVSVEI_CACHE = 'vvsvei-shell-v3';  // bumped 2026-06-09 — purge cached broken-script shell (dup _xenNode); force devices to pull the fixed page
+const VVSVEI_CACHE = 'vvsvei-shell-v4';  // v4 2026-06-09 — NETWORK-FIRST (was cache-first, which trapped qi on a broken cached shell during a P0). Fresh-always beats instant-but-stale.
 const SHELL = ['./', './index.html'];
 
 self.addEventListener('install', (e) => {
@@ -35,19 +35,17 @@ self.addEventListener('fetch', (e) => {
     url.pathname.endsWith('/vvsvei/index.html');
 
   if (isShell) {
-    // Cache-first for the shell: paint instantly from cache, refresh in background.
+    // NETWORK-FIRST (qi 2026-06-09): always fetch the fresh shell; cache it; fall back to
+    // cache ONLY when offline. Was cache-first, which served a stale broken shell and
+    // trapped qi on a pre-fix page during a personal-P0. A broken-but-instant page is
+    // worse than a fresh page that waits a beat.
     e.respondWith(
-      caches.open(VVSVEI_CACHE).then((cache) =>
-        cache.match('./index.html').then((cached) => {
-          const network = fetch(req)
-            .then((res) => {
-              if (res && res.ok) cache.put('./index.html', res.clone());
-              return res;
-            })
-            .catch(() => cached);
-          return cached || network;
+      fetch(req)
+        .then((res) => {
+          if (res && res.ok) { const copy = res.clone(); caches.open(VVSVEI_CACHE).then((c) => c.put('./index.html', copy)); }
+          return res;
         })
-      )
+        .catch(() => caches.open(VVSVEI_CACHE).then((c) => c.match('./index.html')))
     );
   }
 });
