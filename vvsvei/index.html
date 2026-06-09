@@ -1886,7 +1886,7 @@ function _ensureAvaAudio() {
   _avaAudio = new Audio();
   _avaAudio.preload = 'auto';
   _avaAudio.setAttribute('playsinline', '');
-  _avaAudio.crossOrigin = 'anonymous';
+  // crossOrigin removed — caused audio-err on Orion iOS (CORS preflight blocks audio element)
   return _avaAudio;
 }
 let _avaKeepAliveNode = null, _avaKeepAliveGain = null;
