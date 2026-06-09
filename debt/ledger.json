@@ -19,10 +19,10 @@
       "opened": "2026-06-08",
       "type": "persistence",
       "what": "Claude exits the moment its tmux session is unattended. In testing the hub Claude booted, opened its inject socket, then exited with no client attached. If this holds for the live voice session, Xen only runs while qi is watching it.",
-      "root_cause": "Wrapper pipes Claude's stdin; a detached pane gives it no live input. Likely THE mechanism behind 'I wake up and catch Xen idle' — it dies when qi looks away.",
+      "root_cause": "The Claude BINARY was MISSING. The migration renamed the install to ~/.local/share/claude.premove and left ~/.local/share/claude (-> dangling /Volumes/qi_/exedus/claude-cli/share) + ~/.local/bin/claude (-> dead versions/2.1.168) pointing at nothing. Every Xen launch: wrapper boots -> 'socket ready' -> tries to exec a missing binary -> instant exit -> keepalive relaunches -> CHURN. NOT a detachment issue at all.",
       "cost_usd": null,
-      "status": "open",
-      "notes": "ROOT CAUSE LOCATED (2026-06-08): the two 'permanently-alive' daemons are OFFLINE — com.exedus.xen-claude-launcher (warm socket-Claude on /tmp/xen-claude.sock, haiku) + com.xen.claude-keepalive (auto-relaunch `claude --resume` in XenV40). Scripts/paths intact (NOT migration-broken), just not loaded. Confirmed: Claude exits ~seconds after the tmux session goes unattended. Fix = deliberately bind ONE keepalive-managed Claude to the `xen` hub pane + write the sentinel + survive detach — NOT a blind `launchctl load` (would spawn colliding brains in the wrong places). Interim that works NOW: type `xen` then `claude` (Claude stays alive while qi is attached)."
+      "status": "fixing",
+      "notes": "KEYSTONE FIXED (2026-06-08): repointed ~/.local/share/claude -> /Volumes/qi_/sync_/exedus/claude-cli/share + ~/.local/bin/claude -> versions/2.1.168; `claude --version` = 2.1.168 OK; `xen-c` now boots a LIVE, working Xen (verified: TUI 'Scurrying', processing the firehose, wrapper pid live). Keepalive --resume churn also fixed (dropped the stale --resume that failed under the symlinked cwd). REMAINING to be fully functional: (1) `study_commandments.py` UserPromptSubmit hook is MISSING (another migration casualty) -> it BLOCKS every prompt -> Xen runs but can't respond yet; restore the hook. (2) wire the keepalive as the hub's persistent manager (Xen is currently live via manual xen-c, not yet auto-relaunched). (Mac hub 502'd from load — finishing these on recovery.)"
     },
     {
       "id": "DEBT-002",
