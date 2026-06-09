@@ -19,6 +19,7 @@ const DENY = new Set([
   'xen-map', // internal Xen/Exedus architecture map — noindex, not for public grid
   'debt', // internal Xen Ledger (debt/P&L/sentiment) — noindex, not for public grid
   'vision', // omni vision wall — shows qi's private device screens, noindex, never public
+  'hooks', // webhook control surface — qi's private pane-%0 webhook console, noindex
 ]);
 
 // Category inference by slug/title keywords (for grouping in the gallery).
