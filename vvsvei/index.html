@@ -552,7 +552,31 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
 if ('serviceWorker' in navigator) {
   try {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js', { scope: './' }).catch(function(){});
+      // Was there already a controller at load? If yes, a later controllerchange
+      // means a NEW build claimed us (a real update). If no controller (first
+      // install ever), the initial claim is NOT an update and must not reload.
+      var _hadController = !!navigator.serviceWorker.controller;
+      navigator.serviceWorker.register('sw.js', { scope: './' }).then(function(reg){
+        // SSE-independent update DETECTION (H5): poll for a byte-changed sw.js so a
+        // deploy is noticed even when SSE is down/backgrounded. Cheap conditional GET.
+        try { reg.update(); } catch (_) {}
+        setInterval(function(){ try { reg.update(); } catch (_) {} }, 60000);
+      }).catch(function(){});
+      var _swReloaded = false;
+      // Guard a deploy-reload so it NEVER silently re-locks a live armed tab (iOS
+      // audio re-locks on reload, re-arm is a manual tap, no full persistence yet).
+      var _safeReload = function(){
+        if (_swReloaded || !_hadController) return;                       // never on first install
+        if (typeof _avaLive !== 'undefined' && _avaLive) return;          // never yank a live tab
+        if (typeof _avaAudioUnlocked !== 'undefined' && _avaAudioUnlocked) return;  // never an armed tab
+        _swReloaded = true; try { location.reload(); } catch (_) {}
+      };
+      navigator.serviceWorker.addEventListener('controllerchange', _safeReload);
+      // PRE-v7 CONVERGENCE (H5): honor the v8 SW's postMessage nudge under the same
+      // arm-safe guard — a stale never-armed tab reloads (heals), a live tab stays.
+      navigator.serviceWorker.addEventListener('message', function(ev){
+        try { if (ev.data && ev.data.type === 'vvsvei-reload') _safeReload(); } catch (_) {}
+      });
     });
   } catch (_) {}
 }
@@ -1644,7 +1668,11 @@ function renderEvent(d) {
     _hudRx++;
     _hud('rx ' + (_avaLive ? 'LIVE' : 'backlog') + ' "' + txt.slice(0,24) + '"');
     if (!_avaLive) { try { if (window._avaSetLoad) window._avaSetLoad('Loading history…', _hudRx + ' messages', Math.min(99, Math.round(_hudRx / 50))); } catch (_) {} }
-    if (_avaLive) { try { _avaTelemetry("speak-gate live=T armed="+_avaAudioUnlocked+" ctx="+!!_avaCtx); } catch(_){} speakAva(txt); } else { try { _avaTelemetry("speak-gate live=F armed="+_avaAudioUnlocked+" ctx="+!!_avaCtx); } catch(_){} }   // sentinel-gated: only live replies speak
+    if (_avaLive) {
+      try { _avaTelemetry("speak-gate live=T armed="+_avaAudioUnlocked+" ctx="+!!_avaCtx); } catch(_){}
+      if (_avaAudioUnlocked) { speakAva(txt); }
+      else { _avaPending.push(txt); if (_avaPending.length > 12) _avaPending = _avaPending.slice(-12); }   // park: iOS unarmed play() would emit a doomed play()+telemetry storm — speak on first tap (H2)
+    } else { try { _avaTelemetry("speak-gate live=F armed="+_avaAudioUnlocked+" ctx="+!!_avaCtx); } catch(_){} }   // sentinel-gated: only live replies speak
   } else if (isUserDictate) {
     // Skip the SSE echo of qi's OWN dictation already rendered locally (Web
     // Speech) — that was the doubling. 30s window; consume the registry entry.
@@ -1975,6 +2003,9 @@ function _unlockAvaAudio() {
   const a = _ensureAvaAudio();
   try { a.src = _AVA_SILENT; const p = a.play(); if (p && p.then) p.then(() => { _avaAudioUnlocked = true; _renderAvaPill(); }).catch(() => {}); } catch (_) {}
   _avaAudioUnlocked = true; _renderAvaPill();
+  try { localStorage.setItem('vei-was-armed','1'); } catch (_) {}   // returning-user hint for a cheap 1-tap resume next reload (H2)
+  // Flush replies that arrived live-but-unarmed so the first tap speaks them (never dropped).
+  try { if (_avaPending.length) { const _p = _avaPending; _avaPending = []; _p.forEach(function(t){ speakAva(t); }); } } catch (_) {}
 }
 // Barge-in: the instant qi's mic catches speech, cut my voice (qi 2026-05-30).
 let _avaCurrentSource = null;  // track the active AudioBufferSourceNode for barge-in
@@ -1992,7 +2023,7 @@ function _avaBargeIn() {
   // mid-utterance on the browser engine, barge-in must silence it (qi 2026-05-31).
   try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (_) {}
   try { _ssStopHeartbeat(); } catch (_) {}   // stop the resume-heartbeat on barge-in
-  _avaQueue = []; _avaPlaying = false;
+  _avaQueue = []; _avaPlaying = false; _avaPending = [];
   _avaStatus = 'you spoke'; _renderAvaPill();
 }
 // DEVICE-SIDE FALLBACK (qi 2026-05-31): when /api/tts (Mac omnimind/edge-tts) is
@@ -2013,8 +2044,17 @@ function _avaSpeakDevice(clip, genAtStart) {
   try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (_) {}
   if (genAtStart !== _avaGen) { _avaPlaying = false; _avaStatus = 'you spoke'; _renderAvaPill(); return false; }
   try {
-    const url = AVA_TTS_URL + '?voice=ava&text=' + encodeURIComponent(String(clip));
     const a = _ensureAvaAudio();
+    let _done = false;
+    const _toSpeech = () => {
+      if (_done) return; _done = true;
+      a.onerror = null; a.oncanplay = null;
+      if (genAtStart !== _avaGen) { _avaPlaying = false; _avaStatus = 'you spoke'; _renderAvaPill(); return; }
+      _avaStatus = 'native-err'; _renderAvaPill();
+      _ssStopHeartbeat();
+      try { _ssSpeakClip(clip, genAtStart); } catch (_) { _avaPlaying = false; _avaDrain(); }
+    };
+    try { a.pause(); } catch (_) {}
     a.onplaying = () => {
       if (genAtStart !== _avaGen) { try { a.pause(); a.currentTime = 0; } catch (_) {} return; }
       _avaStatus = 'playing(native)'; _hud('PLAYING via native audio'); _renderAvaPill();
@@ -2027,11 +2067,18 @@ function _avaSpeakDevice(clip, genAtStart) {
       try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; } catch (_) {}
       _avaDrain();
     };
-    a.onerror = () => { _avaPlaying = false; _avaStatus = 'native-err'; _renderAvaPill(); _avaDrain(); };
-    a.src = url;
-    const p = a.play();
-    if (p && p.catch) p.catch(() => { _avaPlaying = false; _avaStatus = 'native-blocked'; _renderAvaPill(); _avaDrain(); });
-    return true;  // we own the playback lifecycle now (onended drains)
+    a.onerror = () => { _toSpeech(); };   // primary <audio> failed again -> guaranteed device voice
+    a.src = AVA_TTS_URL + '?voice=ava&text=' + encodeURIComponent(String(clip));
+    const _go = () => {
+      a.oncanplay = null;
+      if (_done) return;
+      if (genAtStart !== _avaGen) { _avaPlaying = false; _avaStatus = 'you spoke'; _renderAvaPill(); return; }
+      const p = a.play();
+      if (p && p.catch) p.catch(() => { _toSpeech(); });
+    };
+    a.oncanplay = _go;
+    setTimeout(() => { if (a.oncanplay === _go) _toSpeech(); }, 900);  // fast bail to guaranteed voice
+    return true;  // we own the playback lifecycle now (onended / _ssSpeakClip drain)
   } catch (_) {
     _avaPlaying = false; _avaStatus = 'native-err'; _renderAvaPill(); _avaDrain();
     return false;
@@ -2040,7 +2087,33 @@ function _avaSpeakDevice(clip, genAtStart) {
 // QUEUE, never drop (qi 2026-05-30: "I haven't heard you the last 3-5 outputs").
 // Old cancel-and-replace meant rapid xen-out replies killed each other so none
 // played. Now every reply enqueues + plays in order — one voice, zero drops.
-let _avaQueue = [], _avaPlaying = false;
+let _avaQueue = [], _avaPlaying = false, _drainStarted = 0, _wdLastT = -1;
+let _avaPending = [];   // replies that arrived live-but-unarmed; flushed on first tap (H2)
+// DRAIN WATCHDOG (qi 2026-06-09, H4): iOS emits stalled/suspend (not error) on a
+// hung TTS fetch, so onended/onerror never fire and _avaPlaying sticks true — the
+// queue wedges and spoke lags rx until qi speaks. This timer force-releases a
+// STUCK mutex and re-fires the drain so PARKED replies still get spoken, zero qi
+// action. STALL-AWARE so it can NEVER truncate a healthy long clip: it only
+// releases when the shared <audio> element is genuinely not advancing (paused,
+// ended, or currentTime frozen between two checks ~5s apart). A clip that is still
+// playing keeps advancing currentTime and is left strictly alone. We also pause()
+// the wedged element before re-draining so two clips never overlap.
+setInterval(function() {
+  try {
+    if (!_avaPlaying || !_drainStarted) { _wdLastT = -1; return; }
+    var waited = Date.now() - _drainStarted;
+    if (waited < 12000) return;            // give every real clip room to start
+    var a = _avaAudio;
+    var advancing = !!(a && !a.paused && !a.ended && a.currentTime !== _wdLastT && a.readyState >= 2);
+    if (a) _wdLastT = a.currentTime;
+    if (advancing) return;                 // healthy playback in progress — never touch it
+    if (waited > 16000) {                  // not advancing for >16s — genuinely wedged
+      _avaTelemetry('drain-watchdog force-release (stuck ' + Math.round(waited/1000) + 's, ct=' + (a ? a.currentTime : 'n/a') + ')');
+      try { if (a) { a.pause(); a.src = ''; } } catch (_) {}
+      _avaPlaying = false; _drainStarted = 0; _wdLastT = -1; _avaStatus = 'idle'; _renderAvaPill(); _avaDrain();
+    }
+  } catch (_) {}
+}, 5000);
 
 // ─── speechSynthesis voice engine — hardened for stability ────────────────
 // qi 2026-06-09: the voice IS the browser's built-in speechSynthesis. Free,
@@ -2084,7 +2157,7 @@ function _avaDrain() {
   if (_avaPlaying || !_avaQueue.length) return;
   if (!_avaOn) { _avaQueue = []; return; }
   const clip = _avaQueue.shift();
-  _avaPlaying = true;
+  _avaPlaying = true; _drainStarted = Date.now(); _wdLastT = -1;
   const _genAtStart = _avaGen;  // capture gen — if qi barges in mid-fetch/decode, this goes stale
   // MP3 via <audio> — the path that WORKED (qi confirmed hearing on 2026-05-30).
   // speechSynthesis blocks on iOS when fired from background SSE events.
@@ -2150,13 +2223,36 @@ function _avaDrain() {
     // Per-drain dedup: both onerror and play AbortError fire for the same
     // underlying failure — only the first triggers fallback.
     let _aErr = false;
+    // RESILIENT MULTI-ENDPOINT (qi 2026-06-09): a single origin 5xx/502 must NOT
+    // drop to the bad voice. On <audio> failure, RETRY the SAME clip against the
+    // OTHER host (xen-vm) before any device path; only if BOTH network hosts fail
+    // do we fall to _avaSpeakDevice and finally _ssSpeakClip (never silent).
+    const _hosts = [AVA_TTS_URL, AVA_TTS_URL_FALLBACK];
+    let _hostIdx = 0;
     const _fallback = (label) => {
       if (_aErr) return; _aErr = true;
       a.oncanplay = null;
+      if (_genAtStart !== _avaGen) { _avaPlaying = false; _avaStatus = 'you spoke'; _renderAvaPill(); return; }
+      _hostIdx++;
+      if (_hostIdx < _hosts.length) {
+        // Retry the SAME clip against the next independent origin (real redundancy).
+        _aErr = false;
+        _avaStatus = 'retry-host'; _avaTelemetry(label + ' -> retry ' + _hosts[_hostIdx]); _renderAvaPill();
+        try { a.pause(); } catch (_) {}
+        a.onerror = () => _fallback('audio-err fallback');
+        a.src = _hosts[_hostIdx] + '?voice=ava&text=' + encodeURIComponent(clip);
+        a.oncanplay = _doPlay;
+        setTimeout(() => { if (a.oncanplay === _doPlay) _doPlay(); }, 3000);
+        return;
+      }
+      // BOTH network hosts failed — device replay, then real speechSynthesis.
       _avaStatus = label.startsWith('play blocked') ? 'blocked:'+label.slice(13) : 'audio-err';
       _avaTelemetry(label + ' -> device-tts');
       _renderAvaPill();
-      if (!_avaSpeakDevice(clip, _genAtStart)) { _avaPlaying = false; _avaDrain(); }
+      if (!_avaSpeakDevice(clip, _genAtStart)) {
+        // _avaSpeakDevice returned false (sync throw / barge) — last resort: on-device speech.
+        try { _ssSpeakClip(clip, _genAtStart); } catch (_) { _avaPlaying = false; _avaDrain(); }
+      }
     };
     a.onplaying = () => { _avaStatus = 'playing'; _hudSpoke++; _renderAvaPill(); try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; } catch (_) {} };
     a.onended   = () => { _avaPlaying = false; _avaStatus = _avaQueue.length ? ('queued '+_avaQueue.length) : 'idle'; _renderAvaPill(); try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; } catch (_) {} _avaDrain(); };
@@ -2198,7 +2294,7 @@ function speakAva(text) {
   // qi heard it as "Zantac"). Lyn/Eli tags also stripped from the spoken leg.
   const spoken = String(text).replace(/^\s*(Xen|Lyn|Eli)\s*:\s*/i, '');
   _avaQueue.push(spoken.slice(0, 800));
-  if (_avaQueue.length > 12) _avaQueue = _avaQueue.slice(-12);
+  if (_avaQueue.length > 40) _avaQueue = _avaQueue.slice(-40);   // higher cap (qi nothing-drops); 800-char clips x40 is bounded memory
   _avaDrain();
 }
 // _speakAvaFallback REMOVED 2026-05-30 — qi canon "no fallbacks; if it needs to
@@ -2251,10 +2347,11 @@ function _renderAvaPill() {
     overlay = document.createElement('div');
     overlay.id = 'ava-arm';
     overlay.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(6,20,12,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);cursor:pointer;color:#bff7d8;font:600 19px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;text-align:center;padding:24px';
+    var _wasArmed = false; try { _wasArmed = localStorage.getItem('vei-was-armed') === '1'; } catch (_) {}
     overlay.innerHTML =
       '<div style="font-size:46px">🎙️</div>' +
-      '<div id="ava-arm-title">Tap anywhere to start</div>' +
-      '<div id="ava-arm-sub" style="font-size:13px;opacity:.65;max-width:300px">enables voice + mic — one tap, then live</div>' +
+      '<div id="ava-arm-title">' + (_wasArmed ? 'Tap to resume Ava' : 'Tap anywhere to start') + '</div>' +
+      '<div id="ava-arm-sub" style="font-size:13px;opacity:.65;max-width:300px">' + (_wasArmed ? 'voice was on — one tap to continue' : 'enables voice + mic — one tap, then live') + '</div>' +
       '<div id="ava-arm-barwrap" style="display:none;width:220px;height:8px;background:rgba(255,255,255,.12);border-radius:99px;overflow:hidden;margin-top:6px"><div id="ava-arm-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#00ff88,#7CFC9A);transition:width .25s"></div></div>';
     document.body.appendChild(overlay);
   }
@@ -2274,6 +2371,7 @@ function _renderAvaPill() {
   const unlock = () => {
     if (_avaUnlocked) return;          // already armed; loader handles dismissal
     _avaUnlocked = true;
+    try { localStorage.setItem('vei-was-armed', '1'); } catch (_) {}   // returning-user hint (H2): next reload reads as a cheap 1-tap resume
     _hud('ARMED by tap');
     _avaVoice = pickAvaVoice();
     // CRITICAL: create + resume AudioContext synchronously in this gesture.
