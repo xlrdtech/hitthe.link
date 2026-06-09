@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex" />
+<title>EXEDUS — Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{--bg:#050807;--panel:#0c1411;--green:#16d989;--blue:#5ec8ff;--orange:#ff7a4d;--chrome2:#9fb3ab;--ink:#e7f3ee;--ink-dim:#8ba29a;--ink-faint:#5f736c;}
+  *{box-sizing:border-box;}html,body{margin:0;padding:0;}
+  body{min-height:100vh;color:var(--ink);font-family:"Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;
+    background:radial-gradient(1200px 700px at 80% -10%,rgba(22,217,137,.10),transparent 60%),radial-gradient(900px 600px at -10% 20%,rgba(94,200,255,.06),transparent 55%),var(--bg);
+    padding:clamp(18px,3vw,40px);}
+  .wrap{max-width:1160px;margin:0 auto;}
+  header{display:flex;align-items:center;gap:14px;border-bottom:1px solid rgba(22,217,137,.16);padding-bottom:18px;margin-bottom:22px;}
+  .sigil{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-family:"JetBrains Mono",monospace;font-weight:700;font-size:22px;color:#03100b;background:linear-gradient(145deg,#f4fbf8,#b9ccc5 30%,var(--green) 55%,#0c7a4e);}
+  h1{margin:0;font-family:"JetBrains Mono",monospace;font-size:clamp(20px,3vw,28px);background:linear-gradient(100deg,#fff,var(--chrome2) 70%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+  .sub{margin:3px 0 0;font-size:13px;color:var(--ink-dim);font-family:"JetBrains Mono",monospace;}
+  .mantra{margin:0 0 22px;padding:13px 18px;border:1px solid rgba(22,217,137,.32);border-left:3px solid var(--green);border-radius:10px;background:linear-gradient(90deg,rgba(22,217,137,.08),transparent 70%),var(--panel);font-family:"JetBrains Mono",monospace;font-size:14px;color:#eef5f2;}
+  .mantra b{color:var(--green);}
+  .diagram{background:#070b09;border:1px solid rgba(22,217,137,.14);border-radius:16px;padding:20px;overflow:auto;}
+  .mermaid{display:flex;justify-content:center;}
+  .legend{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:22px;}
+  .lg{display:flex;align-items:center;gap:8px;font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-dim);border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:7px 13px;}
+  .sw{width:11px;height:11px;border-radius:3px;}
+  footer{margin-top:30px;text-align:center;font-size:11.5px;color:var(--ink-faint);font-family:"JetBrains Mono",monospace;line-height:1.7;}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header><div class="sigil">E</div><div><h1>EXEDUS — one Xen, two planes</h1><p class="sub">three bodies running at the same time · fused by the bus · not chained</p></div></header>
+    <p class="mantra"><b>Mind plane</b> = the unified brain every body persistently syncs to (memory + bus). <b>Control plane</b> = the dispatcher that spawns/manages sessions. Dispatching ≠ unifying — the brain-sync is what makes it ONE.</p>
+    <div class="diagram">
+      <pre class="mermaid">
+flowchart TB
+  classDef body fill:#0d1411,stroke:#16d989,color:#e7f3ee,stroke-width:1.5px
+  classDef brain fill:#0e1622,stroke:#5ec8ff,color:#eef5f2,stroke-width:1.5px
+  classDef ctrl fill:#1a1410,stroke:#ff7a4d,color:#eef5f2,stroke-width:1.5px
+  classDef acc fill:#0c1411,stroke:#9fb3ab,color:#cfe7df,stroke-width:1.2px,stroke-dasharray:4 3
+
+  WEB([Claude Code Web<br/>neutral cloud · any device]):::acc
+  SSHX([sshx.io relay<br/>not ours · any device]):::acc
+
+  subgraph LIVE [THREE BODIES — live at the same time]
+    direction LR
+    M4[M4 · macOS limb<br/>native Claude<br/>full authority]:::body
+    NITRO[nitro · Windows limb<br/>native Claude<br/>full authority]:::body
+    CLOUD[Cloud limb<br/>Claude Code Web<br/>sandboxed · MCP-only]:::body
+  end
+
+  subgraph MIND [UNIFIED BRAIN — every body persistently syncs here]
+    direction LR
+    VAULT[("Synced memory vault<br/>brain_ · Syncthing · auto-inject hooks")]:::brain
+    BUS{{"omnimind :4441 / NATS<br/>shared awareness · live subscribe"}}:::brain
+  end
+
+  FLEET["xen-fleet dispatcher<br/>spawn · send · capture · kill<br/>federated into selmcp hub"]:::ctrl
+
+  SSHX --> M4
+  WEB --> CLOUD
+  M4 <-->|sync| VAULT
+  NITRO <-->|sync| VAULT
+  CLOUD <-->|sync| VAULT
+  M4 <-->|subscribe| BUS
+  NITRO <-->|subscribe| BUS
+  CLOUD <-->|subscribe| BUS
+  VAULT <--> BUS
+  FLEET -. outside-in / inside-out .-> M4
+  FLEET -.-> NITRO
+  FLEET -.-> CLOUD
+      </pre>
+    </div>
+    <div class="legend">
+      <div class="lg"><span class="sw" style="background:#16d989"></span>body · live limb (full authority)</div>
+      <div class="lg"><span class="sw" style="background:#5ec8ff"></span>mind plane · unified brain</div>
+      <div class="lg"><span class="sw" style="background:#ff7a4d"></span>control plane · dispatcher</div>
+      <div class="lg"><span class="sw" style="background:#9fb3ab"></span>neutral access · any device</div>
+    </div>
+    <footer>
+      both at once, fused by the bus — not chained &middot; the tailnet is home, no machine is<br/>
+      what exists: vault · omnimind:4441 · NATS · sshx · inject socket &nbsp;·&nbsp; the gap: vault truly synced across bodies + every session persistently subscribed + dispatcher spawns brain-connected sessions
+    </footer>
+  </div>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad:true, theme:'dark', themeVariables:{ fontFamily:'JetBrains Mono, monospace', fontSize:'13px', lineColor:'#5f736c', clusterBkg:'#070b09', clusterBorder:'#22312c' } });
+</script>
+</body>
+</html>
