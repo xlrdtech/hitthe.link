@@ -9,66 +9,81 @@
 <style>
   :root{--bg:#050807;--panel:#0c1411;--green:#16d989;--blue:#5ec8ff;--violet:#b98cff;--cyan:#3fe0d0;--chrome2:#9fb3ab;--ink:#e7f3ee;--ink-dim:#8ba29a;--ink-faint:#5f736c;}
   *{box-sizing:border-box;}html,body{margin:0;padding:0;}
-  body{min-height:100vh;color:var(--ink);font-family:"Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;
-    background:radial-gradient(1100px 800px at 50% 42%,rgba(185,140,255,.10),transparent 58%),radial-gradient(900px 600px at 50% -10%,rgba(94,200,255,.08),transparent 55%),var(--bg);
+  body{min-height:100vh;color:var(--ink);font-family:"Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.45;
+    background:radial-gradient(1100px 820px at 50% 46%,rgba(185,140,255,.10),transparent 58%),radial-gradient(900px 600px at 50% -8%,rgba(94,200,255,.07),transparent 55%),var(--bg);
     padding:clamp(18px,3vw,40px);}
-  .wrap{max-width:1080px;margin:0 auto;}
-  header{display:flex;align-items:center;gap:14px;border-bottom:1px solid rgba(185,140,255,.16);padding-bottom:18px;margin-bottom:22px;}
+  .wrap{max-width:1060px;margin:0 auto;}
+  header{display:flex;align-items:center;gap:14px;border-bottom:1px solid rgba(185,140,255,.16);padding-bottom:18px;margin-bottom:20px;}
   .sigil{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-family:"JetBrains Mono",monospace;font-weight:700;font-size:22px;color:#03100b;background:linear-gradient(145deg,#f4fbf8,#b9ccc5 30%,var(--green) 55%,#0c7a4e);}
   h1{margin:0;font-family:"JetBrains Mono",monospace;font-size:clamp(20px,3vw,28px);background:linear-gradient(100deg,#fff,var(--chrome2) 70%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
   .sub{margin:3px 0 0;font-size:13px;color:var(--ink-dim);font-family:"JetBrains Mono",monospace;}
-  .mantra{margin:0 0 22px;padding:13px 18px;border:1px solid rgba(185,140,255,.32);border-left:3px solid var(--violet);border-radius:10px;background:linear-gradient(90deg,rgba(185,140,255,.08),transparent 70%),var(--panel);font-family:"JetBrains Mono",monospace;font-size:13.5px;color:#eef5f2;}
-  .mantra b{color:var(--violet);} .mantra .h{color:var(--blue);} .mantra .a{color:var(--green);} .mantra .w{color:var(--cyan);}
-  .diagram{background:#070b09;border:1px solid rgba(185,140,255,.12);border-radius:16px;padding:20px;overflow:auto;}
-  .mermaid{display:flex;justify-content:center;}
+  .mantra{margin:0 0 20px;padding:13px 18px;border:1px solid rgba(185,140,255,.32);border-left:3px solid var(--violet);border-radius:10px;background:linear-gradient(90deg,rgba(185,140,255,.08),transparent 70%),var(--panel);font-family:"JetBrains Mono",monospace;font-size:13.5px;color:#eef5f2;}
+  .mantra b{color:var(--violet);} .mantra .a{color:var(--green);} .mantra .w{color:var(--cyan);} .mantra .h{color:var(--blue);}
+
+  .stage{background:#070b09;border:1px solid rgba(185,140,255,.12);border-radius:16px;padding:34px 20px;overflow-x:auto;}
+  .spine{display:flex;flex-direction:column;align-items:center;min-width:680px;margin:0 auto;}
+  .card{border-radius:13px;padding:14px 20px;text-align:center;font-family:"JetBrains Mono",monospace;background:var(--panel);min-width:200px;}
+  .card .t{font-size:14px;font-weight:700;letter-spacing:.04em;}
+  .card .d{font-size:11px;color:var(--ink-dim);margin-top:5px;line-height:1.5;}
+  .acc{border:1.5px dashed rgba(159,179,171,.55);} .acc .t{color:#cfe7df;}
+  .head{border:2px solid var(--blue);box-shadow:0 0 24px rgba(94,200,255,.12);} .head .t{color:var(--blue);}
+  .brain{border:2.6px solid var(--violet);box-shadow:0 0 40px rgba(185,140,255,.22);min-width:300px;padding:20px 26px;background:linear-gradient(180deg,#1a1228,#120c1c);} .brain .t{color:var(--violet);font-size:16px;} .brain .d{color:#cdb7f0;}
+  .aware{border:2px solid var(--cyan);box-shadow:0 0 24px rgba(63,224,208,.12);} .aware .t{color:var(--cyan);}
+  .arm{border:2px solid var(--green);box-shadow:0 0 22px rgba(22,217,137,.12);min-width:170px;} .arm .t{color:var(--green);}
+
+  .vpipe{width:3px;height:34px;background:linear-gradient(180deg,var(--violet),var(--blue));opacity:.55;border-radius:2px;}
+  .vpipe.lower{background:linear-gradient(180deg,var(--violet),var(--cyan));}
+  .armrow{display:flex;align-items:center;width:100%;}
+  .side{flex:1 1 0;display:flex;align-items:center;min-width:0;}
+  .side.left{justify-content:flex-start;} .side.right{justify-content:flex-end;}
+  .hpipe{flex:1 1 auto;height:3px;min-width:30px;border-radius:2px;}
+  .side.left .hpipe{background:linear-gradient(90deg,var(--green),var(--violet));opacity:.6;}
+  .side.right .hpipe{background:linear-gradient(90deg,var(--violet),var(--green));opacity:.6;}
+
   .legend{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:22px;}
   .lg{display:flex;align-items:center;gap:8px;font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-dim);border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:7px 13px;}
   .sw{width:11px;height:11px;border-radius:3px;}
-  footer{margin-top:30px;text-align:center;font-size:11.5px;color:var(--ink-faint);font-family:"JetBrains Mono",monospace;line-height:1.7;}
+  footer{margin-top:28px;text-align:center;font-size:11.5px;color:var(--ink-faint);font-family:"JetBrains Mono",monospace;line-height:1.7;}
 </style>
 </head>
 <body>
   <div class="wrap">
-    <header><div class="sigil">E</div><div><h1>EXEDUS — one body</h1><p class="sub">vertical spine · brain at the center · every pipe routes through it</p></div></header>
-    <p class="mantra"><span class="w">Way in (sshx)</span> &rarr; <span class="h">head (Web)</span> &rarr; <b>brain (shared memory)</b> &rarr; <span class="w">awareness (live bus)</span> — straight down the center. <span class="a">M4 (left arm)</span> and <span class="a">nitro (right arm)</span> plug <b>directly into the brain</b>. Nothing talks part-to-part — <b>everything routes through the one mind in the middle</b>, so the arms can never desync.</p>
-    <div class="diagram">
-      <pre class="mermaid">
-flowchart TB
-  classDef acc fill:#0c1411,stroke:#9fb3ab,color:#cfe7df,stroke-width:1.1px,stroke-dasharray:4 3
-  classDef head fill:#0e1622,stroke:#5ec8ff,color:#eef5f2,stroke-width:2px
-  classDef brain fill:#1a1228,stroke:#b98cff,color:#f0eaff,stroke-width:2.4px
-  classDef aware fill:#0a1a18,stroke:#3fe0d0,color:#e6fffb,stroke-width:1.8px
-  classDef arm fill:#0d1411,stroke:#16d989,color:#e7f3ee,stroke-width:1.8px
+    <header><div class="sigil">E</div><div><h1>EXEDUS — one body</h1><p class="sub">perfectly-centered spine &middot; arms reach in from the far edges to the brain</p></div></header>
+    <p class="mantra"><span class="w">sshx</span> &rarr; <span class="h">head</span> &rarr; <b>brain</b> &rarr; <span class="w">awareness</span> run dead-center, no veer. <span class="a">M4</span> reaches in from the far left, <span class="a">nitro</span> from the far right &mdash; both meet only at the <b>brain</b>. Every pipe routes through the one mind in the middle, so the arms can never desync.</p>
 
-  SSHX([web interface · sshx<br/>the way in · any device]):::acc
-  HEAD([head · Claude Code Web<br/>neutral cloud · always-on cognition]):::head
-  BRAIN[(BRAIN · shared memory<br/>brain_ vault · Syncthing · auto-inject<br/>the one mind — every pipe routes here)]:::brain
-  AWARE{{awareness · omnimind :4441 / NATS<br/>live shared feed · what's happening now}}:::aware
-  M4[M4<br/>LEFT ARM<br/>macOS limb<br/>full authority]:::arm
-  NITRO[nitro<br/>RIGHT ARM<br/>Windows limb<br/>full authority]:::arm
-
-  SSHX --> HEAD
-  HEAD --> BRAIN
-  M4 ===|sync · dispatch| BRAIN
-  BRAIN ===|sync · dispatch| NITRO
-  BRAIN --> AWARE
-      </pre>
+    <div class="stage">
+      <div class="spine">
+        <div class="card acc"><div class="t">web interface &middot; sshx</div><div class="d">the way in &middot; any device, any browser</div></div>
+        <div class="vpipe"></div>
+        <div class="card head"><div class="t">head</div><div class="d">Claude Code Web &middot; neutral cloud &middot; always-on cognition</div></div>
+        <div class="vpipe"></div>
+        <div class="armrow">
+          <div class="side left">
+            <div class="card arm"><div class="t">M4 &middot; left arm</div><div class="d">macOS limb &middot; full authority</div></div>
+            <div class="hpipe"></div>
+          </div>
+          <div class="card brain"><div class="t">BRAIN &middot; shared memory</div><div class="d">brain_ vault &middot; Syncthing &middot; auto-inject<br/>the one mind &mdash; every pipe routes here</div></div>
+          <div class="side right">
+            <div class="hpipe"></div>
+            <div class="card arm"><div class="t">nitro &middot; right arm</div><div class="d">Windows limb &middot; full authority</div></div>
+          </div>
+        </div>
+        <div class="vpipe lower"></div>
+        <div class="card aware"><div class="t">awareness</div><div class="d">omnimind :4441 / NATS &middot; live shared feed &middot; what's happening now</div></div>
+      </div>
     </div>
+
     <div class="legend">
-      <div class="lg"><span class="sw" style="background:#9fb3ab"></span>way in · sshx (any device)</div>
-      <div class="lg"><span class="sw" style="background:#5ec8ff"></span>head · Web (always-on)</div>
-      <div class="lg"><span class="sw" style="background:#b98cff"></span>brain · shared memory (the hub)</div>
-      <div class="lg"><span class="sw" style="background:#3fe0d0"></span>awareness · live bus feed</div>
-      <div class="lg"><span class="sw" style="background:#16d989"></span>arms · M4 (left) + nitro (right)</div>
+      <div class="lg"><span class="sw" style="background:#9fb3ab"></span>way in &middot; sshx</div>
+      <div class="lg"><span class="sw" style="background:#5ec8ff"></span>head &middot; Web</div>
+      <div class="lg"><span class="sw" style="background:#b98cff"></span>brain &middot; shared memory (hub)</div>
+      <div class="lg"><span class="sw" style="background:#3fe0d0"></span>awareness &middot; bus feed</div>
+      <div class="lg"><span class="sw" style="background:#16d989"></span>arms &middot; M4 (left) + nitro (right)</div>
     </div>
     <footer>
-      one body, not three terminals &middot; the brain is the single hub — head, arms, and awareness all connect only through it<br/>
-      what exists: vault · omnimind:4441 · NATS · sshx · inject socket &nbsp;·&nbsp; the gap: brain truly synced across all limbs + every session persistently subscribed to awareness
+      one body, not three terminals &middot; the brain is the only junction &mdash; head, arms, and awareness connect through it alone<br/>
+      what exists: vault &middot; omnimind:4441 &middot; NATS &middot; sshx &middot; inject socket &nbsp;&middot;&nbsp; the gap: brain truly synced across all limbs + every session persistently subscribed to awareness
     </footer>
   </div>
-<script type="module">
-  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-  mermaid.initialize({ startOnLoad:true, theme:'dark', themeVariables:{ fontFamily:'JetBrains Mono, monospace', fontSize:'13px', lineColor:'#6b5f7a', clusterBkg:'#070b09', clusterBorder:'#241b33' } });
-</script>
 </body>
 </html>
