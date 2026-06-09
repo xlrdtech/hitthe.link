@@ -1906,8 +1906,7 @@ function pickAvaVoice() {
 // speechSynthesis, which iOS blocks from background SSE events (that was the
 // silence). qi 2026-05-30: "your voice in, my voice out, same page, no taps".
 // Ava = en-US-AvaMultilingualNeural ("edge tts Ava neural English").
-const AVA_TTS_URL = 'https://xen.xlrd.org/api/tts';  // primary — direct omnimind (xen-vm 404'd 2026-06-09)
-const AVA_TTS_URL_FALLBACK = 'https://api.xlrd.org/api/tts';  // same omnimind origin via godmode-mac tunnel (live fallback, swapped from dead xen-vm 2026-06-09)
+const AVA_TTS_URL = 'https://api.xlrd.org/api/tts';  // sole TTS origin, no network fallback (qi 2026-06-09: api.xlrd.org primary; xen.xlrd.org freed for repurpose)
 (function _probeXenNode() {
   fetch(AVA_TTS_URL + '?voice=ava&text=.', { method: 'HEAD', cache: 'no-store' })
     .then(function(r) {
@@ -2227,7 +2226,7 @@ function _avaDrain() {
     // drop to the bad voice. On <audio> failure, RETRY the SAME clip against the
     // OTHER host (xen-vm) before any device path; only if BOTH network hosts fail
     // do we fall to _avaSpeakDevice and finally _ssSpeakClip (never silent).
-    const _hosts = [AVA_TTS_URL, AVA_TTS_URL_FALLBACK];
+    const _hosts = [AVA_TTS_URL];  // no network fallback (single origin); device speech-synth remains the never-silent guarantee
     let _hostIdx = 0;
     const _fallback = (label) => {
       if (_aErr) return; _aErr = true;
