@@ -1,7 +1,7 @@
 // VVSVEI service worker (wf 2026-05-31) — cache-first shell so reopen is instant.
 // Scope: /vvsvei/ ONLY. Never caches /events SSE, /api/*, or cross-origin xen.xlrd.org.
 // qi: "having to reload vvsvei is a bottleneck. it should open and work instantly."
-const VVSVEI_CACHE = 'vvsvei-shell-v4';  // v4 2026-06-09 — NETWORK-FIRST (was cache-first, which trapped qi on a broken cached shell during a P0). Fresh-always beats instant-but-stale.
+const VVSVEI_CACHE = 'vvsvei-shell-v5';  // v5 2026-06-09 — bust cache, fix crossOrigin audio-err (was cache-first, which trapped qi on a broken cached shell during a P0). Fresh-always beats instant-but-stale.
 const SHELL = ['./', './index.html'];
 
 self.addEventListener('install', (e) => {
