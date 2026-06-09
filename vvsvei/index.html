@@ -975,10 +975,46 @@ function drawWave(samples, listening) {
   waveCtx2d.globalAlpha = 1;
 }
 
+// ─── Energy VAD + barge-in cuts (qi 2026-06-09: "web vad and barge in cuts") ──
+// Hands-free barge-in. The visualizer's AnalyserNode already hands us the raw mic
+// waveform every animation frame, so we compute short-time RMS energy on it — no
+// extra dependency, no Silero/ONNX model that could fail to load (reliability >
+// accuracy for a voice OS whose breakage paralyzes qi). On a speech ONSET we cut
+// Ava mid-sentence through the existing _avaBargeIn(); echoCancellation on the
+// analyser stream keeps her own playback from self-triggering the cut.
+let _vadSpeaking = false;        // currently inside a detected speech segment
+let _vadHot = 0;                 // consecutive frames above threshold (onset debounce)
+let _vadCold = 0;                // consecutive frames below threshold (offset debounce)
+let _vadFloor = 0.012;           // adaptive noise floor (EMA), seeded at a quiet-room guess
+const VAD_ONSET_FRAMES = 4;      // ~66ms @60fps of energy before we trust it's real speech
+const VAD_OFFSET_FRAMES = 12;    // ~200ms of quiet ends the segment and re-arms the cut
+const VAD_ABS_MIN = 0.045;       // absolute floor so a silent room can't collapse the
+                                 // adaptive threshold to ~0 and trigger on faint hiss
+function _vadCheck(samples) {
+  // Short-time RMS of the centered waveform (bytes 0..255, 128 = silence).
+  let sum = 0;
+  for (let i = 0; i < samples.length; i++) { const v = (samples[i] - 128) / 128; sum += v * v; }
+  const rms = Math.sqrt(sum / samples.length);
+  const avaActive = _avaPlaying || (_avaQueue && _avaQueue.length > 0);
+  // Adapt the noise floor ONLY while Ava is silent — otherwise her playback (even the
+  // post-AEC residue) inflates the floor and qi would have to shout to barge in.
+  if (!avaActive) _vadFloor = _vadFloor * 0.95 + rms * 0.05;
+  const thresh = Math.max(VAD_ABS_MIN, _vadFloor * 2.4);
+  if (rms > thresh) { _vadHot++; _vadCold = 0; } else { _vadCold++; _vadHot = 0; }
+  // Rising edge → speech onset confirmed: cut Ava the instant qi talks over her.
+  if (!_vadSpeaking && _vadHot >= VAD_ONSET_FRAMES) {
+    _vadSpeaking = true;
+    if (avaActive) _avaBargeIn();
+  }
+  // Falling edge → segment ended; next onset re-arms the cut.
+  if (_vadSpeaking && _vadCold >= VAD_OFFSET_FRAMES) { _vadSpeaking = false; }
+}
+
 function tickListening() {
   if (!analyser) return;
   const samples = new Uint8Array(analyser.fftSize);
   analyser.getByteTimeDomainData(samples);
+  _vadCheck(samples);          // energy VAD → barge-in cut (qi 2026-06-09)
   drawWave(samples, true);
   rafId = requestAnimationFrame(tickListening);
 }
@@ -994,7 +1030,14 @@ clearWave();
 async function startAnalyser() {
   if (analyser) return;
   try {
-    analyserStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // echoCancellation is the load-bearing flag (qi 2026-06-09): it subtracts Ava's
+    // own TTS playback from the mic signal so her voice does NOT self-trigger the VAD
+    // barge-in below. noiseSuppression cleans hiss; autoGainControl normalizes level.
+    // This is the analyser-only stream — Web Speech STT runs its own internal stream,
+    // so these constraints never affect recognition accuracy.
+    analyserStream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+    });
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const source = audioCtx.createMediaStreamSource(analyserStream);
     analyser = audioCtx.createAnalyser();
