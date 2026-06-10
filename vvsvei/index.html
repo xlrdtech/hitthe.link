@@ -1815,7 +1815,7 @@ try { _hud('loaded — tap to arm'); } catch (_) {}
   const updateStatus = () => {
     try {
       if (window._avaSetLoad) {
-        if (!_avaAudioUnlocked) window._avaSetLoad('Tap to connect', 'loading ' + _hudRx + ' messages…', Math.min(99, Math.round(_hudRx / 50)));
+        // history progress display removed — overlay dismisses on tap immediately
       }
     } catch (_) {}
   };
@@ -2391,9 +2391,8 @@ function _renderAvaPill() {
     // Removed speechSynthesis warm-up to eliminate the multiple-voices issue.
     _avaAudioUnlocked = true;
     try { if (typeof toggleMic === 'function' && !viz_listening) toggleMic().catch(() => {}); } catch (_) {}  // start mic same gesture
-    // Keep the overlay as a live loader until caught-up. If already live, dismiss.
-    if (_avaLive) { window._avaDismissOverlay(); }
-    else { window._avaSetLoad('Connecting…', 'loading your conversation', Math.min(99, Math.round(_hudRx / 50))); }
+    // Dismiss overlay immediately on tap — no history loading screen.
+    window._avaDismissOverlay();
     _renderAvaPill();
   };
   document.body.addEventListener('click', unlock, { passive: true });
