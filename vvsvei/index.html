@@ -1626,7 +1626,9 @@ function renderEvent(d) {
     } catch (_) { try { location.reload(true); } catch (__) {} }
     return;
   }
-  const txt = (d.text || d.body || d.message || '').toString().trim();
+  // qi 2026-06-10: beside SMS omni:new-thread events carry text in `preview`
+  // (not `text`/`body`/`message`). Include preview so SMS bubbles render.
+  const txt = (d.text || d.body || d.message || d.preview || '').toString().trim();
   if (!txt) return;
   const tag = (d.event || d.kind || '').toString().toLowerCase();
   const src = (d.source || d.sender || '').toString().toLowerCase();
@@ -1698,7 +1700,10 @@ function renderEvent(d) {
   } else {
     // qi 2026-05-30: events render IN the chat, not a separate panel —
     // "everything is supposed to show up in the chat". Firehose bubble inline.
-    const labelSrc = (d.source || d.sender || d.title || tag || 'firehose').toString().slice(0, 24);
+    // qi 2026-06-10: map raw source names to canonical prefix tags (sms:/bee:/omi:)
+    const _rawSrc = (d.source || d.sender || d.title || tag || 'firehose').toString().toLowerCase();
+    const _srcMap = { beside: 'sms:', 'beside-sms': 'sms:', omi: 'omi:', 'omi:': 'omi:', 'bee:': 'bee:', bee: 'bee:' };
+    const labelSrc = (_srcMap[_rawSrc] || (d.source || d.sender || d.title || tag || 'firehose').toString()).slice(0, 24);
     const cleanBody = String(txt).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 300);
     const fdiv = document.createElement('div');
     fdiv.className = 'firehose';
