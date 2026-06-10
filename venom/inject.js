@@ -3,7 +3,6 @@
   if (window.__xenVenom) return;
   window.__xenVenom = true;
 
-  const TTS_ORIGIN = 'https://api.xlrd.org';
   const SSE_ORIGIN = 'https://xen.xlrd.org';
 
   /* ── Canonical VVS CSS ─────────────────────────────────────── */
@@ -19,7 +18,6 @@
     #xen-venom-shell.hidden { transform: translateY(100%); }
     #xen-venom-dot { width: 8px; height: 8px; border-radius: 50%; background: #444; flex-shrink: 0; }
     #xen-venom-dot.live { background: #00ff88; box-shadow: 0 0 6px #00ff88; animation: xen-pulse 1.4s infinite; }
-    #xen-venom-dot.speaking { background: #fff; box-shadow: 0 0 8px #fff; animation: xen-pulse 0.6s infinite; }
     @keyframes xen-pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
     #xen-venom-text { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.85; }
     #xen-venom-toggle { cursor: pointer; opacity: 0.5; font-size: 10px; padding: 2px 6px; border: 1px solid #333; border-radius: 3px; }
@@ -48,10 +46,8 @@
 
   function setText(msg) { txt.textContent = msg; }
   function setLive() { dot.className = 'live'; }
-  function setSpeaking() { dot.className = 'speaking'; }
-  function setIdle() { dot.className = 'live'; }
 
-  /* ── SSE feed from omnimind ────────────────────────────────── */
+  /* ── SSE feed from omnimind — display only, no TTS ────────── */
   let sse;
   function connect() {
     try {
@@ -60,7 +56,7 @@
       sse.onmessage = (e) => {
         try {
           const d = JSON.parse(e.data);
-          if (d.type === 'xen-out' && d.text) speak(d.text);
+          if (d.type === 'xen-out' && d.text) setText(d.text);
           if (d.type === 'xen-status') setText(d.text || '');
         } catch (_) {}
       };
@@ -68,47 +64,6 @@
     } catch (_) {}
   }
   connect();
-
-  /* ── TTS via M4 api.xlrd.org ───────────────────────────────── */
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  let speaking = false;
-  const queue = [];
-
-  async function speak(text) {
-    queue.push(text);
-    if (!speaking) drain();
-  }
-
-  async function drain() {
-    if (!queue.length) { speaking = false; setIdle(); return; }
-    speaking = true;
-    const text = queue.shift();
-    setSpeaking();
-    setText(text);
-    try {
-      const res = await fetch(TTS_ORIGIN + '/api/tts?text=' + encodeURIComponent(text));
-      if (!res.ok) throw new Error('tts ' + res.status);
-      const buf = await res.arrayBuffer();
-      const decoded = await audioCtx.decodeAudioData(buf);
-      const src = audioCtx.createBufferSource();
-      src.buffer = decoded;
-      src.connect(audioCtx.destination);
-      src.onended = () => drain();
-      src.start(0);
-    } catch (e) {
-      console.warn('[VENOM] TTS error:', e);
-      drain();
-    }
-  }
-
-  /* ── Resume AudioContext on first user gesture ─────────────── */
-  function resume() {
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    document.removeEventListener('click', resume);
-    document.removeEventListener('keydown', resume);
-  }
-  document.addEventListener('click', resume);
-  document.addEventListener('keydown', resume);
 
   setText('Venom armed — ' + location.hostname);
   console.log('[VENOM] Xen symbiote active on', location.href);
