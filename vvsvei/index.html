@@ -2266,7 +2266,17 @@ function _avaDrain() {
       if (p && p.then) p.then(() => {
         if (_genAtStart !== _avaGen) { try { a.pause(); a.currentTime = 0; } catch (_) {} _avaPlaying = false; _avaStatus = 'you spoke'; _renderAvaPill(); }
       });
-      if (p && p.catch) p.catch(e => _fallback('play blocked: '+e.name));
+      if (p && p.catch) p.catch(e => {
+        // Auto-resume AudioContext if suspended (iOS background/gap kill) then retry once
+        if (_avaCtx && _avaCtx.state === 'suspended') {
+          _avaCtx.resume().then(() => {
+            const p2 = a.play();
+            if (p2 && p2.catch) p2.catch(() => _fallback('play blocked: '+e.name));
+          }).catch(() => _fallback('play blocked: '+e.name));
+        } else {
+          _fallback('play blocked: '+e.name);
+        }
+      });
     };
     a.oncanplay = _doPlay;
     // Safety: if canplay never fires within 3s (already-cached src), play anyway
