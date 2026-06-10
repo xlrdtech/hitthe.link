@@ -350,7 +350,10 @@
        Ava-only per canon · NO native SpeechSynthesis fallback. ── */
     let currentAudio = null;
     const AVA_LOCAL_URL = 'http://localhost:7723/';
-    const AVA_RELAY_URL = 'https://ava.xlrd.org/';
+    // qi 2026-06-10: ava.xlrd.org relay was 502-DEAD (Venom voice failed off-Mac).
+    // Wired to the LIVE singular hosted Xen voice (same endpoint VVSVEI uses) so
+    // every Venom-injected surface speaks through ONE hosted voice. Verified 200.
+    const AVA_RELAY_URL = 'https://api.xlrd.org/api/tts';
     const AVA_VOICE = 'en-US-AvaMultilingualNeural';
 
     async function avaSynthesize(text) {
