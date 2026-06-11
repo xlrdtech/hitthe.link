@@ -1170,6 +1170,14 @@ appendFinal = function(text, postedFlag) {
   const k = _normDict(text);
   if (k) { _localDictated.set(k, Date.now());
     if (_localDictated.size > 50) { for (const [kk,vv] of _localDictated) { if (Date.now()-vv > 30000) _localDictated.delete(kk); } } }
+  // qi 2026-06-11: pre-claim the source-agnostic dedup key for THIS local bubble
+  // so its incoming SSE echo (same text, ~same time) is suppressed in renderEvent
+  // and never renders a second time. Claims current + next 5s bucket to cover lag.
+  try {
+    const now = Date.now();
+    _renderedKeys.add(dedupKey(text, now));
+    _renderedKeys.add(dedupKey(text, now + 5000));
+  } catch (_) {}
 };
 
 // ─── Top toolbar: copy-all / export / share / attach ─────────────────────
@@ -1443,6 +1451,18 @@ function threadLabel(t) {
 
 const _renderedKeys = new Set();
 const _xenOutSpoken = new Set(); // Option A speak-dedup · keys mirror _renderedKeys for xen-out events only
+// qi 2026-06-11: shared dedup key — source-agnostic, normalized text + 5s bucket.
+// Used by renderEvent AND appendFinal so a local optimistic bubble suppresses its
+// own SSE echo, and the same utterance from multiple sources collapses to one.
+function dedupKey(txt, ts) {
+  const norm = String(txt || '').toLowerCase().replace(/[^\w ]+/g, '').replace(/\s+/g, ' ').trim().slice(0, 80);
+  const bucket = Math.floor((Number(ts) || Date.now()) / 5000);
+  return `dk|${norm}|${bucket}`;
+}
+function _isXenOutEvt(tag, src) {
+  return (tag || '').includes('xen-out') || (src || '').includes('xen-reply') ||
+         (src || '').includes('xen-primary') || (src || '').includes('xen-out');
+}
 // qi 2026-05-30: /events replays the FULL xen-out history (~1700 events) on every
 // SSE connect. Only LIVE replies (ts newer than this page's connect, minus grace)
 // should SPEAK — the backlog renders silently. Without this the no-drop queue
@@ -1640,7 +1660,7 @@ function renderEvent(d) {
   // colons got chewed into ":::::::::::: 51:40 PM, in:". Strip BOTH so the time
   // never renders twice. Conservative: only a leading time-ish prefix ending in
   // "PM, in:" / "AM, in:" (with optional leading mangled colons) is removed.
-  txt = txt.replace(/^[\s:]*\d{1,2}:\d{2}(?::\d{2})?\s*[AP]M\s*,\s*in:\s*/i, '').trim();
+  txt = txt.replace(/^[\s:]*\d{1,2}:\d{2}(?::\d{2})?\s*[AP]M\s*,\s*(?:in|typed|omi|aua|sms|bee|spark|mail|note):\s*/i, '').trim();
   if (!txt) return;
   // qi 2026-06-11: [VVSVEI] speak-gate telemetry must NEVER render as a chat
   // bubble. omnimind broadcasts it as an xen-dictate-in event, so it was being
@@ -1660,9 +1680,22 @@ function renderEvent(d) {
   }
   const tag = (d.event || d.kind || '').toString().toLowerCase();
   const src = (d.source || d.sender || '').toString().toLowerCase();
-  const key = `${src}|${txt.slice(0, 80)}|${d.ts || ''}`;
-  if (_renderedKeys.has(key)) return;
-  _renderedKeys.add(key);
+  // qi 2026-06-11: SOURCE-AGNOSTIC echo/cross-source dedup. Keep every capture
+  // source ON (so xen is never deaf), but collapse the SAME utterance into ONE
+  // bubble — whether it arrives as a local optimistic render + SSE echo, or from
+  // multiple devices/channels (omi:/vvsvei/grok). Key drops src and buckets time
+  // to 5s so identical text within the window renders once. dedupKey() is shared
+  // with appendFinal so a locally-sent line suppresses its own SSE echo.
+  if (_isXenOutEvt(tag, src)) {
+    // xen replies keep ts-precise keying (don't collapse distinct replies)
+    const key = `${src}|${txt.slice(0, 80)}|${d.ts || ''}`;
+    if (_renderedKeys.has(key)) return;
+    _renderedKeys.add(key);
+  } else {
+    const dk = dedupKey(txt, d.ts);
+    if (_renderedKeys.has(dk) || _renderedKeys.has(dedupKey(txt, (Number(d.ts)||Date.now()) - 5000))) return;
+    _renderedKeys.add(dk);
+  }
   // qi 2026-05-25 timestamp canon — every bubble shows h:mm AM/PM.
   const _fmtTs = (raw) => {
     const _t = raw ? new Date(raw > 9999999999 ? raw : raw * 1000) : new Date();
