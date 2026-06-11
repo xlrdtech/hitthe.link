@@ -1642,6 +1642,22 @@ function renderEvent(d) {
   // "PM, in:" / "AM, in:" (with optional leading mangled colons) is removed.
   txt = txt.replace(/^[\s:]*\d{1,2}:\d{2}(?::\d{2})?\s*[AP]M\s*,\s*in:\s*/i, '').trim();
   if (!txt) return;
+  // qi 2026-06-11: [VVSVEI] speak-gate telemetry must NEVER render as a chat
+  // bubble. omnimind broadcasts it as an xen-dictate-in event, so it was being
+  // mis-shown as user input tagged `in:`. It belongs in the dim telemetry HUD
+  // lane only — route it there and skip the bubble entirely.
+  if (/^\[VVSVEI\]/.test(txt) || /^vei-telemetry$/i.test((d.source||'').toString())) {
+    try { _hud(txt.replace(/^\[VVSVEI\]\s*/, '').slice(0, 60)); } catch (_) {}
+    return;
+  }
+  // qi 2026-06-11: [VVSVEI] speak-gate telemetry must NEVER render as a chat
+  // bubble. omnimind broadcasts it as an xen-dictate-in event (so it was being
+  // mis-rendered as user input tagged `in:`). It already belongs in the dim
+  // telemetry HUD lane — route it there and skip the bubble entirely.
+  if (/^\[VVSVEI\]/.test(txt) || /^vei-telemetry$/i.test((d.source||'').toString())) {
+    try { _hud(txt.replace(/^\[VVSVEI\]\s*/, '').slice(0, 60)); } catch (_) {}
+    return;
+  }
   const tag = (d.event || d.kind || '').toString().toLowerCase();
   const src = (d.source || d.sender || '').toString().toLowerCase();
   const key = `${src}|${txt.slice(0, 80)}|${d.ts || ''}`;
