@@ -1,7 +1,7 @@
 // VVSVEI service worker (wf 2026-05-31) — cache-first shell so reopen is instant.
 // Scope: /vvsvei/ ONLY. Never caches /events SSE, /api/*, or cross-origin xen.xlrd.org.
 // qi: "having to reload vvsvei is a bottleneck. it should open and work instantly."
-const VVSVEI_CACHE = 'vvsvei-shell-v2';
+const VVSVEI_CACHE = 'vvsvei-shell-v3';  // v3 2026-06-11 — strip double-timestamp body prefix ("HH:MM:SS PM, in:" + mangled ":::") at render chokepoint; Ava->voice on all visible labels (header icon + pill tooltips).
 const SHELL = ['./', './index.html'];
 
 self.addEventListener('install', (e) => {
