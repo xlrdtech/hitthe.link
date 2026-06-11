@@ -833,7 +833,13 @@ function stopMediaRecorder() {
 let useContinuous = true;
 
 function startListening() {
-  if (!SR) return;
+  if (!SR) {
+    setStatus('err', 'no voice engine');
+    appendError('This browser has no Web Speech engine — voice input unavailable here. Use the text field below to send to Xen.');
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+    return;
+  }
   recognition = new SR();
   recognition.continuous = useContinuous;
   recognition.interimResults = true;
@@ -893,6 +899,18 @@ function startListening() {
 
   recognition.onerror = (e) => {
     if (e.error === 'no-speech' || e.error === 'aborted') return;
+    // Permission denied — surface a CLEAR, actionable message instead of a
+    // cryptic one-liner. On Comet/Android this is the #1 silent-failure cause:
+    // the site (and/or the Comet app) was never granted mic access.
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+      listening = false;
+      try { recognition.stop(); } catch (_) {}
+      setStatus('err', 'mic blocked');
+      appendError('MIC BLOCKED — grant microphone access: tap the lock/page icon in the address bar → Permissions → Microphone → Allow, AND Android Settings → Apps → Comet → Permissions → Microphone → Allow. Then reload. Type in the field below meanwhile.');
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      return;
+    }
     setStatus('err', 'error: ' + e.error);
     appendError('speech error: ' + e.error);
     if (e.error === 'network') {
