@@ -1628,7 +1628,14 @@ function renderEvent(d) {
   }
   // qi 2026-06-10: beside SMS omni:new-thread events carry text in `preview`
   // (not `text`/`body`/`message`). Include preview so SMS bubbles render.
-  const txt = (d.text || d.body || d.message || d.preview || '').toString().trim();
+  let txt = (d.text || d.body || d.message || d.preview || '').toString().trim();
+  // qi 2026-06-11 DOUBLE-TIMESTAMP FIX: the bubble stamps its own canonical time
+  // (.bubble-ts). The server-side message body sometimes carries a leading
+  // "HH:MM:SS PM, in:" prefix — and a truncated/mangled variant where the hour's
+  // colons got chewed into ":::::::::::: 51:40 PM, in:". Strip BOTH so the time
+  // never renders twice. Conservative: only a leading time-ish prefix ending in
+  // "PM, in:" / "AM, in:" (with optional leading mangled colons) is removed.
+  txt = txt.replace(/^[\s:]*\d{1,2}:\d{2}(?::\d{2})?\s*[AP]M\s*,\s*in:\s*/i, '').trim();
   if (!txt) return;
   const tag = (d.event || d.kind || '').toString().toLowerCase();
   const src = (d.source || d.sender || '').toString().toLowerCase();
@@ -2323,9 +2330,9 @@ function _renderAvaPill() {
   ic.classList.toggle('active', on);            // green glow when armed + on
   ic.style.opacity = !_avaAudioUnlocked ? '.6' : (_avaOn ? '1' : '.4');
   const _nodeTag = _xenNode ? ' [' + _xenNode + ']' : '';
-  ic.title = !_avaAudioUnlocked ? 'Tap to enable Ava voice'
-           : (_avaOn ? ('Ava voice ON' + (_avaStatus ? ' · ' + _avaStatus : '') + _nodeTag + ' — tap to mute')
-                     : 'Ava voice OFF' + _nodeTag + ' — tap to unmute');
+  ic.title = !_avaAudioUnlocked ? 'Tap to enable voice'
+           : (_avaOn ? ('Voice ON' + (_avaStatus ? ' · ' + _avaStatus : '') + _nodeTag + ' — tap to mute')
+                     : 'Voice OFF' + _nodeTag + ' — tap to unmute');
   ic.dataset.node = _xenNode || '';
 }
 (function avaToggleUI() {
@@ -2364,7 +2371,7 @@ function _renderAvaPill() {
     var _wasArmed = false; try { _wasArmed = localStorage.getItem('vei-was-armed') === '1'; } catch (_) {}
     overlay.innerHTML =
       '<div style="font-size:46px">🎙️</div>' +
-      '<div id="ava-arm-title">' + (_wasArmed ? 'Tap to resume Ava' : 'Tap anywhere to start') + '</div>' +
+      '<div id="ava-arm-title">' + (_wasArmed ? 'Tap to resume' : 'Tap anywhere to start') + '</div>' +
       '<div id="ava-arm-sub" style="font-size:13px;opacity:.65;max-width:300px">' + (_wasArmed ? 'voice was on — one tap to continue' : 'enables voice + mic — one tap, then live') + '</div>' +
       '<div id="ava-arm-barwrap" style="display:none;width:220px;height:8px;background:rgba(255,255,255,.12);border-radius:99px;overflow:hidden;margin-top:6px"><div id="ava-arm-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#00ff88,#7CFC9A);transition:width .25s"></div></div>';
     document.body.appendChild(overlay);

@@ -1,7 +1,7 @@
 // VVSVEI service worker (wf 2026-05-31) — cache-first shell so reopen is instant.
 // Scope: /vvsvei/ ONLY. Never caches /events SSE, /api/*, or cross-origin xen.xlrd.org.
 // qi: "having to reload vvsvei is a bottleneck. it should open and work instantly."
-const VVSVEI_CACHE = 'vvsvei-shell-v9';  // v8 2026-06-09 — multi-host TTS retry + stall-aware drain watchdog + park-on-unarmed + arm-resume hint + arm-safe SW auto-update/convergence. v7 — SSE __reload__ self-update hook.  // v5 2026-06-09 — bust cache, fix crossOrigin audio-err (was cache-first, which trapped qi on a broken cached shell during a P0). Fresh-always beats instant-but-stale.
+const VVSVEI_CACHE = 'vvsvei-shell-v10';  // v10 2026-06-11 — strip double-timestamp body prefix ("HH:MM:SS PM, in:" + mangled ":::") at render chokepoint; Ava->voice on all visible labels (pill tooltips + arm overlay). v8 2026-06-09 — multi-host TTS retry + stall-aware drain watchdog + park-on-unarmed + arm-resume hint + arm-safe SW auto-update/convergence. v7 — SSE __reload__ self-update hook.  // v5 2026-06-09 — bust cache, fix crossOrigin audio-err (was cache-first, which trapped qi on a broken cached shell during a P0). Fresh-always beats instant-but-stale.
 const SHELL = ['./', './index.html'];
 
 self.addEventListener('install', (e) => {
