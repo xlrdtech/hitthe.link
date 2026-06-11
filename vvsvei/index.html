@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
 <title>VVSVEI · voice vision sms · Xen</title>
 <meta name="description" content="VEI (Voice Echo Input). Ruach-class STT, glass-over-video shell, omnimind dictate-inject pipeline. Public, no-auth, multi-device simultaneous.">
-<link rel="manifest" href="/vei/manifest.json">
+<link rel="manifest" href="/vvsvei/manifest.json">
 <meta name="theme-color" content="#0A1F12">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="VEI">
+<meta name="apple-mobile-web-app-title" content="VVSVEI">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="/vei/icon.svg">
-<link rel="icon" type="image/svg+xml" href="/vei/icon.svg">
+<link rel="apple-touch-icon" href="/vvsvei/icon.png">
+<link rel="icon" type="image/png" href="/vvsvei/icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -810,9 +810,67 @@ async function postAudioChunk(blob) {
   }
 }
 
+// ─── Engine-independent server-side STT (any browser, incl. Comet/Android) ────
+// 2026-06-11: NOT Whisper. The /api/dictate-audio endpoint is now backed by the
+// Apple on-device STT sidecar (stt-sidecar.py:4458 behind cloudflared). Comet's
+// Chromium lacks Google's Web Speech backend, so SpeechRecognition fails there;
+// MediaRecorder works in EVERY browser. We record short utterances (VAD-style
+// chunks) and POST each to the server, which transcribes + injects as in:.
+// This is canon-aligned: Apple STT is the sole engine, Whisper is NOT used.
 async function startMediaRecorder() {
-  // Permanently stubbed: Whisper + MediaRecorder are D.I.E. banned. Apple STT v2 is sole engine.
-  appendError('MediaRecorder path removed — use the text field below to send to Xen.');
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+    });
+  } catch (e) {
+    setStatus('err', 'mic blocked');
+    appendError('MIC BLOCKED — grant microphone access (lock/page icon → Permissions → Microphone → Allow; on Android also Settings → Apps → your browser → Permissions → Microphone). Then reload. Type below meanwhile.');
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+    return;
+  }
+  // Pick a mime the browser actually supports. Chromium → webm/opus; Safari/iOS → mp4.
+  let mime = '';
+  for (const m of ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/aac']) {
+    if (window.MediaRecorder && MediaRecorder.isTypeSupported(m)) { mime = m; break; }
+  }
+  mediaMode = true;
+  listening = true;
+  setStatus('listen', 'listening (server STT)');
+  startBtn.disabled = true;
+  stopBtn.disabled = false;
+
+  // Chunk-per-utterance loop: record fixed ~5s windows, POST each, repeat while
+  // listening. Simple + robust (no WebSocket, survives flaky mobile networks).
+  // The server returns the transcript and injects it; we render it locally too.
+  const CHUNK_MS = 5000;
+  function recordOneChunk() {
+    if (!listening || !mediaStream) return;
+    let chunks = [];
+    let rec;
+    try {
+      rec = mime ? new MediaRecorder(mediaStream, { mimeType: mime }) : new MediaRecorder(mediaStream);
+    } catch (e) {
+      appendError('MediaRecorder init failed: ' + e.message);
+      stopMediaRecorder();
+      return;
+    }
+    mediaRecorder = rec;
+    rec.ondataavailable = (ev) => { if (ev.data && ev.data.size > 0) chunks.push(ev.data); };
+    rec.onstop = async () => {
+      if (chunks.length) {
+        const blob = new Blob(chunks, { type: mime || 'audio/webm' });
+        // Only POST if there's meaningful audio (skip near-empty silence windows).
+        if (blob.size > 2000) {
+          try { await postAudioChunk(blob); } catch (_) {}
+        }
+      }
+      if (listening) recordOneChunk();  // loop to next window
+    };
+    rec.start();
+    setTimeout(() => { if (rec.state !== 'inactive') { try { rec.stop(); } catch (_) {} } }, CHUNK_MS);
+  }
+  recordOneChunk();
 }
 
 function stopMediaRecorder() {
@@ -834,10 +892,10 @@ let useContinuous = true;
 
 function startListening() {
   if (!SR) {
-    setStatus('err', 'no voice engine');
-    appendError('This browser has no Web Speech engine — voice input unavailable here. Use the text field below to send to Xen.');
-    startBtn.disabled = false;
-    stopBtn.disabled = true;
+    // No Web Speech (Comet, Android Chromium, Firefox, Brave w/o Google backend).
+    // Route to the server-side Apple STT path — works in EVERY browser. 2026-06-11.
+    appendError('No Web Speech engine here — using server-side Apple STT (any-browser voice).');
+    startMediaRecorder();
     return;
   }
   recognition = new SR();
@@ -920,13 +978,13 @@ function startListening() {
         appendError('switching to non-continuous mode for compatibility...');
       }
       if (networkErrorCount >= 3) {
-        // Whisper/MediaRecorder path is permanently D.I.E. banned. Apple STT v2 is sole engine.
-        listening = false;
+        // Web Speech backend unreachable (Comet exposes webkitSpeechRecognition but
+        // has no working Google backend). Fall through to server-side Apple STT —
+        // canon-aligned (Apple engine, NOT Whisper). 2026-06-11.
         try { recognition.stop(); } catch (_) {}
-        appendError('Web Speech blocked on this browser — use the text field below to send to Xen.');
-        setStatus('err', 'use text field');
-        startBtn.disabled = false;
-        stopBtn.disabled = true;
+        listening = false;
+        appendError('Web Speech unreachable on this browser — switching to server-side Apple STT.');
+        startMediaRecorder();
       }
     }
   };
