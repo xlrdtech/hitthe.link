@@ -641,7 +641,7 @@ async function sendFallback() {
   if (!text) return;
   fbSend.disabled = true;
   appendFinal(text, false);
-  const posted = await postTranscript(text);
+  const posted = await postTranscript(text, 'typed');  // keyboard → typed: tag
   if (posted) {
     const lastFinal = transcript.querySelector('.final:last-child');
     if (lastFinal && !lastFinal.innerHTML.includes('posted')) {
@@ -737,8 +737,13 @@ async function tryPostOnce(payload) {
   }
   return true;
 }
-async function postTranscript(text) {
-  const payload = { source: 'xen-vei', ts: Date.now(), text };
+async function postTranscript(text, kind) {
+  // qi 2026-06-11: typed input must tag `typed:`, spoken must tag `in:`. Both
+  // originate from this interface, so omnimind can't tell them apart unless the
+  // SOURCE carries it. 'xen-vei-typed' → omnimind isVvsVeiTyped → `typed:`;
+  // 'xen-vei' (voice default) → isVvsVeiVoice → `in:`.
+  const source = (kind === 'typed') ? 'xen-vei-typed' : 'xen-vei';
+  const payload = { source, ts: Date.now(), text };
   try {
     const ok = await tryPostOnce(payload);
     if (!ok) return false;  // 4xx — deterministic reject, do NOT count or queue
