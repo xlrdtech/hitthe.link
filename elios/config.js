@@ -19,7 +19,20 @@
 
 window.ELIOS_CONFIG = {
   // ---- Supabase (Auth + RLS-scoped data reads) --------------------
-  // Project: "elios-buyer-portal" (dedicated). Settings > API.
+  // Project: "elios-buyer-portal" (dedicated). NOT YET CREATED as of 2026-06-12
+  // (Supabase MCP is unauthenticated; no project ref discovered). Once the
+  // project exists, fill BOTH values from ONE dashboard page:
+  //
+  //   Supabase Dashboard > (select the elios-buyer-portal project)
+  //     > Project Settings (gear, bottom-left) > API
+  //       * "Project URL"           -> paste into SUPABASE_URL below
+  //                                    (it looks like  https://<project-ref>.supabase.co)
+  //       * "Project API keys" > "anon" / "public"  -> paste into SUPABASE_ANON_KEY
+  //         (the anon/publishable key; SAFE in the browser — RLS is the boundary.
+  //          NEVER paste the "service_role" key here — that is a Worker secret.)
+  //
+  //   <project-ref> is the same slug in the Project URL and in every
+  //   https://<project-ref>.supabase.co/auth/v1/callback redirect URI.
   SUPABASE_URL:      "__SUPABASE_URL__",        // e.g. https://abcdxyz.supabase.co
   SUPABASE_ANON_KEY: "__SUPABASE_ANON_KEY__",   // anon / publishable key (public, RLS-protected)
 
