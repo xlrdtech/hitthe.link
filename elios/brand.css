@@ -1,0 +1,123 @@
+/* ===================================================================
+   EliOS Buyer Portal — brand stylesheet
+   Obsidian / metallic-iridescent. Fraunces (display), JetBrains Mono
+   (mono accents), system sans body. Gold gradient + glass.
+   No em-dashes anywhere in copy.
+   =================================================================== */
+
+:root{
+  --bg:#07070a; --bg2:#15151f; --ink:#ececf2; --mut:#8b8b9a;
+  --steel1:#b8c0cc; --steel2:#6e7787;
+  --gold:#d9b46a; --gold1:#f4e2a8; --gold2:#b8923e;
+  --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.045);
+  --ok:#7fe3a3; --warn:#ffd479; --live:#5ad1a0; --err:#ff8a8a;
+  --glass:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  --radius:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:radial-gradient(1200px 620px at 72% -12%,var(--bg2) 0%,var(--bg) 60%) fixed;
+  color:var(--ink);
+  font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;
+  -webkit-font-smoothing:antialiased;min-height:100vh;
+}
+.wrap{max-width:1040px;margin:0 auto;padding:38px 20px 90px}
+
+/* ---- type ---- */
+.kick{letter-spacing:.34em;font-size:11px;color:var(--mut);text-transform:uppercase}
+.display{
+  font-family:"Fraunces",Georgia,serif;
+  font-size:clamp(30px,5.4vw,52px);line-height:1.04;font-weight:600;letter-spacing:-.01em;
+  background:linear-gradient(92deg,var(--steel1),#fff 28%,var(--gold1) 54%,var(--gold2) 80%,var(--steel2));
+  -webkit-background-clip:text;background-clip:text;color:transparent;margin:10px 0 8px;
+}
+.sub{color:var(--mut);font-size:13.5px;max-width:62ch}
+.mono{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+
+/* ---- topbar ---- */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:30px}
+.brand{display:flex;align-items:center;gap:11px}
+.brand .mark{
+  width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-weight:800;font-size:15px;
+  background:linear-gradient(135deg,var(--gold1),var(--gold2));color:#1a1206;
+  box-shadow:0 0 22px -6px var(--gold),0 1px 0 rgba(255,255,255,.4) inset;
+}
+.brand .name{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:18px;letter-spacing:.01em}
+.brand .name small{display:block;font-family:inherit;font-size:10.5px;letter-spacing:.28em;color:var(--mut);text-transform:uppercase;font-weight:400}
+.navbtns{display:flex;align-items:center;gap:8px}
+
+/* ---- pill / status ---- */
+.pill{display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.04em}
+.pill.live{border:1px solid rgba(90,209,160,.35);background:rgba(90,209,160,.07);color:var(--live)}
+.pill.warn{border:1px solid rgba(255,212,121,.35);background:rgba(255,212,121,.07);color:var(--warn)}
+.pill.gold{border:1px solid rgba(216,180,106,.4);background:rgba(216,180,106,.08);color:var(--gold1)}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 10px currentColor;animation:p 1.8s infinite}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ---- glass card ---- */
+.card{
+  background:var(--glass);border:1px solid var(--line);border-radius:var(--radius);padding:22px;
+  box-shadow:0 1px 0 rgba(255,255,255,.05) inset,0 22px 55px -32px #000;
+  backdrop-filter:blur(8px);
+}
+.card h2{font-size:16px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:9px}
+.card .tag{font-size:11px;color:var(--mut);font-weight:500}
+
+/* ---- buttons ---- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;cursor:pointer;
+  font:600 14px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;
+  padding:12px 18px;border-radius:11px;border:1px solid var(--line);
+  background:rgba(255,255,255,.04);color:var(--ink);transition:.18s ease;text-decoration:none;
+}
+.btn:hover{background:rgba(255,255,255,.08);transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn.gold{
+  border:1px solid transparent;color:#1a1206;font-weight:700;
+  background:linear-gradient(135deg,var(--gold1),var(--gold) 55%,var(--gold2));
+  box-shadow:0 0 26px -8px var(--gold),0 1px 0 rgba(255,255,255,.4) inset;
+}
+.btn.gold:hover{box-shadow:0 0 34px -6px var(--gold),0 1px 0 rgba(255,255,255,.5) inset}
+.btn.ghost{background:transparent}
+.btn.sm{padding:8px 13px;font-size:13px;border-radius:9px}
+.btn.full{width:100%}
+.btn .g-ico{width:17px;height:17px;display:block}
+
+/* ---- inputs ---- */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;color:var(--mut);margin-bottom:6px;letter-spacing:.02em}
+.field input{
+  width:100%;padding:12px 14px;border-radius:11px;border:1px solid var(--line);
+  background:rgba(0,0,0,.25);color:var(--ink);font-size:14.5px;transition:.18s ease;
+}
+.field input:focus{outline:none;border-color:rgba(216,180,106,.5);box-shadow:0 0 0 3px rgba(216,180,106,.12)}
+.divider{display:flex;align-items:center;gap:12px;color:var(--mut);font-size:12px;margin:18px 0}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* ---- alerts / notes ---- */
+.note{
+  margin-top:14px;padding:12px 14px;border-radius:11px;font-size:13px;line-height:1.5;
+  border:1px solid rgba(216,180,106,.28);background:linear-gradient(180deg,rgba(216,180,106,.06),rgba(216,180,106,.01));color:var(--ink);
+}
+.note.ok{border-color:rgba(90,209,160,.3);background:rgba(90,209,160,.06);color:var(--ink)}
+.note.err{border-color:rgba(255,138,138,.32);background:rgba(255,138,138,.07);color:#ffd9d9}
+.note code,code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:.9em;color:var(--gold1);background:rgba(216,180,106,.1);padding:1px 6px;border-radius:5px}
+
+/* ---- layout helpers ---- */
+.grid{display:grid;gap:16px}
+.grid.cols2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.grid.cols3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.center-pane{min-height:78vh;display:grid;place-items:center}
+.auth-card{width:100%;max-width:420px}
+.hidden{display:none!important}
+.spread{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.muted{color:var(--mut)}
+.gold-txt{color:var(--gold1)}
+
+footer{margin-top:40px;color:var(--mut);font-size:12px;text-align:center;letter-spacing:.03em}
+footer a{color:var(--steel1);text-decoration:none}
+
+/* ---- loader ---- */
+.loader{width:30px;height:30px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--gold1);animation:spin .8s linear infinite;margin:30px auto}
+@keyframes spin{to{transform:rotate(360deg)}}

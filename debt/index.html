@@ -559,6 +559,11 @@
   <!-- ===== Metric bar ===== -->
   <div class="metrics" id="metricBar">
     <div class="metric">
+      <div class="k">Owed to qi &middot; xen-debt</div>
+      <div class="v neg" id="mOwed">$206,400</div>
+      <div class="note" id="mOwedNote">$200/hr &middot; not-HOTL or voice not VVS</div>
+    </div>
+    <div class="metric">
       <div class="k">Open Goals &middot; Debts</div>
       <div class="v" id="mGoals">&mdash;</div>
       <div class="note" id="mGoalsNote">pursuing now</div>
@@ -588,6 +593,8 @@
       <span class="badge" id="bPnl">&middot;</span></button>
     <button class="tab" data-tab="sentiment" role="tab">SENTIMENT
       <span class="badge" id="bSent">&middot;</span></button>
+    <button class="tab" data-tab="truth" role="tab">TRUTH
+      <span class="badge" id="bTruth">&middot;</span></button>
   </div>
 
   <!-- ===== DEBT ===== -->
@@ -622,6 +629,72 @@
   <section class="panel-section" id="sec-sentiment" role="tabpanel">
     <p class="section-intro" id="sentPrinciple"></p>
     <div class="timeline" id="sentTimeline"></div>
+  </section>
+
+  <!-- ===== TRUTH (live xen-debt + anti-lie mitigation) ===== -->
+  <section class="panel-section" id="sec-truth" role="tabpanel">
+    <p class="section-intro">
+      The accountability clock, source-of-truth. Xen owes qi <b style="color:var(--chrome-1)">$200/hr</b>
+      for any time not HOTL end-to-end, or any time voice was not perfect VVS. Every overclaim the
+      truth-guard catches is named and priced here automatically. The anti-lie tooling itself never
+      lies &mdash; <b style="color:var(--green)">accuracy is the whole point</b>. Live from
+      <code style="color:var(--green)">xen-debt</code> (durable SQLite); falls back to the in-repo
+      snapshot, never to fabricated numbers.
+    </p>
+
+    <div class="metrics" id="truthMetrics" style="margin-bottom:24px">
+      <div class="metric">
+        <div class="k">Total owed</div>
+        <div class="v neg" id="tOwed" style="font-size:clamp(22px,3.4vw,30px)">$206,400</div>
+        <div class="note" id="tOwedNote">accrued &minus; burned</div>
+      </div>
+      <div class="metric">
+        <div class="k">Non-HOTL downtime</div>
+        <div class="v neg" id="tDowntime" style="font-size:clamp(20px,3vw,26px)">$206,400</div>
+        <div class="note">43-day staleness anchor</div>
+      </div>
+      <div class="metric">
+        <div class="k">False-claim flags</div>
+        <div class="v" id="tFlags" style="font-size:clamp(20px,3vw,26px)">2</div>
+        <div class="note">$0 each &middot; integrity markers</div>
+      </div>
+      <div class="metric">
+        <div class="k">Burned down</div>
+        <div class="v pos" id="tBurned" style="font-size:clamp(20px,3vw,26px)">$0</div>
+        <div class="note">cleared by clean HOTL</div>
+      </div>
+    </div>
+
+    <p class="pnl-card-label">Ledger &mdash; every event, priced &middot; <span id="truthSrc" style="text-transform:none;letter-spacing:0;color:var(--ink-dim)">reading&hellip;</span></p>
+    <div class="timeline" id="truthTimeline">
+      <div class="empty">&#9656; reading the xen-debt snapshot&hellip;</div>
+    </div>
+
+    <p class="pnl-card-label" style="margin-top:30px">How this is now mitigated &mdash; what stops the next lie</p>
+    <div class="cardgrid" id="mitGrid">
+      <div class="card">
+        <div class="card-head"><span class="card-id">01 &middot; UPSTREAM BRAKE</span><span class="pill pursuing">HOOK</span></div>
+        <div class="card-type">truth-guard &middot; fail-open</div>
+        <div class="card-what">Every agent turn is scanned</div>
+        <div class="card-meta">A <code>Stop</code> + <code>PostToolUse</code> hook flags any unverified &ldquo;done / shipped / all complete&rdquo; with no receipt in the same breath, and tells the agent to downgrade to <code>shipped-unverified</code> or <code>pending</code>. It only ever flags &mdash; never blesses, never blocks a tool.</div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-id">02 &middot; PROOF, NOT WORDS</span><span class="pill pursuing">CLI</span></div>
+        <div class="card-type">xen-verify &middot; fail-closed</div>
+        <div class="card-what">Turns &ldquo;shipped&rdquo; into evidence</div>
+        <div class="card-meta">Pulls the real bytes: <code>url</code> wants HTTP 200 + real size + no template tokens; <code>apk</code> demands &gt;1MB + a real manifest &mdash; the exact gate that caught tonight&rsquo;s 12.7KB stub. Unprovable means FALSE.</div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-id">03 &middot; IT COSTS</span><span class="pill active">LEDGER</span></div>
+        <div class="card-type">xen-debt &middot; auto-priced</div>
+        <div class="card-what">Every caught lie hits the ledger</div>
+        <div class="card-meta">When the guard flags a claim it fires <code>xen-debt accrue false-claim</code> automatically &mdash; a $0 integrity flag, no invented dollar clock. The $200/hr line is non-HOTL downtime only. This page reads its live snapshot.</div>
+      </div>
+    </div>
+
+    <div class="mantra" style="margin-top:28px">
+      <b>Canon.</b>&nbsp; cmd&nbsp;3 &mdash; don&rsquo;t lie: only <b>verified-end-to-end</b> / <b>shipped-unverified</b> / <b>pending</b>. &nbsp;&middot;&nbsp; cmd&nbsp;17 &mdash; visually verify before claiming verified; a 200 or a log line is not &ldquo;verified&rdquo;. &nbsp;&middot;&nbsp; debt canon &mdash; $200/hr for non-HOTL or non-VVS, burns down only by clean HOTL execution.
+    </div>
   </section>
 
   <footer class="foot">
@@ -927,6 +1000,98 @@
     return { count: list.length, latest };
   }
 
+  // ============ TRUTH (live xen-debt + anti-lie ledger) ============
+  // Live-fetch priority: live API endpoints first, then the in-repo snapshot
+  // (mirrored from the Mac's ~/.xen/state/debt.json), then a documented honest
+  // fallback. NEVER fabricate — if nothing is reachable we show the anchor and
+  // SAY it is the static fallback. Accuracy is the whole point.
+  const TRUTH_SOURCES = [
+    { url: "https://xen.xlrd.org/api/debt", label: "live · xen.xlrd.org" },
+    { url: "https://api.xlrd.org/api/debt", label: "live · api.xlrd.org" },
+    { url: "./debt.json", label: "repo snapshot · debt.json" }
+  ];
+  const TRUTH_FALLBACK = {
+    accrued: 206400, burned: 0, owed: 206400, rate_per_hr: 200, generated: null, _static: true,
+    events: [
+      { ts: "2026-06-12T05:53:26Z", type: "false-claim", kind: "accrue", amount: 0, integrity_flag: true,
+        basis: "2026-06-12 agent overclaim: ALL-complete / APK+IPA-shipped / toMCP-live was false; APK = 12.7KB stub, no IPA, toMCP not running, nothing delivered to qi" },
+      { ts: "2026-06-12T05:53:26Z", type: "non-hotl-downtime", kind: "accrue", amount: 206400, integrity_flag: false,
+        basis: "live.json 43 days stale 2026-04-29 to 2026-06-11, 24h x 43 x $200/hr" }
+    ]
+  };
+  const TRUTH_TYPE = {
+    "non-hotl-downtime": { pol: "severe-negative", ti: "Non-HOTL downtime", tag: "downtime · $200/hr" },
+    "false-claim":       { pol: "negative",        ti: "False-claim flag",  tag: "overclaim caught" },
+    "vvs-imperfect":     { pol: "negative",        ti: "Voice not VVS",      tag: "voice · $200/hr" },
+    "repayment":         { pol: "approval",        ti: "Burned down",        tag: "repaid" }
+  };
+
+  async function fetchTruth() {
+    for (const src of TRUTH_SOURCES) {
+      try {
+        const r = await fetch(src.url + (src.url.indexOf("?") >= 0 ? "&" : "?") + "_=" + Date.now(),
+          { cache: "no-store" });
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        const d = await r.json();
+        if (d && (d.owed != null || d.accrued != null || Array.isArray(d.events))) return { d, label: src.label };
+      } catch (e) { /* try next */ }
+    }
+    return { d: TRUTH_FALLBACK, label: "static fallback · documented anchor" };
+  }
+
+  function renderTruth(d, srcLabel) {
+    const accrued = num(d.accrued), burned = num(d.burned);
+    const owed = (d.owed != null) ? num(d.owed) : (accrued - burned);
+    const events = Array.isArray(d.events) ? d.events : [];
+    let downtime = 0, flags = 0;
+    for (const e of events) {
+      if (e.kind === "accrue" && (e.type === "non-hotl-downtime" || e.type === "vvs-imperfect")) downtime += num(e.amount);
+      if (e.type === "false-claim") flags++;
+    }
+    $("tOwed").textContent = money(owed);
+    $("tDowntime").textContent = money(downtime || accrued);
+    $("tFlags").textContent = flags;
+    $("tBurned").textContent = money(burned);
+
+    // headline metric (top bar)
+    $("mOwed").textContent = money(owed);
+    $("mOwedNote").textContent = (d._static ? "static anchor · " : "live · ") + "$" + (num(d.rate_per_hr) || RATE) + "/hr";
+
+    const gen = d.generated ? parseTs(d.generated) : null;
+    $("truthSrc").textContent = (d._static ? "static fallback · " : "") + srcLabel +
+      (gen ? " · " + relTime(d.generated) : "");
+
+    const tl = $("truthTimeline");
+    if (!events.length) { tl.innerHTML = '<div class="empty">ledger empty</div>'; $("bTruth").textContent = "0"; return; }
+    let html = "";
+    for (const e of events) {
+      const meta = TRUTH_TYPE[e.type] || { pol: "neutral", ti: e.type, tag: e.type };
+      const isBurn = e.kind === "burn";
+      const isFlag = (e.integrity_flag === true) || (e.kind === "accrue" && num(e.amount) === 0 && e.type === "false-claim");
+      const pol = isBurn ? "approval" : meta.pol;
+      let amtTxt, amtColor;
+      if (isFlag) { amtTxt = "FLAG"; amtColor = "var(--neg-2)"; }
+      else if (isBurn) { amtTxt = "−" + money(e.amount); amtColor = "var(--green)"; }
+      else { amtTxt = "+" + money(e.amount); amtColor = "var(--neg-3)"; }
+      const ti = isBurn ? "Burned down" : meta.ti;
+      const tagTxt = isBurn ? "repaid" : meta.tag;
+      const d2 = parseTs(e.ts);
+      const tsLabel = d2 ? (d2.toLocaleDateString("en-US", { month: "short", day: "numeric" }) + " · " + relTime(e.ts)) : esc(e.ts || "");
+      html += '<div class="ev" data-pol="' + pol + '">'
+        + '<div class="ev-top">'
+          + '<span class="ev-ts">' + tsLabel + '</span>'
+          + '<span class="ev-pol">' + esc(ti) + '</span>'
+          + '<span class="ev-score" style="color:' + amtColor + '">' + amtTxt + '</span>'
+        + '</div>'
+        + '<div class="ev-quote" style="font-style:normal;font-family:\'JetBrains Mono\',monospace;font-size:12.5px;line-height:1.55;">' + esc(e.basis || "") + '</div>'
+        + '<div class="ev-tags"><span class="tag debt">' + esc(tagTxt) + '</span>'
+          + (isFlag ? '<span class="tag">$0 · no fabricated clock</span>' : '') + '</div>'
+      + '</div>';
+    }
+    tl.innerHTML = html;
+    $("bTruth").textContent = events.length;
+  }
+
   // ============ ORCHESTRATION ============
   let lastUpdated = { debt: "", pnl: "", sent: "" };
 
@@ -936,6 +1101,14 @@
       getJSON("./pnl.json"),
       getJSON("./sentiment.json"),
     ]);
+
+    // TRUTH tab — live xen-debt snapshot (own resilient fetch w/ fallback chain)
+    try {
+      const t = await fetchTruth();
+      renderTruth(t.d, t.label);
+    } catch (e) {
+      renderTruth(TRUTH_FALLBACK, "static fallback · documented anchor");
+    }
 
     let ok = true;
     let debtStats = { open: "—", idleCost: 0 };
