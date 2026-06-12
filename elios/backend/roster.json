@@ -1,0 +1,18 @@
+{
+  "$comment": "EliOS roster - qi fills the 8 email placeholders, then runs seed-roster.sql. Roles per the EliOS ROLE MODEL (qi 2026-06-12): MASTERS see ALL leads, assign leads, manage roster; SUBSCRIBERS see ONLY leads assigned to them (RLS-scoped). Emails MUST match the address each user logs in with (Supabase Auth invite address OR Google OAuth email - they must be identical).",
+  "model": {
+    "master": "Admin tier. Sees ALL leads + ALL grants. Can assign/unassign leads to any subscriber. Can manage the roster (set roles).",
+    "subscriber": "Sees ONLY the leads assigned to them (RLS-scoped via lead_grants/my_leads). No roster or cross-buyer visibility."
+  },
+  "users": [
+    { "full_name": "Anthony Vasquez", "role": "master",     "email": "<anthony_email>" },
+    { "full_name": "Gerald",          "role": "master",     "email": "<gerald_email>" },
+    { "full_name": "Nancy",           "role": "subscriber", "email": "<nancy_email>" },
+    { "full_name": "Michael Sell",    "role": "subscriber", "email": "<michael_sell_email>" },
+    { "full_name": "Sergio",          "role": "subscriber", "email": "<sergio_email>" },
+    { "full_name": "Richard",         "role": "subscriber", "email": "<richard_email>" },
+    { "full_name": "Rossalyn",        "role": "subscriber", "email": "<rossalyn_email>" },
+    { "full_name": "Michael Krebbs",  "role": "subscriber", "email": "<michael_krebbs_email>" }
+  ],
+  "counts": { "total": 8, "masters": 2, "subscribers": 6 }
+}

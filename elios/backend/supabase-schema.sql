@@ -291,3 +291,314 @@ grant execute on function public.my_entitlement() to authenticated;
 --   plan_b : Stripe price STRIPE_PRICE_PLAN_B  -> $40/mo  -> monthly_quota 15
 -- The Worker maps stripe_price_id -> (plan, monthly_quota) at webhook time.
 -- =====================================================================
+
+
+-- #####################################################################
+-- #  MIGRATION 2026-06-12 — ROLE MODEL (MASTERS vs SUBSCRIBERS)
+-- #####################################################################
+-- Purpose (qi 2026-06-12): two tiers on top of the existing buyer portal.
+--
+--   MASTERS (role='master')  — admin/operators. May:
+--       * SELECT ALL leads (via admin view all_leads + a leads SELECT policy)
+--       * SELECT ALL buyers (the roster) and ALL lead_grants
+--       * INSERT / DELETE lead_grants for ANY buyer (assign / revoke leads)
+--       * call the assign_leads() RPC to hand leads to a subscriber
+--     Roster: Anthony (Vasquez), Gerald.
+--
+--   SUBSCRIBERS (role='subscriber', the DEFAULT) — unchanged behavior. May:
+--       * read ONLY their own buyers row, own subscription, own lead_grants
+--       * see lead PII ONLY through my_leads (RLS-scoped to auth.uid())
+--     Roster: Nancy, Michael Sell, Sergio, Richard, Rossalyn, Michael Krebbs.
+--
+-- This block is ADDITIVE and IDEMPOTENT (safe to re-run). It does NOT alter
+-- the quota logic, the allocator, my_leads, my_entitlement, or any existing
+-- subscriber policy. It only ADDS a role column, helper, master policies,
+-- the assign_leads RPC, and the all_leads admin view.
+--
+-- Run order: paste AFTER the original schema above (or run standalone against
+-- a DB that already has the original schema). No live secrets here.
+-- #####################################################################
+
+-- ---------------------------------------------------------------------
+-- 11. buyers.role  — the tier flag
+-- ---------------------------------------------------------------------
+alter table public.buyers
+  add column if not exists role text not null default 'subscriber';
+
+-- Add the CHECK constraint idempotently (ADD CONSTRAINT has no IF NOT EXISTS).
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'buyers_role_check'
+      and conrelid = 'public.buyers'::regclass
+  ) then
+    alter table public.buyers
+      add constraint buyers_role_check check (role in ('master','subscriber'));
+  end if;
+end $$;
+
+create index if not exists buyers_role_idx on public.buyers(role);
+
+comment on column public.buyers.role is
+  'Authorization tier: master (admin: see ALL leads/buyers, assign grants, manage roster) or subscriber (RLS-scoped to own data). Default subscriber.';
+
+-- ---------------------------------------------------------------------
+-- 12. is_master()  — recursion-safe role check for use inside RLS
+-- ---------------------------------------------------------------------
+-- A master's RLS policy on buyers needs to read the caller's own role from
+-- buyers. Doing that with a plain subquery inside a buyers policy would be
+-- self-referential and recurse. So we read the role in a SECURITY DEFINER
+-- helper that runs as the function owner and therefore bypasses RLS on
+-- buyers for this single, narrow lookup. Returns true iff the current
+-- authenticated user is a master.
+create or replace function public.is_master()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.buyers b
+    where b.id = (select auth.uid())
+      and b.role = 'master'
+  );
+$$;
+
+revoke all on function public.is_master() from public, anon;
+grant execute on function public.is_master() to authenticated;
+
+comment on function public.is_master() is
+  'True iff auth.uid() is a master. SECURITY DEFINER so it can read buyers.role without tripping buyers RLS recursion. Used as a guard in master policies and the assign_leads RPC.';
+
+-- =====================================================================
+-- 13. MASTER row-level security policies (additive; subscriber policies stand)
+-- =====================================================================
+-- Each master policy is OR-ed with the existing *_select_own subscriber
+-- policies by Postgres (permissive policies are unioned). A subscriber gets
+-- their own rows; a master additionally gets everyone's rows. Service-role
+-- (the Worker) still bypasses RLS entirely.
+
+-- ---- buyers: masters read the whole roster --------------------------
+drop policy if exists buyers_select_master on public.buyers;
+create policy buyers_select_master on public.buyers
+  for select to authenticated
+  using (public.is_master());
+
+-- ---- leads: masters read the entire lead inventory ------------------
+-- (Subscribers still have NO direct SELECT on leads — they use my_leads.)
+drop policy if exists leads_select_master on public.leads;
+create policy leads_select_master on public.leads
+  for select to authenticated
+  using (public.is_master());
+
+-- ---- lead_grants: masters read ALL grants (full assignment board) ---
+drop policy if exists lead_grants_select_master on public.lead_grants;
+create policy lead_grants_select_master on public.lead_grants
+  for select to authenticated
+  using (public.is_master());
+
+-- ---- lead_grants: masters may INSERT a grant for ANY buyer (assign) -
+drop policy if exists lead_grants_insert_master on public.lead_grants;
+create policy lead_grants_insert_master on public.lead_grants
+  for insert to authenticated
+  with check (public.is_master());
+
+-- ---- lead_grants: masters may DELETE any grant (revoke / reassign) --
+drop policy if exists lead_grants_delete_master on public.lead_grants;
+create policy lead_grants_delete_master on public.lead_grants
+  for delete to authenticated
+  using (public.is_master());
+
+-- ---------------------------------------------------------------------
+-- 14. assign_leads(p_subscriber, p_lead_ids[])  — master-only RPC
+-- ---------------------------------------------------------------------
+-- Atomically hands a set of leads to one subscriber. SECURITY DEFINER so it
+-- can flip leads.status and write lead_grants regardless of the caller's own
+-- table privileges, BUT it self-guards: the FIRST thing it does is verify the
+-- caller is a master (is_master()), raising otherwise. Not granted to anon.
+--
+-- Semantics:
+--   * recipient must exist and be a 'subscriber' (masters are not lead buyers).
+--   * each lead must currently be status='available'; rows that are already
+--     granted/retired or already in lead_grants are SKIPPED (not errored), so
+--     the call is partial-safe and idempotent. FOR UPDATE SKIP LOCKED keeps it
+--     concurrency-safe alongside the monthly allocator.
+--   * grant_period defaults to the current 'YYYY-MM' (counts toward quota).
+--   * returns the lead_ids actually assigned this call.
+create or replace function public.assign_leads(
+  p_subscriber uuid,
+  p_lead_ids   uuid[],
+  p_period     text default to_char(now(),'YYYY-MM')
+)
+returns table (assigned_lead_id uuid)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_role      text;
+  v_lead      uuid;
+  v_locked    uuid;
+begin
+  -- 1) Authorization: master only.
+  if not public.is_master() then
+    raise exception 'assign_leads: forbidden (caller is not a master)'
+      using errcode = '42501';  -- insufficient_privilege
+  end if;
+
+  -- 2) Recipient must be an existing subscriber (never assign to a master).
+  select role into v_role from public.buyers where id = p_subscriber;
+  if v_role is null then
+    raise exception 'assign_leads: subscriber % not found', p_subscriber
+      using errcode = 'P0002';
+  end if;
+  if v_role <> 'subscriber' then
+    raise exception 'assign_leads: recipient % is not a subscriber (role=%)', p_subscriber, v_role
+      using errcode = '22023';
+  end if;
+
+  -- 3) Walk the requested leads; claim only the ones still available.
+  foreach v_lead in array coalesce(p_lead_ids, '{}'::uuid[])
+  loop
+    select l.id into v_locked
+      from public.leads l
+      where l.id = v_lead
+        and l.status = 'available'
+      for update skip locked
+      limit 1;
+
+    continue when v_locked is null;  -- not available / locked / unknown -> skip
+
+    update public.leads set status = 'granted' where id = v_locked;
+
+    begin
+      insert into public.lead_grants (buyer_id, lead_id, subscription_id, grant_period)
+      values (
+        p_subscriber,
+        v_locked,
+        -- best-effort link to the recipient's active subscription, if any
+        (select s.id from public.subscriptions s
+           where s.buyer_id = p_subscriber
+             and s.status in ('active','trialing')
+           order by s.updated_at desc
+           limit 1),
+        p_period
+      );
+      assigned_lead_id := v_locked;
+      return next;
+    exception when unique_violation then
+      -- Already granted (race or pre-existing); release the status flip we did.
+      update public.leads set status = 'available'
+        where id = v_locked and status = 'granted';
+    end;
+
+    v_locked := null;
+  end loop;
+end;
+$$;
+
+-- Master-only at the SQL layer too: callable by authenticated (the body
+-- re-checks is_master()), never by anon/public.
+revoke all on function public.assign_leads(uuid, uuid[], text) from public, anon;
+grant execute on function public.assign_leads(uuid, uuid[], text) to authenticated;
+
+comment on function public.assign_leads(uuid, uuid[], text) is
+  'Master-only RPC. Assigns available leads to a subscriber: guards is_master(), verifies recipient is a subscriber, flips leads.status->granted and writes lead_grants (skipping unavailable/duplicate leads). Concurrency-safe (FOR UPDATE SKIP LOCKED). Returns lead_ids actually assigned.';
+
+-- =====================================================================
+-- 15. all_leads — masters-only admin view of the FULL lead inventory
+-- =====================================================================
+-- security_invoker=true so the leads_select_master RLS policy (is_master())
+-- is what actually gates rows: a master sees every lead; a subscriber sees
+-- ZERO rows (no leads SELECT policy applies to them). Includes the current
+-- assignment (which subscriber holds the lead) for the assignment board.
+create or replace view public.all_leads
+with (security_invoker = true) as
+select
+  l.id,
+  l.asana_gid,
+  l.source_ref,
+  l.name,
+  l.phone,
+  l.email,
+  l.address,
+  l.project_type,
+  l.event,
+  l.rep,
+  l.pipeline_stage,
+  l.quality_score,
+  l.notes,
+  l.status,
+  l.source,
+  l.created_at,
+  l.updated_at,
+  g.buyer_id      as assigned_buyer_id,
+  b.full_name     as assigned_buyer_name,
+  b.email         as assigned_buyer_email,
+  g.grant_period  as assigned_period,
+  g.granted_at    as assigned_at
+from public.leads l
+left join public.lead_grants g on g.lead_id = l.id
+left join public.buyers     b on b.id = g.buyer_id;
+
+comment on view public.all_leads is
+  'Masters-only admin view of EVERY lead plus its current assignee. security_invoker=true => leads_select_master RLS (is_master()) gates rows; subscribers see nothing. Service-role bypasses RLS as usual.';
+
+grant select on public.all_leads to authenticated;
+
+-- ---------------------------------------------------------------------
+-- 16. handle_new_user — honor a role from signup metadata (additive)
+-- ---------------------------------------------------------------------
+-- Replaces the function body so a buyer provisioned with
+-- raw_user_meta_data.role = 'master' is created as a master; everyone else
+-- defaults to 'subscriber'. Idempotent (CREATE OR REPLACE). Existing rows are
+-- unaffected; set masters explicitly via the seed in note 17.
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.buyers (id, email, full_name, role)
+  values (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name'),
+    case when (new.raw_user_meta_data->>'role') = 'master' then 'master' else 'subscriber' end
+  )
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+-- =====================================================================
+-- 17. ROSTER SEED (run ONCE after the 8 users exist in auth.users)
+-- =====================================================================
+-- Roles are keyed off the buyer's email so this is safe to re-run. Replace
+-- the example addresses with the real mailbox each person signs in with
+-- (Supabase Auth identity). Anyone not listed here stays 'subscriber'.
+--
+--   -- MASTERS
+--   update public.buyers set role = 'master'
+--     where lower(email) in (
+--       'anthony.vasquez@example.com',   -- Anthony Vasquez
+--       'gerald@example.com'             -- Gerald
+--     );
+--
+--   -- SUBSCRIBERS (explicit; also the default for new rows)
+--   update public.buyers set role = 'subscriber'
+--     where lower(email) in (
+--       'nancy@example.com',             -- Nancy
+--       'michael.sell@example.com',      -- Michael Sell
+--       'sergio@example.com',            -- Sergio
+--       'richard@example.com',           -- Richard
+--       'rossalyn@example.com',          -- Rossalyn
+--       'michael.krebbs@example.com'     -- Michael Krebbs
+--     );
+--
+-- Verify:
+--   select email, full_name, role from public.buyers order by role, email;
+-- =====================================================================

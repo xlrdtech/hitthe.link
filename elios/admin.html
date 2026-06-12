@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>EliOS &mdash; Master Console</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="description" content="EliOS master console. Full lead pool, subscriber roster, and lead assignment for Anthony and Gerald.">
+<meta name="theme-color" content="#07070a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/elios/brand.css">
+<style>
+  /* admin-specific (built only from brand.css tokens) */
+  .metric{padding:18px 20px}
+  .metric .big{font-family:"Fraunces",Georgia,serif;font-size:38px;font-weight:600;line-height:1;
+    background:linear-gradient(92deg,#fff,var(--gold1) 60%,var(--gold2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .metric .lbl{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--mut);margin-top:8px}
+
+  /* roster */
+  .roster-row{display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center;padding:14px 0;border-top:1px solid var(--line)}
+  .roster-row:first-child{border-top:none}
+  .roster-name{font-weight:650;color:#fff;font-size:15px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .roster-meta{font-size:12.5px;color:var(--mut);margin-top:3px}
+  .roster-quota{text-align:right;min-width:128px}
+  .roster-quota .nums{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:13px;color:var(--ink)}
+  .roster-quota .nums b{color:var(--gold1)}
+  .quota-track{height:8px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden;margin-top:7px;width:128px;margin-left:auto}
+  .quota-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--gold2),var(--gold1));box-shadow:0 0 14px -2px var(--gold)}
+  .quota-fill.full{background:linear-gradient(90deg,var(--ok),var(--live))}
+  .assign-quick{flex-shrink:0}
+
+  /* lead pool */
+  .lead-row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;padding:12px 0;border-top:1px solid var(--line)}
+  .lead-row:first-child{border-top:none}
+  .lead-row.is-granted .lead-pick{visibility:hidden}
+  .lead-pick{width:19px;height:19px;margin-top:2px;accent-color:var(--gold);cursor:pointer}
+  .lead-name{font-weight:650;color:#fff;font-size:14.5px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .lead-meta{font-size:12px;color:var(--mut);margin-top:4px;line-height:1.5;word-break:break-word}
+  .lead-meta b{color:var(--ink);font-weight:600}
+  .lstat{font-size:10px;font-weight:700;letter-spacing:.05em;padding:3px 8px;border-radius:6px;border:1px solid;white-space:nowrap;text-transform:uppercase}
+  .lstat.available{color:var(--live);border-color:rgba(90,209,160,.4);background:rgba(90,209,160,.08)}
+  .lstat.granted{color:var(--gold1);border-color:rgba(216,180,106,.4);background:rgba(216,180,106,.1)}
+  .lstat.retired{color:var(--mut);border-color:var(--line);background:rgba(255,255,255,.03)}
+  .lead-to{font-size:11px;color:var(--steel1);margin-top:3px}
+  .lead-score{align-self:center}
+  .empty{text-align:center;padding:42px 20px;color:var(--mut);font-size:13px}
+
+  /* filter chips */
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px}
+  .chip{font-size:11.5px;font-weight:600;letter-spacing:.03em;padding:6px 12px;border-radius:999px;border:1px solid var(--line);
+    background:rgba(255,255,255,.03);color:var(--mut);cursor:pointer;transition:.15s ease}
+  .chip:hover{background:rgba(255,255,255,.07);color:var(--ink)}
+  .chip.on{border-color:rgba(216,180,106,.45);background:rgba(216,180,106,.1);color:var(--gold1)}
+
+  /* assign bar */
+  .assign-bar{display:grid;grid-template-columns:1.5fr auto auto;gap:12px;align-items:end}
+  @media(max-width:680px){.assign-bar{grid-template-columns:1fr}.roster-row{grid-template-columns:1fr;gap:8px}.roster-quota{text-align:left}.quota-track,.assign-quick{margin-left:0}}
+  .field select{
+    width:100%;padding:12px 14px;border-radius:11px;border:1px solid var(--line);
+    background:rgba(0,0,0,.25);color:var(--ink);font-size:14.5px;transition:.18s ease;
+    -webkit-appearance:none;appearance:none;
+    background-image:linear-gradient(45deg,transparent 50%,var(--steel1) 50%),linear-gradient(135deg,var(--steel1) 50%,transparent 50%);
+    background-position:calc(100% - 18px) 19px,calc(100% - 13px) 19px;background-size:5px 5px,5px 5px;background-repeat:no-repeat;
+  }
+  .field select:focus{outline:none;border-color:rgba(216,180,106,.5);box-shadow:0 0 0 3px rgba(216,180,106,.12)}
+  .sel-count{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:13px;color:var(--gold1);white-space:nowrap;align-self:center}
+  .selectall{font-size:12px;color:var(--steel1);cursor:pointer;text-decoration:none;white-space:nowrap}
+  .demo-banner{margin-bottom:18px}
+  .master-pill .dot{background:var(--gold1)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <a class="brand" href="/elios/admin.html" style="text-decoration:none;color:inherit">
+      <span class="mark">E</span>
+      <span class="name">EliOS<small>Master Console</small></span>
+    </a>
+    <div class="navbtns">
+      <a class="btn sm ghost" href="/elios/dashboard.html">My dashboard</a>
+      <button class="btn sm ghost" id="refreshBtn">Refresh</button>
+      <button class="btn sm ghost" id="signOutBtn">Sign out</button>
+    </div>
+  </div>
+
+  <!-- loading -->
+  <div id="loadingPane" class="center-pane"><div class="loader"></div></div>
+
+  <!-- main -->
+  <div id="app" class="hidden">
+
+    <div id="demoBanner" class="note warn demo-banner hidden"></div>
+
+    <div class="spread">
+      <div>
+        <div class="kick" id="welcomeKick">Master console</div>
+        <h1 class="display" id="masterName">Lead command</h1>
+        <p class="sub">All leads, the full subscriber roster, and one-tap assignment. Subscribers see only the leads you grant them, scoped by Supabase Row-Level Security.</p>
+      </div>
+      <span class="pill gold master-pill"><span class="dot"></span><span>master</span></span>
+    </div>
+
+    <!-- pool metrics -->
+    <div class="grid cols3" style="margin-top:24px">
+      <div class="card metric">
+        <div class="big" id="mAvailable">0</div>
+        <div class="lbl">Available to assign</div>
+        <div class="sub" style="font-size:11.5px;margin-top:8px">Unclaimed leads in the pool</div>
+      </div>
+      <div class="card metric">
+        <div class="big" id="mGranted">0</div>
+        <div class="lbl">Granted</div>
+        <div class="sub" style="font-size:11.5px;margin-top:8px">Assigned to subscribers</div>
+      </div>
+      <div class="card metric">
+        <div class="big" id="mSubs">0</div>
+        <div class="lbl">Active subscribers</div>
+        <div class="sub" style="font-size:11.5px;margin-top:8px">On the roster you manage</div>
+      </div>
+    </div>
+
+    <!-- subscriber roster -->
+    <div class="card" style="margin-top:18px">
+      <div class="spread" style="margin-bottom:6px">
+        <h2>Subscriber roster <span class="tag" id="rosterPeriodTag"></span></h2>
+        <span class="mono muted" style="font-size:12px" id="rosterCountTag"></span>
+      </div>
+      <div id="rosterList"></div>
+    </div>
+
+    <!-- full lead pool + ASSIGN -->
+    <div class="card" style="margin-top:18px">
+      <div class="spread" style="margin-bottom:8px">
+        <h2>Lead pool</h2>
+        <span class="mono muted" style="font-size:12px" id="poolCountTag"></span>
+      </div>
+
+      <!-- assign bar: choose subscriber, then tick available leads below -->
+      <div class="assign-bar">
+        <div class="field" style="margin-bottom:0">
+          <label for="assignBuyer">Assign selected leads to</label>
+          <select id="assignBuyer"></select>
+        </div>
+        <span class="sel-count" id="selCount">0 selected</span>
+        <button id="assignBtn" class="btn gold">Assign</button>
+      </div>
+      <div id="assignMsg" class="note hidden"></div>
+
+      <div class="chips" id="poolChips" style="margin-top:16px">
+        <button class="chip on" data-f="available">Available</button>
+        <button class="chip" data-f="granted">Granted</button>
+        <button class="chip" data-f="all">All</button>
+        <a class="selectall" id="selectAll" href="#" style="margin-left:auto">Select all available</a>
+      </div>
+      <div id="poolList"></div>
+    </div>
+
+  </div>
+
+  <footer>EliOS &middot; master console &middot; assignment routed through the <code>assign_leads</code> RPC &middot; access gated by Supabase Row-Level Security</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/elios/config.js"></script>
+<script>
+(function(){
+  const cfg = window.ELIOS_CONFIG;
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  const configured = cfg.SUPABASE_URL.indexOf('__') === -1 && cfg.SUPABASE_ANON_KEY.indexOf('__') === -1;
+
+  // ---- DEMO dataset (renders when Supabase keys are still placeholders) ----
+  // Shapes mirror what the real queries return:
+  //   roster   -> built from buyers + subscriptions + lead_grants counts
+  //   leads    -> public.all_leads (masters-only view): includes status +
+  //               assigned_buyer_name for granted rows.
+  // The 8-person roster matches qi's 2026-06-12 model.
+  const DEMO = {
+    master: { full_name: 'Anthony Vasquez', email: 'anthony.vasquez@example.com' },
+    roster: [
+      { buyer_id:'d-nancy',   full_name:'Nancy',          plan:'plan_a', sub_status:'active',   monthly_quota:30, granted_this_period:18, granted_total:64 },
+      { buyer_id:'d-msell',   full_name:'Michael Sell',   plan:'plan_a', sub_status:'active',   monthly_quota:30, granted_this_period:30, granted_total:121 },
+      { buyer_id:'d-sergio',  full_name:'Sergio',         plan:'plan_b', sub_status:'active',   monthly_quota:15, granted_this_period:7,  granted_total:22 },
+      { buyer_id:'d-richard', full_name:'Richard',        plan:'plan_b', sub_status:'trialing', monthly_quota:15, granted_this_period:3,  granted_total:3  },
+      { buyer_id:'d-ross',    full_name:'Rossalyn',       plan:'plan_a', sub_status:'active',   monthly_quota:30, granted_this_period:12, granted_total:48 },
+      { buyer_id:'d-mkrebbs', full_name:'Michael Krebbs', plan:'plan_b', sub_status:'past_due', monthly_quota:15, granted_this_period:0,  granted_total:9  }
+    ],
+    leads: [
+      { id:'l1', name:'Ash R.',          phone:'858-245-6574', project_type:'Kitchen',  event:'Taste of Placentia', status:'available', quality_score:82 },
+      { id:'l2', name:'Luisa Contera',   phone:'619-410-1375', project_type:'Remodel',  event:'Home Expo',          status:'available', quality_score:88 },
+      { id:'l3', name:'Carlos Morgan',   phone:'619-246-9807', project_type:'Kitchen',  event:'Taste of Placentia', status:'available', quality_score:74 },
+      { id:'l4', name:'Michelle Harris', phone:'909-836-4473', project_type:'Solar',    event:'',                   status:'available', quality_score:69 },
+      { id:'l5', name:'Donna Ratliff',   phone:'909-728-8126', project_type:'Roofing',  event:'',                   status:'granted',   quality_score:91, assigned_buyer_name:'Nancy' },
+      { id:'l6', name:'James Okafor',    phone:'714-555-0148', project_type:'Bathroom', event:'',                   status:'granted',   quality_score:95, assigned_buyer_name:'Michael Sell' }
+    ]
+  };
+
+  let sb = null;
+  if(configured){
+    sb = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    });
+  }
+
+  function planMeta(planKey){ return cfg.PLANS[planKey] || { name: planKey || '-', leads: 0 }; }
+
+  // module state
+  let ROSTER = [];
+  let ALL_LEADS = [];
+  let POOL_FILTER = 'available';
+  const SELECTED = new Set();   // selected available lead ids
+
+  // ---- render: subscriber roster (grant count vs quota) ----
+  function renderRoster(){
+    const list = $('#rosterList');
+    list.innerHTML = '';
+    $('#rosterCountTag').textContent = ROSTER.length + ' subscriber' + (ROSTER.length===1?'':'s');
+    $('#mSubs').textContent = ROSTER.filter(r => r.sub_status === 'active' || r.sub_status === 'trialing').length;
+    $('#rosterPeriodTag').textContent = 'this billing month';
+
+    if(!ROSTER.length){
+      list.innerHTML = '<div class="empty">No subscribers on the roster yet.</div>';
+      return;
+    }
+    const frag = document.createDocumentFragment();
+    ROSTER.forEach(r => {
+      const quota = r.monthly_quota || planMeta(r.plan).leads || 0;
+      const used = r.granted_this_period || 0;
+      const pct = quota ? Math.min(100, Math.round(used/quota*100)) : 0;
+      const full = quota && used >= quota;
+      const planName = r.plan ? planMeta(r.plan).name : 'No plan';
+      const statusGood = (r.sub_status === 'active' || r.sub_status === 'trialing');
+      const row = document.createElement('div');
+      row.className = 'roster-row';
+      row.innerHTML =
+        '<div>' +
+          '<div class="roster-name">' + esc(r.full_name || r.email || 'Subscriber') +
+            (statusGood ? '' : ' <span class="lstat retired">' + esc(r.sub_status || 'no plan') + '</span>') +
+          '</div>' +
+          '<div class="roster-meta">' + esc(planName) + ' &middot; lifetime ' +
+            (r.granted_total||0) + ' lead' + ((r.granted_total||0)===1?'':'s') + '</div>' +
+        '</div>' +
+        '<div class="roster-quota">' +
+          '<div class="nums"><b>' + used + '</b> / ' + quota + ' this month</div>' +
+          '<div class="quota-track"><div class="quota-fill' + (full?' full':'') + '" style="width:' + pct + '%"></div></div>' +
+        '</div>' +
+        '<div class="assign-quick"><button class="btn sm" data-pick="' + esc(r.buyer_id) + '">Pick</button></div>';
+      frag.appendChild(row);
+    });
+    list.appendChild(frag);
+
+    // "Pick" sets the assign dropdown to this subscriber and jumps to the pool
+    list.querySelectorAll('[data-pick]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        $('#assignBuyer').value = btn.getAttribute('data-pick');
+        $('#assignBuyer').scrollIntoView({ behavior:'smooth', block:'center' });
+      });
+    });
+  }
+
+  // ---- render: assign dropdown ----
+  function renderBuyerSelect(){
+    const sel = $('#assignBuyer');
+    const prev = sel.value;
+    sel.innerHTML = '';
+    if(!ROSTER.length){ sel.innerHTML = '<option value="">No subscribers</option>'; return; }
+    ROSTER.forEach(r => {
+      const quota = r.monthly_quota || planMeta(r.plan).leads || 0;
+      const used = r.granted_this_period || 0;
+      const opt = document.createElement('option');
+      opt.value = r.buyer_id;
+      opt.textContent = (r.full_name || r.email || 'Subscriber') + '  (' + used + '/' + quota + ' this month)';
+      sel.appendChild(opt);
+    });
+    if(prev){ sel.value = prev; }
+  }
+
+  function updateSelCount(){
+    const n = SELECTED.size;
+    $('#selCount').textContent = n + ' selected';
+  }
+
+  // ---- render: lead pool (checkbox = pick to assign; only available rows) ----
+  function renderPool(){
+    const list = $('#poolList');
+    const filtered = POOL_FILTER === 'all' ? ALL_LEADS : ALL_LEADS.filter(l => l.status === POOL_FILTER);
+    const avail = ALL_LEADS.filter(l => l.status === 'available').length;
+    const granted = ALL_LEADS.filter(l => l.status === 'granted').length;
+    $('#mAvailable').textContent = avail;
+    $('#mGranted').textContent = granted;
+    $('#poolCountTag').innerHTML = filtered.length + ' shown &middot; ' + ALL_LEADS.length + ' total';
+
+    list.innerHTML = '';
+    if(!filtered.length){
+      list.innerHTML = '<div class="empty">No leads match this filter.</div>';
+      return;
+    }
+    const frag = document.createDocumentFragment();
+    filtered.forEach(l => {
+      const isAvail = l.status === 'available';
+      const score = (l.quality_score != null) ? ('<span class="mono gold-txt lead-score" style="font-size:11px">score ' + l.quality_score + '</span>') : '';
+      const row = document.createElement('div');
+      row.className = 'lead-row' + (isAvail ? '' : ' is-granted');
+      row.innerHTML =
+        '<input type="checkbox" class="lead-pick" ' + (isAvail ? '' : 'disabled ') +
+          (SELECTED.has(l.id) ? 'checked ' : '') + 'data-id="' + esc(l.id) + '" aria-label="Select lead">' +
+        '<div>' +
+          '<div class="lead-name">' + esc(l.name || 'Unnamed lead') +
+            ' <span class="lstat ' + esc(l.status) + '">' + esc(l.status) + '</span>' +
+          '</div>' +
+          '<div class="lead-meta">' +
+            (l.phone ? ('Phone <b>' + esc(l.phone) + '</b> &middot; ') : '') +
+            'Project <b>' + esc(l.project_type || 'General') + '</b>' +
+            (l.event ? (' &middot; ' + esc(l.event)) : '') +
+            (l.status === 'granted' && l.assigned_buyer_name ? ('<div class="lead-to">Granted to ' + esc(l.assigned_buyer_name) + '</div>') : '') +
+          '</div>' +
+        '</div>' +
+        '<div>' + score + '</div>';
+      frag.appendChild(row);
+    });
+    list.appendChild(frag);
+
+    list.querySelectorAll('.lead-pick').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const id = cb.getAttribute('data-id');
+        if(cb.checked){ SELECTED.add(id); } else { SELECTED.delete(id); }
+        updateSelCount();
+      });
+    });
+    updateSelCount();
+  }
+
+  $('#poolChips').addEventListener('click', function(e){
+    const chip = e.target.closest('.chip');
+    if(!chip) return;
+    POOL_FILTER = chip.getAttribute('data-f');
+    this.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c === chip));
+    renderPool();
+  });
+
+  $('#selectAll').addEventListener('click', function(e){
+    e.preventDefault();
+    const avail = ALL_LEADS.filter(l => l.status === 'available');
+    const allOn = avail.length && avail.every(l => SELECTED.has(l.id));
+    if(allOn){ avail.forEach(l => SELECTED.delete(l.id)); }
+    else { avail.forEach(l => SELECTED.add(l.id)); }
+    // jump to available filter so the ticks are visible
+    POOL_FILTER = 'available';
+    $('#poolChips').querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c.getAttribute('data-f')==='available'));
+    renderPool();
+  });
+
+  function showAssignMsg(text, kind){
+    const m = $('#assignMsg');
+    m.className = 'note' + (kind ? ' ' + kind : '');
+    m.innerHTML = text;
+    m.classList.remove('hidden');
+  }
+
+  // ---- ASSIGN action -> assign_leads(p_subscriber, p_lead_ids[]) RPC ----
+  $('#assignBtn').addEventListener('click', async function(){
+    const buyerId = $('#assignBuyer').value;
+    const ids = Array.from(SELECTED);
+    if(!buyerId){ showAssignMsg('Pick a subscriber to assign to.', 'err'); return; }
+    if(!ids.length){ showAssignMsg('Tick one or more available leads in the pool first.', 'err'); return; }
+
+    const opt = $('#assignBuyer').selectedOptions[0];
+    const label = opt ? opt.textContent.split('  (')[0] : 'subscriber';
+
+    if(!sb){
+      // Demo mode: simulate the RPC against the local arrays.
+      let n = 0;
+      ids.forEach(id => {
+        const l = DEMO.leads.find(x => x.id === id && x.status === 'available');
+        if(l){ l.status = 'granted'; l.assigned_buyer_name = label; n++; }
+      });
+      const r = DEMO.roster.find(x => x.buyer_id === buyerId);
+      if(r){ r.granted_this_period += n; r.granted_total += n; }
+      SELECTED.clear();
+      ALL_LEADS = DEMO.leads.slice(); ROSTER = DEMO.roster.slice();
+      renderRoster(); renderBuyerSelect(); renderPool();
+      $('#assignBuyer').value = buyerId;
+      showAssignMsg('Demo mode: assigned <b>' + n + '</b> lead' + (n===1?'':'s') + ' to <b>' + esc(label) +
+        '</b>. Wire Supabase keys in <code>/elios/config.js</code> to run the real <code>assign_leads</code> RPC.', 'ok');
+      return;
+    }
+
+    this.disabled = true;
+    const orig = this.textContent;
+    this.textContent = 'Assigning...';
+    try{
+      // SECURITY DEFINER RPC: re-checks is_master() server-side, verifies the
+      // recipient is a subscriber, flips leads.status and writes lead_grants,
+      // skipping anything no longer available. Returns rows actually assigned.
+      const { data, error } = await sb.rpc('assign_leads', { p_subscriber: buyerId, p_lead_ids: ids });
+      if(error) throw error;
+      const rows = Array.isArray(data) ? data : (data ? [data] : []);
+      const assigned = rows.length;
+      const skipped = ids.length - assigned;
+      showAssignMsg('Assigned <b>' + assigned + '</b> of ' + ids.length + ' selected to <b>' + esc(label) + '</b>' +
+        (skipped ? ' &middot; ' + skipped + ' skipped (already granted or no longer available).' : '.'),
+        skipped ? 'warn' : 'ok');
+      SELECTED.clear();
+      await load();                 // refresh pool + roster counts
+      $('#assignBuyer').value = buyerId;
+    } catch(err){
+      const m = (err && (err.message || err.error_description)) || String(err);
+      const denied = /forbidden|master|not authorized/i.test(m);
+      showAssignMsg('Assign failed: ' + esc(m) + (denied ? ' (your account is not a master).' : ''), 'err');
+    } finally {
+      this.disabled = false;
+      this.textContent = orig;
+    }
+  });
+
+  $('#refreshBtn').addEventListener('click', function(){ if(sb){ SELECTED.clear(); load(); } });
+
+  $('#signOutBtn').addEventListener('click', async function(){
+    if(sb){ await sb.auth.signOut(); }
+    window.location.href = cfg.ROUTES.login;
+  });
+
+  // ---- build the roster client-side from master-readable tables ----
+  // Masters can SELECT all buyers / subscriptions / lead_grants via the
+  // buyers_select_master / subscriptions_select_master / lead_grants_select_master
+  // RLS policies. We join them in the client (no extra admin_roster view needed).
+  function periodLabel(){
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');  // YYYY-MM
+  }
+
+  async function buildRoster(){
+    const period = periodLabel();
+    const [{ data: buyers, error: be }, { data: subs, error: se }, { data: grants, error: ge }] = await Promise.all([
+      sb.from('buyers').select('id, email, full_name, company, role'),
+      sb.from('subscriptions').select('buyer_id, plan, status, monthly_quota, updated_at'),
+      sb.from('lead_grants').select('buyer_id, grant_period')
+    ]);
+    if(be) throw be; if(se) throw se; if(ge) throw ge;
+
+    // best subscription per buyer: active/trialing first, then newest
+    const subByBuyer = {};
+    (subs || []).forEach(s => {
+      const cur = subByBuyer[s.buyer_id];
+      const good = (st) => st === 'active' || st === 'trialing';
+      if(!cur) { subByBuyer[s.buyer_id] = s; return; }
+      if(good(s.status) && !good(cur.status)) { subByBuyer[s.buyer_id] = s; return; }
+      if(good(s.status) === good(cur.status) && new Date(s.updated_at) > new Date(cur.updated_at)) subByBuyer[s.buyer_id] = s;
+    });
+
+    // grant counts per buyer (this period + lifetime)
+    const cntPeriod = {}, cntTotal = {};
+    (grants || []).forEach(g => {
+      cntTotal[g.buyer_id] = (cntTotal[g.buyer_id]||0) + 1;
+      if(g.grant_period === period) cntPeriod[g.buyer_id] = (cntPeriod[g.buyer_id]||0) + 1;
+    });
+
+    ROSTER = (buyers || [])
+      .filter(b => b.role === 'subscriber')
+      .map(b => {
+        const s = subByBuyer[b.id] || {};
+        return {
+          buyer_id: b.id, email: b.email, full_name: b.full_name, company: b.company,
+          plan: s.plan || null, sub_status: s.status || null, monthly_quota: s.monthly_quota || 0,
+          granted_this_period: cntPeriod[b.id] || 0, granted_total: cntTotal[b.id] || 0
+        };
+      })
+      .sort((a,b) => String(a.full_name||a.email).localeCompare(String(b.full_name||b.email)));
+  }
+
+  // ---- data load (real Supabase) ----
+  async function load(){
+    await buildRoster();
+
+    // Full lead pool from the masters-only all_leads view (status +
+    // current assignee). security_invoker + leads_select_master gates rows.
+    const { data: leads, error: leadsErr } = await sb.from('all_leads')
+      .select('id, name, phone, project_type, event, status, quality_score, assigned_buyer_name')
+      .order('created_at', { ascending: true });
+    if(leadsErr) throw leadsErr;
+    ALL_LEADS = (leads || []);
+
+    renderRoster();
+    renderBuyerSelect();
+    renderPool();
+  }
+
+  // ---- boot ----
+  async function boot(){
+    if(!configured){
+      const banner = $('#demoBanner');
+      banner.classList.remove('hidden');
+      banner.innerHTML = 'Demo mode. Public keys are not yet set in <code>/elios/config.js</code>, so this shows sample roster and pool data. The role gate, master RLS reads, and the <code>assign_leads</code> RPC engage once configured.';
+      $('#masterName').textContent = DEMO.master.full_name;
+      $('#loadingPane').classList.add('hidden');
+      $('#app').classList.remove('hidden');
+      ROSTER = DEMO.roster.slice();
+      ALL_LEADS = DEMO.leads.slice();
+      renderRoster();
+      renderBuyerSelect();
+      renderPool();
+      return;
+    }
+
+    // Require a session.
+    const { data: sess } = await sb.auth.getSession();
+    if(!sess || !sess.session){ window.location.href = cfg.ROUTES.login; return; }
+    const uid = sess.session.user.id;
+
+    // ROLE GATE: only role='master' may use this console. Non-masters bounce
+    // to the normal subscriber dashboard. RLS also enforces this server-side
+    // (a subscriber's all_leads query returns zero rows); this is the UX-level
+    // redirect so subscribers never land on an empty console.
+    let role = 'subscriber';
+    try{
+      const { data: me } = await sb.from('buyers').select('full_name, email, role').eq('id', uid).maybeSingle();
+      role = (me && me.role) || 'subscriber';
+      if(me){ $('#masterName').textContent = me.full_name || me.email || 'Master'; }
+    } catch(e){ /* fall through to gate */ }
+
+    if(role !== 'master'){
+      window.location.href = cfg.ROUTES.dashboard;
+      return;
+    }
+
+    $('#loadingPane').classList.add('hidden');
+    $('#app').classList.remove('hidden');
+
+    try{
+      await load();
+    } catch(err){
+      const banner = $('#demoBanner');
+      banner.classList.remove('hidden');
+      banner.className = 'note err demo-banner';
+      banner.textContent = 'Could not load master data: ' + (err.message || err) +
+        '. Confirm the 2026-06-12 role migration is applied (buyers.role, master RLS policies, all_leads view, assign_leads RPC).';
+    }
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
