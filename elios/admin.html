@@ -13,7 +13,9 @@
 <link rel="stylesheet" href="/elios/brand.css">
 <style>
   /* admin-specific (built only from brand.css tokens) */
+  .grid.cols4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
   .metric{padding:18px 20px}
+  .metric .big.is-money{font-size:30px}
   .metric .big{font-family:"Fraunces",Georgia,serif;font-size:38px;font-weight:600;line-height:1;
     background:linear-gradient(92deg,#fff,var(--gold1) 60%,var(--gold2));-webkit-background-clip:text;background-clip:text;color:transparent}
   .metric .lbl{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--mut);margin-top:8px}
@@ -46,6 +48,18 @@
   .lead-to{font-size:11px;color:var(--steel1);margin-top:3px}
   .lead-score{align-self:center}
   .empty{text-align:center;padding:42px 20px;color:var(--mut);font-size:13px}
+
+  /* block value ($ per lead) */
+  .lead-right{display:flex;flex-direction:column;align-items:flex-end;gap:7px;align-self:center}
+  .blockval{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:15px;font-weight:600;
+    background:linear-gradient(92deg,#fff,var(--gold1) 65%,var(--gold2));-webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
+  .blockval.zero{background:none;-webkit-text-fill-color:var(--mut);color:var(--mut);font-weight:400}
+  .value-basis{font-size:10.5px;color:var(--steel1);margin-top:3px;line-height:1.45;word-break:break-word}
+  .edit-val{font-size:11px;color:var(--steel1);cursor:pointer;text-decoration:none;border:1px solid var(--line);
+    background:rgba(255,255,255,.03);border-radius:7px;padding:4px 9px;white-space:nowrap}
+  .edit-val:hover{color:var(--gold1);border-color:rgba(216,180,106,.4)}
+  .roster-value{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--gold1);margin-top:5px}
+  .roster-value b{color:#fff}
 
   /* filter chips */
   .chips{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px}
@@ -104,7 +118,7 @@
     </div>
 
     <!-- pool metrics -->
-    <div class="grid cols3" style="margin-top:24px">
+    <div class="grid cols4" style="margin-top:24px">
       <div class="card metric">
         <div class="big" id="mAvailable">0</div>
         <div class="lbl">Available to assign</div>
@@ -114,6 +128,11 @@
         <div class="big" id="mGranted">0</div>
         <div class="lbl">Granted</div>
         <div class="sub" style="font-size:11.5px;margin-top:8px">Assigned to subscribers</div>
+      </div>
+      <div class="card metric">
+        <div class="big is-money" id="mAvailValue">$0</div>
+        <div class="lbl">Available block value</div>
+        <div class="sub" style="font-size:11.5px;margin-top:8px">Total $ worth still in the pool</div>
       </div>
       <div class="card metric">
         <div class="big" id="mSubs">0</div>
@@ -170,6 +189,9 @@
   const cfg = window.ELIOS_CONFIG;
   const $ = s => document.querySelector(s);
   const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  // Block value ($) formatting - Anthony block-value model.
+  const numVal = v => { const n = Number(v); return isFinite(n) ? n : 0; };
+  const money = v => '$' + numVal(v).toLocaleString('en-US', { maximumFractionDigits: 0 });
 
   const configured = cfg.SUPABASE_URL.indexOf('__') === -1 && cfg.SUPABASE_ANON_KEY.indexOf('__') === -1;
 
@@ -182,20 +204,20 @@
   const DEMO = {
     master: { full_name: 'Anthony Vasquez', email: 'anthony.vasquez@example.com' },
     roster: [
-      { buyer_id:'d-nancy',   full_name:'Nancy',          plan:'plan_a', sub_status:'active',   monthly_quota:30, granted_this_period:18, granted_total:64 },
-      { buyer_id:'d-msell',   full_name:'Michael Sell',   plan:'plan_a', sub_status:'active',   monthly_quota:30, granted_this_period:30, granted_total:121 },
-      { buyer_id:'d-sergio',  full_name:'Sergio',         plan:'plan_b', sub_status:'active',   monthly_quota:15, granted_this_period:7,  granted_total:22 },
-      { buyer_id:'d-richard', full_name:'Richard',        plan:'plan_b', sub_status:'trialing', monthly_quota:15, granted_this_period:3,  granted_total:3  },
-      { buyer_id:'d-ross',    full_name:'Rossalyn',       plan:'plan_a', sub_status:'active',   monthly_quota:30, granted_this_period:12, granted_total:48 },
-      { buyer_id:'d-mkrebbs', full_name:'Michael Krebbs', plan:'plan_b', sub_status:'past_due', monthly_quota:15, granted_this_period:0,  granted_total:9  }
+      { buyer_id:'d-nancy',   full_name:'Nancy',          plan:'plan_a', sub_status:'active',   monthly_quota:30, granted_this_period:18, granted_total:64,  granted_value:42000 },
+      { buyer_id:'d-msell',   full_name:'Michael Sell',   plan:'plan_a', sub_status:'active',   monthly_quota:30, granted_this_period:30, granted_total:121, granted_value:98500 },
+      { buyer_id:'d-sergio',  full_name:'Sergio',         plan:'plan_b', sub_status:'active',   monthly_quota:15, granted_this_period:7,  granted_total:22,  granted_value:16000 },
+      { buyer_id:'d-richard', full_name:'Richard',        plan:'plan_b', sub_status:'trialing', monthly_quota:15, granted_this_period:3,  granted_total:3,   granted_value:6000  },
+      { buyer_id:'d-ross',    full_name:'Rossalyn',       plan:'plan_a', sub_status:'active',   monthly_quota:30, granted_this_period:12, granted_total:48,  granted_value:33000 },
+      { buyer_id:'d-mkrebbs', full_name:'Michael Krebbs', plan:'plan_b', sub_status:'past_due', monthly_quota:15, granted_this_period:0,  granted_total:9,   granted_value:7000  }
     ],
     leads: [
-      { id:'l1', name:'Ash R.',          phone:'858-245-6574', project_type:'Kitchen',  event:'Taste of Placentia', status:'available', quality_score:82 },
-      { id:'l2', name:'Luisa Contera',   phone:'619-410-1375', project_type:'Remodel',  event:'Home Expo',          status:'available', quality_score:88 },
-      { id:'l3', name:'Carlos Morgan',   phone:'619-246-9807', project_type:'Kitchen',  event:'Taste of Placentia', status:'available', quality_score:74 },
-      { id:'l4', name:'Michelle Harris', phone:'909-836-4473', project_type:'Solar',    event:'',                   status:'available', quality_score:69 },
-      { id:'l5', name:'Donna Ratliff',   phone:'909-728-8126', project_type:'Roofing',  event:'',                   status:'granted',   quality_score:91, assigned_buyer_name:'Nancy' },
-      { id:'l6', name:'James Okafor',    phone:'714-555-0148', project_type:'Bathroom', event:'',                   status:'granted',   quality_score:95, assigned_buyer_name:'Michael Sell' }
+      { id:'l1', name:'Ash R.',          phone:'858-245-6574', project_type:'Kitchen',  event:'Taste of Placentia', status:'available', quality_score:82, block_value:2000, value_basis:'kitchen refresh/$1500, paint/$500' },
+      { id:'l2', name:'Luisa Contera',   phone:'619-410-1375', project_type:'Remodel',  event:'Home Expo',          status:'available', quality_score:88, block_value:3000, value_basis:'windows/$1000, flooring/$1000, full remodel/$1000' },
+      { id:'l3', name:'Carlos Morgan',   phone:'619-246-9807', project_type:'Kitchen',  event:'Taste of Placentia', status:'available', quality_score:74, block_value:1000, value_basis:'paint/$1000' },
+      { id:'l4', name:'Michelle Harris', phone:'909-836-4473', project_type:'Solar',    event:'',                   status:'available', quality_score:69, block_value:0,    value_basis:'' },
+      { id:'l5', name:'Donna Ratliff',   phone:'909-728-8126', project_type:'Roofing',  event:'',                   status:'granted',   quality_score:91, block_value:3000, value_basis:'roof/$3000', assigned_buyer_id:'d-nancy', assigned_buyer_name:'Nancy' },
+      { id:'l6', name:'James Okafor',    phone:'714-555-0148', project_type:'Bathroom', event:'',                   status:'granted',   quality_score:95, block_value:2500, value_basis:'bath remodel/$2500', assigned_buyer_id:'d-msell', assigned_buyer_name:'Michael Sell' }
     ]
   };
 
@@ -243,6 +265,7 @@
           '</div>' +
           '<div class="roster-meta">' + esc(planName) + ' &middot; lifetime ' +
             (r.granted_total||0) + ' lead' + ((r.granted_total||0)===1?'':'s') + '</div>' +
+          '<div class="roster-value">Portfolio value <b>' + money(r.granted_value) + '</b></div>' +
         '</div>' +
         '<div class="roster-quota">' +
           '<div class="nums"><b>' + used + '</b> / ' + quota + ' this month</div>' +
@@ -290,8 +313,11 @@
     const filtered = POOL_FILTER === 'all' ? ALL_LEADS : ALL_LEADS.filter(l => l.status === POOL_FILTER);
     const avail = ALL_LEADS.filter(l => l.status === 'available').length;
     const granted = ALL_LEADS.filter(l => l.status === 'granted').length;
+    const availValue = ALL_LEADS.filter(l => l.status === 'available')
+      .reduce((sum, l) => sum + numVal(l.block_value), 0);
     $('#mAvailable').textContent = avail;
     $('#mGranted').textContent = granted;
+    $('#mAvailValue').textContent = money(availValue);
     $('#poolCountTag').innerHTML = filtered.length + ' shown &middot; ' + ALL_LEADS.length + ' total';
 
     list.innerHTML = '';
@@ -303,6 +329,9 @@
     filtered.forEach(l => {
       const isAvail = l.status === 'available';
       const score = (l.quality_score != null) ? ('<span class="mono gold-txt lead-score" style="font-size:11px">score ' + l.quality_score + '</span>') : '';
+      const bv = numVal(l.block_value);
+      const valHtml = '<span class="blockval' + (bv > 0 ? '' : ' zero') + '">' + (bv > 0 ? money(bv) : 'no value') + '</span>';
+      const basisHtml = l.value_basis ? ('<div class="value-basis">' + esc(l.value_basis) + '</div>') : '';
       const row = document.createElement('div');
       row.className = 'lead-row' + (isAvail ? '' : ' is-granted');
       row.innerHTML =
@@ -310,16 +339,20 @@
           (SELECTED.has(l.id) ? 'checked ' : '') + 'data-id="' + esc(l.id) + '" aria-label="Select lead">' +
         '<div>' +
           '<div class="lead-name">' + esc(l.name || 'Unnamed lead') +
-            ' <span class="lstat ' + esc(l.status) + '">' + esc(l.status) + '</span>' +
+            ' <span class="lstat ' + esc(l.status) + '">' + esc(l.status) + '</span>' + score +
           '</div>' +
           '<div class="lead-meta">' +
             (l.phone ? ('Phone <b>' + esc(l.phone) + '</b> &middot; ') : '') +
             'Project <b>' + esc(l.project_type || 'General') + '</b>' +
             (l.event ? (' &middot; ' + esc(l.event)) : '') +
+            basisHtml +
             (l.status === 'granted' && l.assigned_buyer_name ? ('<div class="lead-to">Granted to ' + esc(l.assigned_buyer_name) + '</div>') : '') +
           '</div>' +
         '</div>' +
-        '<div>' + score + '</div>';
+        '<div class="lead-right">' +
+          valHtml +
+          '<a class="edit-val" href="#" data-edit="' + esc(l.id) + '">Set value</a>' +
+        '</div>';
       frag.appendChild(row);
     });
     list.appendChild(frag);
@@ -330,6 +363,9 @@
         if(cb.checked){ SELECTED.add(id); } else { SELECTED.delete(id); }
         updateSelCount();
       });
+    });
+    list.querySelectorAll('[data-edit]').forEach(a => {
+      a.addEventListener('click', (e) => { e.preventDefault(); editBlockValue(a.getAttribute('data-edit')); });
     });
     updateSelCount();
   }
@@ -361,6 +397,64 @@
     m.classList.remove('hidden');
   }
 
+  // ---- SET / EDIT a lead's block value ($) - Anthony block-value model ----
+  // Master writes leads.block_value + leads.value_basis straight through the
+  // anon client under the master JWT (leads_update_master RLS policy gates it).
+  async function editBlockValue(id){
+    const lead = ALL_LEADS.find(l => l.id === id);
+    if(!lead) return;
+    const curVal = numVal(lead.block_value);
+    const raw = window.prompt(
+      'Block value for "' + (lead.name || 'lead') + '"\n' +
+      'The $ this address is worth (property worth + improvement potential).\n' +
+      'Enter a dollar amount, e.g. 1000 / 2000 / 3000:',
+      curVal ? String(curVal) : ''
+    );
+    if(raw === null) return;                       // cancelled
+    const cleaned = String(raw).replace(/[^0-9.]/g, '');
+    const value = cleaned === '' ? 0 : Number(cleaned);
+    if(!isFinite(value) || value < 0){ showAssignMsg('Enter a valid dollar amount (0 or more).', 'err'); return; }
+    const basis = window.prompt(
+      'Value basis (optional) - how the ' + money(value) + ' breaks down.\n' +
+      'e.g. "paint/$1000, roof/$3000". Leave blank to skip:',
+      lead.value_basis || ''
+    );
+    const value_basis = (basis === null) ? (lead.value_basis || null) : (basis.trim() || null);
+
+    if(!sb){
+      // Demo mode: mutate the local arrays.
+      const d = DEMO.leads.find(x => x.id === id);
+      if(d){ d.block_value = value; d.value_basis = value_basis; }
+      lead.block_value = value; lead.value_basis = value_basis;
+      ALL_LEADS = DEMO.leads.slice();
+      // Re-total each subscriber's portfolio value from the granted blocks.
+      DEMO.roster.forEach(r => {
+        r.granted_value = DEMO.leads
+          .filter(x => x.status === 'granted' && x.assigned_buyer_id === r.buyer_id)
+          .reduce((s, x) => s + numVal(x.block_value), 0);
+      });
+      ROSTER = DEMO.roster.slice();
+      renderRoster(); renderPool();
+      showAssignMsg('Demo mode: set "' + esc(lead.name || 'lead') + '" block value to <b>' + money(value) +
+        '</b>. Wire Supabase keys in <code>/elios/config.js</code> to write it for real.', 'ok');
+      return;
+    }
+
+    try{
+      const { error } = await sb.from('leads')
+        .update({ block_value: value, value_basis: value_basis })
+        .eq('id', id);
+      if(error) throw error;
+      lead.block_value = value; lead.value_basis = value_basis;
+      await load();              // refresh pool totals + per-subscriber portfolio value
+      showAssignMsg('Set "' + esc(lead.name || 'lead') + '" block value to <b>' + money(value) + '</b>.', 'ok');
+    } catch(err){
+      const m = (err && (err.message || err.error_description)) || String(err);
+      const denied = /forbidden|master|policy|row-level/i.test(m);
+      showAssignMsg('Could not set block value: ' + esc(m) + (denied ? ' (your account is not a master).' : ''), 'err');
+    }
+  }
+
   // ---- ASSIGN action -> assign_leads(p_subscriber, p_lead_ids[]) RPC ----
   $('#assignBtn').addEventListener('click', async function(){
     const buyerId = $('#assignBuyer').value;
@@ -373,13 +467,13 @@
 
     if(!sb){
       // Demo mode: simulate the RPC against the local arrays.
-      let n = 0;
+      let n = 0, addedValue = 0;
       ids.forEach(id => {
         const l = DEMO.leads.find(x => x.id === id && x.status === 'available');
-        if(l){ l.status = 'granted'; l.assigned_buyer_name = label; n++; }
+        if(l){ l.status = 'granted'; l.assigned_buyer_name = label; l.assigned_buyer_id = buyerId; addedValue += numVal(l.block_value); n++; }
       });
       const r = DEMO.roster.find(x => x.buyer_id === buyerId);
-      if(r){ r.granted_this_period += n; r.granted_total += n; }
+      if(r){ r.granted_this_period += n; r.granted_total += n; r.granted_value = numVal(r.granted_value) + addedValue; }
       SELECTED.clear();
       ALL_LEADS = DEMO.leads.slice(); ROSTER = DEMO.roster.slice();
       renderRoster(); renderBuyerSelect(); renderPool();
@@ -442,6 +536,16 @@
     ]);
     if(be) throw be; if(se) throw se; if(ge) throw ge;
 
+    // Running TOTAL block value ($) assigned per subscriber. Derived from the
+    // all_leads view (assigned_buyer_id + block_value) already loaded into
+    // ALL_LEADS by load(). Each assigned block contributes its block_value.
+    const valByBuyer = {};
+    (ALL_LEADS || []).forEach(l => {
+      if(l.assigned_buyer_id){
+        valByBuyer[l.assigned_buyer_id] = (valByBuyer[l.assigned_buyer_id] || 0) + numVal(l.block_value);
+      }
+    });
+
     // best subscription per buyer: active/trialing first, then newest
     const subByBuyer = {};
     (subs || []).forEach(s => {
@@ -466,7 +570,8 @@
         return {
           buyer_id: b.id, email: b.email, full_name: b.full_name, company: b.company,
           plan: s.plan || null, sub_status: s.status || null, monthly_quota: s.monthly_quota || 0,
-          granted_this_period: cntPeriod[b.id] || 0, granted_total: cntTotal[b.id] || 0
+          granted_this_period: cntPeriod[b.id] || 0, granted_total: cntTotal[b.id] || 0,
+          granted_value: valByBuyer[b.id] || 0
         };
       })
       .sort((a,b) => String(a.full_name||a.email).localeCompare(String(b.full_name||b.email)));
@@ -474,15 +579,16 @@
 
   // ---- data load (real Supabase) ----
   async function load(){
-    await buildRoster();
-
     // Full lead pool from the masters-only all_leads view (status +
-    // current assignee). security_invoker + leads_select_master gates rows.
+    // current assignee + block value). security_invoker + leads_select_master
+    // gates rows. Loaded FIRST so buildRoster can total block value per buyer.
     const { data: leads, error: leadsErr } = await sb.from('all_leads')
-      .select('id, name, phone, project_type, event, status, quality_score, assigned_buyer_name')
+      .select('id, name, phone, project_type, event, status, quality_score, block_value, value_basis, assigned_buyer_id, assigned_buyer_name')
       .order('created_at', { ascending: true });
     if(leadsErr) throw leadsErr;
     ALL_LEADS = (leads || []);
+
+    await buildRoster();
 
     renderRoster();
     renderBuyerSelect();

@@ -33,6 +33,12 @@
   .stage.Booked{color:var(--ok);border-color:var(--ok);background:rgba(127,227,163,.12)}
   .stage.default{color:var(--steel1);border-color:var(--steel2);background:rgba(184,192,204,.1)}
   .lead-actions{display:flex;gap:7px;flex-shrink:0}
+  .lead-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
+  .blockval{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:16px;font-weight:600;
+    background:linear-gradient(92deg,#fff,var(--gold1) 65%,var(--gold2));-webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
+  .blockval.zero{background:none;-webkit-text-fill-color:var(--mut);color:var(--mut);font-weight:400}
+  .value-basis{font-size:11px;color:var(--steel1);margin-top:4px;line-height:1.5}
+  .metric .big.is-money{font-size:32px}
   .act{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:15px;border:1px solid var(--line);background:rgba(0,0,0,.25);text-decoration:none}
   .act.call{border-color:rgba(127,227,163,.4);color:var(--ok)}
   .act.text{border-color:rgba(216,180,106,.4);color:var(--gold1)}
@@ -81,9 +87,9 @@
         <div class="sub" style="font-size:11.5px;margin-top:8px">New + Attempted + Follow Up</div>
       </div>
       <div class="card metric">
-        <div class="big" id="mBooked">0</div>
-        <div class="lbl">Booked / won</div>
-        <div class="sub" style="font-size:11.5px;margin-top:8px">Closed from your allotment</div>
+        <div class="big is-money" id="mPortfolio">$0</div>
+        <div class="lbl">Portfolio value</div>
+        <div class="sub" id="portfolioSub" style="font-size:11.5px;margin-top:8px">Total $ across your blocks</div>
       </div>
     </div>
 
@@ -123,6 +129,9 @@
   const smsHref = p => 'sms:'+String(p||'').replace(/[^0-9+]/g,'');
   const hasPhone = p => p && /\d/.test(p);
   const stageClass = s => ({'New':'New','Follow Up':'FollowUp','Attempted':'Attempted','Interested':'Interested','Booked':'Booked'})[s] || 'default';
+  // Block value ($) formatting - Anthony block-value model.
+  const numVal = v => { const n = Number(v); return isFinite(n) ? n : 0; };
+  const money = v => '$' + numVal(v).toLocaleString('en-US', { maximumFractionDigits: 0 });
 
   const configured = cfg.SUPABASE_URL.indexOf('__') === -1 && cfg.SUPABASE_ANON_KEY.indexOf('__') === -1;
 
@@ -132,12 +141,12 @@
     sub:   { plan: 'plan_a', status: 'active', monthly_quota: 30,
              current_period_start: '2026-06-01', current_period_end: '2026-07-01', cancel_at_period_end: false },
     leads: [
-      { name:'Ash R.',          phone:'858-245-6574', project_type:'Kitchen',                    pipeline_stage:'Follow Up',  quality_score:82, notes:'Discussed kitchen remodel at the Taste of Placentia.' },
-      { name:'Luisa Contera',   phone:'619-410-1375', project_type:'Windows / Flooring / Remodel', pipeline_stage:'Follow Up',  quality_score:88, notes:'20x12 windows, flooring, ceiling, full remodel.' },
-      { name:'Carlos Morgan',   phone:'619-246-9807', project_type:'Kitchen',                    pipeline_stage:'New',        quality_score:74, notes:'Met at Taste of Placentia re: kitchen.' },
-      { name:'Michelle Harris', phone:'909-836-4473', project_type:'Solar',                      pipeline_stage:'Attempted',  quality_score:69, notes:'' },
-      { name:'Donna Ratliff',   phone:'909-728-8126', project_type:'Roofing',                    pipeline_stage:'Interested', quality_score:91, notes:'Wants a quote within 2 weeks.' },
-      { name:'James Okafor',    phone:'714-555-0148', project_type:'Bathroom',                   pipeline_stage:'Booked',     quality_score:95, notes:'Booked estimate for Saturday.' }
+      { name:'Ash R.',          phone:'858-245-6574', project_type:'Kitchen',                    pipeline_stage:'Follow Up',  quality_score:82, block_value:2000, value_basis:'kitchen refresh/$1500, paint/$500', notes:'Discussed kitchen remodel at the Taste of Placentia.' },
+      { name:'Luisa Contera',   phone:'619-410-1375', project_type:'Windows / Flooring / Remodel', pipeline_stage:'Follow Up',  quality_score:88, block_value:3000, value_basis:'windows/$1000, flooring/$1000, full remodel/$1000', notes:'20x12 windows, flooring, ceiling, full remodel.' },
+      { name:'Carlos Morgan',   phone:'619-246-9807', project_type:'Kitchen',                    pipeline_stage:'New',        quality_score:74, block_value:1000, value_basis:'paint/$1000', notes:'Met at Taste of Placentia re: kitchen.' },
+      { name:'Michelle Harris', phone:'909-836-4473', project_type:'Solar',                      pipeline_stage:'Attempted',  quality_score:69, block_value:0,    value_basis:'', notes:'' },
+      { name:'Donna Ratliff',   phone:'909-728-8126', project_type:'Roofing',                    pipeline_stage:'Interested', quality_score:91, block_value:3000, value_basis:'roof/$3000', notes:'Wants a quote within 2 weeks.' },
+      { name:'James Okafor',    phone:'714-555-0148', project_type:'Bathroom',                   pipeline_stage:'Booked',     quality_score:95, block_value:2500, value_basis:'bath remodel/$2500', notes:'Booked estimate for Saturday.' }
     ]
   };
 
@@ -197,7 +206,12 @@
 
     const activeStages = ['New','Attempted','Follow Up'];
     $('#mActive').textContent = leads.filter(l => activeStages.indexOf(l.pipeline_stage) !== -1).length;
-    $('#mBooked').textContent = leads.filter(l => l.pipeline_stage === 'Booked').length;
+
+    // Portfolio value: sum of each assigned block's $ value (Anthony block-value model).
+    const portfolio = leads.reduce((sum, l) => sum + numVal(l.block_value), 0);
+    const booked = leads.filter(l => l.pipeline_stage === 'Booked').length;
+    $('#mPortfolio').textContent = money(portfolio);
+    $('#portfolioSub').innerHTML = used + ' block' + (used===1?'':'s') + ' &middot; ' + booked + ' booked';
 
     // period
     if(model.sub && model.sub.current_period_start){
@@ -218,6 +232,9 @@
       row.className = 'lead-row';
       const ph = hasPhone(l.phone);
       const score = (l.quality_score != null) ? ('<span class="mono gold-txt" style="font-size:11px">score ' + l.quality_score + '</span>') : '';
+      const bv = numVal(l.block_value);
+      const valHtml = '<span class="blockval' + (bv > 0 ? '' : ' zero') + '" title="Block value (property worth + improvement potential)">' +
+        (bv > 0 ? money(bv) : 'no value yet') + '</span>';
       row.innerHTML =
         '<div>' +
           '<div class="lead-name">' + esc(l.name) +
@@ -226,12 +243,16 @@
           '<div class="lead-meta">' +
             (ph ? ('Phone <a href="' + telHref(l.phone) + '">' + esc(l.phone) + '</a> &middot; ') : '') +
             'Project <b>' + esc(l.project_type || 'General') + '</b>' +
+            (l.value_basis ? ('<div class="value-basis">Block value basis: ' + esc(l.value_basis) + '</div>') : '') +
             (l.notes ? ('<br>' + esc(l.notes)) : '') +
           '</div>' +
         '</div>' +
-        '<div class="lead-actions">' +
-          (ph ? ('<a class="act call" href="' + telHref(l.phone) + '" title="Call">&#9742;</a>' +
-                 '<a class="act text" href="' + smsHref(l.phone) + '" title="Text">&#128172;</a>') : '') +
+        '<div class="lead-right">' +
+          valHtml +
+          '<div class="lead-actions">' +
+            (ph ? ('<a class="act call" href="' + telHref(l.phone) + '" title="Call">&#9742;</a>' +
+                   '<a class="act text" href="' + smsHref(l.phone) + '" title="Text">&#128172;</a>') : '') +
+          '</div>' +
         '</div>';
       frag.appendChild(row);
     });
@@ -297,7 +318,7 @@
       // on public.leads; my_leads is security_invoker so lead_grants RLS scopes
       // rows to auth.uid(). This is the single sanctioned buyer path to lead PII.
       const { data: myLeads, error: leadsErr } = await sb.from('my_leads')
-        .select('name, phone, email, address, project_type, event, pipeline_stage, quality_score, notes, granted_at')
+        .select('name, phone, email, address, project_type, event, pipeline_stage, quality_score, block_value, value_basis, notes, granted_at')
         .order('granted_at', { ascending: false });
       if(leadsErr) throw leadsErr;
       const leads = (myLeads || []).filter(l => l && l.name);

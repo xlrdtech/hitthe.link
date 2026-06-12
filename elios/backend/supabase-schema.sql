@@ -602,3 +602,120 @@ $$;
 -- Verify:
 --   select email, full_name, role from public.buyers order by role, email;
 -- =====================================================================
+
+
+-- #####################################################################
+-- #  MIGRATION 2026-06-12b - BLOCK VALUE ($ per lead) - Anthony model
+-- #####################################################################
+-- Purpose (Anthony 2026-06-12 call): every lead IS a value-tagged BLOCK.
+--   "every address connects to a value... $1000/2000/3000... it's got a
+--    value, that's the block value."
+-- The $ figure is derived from property worth + improvement potential
+-- (e.g. paint $1000, roof $3000). A master SETS/edits each lead's block
+-- value; subscribers see the worth of each block assigned to them plus
+-- their total portfolio value.
+--
+-- This block is ADDITIVE and IDEMPOTENT (safe to re-run). It does NOT alter
+-- quota logic, the allocator, assign_leads, the role model, or any existing
+-- policy. It ADDS two columns to leads, exposes them on all_leads + my_leads,
+-- and adds a master-only update policy so masters can set a lead's value.
+-- No live secrets here.
+-- #####################################################################
+
+-- ---------------------------------------------------------------------
+-- 18. leads.block_value + leads.value_basis  - the $ worth of the block
+-- ---------------------------------------------------------------------
+alter table public.leads
+  add column if not exists block_value numeric(12,2) not null default 0;
+
+alter table public.leads
+  add column if not exists value_basis text;
+
+comment on column public.leads.block_value is
+  'Anthony block-value model: the $ worth of this lead/block, derived from property worth + improvement potential (e.g. 1000/2000/3000). Set/edited by a master. Subscribers see the value of each block assigned to them.';
+
+comment on column public.leads.value_basis is
+  'Optional human-readable breakdown of how block_value was derived, e.g. "paint/$1000, roof/$3000". Free text, master-authored.';
+
+create index if not exists leads_block_value_idx on public.leads(block_value);
+
+-- ---------------------------------------------------------------------
+-- 19. leads: masters may UPDATE a lead (set/edit block_value, value_basis)
+-- ---------------------------------------------------------------------
+-- Subscribers still have NO write path to leads. Service-role bypasses RLS.
+-- This permissive UPDATE policy lets the master console write block_value /
+-- value_basis straight through the anon client under the caller's master JWT.
+drop policy if exists leads_update_master on public.leads;
+create policy leads_update_master on public.leads
+  for update to authenticated
+  using (public.is_master())
+  with check (public.is_master());
+
+-- =====================================================================
+-- 20. all_leads - re-expose with block_value + value_basis (additive)
+-- =====================================================================
+-- CREATE OR REPLACE keeps the same masters-only gating (security_invoker +
+-- leads_select_master). Adds the two value columns so the admin pool can
+-- show each block's $ and the running total assigned per subscriber.
+create or replace view public.all_leads
+with (security_invoker = true) as
+select
+  l.id,
+  l.asana_gid,
+  l.source_ref,
+  l.name,
+  l.phone,
+  l.email,
+  l.address,
+  l.project_type,
+  l.event,
+  l.rep,
+  l.pipeline_stage,
+  l.quality_score,
+  l.block_value,
+  l.value_basis,
+  l.notes,
+  l.status,
+  l.source,
+  l.created_at,
+  l.updated_at,
+  g.buyer_id      as assigned_buyer_id,
+  b.full_name     as assigned_buyer_name,
+  b.email         as assigned_buyer_email,
+  g.grant_period  as assigned_period,
+  g.granted_at    as assigned_at
+from public.leads l
+left join public.lead_grants g on g.lead_id = l.id
+left join public.buyers     b on b.id = g.buyer_id;
+
+-- =====================================================================
+-- 21. my_leads - re-expose with block_value + value_basis (additive)
+-- =====================================================================
+-- CREATE OR REPLACE keeps security_invoker=true so lead_grants RLS still
+-- scopes rows to auth.uid(). Adds block_value/value_basis so a subscriber
+-- sees the $ worth of each assigned block and can total their portfolio.
+create or replace view public.my_leads
+with (security_invoker = true) as
+select
+  l.id,
+  l.name,
+  l.phone,
+  l.email,
+  l.address,
+  l.project_type,
+  l.event,
+  l.pipeline_stage,
+  l.quality_score,
+  l.block_value,
+  l.value_basis,
+  l.notes,
+  g.grant_period,
+  g.granted_at
+from public.lead_grants g
+join public.leads l on l.id = g.lead_id
+where g.buyer_id = (select auth.uid());
+
+-- Re-grant (CREATE OR REPLACE preserves grants, but this is safe + explicit).
+grant select on public.all_leads to authenticated;
+grant select on public.my_leads  to authenticated;
+-- =====================================================================
