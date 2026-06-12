@@ -331,6 +331,21 @@ footer .f2 em{color:var(--ng)}
   </div>
 </section>
 
+<!-- QUATERNITY / XQL CONTROL PLANE -->
+<section class="wrap" id="quaternity">
+  <div class="sechead">
+    <div class="ix">I· · Quaternity · Control Plane</div>
+    <h2>The four · live<span id="xql-updated" style="font-size:11px;color:var(--faint);font-weight:400"></span></h2>
+    <div class="rule"></div>
+    <div class="note">genesis · exodus · leviticus + xql · all inputs → all 3 + sink</div>
+  </div>
+  <div id="xql-members" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0">
+    <span style="color:var(--faint);font-size:11px">▸ resolving the four…</span>
+  </div>
+  <h3 style="margin-top:16px;font-size:13px">Input stream · all channels → all 3 + xql</h3>
+  <div id="xql-feed" style="font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--faint)">Loading…</div>
+</section>
+
 <!-- GOAL SWARM -->
 <section class="wrap" id="goals">
   <div class="sechead">
@@ -663,6 +678,43 @@ loadSuggestions();
 setInterval(loadSuggestions, 30000);
 
 document.getElementById('ts').textContent = new Date().toISOString().slice(0,10);
+
+// ── QUATERNITY / XQL control plane (unified hub, 2026-06-11) ──
+async function loadXql(){
+  try{
+    const r = await fetch('https://xen.xlrd.org/api/xql?_='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(6000)});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const d = await r.json();
+    const roles = d.panes||{}; const inv={};
+    Object.entries(roles).forEach(function(e){inv[e[1]]=e[0];});
+    const members=[
+      ['genesis', inv.genesis||'', 'voice · heard via vvsvei'],
+      ['exodus', inv.exodus||'', 'hands · Opus ultracode'],
+      ['leviticus', inv.leviticus||'', 'quick · formatter'],
+      ['xql', 'process', 'control plane · no pane']
+    ];
+    document.getElementById('xql-members').innerHTML = members.map(function(m){
+      var name=m[0], pid=m[1], sub=m[2];
+      var ok = !!pid;
+      var show = pid==='process' ? 'live' : (pid||'—');
+      return '<div style="border:1px solid var(--line,rgba(255,255,255,.12));border-radius:12px;padding:12px;background:rgba(255,255,255,.03)">'
+        +'<div style="font-weight:700">'+name+'</div>'
+        +'<div style="font-size:18px;color:'+(ok?'#7fe3a3':'#ff6b6b')+'">'+show+'</div>'
+        +'<div style="font-size:10px;color:var(--faint)">'+sub+'</div></div>';
+    }).join('');
+    var feed=(d.feed||[]).slice(-8).reverse();
+    document.getElementById('xql-feed').innerHTML = feed.length ? feed.map(function(f){
+      var n=(f.ok!=null)? f.ok+'/3' : (Array.isArray(f.fanned)? f.fanned.length+'/3' : '·');
+      var lbl=String(f.label||'').replace(/</g,'&lt;');
+      var body=String(f.body||'').slice(0,70).replace(/</g,'&lt;');
+      return '<div>['+n+'] <b>'+lbl+'</b> '+body+'</div>';
+    }).join('') : '<span>no recent input</span>';
+    var u=document.getElementById('xql-updated'); if(u) u.textContent=' · live '+new Date().toLocaleTimeString();
+  }catch(e){
+    var el=document.getElementById('xql-feed'); if(el) el.innerHTML='<span style="color:#ff6b6b">control plane offline ('+e.message+')</span>';
+  }
+}
+loadXql(); setInterval(loadXql, 5000);
 </script>
 </body>
 </html>
