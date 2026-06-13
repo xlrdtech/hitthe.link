@@ -46,14 +46,15 @@
       </div>
 
       <p class="sub" style="margin-top:16px;font-size:12px">
-        Passwords are stored only as scrypt hashes and never in plaintext. Your session is an HMAC-signed token. Masters land on the console; subscribers on their dashboard.
+        Your session is held securely by Supabase Auth and access to each lead is enforced by row-level security. Masters land on the console; subscribers on their dashboard.
       </p>
     </div>
   </div>
 
-  <footer>EliOS &middot; access scoped per account server-side &middot; api.xlrd.org</footer>
+  <footer>EliOS &middot; access scoped per account by row-level security &middot; trackingtogether.com</footer>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/elios/config.js"></script>
 <script>
 (function(){
@@ -62,51 +63,46 @@
   var form = document.getElementById('loginForm');
   var btn = document.getElementById('loginBtn');
 
+  var sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+
   function show(text, kind){
     msg.className = 'note' + (kind ? ' ' + kind : '');
     msg.textContent = text;
     msg.classList.remove('hidden');
   }
-  function go(redirect, role){
-    // trust server redirect; fall back to role mapping
-    var dest = redirect || (role === 'master' ? '/elios/admin.html' : '/elios/dashboard.html');
+  function go(role){
+    var dest = (role === 'master') ? cfg.ROUTES.admin : cfg.ROUTES.dashboard;
     window.location.href = dest;
   }
-
-  // Already signed in? Validate the stored token against /me and route.
-  var existing = localStorage.getItem(cfg.TOKEN_KEY);
-  if(existing){
-    fetch(cfg.API_BASE + '/me', { headers: { 'Authorization': 'Bearer ' + existing } })
-      .then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(me){ if(me && me.username){ go(me.redirect, me.role); } })
-      .catch(function(){ /* stay on login */ });
+  function roleOf(user){
+    return (user && user.user_metadata && user.user_metadata.role) || 'subscriber';
   }
+
+  // Already signed in? supabase-js persists the session. Route by role.
+  sb.auth.getSession().then(function(res){
+    var session = res && res.data && res.data.session;
+    if(session && session.user){ go(roleOf(session.user)); }
+  }).catch(function(){ /* stay on login */ });
 
   form.addEventListener('submit', async function(e){
     e.preventDefault();
     var username = document.getElementById('username').value.trim().toLowerCase();
     var password = document.getElementById('password').value;
     if(!username || !password){ show('Enter your username and password.', 'err'); return; }
+    var email = username.indexOf('@') !== -1 ? username : (username + '@' + cfg.EMAIL_DOMAIN);
     btn.disabled = true;
     var orig = btn.textContent;
     btn.textContent = 'Signing in...';
     try{
-      var res = await fetch(cfg.API_BASE + '/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username, password: password })
-      });
-      var data = {};
-      try { data = await res.json(); } catch(_){}
-      if(!res.ok || !data.token){
-        show((data && data.error) || ('Sign in failed (HTTP ' + res.status + ').'), 'err');
+      var out = await sb.auth.signInWithPassword({ email: email, password: password });
+      if(out.error || !out.data || !out.data.session){
+        show('Sign in failed. Check your username and password.', 'err');
         return;
       }
-      localStorage.setItem(cfg.TOKEN_KEY, data.token);
       show('Signed in. Loading your portal...', 'ok');
-      go(data.redirect, data.user && data.user.role);
+      go(roleOf(out.data.user || out.data.session.user));
     } catch(err){
-      show('Could not reach the portal API. The backend may be offline. Try again shortly.', 'err');
+      show('Could not reach the portal. Try again shortly.', 'err');
     } finally {
       btn.disabled = false;
       btn.textContent = orig;

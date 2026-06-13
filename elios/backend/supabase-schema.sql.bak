@@ -222,8 +222,7 @@ create policy lead_grants_select_own on public.lead_grants
 -- the buyer has no SELECT on leads, the join is allowed only for leads
 -- reachable through their own grants (security_invoker + RLS on the join).
 -- Buyers query:  select * from my_leads;
-drop view if exists public.my_leads cascade;
-create view public.my_leads
+create or replace view public.my_leads
 with (security_invoker = true) as
 select
   l.id,
@@ -515,8 +514,7 @@ comment on function public.assign_leads(uuid, uuid[], text) is
 -- is what actually gates rows: a master sees every lead; a subscriber sees
 -- ZERO rows (no leads SELECT policy applies to them). Includes the current
 -- assignment (which subscriber holds the lead) for the assignment board.
-drop view if exists public.all_leads cascade;
-create view public.all_leads
+create or replace view public.all_leads
 with (security_invoker = true) as
 select
   l.id,
@@ -659,8 +657,7 @@ create policy leads_update_master on public.leads
 -- CREATE OR REPLACE keeps the same masters-only gating (security_invoker +
 -- leads_select_master). Adds the two value columns so the admin pool can
 -- show each block's $ and the running total assigned per subscriber.
-drop view if exists public.all_leads cascade;
-create view public.all_leads
+create or replace view public.all_leads
 with (security_invoker = true) as
 select
   l.id,
@@ -697,8 +694,7 @@ left join public.buyers     b on b.id = g.buyer_id;
 -- CREATE OR REPLACE keeps security_invoker=true so lead_grants RLS still
 -- scopes rows to auth.uid(). Adds block_value/value_basis so a subscriber
 -- sees the $ worth of each assigned block and can total their portfolio.
-drop view if exists public.my_leads cascade;
-create view public.my_leads
+create or replace view public.my_leads
 with (security_invoker = true) as
 select
   l.id,

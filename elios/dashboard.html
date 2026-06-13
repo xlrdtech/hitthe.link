@@ -91,9 +91,10 @@
     </div>
   </div>
 
-  <footer>EliOS &middot; leads scoped to your account server-side &middot; api.xlrd.org</footer>
+  <footer>EliOS &middot; leads scoped to your account by row-level security &middot; trackingtogether.com</footer>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/elios/config.js"></script>
 <script>
 (function(){
@@ -107,14 +108,16 @@
   var numVal = function(v){ var n = Number(v); return isFinite(n) ? n : 0; };
   var money = function(v){ return '$' + numVal(v).toLocaleString('en-US', { maximumFractionDigits: 0 }); };
 
-  var token = localStorage.getItem(cfg.TOKEN_KEY);
-  function toLogin(){ window.location.href = '/elios/index.html'; }
-  if(!token){ toLogin(); return; }
+  var sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+  function toLogin(){ window.location.href = cfg.ROUTES.login; }
+  function roleOf(user){ return (user && user.user_metadata && user.user_metadata.role) || 'subscriber'; }
+  function nameOf(user){
+    var m = user && user.user_metadata;
+    return (m && (m.full_name || m.name)) || (user && user.email ? user.email.split('@')[0] : null);
+  }
 
-  function authHeaders(){ return { 'Authorization': 'Bearer ' + token }; }
-
-  $('#signOutBtn').addEventListener('click', function(){
-    localStorage.removeItem(cfg.TOKEN_KEY);
+  $('#signOutBtn').addEventListener('click', async function(){
+    try{ await sb.auth.signOut(); } catch(e){}
     toLogin();
   });
 
@@ -135,7 +138,7 @@
 
     $('#mGranted').textContent = used;
     var activeStages = ['New','Attempted','Follow Up'];
-    $('#mActive').textContent = leads.filter(function(l){ return activeStages.indexOf(l.status) !== -1; }).length;
+    $('#mActive').textContent = leads.filter(function(l){ return activeStages.indexOf(l.pipeline_stage) !== -1; }).length;
     var portfolio = leads.reduce(function(sum, l){ return sum + numVal(l.block_value); }, 0);
     $('#mPortfolio').textContent = money(portfolio);
     $('#leadCountTag').textContent = used + ' lead' + (used===1?'':'s');
@@ -152,19 +155,18 @@
       row.className = 'lead-row';
       var ph = hasPhone(l.phone);
       var bv = numVal(l.block_value);
+      var stage = l.pipeline_stage || 'New';
       var valHtml = '<span class="blockval' + (bv > 0 ? '' : ' zero') + '" title="Block value">' +
         (bv > 0 ? money(bv) : 'no value yet') + '</span>';
-      var alertHtml = l.alert ? (' <span class="alert-flag">' + esc(l.alert) + '</span>') : '';
       row.innerHTML =
         '<div>' +
           '<div class="lead-name">' + esc(l.name || 'Unnamed lead') +
-            ' <span class="stage ' + stageClass(l.status) + '">' + esc(l.status || 'New') + '</span>' + alertHtml +
+            ' <span class="stage ' + stageClass(stage) + '">' + esc(stage) + '</span>' +
           '</div>' +
           '<div class="lead-meta">' +
             (ph ? ('Phone <a href="' + telHref(l.phone) + '">' + esc(l.phone) + '</a> &middot; ') : '') +
-            'Service <b>' + esc(l.service || 'General') + '</b>' +
+            'Service <b>' + esc(l.project_type || 'General') + '</b>' +
             (l.event ? (' &middot; ' + esc(l.event)) : '') +
-            (l.rep ? (' &middot; Rep ' + esc(l.rep)) : '') +
             (l.notes ? ('<br>' + esc(l.notes)) : '') +
           '</div>' +
         '</div>' +
@@ -181,31 +183,24 @@
   }
 
   async function boot(){
-    var me;
-    try{
-      var meRes = await fetch(cfg.API_BASE + '/me', { headers: authHeaders() });
-      if(meRes.status === 401){ localStorage.removeItem(cfg.TOKEN_KEY); toLogin(); return; }
-      me = await meRes.json();
-    } catch(e){
-      $('#loadingPane').classList.add('hidden');
-      $('#app').classList.remove('hidden');
-      showErr('Could not reach the portal API. The backend may be offline. Try again shortly.');
-      render({ full_name: null, leads: [] });
-      return;
-    }
-    // Masters belong on the console.
-    if(me && me.role === 'master'){ window.location.href = '/elios/admin.html'; return; }
+    var sessRes = await sb.auth.getSession();
+    var session = sessRes && sessRes.data && sessRes.data.session;
+    if(!session || !session.user){ toLogin(); return; }
+    var user = session.user;
 
+    // Masters belong on the console.
+    if(roleOf(user) === 'master'){ window.location.href = cfg.ROUTES.admin; return; }
+
+    var fullName = nameOf(user);
     try{
-      var res = await fetch(cfg.API_BASE + '/leads', { headers: authHeaders() });
-      if(res.status === 401){ localStorage.removeItem(cfg.TOKEN_KEY); toLogin(); return; }
-      var data = await res.json();
-      render({ full_name: me && me.full_name, leads: (data && data.leads) || [] });
+      var res = await sb.from('my_leads').select();
+      if(res.error){ throw res.error; }
+      render({ full_name: fullName, leads: res.data || [] });
     } catch(e){
       $('#loadingPane').classList.add('hidden');
       $('#app').classList.remove('hidden');
       showErr('Could not load your leads: ' + (e.message || e) + '.');
-      render({ full_name: me && me.full_name, leads: [] });
+      render({ full_name: fullName, leads: [] });
     }
   }
 

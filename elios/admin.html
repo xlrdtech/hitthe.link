@@ -144,9 +144,10 @@
     </div>
   </div>
 
-  <footer>EliOS &middot; master console &middot; assignment + per-account scoping enforced server-side &middot; api.xlrd.org</footer>
+  <footer>EliOS &middot; master console &middot; assignment + per-account scoping enforced by row-level security &middot; trackingtogether.com</footer>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/elios/config.js"></script>
 <script>
 (function(){
@@ -156,22 +157,20 @@
   var numVal = function(v){ var n = Number(v); return isFinite(n) ? n : 0; };
   var money = function(v){ return '$' + numVal(v).toLocaleString('en-US', { maximumFractionDigits: 0 }); };
 
-  var token = localStorage.getItem(cfg.TOKEN_KEY);
-  function toLogin(){ window.location.href = '/elios/index.html'; }
-  if(!token){ toLogin(); return; }
-  function authHeaders(extra){
-    var h = { 'Authorization': 'Bearer ' + token };
-    if(extra){ for(var k in extra){ h[k] = extra[k]; } }
-    return h;
+  var sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+  function toLogin(){ window.location.href = cfg.ROUTES.login; }
+  function roleOf(user){ return (user && user.user_metadata && user.user_metadata.role) || 'subscriber'; }
+  function nameOf(user){
+    var m = user && user.user_metadata;
+    return (m && (m.full_name || m.name)) || (user && user.email ? user.email.split('@')[0] : null);
   }
 
-  var ROSTER = [];
-  var ALL_LEADS = [];
-  var ASSIGNED = {};          // leadId -> subscriber username (derived from roster grants is not granular; we mark from /leads if available)
-  var SELECTED = new Set();
+  var ROSTER = [];            // [{ id (uuid), full_name, email }]
+  var ALL_LEADS = [];         // rows from all_leads view
+  var SELECTED = new Set();   // lead uuids
   var FILTER = '';
 
-  $('#signOutBtn').addEventListener('click', function(){ localStorage.removeItem(cfg.TOKEN_KEY); toLogin(); });
+  $('#signOutBtn').addEventListener('click', async function(){ try{ await sb.auth.signOut(); }catch(e){} toLogin(); });
   $('#refreshBtn').addEventListener('click', function(){ SELECTED.clear(); load(); });
 
   function showErr(text){ var b = $('#errBanner'); b.textContent = text; b.classList.remove('hidden'); }
@@ -182,35 +181,53 @@
     m.classList.remove('hidden');
   }
 
+  // Per-subscriber granted count + portfolio value, derived from all_leads.
+  function rosterStats(){
+    var byId = {};
+    ROSTER.forEach(function(r){ byId[r.id] = { granted: 0, value: 0 }; });
+    ALL_LEADS.forEach(function(l){
+      if(l.assigned_buyer_id && byId[l.assigned_buyer_id]){
+        byId[l.assigned_buyer_id].granted += 1;
+        byId[l.assigned_buyer_id].value += numVal(l.block_value);
+      }
+    });
+    return byId;
+  }
+
   function renderMetrics(){
+    var stats = rosterStats();
     var total = ALL_LEADS.length;
-    var assignedCount = ROSTER.reduce(function(s, r){ return s + (r.granted || 0); }, 0);
+    var assignedCount = ALL_LEADS.filter(function(l){ return !!l.assigned_buyer_id; }).length;
     var value = ALL_LEADS.reduce(function(s, l){ return s + numVal(l.block_value); }, 0);
     $('#mTotal').textContent = total;
     $('#mAssigned').textContent = assignedCount;
     $('#mValue').textContent = money(value);
     $('#mSubs').textContent = ROSTER.length;
+    window.__ELIOS_STATS = stats;
   }
 
   function renderRoster(){
+    var stats = window.__ELIOS_STATS || rosterStats();
     var list = $('#rosterList');
     list.innerHTML = '';
     $('#rosterCountTag').textContent = ROSTER.length + ' subscriber' + (ROSTER.length===1?'':'s');
     if(!ROSTER.length){ list.innerHTML = '<div class="empty">No subscribers on the roster.</div>'; return; }
     var frag = document.createDocumentFragment();
     ROSTER.forEach(function(r){
+      var st = stats[r.id] || { granted: 0, value: 0 };
+      var handle = r.email ? r.email.split('@')[0] : r.id;
       var row = document.createElement('div');
       row.className = 'roster-row';
       row.innerHTML =
         '<div>' +
-          '<div class="roster-name">' + esc(r.full_name || r.username) + '</div>' +
-          '<div class="roster-meta">@' + esc(r.username) + '</div>' +
-          '<div class="roster-value">Portfolio value <b>' + money(r.granted_value) + '</b></div>' +
+          '<div class="roster-name">' + esc(r.full_name || handle) + '</div>' +
+          '<div class="roster-meta">@' + esc(handle) + '</div>' +
+          '<div class="roster-value">Portfolio value <b>' + money(st.value) + '</b></div>' +
         '</div>' +
         '<div class="roster-quota">' +
-          '<div class="nums"><b>' + (r.granted||0) + '</b> leads assigned</div>' +
+          '<div class="nums"><b>' + st.granted + '</b> leads assigned</div>' +
         '</div>' +
-        '<div class="assign-quick"><button class="btn sm" data-pick="' + esc(r.username) + '">Pick</button></div>';
+        '<div class="assign-quick"><button class="btn sm" data-pick="' + esc(r.id) + '">Pick</button></div>';
       frag.appendChild(row);
     });
     list.appendChild(frag);
@@ -223,14 +240,17 @@
   }
 
   function renderBuyerSelect(){
+    var stats = window.__ELIOS_STATS || rosterStats();
     var sel = $('#assignBuyer');
     var prev = sel.value;
     sel.innerHTML = '';
     if(!ROSTER.length){ sel.innerHTML = '<option value="">No subscribers</option>'; return; }
     ROSTER.forEach(function(r){
+      var st = stats[r.id] || { granted: 0 };
+      var handle = r.email ? r.email.split('@')[0] : r.id;
       var opt = document.createElement('option');
-      opt.value = r.username;
-      opt.textContent = (r.full_name || r.username) + '  (' + (r.granted||0) + ' assigned)';
+      opt.value = r.id;
+      opt.textContent = (r.full_name || handle) + '  (' + st.granted + ' assigned)';
       sel.appendChild(opt);
     });
     if(prev){ sel.value = prev; }
@@ -242,7 +262,7 @@
     if(!FILTER) return ALL_LEADS;
     var f = FILTER.toLowerCase();
     return ALL_LEADS.filter(function(l){
-      return [l.name, l.phone, l.service, l.event, l.rep, l.status].join(' ').toLowerCase().indexOf(f) !== -1;
+      return [l.name, l.phone, l.project_type, l.event, l.rep, l.pipeline_stage, l.source_ref].join(' ').toLowerCase().indexOf(f) !== -1;
     });
   }
 
@@ -258,19 +278,23 @@
     shown.slice(0, cap).forEach(function(l){
       var bv = numVal(l.block_value);
       var valHtml = '<span class="blockval' + (bv > 0 ? '' : ' zero') + '">' + (bv > 0 ? money(bv) : 'no value') + '</span>';
-      var alertHtml = l.alert ? (' <span class="alert-flag">' + esc(l.alert) + '</span>') : '';
+      var assignedHtml = l.assigned_buyer_name
+        ? (' <span class="alert-flag" style="color:var(--gold1);border-color:rgba(216,180,106,.35);background:rgba(216,180,106,.08)">assigned ' + esc(l.assigned_buyer_name) + '</span>')
+        : '';
+      var stage = l.pipeline_stage || 'New';
       var row = document.createElement('div');
       row.className = 'lead-row';
-      var stClass = (l.status === 'New') ? 'New' : 'default';
+      var stClass = (stage === 'New') ? 'New' : 'default';
+      var disabled = !!l.assigned_buyer_id;  // already granted leads cannot be re-assigned
       row.innerHTML =
-        '<input type="checkbox" class="lead-pick" ' + (SELECTED.has(l.id) ? 'checked ' : '') + 'data-id="' + esc(l.id) + '" aria-label="Select lead">' +
+        '<input type="checkbox" class="lead-pick" ' + (SELECTED.has(l.id) ? 'checked ' : '') + (disabled ? 'disabled ' : '') + 'data-id="' + esc(l.id) + '" aria-label="Select lead">' +
         '<div>' +
           '<div class="lead-name">' + esc(l.name || 'Unnamed lead') +
-            ' <span class="lstat ' + stClass + '">' + esc(l.status || 'New') + '</span>' + alertHtml +
+            ' <span class="lstat ' + stClass + '">' + esc(stage) + '</span>' + assignedHtml +
           '</div>' +
           '<div class="lead-meta">' +
             (l.phone ? ('Phone <b>' + esc(l.phone) + '</b> &middot; ') : '') +
-            'Service <b>' + esc(l.service || 'General') + '</b>' +
+            'Service <b>' + esc(l.project_type || 'General') + '</b>' +
             (l.event ? (' &middot; ' + esc(l.event)) : '') +
             (l.rep ? (' &middot; Rep ' + esc(l.rep)) : '') +
           '</div>' +
@@ -299,7 +323,7 @@
 
   $('#selectAll').addEventListener('click', function(e){
     e.preventDefault();
-    var shown = visibleLeads();
+    var shown = visibleLeads().filter(function(l){ return !l.assigned_buyer_id; });
     var allOn = shown.length && shown.every(function(l){ return SELECTED.has(l.id); });
     if(allOn){ shown.forEach(function(l){ SELECTED.delete(l.id); }); }
     else { shown.forEach(function(l){ SELECTED.add(l.id); }); }
@@ -307,7 +331,7 @@
   });
 
   $('#assignBtn').addEventListener('click', async function(){
-    var subscriber = $('#assignBuyer').value;
+    var subscriber = $('#assignBuyer').value;   // subscriber uuid
     var ids = Array.from(SELECTED);
     if(!subscriber){ showAssignMsg('Pick a subscriber to assign to.', 'err'); return; }
     if(!ids.length){ showAssignMsg('Tick one or more leads in the pool first.', 'err'); return; }
@@ -318,27 +342,21 @@
     var orig = this.textContent;
     this.textContent = 'Assigning...';
     try{
-      var res = await fetch(cfg.API_BASE + '/assign', {
-        method: 'POST',
-        headers: authHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ subscriber: subscriber, lead_ids: ids })
-      });
-      var data = {};
-      try { data = await res.json(); } catch(_){}
-      if(res.status === 401){ localStorage.removeItem(cfg.TOKEN_KEY); toLogin(); return; }
-      if(!res.ok || !data.ok){
-        showAssignMsg('Assign failed: ' + esc((data && data.error) || ('HTTP ' + res.status)), 'err');
+      var res = await sb.rpc('assign_leads', { p_subscriber: subscriber, p_lead_ids: ids });
+      if(res.error){
+        showAssignMsg('Assign failed: ' + esc(res.error.message || 'unknown error'), 'err');
         return;
       }
-      var skipped = data.skipped || 0;
-      showAssignMsg('Assigned <b>' + data.assigned + '</b> of ' + ids.length + ' to <b>' + esc(label) + '</b>' +
-        (skipped ? ' &middot; ' + skipped + ' skipped (already assigned or invalid).' : '.'),
+      var assigned = (res.data && res.data.length) || 0;
+      var skipped = ids.length - assigned;
+      showAssignMsg('Assigned <b>' + assigned + '</b> of ' + ids.length + ' to <b>' + esc(label) + '</b>' +
+        (skipped ? ' &middot; ' + skipped + ' skipped (already assigned or unavailable).' : '.'),
         skipped ? 'warn' : 'ok');
       SELECTED.clear();
       await load();
       $('#assignBuyer').value = subscriber;
     } catch(err){
-      showAssignMsg('Assign error: ' + esc(err.message || String(err)), 'err');
+      showAssignMsg('Assign error: ' + esc((err && err.message) || String(err)), 'err');
     } finally {
       this.disabled = false;
       this.textContent = orig;
@@ -346,16 +364,15 @@
   });
 
   async function load(){
-    var rRes = await fetch(cfg.API_BASE + '/roster', { headers: authHeaders() });
-    if(rRes.status === 401){ localStorage.removeItem(cfg.TOKEN_KEY); toLogin(); return; }
-    if(rRes.status === 403){ window.location.href = '/elios/dashboard.html'; return; }
-    var rData = await rRes.json();
-    ROSTER = (rData && rData.roster) || [];
+    var rRes = await sb.from('buyers').select('id, full_name, email, role').eq('role', 'subscriber');
+    if(rRes.error){ throw rRes.error; }
+    ROSTER = (rRes.data || []).sort(function(a, b){
+      return String(a.full_name || a.email || '').localeCompare(String(b.full_name || b.email || ''));
+    });
 
-    var lRes = await fetch(cfg.API_BASE + '/leads', { headers: authHeaders() });
-    if(lRes.status === 401){ localStorage.removeItem(cfg.TOKEN_KEY); toLogin(); return; }
-    var lData = await lRes.json();
-    ALL_LEADS = (lData && lData.leads) || [];
+    var lRes = await sb.from('all_leads').select();
+    if(lRes.error){ throw lRes.error; }
+    ALL_LEADS = lRes.data || [];
 
     renderMetrics();
     renderRoster();
@@ -364,26 +381,21 @@
   }
 
   async function boot(){
-    var me;
-    try{
-      var meRes = await fetch(cfg.API_BASE + '/me', { headers: authHeaders() });
-      if(meRes.status === 401){ localStorage.removeItem(cfg.TOKEN_KEY); toLogin(); return; }
-      me = await meRes.json();
-    } catch(e){
-      $('#loadingPane').classList.add('hidden');
-      $('#app').classList.remove('hidden');
-      showErr('Could not reach the portal API. The backend may be offline.');
-      return;
-    }
-    if(me && me.role !== 'master'){ window.location.href = '/elios/dashboard.html'; return; }
-    if(me){ $('#masterName').textContent = me.full_name || me.username || 'Master'; }
+    var sessRes = await sb.auth.getSession();
+    var session = sessRes && sessRes.data && sessRes.data.session;
+    if(!session || !session.user){ toLogin(); return; }
+    var user = session.user;
+
+    // Non-masters belong on the subscriber dashboard.
+    if(roleOf(user) !== 'master'){ window.location.href = cfg.ROUTES.dashboard; return; }
+    $('#masterName').textContent = nameOf(user) || 'Master';
 
     $('#loadingPane').classList.add('hidden');
     $('#app').classList.remove('hidden');
     try{
       await load();
     } catch(err){
-      showErr('Could not load master data: ' + (err.message || err) + '.');
+      showErr('Could not load master data: ' + ((err && err.message) || err) + '.');
     }
   }
 
