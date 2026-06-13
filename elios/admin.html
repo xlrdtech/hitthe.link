@@ -3,10 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>EliOS &mdash; Master Console</title>
+<title>Tracking Together &mdash; Master Console</title>
 <meta name="robots" content="noindex,nofollow">
-<meta name="description" content="EliOS master console. Full lead pool, subscriber roster, and lead assignment for masters.">
-<meta name="theme-color" content="#f6f8fb">
+<meta name="description" content="Tracking Together master console. Full lead pool, subscriber roster, and lead assignment for masters.">
+<meta name="theme-color" content="#f6f8fb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0f14" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="/elios/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/elios/icon-192.png">
+<link rel="apple-touch-icon" href="/elios/apple-touch-icon.png">
+<link rel="manifest" href="/elios/site.webmanifest">
+<script src="/elios/theme.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -48,7 +54,7 @@
   @media(max-width:680px){.assign-bar{grid-template-columns:1fr}.roster-row{grid-template-columns:1fr;gap:8px}.roster-quota{text-align:left}}
   .field select{
     width:100%;padding:12px 14px;border-radius:11px;border:1px solid var(--line);
-    background:#fff;color:var(--ink);font-size:14.5px;transition:.18s ease;
+    background:var(--surface);color:var(--ink);font-size:14.5px;transition:.18s ease;
     -webkit-appearance:none;appearance:none;
     background-image:linear-gradient(45deg,transparent 50%,var(--steel1) 50%),linear-gradient(135deg,var(--steel1) 50%,transparent 50%);
     background-position:calc(100% - 18px) 19px,calc(100% - 13px) 19px;background-size:5px 5px,5px 5px;background-repeat:no-repeat;
@@ -58,7 +64,7 @@
   .selectall{font-size:12px;color:var(--gold1);cursor:pointer;text-decoration:none;white-space:nowrap}
   .master-pill .dot{background:var(--gold1)}
   .toolbar{display:flex;gap:10px;align-items:center;margin:16px 0 8px;flex-wrap:wrap}
-  .search{flex:1;min-width:160px;padding:10px 13px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);font-size:13.5px}
+  .search{flex:1;min-width:160px;padding:10px 13px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:13.5px}
   .search:focus{outline:none;border-color:rgba(21,128,61,.6)}
 </style>
 </head>
@@ -67,13 +73,14 @@
 
   <div class="topbar">
     <a class="brand" href="/elios/admin.html" style="text-decoration:none;color:inherit">
-      <span class="mark">E</span>
-      <span class="name">EliOS<small>Master Console</small></span>
+      <img class="tt-logo" src="/elios/tt-logo.png" alt="Tracking Together">
+      <span style="font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);border-left:1px solid var(--line);padding-left:11px;font-weight:600">Master Console</span>
     </a>
     <div class="navbtns">
       <a class="btn sm ghost" href="/elios/dashboard.html">My dashboard</a>
       <button class="btn sm ghost" id="refreshBtn">Refresh</button>
       <button class="btn sm ghost" id="signOutBtn">Sign out</button>
+      <button class="theme-toggle" id="themeToggle" title="Toggle light / dark" aria-label="Toggle theme"><span class="moon">&#127769;</span><span class="sun">&#9728;&#65039;</span></button>
     </div>
   </div>
 
@@ -134,10 +141,19 @@
       </div>
       <div id="assignMsg" class="note hidden"></div>
 
-      <div class="toolbar">
-        <input id="search" class="search" type="text" placeholder="Filter by name, phone, service, event...">
-        <a class="selectall" id="selectAll" href="#">Select all shown</a>
+      <div class="chips" id="chips"></div>
+      <div class="filters">
+        <div class="search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="q" type="search" placeholder="Search name, phone, service, notes...">
+        </div>
+        <select id="f-event"><option value="">All Events</option></select>
+        <select id="f-rep"><option value="">All Reps</option></select>
+        <button class="clearf" id="f-clear">Clear</button>
       </div>
+      <div id="filter-banner"><span id="filter-banner-text"></span><button id="filter-banner-clear">Show all leads</button></div>
+      <div class="count" id="count"></div>
+      <div class="toolbar"><a class="selectall" id="selectAll" href="#">Select all shown</a></div>
       <div id="poolList"></div>
     </div>
   </div>
@@ -166,7 +182,9 @@
   var ROSTER = [];            // [{ id (uuid), full_name, email }]
   var ALL_LEADS = [];         // rows from all_leads view
   var SELECTED = new Set();   // lead uuids
-  var FILTER = '';
+  // Full filter state (ported from the original eliops tool). status -> pipeline_stage.
+  var FILT = { chip:'all', q:'', event:'', rep:'' };
+  function isStop(l){ return (l.pipeline_stage || '') === 'STOP'; }
 
   $('#signOutBtn').addEventListener('click', async function(){ try{ await sb.auth.signOut(); }catch(e){} toLogin(); });
   $('#refreshBtn').addEventListener('click', function(){ SELECTED.clear(); load(); });
@@ -256,18 +274,86 @@
 
   function updateSelCount(){ $('#selCount').textContent = SELECTED.size + ' selected'; }
 
-  function visibleLeads(){
-    if(!FILTER) return ALL_LEADS;
-    var f = FILTER.toLowerCase();
-    return ALL_LEADS.filter(function(l){
-      return [l.name, l.phone, l.project_type, l.event, l.rep, l.pipeline_stage, l.source_ref].join(' ').toLowerCase().indexOf(f) !== -1;
+  // ---- status chips (live counts, derived from the loaded pool) ----
+  function stageCounts(){
+    var c = { all: ALL_LEADS.length, New:0, Booked:0, 'Follow Up':0, Attempted:0, STOP:0 };
+    ALL_LEADS.forEach(function(l){
+      if(isStop(l)){ c.STOP++; return; }
+      var s = l.pipeline_stage;
+      if(s in c) c[s]++;
+    });
+    return c;
+  }
+  function renderChips(){
+    var c = stageCounts(), box = $('#chips'); box.innerHTML = '';
+    var defs = [['all','All'],['New','New'],['Booked','Booked'],['Follow Up','Follow Up'],['Attempted','Attempted'],['STOP','STOP']];
+    defs.forEach(function(d){
+      var k = d[0];
+      var b = document.createElement('button');
+      b.className = 'chip' + (k==='STOP'?' stop':'') + (FILT.chip===k?' on':'');
+      b.innerHTML = '<span class="n">' + (k==='all'?c.all:(c[k]||0)) + '</span> ' + d[1];
+      b.addEventListener('click', function(){ FILT.chip = k; applyFilters(); });
+      box.appendChild(b);
     });
   }
+
+  // ---- event / rep dropdowns (distinct values from the pool) ----
+  function fillSelect(sel, values, allLabel){
+    var prev = sel.value;
+    sel.innerHTML = '<option value="">' + allLabel + '</option>';
+    values.forEach(function(v){ var o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o); });
+    if(prev && values.indexOf(prev) !== -1) sel.value = prev;
+  }
+  function populateFilterDropdowns(){
+    var events = {}, reps = {};
+    ALL_LEADS.forEach(function(l){ if(l.event) events[l.event]=1; if(l.rep) reps[l.rep]=1; });
+    fillSelect($('#f-event'), Object.keys(events).sort(), 'All Events');
+    fillSelect($('#f-rep'), Object.keys(reps).sort(), 'All Reps');
+  }
+
+  // ---- the filter engine (chip + event + rep + search, STOP suppressed) ----
+  function visibleLeads(){
+    return ALL_LEADS.filter(function(l){
+      if(FILT.chip === 'STOP') return isStop(l);
+      if(isStop(l)) return false;                                  // STOPs hidden unless STOP chip active
+      if(FILT.chip !== 'all' && (l.pipeline_stage||'') !== FILT.chip) return false;
+      if(FILT.event && l.event !== FILT.event) return false;
+      if(FILT.rep && l.rep !== FILT.rep) return false;
+      if(FILT.q){
+        var q = FILT.q.toLowerCase();
+        var hay = [l.name,l.phone,l.address,l.project_type,l.notes,l.event,l.rep].map(function(x){return x||'';}).join(' ').toLowerCase();
+        if(hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+  }
+
+  function renderFilterBanner(){
+    var b = $('#filter-banner');
+    var active = FILT.chip !== 'all' || FILT.q || FILT.event || FILT.rep;
+    if(!active){ b.classList.remove('on'); return; }
+    var parts = [];
+    if(FILT.chip !== 'all') parts.push('status <b>' + esc(FILT.chip) + '</b>');
+    if(FILT.event) parts.push('event <b>' + esc(FILT.event) + '</b>');
+    if(FILT.rep) parts.push('rep <b>' + esc(FILT.rep) + '</b>');
+    if(FILT.q) parts.push('matching <b>"' + esc(FILT.q) + '"</b>');
+    $('#filter-banner-text').innerHTML = 'Filtering by ' + parts.join(' &middot; ');
+    b.classList.add('on');
+  }
+  function clearFilters(){
+    FILT = { chip:'all', q:'', event:'', rep:'' };
+    if($('#q')) $('#q').value = '';
+    if($('#f-event')) $('#f-event').value = '';
+    if($('#f-rep')) $('#f-rep').value = '';
+    applyFilters();
+  }
+  function applyFilters(){ renderChips(); renderFilterBanner(); renderPool(); }
 
   function renderPool(){
     var list = $('#poolList');
     var shown = visibleLeads();
     $('#poolCountTag').innerHTML = shown.length + ' shown &middot; ' + ALL_LEADS.length + ' total';
+    $('#count').textContent = shown.length + ' of ' + ALL_LEADS.length + ' leads shown';
     list.innerHTML = '';
     if(!shown.length){ list.innerHTML = '<div class="empty">No leads match this filter.</div>'; return; }
     var frag = document.createDocumentFragment();
@@ -317,7 +403,11 @@
     updateSelCount();
   }
 
-  $('#search').addEventListener('input', function(){ FILTER = this.value.trim(); renderPool(); });
+  $('#q').addEventListener('input', function(){ FILT.q = this.value.trim(); renderFilterBanner(); renderPool(); });
+  $('#f-event').addEventListener('change', function(){ FILT.event = this.value; applyFilters(); });
+  $('#f-rep').addEventListener('change', function(){ FILT.rep = this.value; applyFilters(); });
+  $('#f-clear').addEventListener('click', clearFilters);
+  $('#filter-banner-clear').addEventListener('click', clearFilters);
 
   $('#selectAll').addEventListener('click', function(e){
     e.preventDefault();
@@ -375,7 +465,8 @@
     renderMetrics();
     renderRoster();
     renderBuyerSelect();
-    renderPool();
+    populateFilterDropdowns();
+    applyFilters();   // renders chips + banner + pool
   }
 
   async function boot(){
