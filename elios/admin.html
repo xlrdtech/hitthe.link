@@ -202,6 +202,10 @@
         <div><label for="e-rep">Rep</label><input id="e-rep"></div>
       </div>
       <div><label for="e-event">Event</label><input id="e-event" placeholder="Where the lead was captured"></div>
+      <div class="mrow2">
+        <div><label for="e-blockval">Block value ($)</label><input id="e-blockval" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></div>
+        <div><label for="e-basis">Value basis</label><input id="e-basis" placeholder="e.g. quoted, estimate"></div>
+      </div>
       <div><label for="e-notes">Notes</label><textarea id="e-notes" rows="3"></textarea></div>
     </form>
     <div id="editMsg" class="note hidden" style="margin:6px 22px 0"></div>
@@ -538,14 +542,18 @@
     $('#e-name').value=l.name||''; $('#e-phone').value=l.phone||''; $('#e-project').value=l.project_type||'';
     $('#e-address').value=l.address||''; fillStageSelect(l.pipeline_stage||'New'); $('#e-rep').value=l.rep||'';
     $('#e-event').value=l.event||''; $('#e-notes').value=l.notes||'';
+    $('#e-blockval').value=(l.block_value!=null?l.block_value:''); $('#e-basis').value=l.value_basis||'';
     $('#editRemove').style.display=''; $('#editMsg').classList.add('hidden'); resetRemove(); openModal();
   }
   function openNew(){
     $('#editTitle').textContent='New lead'; $('#e-id').value='';
-    ['e-name','e-phone','e-project','e-address','e-rep','e-event','e-notes'].forEach(function(id){ $('#'+id).value=''; });
+    ['e-name','e-phone','e-project','e-address','e-rep','e-event','e-blockval','e-basis','e-notes'].forEach(function(id){ $('#'+id).value=''; });
     fillStageSelect('New'); $('#editRemove').style.display='none'; $('#editMsg').classList.add('hidden'); resetRemove(); openModal();
   }
   function leadFromForm(){
+    var bvRaw = $('#e-blockval').value.trim();
+    var bv = bvRaw === '' ? null : Math.max(0, Number(bvRaw));
+    if(bv !== null && !isFinite(bv)) bv = null;
     return {
       name: $('#e-name').value.trim(),
       phone: $('#e-phone').value.trim() || null,
@@ -554,6 +562,8 @@
       pipeline_stage: $('#e-stage').value,
       rep: $('#e-rep').value.trim() || null,
       event: $('#e-event').value.trim() || null,
+      block_value: bv,
+      value_basis: $('#e-basis').value.trim() || null,
       notes: $('#e-notes').value.trim() || null
     };
   }
@@ -581,6 +591,8 @@
     try{
       var res = await sb.from('leads').update({ status:'retired' }).eq('id', id);
       if(res.error){ showEditMsg('Remove failed: ' + esc(res.error.message||'error'), 'err'); resetRemove(); return; }
+      // also pull back any grant so the lead truly leaves the subscriber's view (master has lead_grants delete policy)
+      try{ await sb.from('lead_grants').delete().eq('lead_id', id); }catch(e){}
       SELECTED.delete(id); closeEditModal(); await load();
     } catch(err){ showEditMsg('Remove error: ' + esc((err&&err.message)||String(err)), 'err'); resetRemove(); }
   });
