@@ -723,3 +723,20 @@ where g.buyer_id = (select auth.uid());
 grant select on public.all_leads to authenticated;
 grant select on public.my_leads  to authenticated;
 -- =====================================================================
+
+-- ============================================================
+-- FIX 2026-06-13: subscriber can read leads GRANTED to them.
+-- Without this, my_leads (security_invoker view joining leads)
+-- returned 0 for subscribers even with valid grants, because
+-- subscribers had no SELECT policy on leads (only the raw-table
+-- block). Masters keep leads_select_master (all). This grants a
+-- subscriber read of ONLY leads present in their own lead_grants.
+-- Verified live: master assigns -> subscriber sees exactly those.
+-- ============================================================
+drop policy if exists leads_select_granted on public.leads;
+create policy leads_select_granted on public.leads
+  for select to authenticated
+  using (exists (
+    select 1 from public.lead_grants g
+    where g.lead_id = leads.id and g.buyer_id = auth.uid()
+  ));
