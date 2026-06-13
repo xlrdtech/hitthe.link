@@ -1,45 +1,43 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>EliOS &mdash; Your Leads</title>
 <meta name="robots" content="noindex,nofollow">
 <meta name="description" content="Your EliOS dashboard. The qualified leads assigned to your account.">
-<meta name="theme-color" content="#07070a">
+<meta name="theme-color" content="#f6f8fb">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/elios/brand.css">
 <style>
   .metric{padding:18px 20px}
-  .metric .big{font-family:"Fraunces",Georgia,serif;font-size:38px;font-weight:600;line-height:1;
-    background:linear-gradient(92deg,#fff,var(--gold1) 60%,var(--gold2));-webkit-background-clip:text;background-clip:text;color:transparent}
-  .metric .big.is-money{font-size:32px}
+  .metric .big{font-family:"Fraunces",Georgia,serif;font-size:38px;font-weight:600;line-height:1;color:var(--ink)}
+  .metric .big.is-money{font-size:32px;color:var(--gold1)}
   .metric .lbl{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--mut);margin-top:8px}
   .lead-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;padding:14px 0;border-top:1px solid var(--line)}
   .lead-row:first-child{border-top:none}
-  .lead-name{font-weight:650;color:#fff;font-size:15px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .lead-name{font-weight:650;color:var(--ink);font-size:15px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
   .lead-meta{font-size:12.5px;color:var(--mut);margin-top:4px;line-height:1.55;word-break:break-word}
-  .lead-meta a{color:var(--steel1);text-decoration:none}
+  .lead-meta a{color:var(--gold1);text-decoration:none}
   .lead-meta b{color:var(--ink);font-weight:600}
   .stage{font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:4px 9px;border-radius:7px;border:1px solid;white-space:nowrap}
-  .stage.New{color:#c084fc;border-color:#c084fc;background:rgba(192,132,252,.12)}
-  .stage.FollowUp{color:var(--warn);border-color:var(--warn);background:rgba(255,212,121,.1)}
-  .stage.Attempted{color:#fb923c;border-color:#fb923c;background:rgba(251,146,60,.12)}
-  .stage.Interested{color:var(--gold1);border-color:var(--gold);background:rgba(216,180,106,.12)}
-  .stage.Booked{color:var(--ok);border-color:var(--ok);background:rgba(127,227,163,.12)}
-  .stage.default{color:var(--steel1);border-color:var(--steel2);background:rgba(184,192,204,.1)}
+  .stage.New{color:#7c3aed;border-color:rgba(124,58,237,.4);background:rgba(124,58,237,.1)}
+  .stage.FollowUp{color:var(--warn);border-color:rgba(180,83,9,.4);background:rgba(180,83,9,.09)}
+  .stage.Attempted{color:#c2410c;border-color:rgba(194,65,12,.4);background:rgba(194,65,12,.09)}
+  .stage.Interested{color:var(--gold1);border-color:rgba(21,128,61,.4);background:rgba(21,128,61,.09)}
+  .stage.Booked{color:var(--ok);border-color:rgba(21,128,61,.4);background:rgba(21,128,61,.1)}
+  .stage.default{color:var(--steel1);border-color:var(--line);background:rgba(15,23,42,.05)}
   .lead-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
-  .blockval{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:16px;font-weight:600;
-    background:linear-gradient(92deg,#fff,var(--gold1) 65%,var(--gold2));-webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
-  .blockval.zero{background:none;-webkit-text-fill-color:var(--mut);color:var(--mut);font-weight:400}
+  .blockval{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:16px;font-weight:600;color:var(--gold1);white-space:nowrap}
+  .blockval.zero{color:var(--mut);font-weight:400}
   .lead-actions{display:flex;gap:7px;flex-shrink:0}
-  .act{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:15px;border:1px solid var(--line);background:rgba(0,0,0,.25);text-decoration:none}
-  .act.call{border-color:rgba(127,227,163,.4);color:var(--ok)}
-  .act.text{border-color:rgba(216,180,106,.4);color:var(--gold1)}
+  .act{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:15px;border:1px solid var(--line);background:#fff;text-decoration:none}
+  .act.call{border-color:rgba(21,128,61,.4);color:var(--ok)}
+  .act.text{border-color:rgba(21,128,61,.4);color:var(--gold1)}
   .empty{text-align:center;padding:46px 20px;color:var(--mut);font-size:13px}
-  .alert-flag{font-size:10.5px;font-weight:700;color:var(--err);border:1px solid rgba(255,138,138,.35);background:rgba(255,138,138,.08);border-radius:7px;padding:3px 8px}
+  .alert-flag{font-size:10.5px;font-weight:700;color:var(--err);border:1px solid rgba(220,38,38,.35);background:rgba(220,38,38,.07);border-radius:7px;padding:3px 8px}
 </style>
 </head>
 <body>

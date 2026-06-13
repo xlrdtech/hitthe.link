@@ -1,17 +1,25 @@
 /* ===================================================================
    EliOS Buyer Portal — brand stylesheet
-   Obsidian / metallic-iridescent. Fraunces (display), JetBrains Mono
-   (mono accents), system sans body. Gold gradient + glass.
+   LIGHT MODE FIRST. Clean professional CRM: white / near-white surfaces,
+   dark slate text, forest/emerald green accent (#15803d / #16a34a) for
+   buttons, links and badges. Fraunces (display), JetBrains Mono (mono
+   accents), system sans body. WCAG-AA contrast on light.
    No em-dashes anywhere in copy.
    =================================================================== */
 
 :root{
-  --bg:#07070a; --bg2:#15151f; --ink:#ececf2; --mut:#8b8b9a;
-  --steel1:#b8c0cc; --steel2:#6e7787;
-  --gold:#d9b46a; --gold1:#f4e2a8; --gold2:#b8923e;
-  --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.045);
-  --ok:#7fe3a3; --warn:#ffd479; --live:#5ad1a0; --err:#ff8a8a;
-  --glass:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  /* surfaces + text (light) */
+  --bg:#f6f8fb; --bg2:#ffffff; --ink:#0f172a; --mut:#64748b;
+  /* secondary / link slates (readable on light) */
+  --steel1:#475569; --steel2:#94a3b8;
+  /* accent green family (was gold). --gold = primary action,
+     --gold1 = deep forest for text/hover, --gold2 = bright emerald */
+  --gold:#16a34a; --gold1:#15803d; --gold2:#22c55e;
+  /* hairlines on light */
+  --line:rgba(15,23,42,.10); --line2:rgba(15,23,42,.06);
+  /* status (readable on light) */
+  --ok:#15803d; --warn:#b45309; --live:#15803d; --err:#dc2626;
+  --glass:#ffffff;
   --radius:16px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -29,8 +37,7 @@ body{
 .display{
   font-family:"Fraunces",Georgia,serif;
   font-size:clamp(30px,5.4vw,52px);line-height:1.04;font-weight:600;letter-spacing:-.01em;
-  background:linear-gradient(92deg,var(--steel1),#fff 28%,var(--gold1) 54%,var(--gold2) 80%,var(--steel2));
-  -webkit-background-clip:text;background-clip:text;color:transparent;margin:10px 0 8px;
+  color:var(--ink);margin:10px 0 8px;
 }
 .sub{color:var(--mut);font-size:13.5px;max-width:62ch}
 .mono{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
@@ -40,8 +47,8 @@ body{
 .brand{display:flex;align-items:center;gap:11px}
 .brand .mark{
   width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-weight:800;font-size:15px;
-  background:linear-gradient(135deg,var(--gold1),var(--gold2));color:#1a1206;
-  box-shadow:0 0 22px -6px var(--gold),0 1px 0 rgba(255,255,255,.4) inset;
+  background:linear-gradient(135deg,var(--gold2),var(--gold1));color:#fff;
+  box-shadow:0 2px 8px -2px rgba(21,128,61,.45);
 }
 .brand .name{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:18px;letter-spacing:.01em}
 .brand .name small{display:block;font-family:inherit;font-size:10.5px;letter-spacing:.28em;color:var(--mut);text-transform:uppercase;font-weight:400}
@@ -49,17 +56,16 @@ body{
 
 /* ---- pill / status ---- */
 .pill{display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.04em}
-.pill.live{border:1px solid rgba(90,209,160,.35);background:rgba(90,209,160,.07);color:var(--live)}
-.pill.warn{border:1px solid rgba(255,212,121,.35);background:rgba(255,212,121,.07);color:var(--warn)}
-.pill.gold{border:1px solid rgba(216,180,106,.4);background:rgba(216,180,106,.08);color:var(--gold1)}
-.dot{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 10px currentColor;animation:p 1.8s infinite}
+.pill.live{border:1px solid rgba(21,128,61,.35);background:rgba(21,128,61,.08);color:var(--live)}
+.pill.warn{border:1px solid rgba(180,83,9,.35);background:rgba(180,83,9,.08);color:var(--warn)}
+.pill.gold{border:1px solid rgba(21,128,61,.4);background:rgba(21,128,61,.08);color:var(--gold1)}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 6px currentColor;animation:p 1.8s infinite}
 @keyframes p{0%,100%{opacity:1}50%{opacity:.4}}
 
-/* ---- glass card ---- */
+/* ---- card ---- */
 .card{
   background:var(--glass);border:1px solid var(--line);border-radius:var(--radius);padding:22px;
-  box-shadow:0 1px 0 rgba(255,255,255,.05) inset,0 22px 55px -32px #000;
-  backdrop-filter:blur(8px);
+  box-shadow:0 1px 2px rgba(15,23,42,.04),0 12px 30px -22px rgba(15,23,42,.25);
 }
 .card h2{font-size:16px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:9px}
 .card .tag{font-size:11px;color:var(--mut);font-weight:500}
@@ -69,17 +75,18 @@ body{
   display:inline-flex;align-items:center;justify-content:center;gap:9px;cursor:pointer;
   font:600 14px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;
   padding:12px 18px;border-radius:11px;border:1px solid var(--line);
-  background:rgba(255,255,255,.04);color:var(--ink);transition:.18s ease;text-decoration:none;
+  background:#fff;color:var(--ink);transition:.18s ease;text-decoration:none;
 }
-.btn:hover{background:rgba(255,255,255,.08);transform:translateY(-1px)}
+.btn:hover{background:#f1f5f9;transform:translateY(-1px)}
 .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
 .btn.gold{
-  border:1px solid transparent;color:#1a1206;font-weight:700;
-  background:linear-gradient(135deg,var(--gold1),var(--gold) 55%,var(--gold2));
-  box-shadow:0 0 26px -8px var(--gold),0 1px 0 rgba(255,255,255,.4) inset;
+  border:1px solid transparent;color:#fff;font-weight:700;
+  background:linear-gradient(135deg,var(--gold2),var(--gold) 55%,var(--gold1));
+  box-shadow:0 2px 10px -3px rgba(21,128,61,.5);
 }
-.btn.gold:hover{box-shadow:0 0 34px -6px var(--gold),0 1px 0 rgba(255,255,255,.5) inset}
+.btn.gold:hover{box-shadow:0 4px 14px -3px rgba(21,128,61,.55);background:linear-gradient(135deg,var(--gold2),var(--gold) 50%,var(--gold1))}
 .btn.ghost{background:transparent}
+.btn.ghost:hover{background:#f1f5f9}
 .btn.sm{padding:8px 13px;font-size:13px;border-radius:9px}
 .btn.full{width:100%}
 .btn .g-ico{width:17px;height:17px;display:block}
@@ -89,20 +96,21 @@ body{
 .field label{display:block;font-size:12px;color:var(--mut);margin-bottom:6px;letter-spacing:.02em}
 .field input{
   width:100%;padding:12px 14px;border-radius:11px;border:1px solid var(--line);
-  background:rgba(0,0,0,.25);color:var(--ink);font-size:14.5px;transition:.18s ease;
+  background:#fff;color:var(--ink);font-size:14.5px;transition:.18s ease;
 }
-.field input:focus{outline:none;border-color:rgba(216,180,106,.5);box-shadow:0 0 0 3px rgba(216,180,106,.12)}
+.field input:focus{outline:none;border-color:rgba(21,128,61,.6);box-shadow:0 0 0 3px rgba(21,128,61,.15)}
 .divider{display:flex;align-items:center;gap:12px;color:var(--mut);font-size:12px;margin:18px 0}
 .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
 
 /* ---- alerts / notes ---- */
 .note{
   margin-top:14px;padding:12px 14px;border-radius:11px;font-size:13px;line-height:1.5;
-  border:1px solid rgba(216,180,106,.28);background:linear-gradient(180deg,rgba(216,180,106,.06),rgba(216,180,106,.01));color:var(--ink);
+  border:1px solid rgba(21,128,61,.28);background:rgba(21,128,61,.06);color:var(--ink);
 }
-.note.ok{border-color:rgba(90,209,160,.3);background:rgba(90,209,160,.06);color:var(--ink)}
-.note.err{border-color:rgba(255,138,138,.32);background:rgba(255,138,138,.07);color:#ffd9d9}
-.note code,code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:.9em;color:var(--gold1);background:rgba(216,180,106,.1);padding:1px 6px;border-radius:5px}
+.note.ok{border-color:rgba(21,128,61,.32);background:rgba(21,128,61,.07);color:var(--ink)}
+.note.warn{border-color:rgba(180,83,9,.32);background:rgba(180,83,9,.07);color:var(--ink)}
+.note.err{border-color:rgba(220,38,38,.34);background:rgba(220,38,38,.07);color:#7f1d1d}
+.note code,code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:.9em;color:var(--gold1);background:rgba(21,128,61,.1);padding:1px 6px;border-radius:5px}
 
 /* ---- layout helpers ---- */
 .grid{display:grid;gap:16px}
@@ -121,3 +129,5 @@ footer a{color:var(--steel1);text-decoration:none}
 /* ---- loader ---- */
 .loader{width:30px;height:30px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--gold1);animation:spin .8s linear infinite;margin:30px auto}
 @keyframes spin{to{transform:rotate(360deg)}}
+</content>
+</invoke>
