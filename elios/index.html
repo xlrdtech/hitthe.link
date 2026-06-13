@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>EliOS — Buyer Sign In</title>
+<title>EliOS &mdash; Sign In</title>
 <meta name="robots" content="noindex,nofollow">
-<meta name="description" content="EliOS buyer portal. Secure sign in to access your monthly qualified home-improvement leads.">
+<meta name="description" content="EliOS portal. Secure sign in to access your assigned qualified home-improvement leads.">
 <meta name="theme-color" content="#07070a">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,158 +18,99 @@
   <div class="topbar">
     <a class="brand" href="/elios/index.html" style="text-decoration:none;color:inherit">
       <span class="mark">E</span>
-      <span class="name">EliOS<small>Buyer Portal</small></span>
+      <span class="name">EliOS<small>Lead Portal</small></span>
     </a>
     <a class="btn sm ghost" href="/elios/pricing.html">View plans</a>
   </div>
 
   <div class="center-pane">
     <div class="auth-card">
-      <div class="kick">tools.trackingtogether.com</div>
+      <div class="kick">trackingtogether.com</div>
       <h1 class="display">Sign in</h1>
-      <p class="sub">Secure access to your qualified home-improvement leads. Each buyer gets their own login, scoped to only the leads granted to your account.</p>
+      <p class="sub">Secure access to your qualified home-improvement leads. Each login is scoped server-side to only the leads assigned to your account.</p>
 
       <div class="card" style="margin-top:22px">
-
-        <!-- Google OAuth -->
-        <button id="googleBtn" class="btn full">
-          <svg class="g-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.66 4.1-5.5 4.1-3.3 0-6-2.7-6-6.2s2.7-6.2 6-6.2c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.9 2.9 14.7 2 12 2 6.9 2 2.8 6.1 2.8 12S6.9 22 12 22c5.9 0 9.8-4.1 9.8-9.9 0-.7-.1-1.2-.2-1.9H12z"/></svg>
-          Continue with Google
-        </button>
-
-        <div class="divider">or use email</div>
-
-        <!-- Email password / magic link -->
-        <form id="emailForm" autocomplete="on">
+        <form id="loginForm" autocomplete="on">
           <div class="field">
-            <label for="email">Email</label>
-            <input id="email" name="email" type="email" inputmode="email" placeholder="you@company.com" required>
+            <label for="username">Username</label>
+            <input id="username" name="username" type="text" inputmode="text" autocapitalize="none" spellcheck="false" placeholder="e.g. nancy" autocomplete="username" required>
           </div>
-          <div class="field" id="pwField">
+          <div class="field">
             <label for="password">Password</label>
-            <input id="password" name="password" type="password" placeholder="Your password" autocomplete="current-password">
+            <input id="password" name="password" type="password" placeholder="Your password" autocomplete="current-password" required>
           </div>
-          <button id="emailBtn" class="btn gold full" type="submit">Sign in</button>
+          <button id="loginBtn" class="btn gold full" type="submit">Sign in</button>
         </form>
-
-        <div class="spread" style="margin-top:14px;font-size:13px">
-          <a href="#" id="toggleMode" class="muted" style="text-decoration:none">Create an account</a>
-          <a href="#" id="magicLink" class="muted" style="text-decoration:none">Email me a magic link</a>
-        </div>
 
         <div id="msg" class="note hidden"></div>
       </div>
 
       <p class="sub" style="margin-top:16px;font-size:12px">
-        Authentication is handled by Supabase Auth (GoTrue). No passwords or sessions are hand-rolled. By signing in you agree to receive your purchased lead allotment.
+        Passwords are stored only as scrypt hashes and never in plaintext. Your session is an HMAC-signed token. Masters land on the console; subscribers on their dashboard.
       </p>
     </div>
   </div>
 
-  <footer>EliOS &middot; Eli automation persona &middot; buyer portal &middot; powered by Supabase Auth + Stripe Billing</footer>
+  <footer>EliOS &middot; access scoped per account server-side &middot; api.xlrd.org</footer>
 </div>
 
-<!-- Supabase JS (CDN, no build step) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/elios/config.js"></script>
 <script>
 (function(){
-  const cfg = window.ELIOS_CONFIG;
-  const msg = document.getElementById('msg');
-  const configured = cfg.SUPABASE_URL.indexOf('__') === -1 && cfg.SUPABASE_ANON_KEY.indexOf('__') === -1;
+  var cfg = window.ELIOS_CONFIG;
+  var msg = document.getElementById('msg');
+  var form = document.getElementById('loginForm');
+  var btn = document.getElementById('loginBtn');
 
   function show(text, kind){
     msg.className = 'note' + (kind ? ' ' + kind : '');
     msg.textContent = text;
     msg.classList.remove('hidden');
   }
-
-  if(!configured){
-    show('Portal is in setup mode. Public keys are not yet filled in /elios/config.js (SUPABASE_URL, SUPABASE_ANON_KEY). Sign in is disabled until configured.', 'warn');
+  function go(redirect, role){
+    // trust server redirect; fall back to role mapping
+    var dest = redirect || (role === 'master' ? '/elios/admin.html' : '/elios/dashboard.html');
+    window.location.href = dest;
   }
 
-  // If keys missing, page still renders but auth actions are disabled.
-  let sb = null;
-  if(configured){
-    sb = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY, {
-      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
-    });
-    // Already signed in? Go straight to the dashboard.
-    sb.auth.getSession().then(({ data }) => {
-      if(data && data.session){ window.location.href = cfg.ROUTES.dashboard; }
-    });
+  // Already signed in? Validate the stored token against /me and route.
+  var existing = localStorage.getItem(cfg.TOKEN_KEY);
+  if(existing){
+    fetch(cfg.API_BASE + '/me', { headers: { 'Authorization': 'Bearer ' + existing } })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(me){ if(me && me.username){ go(me.redirect, me.role); } })
+      .catch(function(){ /* stay on login */ });
   }
 
-  let mode = 'signin'; // signin | signup
-  const emailBtn  = document.getElementById('emailBtn');
-  const toggle    = document.getElementById('toggleMode');
-  const passwordEl= document.getElementById('password');
-
-  toggle.addEventListener('click', function(e){
+  form.addEventListener('submit', async function(e){
     e.preventDefault();
-    mode = (mode === 'signin') ? 'signup' : 'signin';
-    if(mode === 'signup'){
-      emailBtn.textContent = 'Create account';
-      toggle.textContent = 'I already have an account';
-      passwordEl.setAttribute('autocomplete','new-password');
-    } else {
-      emailBtn.textContent = 'Sign in';
-      toggle.textContent = 'Create an account';
-      passwordEl.setAttribute('autocomplete','current-password');
-    }
-  });
-
-  // Google OAuth
-  document.getElementById('googleBtn').addEventListener('click', async function(){
-    if(!sb){ show('Sign in is disabled until config.js is filled.', 'warn'); return; }
-    show('Redirecting to Google...', 'ok');
-    const { error } = await sb.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin + cfg.ROUTES.dashboard }
-    });
-    if(error){ show(error.message, 'err'); }
-  });
-
-  // Email + password (sign in or sign up)
-  document.getElementById('emailForm').addEventListener('submit', async function(e){
-    e.preventDefault();
-    if(!sb){ show('Sign in is disabled until config.js is filled.', 'warn'); return; }
-    const email = document.getElementById('email').value.trim();
-    const password = passwordEl.value;
-    if(!email || !password){ show('Enter your email and password.', 'err'); return; }
-    emailBtn.disabled = true;
+    var username = document.getElementById('username').value.trim().toLowerCase();
+    var password = document.getElementById('password').value;
+    if(!username || !password){ show('Enter your username and password.', 'err'); return; }
+    btn.disabled = true;
+    var orig = btn.textContent;
+    btn.textContent = 'Signing in...';
     try{
-      if(mode === 'signup'){
-        const { error } = await sb.auth.signUp({
-          email, password,
-          options: { emailRedirectTo: window.location.origin + cfg.ROUTES.dashboard }
-        });
-        if(error) throw error;
-        show('Account created. Check your inbox to confirm, then sign in.', 'ok');
-      } else {
-        const { error } = await sb.auth.signInWithPassword({ email, password });
-        if(error) throw error;
-        window.location.href = cfg.ROUTES.dashboard;
+      var res = await fetch(cfg.API_BASE + '/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username, password: password })
+      });
+      var data = {};
+      try { data = await res.json(); } catch(_){}
+      if(!res.ok || !data.token){
+        show((data && data.error) || ('Sign in failed (HTTP ' + res.status + ').'), 'err');
+        return;
       }
+      localStorage.setItem(cfg.TOKEN_KEY, data.token);
+      show('Signed in. Loading your portal...', 'ok');
+      go(data.redirect, data.user && data.user.role);
     } catch(err){
-      show(err.message || 'Sign in failed.', 'err');
+      show('Could not reach the portal API. The backend may be offline. Try again shortly.', 'err');
     } finally {
-      emailBtn.disabled = false;
+      btn.disabled = false;
+      btn.textContent = orig;
     }
-  });
-
-  // Magic link (passwordless)
-  document.getElementById('magicLink').addEventListener('click', async function(e){
-    e.preventDefault();
-    if(!sb){ show('Sign in is disabled until config.js is filled.', 'warn'); return; }
-    const email = document.getElementById('email').value.trim();
-    if(!email){ show('Enter your email first, then request the magic link.', 'err'); return; }
-    const { error } = await sb.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: window.location.origin + cfg.ROUTES.dashboard }
-    });
-    if(error){ show(error.message, 'err'); }
-    else { show('Magic link sent. Check ' + email + ' and click to sign in.', 'ok'); }
   });
 })();
 </script>

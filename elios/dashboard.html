@@ -3,22 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>EliOS — Buyer Dashboard</title>
+<title>EliOS &mdash; Your Leads</title>
 <meta name="robots" content="noindex,nofollow">
-<meta name="description" content="Your EliOS buyer dashboard. This month's lead allotment and pipeline status.">
+<meta name="description" content="Your EliOS dashboard. The qualified leads assigned to your account.">
 <meta name="theme-color" content="#07070a">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/elios/brand.css">
 <style>
-  /* dashboard-specific */
   .metric{padding:18px 20px}
   .metric .big{font-family:"Fraunces",Georgia,serif;font-size:38px;font-weight:600;line-height:1;
     background:linear-gradient(92deg,#fff,var(--gold1) 60%,var(--gold2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .metric .big.is-money{font-size:32px}
   .metric .lbl{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--mut);margin-top:8px}
-  .quota-track{height:10px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden;margin-top:12px}
-  .quota-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--gold2),var(--gold1));box-shadow:0 0 16px -2px var(--gold)}
   .lead-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;padding:14px 0;border-top:1px solid var(--line)}
   .lead-row:first-child{border-top:none}
   .lead-name{font-weight:650;color:#fff;font-size:15px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
@@ -32,18 +30,16 @@
   .stage.Interested{color:var(--gold1);border-color:var(--gold);background:rgba(216,180,106,.12)}
   .stage.Booked{color:var(--ok);border-color:var(--ok);background:rgba(127,227,163,.12)}
   .stage.default{color:var(--steel1);border-color:var(--steel2);background:rgba(184,192,204,.1)}
-  .lead-actions{display:flex;gap:7px;flex-shrink:0}
   .lead-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
   .blockval{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:16px;font-weight:600;
     background:linear-gradient(92deg,#fff,var(--gold1) 65%,var(--gold2));-webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
   .blockval.zero{background:none;-webkit-text-fill-color:var(--mut);color:var(--mut);font-weight:400}
-  .value-basis{font-size:11px;color:var(--steel1);margin-top:4px;line-height:1.5}
-  .metric .big.is-money{font-size:32px}
+  .lead-actions{display:flex;gap:7px;flex-shrink:0}
   .act{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:15px;border:1px solid var(--line);background:rgba(0,0,0,.25);text-decoration:none}
   .act.call{border-color:rgba(127,227,163,.4);color:var(--ok)}
   .act.text{border-color:rgba(216,180,106,.4);color:var(--gold1)}
   .empty{text-align:center;padding:46px 20px;color:var(--mut);font-size:13px}
-  .demo-banner{margin-bottom:18px}
+  .alert-flag{font-size:10.5px;font-weight:700;color:var(--err);border:1px solid rgba(255,138,138,.35);background:rgba(255,138,138,.08);border-radius:7px;padding:3px 8px}
 </style>
 </head>
 <body>
@@ -52,34 +48,27 @@
   <div class="topbar">
     <a class="brand" href="/elios/dashboard.html" style="text-decoration:none;color:inherit">
       <span class="mark">E</span>
-      <span class="name">EliOS<small>Buyer Portal</small></span>
+      <span class="name">EliOS<small>Lead Portal</small></span>
     </a>
     <div class="navbtns">
       <a class="btn sm ghost" href="/elios/pricing.html">Plans</a>
-      <button class="btn sm" id="manageBtn">Manage billing</button>
       <button class="btn sm ghost" id="signOutBtn">Sign out</button>
     </div>
   </div>
 
-  <!-- loading -->
   <div id="loadingPane" class="center-pane"><div class="loader"></div></div>
 
-  <!-- main -->
   <div id="app" class="hidden">
-
-    <div id="demoBanner" class="note warn demo-banner hidden"></div>
+    <div id="errBanner" class="note err hidden"></div>
 
     <div class="kick" id="welcomeKick">Welcome back</div>
-    <h1 class="display" id="buyerName">Your dashboard</h1>
-    <p class="sub" id="planLine">Loading your plan...</p>
+    <h1 class="display" id="buyerName">Your leads</h1>
+    <p class="sub" id="planLine">The qualified leads assigned to your account.</p>
 
-    <!-- metrics -->
     <div class="grid cols3" style="margin-top:24px">
       <div class="card metric">
         <div class="big" id="mGranted">0</div>
-        <div class="lbl">Leads this month</div>
-        <div class="quota-track"><div class="quota-fill" id="quotaFill" style="width:0%"></div></div>
-        <div class="sub" id="quotaSub" style="font-size:11.5px;margin-top:8px">0 of 0 used</div>
+        <div class="lbl">Leads assigned</div>
       </div>
       <div class="card metric">
         <div class="big" id="mActive">0</div>
@@ -89,161 +78,93 @@
       <div class="card metric">
         <div class="big is-money" id="mPortfolio">$0</div>
         <div class="lbl">Portfolio value</div>
-        <div class="sub" id="portfolioSub" style="font-size:11.5px;margin-top:8px">Total $ across your blocks</div>
+        <div class="sub" style="font-size:11.5px;margin-top:8px">Total $ across your blocks</div>
       </div>
     </div>
 
-    <!-- subscription status -->
-    <div class="card" style="margin-top:18px">
-      <div class="spread">
-        <div>
-          <h2>Subscription</h2>
-          <div class="tag" id="subStatusLine">Loading subscription status...</div>
-        </div>
-        <span class="pill" id="subPill"><span class="dot"></span><span id="subPillText">checking</span></span>
-      </div>
-    </div>
-
-    <!-- lead allotment -->
     <div class="card" style="margin-top:18px">
       <div class="spread" style="margin-bottom:6px">
-        <h2>Your lead allotment <span class="tag" id="periodTag"></span></h2>
+        <h2>Your lead allotment</h2>
         <span class="mono muted" style="font-size:12px" id="leadCountTag"></span>
       </div>
       <div id="leadList"></div>
     </div>
-
   </div>
 
-  <footer>EliOS &middot; leads scoped to your account by Supabase Row-Level Security &middot; billing by Stripe</footer>
+  <footer>EliOS &middot; leads scoped to your account server-side &middot; api.xlrd.org</footer>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/elios/config.js"></script>
 <script>
 (function(){
-  const cfg = window.ELIOS_CONFIG;
-  const $ = s => document.querySelector(s);
-  const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const telHref = p => 'tel:'+String(p||'').replace(/[^0-9+]/g,'');
-  const smsHref = p => 'sms:'+String(p||'').replace(/[^0-9+]/g,'');
-  const hasPhone = p => p && /\d/.test(p);
-  const stageClass = s => ({'New':'New','Follow Up':'FollowUp','Attempted':'Attempted','Interested':'Interested','Booked':'Booked'})[s] || 'default';
-  // Block value ($) formatting - Anthony block-value model.
-  const numVal = v => { const n = Number(v); return isFinite(n) ? n : 0; };
-  const money = v => '$' + numVal(v).toLocaleString('en-US', { maximumFractionDigits: 0 });
+  var cfg = window.ELIOS_CONFIG;
+  var $ = function(s){ return document.querySelector(s); };
+  var esc = function(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); };
+  var telHref = function(p){ return 'tel:'+String(p||'').replace(/[^0-9+]/g,''); };
+  var smsHref = function(p){ return 'sms:'+String(p||'').replace(/[^0-9+]/g,''); };
+  var hasPhone = function(p){ return p && /\d/.test(p); };
+  var stageClass = function(s){ return ({'New':'New','Follow Up':'FollowUp','Attempted':'Attempted','Interested':'Interested','Booked':'Booked'})[s] || 'default'; };
+  var numVal = function(v){ var n = Number(v); return isFinite(n) ? n : 0; };
+  var money = function(v){ return '$' + numVal(v).toLocaleString('en-US', { maximumFractionDigits: 0 }); };
 
-  const configured = cfg.SUPABASE_URL.indexOf('__') === -1 && cfg.SUPABASE_ANON_KEY.indexOf('__') === -1;
+  var token = localStorage.getItem(cfg.TOKEN_KEY);
+  function toLogin(){ window.location.href = '/elios/index.html'; }
+  if(!token){ toLogin(); return; }
 
-  // ---- DEMO dataset (renders when Supabase not yet configured) ----
-  const DEMO = {
-    buyer: { full_name: 'Demo Buyer', company: 'Vasquez Home Improvement' },
-    sub:   { plan: 'plan_a', status: 'active', monthly_quota: 30,
-             current_period_start: '2026-06-01', current_period_end: '2026-07-01', cancel_at_period_end: false },
-    leads: [
-      { name:'Ash R.',          phone:'858-245-6574', project_type:'Kitchen',                    pipeline_stage:'Follow Up',  quality_score:82, block_value:2000, value_basis:'kitchen refresh/$1500, paint/$500', notes:'Discussed kitchen remodel at the Taste of Placentia.' },
-      { name:'Luisa Contera',   phone:'619-410-1375', project_type:'Windows / Flooring / Remodel', pipeline_stage:'Follow Up',  quality_score:88, block_value:3000, value_basis:'windows/$1000, flooring/$1000, full remodel/$1000', notes:'20x12 windows, flooring, ceiling, full remodel.' },
-      { name:'Carlos Morgan',   phone:'619-246-9807', project_type:'Kitchen',                    pipeline_stage:'New',        quality_score:74, block_value:1000, value_basis:'paint/$1000', notes:'Met at Taste of Placentia re: kitchen.' },
-      { name:'Michelle Harris', phone:'909-836-4473', project_type:'Solar',                      pipeline_stage:'Attempted',  quality_score:69, block_value:0,    value_basis:'', notes:'' },
-      { name:'Donna Ratliff',   phone:'909-728-8126', project_type:'Roofing',                    pipeline_stage:'Interested', quality_score:91, block_value:3000, value_basis:'roof/$3000', notes:'Wants a quote within 2 weeks.' },
-      { name:'James Okafor',    phone:'714-555-0148', project_type:'Bathroom',                   pipeline_stage:'Booked',     quality_score:95, block_value:2500, value_basis:'bath remodel/$2500', notes:'Booked estimate for Saturday.' }
-    ]
-  };
+  function authHeaders(){ return { 'Authorization': 'Bearer ' + token }; }
 
-  let sb = null;
-  if(configured){
-    sb = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY, {
-      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
-    });
-  }
+  $('#signOutBtn').addEventListener('click', function(){
+    localStorage.removeItem(cfg.TOKEN_KEY);
+    toLogin();
+  });
 
-  function planMeta(planKey){
-    return cfg.PLANS[planKey] || { name: planKey || 'Plan', leads: 0 };
-  }
-  function fmtDate(d){
-    if(!d) return '';
-    try { return new Date(d).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}); }
-    catch(e){ return String(d); }
+  function showErr(text){
+    var b = $('#errBanner');
+    b.textContent = text;
+    b.classList.remove('hidden');
   }
 
   function render(model){
     $('#loadingPane').classList.add('hidden');
     $('#app').classList.remove('hidden');
 
-    const pm = planMeta(model.sub && model.sub.plan);
-    const quota = (model.sub && model.sub.monthly_quota) || pm.leads || 0;
-    const leads = model.leads || [];
-    const used = leads.length;
+    var leads = model.leads || [];
+    var used = leads.length;
+    $('#buyerName').textContent = model.full_name ? (model.full_name + "'s leads") : 'Your leads';
+    if(model.full_name){ $('#welcomeKick').textContent = 'Welcome back, ' + model.full_name; }
 
-    $('#buyerName').textContent = (model.buyer && (model.buyer.full_name || model.buyer.company)) || 'Your dashboard';
-    if(model.buyer && model.buyer.company && model.buyer.full_name){
-      $('#welcomeKick').textContent = model.buyer.company;
-    }
-
-    // plan line + sub status
-    if(model.sub){
-      $('#planLine').innerHTML = pm.name + ' &middot; ' + quota + ' leads / month &middot; $' + (pm.price||'') + '/mo';
-      const st = model.sub.status;
-      const good = (st === 'active' || st === 'trialing');
-      const pill = $('#subPill');
-      pill.className = 'pill ' + (good ? 'live' : 'warn');
-      $('#subPillText').textContent = st + (model.sub.cancel_at_period_end ? ' (cancels at period end)' : '');
-      $('#subStatusLine').innerHTML = good
-        ? 'Active. Your allotment refills at the start of each billing period.'
-        : 'Your subscription is <b>' + esc(st) + '</b>. Update billing to restore lead access.';
-    } else {
-      $('#planLine').innerHTML = 'No active subscription. <a href="/elios/pricing.html" class="gold-txt">Choose a plan</a> to start receiving leads.';
-      const pill = $('#subPill'); pill.className = 'pill warn';
-      $('#subPillText').textContent = 'none';
-      $('#subStatusLine').textContent = 'No active plan on file.';
-    }
-
-    // metrics
     $('#mGranted').textContent = used;
-    const pct = quota ? Math.min(100, Math.round(used/quota*100)) : 0;
-    $('#quotaFill').style.width = pct + '%';
-    $('#quotaSub').textContent = used + ' of ' + quota + ' used this period';
-
-    const activeStages = ['New','Attempted','Follow Up'];
-    $('#mActive').textContent = leads.filter(l => activeStages.indexOf(l.pipeline_stage) !== -1).length;
-
-    // Portfolio value: sum of each assigned block's $ value (Anthony block-value model).
-    const portfolio = leads.reduce((sum, l) => sum + numVal(l.block_value), 0);
-    const booked = leads.filter(l => l.pipeline_stage === 'Booked').length;
+    var activeStages = ['New','Attempted','Follow Up'];
+    $('#mActive').textContent = leads.filter(function(l){ return activeStages.indexOf(l.status) !== -1; }).length;
+    var portfolio = leads.reduce(function(sum, l){ return sum + numVal(l.block_value); }, 0);
     $('#mPortfolio').textContent = money(portfolio);
-    $('#portfolioSub').innerHTML = used + ' block' + (used===1?'':'s') + ' &middot; ' + booked + ' booked';
-
-    // period
-    if(model.sub && model.sub.current_period_start){
-      $('#periodTag').textContent = fmtDate(model.sub.current_period_start) + ' to ' + fmtDate(model.sub.current_period_end);
-    }
     $('#leadCountTag').textContent = used + ' lead' + (used===1?'':'s');
 
-    // lead list
-    const list = $('#leadList');
+    var list = $('#leadList');
     list.innerHTML = '';
     if(!leads.length){
-      list.innerHTML = '<div class="empty">No leads granted yet this period. New leads appear here as Eli allocates them up to your monthly quota.</div>';
+      list.innerHTML = '<div class="empty">No leads assigned to your account yet. New leads appear here as they are allocated to you.</div>';
       return;
     }
-    const frag = document.createDocumentFragment();
-    leads.forEach(l => {
-      const row = document.createElement('div');
+    var frag = document.createDocumentFragment();
+    leads.forEach(function(l){
+      var row = document.createElement('div');
       row.className = 'lead-row';
-      const ph = hasPhone(l.phone);
-      const score = (l.quality_score != null) ? ('<span class="mono gold-txt" style="font-size:11px">score ' + l.quality_score + '</span>') : '';
-      const bv = numVal(l.block_value);
-      const valHtml = '<span class="blockval' + (bv > 0 ? '' : ' zero') + '" title="Block value (property worth + improvement potential)">' +
+      var ph = hasPhone(l.phone);
+      var bv = numVal(l.block_value);
+      var valHtml = '<span class="blockval' + (bv > 0 ? '' : ' zero') + '" title="Block value">' +
         (bv > 0 ? money(bv) : 'no value yet') + '</span>';
+      var alertHtml = l.alert ? (' <span class="alert-flag">' + esc(l.alert) + '</span>') : '';
       row.innerHTML =
         '<div>' +
-          '<div class="lead-name">' + esc(l.name) +
-            ' <span class="stage ' + stageClass(l.pipeline_stage) + '">' + esc(l.pipeline_stage || 'New') + '</span>' + score +
+          '<div class="lead-name">' + esc(l.name || 'Unnamed lead') +
+            ' <span class="stage ' + stageClass(l.status) + '">' + esc(l.status || 'New') + '</span>' + alertHtml +
           '</div>' +
           '<div class="lead-meta">' +
             (ph ? ('Phone <a href="' + telHref(l.phone) + '">' + esc(l.phone) + '</a> &middot; ') : '') +
-            'Project <b>' + esc(l.project_type || 'General') + '</b>' +
-            (l.value_basis ? ('<div class="value-basis">Block value basis: ' + esc(l.value_basis) + '</div>') : '') +
+            'Service <b>' + esc(l.service || 'General') + '</b>' +
+            (l.event ? (' &middot; ' + esc(l.event)) : '') +
+            (l.rep ? (' &middot; Rep ' + esc(l.rep)) : '') +
             (l.notes ? ('<br>' + esc(l.notes)) : '') +
           '</div>' +
         '</div>' +
@@ -259,79 +180,32 @@
     list.appendChild(frag);
   }
 
-  // ---- Manage billing (Stripe Customer Portal via Worker) ----
-  $('#manageBtn').addEventListener('click', async function(){
-    if(!sb){ alert('Billing portal is available once the portal is fully configured.'); return; }
-    const { data } = await sb.auth.getSession();
-    const token = data && data.session && data.session.access_token;
-    if(!token){ window.location.href = cfg.ROUTES.login; return; }
-    try{
-      const res = await fetch(cfg.WORKER_API_BASE + '/api/create-portal-session', {
-        method:'POST',
-        headers:{ 'Authorization':'Bearer ' + token, 'Content-Type':'application/json' }
-      });
-      const json = await res.json();
-      if(json.url){ window.location.href = json.url; }
-      else { alert('Could not open billing portal: ' + (json.error || 'unknown error')); }
-    } catch(e){ alert('Billing portal error: ' + e.message); }
-  });
-
-  // ---- Sign out ----
-  $('#signOutBtn').addEventListener('click', async function(){
-    if(sb){ await sb.auth.signOut(); }
-    window.location.href = cfg.ROUTES.login;
-  });
-
-  // ---- Boot ----
   async function boot(){
-    if(!configured){
-      // Demo mode so the UI is reviewable before keys are wired.
-      const banner = $('#demoBanner');
-      banner.classList.remove('hidden');
-      banner.innerHTML = 'Demo mode. Public keys are not yet set in <code>/elios/config.js</code>, so this shows sample data. Real buyer data loads via Supabase RLS once configured.';
-      render(DEMO);
-      return;
-    }
-
-    // Require a session.
-    const { data: sess } = await sb.auth.getSession();
-    if(!sess || !sess.session){ window.location.href = cfg.ROUTES.login; return; }
-    const uid = sess.session.user.id;
-
+    var me;
     try{
-      // Buyer profile (RLS: id = auth.uid()).
-      const { data: buyer } = await sb.from('buyers').select('full_name, company, email').eq('id', uid).maybeSingle();
-
-      // Subscription (RLS policy subscriptions_select_own allows buyer_id = auth.uid()).
-      // Active/trialing first, then most recently updated.
-      const { data: subs } = await sb.from('subscriptions')
-        .select('plan, status, monthly_quota, current_period_start, current_period_end, cancel_at_period_end')
-        .eq('buyer_id', uid)
-        .order('updated_at', { ascending: false })
-        .limit(5);
-      let sub = null;
-      if(subs && subs.length){
-        sub = subs.find(s => s.status === 'active' || s.status === 'trialing') || subs[0];
-      }
-
-      // Granted leads come ONLY through the my_leads view. Buyers have no SELECT
-      // on public.leads; my_leads is security_invoker so lead_grants RLS scopes
-      // rows to auth.uid(). This is the single sanctioned buyer path to lead PII.
-      const { data: myLeads, error: leadsErr } = await sb.from('my_leads')
-        .select('name, phone, email, address, project_type, event, pipeline_stage, quality_score, block_value, value_basis, notes, granted_at')
-        .order('granted_at', { ascending: false });
-      if(leadsErr) throw leadsErr;
-      const leads = (myLeads || []).filter(l => l && l.name);
-
-      render({ buyer: buyer || sess.session.user, sub: sub, leads: leads });
-    } catch(err){
+      var meRes = await fetch(cfg.API_BASE + '/me', { headers: authHeaders() });
+      if(meRes.status === 401){ localStorage.removeItem(cfg.TOKEN_KEY); toLogin(); return; }
+      me = await meRes.json();
+    } catch(e){
       $('#loadingPane').classList.add('hidden');
       $('#app').classList.remove('hidden');
-      const banner = $('#demoBanner');
-      banner.classList.remove('hidden');
-      banner.className = 'note err demo-banner';
-      banner.textContent = 'Could not load your data: ' + (err.message || err) + '. Check Supabase tables / RLS policies.';
-      render({ buyer: sess.session.user, sub: null, leads: [] });
+      showErr('Could not reach the portal API. The backend may be offline. Try again shortly.');
+      render({ full_name: null, leads: [] });
+      return;
+    }
+    // Masters belong on the console.
+    if(me && me.role === 'master'){ window.location.href = '/elios/admin.html'; return; }
+
+    try{
+      var res = await fetch(cfg.API_BASE + '/leads', { headers: authHeaders() });
+      if(res.status === 401){ localStorage.removeItem(cfg.TOKEN_KEY); toLogin(); return; }
+      var data = await res.json();
+      render({ full_name: me && me.full_name, leads: (data && data.leads) || [] });
+    } catch(e){
+      $('#loadingPane').classList.add('hidden');
+      $('#app').classList.remove('hidden');
+      showErr('Could not load your leads: ' + (e.message || e) + '.');
+      render({ full_name: me && me.full_name, leads: [] });
     }
   }
 

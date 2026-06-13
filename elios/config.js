@@ -18,7 +18,25 @@
    =================================================================== */
 
 window.ELIOS_CONFIG = {
-  // ---- Supabase (Auth + RLS-scoped data reads) --------------------
+  // ---- EliOS auth + leads API (the LIVE path) ---------------------
+  // omnimind.js on the Mac spine, exposed via the api.xlrd.org tunnel.
+  // Endpoints (all under this base):
+  //   POST /api/elios/login   { username, password } -> { token, user, redirect }
+  //   GET  /api/elios/me      (Bearer)               -> { username, role, redirect }
+  //   GET  /api/elios/leads   (Bearer)               -> { role, count, leads[] }  (scoped server-side)
+  //   GET  /api/elios/roster  (Bearer, master only)  -> { roster[], total_leads }
+  //   POST /api/elios/assign  (Bearer, master only)  { subscriber, lead_ids[] }
+  // The session token is an HMAC-signed string; it is stored in localStorage
+  // and sent as `Authorization: Bearer <token>`. Per-user access is enforced
+  // SERVER-SIDE (a subscriber can never fetch another user's leads).
+  // Honest caveat: this backend lives on the Mac spine (single point of
+  // failure) -- the deliberate no-gate tradeoff.
+  API_BASE: "https://api.xlrd.org/api/elios",
+  TOKEN_KEY: "elios_token",
+
+  // ---- Supabase (legacy / unused; kept for the pricing+billing path)
+  // The auth + leads path no longer uses Supabase. These remain only so the
+  // pricing page's optional Stripe wiring does not error if referenced.
   // Project: "elios-buyer-portal" (dedicated). NOT YET CREATED as of 2026-06-12
   // (Supabase MCP is unauthenticated; no project ref discovered). Once the
   // project exists, fill BOTH values from ONE dashboard page:
