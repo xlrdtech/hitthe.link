@@ -363,7 +363,7 @@
   }
   function populateFilterDropdowns(){
     var events = {}, reps = {};
-    ALL_LEADS.forEach(function(l){ if(l.event) events[l.event]=1; if(l.rep) reps[l.rep]=1; });
+    ALL_LEADS.forEach(function(l){ if(isRetired(l)) return; if(l.event) events[l.event]=1; if(l.rep) reps[l.rep]=1; });
     fillSelect($('#f-event'), Object.keys(events).sort(), 'All Events');
     fillSelect($('#f-rep'), Object.keys(reps).sort(), 'All Reps');
   }
