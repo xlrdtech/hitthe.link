@@ -44,6 +44,20 @@
   .act.text{border-color:rgba(21,128,61,.4);color:var(--gold1)}
   .empty{text-align:center;padding:46px 20px;color:var(--mut);font-size:13px}
   .alert-flag{font-size:10.5px;font-weight:700;color:var(--err);border:1px solid rgba(220,38,38,.35);background:rgba(220,38,38,.07);border-radius:7px;padding:3px 8px}
+  .act.edit{border-color:rgba(21,128,61,.4);color:var(--gold1);cursor:pointer;background:var(--surface);font-family:inherit}
+  /* edit modal */
+  .scrim{position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:60;padding:20px}
+  .scrim.on{display:flex}
+  .modal{background:var(--glass);border:1px solid var(--line);border-radius:16px;width:100%;max-width:480px;max-height:92vh;overflow:auto;box-shadow:0 24px 70px -24px rgba(0,0,0,.45)}
+  .mhead{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line)}
+  .mhead h3{font-family:"Fraunces",Georgia,serif;font-size:19px;font-weight:600}
+  .iconbtn{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-size:15px;line-height:1}
+  .mbody{padding:18px 22px;display:grid;gap:13px}
+  .mbody label{display:block;font-size:12px;color:var(--mut);margin-bottom:5px;letter-spacing:.02em}
+  .mbody select,.mbody textarea{width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14.5px;font-family:inherit}
+  .mbody select:focus,.mbody textarea:focus{outline:none;border-color:rgba(21,128,61,.6);box-shadow:0 0 0 3px rgba(21,128,61,.13)}
+  .mbody textarea{resize:vertical;min-height:80px}
+  .mfoot{display:flex;gap:10px;align-items:center;justify-content:flex-end;padding:16px 22px;border-top:1px solid var(--line)}
 </style>
 </head>
 <body>
@@ -109,6 +123,25 @@
   </div>
 
   <footer>Tracking Together &middot; leads scoped to your account by row-level security &middot; trackingtogether.com</footer>
+</div>
+
+<div class="scrim" id="editScrim">
+  <div class="modal">
+    <div class="mhead">
+      <h3>Update <span id="editLeadName">lead</span></h3>
+      <button class="iconbtn" id="editClose" type="button" aria-label="Close">&#10005;</button>
+    </div>
+    <div class="mbody">
+      <input type="hidden" id="e-id">
+      <div><label for="e-stage">Status</label><select id="e-stage"></select></div>
+      <div><label for="e-notes">Notes</label><textarea id="e-notes" rows="4" placeholder="Call outcome, next step, details..."></textarea></div>
+    </div>
+    <div id="editMsg" class="note hidden" style="margin:6px 22px 0"></div>
+    <div class="mfoot">
+      <button class="btn ghost" id="editCancel" type="button">Cancel</button>
+      <button class="btn gold" id="editSave" type="button">Save</button>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -272,12 +305,56 @@
           '<div class="lead-actions">' +
             (ph ? ('<a class="act call" href="' + telHref(l.phone) + '" title="Call">&#9742;</a>' +
                    '<a class="act text" href="' + smsHref(l.phone) + '" title="Text">&#128172;</a>') : '') +
+            '<button class="act edit" data-edit="' + esc(l.id) + '" title="Update status / notes">&#9998;</button>' +
           '</div>' +
         '</div>';
       frag.appendChild(row);
     });
     list.appendChild(frag);
+    Array.prototype.forEach.call(list.querySelectorAll('.act.edit'), function(b){
+      b.addEventListener('click', function(){
+        var id = b.getAttribute('data-edit');
+        var l = MY_LEADS.filter(function(x){ return x.id === id; })[0];
+        if(l) openEdit(l);
+      });
+    });
   }
+
+  // ---------- subscriber edit modal: stage + notes via update_my_lead RPC ----------
+  var STAGES = ['New','Attempted','Follow Up','Interested','Booked','Not Interested','STOP'];
+  function fillStageSelect(current){
+    var sel = $('#e-stage'); sel.innerHTML = '';
+    var opts = STAGES.slice();
+    if(current && opts.indexOf(current) === -1) opts.unshift(current);
+    opts.forEach(function(s){ var o=document.createElement('option'); o.value=s; o.textContent=s; sel.appendChild(o); });
+    sel.value = current || 'New';
+  }
+  function showEditMsg(t,k){ var m=$('#editMsg'); m.className='note'+(k?' '+k:''); m.textContent=t; m.classList.remove('hidden'); }
+  function closeEditModal(){ $('#editScrim').classList.remove('on'); $('#editMsg').classList.add('hidden'); }
+  function openEdit(l){
+    $('#e-id').value = l.id;
+    $('#editLeadName').textContent = l.name || 'Lead';
+    fillStageSelect(l.pipeline_stage || 'New');
+    $('#e-notes').value = l.notes || '';
+    $('#editMsg').classList.add('hidden');
+    $('#editScrim').classList.add('on');
+  }
+  $('#editClose').addEventListener('click', closeEditModal);
+  $('#editCancel').addEventListener('click', closeEditModal);
+  $('#editScrim').addEventListener('click', function(e){ if(e.target === this) closeEditModal(); });
+  $('#editSave').addEventListener('click', async function(){
+    var id = $('#e-id').value;
+    this.disabled=true; var orig=this.textContent; this.textContent='Saving...';
+    try{
+      var res = await sb.rpc('update_my_lead', { p_lead_id:id, p_stage:$('#e-stage').value, p_notes:$('#e-notes').value });
+      if(res.error){ showEditMsg('Save failed: ' + esc(res.error.message||'error'), 'err'); return; }
+      // reflect locally then re-render
+      var l = MY_LEADS.filter(function(x){ return x.id===id; })[0];
+      if(l){ l.pipeline_stage = $('#e-stage').value; l.notes = $('#e-notes').value; }
+      closeEditModal(); applyFilters();
+    } catch(err){ showEditMsg('Save error: ' + esc((err&&err.message)||String(err)), 'err'); }
+    finally{ this.disabled=false; this.textContent=orig; }
+  });
 
   $('#q').addEventListener('input', function(){ FILT.q = this.value.trim(); renderFilterBanner(); renderList(); });
   $('#f-event').addEventListener('change', function(){ FILT.event = this.value; applyFilters(); });

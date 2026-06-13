@@ -66,6 +66,25 @@
   .toolbar{display:flex;gap:10px;align-items:center;margin:16px 0 8px;flex-wrap:wrap}
   .search{flex:1;min-width:160px;padding:10px 13px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:13.5px}
   .search:focus{outline:none;border-color:rgba(21,128,61,.6)}
+  .lead-edit{margin-top:6px;font-size:11.5px;padding:5px 11px}
+  /* edit/add modal */
+  .scrim{position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:60;padding:20px}
+  .scrim.on{display:flex}
+  .modal{background:var(--glass);border:1px solid var(--line);border-radius:16px;width:100%;max-width:560px;max-height:92vh;overflow:auto;box-shadow:0 24px 70px -24px rgba(0,0,0,.45)}
+  .mhead{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line)}
+  .mhead h3{font-family:"Fraunces",Georgia,serif;font-size:20px;font-weight:600}
+  .iconbtn{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-size:15px;line-height:1}
+  .mbody{padding:18px 22px;display:grid;gap:13px}
+  .mrow2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .mbody label{display:block;font-size:12px;color:var(--mut);margin-bottom:5px;letter-spacing:.02em}
+  .mbody input,.mbody select,.mbody textarea{width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14.5px;font-family:inherit}
+  .mbody input:focus,.mbody select:focus,.mbody textarea:focus{outline:none;border-color:rgba(21,128,61,.6);box-shadow:0 0 0 3px rgba(21,128,61,.13)}
+  .mbody textarea{resize:vertical;min-height:62px}
+  .mfoot{display:flex;gap:10px;align-items:center;padding:16px 22px;border-top:1px solid var(--line)}
+  .mfoot .spacer{flex:1}
+  .btn.danger{border-color:rgba(220,38,38,.4);color:var(--err);background:transparent}
+  .btn.danger:hover{background:rgba(220,38,38,.08)}
+  @media(max-width:520px){.mrow2{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -128,7 +147,10 @@
     <div class="card" style="margin-top:18px">
       <div class="spread" style="margin-bottom:8px">
         <h2>Lead pool</h2>
-        <span class="mono muted" style="font-size:12px" id="poolCountTag"></span>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="mono muted" style="font-size:12px" id="poolCountTag"></span>
+          <button class="btn sm gold" id="newLeadBtn">+ New lead</button>
+        </div>
       </div>
 
       <div class="assign-bar">
@@ -159,6 +181,37 @@
   </div>
 
   <footer>Tracking Together &middot; master console &middot; assignment + per-account scoping enforced by row-level security &middot; trackingtogether.com</footer>
+</div>
+
+<div class="scrim" id="editScrim">
+  <div class="modal">
+    <div class="mhead">
+      <h3 id="editTitle">Edit lead</h3>
+      <button class="iconbtn" id="editClose" type="button" aria-label="Close">&#10005;</button>
+    </div>
+    <form class="mbody" id="leadForm" autocomplete="off">
+      <input type="hidden" id="e-id">
+      <div><label for="e-name">Name</label><input id="e-name" required></div>
+      <div class="mrow2">
+        <div><label for="e-phone">Phone</label><input id="e-phone" inputmode="tel"></div>
+        <div><label for="e-project">Service</label><input id="e-project" placeholder="Kitchen, Roofing, Solar..."></div>
+      </div>
+      <div><label for="e-address">Address</label><input id="e-address" placeholder="Street, City, State ZIP"></div>
+      <div class="mrow2">
+        <div><label for="e-stage">Status</label><select id="e-stage"></select></div>
+        <div><label for="e-rep">Rep</label><input id="e-rep"></div>
+      </div>
+      <div><label for="e-event">Event</label><input id="e-event" placeholder="Where the lead was captured"></div>
+      <div><label for="e-notes">Notes</label><textarea id="e-notes" rows="3"></textarea></div>
+    </form>
+    <div id="editMsg" class="note hidden" style="margin:6px 22px 0"></div>
+    <div class="mfoot">
+      <button class="btn danger" id="editRemove" type="button">Remove from pool</button>
+      <span class="spacer"></span>
+      <button class="btn ghost" id="editCancel" type="button">Cancel</button>
+      <button class="btn gold" id="editSave" type="button">Save</button>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -210,11 +263,13 @@
     return byId;
   }
 
+  function isRetired(l){ return (l.status || '') === 'retired'; }
   function renderMetrics(){
     var stats = rosterStats();
-    var total = ALL_LEADS.length;
-    var assignedCount = ALL_LEADS.filter(function(l){ return !!l.assigned_buyer_id; }).length;
-    var value = ALL_LEADS.reduce(function(s, l){ return s + numVal(l.block_value); }, 0);
+    var active = ALL_LEADS.filter(function(l){ return !isRetired(l); });
+    var total = active.length;
+    var assignedCount = active.filter(function(l){ return !!l.assigned_buyer_id; }).length;
+    var value = active.reduce(function(s, l){ return s + numVal(l.block_value); }, 0);
     $('#mTotal').textContent = total;
     $('#mAssigned').textContent = assignedCount;
     $('#mValue').textContent = money(value);
@@ -276,8 +331,10 @@
 
   // ---- status chips (live counts, derived from the loaded pool) ----
   function stageCounts(){
-    var c = { all: ALL_LEADS.length, New:0, Booked:0, 'Follow Up':0, Attempted:0, STOP:0 };
+    var c = { all: 0, New:0, Booked:0, 'Follow Up':0, Attempted:0, STOP:0 };
     ALL_LEADS.forEach(function(l){
+      if(isRetired(l)) return;            // retired leads are archived, not in the pool
+      c.all++;
       if(isStop(l)){ c.STOP++; return; }
       var s = l.pipeline_stage;
       if(s in c) c[s]++;
@@ -314,6 +371,7 @@
   // ---- the filter engine (chip + event + rep + search, STOP suppressed) ----
   function visibleLeads(){
     return ALL_LEADS.filter(function(l){
+      if(isRetired(l)) return false;                                // archived leads hidden from the pool
       if(FILT.chip === 'STOP') return isStop(l);
       if(isStop(l)) return false;                                  // STOPs hidden unless STOP chip active
       if(FILT.chip !== 'all' && (l.pipeline_stage||'') !== FILT.chip) return false;
@@ -383,7 +441,9 @@
             (l.rep ? (' &middot; Rep ' + esc(l.rep)) : '') +
           '</div>' +
         '</div>' +
-        '<div class="lead-right">' + valHtml + '</div>';
+        '<div class="lead-right">' + valHtml +
+          '<button class="btn ghost lead-edit" data-edit="' + esc(l.id) + '">Edit</button>' +
+        '</div>';
       frag.appendChild(row);
     });
     list.appendChild(frag);
@@ -398,6 +458,13 @@
         var id = cb.getAttribute('data-id');
         if(cb.checked){ SELECTED.add(id); } else { SELECTED.delete(id); }
         updateSelCount();
+      });
+    });
+    Array.prototype.forEach.call(list.querySelectorAll('.lead-edit'), function(b){
+      b.addEventListener('click', function(){
+        var id = b.getAttribute('data-edit');
+        var l = ALL_LEADS.filter(function(x){ return x.id === id; })[0];
+        if(l) openEdit(l);
       });
     });
     updateSelCount();
@@ -449,6 +516,73 @@
       this.disabled = false;
       this.textContent = orig;
     }
+  });
+
+  // ---------- edit / add lead modal (master writes directly; RLS leads_*_master) ----------
+  var STAGES = ['New','Attempted','Follow Up','Interested','Booked','Not Interested','STOP'];
+  var removeArmed = false;
+  function fillStageSelect(current){
+    var sel = $('#e-stage'); sel.innerHTML = '';
+    var opts = STAGES.slice();
+    if(current && opts.indexOf(current) === -1) opts.unshift(current);
+    opts.forEach(function(s){ var o=document.createElement('option'); o.value=s; o.textContent=s; sel.appendChild(o); });
+    sel.value = current || 'New';
+  }
+  function showEditMsg(t,k){ var m=$('#editMsg'); m.className='note'+(k?' '+k:''); m.textContent=t; m.classList.remove('hidden'); }
+  function resetRemove(){ removeArmed=false; var b=$('#editRemove'); b.textContent='Remove from pool'; b.disabled=false; }
+  function openModal(){ $('#editScrim').classList.add('on'); }
+  function closeEditModal(){ $('#editScrim').classList.remove('on'); $('#editMsg').classList.add('hidden'); resetRemove(); }
+  function openEdit(l){
+    $('#editTitle').textContent='Edit lead';
+    $('#e-id').value=l.id;
+    $('#e-name').value=l.name||''; $('#e-phone').value=l.phone||''; $('#e-project').value=l.project_type||'';
+    $('#e-address').value=l.address||''; fillStageSelect(l.pipeline_stage||'New'); $('#e-rep').value=l.rep||'';
+    $('#e-event').value=l.event||''; $('#e-notes').value=l.notes||'';
+    $('#editRemove').style.display=''; $('#editMsg').classList.add('hidden'); resetRemove(); openModal();
+  }
+  function openNew(){
+    $('#editTitle').textContent='New lead'; $('#e-id').value='';
+    ['e-name','e-phone','e-project','e-address','e-rep','e-event','e-notes'].forEach(function(id){ $('#'+id).value=''; });
+    fillStageSelect('New'); $('#editRemove').style.display='none'; $('#editMsg').classList.add('hidden'); resetRemove(); openModal();
+  }
+  function leadFromForm(){
+    return {
+      name: $('#e-name').value.trim(),
+      phone: $('#e-phone').value.trim() || null,
+      project_type: $('#e-project').value.trim() || null,
+      address: $('#e-address').value.trim() || null,
+      pipeline_stage: $('#e-stage').value,
+      rep: $('#e-rep').value.trim() || null,
+      event: $('#e-event').value.trim() || null,
+      notes: $('#e-notes').value.trim() || null
+    };
+  }
+  $('#newLeadBtn').addEventListener('click', openNew);
+  $('#editClose').addEventListener('click', closeEditModal);
+  $('#editCancel').addEventListener('click', closeEditModal);
+  $('#editScrim').addEventListener('click', function(e){ if(e.target === this) closeEditModal(); });
+  $('#editSave').addEventListener('click', async function(){
+    var id = $('#e-id').value, data = leadFromForm();
+    if(!data.name){ showEditMsg('Name is required.', 'err'); return; }
+    this.disabled=true; var orig=this.textContent; this.textContent='Saving...';
+    try{
+      var res;
+      if(id){ res = await sb.from('leads').update(data).eq('id', id); }
+      else { data.status='available'; res = await sb.from('leads').insert(data); }
+      if(res.error){ showEditMsg('Save failed: ' + esc(res.error.message||'error'), 'err'); return; }
+      closeEditModal(); await load();
+    } catch(err){ showEditMsg('Save error: ' + esc((err&&err.message)||String(err)), 'err'); }
+    finally{ this.disabled=false; this.textContent=orig; }
+  });
+  $('#editRemove').addEventListener('click', async function(){
+    var id = $('#e-id').value; if(!id){ closeEditModal(); return; }
+    if(!removeArmed){ removeArmed=true; this.textContent='Confirm remove'; showEditMsg('Archives this lead (status retired): hidden from the pool but recoverable, never deleted. Click "Confirm remove" again.', 'warn'); return; }
+    this.disabled=true;
+    try{
+      var res = await sb.from('leads').update({ status:'retired' }).eq('id', id);
+      if(res.error){ showEditMsg('Remove failed: ' + esc(res.error.message||'error'), 'err'); resetRemove(); return; }
+      SELECTED.delete(id); closeEditModal(); await load();
+    } catch(err){ showEditMsg('Remove error: ' + esc((err&&err.message)||String(err)), 'err'); resetRemove(); }
   });
 
   async function load(){
