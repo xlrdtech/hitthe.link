@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Tracking Together &mdash; Your Leads</title>
+<title>Tracking Together &mdash; Luminescent Crew</title>
 <meta name="robots" content="noindex,nofollow">
-<meta name="description" content="Your Tracking Together dashboard. The qualified leads assigned to your account.">
+<meta name="description" content="Luminescent crew lead board. The leads worked by your crew, scoped by row-level security.">
 <meta name="theme-color" content="#f6f8fb" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0a0f14" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="/elios/favicon.ico" sizes="any">
@@ -71,47 +71,19 @@
   .mbody select:focus,.mbody textarea:focus{outline:none;border-color:rgba(216,180,106,.6);box-shadow:0 0 0 3px rgba(216,180,106,.13)}
   .mbody textarea{resize:vertical;min-height:80px}
   .mfoot{display:flex;gap:10px;align-items:center;justify-content:flex-end;padding:16px 22px;border-top:1px solid var(--line)}
-
-  /* --- animated gradient background toggle (ported from /eliops/) --- */
-  body.elios-bg::before{
-    content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
-    background:linear-gradient(125deg,rgba(216,180,106,.16),rgba(37,99,235,.10),rgba(216,180,106,.13),rgba(124,58,237,.10));
-    background-size:320% 320%;
-    animation:eliosBgShift 26s ease infinite;
-    opacity:.55;
-  }
-  @media(prefers-color-scheme:dark){body.elios-bg::before{opacity:.4}}
-  @keyframes eliosBgShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-  @media(prefers-reduced-motion:reduce){body.elios-bg::before{animation:none}}
-  .hdr-icon{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-size:15px;line-height:1;display:inline-grid;place-items:center}
-  .hdr-icon:hover{border-color:rgba(216,180,106,.6)}
-  .hdr-icon.on{border-color:rgba(216,180,106,.7);color:var(--gold1);background:rgba(216,180,106,.1)}
-
-  /* --- guided tour coachmarks (pure CSS/JS, no libs) --- */
-  .tour-scrim{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:80;display:none}
-  .tour-scrim.on{display:block}
-  .tour-spot{position:absolute;border-radius:12px;box-shadow:0 0 0 9999px rgba(15,23,42,.55),0 0 0 3px var(--gold);transition:.2s ease;pointer-events:none}
-  .tour-pop{position:absolute;z-index:81;max-width:300px;background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:0 20px 60px -20px rgba(0,0,0,.5)}
-  .tour-pop h4{font-family:"Fraunces",Georgia,serif;font-size:16px;font-weight:600;margin:0 0 6px;color:var(--ink)}
-  .tour-pop p{font-size:13px;line-height:1.55;color:var(--mut);margin:0}
-  .tour-foot{display:flex;align-items:center;gap:10px;margin-top:14px}
-  .tour-foot .step{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
-  .tour-foot .spacer{flex:1}
+  .crew-badge{font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold1);border:1px solid rgba(216,180,106,.4);background:rgba(216,180,106,.09);border-radius:7px;padding:4px 10px}
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <div class="topbar">
-    <a class="brand" href="/elios/dashboard.html" style="text-decoration:none;color:inherit">
+    <a class="brand" href="/elios/crew.html" style="text-decoration:none;color:inherit">
       <img class="tt-logo" src="/elios/tt-logo.png" alt="Tracking Together">
-      <span style="font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);border-left:1px solid var(--line);padding-left:11px;font-weight:600">Lead Portal</span>
+      <span style="font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);border-left:1px solid var(--line);padding-left:11px;font-weight:600">Crew Board</span>
     </a>
     <div class="navbtns">
-      <a class="btn sm ghost" href="/elios/pricing.html">Plans</a>
-      <button class="hdr-icon" id="exportBtn" title="Export your leads to CSV" aria-label="Export CSV">&#8675;</button>
-      <button class="hdr-icon" id="tourBtn" title="Guided tour" aria-label="Guided tour">?</button>
-      <button class="hdr-icon" id="bgBtn" title="Toggle animated background" aria-label="Toggle animated background">&#9673;</button>
+      <a class="btn sm ghost" href="/elios/dashboard.html">My leads</a>
       <button class="btn sm ghost" id="signOutBtn">Sign out</button>
       <button class="theme-toggle" id="themeToggle" title="Toggle light / dark" aria-label="Toggle theme"><span class="moon">&#127769;</span><span class="sun">&#9728;&#65039;</span></button>
     </div>
@@ -122,14 +94,14 @@
   <div id="app" class="hidden">
     <div id="errBanner" class="note err hidden"></div>
 
-    <div class="kick" id="welcomeKick">Welcome back</div>
-    <h1 class="display" id="buyerName">Your leads</h1>
-    <p class="sub" id="planLine">The qualified leads assigned to your account.</p>
+    <div class="kick" id="welcomeKick">Luminescent crew</div>
+    <h1 class="display" id="crewTitle">Crew board</h1>
+    <p class="sub" id="crewLine">Every lead your crew is working, scoped to your crew by row-level security.</p>
 
     <div class="grid cols3" style="margin-top:24px">
       <div class="card metric">
-        <div class="big" id="mGranted">0</div>
-        <div class="lbl">Leads assigned</div>
+        <div class="big" id="mTotal">0</div>
+        <div class="lbl">Crew leads</div>
       </div>
       <div class="card metric">
         <div class="big" id="mActive">0</div>
@@ -138,14 +110,14 @@
       </div>
       <div class="card metric">
         <div class="big is-money" id="mPortfolio">$0</div>
-        <div class="lbl">Portfolio value</div>
-        <div class="sub" style="font-size:11.5px;margin-top:8px">Total $ across your blocks</div>
+        <div class="lbl">Crew value</div>
+        <div class="sub" style="font-size:11.5px;margin-top:8px">Total $ across crew blocks</div>
       </div>
     </div>
 
     <div class="card" style="margin-top:18px">
       <div class="spread" style="margin-bottom:6px">
-        <h2>Your lead allotment</h2>
+        <h2>Crew lead board</h2>
         <span class="mono muted" style="font-size:12px" id="leadCountTag"></span>
       </div>
       <div class="chips" id="chips"></div>
@@ -164,7 +136,7 @@
     </div>
   </div>
 
-  <footer>Tracking Together &middot; leads scoped to your account by row-level security &middot; trackingtogether.com</footer>
+  <footer>Tracking Together &middot; crew board scoped to your crew by row-level security &middot; trackingtogether.com</footer>
 </div>
 
 <div class="scrim" id="editScrim">
@@ -186,20 +158,6 @@
   </div>
 </div>
 
-<div class="tour-scrim" id="tourScrim">
-  <div class="tour-spot" id="tourSpot"></div>
-  <div class="tour-pop" id="tourPop">
-    <h4 id="tourTitle"></h4>
-    <p id="tourText"></p>
-    <div class="tour-foot">
-      <span class="step" id="tourStepLbl"></span>
-      <span class="spacer"></span>
-      <button class="btn sm ghost" id="tourSkip" type="button">Skip</button>
-      <button class="btn sm gold" id="tourNext" type="button">Next</button>
-    </div>
-  </div>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/elios/config.js"></script>
 <script>
@@ -211,7 +169,7 @@
   var smsHref = function(p){ return 'sms:'+String(p||'').replace(/[^0-9+]/g,''); };
   var hasPhone = function(p){ return p && /\d/.test(p); };
   var stageClass = function(s){ return ({'New':'New','Follow Up':'FollowUp','Attempted':'Attempted','Interested':'Interested','Booked':'Booked','STOP':'STOP'})[s] || 'default'; };
-  // Anthony's traffic-light touch state: sold=GREEN, visit=BLUE, stop=RED (read-only for subscribers).
+  // Anthony's traffic-light touch state: sold=GREEN, visit=BLUE, stop=RED.
   var DISP_LABEL = { sold:'SOLD', visit:'VISIT', stop:'STOP' };
   function dispBadge(d){ return (d && DISP_LABEL[d]) ? (' <span class="disp ' + d + '" title="Touch: ' + DISP_LABEL[d] + '">' + DISP_LABEL[d] + '</span>') : ''; }
   var numVal = function(v){ var n = Number(v); return isFinite(n) ? n : 0; };
@@ -245,12 +203,11 @@
     $('#app').classList.remove('hidden');
 
     MY_LEADS = model.leads || [];
-    $('#buyerName').textContent = model.full_name ? (model.full_name + "'s leads") : 'Your leads';
     if(model.full_name){ $('#welcomeKick').textContent = 'Welcome back, ' + model.full_name; }
 
-    // metric cards reflect the FULL allotment, not the active filter
+    // metric cards reflect the FULL crew board, not the active filter
     var used = MY_LEADS.length;
-    $('#mGranted').textContent = used;
+    $('#mTotal').textContent = used;
     var activeStages = ['New','Attempted','Follow Up'];
     $('#mActive').textContent = MY_LEADS.filter(function(l){ return activeStages.indexOf(l.pipeline_stage) !== -1; }).length;
     var portfolio = MY_LEADS.reduce(function(sum, l){ return sum + numVal(l.block_value); }, 0);
@@ -261,7 +218,7 @@
     applyFilters();
   }
 
-  // ---- status chips (live counts over your allotment) ----
+  // ---- status chips (live counts over the crew board) ----
   function stageCounts(){
     var c = { all: MY_LEADS.length, New:0, Booked:0, 'Follow Up':0, Attempted:0, STOP:0 };
     MY_LEADS.forEach(function(l){ if(isStop(l)){ c.STOP++; return; } var s=l.pipeline_stage; if(s in c) c[s]++; });
@@ -331,7 +288,7 @@
     var list = $('#leadList');
     list.innerHTML = '';
     if(!MY_LEADS.length){
-      list.innerHTML = '<div class="empty">No leads assigned to your account yet. New leads appear here as they are allocated to you.</div>';
+      list.innerHTML = '<div class="empty">No leads on your crew board yet. Leads appear here as they are tagged to your crew.</div>';
       return;
     }
     if(!leads.length){
@@ -355,6 +312,7 @@
           '<div class="lead-meta">' +
             (ph ? ('Phone <a href="' + telHref(l.phone) + '">' + esc(l.phone) + '</a> &middot; ') : '') +
             'Service <b>' + esc(l.project_type || 'General') + '</b>' +
+            (l.rep ? (' &middot; Rep ' + esc(l.rep)) : '') +
             (l.event ? (' &middot; ' + esc(l.event)) : '') +
             (l.notes ? ('<br>' + esc(l.notes)) : '') +
           '</div>' +
@@ -377,7 +335,7 @@
         if(l) openEdit(l);
       });
     });
-    // tap-to-advance status (ported from the Luminescent crew view) — one tap cycles the badge
+    // tap-to-advance status — one tap cycles the badge
     Array.prototype.forEach.call(list.querySelectorAll('.stage.tap'), function(b){
       b.addEventListener('click', function(e){
         e.stopPropagation();
@@ -406,7 +364,7 @@
     }
   }
 
-  // ---------- subscriber edit modal: stage + notes via update_my_lead RPC ----------
+  // ---------- crew edit modal: stage + notes via update_my_lead RPC ----------
   var STAGES = ['New','Attempted','Follow Up','Interested','Booked','Not Interested','STOP'];
   function fillStageSelect(current){
     var sel = $('#e-stage'); sel.innerHTML = '';
@@ -454,110 +412,20 @@
     if(!session || !session.user){ toLogin(); return; }
     var user = session.user;
 
-    // Masters belong on the console.
-    if(roleOf(user) === 'master'){ window.location.href = cfg.ROUTES.admin; return; }
-
     var fullName = nameOf(user);
     try{
-      var res = await sb.from('my_leads').select();
+      var res = await sb.from('crew_leads').select();
       if(res.error){ throw res.error; }
       render({ full_name: fullName, leads: res.data || [] });
     } catch(e){
       $('#loadingPane').classList.add('hidden');
       $('#app').classList.remove('hidden');
-      showErr('Could not load your leads: ' + (e.message || e) + '.');
+      showErr('Could not load the crew board: ' + (e.message || e) + '. Your account may not be on a crew yet.');
       render({ full_name: fullName, leads: [] });
     }
   }
 
-  // ---------- animated background toggle (persisted in localStorage 'elios.bg') ----------
-  function applyBg(on){
-    document.body.classList.toggle('elios-bg', !!on);
-    var b = $('#bgBtn'); if(b){ b.classList.toggle('on', !!on); }
-  }
-  (function initBg(){
-    var on = false;
-    try{ on = localStorage.getItem('elios.bg') === '1'; }catch(e){}
-    applyBg(on);
-    var b = $('#bgBtn');
-    if(b) b.addEventListener('click', function(){
-      var next = !document.body.classList.contains('elios-bg');
-      applyBg(next);
-      try{ localStorage.setItem('elios.bg', next ? '1' : '0'); }catch(e){}
-    });
-  })();
-
-  // ---------- CSV export (currently filtered my_leads rows) ----------
-  function csvCell(v){
-    var s = (v == null) ? '' : String(v);
-    if(/[",\n\r]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
-    return s;
-  }
-  function exportCsv(){
-    var rows = (typeof visibleLeads === 'function') ? visibleLeads() : MY_LEADS;
-    var cols = ['name','phone','project_type','event','rep','pipeline_stage','disposition','block_value','notes'];
-    var lines = [cols.join(',')];
-    rows.forEach(function(l){
-      lines.push(cols.map(function(c){ return csvCell(l[c]); }).join(','));
-    });
-    var d = new Date();
-    var stamp = d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2);
-    var blob = new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url; a.download = 'tracking-together-leads-' + stamp + '.csv';
-    document.body.appendChild(a); a.click();
-    setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
-  }
-  $('#exportBtn').addEventListener('click', exportCsv);
-
-  // ---------- guided tour (coachmarks; auto-runs once via 'elios.tour.done') ----------
-  var TOUR = [
-    { sel:'#chips', title:'Status filters', text:'Tap these chips to filter your leads by pipeline stage. The STOP chip surfaces leads you marked stop.' },
-    { sel:'.filters', title:'Search and refine', text:'Search by name, phone, service, or notes, and narrow by event or rep.' },
-    { sel:'.stage.tap', title:'Advance a lead', text:'Tap a status badge to advance the lead through your pipeline in one tap. The call, text, and edit buttons sit alongside it.' },
-    { sel:'#exportBtn', title:'Export to CSV', text:'Download your currently filtered leads as a spreadsheet at any time.' }
-  ];
-  var tourIdx = 0;
-  function positionTour(){
-    var st = TOUR[tourIdx];
-    var el = document.querySelector(st.sel);
-    var spot = $('#tourSpot'), pop = $('#tourPop');
-    if(!el){ nextTour(); return; }
-    el.scrollIntoView({ behavior:'smooth', block:'center' });
-    var r = el.getBoundingClientRect();
-    var pad = 6;
-    spot.style.left = (r.left - pad) + 'px';
-    spot.style.top = (r.top - pad) + 'px';
-    spot.style.width = (r.width + pad*2) + 'px';
-    spot.style.height = (r.height + pad*2) + 'px';
-    $('#tourTitle').textContent = st.title;
-    $('#tourText').textContent = st.text;
-    $('#tourStepLbl').textContent = 'Step ' + (tourIdx+1) + ' of ' + TOUR.length;
-    $('#tourNext').textContent = (tourIdx === TOUR.length-1) ? 'Done' : 'Next';
-    var popTop = r.bottom + 14;
-    if(popTop + 180 > window.innerHeight) popTop = Math.max(14, r.top - 190);
-    var popLeft = Math.min(Math.max(14, r.left), window.innerWidth - 320);
-    pop.style.top = popTop + 'px';
-    pop.style.left = popLeft + 'px';
-  }
-  function startTour(){ tourIdx = 0; $('#tourScrim').classList.add('on'); positionTour(); }
-  function endTour(){
-    $('#tourScrim').classList.remove('on');
-    try{ localStorage.setItem('elios.tour.done', '1'); }catch(e){}
-  }
-  function nextTour(){ if(tourIdx >= TOUR.length-1){ endTour(); return; } tourIdx++; positionTour(); }
-  $('#tourBtn').addEventListener('click', startTour);
-  $('#tourNext').addEventListener('click', nextTour);
-  $('#tourSkip').addEventListener('click', endTour);
-  window.addEventListener('resize', function(){ if($('#tourScrim').classList.contains('on')) positionTour(); });
-  function maybeAutoTour(){
-    var done = false;
-    try{ done = localStorage.getItem('elios.tour.done') === '1'; }catch(e){}
-    if(!done) setTimeout(startTour, 700);
-  }
-
-  boot().then(maybeAutoTour);
+  boot();
 })();
 </script>
 </body>

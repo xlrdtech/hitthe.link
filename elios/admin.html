@@ -95,6 +95,32 @@
   .btn.danger{border-color:rgba(220,38,38,.4);color:var(--err);background:transparent}
   .btn.danger:hover{background:rgba(220,38,38,.08)}
   @media(max-width:520px){.mrow2{grid-template-columns:1fr}}
+
+  /* --- animated gradient background toggle (ported from /eliops/) --- */
+  body.elios-bg::before{
+    content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:linear-gradient(125deg,rgba(216,180,106,.16),rgba(37,99,235,.10),rgba(216,180,106,.13),rgba(124,58,237,.10));
+    background-size:320% 320%;
+    animation:eliosBgShift 26s ease infinite;
+    opacity:.55;
+  }
+  @media(prefers-color-scheme:dark){body.elios-bg::before{opacity:.4}}
+  @keyframes eliosBgShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+  @media(prefers-reduced-motion:reduce){body.elios-bg::before{animation:none}}
+  .hdr-icon{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-size:15px;line-height:1;display:inline-grid;place-items:center}
+  .hdr-icon:hover{border-color:rgba(216,180,106,.6)}
+  .hdr-icon.on{border-color:rgba(216,180,106,.7);color:var(--gold1);background:rgba(216,180,106,.1)}
+
+  /* --- guided tour coachmarks (pure CSS/JS, no libs) --- */
+  .tour-scrim{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:80;display:none}
+  .tour-scrim.on{display:block}
+  .tour-spot{position:absolute;border-radius:12px;box-shadow:0 0 0 9999px rgba(15,23,42,.55),0 0 0 3px var(--gold);transition:.2s ease;pointer-events:none}
+  .tour-pop{position:absolute;z-index:81;max-width:300px;background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:0 20px 60px -20px rgba(0,0,0,.5)}
+  .tour-pop h4{font-family:"Fraunces",Georgia,serif;font-size:16px;font-weight:600;margin:0 0 6px;color:var(--ink)}
+  .tour-pop p{font-size:13px;line-height:1.55;color:var(--mut);margin:0}
+  .tour-foot{display:flex;align-items:center;gap:10px;margin-top:14px}
+  .tour-foot .step{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+  .tour-foot .spacer{flex:1}
 </style>
 </head>
 <body>
@@ -108,6 +134,9 @@
     <div class="navbtns">
       <a class="btn sm ghost" href="/elios/dashboard.html">My dashboard</a>
       <button class="btn sm ghost" id="refreshBtn">Refresh</button>
+      <button class="hdr-icon" id="exportBtn" title="Export filtered leads to CSV" aria-label="Export CSV">&#8675;</button>
+      <button class="hdr-icon" id="tourBtn" title="Guided tour" aria-label="Guided tour">?</button>
+      <button class="hdr-icon" id="bgBtn" title="Toggle animated background" aria-label="Toggle animated background">&#9673;</button>
       <button class="btn sm ghost" id="signOutBtn">Sign out</button>
       <button class="theme-toggle" id="themeToggle" title="Toggle light / dark" aria-label="Toggle theme"><span class="moon">&#127769;</span><span class="sun">&#9728;&#65039;</span></button>
     </div>
@@ -232,6 +261,20 @@
       <span class="spacer"></span>
       <button class="btn ghost" id="editCancel" type="button">Cancel</button>
       <button class="btn gold" id="editSave" type="button">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="tour-scrim" id="tourScrim">
+  <div class="tour-spot" id="tourSpot"></div>
+  <div class="tour-pop" id="tourPop">
+    <h4 id="tourTitle"></h4>
+    <p id="tourText"></p>
+    <div class="tour-foot">
+      <span class="step" id="tourStepLbl"></span>
+      <span class="spacer"></span>
+      <button class="btn sm ghost" id="tourSkip" type="button">Skip</button>
+      <button class="btn sm gold" id="tourNext" type="button">Next</button>
     </div>
   </div>
 </div>
@@ -662,7 +705,94 @@
     }
   }
 
-  boot();
+  // ---------- animated background toggle (persisted in localStorage 'elios.bg') ----------
+  function applyBg(on){
+    document.body.classList.toggle('elios-bg', !!on);
+    var b = $('#bgBtn'); if(b){ b.classList.toggle('on', !!on); }
+  }
+  (function initBg(){
+    var on = false;
+    try{ on = localStorage.getItem('elios.bg') === '1'; }catch(e){}
+    applyBg(on);
+    var b = $('#bgBtn');
+    if(b) b.addEventListener('click', function(){
+      var next = !document.body.classList.contains('elios-bg');
+      applyBg(next);
+      try{ localStorage.setItem('elios.bg', next ? '1' : '0'); }catch(e){}
+    });
+  })();
+
+  // ---------- CSV export (currently filtered all_leads rows) ----------
+  function csvCell(v){
+    var s = (v == null) ? '' : String(v);
+    if(/[",\n\r]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+  function exportCsv(){
+    var rows = (typeof visibleLeads === 'function') ? visibleLeads() : ALL_LEADS;
+    var cols = ['name','phone','project_type','event','rep','pipeline_stage','disposition','block_value','notes'];
+    var lines = [cols.join(',')];
+    rows.forEach(function(l){
+      lines.push(cols.map(function(c){ return csvCell(l[c]); }).join(','));
+    });
+    var d = new Date();
+    var stamp = d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2);
+    var blob = new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'tracking-together-leads-' + stamp + '.csv';
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
+  }
+  $('#exportBtn').addEventListener('click', exportCsv);
+
+  // ---------- guided tour (coachmarks; auto-runs once via 'elios.tour.done') ----------
+  var TOUR = [
+    { sel:'#chips', title:'Status filters', text:'Tap these chips to filter the lead pool by pipeline stage. The STOP chip surfaces leads marked stop.' },
+    { sel:'.filters', title:'Search and refine', text:'Search by name, phone, service, or notes, and narrow by event or rep.' },
+    { sel:'.assign-bar', title:'Assign leads', text:'Tick leads below, pick a subscriber here, and assign. Server-side row-level security enforces who sees what.' },
+    { sel:'#exportBtn', title:'Export to CSV', text:'Download the currently filtered leads as a spreadsheet at any time.' }
+  ];
+  var tourIdx = 0;
+  function positionTour(){
+    var st = TOUR[tourIdx];
+    var el = document.querySelector(st.sel);
+    var spot = $('#tourSpot'), pop = $('#tourPop');
+    if(!el){ nextTour(); return; }
+    el.scrollIntoView({ behavior:'smooth', block:'center' });
+    var r = el.getBoundingClientRect();
+    var pad = 6;
+    spot.style.left = (r.left - pad) + 'px';
+    spot.style.top = (r.top - pad) + 'px';
+    spot.style.width = (r.width + pad*2) + 'px';
+    spot.style.height = (r.height + pad*2) + 'px';
+    $('#tourTitle').textContent = st.title;
+    $('#tourText').textContent = st.text;
+    $('#tourStepLbl').textContent = 'Step ' + (tourIdx+1) + ' of ' + TOUR.length;
+    $('#tourNext').textContent = (tourIdx === TOUR.length-1) ? 'Done' : 'Next';
+    var popTop = r.bottom + 14;
+    if(popTop + 180 > window.innerHeight) popTop = Math.max(14, r.top - 190);
+    var popLeft = Math.min(Math.max(14, r.left), window.innerWidth - 320);
+    pop.style.top = popTop + 'px';
+    pop.style.left = popLeft + 'px';
+  }
+  function startTour(){ tourIdx = 0; $('#tourScrim').classList.add('on'); positionTour(); }
+  function endTour(){
+    $('#tourScrim').classList.remove('on');
+    try{ localStorage.setItem('elios.tour.done', '1'); }catch(e){}
+  }
+  function nextTour(){ if(tourIdx >= TOUR.length-1){ endTour(); return; } tourIdx++; positionTour(); }
+  $('#tourBtn').addEventListener('click', startTour);
+  $('#tourNext').addEventListener('click', nextTour);
+  $('#tourSkip').addEventListener('click', endTour);
+  window.addEventListener('resize', function(){ if($('#tourScrim').classList.contains('on')) positionTour(); });
+  function maybeAutoTour(){
+    var done = false;
+    try{ done = localStorage.getItem('elios.tour.done') === '1'; }catch(e){}
+    if(!done) setTimeout(startTour, 700);
+  }
+
+  boot().then(maybeAutoTour);
 })();
 </script>
 </body>
