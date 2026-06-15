@@ -10,17 +10,38 @@
 <meta property="og:description" content="Branded, fillable, e-sign-ready L7S document shells.">
 <meta property="og:image" content="https://hitthe.link/l7s/assets/hero-emblem.png">
 <link rel="icon" type="image/svg+xml" href="/l7s/assets/logo.svg">
+<script>(function(){var t=localStorage.getItem('l7s-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
 <style>
-  :root{
+  :root{ /* LIGHT — default */
+    --bg:#f6f5f1; --bg2:#ffffff; --panel:#ffffff; --line:#e7e4dc;
+    --ink:#16161b; --mut:#5c5c66; --red:#dc2626; --red2:#d11320; --gold:#a9781a; --gold2:#c79a3a;
+    --rad:14px; --max:1080px; --redgrad:linear-gradient(135deg,#ff3b46,#b3121d); --goldgrad:linear-gradient(135deg,#b8860b,#8a6a1f);
+    --glow1:rgba(220,38,38,.09); --glow2:rgba(199,154,58,.10);
+    --cardgrad:linear-gradient(180deg,#ffffff,#fbfaf6);
+    --legendgrad:linear-gradient(135deg,rgba(220,38,38,.07),rgba(199,154,58,.05));
+    --icbg:rgba(220,38,38,.08); --icline:rgba(220,38,38,.28);
+    --disc:#8a8a93; --shadow:0 12px 34px rgba(20,20,30,.10);
+    color-scheme:light;
+  }
+  html[data-theme="dark"]{
     --bg:#0a0a0c; --bg2:#111114; --panel:#161618; --line:#27272b;
     --ink:#f5f5f7; --mut:#a0a0aa; --red:#dc2626; --red2:#ff3b46; --gold:#e6c463; --gold2:#c79a3a;
-    --rad:14px; --max:1080px; --redgrad:linear-gradient(135deg,#ff3b46,#b3121d); --goldgrad:linear-gradient(135deg,#f0d385,#c79a3a);
+    --goldgrad:linear-gradient(135deg,#f0d385,#c79a3a);
+    --glow1:rgba(220,38,38,.16); --glow2:rgba(230,196,99,.08);
+    --cardgrad:linear-gradient(180deg,#161618,#111114);
+    --legendgrad:linear-gradient(135deg,rgba(220,38,38,.1),rgba(230,196,99,.05));
+    --icbg:rgba(220,38,38,.1); --icline:rgba(220,38,38,.3);
+    --disc:#7c7c86; --shadow:0 8px 28px rgba(0,0,0,.4);
+    color-scheme:dark;
   }
+  body,.doc,.legend,.glow,.theme-toggle{transition:background .25s,color .25s,border-color .25s}
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--ink);font:16px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Inter,Roboto,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
   a{color:inherit;text-decoration:none}
   .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
-  .glow{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(620px 440px at 82% -8%,rgba(220,38,38,.16),transparent 60%),radial-gradient(680px 480px at 4% 4%,rgba(230,196,99,.08),transparent 60%)}
+  .glow{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(620px 440px at 82% -8%,var(--glow1),transparent 60%),radial-gradient(680px 480px at 4% 4%,var(--glow2),transparent 60%)}
+  .theme-toggle{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;font-size:16px;display:grid;place-items:center;flex:none;transition:.18s}
+  .theme-toggle:hover{border-color:var(--gold);color:var(--gold)}
   header,main,footer{position:relative;z-index:1}
   nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
   .brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:18px}
@@ -38,20 +59,20 @@
   .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
   @media(max-width:880px){.grid{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:560px){.grid{grid-template-columns:1fr}}
-  .doc{display:flex;flex-direction:column;background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:var(--rad);padding:24px;transition:.2s}
+  .doc{display:flex;flex-direction:column;background:var(--cardgrad);border:1px solid var(--line);border-radius:var(--rad);padding:24px;transition:.2s;box-shadow:var(--shadow)}
   .doc:hover{border-color:rgba(230,196,99,.45);transform:translateY(-4px)}
-  .doc .ic{width:46px;height:46px;border-radius:11px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.3);display:grid;place-items:center;font-size:22px;margin-bottom:14px}
+  .doc .ic{width:46px;height:46px;border-radius:11px;background:var(--icbg);border:1px solid var(--icline);display:grid;place-items:center;font-size:22px;margin-bottom:14px}
   .doc .k{font-family:Georgia,serif;font-size:11.5px;font-weight:800;color:var(--gold);letter-spacing:.06em;text-transform:uppercase}
   .doc h3{font-size:18px;letter-spacing:-.01em;margin:8px 0}
   .doc p{color:var(--mut);font-size:13.8px;flex:1}
   .doc .go{margin-top:16px;font-size:13.5px;font-weight:700;color:var(--red2)}
-  .legend{margin-top:30px;background:linear-gradient(135deg,rgba(220,38,38,.1),rgba(230,196,99,.05));border:1px solid rgba(230,196,99,.28);border-radius:18px;padding:24px 26px}
+  .legend{margin-top:30px;background:var(--legendgrad);border:1px solid rgba(230,196,99,.28);border-radius:18px;padding:24px 26px}
   .legend h2{font-size:16px;letter-spacing:-.01em;margin-bottom:6px}
   .legend p{color:var(--mut);font-size:14px}
   .legend b{color:var(--ink)}
   footer{border-top:1px solid var(--line);padding:34px 0;color:var(--mut);font-size:13px}
-  .disc{margin-top:14px;color:#7c7c86;font-size:11.5px;line-height:1.6}
-  .credit{margin-top:12px;color:#7c7c86;font-size:11.5px}.credit a{color:var(--gold)}
+  .disc{margin-top:14px;color:var(--disc);font-size:11.5px;line-height:1.6}
+  .credit{margin-top:12px;color:var(--disc);font-size:11.5px}.credit a{color:var(--gold)}
 </style>
 </head>
 <body>
@@ -59,7 +80,10 @@
 <header class="wrap">
   <nav>
     <div class="brand"><svg class="mark" viewBox="0 0 200 200" role="img" aria-label="L7S"><rect width="200" height="200" rx="22" fill="#dc2626"/><rect x="6" y="6" width="188" height="188" rx="17" fill="#000"/><rect x="35" y="26" width="20" height="116" fill="#fff"/><rect x="35" y="122" width="96" height="20" fill="#fff"/><rect x="80" y="58" width="85" height="20" fill="#dc2626"/><rect x="145" y="58" width="20" height="112" fill="#dc2626"/></svg><div>L7S, INC.<small>Document Hub</small></div></div>
-    <div class="nav-links"><a href="/l7s/solutions/">Solutions</a><a href="/l7s/onboarding/">Onboarding</a><a href="https://cal.com/ctoeast">Book a call</a></div>
+    <div style="display:flex;align-items:center;gap:18px">
+      <div class="nav-links"><a href="/l7s/solutions/">Solutions</a><a href="/l7s/onboarding/">Onboarding</a><a href="https://cal.com/ctoeast">Book a call</a></div>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle light or dark mode" title="Toggle light / dark">🌙</button>
+    </div>
   </nav>
 </header>
 
@@ -117,6 +141,13 @@
     </div>
   </section>
 </main>
+
+<script>
+(function(){var KEY='l7s-theme';function icon(t){return t==='dark'?'☀️':'🌙';}
+var b=document.getElementById('themeToggle');
+if(b){b.textContent=icon(document.documentElement.getAttribute('data-theme'));
+b.addEventListener('click',function(){var cur=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',cur);localStorage.setItem(KEY,cur);b.textContent=icon(cur);});}})();
+</script>
 
 <footer class="wrap">
   <div class="disc">

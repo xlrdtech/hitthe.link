@@ -11,13 +11,31 @@
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://hitthe.link/l7s/assets/hero-emblem.png">
 <link rel="icon" type="image/svg+xml" href="/l7s/assets/logo.svg">
+<script>(function(){var t=localStorage.getItem('l7s-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
 <style>
-  :root{
-    --bg:#0b0b0d; --bg2:#121215; --panel:#161619; --line:#262629;
-    --ink:#f4f4f6; --mut:#a2a2ad; --red:#e11d2a; --red2:#ff3b46; --gold:#d9b25a;
+  :root{ /* LIGHT — default */
+    --bg:#f6f5f1; --bg2:#ffffff; --panel:#ffffff; --line:#e7e4dc;
+    --ink:#16161b; --mut:#5c5c66; --red:#dc2626; --red2:#d11320; --gold:#a9781a;
     --rad:14px; --max:1120px;
     --redgrad:linear-gradient(135deg,#ff3b46,#b3121d);
+    --glow1:rgba(220,38,38,.09); --glow2:rgba(199,154,58,.08);
+    --cardgrad:linear-gradient(180deg,#ffffff,#fbfaf6);
+    --bandgrad:linear-gradient(135deg,rgba(220,38,38,.08),rgba(199,154,58,.05));
+    --chkbg:rgba(220,38,38,.08); --chkline:rgba(220,38,38,.28);
+    --disc:#8a8a93; --shadow:0 12px 34px rgba(20,20,30,.10);
+    color-scheme:light;
   }
+  html[data-theme="dark"]{
+    --bg:#0b0b0d; --bg2:#121215; --panel:#161619; --line:#262629;
+    --ink:#f4f4f6; --mut:#a2a2ad; --red:#e11d2a; --red2:#ff3b46; --gold:#d9b25a;
+    --glow1:rgba(225,29,42,.18); --glow2:rgba(225,29,42,.08);
+    --cardgrad:linear-gradient(180deg,#161619,#121215);
+    --bandgrad:linear-gradient(135deg,rgba(225,29,42,.14),rgba(225,29,42,.05));
+    --chkbg:rgba(225,29,42,.12); --chkline:rgba(225,29,42,.35);
+    --disc:#7c7c86; --shadow:0 8px 28px rgba(0,0,0,.4);
+    color-scheme:dark;
+  }
+  body,.step,.docs,.tcard,.band,.btn,.pill,.glow{transition:background .25s,color .25s,border-color .25s}
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
   body{background:var(--bg);color:var(--ink);font:16px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Inter,Roboto,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
@@ -26,8 +44,10 @@
 
   .glow{position:fixed;inset:0;z-index:0;pointer-events:none;
     background:
-      radial-gradient(600px 420px at 80% -8%,rgba(225,29,42,.18),transparent 60%),
-      radial-gradient(700px 480px at 6% 4%,rgba(225,29,42,.08),transparent 60%);}
+      radial-gradient(600px 420px at 80% -8%,var(--glow1),transparent 60%),
+      radial-gradient(700px 480px at 6% 4%,var(--glow2),transparent 60%);}
+  .theme-toggle{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;font-size:16px;display:grid;place-items:center;flex:none;transition:.18s}
+  .theme-toggle:hover{border-color:var(--red2);color:var(--red2)}
   header,main,footer{position:relative;z-index:1}
 
   nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
@@ -65,7 +85,7 @@
   .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:42px}
   @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:520px){.grid{grid-template-columns:1fr}}
-  .step{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:var(--rad);padding:26px;transition:.2s;position:relative;overflow:hidden}
+  .step{background:var(--cardgrad);border:1px solid var(--line);border-radius:var(--rad);padding:26px;transition:.2s;position:relative;overflow:hidden;box-shadow:var(--shadow)}
   .step:hover{border-color:rgba(225,29,42,.45);transform:translateY(-4px)}
   .step .num{font-family:Georgia,serif;font-size:13px;font-weight:800;color:var(--red2);background:rgba(225,29,42,.1);border:1px solid rgba(225,29,42,.25);width:34px;height:34px;border-radius:9px;display:grid;place-items:center;margin-bottom:16px}
   .step h3{font-size:18px;letter-spacing:-.01em;margin-bottom:8px}
@@ -73,26 +93,26 @@
 
   .split{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center}
   @media(max-width:860px){.split{grid-template-columns:1fr}}
-  .docs{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:18px;padding:30px}
+  .docs{background:var(--cardgrad);border:1px solid var(--line);border-radius:18px;padding:30px;box-shadow:var(--shadow)}
   .docs h3{font-size:16px;margin-bottom:16px;letter-spacing:-.01em}
   .docitem{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14.5px}
   .docitem:last-child{border-bottom:0}
-  .chk{width:22px;height:22px;border-radius:6px;background:rgba(225,29,42,.12);border:1px solid rgba(225,29,42,.35);display:grid;place-items:center;color:var(--red2);font-size:12px;flex:none}
+  .chk{width:22px;height:22px;border-radius:6px;background:var(--chkbg);border:1px solid var(--chkline);display:grid;place-items:center;color:var(--red2);font-size:12px;flex:none}
 
   .trust{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:42px}
   @media(max-width:680px){.trust{grid-template-columns:1fr}}
-  .tcard{padding:24px;background:var(--panel);border:1px solid var(--line);border-radius:var(--rad);text-align:center}
+  .tcard{padding:24px;background:var(--panel);border:1px solid var(--line);border-radius:var(--rad);text-align:center;box-shadow:var(--shadow)}
   .tcard .ic{font-size:24px;margin-bottom:10px}
   .tcard h4{font-size:15.5px;margin-bottom:6px}
   .tcard p{color:var(--mut);font-size:13.5px}
 
-  .band{background:linear-gradient(135deg,rgba(225,29,42,.14),rgba(225,29,42,.05));border:1px solid rgba(225,29,42,.3);border-radius:24px;padding:56px;text-align:center;margin:24px 0}
+  .band{background:var(--bandgrad);border:1px solid rgba(225,29,42,.3);border-radius:24px;padding:56px;text-align:center;margin:24px 0}
   .band h2{margin-bottom:14px}.band .lead{margin:0 auto 28px}
 
   footer{border-top:1px solid var(--line);padding:36px 0;color:var(--mut);font-size:13px}
   .fcols{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:center}
-  .disc{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);color:#7c7c86;font-size:12px;line-height:1.6}
-  .credit{margin-top:14px;color:#7c7c86;font-size:12px}
+  .disc{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);color:var(--disc);font-size:12px;line-height:1.6}
+  .credit{margin-top:14px;color:var(--disc);font-size:12px}
   .credit a{color:var(--red2)}
 </style>
 </head>
@@ -107,7 +127,10 @@
       <a href="#trust">Secure &amp; compliant</a>
       <a href="#start">Get started</a>
     </div>
-    <a href="#start" class="btn btn-pri">Start onboarding</a>
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle light or dark mode" title="Toggle light / dark">🌙</button>
+      <a href="#start" class="btn btn-pri">Start onboarding</a>
+    </div>
   </nav>
 </header>
 
@@ -185,6 +208,13 @@
     </div>
   </section>
 </main>
+
+<script>
+(function(){var KEY='l7s-theme';function icon(t){return t==='dark'?'☀️':'🌙';}
+var b=document.getElementById('themeToggle');
+if(b){b.textContent=icon(document.documentElement.getAttribute('data-theme'));
+b.addEventListener('click',function(){var cur=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',cur);localStorage.setItem(KEY,cur);b.textContent=icon(cur);});}})();
+</script>
 
 <footer class="wrap">
   <div class="fcols">
