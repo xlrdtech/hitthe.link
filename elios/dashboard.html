@@ -35,6 +35,15 @@
   .stage.Interested{color:var(--gold1);border-color:rgba(216,180,106,.4);background:rgba(216,180,106,.09)}
   .stage.Booked{color:var(--ok);border-color:rgba(216,180,106,.4);background:rgba(216,180,106,.1)}
   .stage.default{color:var(--steel1);border-color:var(--line);background:rgba(15,23,42,.05)}
+  .stage.STOP{color:#fff;border-color:#b91c1c;background:linear-gradient(135deg,#f87171,#dc2626);box-shadow:0 1px 6px -1px rgba(220,38,38,.5)}
+  .lead-row.stop-row{background:rgba(220,38,38,.08);border-left:4px solid #dc2626;padding-left:12px;margin-left:-16px;border-radius:0 10px 10px 0}
+  .lead-row.stop-row .lead-name{color:#b91c1c}
+  /* disposition — Anthony's traffic-light "touch" (sold=GREEN, visit=BLUE, stop=RED) */
+  .disp{font-size:10px;font-weight:700;letter-spacing:.05em;padding:3px 8px 3px 7px;border-radius:6px;border:1px solid;white-space:nowrap;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px}
+  .disp::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 0 2px rgba(255,255,255,.6)}
+  .disp.sold{color:#15803d;border-color:rgba(22,163,74,.45);background:rgba(22,163,74,.12)}
+  .disp.visit{color:#1d4ed8;border-color:rgba(37,99,235,.45);background:rgba(37,99,235,.12)}
+  .disp.stop{color:#dc2626;border-color:rgba(220,38,38,.5);background:rgba(220,38,38,.14)}
   .lead-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
   .blockval{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:16px;font-weight:600;color:var(--gold1);white-space:nowrap}
   .blockval.zero{color:var(--mut);font-weight:400}
@@ -154,7 +163,10 @@
   var telHref = function(p){ return 'tel:'+String(p||'').replace(/[^0-9+]/g,''); };
   var smsHref = function(p){ return 'sms:'+String(p||'').replace(/[^0-9+]/g,''); };
   var hasPhone = function(p){ return p && /\d/.test(p); };
-  var stageClass = function(s){ return ({'New':'New','Follow Up':'FollowUp','Attempted':'Attempted','Interested':'Interested','Booked':'Booked'})[s] || 'default'; };
+  var stageClass = function(s){ return ({'New':'New','Follow Up':'FollowUp','Attempted':'Attempted','Interested':'Interested','Booked':'Booked','STOP':'STOP'})[s] || 'default'; };
+  // Anthony's traffic-light touch state: sold=GREEN, visit=BLUE, stop=RED (read-only for subscribers).
+  var DISP_LABEL = { sold:'SOLD', visit:'VISIT', stop:'STOP' };
+  function dispBadge(d){ return (d && DISP_LABEL[d]) ? (' <span class="disp ' + d + '" title="Touch: ' + DISP_LABEL[d] + '">' + DISP_LABEL[d] + '</span>') : ''; }
   var numVal = function(v){ var n = Number(v); return isFinite(n) ? n : 0; };
   var money = function(v){ return '$' + numVal(v).toLocaleString('en-US', { maximumFractionDigits: 0 }); };
 
@@ -282,7 +294,7 @@
     var frag = document.createDocumentFragment();
     leads.forEach(function(l){
       var row = document.createElement('div');
-      row.className = 'lead-row';
+      row.className = 'lead-row' + (isStop(l) ? ' stop-row' : '');
       var ph = hasPhone(l.phone);
       var bv = numVal(l.block_value);
       var stage = l.pipeline_stage || 'New';
@@ -291,7 +303,7 @@
       row.innerHTML =
         '<div>' +
           '<div class="lead-name">' + esc(l.name || 'Unnamed lead') +
-            ' <span class="stage ' + stageClass(stage) + '">' + esc(stage) + '</span>' +
+            ' <span class="stage ' + stageClass(stage) + '">' + esc(stage) + '</span>' + dispBadge(l.disposition) +
           '</div>' +
           '<div class="lead-meta">' +
             (ph ? ('Phone <a href="' + telHref(l.phone) + '">' + esc(l.phone) + '</a> &middot; ') : '') +

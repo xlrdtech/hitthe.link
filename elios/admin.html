@@ -49,6 +49,16 @@
   .lead-right{display:flex;flex-direction:column;align-items:flex-end;gap:7px;align-self:center}
   .blockval{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:15px;font-weight:600;color:var(--gold1);white-space:nowrap}
   .blockval.zero{color:var(--mut);font-weight:400}
+  /* STOP — strong red treatment carried all the way through the row */
+  .lstat.STOP{color:#fff;border-color:#b91c1c;background:linear-gradient(135deg,#f87171,#dc2626);box-shadow:0 1px 6px -1px rgba(220,38,38,.5)}
+  .lead-row.stop-row{background:rgba(220,38,38,.08);border-left:4px solid #dc2626;padding-left:12px;margin-left:-16px;border-radius:0 10px 10px 0}
+  .lead-row.stop-row .lead-name{color:#b91c1c}
+  /* disposition — Anthony's traffic-light "touch" (sold=GREEN, visit=BLUE, stop=RED) */
+  .disp{font-size:10px;font-weight:700;letter-spacing:.05em;padding:3px 8px 3px 7px;border-radius:6px;border:1px solid;white-space:nowrap;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px}
+  .disp::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 0 2px rgba(255,255,255,.6)}
+  .disp.sold{color:#15803d;border-color:rgba(22,163,74,.45);background:rgba(22,163,74,.12)}
+  .disp.visit{color:#1d4ed8;border-color:rgba(37,99,235,.45);background:rgba(37,99,235,.12)}
+  .disp.stop{color:#dc2626;border-color:rgba(220,38,38,.5);background:rgba(220,38,38,.14)}
 
   .assign-bar{display:grid;grid-template-columns:1.5fr auto auto;gap:12px;align-items:end}
   @media(max-width:680px){.assign-bar{grid-template-columns:1fr}.roster-row{grid-template-columns:1fr;gap:8px}.roster-quota{text-align:left}}
@@ -206,6 +216,14 @@
         <div><label for="e-blockval">Block value ($)</label><input id="e-blockval" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></div>
         <div><label for="e-basis">Value basis</label><input id="e-basis" placeholder="e.g. quoted, estimate"></div>
       </div>
+      <div><label for="e-disp">Disposition (touch) &middot; sold = green, visit = blue, stop = red</label>
+        <select id="e-disp">
+          <option value="">— none —</option>
+          <option value="sold">Sold (green)</option>
+          <option value="visit">Visit (blue)</option>
+          <option value="stop">Stop (red)</option>
+        </select>
+      </div>
       <div><label for="e-notes">Notes</label><textarea id="e-notes" rows="3"></textarea></div>
     </form>
     <div id="editMsg" class="note hidden" style="margin:6px 22px 0"></div>
@@ -242,6 +260,12 @@
   // Full filter state (ported from the original eliops tool). status -> pipeline_stage.
   var FILT = { chip:'all', q:'', event:'', rep:'' };
   function isStop(l){ return (l.pipeline_stage || '') === 'STOP'; }
+  // Anthony's traffic-light touch state: sold=GREEN, visit=BLUE, stop=RED.
+  var DISP_LABEL = { sold:'SOLD', visit:'VISIT', stop:'STOP' };
+  function dispBadge(d){
+    if(!d || !DISP_LABEL[d]) return '';
+    return ' <span class="disp ' + d + '" title="Touch: ' + DISP_LABEL[d] + '">' + DISP_LABEL[d] + '</span>';
+  }
 
   $('#signOutBtn').addEventListener('click', async function(){ try{ await sb.auth.signOut(); }catch(e){} toLogin(); });
   $('#refreshBtn').addEventListener('click', function(){ SELECTED.clear(); load(); });
@@ -428,15 +452,17 @@
         ? (' <span class="alert-flag" style="color:var(--gold1);border-color:rgba(216,180,106,.35);background:rgba(216,180,106,.08)">assigned ' + esc(l.assigned_buyer_name) + '</span>')
         : '';
       var stage = l.pipeline_stage || 'New';
+      var stopped = isStop(l);
       var row = document.createElement('div');
-      row.className = 'lead-row';
-      var stClass = (stage === 'New') ? 'New' : 'default';
+      row.className = 'lead-row' + (stopped ? ' stop-row' : '');
+      var stClass = (stage === 'New') ? 'New' : (stage === 'STOP' ? 'STOP' : 'default');
+      var dispHtml = dispBadge(l.disposition);
       var disabled = !!l.assigned_buyer_id;  // already granted leads cannot be re-assigned
       row.innerHTML =
         '<input type="checkbox" class="lead-pick" ' + (SELECTED.has(l.id) ? 'checked ' : '') + (disabled ? 'disabled ' : '') + 'data-id="' + esc(l.id) + '" aria-label="Select lead">' +
         '<div>' +
           '<div class="lead-name">' + esc(l.name || 'Unnamed lead') +
-            ' <span class="lstat ' + stClass + '">' + esc(stage) + '</span>' + assignedHtml +
+            ' <span class="lstat ' + stClass + '">' + esc(stage) + '</span>' + dispHtml + assignedHtml +
           '</div>' +
           '<div class="lead-meta">' +
             (l.phone ? ('Phone <b>' + esc(l.phone) + '</b> &middot; ') : '') +
@@ -543,11 +569,12 @@
     $('#e-address').value=l.address||''; fillStageSelect(l.pipeline_stage||'New'); $('#e-rep').value=l.rep||'';
     $('#e-event').value=l.event||''; $('#e-notes').value=l.notes||'';
     $('#e-blockval').value=(l.block_value!=null?l.block_value:''); $('#e-basis').value=l.value_basis||'';
+    $('#e-disp').value=l.disposition||'';
     $('#editRemove').style.display=''; $('#editMsg').classList.add('hidden'); resetRemove(); openModal();
   }
   function openNew(){
     $('#editTitle').textContent='New lead'; $('#e-id').value='';
-    ['e-name','e-phone','e-project','e-address','e-rep','e-event','e-blockval','e-basis','e-notes'].forEach(function(id){ $('#'+id).value=''; });
+    ['e-name','e-phone','e-project','e-address','e-rep','e-event','e-blockval','e-basis','e-disp','e-notes'].forEach(function(id){ $('#'+id).value=''; });
     fillStageSelect('New'); $('#editRemove').style.display='none'; $('#editMsg').classList.add('hidden'); resetRemove(); openModal();
   }
   function leadFromForm(){
@@ -564,6 +591,7 @@
       event: $('#e-event').value.trim() || null,
       block_value: bv,
       value_basis: $('#e-basis').value.trim() || null,
+      disposition: $('#e-disp').value || null,
       notes: $('#e-notes').value.trim() || null
     };
   }
