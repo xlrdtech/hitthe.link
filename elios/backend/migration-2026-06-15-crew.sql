@@ -102,3 +102,13 @@ grant select on public.crew_leads to authenticated;
 --
 -- (Backfilled data lives in the dropped columns, so the drop reverses it.)
 -- ============================================================================
+
+-- 2026-06-15 FIX: crew_leads is security_invoker, so crew members need a base-table
+-- SELECT policy on leads (mirrors how subscribers see granted leads). Without this the
+-- view returns 0 rows for crew members. Idempotent.
+drop policy if exists leads_select_crew on public.leads;
+create policy leads_select_crew on public.leads for select to authenticated
+using (
+  crew is not null
+  and crew = (select b.crew from public.buyers b where b.id = (select auth.uid()))
+);
