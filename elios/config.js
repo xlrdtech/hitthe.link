@@ -39,10 +39,12 @@ window.ELIOS_CONFIG = {
   EMAIL_DOMAIN: "trackingtogether.com",
 
   // ---- Stripe (publishable key only; pricing page only) -----------
-  STRIPE_PUBLISHABLE_KEY: "__STRIPE_PK_LIVE__", // pk_live_... (public)
-  STRIPE_PRICE_PLAN_A: "__STRIPE_PRICE_PLAN_A__", // 30 leads / mo / $100
-  STRIPE_PRICE_PLAN_B: "__STRIPE_PRICE_PLAN_B__", // 15 leads / mo / $40
-  WORKER_API_BASE: "__WORKER_API_BASE__",       // e.g. https://elios-api.<acct>.workers.dev
+  // Live keys for the Tracking Together Stripe account (acct_1Tf7SR...).
+  STRIPE_PUBLISHABLE_KEY: "pk_live_51Tf7SRQjGRHpyWQNxe1WSnE9FhiPiiKwgbMSAHcANccgLCNgoKXLZ0lM0MQUrQskPkhgAd83jToXDY0ta0MmpsN800LhWKc8Ow",
+  STRIPE_PRICE_PLAN_A: "price_1TiQO1QjGRHpyWQNlJHWN3Cl", // 30 leads / mo / $100
+  STRIPE_PRICE_PLAN_B: "price_1TiQO2QjGRHpyWQNWcFnG0Tf", // 15 leads / mo / $40
+  // Billing API = Supabase Edge Functions (functions/v1/{stripe-checkout,stripe-webhook}).
+  WORKER_API_BASE: "https://jftakowpjkbcqpvtgwgq.supabase.co/functions/v1",
 
   // ---- Plan catalog (display only; quota is enforced server-side) --
   PLANS: {

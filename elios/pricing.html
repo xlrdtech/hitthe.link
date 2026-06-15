@@ -142,15 +142,10 @@
     const priceId = planKey === 'plan_a' ? cfg.STRIPE_PRICE_PLAN_A : cfg.STRIPE_PRICE_PLAN_B;
     show('Opening secure Stripe Checkout...', 'ok');
     try{
-      const res = await fetch(cfg.WORKER_API_BASE + '/api/create-checkout-session', {
+      const res = await fetch(cfg.WORKER_API_BASE + '/stripe-checkout', {
         method:'POST',
         headers:{ 'Authorization':'Bearer ' + token, 'Content-Type':'application/json' },
-        body: JSON.stringify({
-          price_id: priceId,
-          plan: planKey,
-          success_url: window.location.origin + cfg.ROUTES.dashboard,
-          cancel_url: window.location.href
-        })
+        body: JSON.stringify({ action: 'checkout', plan: planKey })
       });
       const json = await res.json();
       if(json.url){ window.location.href = json.url; }
