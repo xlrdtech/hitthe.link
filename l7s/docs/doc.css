@@ -83,12 +83,20 @@ html[data-theme="dark"] body{background:#3a3a40}
 .esign .pill{border:1px solid var(--gold);color:var(--gold);font-weight:700;border-radius:999px;padding:2px 9px;letter-spacing:.06em}
 
 @media print{
-  /* Surround is irrelevant in print — pages always print white. Force white regardless of theme. */
-  html,body,html[data-theme="dark"] body{background:#fff}
-  .toolbar{display:none}
-  .page{box-shadow:none;margin:0;width:auto;min-height:auto}
-  .page{page-break-after:always}
-  .page:last-child{page-break-after:auto}
-  @page{size:letter;margin:0}
+  /* Force backgrounds + colors to render (browsers strip them by default — this keeps the dark cover, logo, emblem and washes intact). */
+  *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
+  html,body,html[data-theme="dark"] body{ background:#fff !important; }
+  .toolbar{ display:none !important; }
+  @page{ size:letter; margin:0; }
+  /* Body pages flow to their natural height (no forced 11in => no big white gaps when content spills); each still starts on a fresh sheet. */
+  .page{ box-shadow:none !important; margin:0; width:auto; min-height:auto; page-break-after:always; break-after:page; }
+  .page:last-child{ page-break-after:auto; break-after:auto; }
+  /* The cover is the one page that fills the whole sheet (border-box makes 11in exact). */
+  .page.cover{ min-height:11in; }
+  /* Never split these across a page boundary. */
+  .section, .party, .fieldgrid, .sigblock, .sig, .notice, .field, .docitem, .cover{ page-break-inside:avoid; break-inside:avoid; }
+  .doc-header{ break-after:avoid; }
+  h2, h1.h-doc{ break-after:avoid; }
+  a{ color:inherit; text-decoration:none; }
 }
 @media(max-width:900px){.page{width:auto;max-width:96vw;padding:6vw 6vw 5vw}.cover h1{font-size:34px}.fieldgrid,.sigblock{grid-template-columns:1fr}}
