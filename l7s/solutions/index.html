@@ -11,14 +11,34 @@
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://hitthe.link/l7s/assets/hero-emblem.png">
 <link rel="icon" type="image/svg+xml" href="/l7s/assets/logo.svg">
+<script>(function(){var t=localStorage.getItem('l7s-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
 <style>
-  :root{
-    --bg:#0a0a0c; --bg2:#111114; --panel:#161618; --line:#27272b;
-    --ink:#f5f5f7; --mut:#a0a0aa; --red:#e11d2a; --red2:#ff3b46; --gold:#e6c463; --gold2:#c79a3a;
+  :root{ /* LIGHT — default */
+    --bg:#f6f5f1; --bg2:#ffffff; --panel:#ffffff; --line:#e7e4dc;
+    --ink:#16161b; --mut:#5c5c66; --red:#dc2626; --red2:#d11320; --gold:#a9781a; --gold2:#c79a3a;
     --rad:14px; --max:1160px;
     --redgrad:linear-gradient(135deg,#ff3b46,#b3121d);
-    --goldgrad:linear-gradient(135deg,#f0d385,#c79a3a);
+    --goldgrad:linear-gradient(135deg,#b8860b,#8a6a1f);
+    --glow1:rgba(220,38,38,.09); --glow2:rgba(199,154,58,.10);
+    --cardgrad:linear-gradient(180deg,#ffffff,#fbfaf6);
+    --ctagrad:linear-gradient(160deg,rgba(220,38,38,.10),rgba(199,154,58,.07));
+    --bandgrad:linear-gradient(135deg,rgba(220,38,38,.08),rgba(199,154,58,.05));
+    --disc:#8a8a93; --shadow:0 12px 34px rgba(20,20,30,.10);
+    color-scheme:light;
   }
+  html[data-theme="dark"]{
+    --bg:#0a0a0c; --bg2:#111114; --panel:#161618; --line:#27272b;
+    --ink:#f5f5f7; --mut:#a0a0aa; --red:#e11d2a; --red2:#ff3b46; --gold:#e6c463; --gold2:#c79a3a;
+    --goldgrad:linear-gradient(135deg,#f0d385,#c79a3a);
+    --glow1:rgba(225,29,42,.16); --glow2:rgba(230,196,99,.08);
+    --cardgrad:linear-gradient(180deg,#161618,#111114);
+    --ctagrad:linear-gradient(160deg,rgba(225,29,42,.16),rgba(230,196,99,.06));
+    --bandgrad:linear-gradient(135deg,rgba(225,29,42,.13),rgba(230,196,99,.05));
+    --disc:#7c7c86; --shadow:0 8px 28px rgba(0,0,0,.4);
+    color-scheme:dark;
+  }
+  html{transition:none}
+  body,.card,.band,.btn,.pill,.tag,.glow{transition:background .25s,color .25s,border-color .25s}
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
   body{background:var(--bg);color:var(--ink);font:16px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Inter,Roboto,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
@@ -27,8 +47,10 @@
 
   .glow{position:fixed;inset:0;z-index:0;pointer-events:none;
     background:
-      radial-gradient(620px 440px at 82% -8%,rgba(225,29,42,.16),transparent 60%),
-      radial-gradient(680px 480px at 4% 4%,rgba(230,196,99,.08),transparent 60%);}
+      radial-gradient(620px 440px at 82% -8%,var(--glow1),transparent 60%),
+      radial-gradient(680px 480px at 4% 4%,var(--glow2),transparent 60%);}
+  .theme-toggle{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;font-size:16px;display:grid;place-items:center;flex:none;transition:.18s}
+  .theme-toggle:hover{border-color:var(--gold);color:var(--gold)}
   header,main,footer{position:relative;z-index:1}
 
   nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
@@ -55,25 +77,25 @@
   .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
   @media(max-width:980px){.grid{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:560px){.grid{grid-template-columns:1fr}}
-  .card{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:var(--rad);padding:24px;transition:.2s;display:flex;flex-direction:column}
+  .card{background:var(--cardgrad);border:1px solid var(--line);border-radius:var(--rad);padding:24px;transition:.2s;display:flex;flex-direction:column;box-shadow:var(--shadow)}
   .card:hover{border-color:rgba(225,29,42,.45);transform:translateY(-4px)}
   .tag{font-family:Georgia,serif;font-size:12px;font-weight:800;color:var(--gold);letter-spacing:.05em;text-transform:uppercase}
   .card h3{font-size:19px;letter-spacing:-.01em;margin:10px 0 8px}
   .card p{color:var(--mut);font-size:13.8px;flex:1}
   .card .go{margin-top:16px;font-size:13.5px;font-weight:700;color:var(--red2)}
-  .card.cta{background:linear-gradient(160deg,rgba(225,29,42,.16),rgba(230,196,99,.06));border-color:rgba(230,196,99,.35);justify-content:center;text-align:center}
+  .card.cta{background:var(--ctagrad);border-color:rgba(199,154,58,.4);justify-content:center;text-align:center}
   .card.cta h3{font-size:18px}
   .card.cta .btn{margin-top:14px;justify-content:center}
 
-  .band{background:linear-gradient(135deg,rgba(225,29,42,.13),rgba(230,196,99,.05));border:1px solid rgba(230,196,99,.3);border-radius:24px;padding:54px;text-align:center;margin:30px 0}
+  .band{background:var(--bandgrad);border:1px solid rgba(199,154,58,.32);border-radius:24px;padding:54px;text-align:center;margin:30px 0}
   .band h2{font-size:clamp(26px,3.4vw,38px);letter-spacing:-.02em;margin-bottom:14px;font-weight:820}
   .band p{color:var(--mut);font-size:17px;max-width:560px;margin:0 auto 28px}
   .cta-row{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
 
   footer{border-top:1px solid var(--line);padding:36px 0;color:var(--mut);font-size:13px}
   .fcols{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:center}
-  .disc{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);color:#7c7c86;font-size:12px;line-height:1.6}
-  .credit{margin-top:14px;color:#7c7c86;font-size:12px}
+  .disc{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);color:var(--disc);font-size:12px;line-height:1.6}
+  .credit{margin-top:14px;color:var(--disc);font-size:12px}
   .credit a{color:var(--gold)}
 </style>
 </head>
@@ -85,9 +107,13 @@
     <div class="nav-links">
       <a href="#solutions">Solutions</a>
       <a href="#pricing">Pricing</a>
+      <a href="/l7s/docs/">Documents</a>
       <a href="/l7s/onboarding/">Onboarding</a>
     </div>
-    <a href="#start" class="btn btn-pri">Find your Hero</a>
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle light or dark mode" title="Toggle light / dark">🌙</button>
+      <a href="#start" class="btn btn-pri">Find your Hero</a>
+    </div>
   </nav>
 </header>
 
@@ -203,6 +229,13 @@
     </div>
   </section>
 </main>
+
+<script>
+(function(){var KEY='l7s-theme';function icon(t){return t==='dark'?'☀️':'🌙';}
+var b=document.getElementById('themeToggle');
+if(b){b.textContent=icon(document.documentElement.getAttribute('data-theme'));
+b.addEventListener('click',function(){var cur=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',cur);localStorage.setItem(KEY,cur);b.textContent=icon(cur);});}})();
+</script>
 
 <footer class="wrap">
   <div class="fcols">
