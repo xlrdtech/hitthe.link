@@ -19,6 +19,18 @@
   .ev .meta{font:600 10px/1.2 ui-monospace,monospace;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
   .ev .txt{font-size:15px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
   .ev.vision{border-left-color:var(--blue)}.ev.sms{border-left-color:var(--warn)}
+  /* injections (in:/typed:/aua:/sms:) — qi's tagged inputs */
+  .ev.inject{border-left-color:var(--blue)}
+  /* one-voice replies (xen-out) */
+  .ev.reply{border-left-color:var(--accent)}
+  /* terminal lines — distinct monospace block, tight, dimmer */
+  .ev.term{background:#06080c;border-color:#10202a;border-left-color:#2f7df6;padding:6px 11px;border-radius:6px;margin:0}
+  .ev.term .meta{color:#3f6b86;margin-bottom:2px}
+  .ev.term .txt{font:13px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace;color:#7fc7a6;white-space:pre-wrap}
+  /* collapse consecutive terminal lines into one visual stream */
+  .ev.term + .ev.term{border-top:0;border-top-left-radius:0;border-top-right-radius:0;margin-top:-10px;padding-top:2px}
+  .ev.term + .ev.term .meta{display:none}
+  .ev.term.run-start{margin-top:0;border-top-left-radius:6px;border-top-right-radius:6px}
   @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
   .empty{color:var(--mut);text-align:center;margin-top:40px;font-size:14px}
   footer{padding:8px 16px;border-top:1px solid var(--line);font:500 11px/1.3 ui-monospace,monospace;color:var(--mut);text-align:center}
@@ -40,11 +52,23 @@ const dot=document.getElementById('dot'), statusEl=document.getElementById('stat
 let lastId='0', count=0;
 
 function setState(s){ dot.className='dot '+(s==='live'?'live':s==='reconnect'?'reconnect':''); statusEl.textContent=s==='live'?'LIVE':s==='reconnect'?'reconnecting…':'offline'; }
+let lastTermPane=null;
+function classify(kind){
+  const k=String(kind||'xen-out');
+  if(k.startsWith('term:')) return {cls:'term', label:'⌗ '+k, pane:k};
+  if(k==='xen-out'||k==='xen-reply-vvs') return {cls:'reply', label:'xen ▸ reply', pane:null};
+  if(k==='xen-dictate-in') return {cls:'inject', label:'inject', pane:null};
+  return {cls:k.replace(/[^a-z0-9]+/gi,'-'), label:k, pane:null};
+}
 function render(ev){
   if(empty&&empty.parentNode) empty.remove();
-  const d=document.createElement('div'); d.className='ev '+(ev.kind||'xen-out');
+  const c=classify(ev.kind);
+  const d=document.createElement('div'); d.className='ev '+c.cls;
+  // collapse a run of consecutive lines from the SAME terminal pane into one block
+  if(c.cls==='term'){ if(c.pane!==lastTermPane) d.classList.add('run-start'); lastTermPane=c.pane; }
+  else lastTermPane=null;
   const t=new Date(+ev.ts||Date.now()).toLocaleTimeString();
-  d.innerHTML=`<div class="meta">${(ev.kind||'xen-out')} · ${t}</div><div class="txt"></div>`;
+  d.innerHTML=`<div class="meta">${c.label} · ${t}</div><div class="txt"></div>`;
   d.querySelector('.txt').textContent=ev.text||'';
   feed.appendChild(d); feed.scrollTop=feed.scrollHeight;
   count++; missEl.textContent=count+' events';
