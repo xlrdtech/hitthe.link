@@ -29,6 +29,10 @@
   .lead-meta a{color:var(--gold1);text-decoration:none}
   .lead-meta b{color:var(--ink);font-weight:600}
   .stage{font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:4px 9px;border-radius:7px;border:1px solid;white-space:nowrap}
+  .stage.tap{cursor:pointer;transition:transform .08s ease,filter .12s ease}
+  .stage.tap:hover{filter:brightness(.96)}
+  .stage.tap:active{transform:scale(.94)}
+  .stage.tap::after{content:" ›";opacity:.55;font-weight:700}
   .stage.New{color:#7c3aed;border-color:rgba(124,58,237,.4);background:rgba(124,58,237,.1)}
   .stage.FollowUp{color:var(--warn);border-color:rgba(180,83,9,.4);background:rgba(180,83,9,.09)}
   .stage.Attempted{color:#c2410c;border-color:rgba(194,65,12,.4);background:rgba(194,65,12,.09)}
@@ -303,7 +307,7 @@
       row.innerHTML =
         '<div>' +
           '<div class="lead-name">' + esc(l.name || 'Unnamed lead') +
-            ' <span class="stage ' + stageClass(stage) + '">' + esc(stage) + '</span>' + dispBadge(l.disposition) +
+            ' <span class="stage tap ' + stageClass(stage) + '" data-cycle="' + esc(l.id) + '" title="Tap to advance status">' + esc(stage) + '</span>' + dispBadge(l.disposition) +
           '</div>' +
           '<div class="lead-meta">' +
             (ph ? ('Phone <a href="' + telHref(l.phone) + '">' + esc(l.phone) + '</a> &middot; ') : '') +
@@ -330,6 +334,33 @@
         if(l) openEdit(l);
       });
     });
+    // tap-to-advance status (ported from the Luminescent crew view) — one tap cycles the badge
+    Array.prototype.forEach.call(list.querySelectorAll('.stage.tap'), function(b){
+      b.addEventListener('click', function(e){
+        e.stopPropagation();
+        var id = b.getAttribute('data-cycle');
+        var l = MY_LEADS.filter(function(x){ return x.id === id; })[0];
+        if(l) cycleStatus(l, b);
+      });
+    });
+  }
+
+  var CYCLE = ['New','Attempted','Follow Up','Interested','Booked','Not Interested','STOP'];
+  async function cycleStatus(l, badgeEl){
+    var cur = l.pipeline_stage || 'New';
+    var next = CYCLE[(CYCLE.indexOf(cur) + 1) % CYCLE.length];
+    if(next === 'STOP' && !confirm('Mark "' + (l.name||'this lead') + '" as STOP? This removes it from your active pipeline view.')) return;
+    if(badgeEl){ badgeEl.style.opacity = '.5'; badgeEl.style.pointerEvents = 'none'; }
+    try{
+      var res = await sb.rpc('update_my_lead', { p_lead_id:l.id, p_stage:next, p_notes:(l.notes||'') });
+      if(res.error){ alert('Could not update status: ' + (res.error.message||'error')); return; }
+      l.pipeline_stage = next;       // reflect locally + recompute metrics/chips/list
+      var activeStages = ['New','Attempted','Follow Up'];
+      $('#mActive').textContent = MY_LEADS.filter(function(x){ return activeStages.indexOf(x.pipeline_stage) !== -1; }).length;
+      renderChips(); applyFilters();
+    } catch(err){
+      alert('Update error: ' + ((err && err.message) || String(err)));
+    }
   }
 
   // ---------- subscriber edit modal: stage + notes via update_my_lead RPC ----------
