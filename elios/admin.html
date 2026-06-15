@@ -759,7 +759,7 @@
     var el = document.querySelector(st.sel);
     var spot = $('#tourSpot'), pop = $('#tourPop');
     if(!el){ nextTour(); return; }
-    el.scrollIntoView({ behavior:'smooth', block:'center' });
+    el.scrollIntoView({ block:'center' });
     var r = el.getBoundingClientRect();
     var pad = 6;
     spot.style.left = (r.left - pad) + 'px';
@@ -771,7 +771,8 @@
     $('#tourStepLbl').textContent = 'Step ' + (tourIdx+1) + ' of ' + TOUR.length;
     $('#tourNext').textContent = (tourIdx === TOUR.length-1) ? 'Done' : 'Next';
     var popTop = r.bottom + 14;
-    if(popTop + 180 > window.innerHeight) popTop = Math.max(14, r.top - 190);
+    if(popTop + 200 > window.innerHeight) popTop = r.top - 200;
+    popTop = Math.min(Math.max(14, popTop), window.innerHeight - 200);
     var popLeft = Math.min(Math.max(14, r.left), window.innerWidth - 320);
     pop.style.top = popTop + 'px';
     pop.style.left = popLeft + 'px';
@@ -785,12 +786,12 @@
   $('#tourBtn').addEventListener('click', startTour);
   $('#tourNext').addEventListener('click', nextTour);
   $('#tourSkip').addEventListener('click', endTour);
+  $('#tourScrim').addEventListener('click', function(e){ if(e.target === this) endTour(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && $('#tourScrim').classList.contains('on')) endTour(); });
   window.addEventListener('resize', function(){ if($('#tourScrim').classList.contains('on')) positionTour(); });
-  function maybeAutoTour(){
-    var done = false;
-    try{ done = localStorage.getItem('elios.tour.done') === '1'; }catch(e){}
-    if(!done) setTimeout(startTour, 700);
-  }
+  // On-demand only (the ? button). Auto-launch was removed: it could overlay the
+  // page before content positioned, leaving everything looking unclickable.
+  function maybeAutoTour(){ /* no auto-launch */ }
 
   boot().then(maybeAutoTour);
 })();
