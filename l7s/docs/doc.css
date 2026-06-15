@@ -9,11 +9,16 @@
   --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 }
 *{box-sizing:border-box}
-html,body{margin:0;padding:0;background:#52525b;color:var(--ink);font-family:var(--serif);-webkit-font-smoothing:antialiased}
+html,body{margin:0;padding:0;color:var(--ink);font-family:var(--serif);-webkit-font-smoothing:antialiased}
+/* SURROUND — light by default (the .page surfaces stay white; only the body background changes) */
+body{background:#e9e9ec}
+html[data-theme="dark"] body{background:#3a3a40}
 .toolbar{position:sticky;top:0;z-index:50;background:#18181b;color:#f4f4f6;display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 20px;font-family:var(--sans);font-size:13.5px}
 .toolbar b{font-weight:700}
 .toolbar .btn{font-family:var(--sans);font-weight:700;font-size:13px;border:1px solid #3f3f46;color:#f4f4f6;background:#27272a;border-radius:8px;padding:8px 14px;cursor:pointer;text-decoration:none}
 .toolbar .btn.print{background:linear-gradient(135deg,#ff3b46,var(--red-dk));border-color:transparent}
+.toolbar .theme-toggle{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;font-size:15px;line-height:1;border:1px solid #3f3f46;color:#f4f4f6;background:#27272a;border-radius:8px;padding:0;cursor:pointer;vertical-align:middle}
+.toolbar .theme-toggle:hover{background:#3f3f46}
 
 /* PAGE — US Letter */
 .page{width:8.5in;min-height:11in;background:var(--paper);margin:22px auto;padding:0.9in 0.85in 0.8in;position:relative;box-shadow:0 10px 40px rgba(0,0,0,.45);display:flex;flex-direction:column}
@@ -78,7 +83,8 @@ html,body{margin:0;padding:0;background:#52525b;color:var(--ink);font-family:var
 .esign .pill{border:1px solid var(--gold);color:var(--gold);font-weight:700;border-radius:999px;padding:2px 9px;letter-spacing:.06em}
 
 @media print{
-  html,body{background:#fff}
+  /* Surround is irrelevant in print — pages always print white. Force white regardless of theme. */
+  html,body,html[data-theme="dark"] body{background:#fff}
   .toolbar{display:none}
   .page{box-shadow:none;margin:0;width:auto;min-height:auto}
   .page{page-break-after:always}
