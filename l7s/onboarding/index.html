@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>L7 Solutions — Onboarding System v1 · Yes → Pay → Sign → Upload</title>
+<meta name="description" content="L7 Solutions onboarding: a clean, compliant path from yes to activated. Confirm your offer, pay securely, sign your agreement, upload documents through a secure portal — no scrambling.">
+<meta name="theme-color" content="#0b0b0d">
+<meta property="og:title" content="L7 Solutions — Onboarding System v1">
+<meta property="og:description" content="Yes → Pay → Sign → Upload → Activate. A clean, compliant onboarding flow.">
+<meta property="og:type" content="website">
+<style>
+  :root{
+    --bg:#0b0b0d; --bg2:#121215; --panel:#161619; --line:#262629;
+    --ink:#f4f4f6; --mut:#a2a2ad; --red:#e11d2a; --red2:#ff3b46; --gold:#d9b25a;
+    --rad:14px; --max:1120px;
+    --redgrad:linear-gradient(135deg,#ff3b46,#b3121d);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font:16px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Inter,Roboto,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+
+  .glow{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(600px 420px at 80% -8%,rgba(225,29,42,.18),transparent 60%),
+      radial-gradient(700px 480px at 6% 4%,rgba(225,29,42,.08),transparent 60%);}
+  header,main,footer{position:relative;z-index:1}
+
+  nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+  .brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:-.01em;font-size:18px}
+  .mark{width:36px;height:36px;border-radius:9px;background:var(--redgrad);display:grid;place-items:center;color:#fff;font-weight:900;font-family:Georgia,serif;font-size:16px;box-shadow:0 0 20px rgba(225,29,42,.45)}
+  .brand small{display:block;color:var(--mut);font-weight:500;font-size:11px;letter-spacing:.02em;margin-top:1px}
+  .nav-links{display:flex;gap:24px;color:var(--mut);font-size:14px;font-weight:500}
+  .nav-links a:hover{color:var(--red2)}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 21px;border-radius:10px;font-weight:700;font-size:14.5px;border:1px solid transparent;cursor:pointer;transition:.18s}
+  .btn-pri{background:var(--redgrad);color:#fff;box-shadow:0 8px 28px rgba(225,29,42,.3)}
+  .btn-pri:hover{transform:translateY(-2px);box-shadow:0 12px 38px rgba(225,29,42,.42)}
+  .btn-ghost{border-color:var(--line);color:var(--ink)}
+  .btn-ghost:hover{border-color:var(--red2);color:var(--red2)}
+  @media(max-width:860px){.nav-links{display:none}}
+
+  .hero{padding:64px 0 48px;text-align:center;max-width:820px;margin:0 auto}
+  .pill{display:inline-flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--red2);background:rgba(225,29,42,.08);border:1px solid rgba(225,29,42,.28);padding:6px 14px;border-radius:999px;margin-bottom:24px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--red2);box-shadow:0 0 10px var(--red2);animation:pulse 1.8s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  h1{font-size:clamp(34px,5.4vw,60px);line-height:1.04;letter-spacing:-.025em;font-weight:850}
+  h1 .g{background:var(--redgrad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--mut);font-size:18.5px;margin:22px auto 32px;max-width:600px}
+  .cta-row{display:flex;gap:14px;flex-wrap:wrap;align-items:center;justify-content:center}
+
+  .flowbar{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:40px 0 0;color:var(--mut);font-weight:700;font-size:14px}
+  .flowbar b{color:var(--ink)}
+  .flowbar .arw{color:var(--red2)}
+
+  section{padding:66px 0}
+  .eyebrow{color:var(--red2);font-weight:700;font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:13px}
+  h2{font-size:clamp(26px,3.6vw,40px);letter-spacing:-.02em;line-height:1.1;font-weight:820}
+  .lead{color:var(--mut);font-size:17px;max-width:600px;margin-top:14px}
+  .center{text-align:center}.center .lead{margin-left:auto;margin-right:auto}
+
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:42px}
+  @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:520px){.grid{grid-template-columns:1fr}}
+  .step{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:var(--rad);padding:26px;transition:.2s;position:relative;overflow:hidden}
+  .step:hover{border-color:rgba(225,29,42,.45);transform:translateY(-4px)}
+  .step .num{font-family:Georgia,serif;font-size:13px;font-weight:800;color:var(--red2);background:rgba(225,29,42,.1);border:1px solid rgba(225,29,42,.25);width:34px;height:34px;border-radius:9px;display:grid;place-items:center;margin-bottom:16px}
+  .step h3{font-size:18px;letter-spacing:-.01em;margin-bottom:8px}
+  .step p{color:var(--mut);font-size:14px}
+
+  .split{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center}
+  @media(max-width:860px){.split{grid-template-columns:1fr}}
+  .docs{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:18px;padding:30px}
+  .docs h3{font-size:16px;margin-bottom:16px;letter-spacing:-.01em}
+  .docitem{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+  .docitem:last-child{border-bottom:0}
+  .chk{width:22px;height:22px;border-radius:6px;background:rgba(225,29,42,.12);border:1px solid rgba(225,29,42,.35);display:grid;place-items:center;color:var(--red2);font-size:12px;flex:none}
+
+  .trust{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:42px}
+  @media(max-width:680px){.trust{grid-template-columns:1fr}}
+  .tcard{padding:24px;background:var(--panel);border:1px solid var(--line);border-radius:var(--rad);text-align:center}
+  .tcard .ic{font-size:24px;margin-bottom:10px}
+  .tcard h4{font-size:15.5px;margin-bottom:6px}
+  .tcard p{color:var(--mut);font-size:13.5px}
+
+  .band{background:linear-gradient(135deg,rgba(225,29,42,.14),rgba(225,29,42,.05));border:1px solid rgba(225,29,42,.3);border-radius:24px;padding:56px;text-align:center;margin:24px 0}
+  .band h2{margin-bottom:14px}.band .lead{margin:0 auto 28px}
+
+  footer{border-top:1px solid var(--line);padding:36px 0;color:var(--mut);font-size:13px}
+  .fcols{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:center}
+  .disc{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);color:#7c7c86;font-size:12px;line-height:1.6}
+  .credit{margin-top:14px;color:#7c7c86;font-size:12px}
+  .credit a{color:var(--red2)}
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<header class="wrap">
+  <nav>
+    <div class="brand"><span class="mark">L7</span><div>L7 Solutions<small>Onboarding System v1</small></div></div>
+    <div class="nav-links">
+      <a href="#flow">How it works</a>
+      <a href="#docs">What you'll need</a>
+      <a href="#trust">Secure &amp; compliant</a>
+      <a href="#start">Get started</a>
+    </div>
+    <a href="#start" class="btn btn-pri">Start onboarding</a>
+  </nav>
+</header>
+
+<main>
+  <section class="wrap hero">
+    <span class="pill"><span class="dot"></span> Onboarding System v1 · live</span>
+    <h1>From <span class="g">“yes”</span> to activated —<br>without the scramble.</h1>
+    <p class="sub">One clean, compliant path: confirm your offer, pay securely, sign your agreement, and upload your documents through a secure portal. No piecemeal transfers. No sensitive docs over text.</p>
+    <div class="cta-row">
+      <a href="#start" class="btn btn-pri">Start onboarding →</a>
+      <a href="#flow" class="btn btn-ghost">See the steps</a>
+    </div>
+    <div class="flowbar">
+      <b>Yes</b><span class="arw">→</span><b>Pay</b><span class="arw">→</span><b>Sign</b><span class="arw">→</span><b>Upload</b><span class="arw">→</span><b>Activate</b>
+    </div>
+  </section>
+
+  <section class="wrap" id="flow">
+    <div class="center">
+      <div class="eyebrow" style="display:inline-block">The flow</div>
+      <h2>Four steps from commitment to kickoff.</h2>
+      <p class="lead">A repeatable system — so every client is onboarded the same clean way, every time.</p>
+    </div>
+    <div class="grid">
+      <div class="step"><div class="num">01</div><h3>Pay securely</h3><p>You receive a secure checkout link for your agreed offer. Pay by card — confirmation is instant and logged.</p></div>
+      <div class="step"><div class="num">02</div><h3>Sign your agreement</h3><p>We email your branded agreement and intake form. Review, sign, and return — fillable and e-sign ready.</p></div>
+      <div class="step"><div class="num">03</div><h3>Upload documents</h3><p>A secure portal link lets you upload required documents. Encrypted, compliant — never over text or email.</p></div>
+      <div class="step"><div class="num">04</div><h3>Activate &amp; kickoff</h3><p>Once payment, agreement, and documents are verified, we activate your service and confirm your kickoff call.</p></div>
+    </div>
+  </section>
+
+  <section class="wrap" id="docs">
+    <div class="split">
+      <div>
+        <div class="eyebrow">What you'll need</div>
+        <h2>Have these ready for a same-day start.</h2>
+        <p class="lead">Gather your documents once. Upload them through the secure portal — we handle the rest and confirm receipt.</p>
+        <div class="cta-row" style="justify-content:flex-start;margin-top:24px">
+          <a href="#start" class="btn btn-pri">Begin securely →</a>
+        </div>
+      </div>
+      <div class="docs">
+        <h3>Required for onboarding</h3>
+        <div class="docitem"><span class="chk">✓</span> Government-issued ID (driver's license or passport)</div>
+        <div class="docitem"><span class="chk">✓</span> Signed service agreement &amp; intake form</div>
+        <div class="docitem"><span class="chk">✓</span> Proof of payment confirmation</div>
+        <div class="docitem"><span class="chk">✓</span> Supporting documents for your specific offer</div>
+        <div class="docitem"><span class="chk">✓</span> Best contact details for your kickoff</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap" id="trust" style="padding-top:6px">
+    <div class="center">
+      <div class="eyebrow" style="display:inline-block">Secure &amp; compliant by design</div>
+      <h2>Your information is handled the right way.</h2>
+      <p class="lead">Sensitive documents move through a secure, encrypted portal — never ad-hoc email or text.</p>
+    </div>
+    <div class="trust">
+      <div class="tcard"><div class="ic">🔒</div><h4>Encrypted uploads</h4><p>Documents are transmitted and stored through a secure portal, not scattered across inboxes and chats.</p></div>
+      <div class="tcard"><div class="ic">📋</div><h4>Clear paper trail</h4><p>Every step — payment, signature, upload — is confirmed and logged, so nothing falls through the cracks.</p></div>
+      <div class="tcard"><div class="ic">🤝</div><h4>Facilitator model</h4><p>L7 Solutions acts as your commercial facilitator, coordinator, and technology/process support partner.</p></div>
+    </div>
+  </section>
+
+  <section class="wrap" id="start">
+    <div class="band">
+      <div class="eyebrow" style="display:inline-block">Ready when you are</div>
+      <h2>Let's get you onboarded.</h2>
+      <p class="lead">Book a quick call to confirm your offer and receive your secure checkout, agreement, and upload links — and you're moving.</p>
+      <div class="cta-row">
+        <a href="https://cal.com/ctoeast" class="btn btn-pri">Book your onboarding call →</a>
+        <a href="#flow" class="btn btn-ghost">Review the process</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <div class="fcols">
+    <div class="brand"><span class="mark">L7</span><div>L7 Solutions<small>Onboarding System v1</small></div></div>
+    <div style="display:flex;gap:22px;flex-wrap:wrap">
+      <a href="#flow">How it works</a><a href="#docs">Documents</a><a href="#trust">Security</a><a href="#start">Get started</a>
+    </div>
+  </div>
+  <div class="disc">
+    L7S, INC. (d/b/a L7 Solutions) and/or its appointed representatives act solely as a commercial facilitator, coordinator, and technology/process support provider. L7 Solutions is not a lender, law firm, or licensed financial advisor, and does not provide legal, tax, or investment advice. Services are provided under a separate written agreement.
+  </div>
+  <div class="credit">© 2026 L7S, INC. · Onboarding System v1 — Yes → Pay → Sign → Upload → Activate · Built by <a href="https://cal.com/ctoeast">XLRD</a></div>
+</footer>
+</body>
+</html>
