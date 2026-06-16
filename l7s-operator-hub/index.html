@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L7S HERO Operator Hub & Project B.A.T.M.A.N.</title>
+    <meta name="robots" content="noindex,nofollow">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        body {
+            background-color: #f8fafc;
+            color: #0f172a;
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .nav-active {
+            background-color: #d4af37;
+            color: #000000;
+            font-weight: bold;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- Chosen Palette: L7S Gold (#d4af37), Slate Dark (#0f172a), Slate Light (#f8fafc) -->
+    <!-- Application Structure Plan: A responsive, dashboard-style single-page application (SPA) featuring a persistent sidebar for navigation and a dynamic main content area. This structure allows users to logically explore the complex L7S ecosystem without context switching. The flow begins with a high-level overview of the business identity, drills down into the core service playbooks (interactive), outlines the B.A.T.M.A.N. technical infrastructure, and concludes with final deliverables and B2B strategies. -->
+    <!-- Visualization & Content Choices: 1. Identity/Overview -> Goal: Inform -> HTML Data Cards -> High visibility of core NAICS codes. 2. Structural Models -> Goal: Compare/Inform -> Doughnut Chart (Chart.js) -> Shows distribution of the ABC model components. 3. Playbooks -> Goal: Explore -> Interactive Tabbed Interface -> Allows deep dive into C4-C7 without cluttering the page. 4. Infrastructure -> Goal: Organize/Relationships -> Polar Area Chart (Chart.js) -> Visualizes the weight/integration of various tech stack categories (AI, PM, Storage). -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col hidden md:flex h-full shadow-2xl z-20 shrink-0">
+        <div class="p-6 bg-black flex items-center gap-3 border-b border-slate-800">
+            <span class="text-3xl text-[#d4af37]">⚡</span>
+            <div>
+                <h1 class="text-[#d4af37] font-extrabold text-xl tracking-wider">L7S HERO</h1>
+                <p class="text-xs uppercase tracking-widest text-slate-500">Operator Hub</p>
+            </div>
+        </div>
+        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+            <button data-target="section-overview" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left hover:bg-slate-800 transition-colors nav-active">
+                <span>🏢</span> Identity & Overview
+            </button>
+            <button data-target="section-models" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left hover:bg-slate-800 transition-colors">
+                <span>🧩</span> Structural Models
+            </button>
+            <button data-target="section-playbooks" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left hover:bg-slate-800 transition-colors">
+                <span>📖</span> Core Playbooks
+            </button>
+            <button data-target="section-batman" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left hover:bg-slate-800 transition-colors">
+                <span>⚙️</span> Project B.A.T.M.A.N.
+            </button>
+            <button data-target="section-artifacts" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left hover:bg-slate-800 transition-colors">
+                <span>📄</span> High-Ticket Artifacts
+            </button>
+        </nav>
+        <div class="p-4 border-t border-slate-800 text-xs text-center text-slate-500">
+            Omnipresent Memory Enabled<br>
+            South Fulton, GA (2026)
+        </div>
+    </aside>
+
+    <main class="flex-1 relative overflow-y-auto bg-slate-50 scroll-smooth">
+
+        <header class="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center sticky top-0 z-30">
+            <div class="flex items-center gap-2">
+                <span class="text-xl text-[#d4af37]">⚡</span>
+                <h1 class="text-[#d4af37] font-bold">L7S HERO</h1>
+            </div>
+            <select id="mobile-nav" class="bg-slate-800 text-white border-none rounded p-2 text-sm focus:ring-2 focus:ring-[#d4af37]">
+                <option value="section-overview">Identity & Overview</option>
+                <option value="section-models">Structural Models</option>
+                <option value="section-playbooks">Core Playbooks</option>
+                <option value="section-batman">Project B.A.T.M.A.N.</option>
+                <option value="section-artifacts">High-Ticket Artifacts</option>
+            </select>
+        </header>
+
+        <div class="p-6 md:p-12 max-w-7xl mx-auto space-y-24 pb-32">
+
+            <section id="section-overview" class="content-section fade-in">
+                <div class="mb-8">
+                    <h2 class="text-4xl font-extrabold text-slate-900 mb-4">Core Business Identity</h2>
+                    <p class="text-lg text-slate-600 leading-relaxed border-l-4 border-[#d4af37] pl-4">
+                        This section outlines the foundational NAICS classifications that drive the L7S HERO ecosystem. By strictly adhering to these two primary avenues, L7S maintains precise operational focus and delegates direct fulfillment to an exclusive matched network.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                        <div class="text-4xl mb-4">💻</div>
+                        <h3 class="text-2xl font-bold text-slate-900 mb-2">Computer Systems Design</h3>
+                        <p class="text-slate-600">
+                            Designing the overarching software tools, SaaS products, automated systems, snapshots, and secure login portals that run the business infrastructure.
+                        </p>
+                    </div>
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                        <div class="text-4xl mb-4">🎓</div>
+                        <h3 class="text-2xl font-bold text-slate-900 mb-2">Product Training</h3>
+                        <p class="text-slate-600">
+                            Training clients and corporate entities on how to effectively utilize the designed software systems to achieve their specific operational use cases.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 text-white p-8 rounded-2xl shadow-xl relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-8 text-8xl opacity-5">🤝</div>
+                    <h3 class="text-xl font-bold text-[#d4af37] mb-4">The Fulfillment Network Engine</h3>
+                    <p class="text-slate-300 leading-relaxed max-w-3xl">
+                        L7S provides the proprietary system and the requisite training. The actual direct fulfillment of the specialized "7 playbooks" (Credit, Cashflow, Crypto, etc.) is handled by an exclusive, coordinated network of professionals dynamically matchmade within the L7S software CRM and back-office infrastructure.
+                    </p>
+                </div>
+            </section>
+
+            <section id="section-models" class="content-section hidden fade-in">
+                <div class="mb-8">
+                    <h2 class="text-4xl font-extrabold text-slate-900 mb-4">Structural Frameworks</h2>
+                    <p class="text-lg text-slate-600 leading-relaxed border-l-4 border-[#d4af37] pl-4">
+                        Visualizing the high-level operational models. The 777 Model governs overarching contracts, while the ABC Model structures the direct tangibles delivered to the client.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mb-6 border-t-4 border-t-[#d4af37]">
+                            <h3 class="text-2xl font-bold text-slate-900 mb-2">The 777 Model</h3>
+                            <p class="text-slate-600">
+                                Focused entirely on total owner contracts. This model represents the overarching solution and service ecosystem governing the entire L7S network.
+                            </p>
+                        </div>
+
+                        <div class="bg-slate-900 p-8 rounded-2xl shadow-sm">
+                            <h3 class="text-2xl font-bold text-[#d4af37] mb-4">The ABC Model</h3>
+                            <ul class="space-y-4 text-slate-300">
+                                <li class="flex gap-4">
+                                    <span class="font-bold text-white text-xl">A</span>
+                                    <div>
+                                        <strong class="text-white block">Apps</strong>
+                                        SaaS products, system snapshots, login portals, and software tools.
+                                    </div>
+                                </li>
+                                <li class="flex gap-4">
+                                    <span class="font-bold text-white text-xl">B</span>
+                                    <div>
+                                        <strong class="text-white block">Books</strong>
+                                        Educational materials and protocol documentation.
+                                    </div>
+                                </li>
+                                <li class="flex gap-4">
+                                    <span class="font-bold text-white text-xl">C</span>
+                                    <div>
+                                        <strong class="text-white block">CDs / C-Suite</strong>
+                                        Calculators, Community classes, Checklists, Checkers.
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-center items-center">
+                        <h4 class="text-center font-bold text-slate-600 mb-4 uppercase tracking-wider text-sm">ABC Deliverable Distribution</h4>
+                        <div class="chart-container">
+                            <canvas id="abcChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="section-playbooks" class="content-section hidden fade-in">
+                <div class="mb-8">
+                    <h2 class="text-4xl font-extrabold text-slate-900 mb-4">The 7 Core Playbooks</h2>
+                    <p class="text-lg text-slate-600 leading-relaxed border-l-4 border-[#d4af37] pl-4">
+                        The L7S system provides tailored infrastructure for 7 core service verticals. Select a playbook below to interactively explore its specific workflow, routing logic, and underlying data architecture.
+                    </p>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-8">
+                    <div class="w-full md:w-1/3 space-y-2 flex flex-col">
+                        <button class="playbook-btn w-full text-left px-6 py-4 rounded-xl font-bold text-slate-700 bg-white border border-slate-200 hover:border-[#d4af37] hover:shadow-md transition-all active-playbook" data-pb="c4">
+                            C4: Consumer Credit
+                        </button>
+                        <button class="playbook-btn w-full text-left px-6 py-4 rounded-xl font-bold text-slate-700 bg-white border border-slate-200 hover:border-[#d4af37] hover:shadow-md transition-all" data-pb="c5">
+                            C5: Cashflow
+                        </button>
+                        <button class="playbook-btn w-full text-left px-6 py-4 rounded-xl font-bold text-slate-700 bg-white border border-slate-200 hover:border-[#d4af37] hover:shadow-md transition-all" data-pb="c6">
+                            C6: Cryptocurrency
+                        </button>
+                        <button class="playbook-btn w-full text-left px-6 py-4 rounded-xl font-bold text-slate-700 bg-white border border-slate-200 hover:border-[#d4af37] hover:shadow-md transition-all" data-pb="c7">
+                            C7: Community
+                        </button>
+                        <div class="mt-4 p-4 text-sm text-slate-500 italic text-center bg-slate-100 rounded-xl">
+                            Note: Additional solutions include Insurance, Forex, and Funding.
+                        </div>
+                    </div>
+
+                    <div class="w-full md:w-2/3 bg-white p-8 rounded-2xl shadow-lg border-t-8 border-[#d4af37] min-h-[400px]" id="playbook-content">
+                        <h3 class="text-3xl font-extrabold text-slate-900 mb-2">C4: Consumer Credit</h3>
+                        <p class="text-[#d4af37] font-bold tracking-widest uppercase text-sm mb-8">C-Suite Contacts + COI</p>
+
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="font-bold text-slate-400 uppercase text-xs tracking-wider mb-2">Primary Workflow</h4>
+                                <p class="text-slate-800 text-lg bg-slate-50 p-4 rounded-lg border border-slate-100">Credit Hero Workflow (AB Reports + 3-Bureau upload).</p>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-400 uppercase text-xs tracking-wider mb-2">System Routing</h4>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="px-3 py-1 bg-slate-900 text-white rounded-full text-sm">PMS MFSN Client Portal</span>
+                                    <span class="px-3 py-1 bg-slate-900 text-white rounded-full text-sm">Scribe Pro</span>
+                                    <span class="px-3 py-1 bg-slate-900 text-white rounded-full text-sm">Asana/Notion/Monday</span>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-400 uppercase text-xs tracking-wider mb-2">Data Architecture Alignment</h4>
+                                <div class="flex items-center gap-4 bg-[#fdfaf2] p-4 rounded-lg border border-[#f0e6c8]">
+                                    <div class="font-bold text-[#b49020]">M.A.P.S.</div>
+                                    <div class="text-sm text-slate-500">(Profiles)</div>
+                                    <div class="text-slate-300">➜ connected to ➜</div>
+                                    <div class="font-bold text-[#b49020]">C.A.R.S.</div>
+                                    <div class="text-sm text-slate-500">(Attributes)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="section-batman" class="content-section hidden fade-in">
+                <div class="mb-8">
+                    <h2 class="text-4xl font-extrabold text-slate-900 mb-4">Project B.A.T.M.A.N. Infrastructure</h2>
+                    <p class="text-lg text-slate-600 leading-relaxed border-l-4 border-[#d4af37] pl-4">
+                        The technical backend powering L7S. This section maps the orchestration layers, knowledge management synchronization, and client ingestion logic necessary for automated, high-ticket fulfillment.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="text-2xl">🧠</span>
+                            <h3 class="text-xl font-bold text-slate-900">AI Orchestration Layer</h3>
+                        </div>
+                        <p class="text-slate-600 mb-4 text-sm">End-to-end orchestration bridging traditional web engineering with LLMs to automate data capture, archiving, and system use cases.</p>
+                        <div class="flex flex-wrap gap-2 mt-auto">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-bold">Otter.ai</span>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-bold">NotebookLM</span>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-bold">Google Studio</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="text-2xl">🗄️</span>
+                            <h3 class="text-xl font-bold text-slate-900">Local Knowledge Sync</h3>
+                        </div>
+                        <p class="text-slate-600 mb-4 text-sm">Obsidian Vault localized mapping. Formatted in Markdown (.md) and .txt for LLMs, MCPs, and CLIs to interact with AI agents properly.</p>
+                        <div class="flex flex-wrap gap-2 mt-auto">
+                            <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs font-bold">Obsidian</span>
+                            <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs font-bold">Dropbox Parity</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 bg-slate-900 text-white p-8 rounded-2xl shadow-lg relative overflow-hidden">
+                        <h3 class="text-2xl font-bold text-[#d4af37] mb-6">Client Portal & PMP Logic</h3>
+
+                        <div class="space-y-6 relative z-10">
+                            <div class="flex gap-4 items-start">
+                                <div class="bg-[#d4af37] text-black w-8 h-8 rounded-full flex items-center justify-center font-bold shrink-0 mt-1">1</div>
+                                <div>
+                                    <h4 class="font-bold text-lg">"One Simple Page" UX</h4>
+                                    <p class="text-slate-400 text-sm">Customers view instructions and upload documentation seamlessly upon payment. Impossible to misunderstand.</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 items-start">
+                                <div class="bg-[#d4af37] text-black w-8 h-8 rounded-full flex items-center justify-center font-bold shrink-0 mt-1">2</div>
+                                <div>
+                                    <h4 class="font-bold text-lg">Cloud Concierge Ingestion</h4>
+                                    <p class="text-slate-400 text-sm">Routing via JotForm/Typeform ➜ W.A.T.E.R. (Events/Exchanges) ➜ M.A.P.S. (Profile storage).</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 items-start">
+                                <div class="bg-[#d4af37] text-black w-8 h-8 rounded-full flex items-center justify-center font-bold shrink-0 mt-1">3</div>
+                                <div>
+                                    <h4 class="font-bold text-lg">Back-Office Dispatch</h4>
+                                    <p class="text-slate-400 text-sm">Direct routing to Monday.com/Asana/Notion to track progress and dispatch to the exclusive fulfillment network.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="absolute right-[-10%] bottom-[-20%] text-[200px] opacity-10 leading-none">⚙️</div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-center items-center">
+                        <h4 class="text-center font-bold text-slate-600 mb-4 uppercase tracking-wider text-xs">Infrastructure Load Distribution</h4>
+                        <div class="chart-container h-full max-h-[300px]">
+                            <canvas id="infraChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="section-artifacts" class="content-section hidden fade-in">
+                <div class="mb-8">
+                    <h2 class="text-4xl font-extrabold text-slate-900 mb-4">High-Ticket Artifacts & B2B Strategy</h2>
+                    <p class="text-lg text-slate-600 leading-relaxed border-l-4 border-[#d4af37] pl-4">
+                        The culmination of the L7S ecosystem is the packaging of its own internal systems as a high-ticket B2B service, supported by meticulously engineered visual assets.
+                    </p>
+                </div>
+
+                <div class="bg-[#111111] p-8 rounded-3xl shadow-2xl mb-12 border border-[#333] relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-[#d4af37] opacity-10 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
+
+                    <div class="text-center mb-10 relative z-10">
+                        <h3 class="text-3xl font-bold text-white mb-2">The 3-Page Master Portfolio</h3>
+                        <p class="text-[#d4af37] max-w-2xl mx-auto">Engineered to replace fragmented files with a single, devastatingly professional document (Target Output: Print-ready LaTeX Buildout).</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+                        <div class="bg-black border border-[#333] p-6 rounded-xl hover:border-[#d4af37] transition-colors">
+                            <div class="text-[#d4af37] font-mono text-sm mb-2">PAGE 01</div>
+                            <h4 class="text-white font-bold text-lg mb-3">U.S. Escrow & Multi-Sig</h4>
+                            <p class="text-slate-400 text-sm">Visual "Infographic" explanation clarifying secure transactional routing and trust logic.</p>
+                        </div>
+                        <div class="bg-black border border-[#333] p-6 rounded-xl hover:border-[#d4af37] transition-colors">
+                            <div class="text-[#d4af37] font-mono text-sm mb-2">PAGE 02</div>
+                            <h4 class="text-white font-bold text-lg mb-3">Premium Direct Seller</h4>
+                            <p class="text-slate-400 text-sm">Template configurations based strictly on the deployment of Public vs. Private funds.</p>
+                        </div>
+                        <div class="bg-black border border-[#333] p-6 rounded-xl hover:border-[#d4af37] transition-colors">
+                            <div class="text-[#d4af37] font-mono text-sm mb-2">PAGE 03</div>
+                            <h4 class="text-white font-bold text-lg mb-3">Discount Broker Side</h4>
+                            <p class="text-slate-400 text-sm">Template mapping out "The 4 Sources" for complete end-to-end transparency.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+                        <h3 class="text-2xl font-bold text-slate-900 mb-4">Brand Asset Directives</h3>
+                        <ul class="space-y-4">
+                            <li class="flex items-start gap-3">
+                                <span class="text-[#d4af37] mt-1">✔</span>
+                                <span class="text-slate-700"><strong>Identity:</strong> Transition to "L7S Hero brand version."</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-[#d4af37] mt-1">✔</span>
+                                <span class="text-slate-700"><strong>Visuals:</strong> Strict Gold and Black execution featuring the core lightning bolt logo. Phase out "black and reds".</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-[#d4af37] mt-1">✔</span>
+                                <span class="text-slate-700"><strong>Utility:</strong> All final deployed documents must be universally fillable.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 border-l-4 border-l-[#d4af37]">
+                        <h3 class="text-2xl font-bold text-slate-900 mb-4">High-Ticket B2B Strategy</h3>
+                        <p class="text-slate-600 mb-4">
+                            The master strategy leverages the internal L7S system as the ultimate case study. The goal is to package and sell the implementation of these precise AI workflows, KM syncs, and CRM integrations to other B2B/service-based operations.
+                        </p>
+                        <div class="bg-slate-50 p-4 rounded-lg">
+                            <strong class="text-slate-900 block mb-2 text-sm uppercase tracking-wider">Current Synthesis Targets (NotebookLM)</strong>
+                            <div class="text-sm text-slate-600 space-y-1">
+                                <div>• t2d3.pro (Cologne G TD23 offer)</div>
+                                <div>• Tony's Thursday 11th Offer</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        const playbookData = {
+            c4: {
+                title: "C4: Consumer Credit",
+                subtitle: "C-Suite Contacts + COI",
+                workflow: "Credit Hero Workflow (AB Reports + 3-Bureau upload).",
+                routing: ["PMS MFSN Client Portal", "Scribe Pro", "Asana/Notion/Monday"],
+                arch: ["M.A.P.S. (Profiles)", "connected to", "C.A.R.S. (Attributes)"]
+            },
+            c5: {
+                title: "C5: Cashflow",
+                subtitle: "Contingencies & Costs",
+                workflow: "Cashflow Coverage Checklist execution.",
+                routing: ["WalletHub", "Monarch Money", "YNAB"],
+                arch: ["K.E.Y.S. (Know Even Your Self)", "utilizing", "F.I.N.E. M.E.N. (Sub-framework)"]
+            },
+            c6: {
+                title: "C6: Cryptocurrency",
+                subtitle: "Content",
+                workflow: "Manage wallets, exchanges, fundamentals (CEX/DEX), Ledger/MetaMask.",
+                routing: ["Secure Identity Vault", "Asset Mapping Nodes"],
+                arch: ["C.A.R.S.", "integrated with", "K.E.Y.S."]
+            },
+            c7: {
+                title: "C7: Community",
+                subtitle: "Channels",
+                workflow: "Skool enrollment and membership portal activation.",
+                routing: ["Mandatory $1 Zoom Test", "Proof of Funds Verification", "Proof of Life Validation"],
+                arch: ["Member Directory", "accessing", "Core Delivery Hub"]
+            }
+        };
+
+        const navButtons = document.querySelectorAll('.nav-btn');
+        const contentSections = document.querySelectorAll('.content-section');
+        const mobileNav = document.getElementById('mobile-nav');
+
+        function switchSection(targetId) {
+            contentSections.forEach(sec => sec.classList.add('hidden'));
+            const targetSection = document.getElementById(targetId);
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+            }
+
+            navButtons.forEach(btn => {
+                btn.classList.remove('nav-active', 'bg-slate-800');
+                if (btn.getAttribute('data-target') === targetId) {
+                    btn.classList.add('nav-active');
+                }
+            });
+
+            if (mobileNav.value !== targetId) {
+                mobileNav.value = targetId;
+            }
+        }
+
+        navButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const target = e.currentTarget.getAttribute('data-target');
+                switchSection(target);
+            });
+        });
+
+        mobileNav.addEventListener('change', (e) => {
+            switchSection(e.target.value);
+        });
+
+        const playbookBtns = document.querySelectorAll('.playbook-btn');
+        const playbookContent = document.getElementById('playbook-content');
+
+        playbookBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                playbookBtns.forEach(b => {
+                    b.classList.remove('border-[#d4af37]', 'shadow-md', 'bg-slate-50');
+                });
+                const currentBtn = e.currentTarget;
+                currentBtn.classList.add('border-[#d4af37]', 'shadow-md', 'bg-slate-50');
+
+                const pbKey = currentBtn.getAttribute('data-pb');
+                const data = playbookData[pbKey];
+
+                const routingHtml = data.routing.map(r => `<span class="px-3 py-1 bg-slate-900 text-white rounded-full text-sm">${r}</span>`).join('');
+
+                playbookContent.innerHTML = `
+                    <div class="fade-in">
+                        <h3 class="text-3xl font-extrabold text-slate-900 mb-2">${data.title}</h3>
+                        <p class="text-[#d4af37] font-bold tracking-widest uppercase text-sm mb-8">${data.subtitle}</p>
+
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="font-bold text-slate-400 uppercase text-xs tracking-wider mb-2">Primary Workflow</h4>
+                                <p class="text-slate-800 text-lg bg-slate-50 p-4 rounded-lg border border-slate-100">${data.workflow}</p>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-400 uppercase text-xs tracking-wider mb-2">System Routing / Tools</h4>
+                                <div class="flex flex-wrap gap-2">
+                                    ${routingHtml}
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-400 uppercase text-xs tracking-wider mb-2">Data Architecture Alignment</h4>
+                                <div class="flex items-center gap-4 bg-[#fdfaf2] p-4 rounded-lg border border-[#f0e6c8]">
+                                    <div class="font-bold text-[#b49020]">${data.arch[0]}</div>
+                                    <div class="text-slate-400 text-sm italic">${data.arch[1]}</div>
+                                    <div class="font-bold text-[#b49020]">${data.arch[2]}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+
+        const ctxAbc = document.getElementById('abcChart').getContext('2d');
+        new Chart(ctxAbc, {
+            type: 'doughnut',
+            data: {
+                labels: ['Apps (SaaS/Portals)', 'Books (Protocols)', 'CDs (C-Suite Items)'],
+                datasets: [{
+                    data: [40, 30, 30],
+                    backgroundColor: ['#0f172a', '#d4af37', '#94a3b8'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: { family: 'sans-serif', size: 12 }
+                        }
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+
+        const ctxInfra = document.getElementById('infraChart').getContext('2d');
+        new Chart(ctxInfra, {
+            type: 'polarArea',
+            data: {
+                labels: ['AI Orchestration', 'Local KM Sync', 'PMP Routing', 'Client Portals'],
+                datasets: [{
+                    data: [85, 70, 90, 60],
+                    backgroundColor: [
+                        'rgba(212, 175, 55, 0.7)',
+                        'rgba(15, 23, 42, 0.7)',
+                        'rgba(71, 85, 105, 0.7)',
+                        'rgba(148, 163, 184, 0.7)'
+                    ],
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        ticks: { display: false },
+                        grid: { color: '#e2e8f0' }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { boxWidth: 12 }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
