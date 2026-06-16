@@ -55,4 +55,17 @@
 <p>In the SMS double-bug, the agent — bypassing the standard interface — executed commands to restart the OS-level services, with statements confirming the double-SMS was eliminated. Then, to resolve the *underlying* bug, it <b>engineered a permanent architectural fix</b>: rewriting the script as a strict <b>content-deduplication checkpoint</b> so the race condition can <b>never recur</b>. </p>
 
 <p>Standard LLM wrappers require human intervention to resolve internal failures. By enforcing architectural constraints — <b>unified queue, decoupled logic, local observability, and self-repair</b> — XEN repositions the agent from a chat tool into a <b>sovereign autonomous controller</b>: it diagnoses itself, fixes its own code, and stays alive without a human in the loop. That is the whole thesis: not a smarter chatbot — an operating system that governs itself.</p>
-<p class=foot>hitthe.link/xen-architecture · dictated by qi 2026-06-16</p></div></body></html>
+
+<h2>The challenge + the AI reviewer&#x27;s critique (the most valuable part)</h2>
+<p><b>The challenge, stated as a number:</b> achieve <b>44,400 inbound voice minutes/month for under $15 total.</b> Standard contact-center plans charge per-minute inbound — a lethal trap: even 0.2¢/min × 44,400 = instantly over budget. So per-minute is disqualified by arithmetic, not taste.</p>
+
+<p><b>Proposed solution:</b> a flat-rate residential/enterprise provider (Telnyx) routed through open-source <b>FreeSWITCH</b>.</p>
+
+<p><b>The reviewer&#x27;s critique (developer handed the blueprint to an AI and said &quot;tear it apart&quot; — brutal but invaluable):</b></p>
+<p>- <b>Agrees</b> with Telnyx specifically — because it offers a <b>channel/capacity</b> feature: billing is a <b>flat monthly charge for an open lane of communication</b>, not a per-call fee. This bypasses the permanent tax trap.</p>
+<p>- <b>But demands refinements, not a rubber-stamp:</b></p>
+<p>  - <b>Start with an IP-authenticated trunk, NOT credentials.</b> Don&#x27;t connect with username/password (can be stolen or expire). Authorize the connection purely on the <b>fixed physical IP address</b> — the telecom provider just looks at where the signal originates. Cleaner, more secure, no rotating secret.</p>
+<p>  - <b>Beware the fragile chain.</b> Real-time audio across many hops (Telnyx → FreeSWITCH → bridge → LiveKit → WebRTC loopback → local agent) — <b>every network hop compounds latency and adds a brand-new failure mode.</b> The expensive setup collapses if one link fails (a long, consecutive chain, not a resilient mesh). The build must minimize hops and harden each.</p>
+
+<p><b>Current status (honest):</b> the Telnyx+FreeSWITCH PSTN→local-agent path is <b>architecturally specced but not yet the live phase</b> — it sits as the blueprint, monitoring/routing capability defined, awaiting the trunk provisioning. Blocked on qi&#x27;s Telnyx creds + IP-trunk setup.</p>
+<p class=foot>hitthe.link/xen-architecture · dictated by qi 2026-06-16 · 14 sections</p></div></body></html>
