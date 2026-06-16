@@ -76,6 +76,9 @@
     <!-- Sidebar Navigation -->
     <aside class="w-72 bg-slate-900 text-slate-300 flex-col hidden md:flex h-full shadow-2xl z-20 shrink-0">
         <div class="p-6 bg-black border-b border-slate-800 flex items-center gap-4">
+            <!-- Logo hook: drop l7s_hero_logo_raster.png in this folder and it snaps in; falls back to ⚡ until then -->
+            <img src="l7s_hero_logo_raster.png" alt="L7S HERO" class="w-12 h-12 object-contain hidden"
+                 onload="this.classList.remove('hidden'); this.nextElementSibling.classList.add('hidden');">
             <div class="text-4xl hero-gold">⚡</div>
             <div>
                 <h1 class="text-white font-extrabold text-2xl tracking-wider">L7S HERO</h1>
@@ -342,9 +345,16 @@
                         <p class="text-lg text-slate-600 border-l-4 hero-gold-border pl-4 leading-relaxed">
                             Direct execution module. This section provides the exact prompt engineering required to generate the print-ready, fillable LaTeX code for the 3-Page Master Portfolio. Copy these directly into Gemini or NotebookLM.
                         </p>
-                        <div class="inline-block mt-4 bg-yellow-100 text-yellow-800 px-3 py-1 rounded text-sm font-bold border border-yellow-300">
-                            Target Output: Strict Gold (#d4af37) & Black Brand
+                        <div class="flex flex-wrap items-center gap-3 mt-4">
+                            <div class="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded text-sm font-bold border border-yellow-300">
+                                Target Output: Strict Gold (#d4af37) & Black Brand
+                            </div>
+                            <a href="L7S-HERO-Master-Portfolio.tex" download
+                               class="inline-flex items-center gap-2 bg-[#d4af37] text-black px-4 py-1.5 rounded font-bold text-sm hover:bg-yellow-400 transition">
+                                ⬇ Download compiled 3-Page Portfolio (.tex)
+                            </a>
                         </div>
+                        <p class="text-xs text-slate-500 mt-2">The .tex is already built — fully fillable, self-contained, Black &amp; Gold. Compile with <code class="bg-slate-100 px-1 rounded">lualatex L7S-HERO-Master-Portfolio.tex</code> (run twice for form fields). The prompt-chains below remain for regenerating or extending.</p>
                     </header>
 
                     <div class="space-y-6">
