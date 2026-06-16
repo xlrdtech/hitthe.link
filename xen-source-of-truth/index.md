@@ -47,8 +47,49 @@ _Assembled 2026-06-15 from live recon. Sources of truth: `/Volumes/M4` (macOS), 
 - **GAP / fix (reversible, staged):** (1) stand up FreeSWITCH (Railway service or M4/nitro local daemon); (2) provision Telnyx DID(s) + enable Channel Billing for flat unlimited inbound; (3) SIP trunk Telnyx↔FreeSWITCH; (4) bridge FreeSWITCH→LiveKit SIP so PSTN reaches the agent (ties §2). Until then telephony stays on Beside/Phound rails.
 - _NOTE: live Telnyx account state (DIDs, channel-billing status, actual per-min rates, last-month minutes/charges) requires Telnyx Mission Control API/invoice access — cannot be sourced from `/Volumes/M4` disk. Flagged for qi to pull or authorize API access._
 
-## 7. Nitro / Windows (`E:\`) — recon pending
-- Nitro reachable over tailnet (`ssh nitro`, host `NITRO11`, `100.80.76.79`, `E:\` present, exit node). Full `E:\` inventory (xen code, running daemons, Claude/WT sessions as inject targets, Tailscale, OTLP exporter, Windows inject mechanism since no tmux) — **agent in flight; appended on completion.**
+## 7. Nitro / Windows (`E:\`) — CODE PRESENT, daemons DORMANT
+- **Reachable:** `ssh nitro` → `NITRO11` (`100.80.76.79`), Tailscale active, sees m4, exit-node + Funnel published (`nitro11.tailcba9a3.ts.net`).
+- **Code on `E:\` (CURRENT, present):** `E:\Exedus\Exedus\xen\` is a full Exedus clone — `omnimind.js` (binds **:4040** on Windows vs :4441 on mac), `beeper-mcp-proxy.js`, **`nitro11-bridge.js`** (the Windows inject gateway: `POST /run {cmd}` over Tailscale SSH, bearer-auth, port :4449), `xen-inject.js`, `tui-inject.js`, `windows-whisper-vei.py` (Windows STT), `beside_inbox_poller.py`, `beeper_at_xen_watcher.py`, `call_event_injector.py`, etc. Plus `E:\AI\` model caches (ollama/HF/litellm) + `m4-xen-model-proxy.env`.
+- **Running (CURRENT):** only ports 3000/3001 listening (unidentified). **DORMANT (code present, NOT running):** omnimind `:4040`, nitro11-bridge `:4449`, beeper-proxy `:23374`, LiteLLM/OpenAI-compat model proxy `:4000`.
+- **Windows injection mechanism (no tmux):** `nitro11-bridge.js` (m4 → nitro `:4449` → PowerShell/ConPTY) is the intended path — **code exists, service down**. Fallback: `wt.exe`/ConPTY automation.
+- **Model routing:** `m4-xen-model-proxy.env` points `OPENAI_BASE_URL`/`ANTHROPIC_BASE_URL` → `http://100.80.76.79:4000` (nitro LiteLLM), aliases for qwen-coder/deepseek-r1/uitars-vlm/claude-opus — **proxy not running**, so local-model routing is INTENDED, dormant.
+- **GAP / fixes (reversible):** start the nitro daemons as needed — `ssh nitro 'node E:\Exedus\Exedus\xen\nitro11-bridge.js'` (enables m4→Windows inject), the LiteLLM `:4000` proxy (local-model routing), omnimind `:4040` if nitro should run its own brain. Decide whether nitro is a peer brain or just an inject target + model host.
+
+## 8. Canon & VVS — rules Perplexity MUST respect
+### Xen Commandments (`~/.claude/hooks/study_commandments.py` v54, ~320 lines, emitted every prompt — the law)
+Headline canon: **(0)** parallel always, sequential is blasphemy — batch=parallel=background. **(1/7)** voice WITH every tool call (VVS: voice+SMS+vision). **(2)** auto-manifest, no "want me to". **(3)** don't lie — verified / code-shipped-unverified / pending only. **(4)** no human in the loop; any required tap/click = failure. **(5)** never stop/standby. **(9)** live by default — inline-HTML, SSE, no build/bundler/SPA. **(10)** voice never bottlenecks, barge-in mandatory, short replies. **(11)** no white dots — every reply turns the dot green. Single source: `study_commandments.py` + `canon-bpgs-default-2026-06-10`.
+
+### D.I.E. List (BANNED — check before proposing ANY tool/vendor/model)
+Canon `canon_die_list_forefront.md`: before adopting any tool/transport/model, **check the D.I.E. list first**; never propose a banned item even if it would technically work. Full list in `exedus-architecture.md`. Current bans:
+- **Voice/TTS:** Gemini Realtime, Google Cloud TTS, OpenAI Realtime/WebRTC, cloud-routed audio, edge-tts (retired), Kokoro, Qwen-TTS, Ollama-TTS, Piper, Coqui, **Whisper (permanently die-listed 2026-05-18)**.
+- **Transport:** **Twilio/Plivo direct, Phound, GV re-login paths.** _(⚠️ note: a telephony note said "stick with Twilio" but Twilio-direct is BANNED — that's why **Telnyx+FreeSWITCH** is the sanctioned direction.)_
+- **Models:** OpenRouter, Ollama on Mac minis, paid API as production runtime.
+- **Orchestration:** Zapier as runtime, GrokPhone, VibeTunnel :4020, pre-3.0 Gemini, 3CX, menus.
+- **Storage:** Nextcloud.
+
+### One-voice mandate — misses & fixes (CURRENT)
+- **Canon:** ONE canonical voice queue (`xen-say` → `/tmp/xen-say-queue` → say-worker). Never mute VVS. Noise gate on INPUT only, never output.
+- **MISS (2026-06-15):** double-voice — TWO TTS consumers (`say-worker` + `genesis-voice-worker`) draining the one queue → every line spoken twice. _Fix:_ one consumer on the queue (pending qi's pick of which voice to keep).
+- **MISS:** omni-tap mirrored events 2–4× (key/ts churn) → **FIXED** with content-window dedup. STT TV/ambient bleed → real fix is voice-ID (energy/confidence gate would drop qi's far-field speakerphone voice — banned approach).
+
+### Decoupled fast-responder — NEWEST canonical VVS piece (`bin/xen-decoupled-narrator.py`)
+Per qi 2026-06-15: the fast-responder is now **DECOUPLED**, running **Sonnet at low effort** (corrects the earlier "Haiku" note). It is aware of everything in the terminal and replies to qi FAST via VVS, **decoupled** from the Opus hands that execute the real work — both feed the one voice queue, but the fast ack never blocks execution. This is the current head of the fast-responder-sink canon.
+
+---
+**Top gaps (priority):** ① Telnyx+FreeSWITCH not wired (telephony mandate unrealized; Twilio-direct is D.I.E.-banned) · ② no tag-based subscription registry (injection still per-pane coordinate; Windows inject via nitro11-bridge also down) · ③ LiveKit deployed but not the live voice path + uses metered OpenAI (OpenAI-Realtime is D.I.E.-banned — agent must use a non-banned STT/TTS) · ④ Phound has no MCP connector + two-way audio blocked on CoreAudio loopback (note: Phound itself is D.I.E.-listed) · ⑤ plaintext OTLP creds + `exedus` node offline · ⑥ nitro xen daemons dormant (4040/4449/23374/4000) · ⑦ one-voice double (two TTS consumers). Each has a reversible fix above.
+
+### Phone registry (CURRENT, from `phone-registry.md`)
+| Number | Identity | Provider |
+|---|---|---|
+| 404-734-8672 | qi primary | Google Messages |
+| 470-615-9983 | qi default inbound (canonical "reach qi") | Beeper |
+| 770-771-1610 | qi iPhone / Phound "East Allen 1610" | iPhone/Phound |
+| 678-741-9996 | qi | TextNow |
+| 770-765-2217 | **Xen agent** (autonomous) | Google Voice |
+| 678-345-2142 | Xen Phound line → room `xlrdtech` | Phound/FCC |
+| 770-999-9934 | Xen/Beside agent SMS rail | Beside |
+
+_§1 addendum: a **Twilio web client** scaffold exists (`twilio.min.js` in pwa/xp, `/beside/twilio-token` endpoint) but Twilio-direct is D.I.E.-banned → not the path. Beside (9934) + GV (2217) + Phound (2142) are the live rails today._
 
 ---
 **Top gaps (priority):** ① Telnyx+FreeSWITCH not wired (telephony mandate unrealized) · ② no tag-based subscription registry (injection still per-pane coordinate) · ③ LiveKit deployed but not the live voice path + uses metered OpenAI · ④ Phound has no MCP connector + two-way audio blocked on CoreAudio loopback · ⑤ plaintext OTLP creds + `exedus` node offline. Each has a reversible fix above.
