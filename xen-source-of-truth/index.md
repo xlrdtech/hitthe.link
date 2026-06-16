@@ -2,7 +2,8 @@
 _Assembled 2026-06-15 from live recon. Sources of truth: `/Volumes/M4` (macOS), `E:\` (Windows/nitro). Secrets scrubbed._
 
 > Status legend: **CURRENT** = deployed/active w/ evidence · **INTENDED** = design target, not (fully) implemented.
-> Sections 1–2 (Telephony, LiveKit) + 7 (Nitro/Windows) pending agent completion — appended on arrival.
+>
+> **STARTUP-DISK CANON:** `/Users/qi` (the home dir) **IS the startup disk = off-limits**. Nothing is run/stored there — everything lives on `/Volumes/M4` (mac) / `E:\` (Windows). Paths like `~/.xen`, `~/logs`, `~/bin`, `~/.config/xen`, `~/Desktop/hitthe.link` are **symlinks → `/Volumes/M4`** (content is on M4). Sole OS-mandated exception: `~/Library/LaunchAgents` plist *stubs* (launchd requires that exact path) — they only point to M4 code, nothing runs from the startup disk.
 
 ---
 
