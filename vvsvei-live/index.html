@@ -34,6 +34,18 @@
   @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
   .empty{color:var(--mut);text-align:center;margin-top:40px;font-size:14px}
   footer{padding:8px 16px;border-top:1px solid var(--line);font:500 11px/1.3 ui-monospace,monospace;color:var(--mut);text-align:center}
+  /* in-browser voice: liquid-glass controls, fixed top-right */
+  #voicebar{position:fixed;top:10px;right:12px;z-index:50;display:flex;align-items:center;gap:8px}
+  .glass{-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);background:rgba(20,24,33,.55);border:1px solid rgba(255,255,255,.14);box-shadow:0 4px 20px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.10);border-radius:999px;color:var(--ink);font:700 13px/1 -apple-system,"Segoe UI",Roboto,sans-serif;padding:10px 16px;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:7px}
+  .glass:hover{background:rgba(31,184,102,.22);border-color:rgba(31,184,102,.5)}
+  #enableVoice.on{background:rgba(31,184,102,.28);border-color:rgba(31,184,102,.6)}
+  #muteBtn{padding:10px 13px}
+  #speaking{display:none;align-items:center;gap:6px;font:600 11px/1 ui-monospace,monospace;color:var(--accent)}
+  #speaking.show{display:flex}
+  #speaking .bars{display:inline-flex;gap:2px;height:12px;align-items:flex-end}
+  #speaking .bars i{width:3px;background:var(--accent);border-radius:1px;animation:sb .8s ease-in-out infinite}
+  #speaking .bars i:nth-child(2){animation-delay:.15s}#speaking .bars i:nth-child(3){animation-delay:.3s}
+  @keyframes sb{0%,100%{height:3px}50%{height:12px}}
 </style>
 </head>
 <body>
@@ -41,6 +53,11 @@
   <span class="dot" id="dot"></span><span class="brand">VVSVEI</span>
   <span id="status">connecting…</span><span id="miss">0 events</span>
 </header>
+<div id="voicebar">
+  <span id="speaking"><span class="bars"><i></i><i></i><i></i></span>speaking…</span>
+  <button id="enableVoice" class="glass" title="Hear Xen's voice in this browser">🔊 Enable Voice</button>
+  <button id="muteBtn" class="glass" title="Mute / unmute Xen's voice" style="display:none">🔈</button>
+</div>
 <div id="feed"><div class="empty" id="empty">Waiting for the backlog + live stream…</div></div>
 <footer>lossless · Redis-Streams relay · replays backlog on every (re)connect — nothing missed</footer>
 
@@ -50,6 +67,69 @@ const RELAY = "https://xen-vvs-relay-production.up.railway.app";  // VVSVEI scop
 const feed=document.getElementById('feed'), empty=document.getElementById('empty');
 const dot=document.getElementById('dot'), statusEl=document.getElementById('status'), missEl=document.getElementById('miss');
 let lastId='0', count=0;
+
+/* ---------- in-browser voice (window.speechSynthesis) ---------- */
+const synth = window.speechSynthesis;
+const PAGE_LOAD_TS = Date.now();          // de-dupe: never speak backlog older than this open
+let voiceEnabled = localStorage.getItem('vvsvei.voice') === '1';
+let muted = localStorage.getItem('vvsvei.muted') === '1';
+let chosenVoice = null;
+const spokenIds = new Set();              // belt-and-suspenders id de-dupe
+const enableBtn = document.getElementById('enableVoice');
+const muteBtn   = document.getElementById('muteBtn');
+const speakingEl= document.getElementById('speaking');
+
+function pickVoice(){
+  if(!synth) return;
+  const vs = synth.getVoices();
+  if(!vs.length) return;
+  // prefer a clear English voice; common good defaults across platforms
+  const pref = ['Samantha','Google US English','Microsoft Aria Online (Natural) - English (United States)','Microsoft Zira','Karen','Daniel'];
+  chosenVoice = pref.map(n=>vs.find(v=>v.name===n)).find(Boolean)
+             || vs.find(v=>/^en[-_]US/i.test(v.lang))
+             || vs.find(v=>/^en/i.test(v.lang)) || vs[0];
+}
+if(synth){ pickVoice(); synth.onvoiceschanged = pickVoice; }
+
+function reflectUI(){
+  enableBtn.classList.toggle('on', voiceEnabled);
+  enableBtn.innerHTML = voiceEnabled ? '🔊 Voice On' : '🔊 Enable Voice';
+  muteBtn.style.display = voiceEnabled ? 'flex' : 'none';
+  muteBtn.textContent = muted ? '🔇' : '🔈';
+  muteBtn.title = muted ? 'Unmute Xen' : 'Mute Xen';
+}
+function showSpeaking(on){ speakingEl.classList.toggle('show', on); }
+
+function speak(text){
+  if(!synth || !voiceEnabled || muted || !text) return;
+  try{
+    const u = new SpeechSynthesisUtterance(text);
+    if(chosenVoice){ u.voice=chosenVoice; u.lang=chosenVoice.lang; }
+    u.rate=1.0; u.pitch=1.0; u.volume=1.0;
+    u.onstart=()=>showSpeaking(true);
+    u.onend=()=>{ if(!synth.speaking&&!synth.pending) showSpeaking(false); };
+    u.onerror=()=>showSpeaking(false);
+    synth.speak(u);
+  }catch{}
+}
+
+enableBtn.addEventListener('click', ()=>{
+  voiceEnabled = !voiceEnabled;
+  localStorage.setItem('vvsvei.voice', voiceEnabled?'1':'0');
+  if(voiceEnabled && synth){
+    pickVoice();
+    // prime: a short utterance inside the user gesture unlocks autoplay
+    try{ const p=new SpeechSynthesisUtterance(' '); p.volume=0.01; synth.speak(p); }catch{}
+  } else if(synth){ synth.cancel(); showSpeaking(false); }
+  reflectUI();
+});
+muteBtn.addEventListener('click', ()=>{
+  muted = !muted;
+  localStorage.setItem('vvsvei.muted', muted?'1':'0');
+  if(muted && synth){ synth.cancel(); showSpeaking(false); }
+  reflectUI();
+});
+reflectUI();
 
 function setState(s){ dot.className='dot '+(s==='live'?'live':s==='reconnect'?'reconnect':''); statusEl.textContent=s==='live'?'LIVE':s==='reconnect'?'reconnecting…':'offline'; }
 let lastTermPane=null;
@@ -72,6 +152,14 @@ function render(ev){
   d.querySelector('.txt').textContent=ev.text||'';
   feed.appendChild(d); feed.scrollTop=feed.scrollHeight;
   count++; missEl.textContent=count+' events';
+
+  // ---- speak ONLY Xen's voice (xen-out), only if NEW since this page opened ----
+  if(c.cls==='reply'){
+    const ts = +ev.ts || 0;
+    const id = ev.id || ev.ts || ev.text;
+    const isNew = (ts ? ts >= PAGE_LOAD_TS : false) && !spokenIds.has(id);
+    if(isNew){ spokenIds.add(id); speak(ev.text); }
+  }
 }
 function connect(){
   // reconnect always resumes from lastId → backlog replay = nothing missed
