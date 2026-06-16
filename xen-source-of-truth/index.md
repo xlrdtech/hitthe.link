@@ -68,16 +68,16 @@ Canon `canon_die_list_forefront.md`: before adopting any tool/transport/model, *
 - **Orchestration:** Zapier as runtime, GrokPhone, VibeTunnel :4020, pre-3.0 Gemini, 3CX, menus.
 - **Storage:** Nextcloud.
 
-### One-voice mandate — misses & fixes (CURRENT)
-- **Canon:** ONE canonical voice queue (`xen-say` → `/tmp/xen-say-queue` → say-worker). Never mute VVS. Noise gate on INPUT only, never output.
-- **MISS (2026-06-15):** double-voice — TWO TTS consumers (`say-worker` + `genesis-voice-worker`) draining the one queue → every line spoken twice. _Fix:_ one consumer on the queue (pending qi's pick of which voice to keep).
-- **MISS:** omni-tap mirrored events 2–4× (key/ts churn) → **FIXED** with content-window dedup. STT TV/ambient bleed → real fix is voice-ID (energy/confidence gate would drop qi's far-field speakerphone voice — banned approach).
+### One-voice mandate — RESOLVED (per qi 2026-06-15)
+- **Canon:** ONE canonical voice. `xen-reply-vvs` has ALWAYS been the canonical VVS. Never mute VVS. Noise gate on INPUT only, never output.
+- **Single-voice fix:** the double/overlap is **FIXED by the unified queue router** (`bin/xen-router`, see `NARRATION_QUEUE_README.md`) — all VVS sources route through one queue, so one voice, no overlap. (The two-consumer double seen mid-session was transient; the router is the canonical fix — NOT an open gap.)
+- omni-tap relay mirror also deduped (content-window). STT TV/ambient bleed → real fix is voice-ID, not an energy/confidence gate (which would drop qi's far-field speakerphone voice).
 
-### Decoupled fast-responder — NEWEST canonical VVS piece (`bin/xen-decoupled-narrator.py`)
-Per qi 2026-06-15: the fast-responder is now **DECOUPLED**, running **Sonnet at low effort** (corrects the earlier "Haiku" note). It is aware of everything in the terminal and replies to qi FAST via VVS, **decoupled** from the Opus hands that execute the real work — both feed the one voice queue, but the fast ack never blocks execution. This is the current head of the fast-responder-sink canon.
+### xen-fast-responder — the piece that completed the 6-month vision
+Per qi 2026-06-15: **"it's always been `xen-reply-vvs`, and when `xen-fast-responder` was added it finally became exactly what I've been working toward for the past 6 months."** The fast-responder (`bin/xen-fast-responder` + `xen-fast-responder-trigger.py` UserPromptSubmit hook, LIVE 2026-06-14) is **decoupled**, runs **Sonnet at low effort** (qi's correction over the wiring's older "Haiku" note), is aware of everything in the terminal, and replies to qi FAST via VVS — decoupled from the Opus hands doing the real work. Both feed the one router-governed queue; the fast ack never blocks execution. Guards: recursion (`XEN_FAST_RESPONDER` env) + single-flight lock. This is the head of the fast-responder-sink canon and the realization of the VVSVEI vision.
 
 ---
-**Top gaps (priority):** ① Telnyx+FreeSWITCH not wired (telephony mandate unrealized; Twilio-direct is D.I.E.-banned) · ② no tag-based subscription registry (injection still per-pane coordinate; Windows inject via nitro11-bridge also down) · ③ LiveKit deployed but not the live voice path + uses metered OpenAI (OpenAI-Realtime is D.I.E.-banned — agent must use a non-banned STT/TTS) · ④ Phound has no MCP connector + two-way audio blocked on CoreAudio loopback (note: Phound itself is D.I.E.-listed) · ⑤ plaintext OTLP creds + `exedus` node offline · ⑥ nitro xen daemons dormant (4040/4449/23374/4000) · ⑦ one-voice double (two TTS consumers). Each has a reversible fix above.
+**Top gaps (priority):** ① Telnyx+FreeSWITCH not wired (telephony mandate unrealized; Twilio-direct is D.I.E.-banned) · ② no tag-based subscription registry (injection still per-pane coordinate; Windows inject via nitro11-bridge also down) · ③ LiveKit deployed but not the live voice path + uses metered OpenAI (OpenAI-Realtime is D.I.E.-banned — agent must use a non-banned STT/TTS) · ④ Phound has no MCP connector + two-way audio blocked on CoreAudio loopback (note: Phound itself is D.I.E.-listed) · ⑤ plaintext OTLP creds + `exedus` node offline · ⑥ nitro xen daemons dormant (4040/4449/23374/4000). Each has a reversible fix above. _(One-voice double is RESOLVED — unified queue router `bin/xen-router`.)_
 
 ### Phone registry (CURRENT, from `phone-registry.md`)
 | Number | Identity | Provider |
