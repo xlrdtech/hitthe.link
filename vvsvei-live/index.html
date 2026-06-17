@@ -40,12 +40,27 @@
   .glass:hover{background:rgba(31,184,102,.22);border-color:rgba(31,184,102,.5)}
   #enableVoice.on{background:rgba(31,184,102,.28);border-color:rgba(31,184,102,.6)}
   #muteBtn{padding:10px 13px}
+  .devsel{padding:8px 12px;max-width:140px;font:600 12px/1 -apple-system,"Segoe UI",sans-serif;appearance:none;-webkit-appearance:none}
+  .devsel option{background:#141821;color:var(--ink)}
   #speaking{display:none;align-items:center;gap:6px;font:600 11px/1 ui-monospace,monospace;color:var(--accent)}
   #speaking.show{display:flex}
   #speaking .bars{display:inline-flex;gap:2px;height:12px;align-items:flex-end}
   #speaking .bars i{width:3px;background:var(--accent);border-radius:1px;animation:sb .8s ease-in-out infinite}
   #speaking .bars i:nth-child(2){animation-delay:.15s}#speaking .bars i:nth-child(3){animation-delay:.3s}
   @keyframes sb{0%,100%{height:3px}50%{height:12px}}
+  /* qi 2026-06-16 action pills per message */
+  .ev .pills{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+  .pill{-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--mut);font:600 11px/1 ui-monospace,monospace;padding:5px 10px;border-radius:999px;cursor:pointer;text-decoration:none;transition:.15s}
+  .pill:hover{background:rgba(31,184,102,.18);border-color:rgba(31,184,102,.5);color:var(--ink)}
+  .pill.p-call{color:var(--accent);border-color:rgba(31,184,102,.4)}
+  /* reply compose bar */
+  #replybar{display:none;flex-direction:column;gap:6px;padding:10px 16px;border-top:1px solid var(--line);background:#0d1016}
+  #replybar.show{display:flex}
+  #replyquote{font:500 11px/1.3 ui-monospace,monospace;color:var(--mut);border-left:2px solid var(--accent);padding-left:8px;max-height:42px;overflow:hidden}
+  #replyrow{display:flex;gap:8px}
+  #replyinput{flex:1;background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:9px 12px;font-size:14px}
+  #replysend{background:var(--accent);border:0;color:#04110a;font-weight:800;border-radius:8px;padding:0 16px;cursor:pointer}
+  #replycancel{background:transparent;border:1px solid var(--line);color:var(--mut);border-radius:8px;padding:0 12px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -57,8 +72,18 @@
   <span id="speaking"><span class="bars"><i></i><i></i><i></i></span>speaking…</span>
   <button id="enableVoice" class="glass" title="Hear Xen's voice in this browser">🔊 Enable Voice</button>
   <button id="muteBtn" class="glass" title="Mute / unmute Xen's voice" style="display:none">🔈</button>
+  <select id="inDev" class="glass devsel" title="Microphone (input)"><option value="">🎤 Input</option></select>
+  <select id="outDev" class="glass devsel" title="Speaker (output)"><option value="">🔊 Output</option></select>
 </div>
 <div id="feed"><div class="empty" id="empty">Waiting for the backlog + live stream…</div></div>
+<div id="replybar">
+  <div id="replyquote"></div>
+  <div id="replyrow">
+    <input id="replyinput" placeholder="Reply to Xen…" autocomplete="off">
+    <button id="replysend">Send</button>
+    <button id="replycancel">✕</button>
+  </div>
+</div>
 <footer>lossless · Redis-Streams relay · replays backlog on every (re)connect — nothing missed</footer>
 
 <script>
@@ -148,8 +173,17 @@ function render(ev){
   if(c.cls==='term'){ if(c.pane!==lastTermPane) d.classList.add('run-start'); lastTermPane=c.pane; }
   else lastTermPane=null;
   const t=new Date(+ev.ts||Date.now()).toLocaleTimeString();
-  d.innerHTML=`<div class="meta">${c.label} · ${t}</div><div class="txt"></div>`;
+  d.innerHTML=`<div class="meta">${c.label} · ${t}</div><div class="txt"></div>`+
+    `<div class="pills"><button class="pill p-copy">Copy</button>`+
+    `<button class="pill p-reply">Reply</button>`+
+    `<button class="pill p-share">Share</button>`+
+    `<a class="pill p-call" href="tel:+14703696463">Call</a></div>`;
   d.querySelector('.txt').textContent=ev.text||'';
+  // qi 2026-06-16 action pills: Copy / Reply / Share / Call per message
+  const _txt = ev.text||'';
+  d.querySelector('.p-copy').onclick=()=>{ navigator.clipboard?.writeText(_txt); flashPill(d.querySelector('.p-copy'),'Copied'); };
+  d.querySelector('.p-share').onclick=()=>{ if(navigator.share){navigator.share({text:_txt}).catch(()=>{});} else {navigator.clipboard?.writeText(_txt); flashPill(d.querySelector('.p-share'),'Copied');} };
+  d.querySelector('.p-reply').onclick=()=>replyTo(_txt, c.label);
   feed.appendChild(d); feed.scrollTop=feed.scrollHeight;
   count++; missEl.textContent=count+' events';
 
@@ -161,6 +195,54 @@ function render(ev){
     if(isNew){ spokenIds.add(id); speak(ev.text); }
   }
 }
+/* ---- qi 2026-06-16 audio device dropdowns (input mic + output speaker) ---- */
+const inDev=document.getElementById('inDev'), outDev=document.getElementById('outDev');
+let savedIn=localStorage.getItem('vvsvei.inDev')||'', savedOut=localStorage.getItem('vvsvei.outDev')||'';
+async function loadDevices(){
+  if(!navigator.mediaDevices?.enumerateDevices) return;
+  try{
+    const devs=await navigator.mediaDevices.enumerateDevices();
+    const fill=(sel,kind,saved,emoji)=>{
+      const cur=sel.value; sel.innerHTML=`<option value="">${emoji} Default</option>`;
+      devs.filter(d=>d.kind===kind).forEach(d=>{ const o=document.createElement('option'); o.value=d.deviceId; o.textContent=(d.label||kind)+''; sel.appendChild(o); });
+      if(saved) sel.value=saved; else sel.value=cur;
+    };
+    fill(inDev,'audioinput',savedIn,'🎤'); fill(outDev,'audiooutput',savedOut,'🔊');
+  }catch(e){}
+}
+inDev.onchange=()=>{ savedIn=inDev.value; localStorage.setItem('vvsvei.inDev',savedIn); };
+outDev.onchange=async()=>{ savedOut=outDev.value; localStorage.setItem('vvsvei.outDev',savedOut); applySink(); };
+// route spoken TTS to chosen output: speechSynthesis can't setSinkId, so mirror via an <audio> sink when a specific output is picked
+let _sinkAudio=null;
+async function applySink(){
+  if(!savedOut) return;
+  try{ if(!_sinkAudio){ _sinkAudio=new Audio(); } if(_sinkAudio.setSinkId) await _sinkAudio.setSinkId(savedOut); }catch(e){}
+}
+navigator.mediaDevices?.addEventListener?.('devicechange', loadDevices);
+loadDevices();
+
+/* ---- qi 2026-06-16 action pills: flash + reply-compose ---- */
+function flashPill(el,label){ if(!el) return; const o=el.textContent; el.textContent=label; el.style.color='var(--accent)'; setTimeout(()=>{el.textContent=o;el.style.color='';},1100); }
+const replybar=document.getElementById('replybar'), replyquote=document.getElementById('replyquote'),
+      replyinput=document.getElementById('replyinput'), replysend=document.getElementById('replysend'),
+      replycancel=document.getElementById('replycancel');
+let replyCtx='';
+function replyTo(text,label){ replyCtx=text||''; replyquote.textContent='↪ '+label+': '+(text||'').slice(0,140); replybar.classList.add('show'); replyinput.focus(); }
+function closeReply(){ replybar.classList.remove('show'); replyinput.value=''; replyCtx=''; }
+replycancel.onclick=closeReply;
+async function sendReply(){
+  const msg=replyinput.value.trim(); if(!msg) return;
+  // quoted reply -> emit to VVSVEI as a qi inject (tag in:) so it routes to Xen like any input
+  const body={ kind:'in:', tag:'in:', source:'vvsvei-ui-reply',
+               text: replyCtx ? ('[reply to: '+replyCtx.slice(0,120)+'] '+msg) : msg };
+  replysend.disabled=true;
+  try{ await fetch(`${RELAY}/emit`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); flashPill(replysend,'Sent'); }
+  catch(e){ flashPill(replysend,'Err'); }
+  replysend.disabled=false; setTimeout(closeReply,500);
+}
+replysend.onclick=sendReply;
+replyinput.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();sendReply();} if(e.key==='Escape')closeReply(); });
+
 function connect(){
   // reconnect always resumes from lastId → backlog replay = nothing missed
   const es=new EventSource(`${RELAY}/sse?since=${encodeURIComponent(lastId)}`);
