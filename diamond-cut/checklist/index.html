@@ -448,10 +448,16 @@ Live Entertainment &amp; Events: Bring Stal'lyon and that chrome-shine Southern 
     document.getElementById('sendEmail').href='mailto:'+EAST_EMAIL+'?subject='+encodeURIComponent('Diamond Cutz intake — Stal\'lyon')+'&body='+encodeURIComponent(body);
   }
 
-  // wire up
+  // wire up — answering an item's input/radio auto-completes that item
   nodes().forEach(function(el){
     var ev=(el.type==='checkbox'||el.type==='radio')?'change':'input';
-    el.addEventListener(ev, function(){ save(); refreshLinks(); });
+    el.addEventListener(ev, function(){
+      if(!/_done$/.test(el.dataset.key)){
+        var item=el.closest('.item');
+        if(item){ var d=item.querySelector('input[type=checkbox][data-key$="_done"]'); if(d && !d.checked) d.checked=true; }
+      }
+      save(); refreshLinks();
+    });
   });
 
   document.getElementById('copyBtn').addEventListener('click', function(){
