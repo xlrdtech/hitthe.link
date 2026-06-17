@@ -210,6 +210,7 @@
         </div>
         <select id="f-event"><option value="">All Events</option></select>
         <select id="f-rep"><option value="">All Reps</option></select>
+        <select id="f-assigned"><option value="">All Subscribers</option></select>
         <button class="clearf" id="f-clear">Clear</button>
       </div>
       <div id="filter-banner"><span id="filter-banner-text"></span><button id="filter-banner-clear">Show all leads</button></div>
@@ -301,7 +302,7 @@
   var ALL_LEADS = [];         // rows from all_leads view
   var SELECTED = new Set();   // lead uuids
   // Full filter state (ported from the original eliops tool). status -> pipeline_stage.
-  var FILT = { chip:'all', q:'', event:'', rep:'' };
+  var FILT = { chip:'all', q:'', event:'', rep:'', assigned:'' };
   function isStop(l){ return (l.pipeline_stage || '') === 'STOP'; }
   // Anthony's traffic-light touch state: sold=GREEN, visit=BLUE, stop=RED.
   var DISP_LABEL = { sold:'SOLD', visit:'VISIT', stop:'STOP' };
@@ -433,10 +434,18 @@
     if(prev && values.indexOf(prev) !== -1) sel.value = prev;
   }
   function populateFilterDropdowns(){
-    var events = {}, reps = {};
-    ALL_LEADS.forEach(function(l){ if(isRetired(l)) return; if(l.event) events[l.event]=1; if(l.rep) reps[l.rep]=1; });
+    var events = {}, reps = {}, assignees = {};
+    ALL_LEADS.forEach(function(l){ if(isRetired(l)) return; if(l.event) events[l.event]=1; if(l.rep) reps[l.rep]=1; if(l.assigned_buyer_name) assignees[l.assigned_buyer_name]=1; });
     fillSelect($('#f-event'), Object.keys(events).sort(), 'All Events');
     fillSelect($('#f-rep'), Object.keys(reps).sort(), 'All Reps');
+    // "Assigned to" filter so a master can view/export just one subscriber's leads.
+    var aSel = $('#f-assigned');
+    if(aSel){
+      var prev = aSel.value;
+      aSel.innerHTML = '<option value="">All Subscribers</option><option value="__UNASSIGNED__">Unassigned (pool)</option>';
+      Object.keys(assignees).sort().forEach(function(n){ var o=document.createElement('option'); o.value=n; o.textContent=n; aSel.appendChild(o); });
+      if(prev) aSel.value = prev;
+    }
   }
 
   // ---- the filter engine (chip + event + rep + search, STOP suppressed) ----
@@ -448,6 +457,8 @@
       if(FILT.chip !== 'all' && (l.pipeline_stage||'') !== FILT.chip) return false;
       if(FILT.event && l.event !== FILT.event) return false;
       if(FILT.rep && l.rep !== FILT.rep) return false;
+      if(FILT.assigned === '__UNASSIGNED__'){ if(l.assigned_buyer_id) return false; }
+      else if(FILT.assigned && l.assigned_buyer_name !== FILT.assigned) return false;
       if(FILT.q){
         var q = FILT.q.toLowerCase();
         var hay = [l.name,l.phone,l.address,l.project_type,l.notes,l.event,l.rep].map(function(x){return x||'';}).join(' ').toLowerCase();
@@ -459,18 +470,20 @@
 
   function renderFilterBanner(){
     var b = $('#filter-banner');
-    var active = FILT.chip !== 'all' || FILT.q || FILT.event || FILT.rep;
+    var active = FILT.chip !== 'all' || FILT.q || FILT.event || FILT.rep || FILT.assigned;
     if(!active){ b.classList.remove('on'); return; }
     var parts = [];
     if(FILT.chip !== 'all') parts.push('status <b>' + esc(FILT.chip) + '</b>');
     if(FILT.event) parts.push('event <b>' + esc(FILT.event) + '</b>');
     if(FILT.rep) parts.push('rep <b>' + esc(FILT.rep) + '</b>');
+    if(FILT.assigned) parts.push('assigned to <b>' + esc(FILT.assigned === '__UNASSIGNED__' ? 'Unassigned' : FILT.assigned) + '</b>');
     if(FILT.q) parts.push('matching <b>"' + esc(FILT.q) + '"</b>');
     $('#filter-banner-text').innerHTML = 'Filtering by ' + parts.join(' &middot; ');
     b.classList.add('on');
   }
   function clearFilters(){
-    FILT = { chip:'all', q:'', event:'', rep:'' };
+    FILT = { chip:'all', q:'', event:'', rep:'', assigned:'' };
+    if($('#f-assigned')) $('#f-assigned').value = '';
     if($('#q')) $('#q').value = '';
     if($('#f-event')) $('#f-event').value = '';
     if($('#f-rep')) $('#f-rep').value = '';
@@ -546,6 +559,7 @@
   $('#q').addEventListener('input', function(){ FILT.q = this.value.trim(); renderFilterBanner(); renderPool(); });
   $('#f-event').addEventListener('change', function(){ FILT.event = this.value; applyFilters(); });
   $('#f-rep').addEventListener('change', function(){ FILT.rep = this.value; applyFilters(); });
+  $('#f-assigned').addEventListener('change', function(){ FILT.assigned = this.value; applyFilters(); });
   $('#f-clear').addEventListener('click', clearFilters);
   $('#filter-banner-clear').addEventListener('click', clearFilters);
 
@@ -737,10 +751,11 @@
     });
     var d = new Date();
     var stamp = d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2);
+    var who = FILT.assigned ? ('-' + (FILT.assigned === '__UNASSIGNED__' ? 'unassigned' : FILT.assigned).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')) : '';
     var blob = new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
-    a.href = url; a.download = 'tracking-together-leads-' + stamp + '.csv';
+    a.href = url; a.download = 'tracking-together-leads' + who + '-' + stamp + '.csv';
     document.body.appendChild(a); a.click();
     setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
   }
