@@ -357,6 +357,7 @@
             'Service <b>' + esc(l.project_type || 'General') + '</b>' +
             (l.rep ? (' &middot; Rep ' + esc(l.rep)) : '') +
             (l.event ? (' &middot; ' + esc(l.event)) : '') +
+            (l.address ? ('<br>&#128205; ' + esc(l.address)) : '') +
             (l.notes ? ('<br>' + esc(l.notes)) : '') +
           '</div>' +
         '</div>' +
@@ -493,7 +494,7 @@
   }
   function exportCsv(){
     var rows = (typeof visibleLeads === 'function') ? visibleLeads() : MY_LEADS;
-    var cols = ['name','phone','project_type','event','rep','pipeline_stage','disposition','block_value','notes'];
+    var cols = ['name','phone','address','project_type','event','rep','pipeline_stage','disposition','block_value','notes'];
     var lines = [cols.join(',')];
     rows.forEach(function(l){
       lines.push(cols.map(function(c){ return csvCell(l[c]); }).join(','));
