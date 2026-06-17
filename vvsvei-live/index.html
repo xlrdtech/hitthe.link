@@ -74,6 +74,7 @@
   <button id="muteBtn" class="glass" title="Mute / unmute Xen's voice" style="display:none">🔈</button>
   <select id="inDev" class="glass devsel" title="Microphone (input)"><option value="">🎤 Input</option></select>
   <select id="outDev" class="glass devsel" title="Speaker (output)"><option value="">🔊 Output</option></select>
+  <button id="hardRefresh" class="glass" title="Hard refresh — reload latest, bypass cache">↻ Refresh</button>
 </div>
 <div id="feed"><div class="empty" id="empty">Waiting for the backlog + live stream…</div></div>
 <div id="replybar">
@@ -195,6 +196,13 @@ function render(ev){
     if(isNew){ spokenIds.add(id); speak(ev.text); }
   }
 }
+/* ---- qi 2026-06-16 hard-refresh button: force latest, bypass cache ---- */
+document.getElementById('hardRefresh').onclick=()=>{
+  try{ if('caches' in window) caches.keys().then(ks=>ks.forEach(k=>caches.delete(k))); }catch{}
+  const u=new URL(location.href); u.searchParams.set('hardrefresh', Date.now());
+  location.replace(u.toString());
+};
+
 /* ---- qi 2026-06-16 audio device dropdowns (input mic + output speaker) ---- */
 const inDev=document.getElementById('inDev'), outDev=document.getElementById('outDev');
 let savedIn=localStorage.getItem('vvsvei.inDev')||'', savedOut=localStorage.getItem('vvsvei.outDev')||'';
