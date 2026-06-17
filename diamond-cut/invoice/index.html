@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Invoice · Stal'lyon — Diamond Cut Studios Website (Deposit)</title>
+<title>Invoice · Stal'lyon — Diamond Cutz Studios (Deposit)</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#14110c;--paper:#fbfaf6;--line:rgba(20,17,12,.12);--muted:#6b6356;--gold:#9a7b2e;--green:#1f6f5c;--fd:"Fraunces",Georgia,serif;--fb:"Inter",system-ui,sans-serif;--fm:"JetBrains Mono",monospace}
+:root{--ink:#14110c;--paper:#fbfaf6;--line:rgba(20,17,12,.12);--muted:#6b6356;--gold:#9a7b2e;--green:#1f6f5c;--cash:#00c244;--pp:#0070ba;--ppd:#003087;--fd:"Fraunces",Georgia,serif;--fb:"Inter",system-ui,sans-serif;--fm:"JetBrains Mono",monospace}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#e9e6dd;color:var(--ink);font-family:var(--fb);line-height:1.55;-webkit-font-smoothing:antialiased;padding:32px 16px;display:flex;justify-content:center}
 .sheet{background:var(--paper);max-width:680px;width:100%;border:1px solid var(--line);border-radius:10px;box-shadow:0 20px 60px rgba(20,17,12,.14);overflow:hidden}
@@ -25,35 +25,53 @@ body{background:#e9e6dd;color:var(--ink);font-family:var(--fb);line-height:1.55;
 .parties .nm{font-weight:600;font-size:15px}
 .parties .ln{font-size:13px;color:var(--muted)}
 .parties a{color:var(--gold);text-decoration:none}
-.sec{padding:24px 38px;border-bottom:1px solid var(--line)}
-.sec-h{font-family:var(--fm);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
-.items{padding:8px 38px 0}
-table{width:100%;border-collapse:collapse}
-th{text-align:left;font-family:var(--fm);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:16px 0 10px;border-bottom:1px solid var(--line)}
-th.r,td.r{text-align:right}
-td{padding:16px 0;border-bottom:1px solid var(--line);font-size:14px;vertical-align:top}
-td .desc-sub{display:block;color:var(--muted);font-size:12.5px;margin-top:3px}
+.items{padding:14px 38px 0}
+.ihead{display:flex;justify-content:space-between;font-family:var(--fm);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:10px 0;border-bottom:1px solid var(--line)}
+.li{display:flex;align-items:flex-start;gap:13px;padding:15px 0;border-bottom:1px solid var(--line)}
+.li label{display:flex;align-items:flex-start;gap:13px;flex:1;cursor:pointer;min-width:0}
+.li input{width:21px;height:21px;margin-top:1px;accent-color:var(--green);flex:none;cursor:pointer}
+.li.locked input{accent-color:var(--gold)}
+.li .nm{font-weight:600;font-size:14.5px}
+.li .badge{font-family:var(--fm);font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:1px 6px;border-radius:4px;margin-left:7px;vertical-align:middle}
+.li .badge.deal{color:var(--gold);border:1px solid rgba(154,123,46,.4)}
+.li .badge.extra{color:var(--green);border:1px solid rgba(31,111,92,.35)}
+.li .ds{color:var(--muted);font-size:12.5px;margin-top:3px;line-height:1.45}
+.li .amt{font-family:var(--fd);font-weight:600;font-size:15px;white-space:nowrap;padding-top:1px}
+.li.off{opacity:.4}
+.li.off .amt{text-decoration:line-through}
 .totals{padding:18px 38px 6px;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
-.trow{display:flex;justify-content:space-between;width:320px;font-size:14px}
-.trow .k{color:var(--muted)}
-.trow.due{border-top:1px solid var(--line);padding-top:12px;margin-top:4px}
-.trow.due .k{font-family:var(--fd);font-weight:600;font-size:18px;color:var(--ink)}
-.trow.due .v{font-family:var(--fd);font-weight:600;font-size:22px;color:var(--ink)}
-.pay{margin:22px 38px 0;padding:18px 20px;background:rgba(154,123,46,.07);border:1px solid var(--line);border-radius:8px}
-.pay .h{font-family:var(--fm);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
-.pay .row{font-size:14px;margin:4px 0}
+.trow{display:flex;justify-content:space-between;width:330px;max-width:100%;font-size:14px}
+.trow .k{color:var(--muted)}.trow .v{font-family:var(--fd);font-weight:600}
+.trow.dep{border-top:2px solid var(--line);padding-top:12px;margin-top:4px}
+.trow.dep .k{font-family:var(--fd);font-weight:600;font-size:18px;color:var(--ink)}
+.trow.dep .v{font-family:var(--fd);font-weight:600;font-size:24px;color:var(--green)}
+.pay{margin:22px 38px 0;padding:20px;background:rgba(31,111,92,.06);border:1px solid var(--line);border-radius:10px}
+.pay .h{font-family:var(--fm);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
+.pay .big{font-family:var(--fd);font-weight:600;font-size:20px;margin-bottom:14px}
+.pay .big b{color:var(--green)}
+.paybtns{display:flex;gap:10px;flex-wrap:wrap}
+.paybtn{flex:1;min-width:200px;display:inline-flex;align-items:center;justify-content:center;gap:9px;font-family:var(--fb);font-weight:700;font-size:15px;text-decoration:none;padding:15px 20px;border-radius:10px;color:#fff;transition:transform .15s,box-shadow .2s}
+.paybtn.cash{background:var(--cash);color:#062a12;box-shadow:0 6px 18px rgba(0,194,68,.32)}
+.paybtn.pp{background:var(--pp);box-shadow:0 6px 18px rgba(0,112,186,.32)}
+.paybtn:hover{transform:translateY(-1px)}
+.payalt{font-size:12px;color:var(--muted);margin-top:12px;text-align:center}
+.payalt a{color:var(--gold);text-decoration:none}
+.saved{font-size:11px;color:var(--green);text-align:right;padding:6px 40px 0;min-height:16px;opacity:0;transition:opacity .3s}
+.saved.show{opacity:1}
+.sec{padding:22px 38px;border-top:1px solid var(--line)}
+.sec-h{font-family:var(--fm);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
 .steps{counter-reset:s;display:flex;flex-direction:column;gap:14px}
 .step{display:flex;gap:14px;align-items:flex-start}
 .step .n{counter-increment:s;flex:none;width:26px;height:26px;border-radius:50%;border:1px solid var(--gold);color:var(--gold);font-family:var(--fm);font-size:12px;display:flex;align-items:center;justify-content:center}
 .step .n::before{content:counter(s)}
-.step .t{font-weight:600;font-size:14.5px}
-.step .d{color:var(--muted);font-size:13px}
-.step .done{color:var(--green);font-family:var(--fm);font-size:11px;text-transform:uppercase;letter-spacing:.1em}
+.step .t{font-weight:600;font-size:14.5px}.step .d{color:var(--muted);font-size:13px}
+.step .d a{color:var(--gold);text-decoration:none}
+.deadline{margin:0 38px;padding:14px 20px;background:rgba(31,111,92,.08);border:1px solid var(--line);border-radius:8px;font-size:13.5px}
+.deadline b{color:var(--green)}
 .foot{padding:22px 38px 30px;color:var(--muted);font-size:12.5px}
 .foot .ty{font-family:var(--fd);font-style:italic;font-size:15px;color:var(--ink)}
-.deadline{margin:0 38px 0;padding:14px 20px;background:rgba(31,111,92,.08);border:1px solid var(--line);border-radius:8px;font-size:13.5px}
-.deadline b{color:var(--green)}
-@media print{body{background:#fff;padding:0}.sheet{box-shadow:none;border:none}}
+@media print{body{background:#fff;padding:0}.sheet{box-shadow:none;border:none}.li input{-webkit-appearance:auto}}
+@media (max-width:520px){.top,.parties,.items,.sec,.foot{padding-left:22px;padding-right:22px}.pay,.deadline{margin-left:22px;margin-right:22px}.trow{width:100%}}
 </style>
 </head>
 <body>
@@ -66,68 +84,114 @@ td .desc-sub{display:block;color:var(--muted);font-size:12.5px;margin-top:3px}
     <div class="inv-tag">
       <div class="w">Invoice · Deposit</div>
       <div class="no">INV&nbsp;DC‑001</div>
-      <div class="dt">Issued Jun 7, 2026<br>Due on receipt</div>
+      <div class="dt">Issued Jun 17, 2026<br>Due on receipt</div>
     </div>
   </div>
 
   <div class="parties">
     <div>
       <div class="lbl">Billed to</div>
-      <div class="nm">Andre "Stal'lyon"</div>
-      <div class="ln">Diamond Cut Studios · Southern Soul</div>
+      <div class="nm">Andre "Stal'lyon" McAllister</div>
+      <div class="ln">Diamond Cutz Studios · Southern Soul</div>
+      <div class="ln">Mgmt: LaTina McAllister</div>
     </div>
     <div>
       <div class="lbl">Project</div>
-      <div class="nm">Custom artist website</div>
+      <div class="nm">Custom artist website + extras</div>
       <div class="ln"><a href="https://hitthe.link/diamond-cut">hitthe.link/diamond-cut</a></div>
     </div>
   </div>
 
   <div class="items">
-    <table>
-      <thead><tr><th>Scope</th><th class="r">Amount</th></tr></thead>
-      <tbody>
-        <tr>
-          <td>Custom Southern-Soul artist website — design, build &amp; revisions
-            <span class="desc-sub">Mobile-first · glass music players + per-track downloads · live-footage reel + line dances · flyer wall · promo gallery · tour/booking · color-theme switcher · hosted at hitthe.link/diamond-cut · all revisions through launch</span>
-          </td>
-          <td class="r">$111.00</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="ihead"><span>Scope — tap to add or remove</span><span>$111 / piece</span></div>
+    <div id="lines"></div>
   </div>
 
-  <div class="totals">
-    <div class="trow"><span class="k">Project total (pre-launch rate)</span><span class="v">$111.00</span></div>
-    <div class="trow"><span class="k">Balance on completion (INV DC-002)</span><span class="v">$56.00</span></div>
-    <div class="trow due"><span class="k">Deposit due now (50%)</span><span class="v">$55.00</span></div>
-  </div>
+  <div class="totals" id="totals"></div>
+  <div class="saved" id="saved"></div>
 
   <div class="pay">
-    <div class="h">Pay the deposit to start</div>
-    <div class="row" style="margin-bottom:14px"><b>$55.00</b> — this kicks off your 7-day build. Tap to pay securely with Cash App:</div>
-    <a href="https://cash.app/pay/link/qvs4xyj9" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:9px;background:#00d54b;color:#08130b;font-family:var(--fb);font-weight:700;font-size:15px;text-decoration:none;padding:13px 26px;border-radius:8px;box-shadow:0 6px 18px rgba(0,213,75,.3)">Pay $55 deposit with Cash App →</a>
-    <div class="row" style="margin-top:12px;color:var(--muted);font-size:12.5px">Or open: <a href="https://cash.app/pay/link/qvs4xyj9" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none">cash.app/pay/link/qvs4xyj9</a></div>
+    <div class="h">Pay your deposit to start</div>
+    <div class="big">Deposit (50%): <b id="depBig">$166.50</b> — kicks off your 7-day build.</div>
+    <div class="paybtns">
+      <a class="paybtn cash" id="cashBtn" href="#" target="_blank" rel="noopener">Pay <span id="cashAmt">$166.50</span> · Cash App</a>
+      <a class="paybtn pp" id="ppBtn" href="#" target="_blank" rel="noopener">Pay <span id="ppAmt">$166.50</span> · PayPal</a>
+    </div>
+    <div class="payalt">Cash App <b>$x9ea</b> · PayPal <b>@xlrdtech</b> · or <a href="sms:+17709999934">text East</a> to arrange. Balance due on completion.</div>
   </div>
 
-  <div style="height:18px"></div>
-  <div class="deadline"><b>7-day delivery.</b> The clock starts the day your deposit clears — your site ships within <b>7 days</b>, complete with every revision.</div>
-  <div style="height:6px"></div>
+  <div class="deadline" style="margin-top:18px"><b>7-day delivery.</b> The clock starts the day your deposit clears — your site ships within <b>7 days</b>, with every revision.</div>
 
   <div class="sec">
     <div class="sec-h">How it works</div>
     <div class="steps">
-      <div class="step"><div class="n"></div><div><div class="t">Pay the $55 deposit</div><div class="d">Starts your 7-day build clock today.</div></div></div>
-      <div class="step"><div class="n"></div><div><div class="t">Send your content</div><div class="d">Photos, tracks, flyers, show dates, socials — fill the quick intake at <a href="https://hitthe.link/intake" style="color:var(--gold);text-decoration:none">hitthe.link/intake</a> or just text it over.</div></div></div>
+      <div class="step"><div class="n"></div><div><div class="t">Pay the 50% deposit</div><div class="d">Cash App or PayPal above — starts your 7-day build clock today.</div></div></div>
+      <div class="step"><div class="n"></div><div><div class="t">Send your content</div><div class="d">Tracks, photos, flyers, show dates — fill the quick checklist at <a href="https://hitthe.link/diamond-cut/checklist">hitthe.link/diamond-cut/checklist</a> (it saves as you go).</div></div></div>
       <div class="step"><div class="n"></div><div><div class="t">Site built &amp; live within 7 days</div><div class="d">Full custom site at hitthe.link/diamond-cut, with revisions.</div></div></div>
-      <div class="step"><div class="n"></div><div><div class="t">Settle the $56 balance + connect your domain</div><div class="d">Balance due on completion (INV DC-002). Domain connection included free — you cover only the registrar cost if you want a custom web address.</div></div></div>
+      <div class="step"><div class="n"></div><div><div class="t">Settle the balance + connect your domain</div><div class="d">Balance due on completion. Domain connection included — you cover only the registrar cost (~$11–15/yr).</div></div></div>
     </div>
   </div>
 
   <div class="foot">
     <div class="ty">Let's build something diamond-cut. 💎</div>
-    <div style="margin-top:6px">Deposit is 50% of the $111 pre-launch rate. Balance of $56 + any domain cost is due on completion — see INV DC-002.</div>
+    <div style="margin-top:6px">$111 per piece. Deposit is 50% of the selected scope; balance + any domain cost due on completion. Adjust the scope anytime above — your selection saves automatically.</div>
   </div>
 </div>
+
+<script>
+(function(){
+  var KEY='dcz-invoice-v1', UNIT=111;
+  var CASH='https://cash.app/$x9ea/', PP='https://paypal.me/xlrdtech/';
+  // intro = the $111 deal (one-pager + domain), locked base. extras = $111 each, selectable.
+  var ITEMS=[
+    {id:'intro', lock:true,  on:true,  nm:'$111 Introduction Package', badge:'deal',  ds:'One-pager website + custom domain connection — the intro deal. (Domain registrar at cost.)'},
+    {id:'beside',lock:false, on:true,  nm:'Beside AI voice receptionist', badge:'extra', ds:'AI line + your voice persona + text-back that answers callers with all your info, 24/7.'},
+    {id:'social',lock:false, on:true,  nm:'Social media account creation', badge:'extra', ds:'New accounts + one consistent handle locked across every platform (IG @diamondcutzstudios / @dmndctz).'},
+    {id:'logo',  lock:false, on:false, nm:'Custom logo design — metallic diamond', badge:'extra', ds:'"Go-crazy" gold/chrome diamond mark built off your original.'},
+    {id:'ads',   lock:false, on:false, nm:'Ads / Account Center setup', badge:'extra', ds:'Facebook ads + AB split-testing + one unified account center.'},
+    {id:'short', lock:false, on:false, nm:'Short domain · dmndctz.com / .net', badge:'extra', ds:'Auto-forward redirect to the main site. Registrar at cost.'},
+    {id:'choreo',lock:false, on:false, nm:'Stallion Shuffle challenge section', badge:'extra', ds:'Dedicated "submit your Shuffle" interactive section featuring the dance.'},
+  ];
+  var sel={}; try{ sel=JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){ sel={}; }
+  ITEMS.forEach(function(x){ if(x.lock){ sel[x.id]=true; } else if(!(x.id in sel)){ sel[x.id]=x.on; } });
+
+  var savedEl=document.getElementById('saved'), savedT;
+  function stamp(){ var d=new Date(),p=function(n){return(n<10?'0':'')+n;};
+    savedEl.textContent='Saved ✓ '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
+    savedEl.classList.add('show'); clearTimeout(savedT); savedT=setTimeout(function(){savedEl.classList.remove('show');},2000); }
+  function money(n){ return '$'+(Math.round(n*100)/100).toLocaleString(undefined,{minimumFractionDigits:(n%1?2:0),maximumFractionDigits:2}); }
+  function amtUrl(n){ return (Math.round(n*100)/100).toFixed(2); }
+  function total(){ var t=0; ITEMS.forEach(function(x){ if(sel[x.id]) t+=UNIT; }); return t; }
+
+  function render(){
+    var html='';
+    ITEMS.forEach(function(x){
+      var on=!!sel[x.id];
+      html+='<div class="li'+(x.lock?' locked':'')+(on?'':' off')+'">'+
+        '<label><input type="checkbox" data-id="'+x.id+'" '+(on?'checked':'')+(x.lock?' disabled':'')+'>'+
+        '<span><span class="nm">'+x.nm+'<span class="badge '+x.badge+'">'+x.badge+'</span></span><span class="ds">'+x.ds+'</span></span></label>'+
+        '<span class="amt">'+money(UNIT)+'</span></div>';
+    });
+    document.getElementById('lines').innerHTML=html;
+
+    var t=total(), dep=t/2, bal=t-dep, n=Math.round(t/UNIT);
+    document.getElementById('totals').innerHTML=
+      '<div class="trow"><span class="k">Project total ('+n+' piece'+(n===1?'':'s')+' × $'+UNIT+')</span><span class="v">'+money(t)+'</span></div>'+
+      '<div class="trow"><span class="k">Balance on completion</span><span class="v">'+money(bal)+'</span></div>'+
+      '<div class="trow dep"><span class="k">Deposit due now (50%)</span><span class="v">'+money(dep)+'</span></div>';
+
+    document.getElementById('depBig').textContent=money(dep);
+    var u=amtUrl(dep);
+    var cb=document.getElementById('cashBtn'); cb.href=CASH+u; document.getElementById('cashAmt').textContent=money(dep);
+    var pb=document.getElementById('ppBtn'); pb.href=PP+u; document.getElementById('ppAmt').textContent=money(dep);
+  }
+  function save(){ localStorage.setItem(KEY,JSON.stringify(sel)); stamp(); render(); }
+
+  document.getElementById('lines').addEventListener('change', function(e){
+    var t=e.target; if(!t.dataset.id) return; sel[t.dataset.id]=t.checked; save();
+  });
+  render();
+})();
+</script>
 </body>
 </html>
