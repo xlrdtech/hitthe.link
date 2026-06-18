@@ -104,6 +104,9 @@ const FREE = [
   {sfx:'is-a.dev',   who:'is-a.dev (devs)',  url:'https://is-a.dev/'},
   {sfx:'eu.org',     who:'eu.org (free apex-like)', url:'https://nic.eu.org/'}
 ];
+// FreeDNS (afraid.org): 44,000+ shared domains, free subdomains. No public availability API,
+// so it's a claim-link tier — generate the short label, claim it under any of the 44k.
+const FREEDNS = {who:'FreeDNS · 44k+', url:'https://freedns.afraid.org/subdomain/'};
 // OWNED: Spaceship cheap-registration TLDs (premium auto-excluded by the checker).
 const TLDS = ['.xyz','.site','.online','.store','.space','.fun','.live','.lol','.sbs','.click','.link','.pro','.club','.me','.co','.io','.app','.dev','.com'];
 const VOWELS='aeiou';
@@ -160,6 +163,9 @@ function buildCandidates(idea){
       const nm = r+'.'+f.sfx; if(seen.has(nm))return; seen.add(nm);
       out.push({name:nm, root:r, tld:f.sfx, tier:'free', who:f.who, url:f.url, status:'free', len:r.length});
     });
+    // FreeDNS claim-link (one per root): label.* across 44k+ shared domains
+    const fk = r+' · FreeDNS'; if(!seen.has(fk)){ seen.add(fk);
+      out.push({name:r, root:r, tld:'·44k free', tier:'free', who:FREEDNS.who, url:FREEDNS.url, status:'free', len:r.length, freedns:true}); }
   });
   // OWNED across cheap TLDs
   roots.forEach(r=>{
