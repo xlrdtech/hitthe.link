@@ -288,8 +288,8 @@ footer .f2 em{color:var(--ng)}
 <div class="plate">
   <div class="mk"><span class="ember"></span>hitthe.link · life</div>
   <nav>
-    <a href="#flow" class="active">Flow</a>
-    <a href="#scopes">Scopes</a>
+    <a href="#scopes" class="active">Scopes</a>
+    <a href="#flow">Flow</a>
     <a href="#goals">Goals</a>
     <a href="#steer">Steer</a>
     <a href="#ledger">Ledger</a>
@@ -816,8 +816,9 @@ const TREE={name:'sync_',kind:'root',children:[
       ]},
     ]},
     {name:'root/memory',kind:'scope',tag:'Canon · distill',items:[
-      {id:'distill',t:'Distill ALL sessions across both machines + every Claude Max login + M4/sync_/brain_ + memories → scopes & action items into THIS life UI'},
-      {id:'filetree',t:'Organize scopes into filetrees mirroring M4 subfolders verbatim (this tree)',done:true},
+      {id:'distill',t:'Distill ALL sessions across both machines + every Claude Max login + M4/sync_/brain_ + memories → scopes & action items into THIS life UI (Windows + M4 reachable; partial — re-run as new sessions land)'},
+      {id:'filetree-ui',t:'This tree mirrors the M4 sync_/ layout in-UI',done:true},
+      {id:'filetree-fs',t:'Organize the actual scope files into filetrees mirroring M4 subfolders verbatim (filesystem, not just UI)'},
       {id:'masterlist',t:'Master checklist merged into hitthe.link/life',done:true},
     ]},
     {name:'agents/',kind:'note',t:'qi · xen (identity)'},
@@ -829,10 +830,12 @@ const TREE={name:'sync_',kind:'root',children:[
       {id:'one-brain',t:'One-voice-one-brain — mirror the single-session auto-router into the M4 harness once voice is stable'},
     ]},
     {name:'scope-watch',kind:'scope',tag:'24/7 HOTL',items:[
-      {id:'sw-task',t:'Xen-ScopeWatch task registered — every 10 min',done:true},
-      {id:'sw-s4u',t:'S4U set — runs whether logged on or not (silent elevation)',done:true},
+      {id:'sw-loop',t:'Durable watcher = E:\\scope-watch\\loop.ps1, Startup-folder shortcut Xen-ScopeWatch.lnk (interactive console loop), sweeps every 10 min',done:true},
       {id:'sw-otlp',t:'Sweep emits to omni.event OTLP (super-logs + chat mirror)',done:true},
-      {id:'sw-headless',t:'FIX — headless claude hangs under Task Scheduler (no console/stdin); closed-stdin fix pending verify before trusting unattended'},
+      {id:'sw-s4u',t:'VERIFIED: Task Scheduler / S4U / ConPTY REFUTED — claude.exe hangs with no console; do NOT migrate watcher back to a scheduled task',done:true},
+      {id:'sw-loggedin',t:'GAP — runs only while qi is logged in (always-on box). True survive-full-logoff needs an API rewrite (no claude CLI in session 0)'},
+      {id:'sw-mirror',t:'Mirror the router loop logic into the M4 harness once VoiceOS is stable (prompt + playbooks are portable)'},
+      {id:'sw-teach',t:'S4U + headless-claude teaching captured (lesson: claude needs a console; scheduler/S4U/ConPTY all hang) — see memory scope-watch-claude-needs-console',done:true},
     ]},
     {name:'.deploy/hitthe.link',kind:'scope',tag:'Web',items:[
       {id:'life-merge',t:'Master Scope Tree merged into /life',done:true},
@@ -840,6 +843,13 @@ const TREE={name:'sync_',kind:'root',children:[
   ]},
   {name:'inbox_/',kind:'note',t:'staging only — Anthony lead files land here, then promote → ventures/trackingtogether'},
   {name:'notes_/',kind:'note',t:'notes'},
+  {name:'personal/',kind:'dir',note:'qi · life context — NOT autonomous',children:[
+    {name:'home',kind:'scope',tag:'Today · context',items:[
+      {id:'pers-company',t:'Company arriving — context only, do not action'},
+      {id:'pers-clean',t:'Grooming / cleaning before company — context only, do not action'},
+      {id:'pers-caretaker',t:'Elderly caretaker call OVERDUE ~2 days — qi to make this call (not autonomous)'},
+    ]},
+  ]},
 ]};
 let SCDONE={}; try{ SCDONE=JSON.parse(localStorage.getItem(SCOPE_KEY))||{}; }catch(e){ SCDONE={}; }
 function saveSC(){ localStorage.setItem(SCOPE_KEY, JSON.stringify(SCDONE)); }
