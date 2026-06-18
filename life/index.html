@@ -337,6 +337,25 @@ footer .f2 em{color:var(--ng)}
   </div>
 </section>
 
+<!-- CRON SCHEDULER (24/7 HOTL autopilot) -->
+<style>
+.cron-dot{font-size:.62em;vertical-align:middle;margin-left:8px;color:#444}
+.cron-dot.on{color:#39ff14;text-shadow:0 0 9px rgba(57,255,20,.75)}
+.cron-dot.off{color:#ff4d4d;text-shadow:0 0 9px rgba(255,77,77,.6)}
+.ccard{flex:1 1 230px;max-width:340px}
+.cchan{font-size:.56rem;color:var(--faint);text-transform:uppercase;letter-spacing:.09em;margin-bottom:3px}
+.cresult{font-size:.64rem;color:var(--muted);margin-top:5px;letter-spacing:.01em;line-height:1.35}
+</style>
+<section class="wrap" id="crons">
+  <div class="sechead">
+    <div class="ix">I&middot;b · Cron Scheduler</div>
+    <h2>24/7 HOTL autopilot <span id="cron-alive" class="cron-dot" title="">&#9679;</span></h2>
+    <div class="rule"></div>
+    <div class="note" id="cron-meta">reading scheduler state…</div>
+  </div>
+  <div class="flow-row" id="cron-cards"></div>
+</section>
+
 <!-- MASTER SCOPE TREE -->
 <style>
 .scope-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 auto 18px;max-width:820px;justify-content:center}
@@ -483,6 +502,22 @@ async function loadFlow() {
     } else {
       scEl.innerHTML = '<span style="color:var(--faint);font-size:11px">—</span>';
     }
+    // ── Cron Scheduler panel ──
+    const cs = d.cron_scheduler, dot = document.getElementById('cron-alive'),
+          cm = document.getElementById('cron-meta'), cc = document.getElementById('cron-cards');
+    if (cs) {
+      const last = cs.last_sweep ? new Date(cs.last_sweep) : null;
+      const alive = last ? ((Date.now()-last.getTime())/60000 < 15) : false;
+      if (dot) { dot.className = 'cron-dot ' + (alive?'on':'off'); dot.title = alive?'live':'stale'; }
+      if (cm) cm.textContent = (alive?'● LIVE — firing':'○ STALE — loop not heartbeating')
+        + ' · ' + (cs.interval||'') + ' · last sweep ' + (last?last.toLocaleString():'—')
+        + (cs.next_sweep?(' · next ~'+new Date(cs.next_sweep).toLocaleTimeString()):'');
+      if (cc) cc.innerHTML = (cs.crons||[]).map(c =>
+        `<div class="fcard ccard"><div class="cchan">${escH(c.channel||'')}</div>`
+        + `<div class="flabel">${escH(c.name||c.id)}</div>`
+        + `<div class="cresult">${escH(c.last_result||'—')}</div>`
+        + `<div class="fsub">${c.last_fire?('fired '+new Date(c.last_fire).toLocaleString()):'—'}</div></div>`).join('');
+    } else if (cm) { cm.textContent = 'scheduler state not in feed yet'; }
     if (d.updated) {
       const ts = new Date(d.updated);
       document.getElementById('flow-updated').textContent = 'last updated ' + ts.toLocaleString();
