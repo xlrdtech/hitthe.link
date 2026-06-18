@@ -1,884 +1,140 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>XEN · LIFE — Command Dashboard</title>
-<meta name="description" content="Xen life dashboard — goal swarm tracker + steer control merged into one obsidian command surface.">
-<link rel="icon" href="/life/icon.png">
-<link rel="apple-touch-icon" href="/life/apple-touch-icon.png">
-<meta name="theme-color" content="#050507">
-<meta property="og:title" content="XEN · LIFE — Command Dashboard">
-<meta property="og:image" content="https://hitthe.link/life/icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Spline+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>XEN LIFE — Master Scope</title>
 <style>
-:root{
-  --obsidian:#050507;
-  --coal:#0b0c0e;
-  --slate:#111318;
-  --ng:#39FF14;
-  --ng-hi:#a8ff7a;
-  --ng-deep:#1a7308;
-  --ng-leaf:#5eff30;
-  --ng-glow:rgba(57,255,20,.45);
-  --ng-faint:rgba(57,255,20,.12);
-  --ng-line:rgba(57,255,20,.18);
-  --bone:#f0ede6;
-  --muted:#7a7870;
-  --faint:#3e3c37;
-  --amber:#ffc24a;
-  --ox:#c25b4a;
-  --green:#39FF14;
-  --mono:'JetBrains Mono',ui-monospace,monospace;
-  --body:'Spline Sans',system-ui,sans-serif;
-  --disp:'Fraunces',Georgia,serif;
-}
-*{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{
-  background:var(--obsidian);
-  color:var(--bone);
-  font-family:var(--body);
-  font-weight:300;
-  -webkit-font-smoothing:antialiased;
-  overflow-x:hidden;
-  background-image:
-    radial-gradient(900px 500px at 50% -6%, rgba(57,255,20,.12), transparent 60%),
-    radial-gradient(600px 400px at 85% 10%, rgba(30,140,10,.08), transparent 55%),
-    radial-gradient(800px 800px at 50% 115%, rgba(57,255,20,.04), transparent 60%);
-}
-body::after{
-  content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.025;mix-blend-mode:overlay;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-.wrap{max-width:1100px;margin:0 auto;padding:0 22px;position:relative;z-index:1}
-.wrap-narrow{max-width:800px;margin:0 auto;padding:0 22px;position:relative;z-index:1}
-
-/* ── NAV ── */
-.plate{
-  position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
-  padding:14px 22px;backdrop-filter:blur(18px) saturate(140%);
-  background:linear-gradient(180deg,rgba(5,5,7,.94),rgba(5,5,7,.5));
-  border-bottom:1px solid var(--ng-line);
-}
-.plate .mk{font-family:var(--disp);font-weight:600;font-size:1rem;color:var(--bone);display:flex;align-items:center;gap:10px}
-.ember{width:7px;height:7px;border-radius:50%;background:var(--ng);box-shadow:0 0 12px var(--ng),0 0 28px rgba(57,255,20,.6);animation:ember 2.4s ease-in-out infinite}
-@keyframes ember{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
-.plate nav{display:flex;gap:22px}
-.plate a{color:var(--muted);text-decoration:none;font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;transition:color .2s}
-.plate a:hover,.plate a.active{color:var(--ng-leaf);text-shadow:0 0 10px var(--ng-glow)}
-
-/* ── HERO ── */
-.hero{padding:68px 0 36px;text-align:center}
-.eyebrow{font-family:var(--mono);font-size:.65rem;letter-spacing:.5em;text-transform:uppercase;color:var(--ng);opacity:.8;margin-bottom:18px;text-shadow:0 0 12px var(--ng-glow)}
-h1{font-family:var(--disp);font-weight:600;font-size:clamp(2.4rem,5.5vw,4.6rem);line-height:1;letter-spacing:-.01em;margin-bottom:16px}
-h1 i{font-style:italic;font-weight:600;
-  background:linear-gradient(110deg,var(--ng-hi),var(--ng) 48%,var(--ng-leaf));
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(0 0 18px rgba(57,255,20,.6)) drop-shadow(0 0 4px rgba(57,255,20,.9));
-}
-.ngrule{height:1px;margin:18px auto 0;max-width:360px;
-  background:linear-gradient(90deg,transparent,var(--ng-deep),var(--ng-leaf),var(--ng-deep),transparent);
-  box-shadow:0 0 14px rgba(57,255,20,.35);
-}
-.lede{color:var(--muted);font-size:1rem;line-height:1.6;max-width:520px;margin:14px auto 0;font-weight:300}
-
-/* ── NETWORK HEALTH BAR ── */
-.health{max-width:520px;margin:36px auto 0;padding:22px 26px;border-radius:16px;
-  background:linear-gradient(165deg,#0e0f12,#080909);
-  border:1px solid var(--ng-line);
-  box-shadow:inset 0 1px 0 rgba(57,255,20,.08), 0 0 40px rgba(57,255,20,.06), 0 20px 48px rgba(0,0,0,.6);
-}
-.health .top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
-.health .lab{font-family:var(--mono);font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
-.health .big{font-family:var(--disp);font-weight:600;font-size:2.4rem;line-height:1;
-  background:linear-gradient(180deg,var(--ng-hi),var(--ng) 55%,var(--ng-deep));
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(0 0 8px rgba(57,255,20,.5));
-}
-.track{height:10px;border-radius:99px;background:rgba(0,0,0,.7);box-shadow:inset 0 1px 3px rgba(0,0,0,.9);overflow:hidden;position:relative}
-.track .fill{height:100%;border-radius:99px;width:0;transition:width 1.1s cubic-bezier(.2,.8,.2,1);
-  background:linear-gradient(90deg,var(--ng-deep),var(--ng),var(--ng-hi));
-  box-shadow:0 0 14px rgba(57,255,20,.7), inset 0 1px 0 rgba(255,255,255,.3);
-}
-.track .fill::after{content:"";position:absolute;inset:0;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);
-  background-size:200% 100%;animation:shimmer 2.4s linear infinite;opacity:.5;
-}
-@keyframes shimmer{to{background-position:-200% 0}}
-.health .sub{font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-top:10px;letter-spacing:.04em}
-.pulse{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--ng);box-shadow:0 0 8px var(--ng);margin-right:7px;animation:pl 1.6s ease-in-out infinite}
-@keyframes pl{0%,100%{opacity:1}50%{opacity:.2}}
-
-/* ── GAUGES ── */
-.gauges{display:flex;justify-content:center;flex-wrap:wrap;gap:18px;margin:24px 0 8px}
-.gauge{width:160px;padding:18px 14px 16px;border-radius:12px;text-align:center;position:relative;
-  background:linear-gradient(165deg,#0e0f12,#080909);
-  border:1px solid var(--ng-line);
-  box-shadow:inset 0 1px 0 rgba(57,255,20,.07), 0 0 20px rgba(57,255,20,.04), 0 14px 32px rgba(0,0,0,.5);
-}
-.gauge::before{content:"";position:absolute;top:0;left:16px;right:16px;height:1px;
-  background:linear-gradient(90deg,transparent,var(--ng-leaf),transparent);opacity:.5;
-}
-.gauge .v{font-family:var(--disp);font-weight:600;font-size:2.2rem;line-height:1;
-  background:linear-gradient(180deg,var(--ng-hi),var(--ng) 55%,var(--ng-deep));
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(0 0 6px rgba(57,255,20,.4));
-}
-.gauge .k{font-family:var(--mono);font-size:.56rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:9px}
-
-/* ── SECTION HEADS ── */
-section{padding:52px 0}
-.sechead{text-align:center;margin-bottom:36px}
-.sechead .ix{font-family:var(--mono);font-size:.64rem;letter-spacing:.4em;color:var(--ng);opacity:.75;text-transform:uppercase}
-.sechead h2{font-family:var(--disp);font-weight:500;font-size:1.9rem;margin:10px 0 14px;font-style:italic;color:var(--bone)}
-.sechead .rule{width:100px;height:1px;margin:0 auto;
-  background:linear-gradient(90deg,transparent,var(--ng-leaf),transparent);
-  box-shadow:0 0 10px rgba(57,255,20,.3);
-}
-.sechead .note{font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-top:12px;letter-spacing:.05em}
-
-/* ── GOAL GRID ── */
-.cat{margin-bottom:44px}
-.cat-h{text-align:center;font-family:var(--mono);font-size:.68rem;letter-spacing:.28em;text-transform:uppercase;color:var(--ng-leaf);margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:14px}
-.cat-h::before,.cat-h::after{content:"";width:44px;height:1px;background:linear-gradient(90deg,transparent,var(--ng-deep))}
-.cat-h::after{transform:scaleX(-1)}
-.cat-h .avg{color:var(--ng);opacity:.65}
-.grid{display:flex;flex-wrap:wrap;justify-content:center;gap:14px}
-.goal{flex:1 1 280px;max-width:380px;position:relative;padding:18px 20px 16px;border-radius:12px;text-decoration:none;color:inherit;display:block;
-  background:linear-gradient(165deg,#0d0e10,#090a0b);
-  border:1px solid var(--ng-line);overflow:hidden;
-  box-shadow:inset 0 1px 0 rgba(57,255,20,.05), 0 8px 24px rgba(0,0,0,.45);
-  transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s,border-color .28s;
-  overflow-wrap:break-word;word-break:normal;hyphens:none;
-}
-.goal:hover{transform:translateY(-4px);border-color:rgba(57,255,20,.38);box-shadow:0 0 28px rgba(57,255,20,.1),0 22px 48px rgba(0,0,0,.6)}
-.goal .gh{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-.goal .ct{font-family:var(--disp);font-weight:600;font-size:1rem;line-height:1.2;display:flex;align-items:center;gap:8px}
-.goal .lit{width:6px;height:6px;border-radius:50%;flex:none;background:var(--faint);transition:background .4s,box-shadow .4s}
-.goal.up .lit{background:var(--ng);box-shadow:0 0 10px var(--ng),0 0 20px rgba(57,255,20,.4)}
-.goal.warn .lit{background:var(--amber);box-shadow:0 0 8px var(--amber)}
-.goal.down .lit{background:var(--ox);box-shadow:0 0 8px var(--ox)}
-.goal .pct{font-family:var(--mono);font-weight:700;font-size:.95rem;color:var(--ng-leaf);flex:none}
-.goal .meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none}
-.pill{font-family:var(--mono);font-size:.52rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;transition:color .3s,border-color .3s,background .3s}
-.pill::before{content:"";width:4px;height:4px;border-radius:50%;background:currentColor;box-shadow:0 0 5px currentColor}
-.pill.p1{color:var(--ox);border-color:rgba(194,91,74,.45);background:rgba(194,91,74,.10)}
-.pill.p2{color:var(--amber);border-color:rgba(255,194,74,.38);background:rgba(255,194,74,.08)}
-.pill.p3{color:var(--ng-leaf);border-color:rgba(57,255,20,.3);background:rgba(57,255,20,.07)}
-.goal .cu{font-family:var(--mono);font-size:.58rem;color:rgba(57,255,20,.35);margin:4px 0 10px;letter-spacing:.02em}
-.goal .gap{font-family:var(--mono);font-size:.59rem;line-height:1.6;letter-spacing:.02em;min-height:1.1em}
-.goal .gap.complete{color:var(--ng)}
-.goal .gap .lbl{color:var(--faint)}
-.goal .gap .miss{color:var(--amber)}
-.goal .gap .pend{color:var(--muted);font-style:italic}
-.loading{text-align:center;color:var(--muted);font-family:var(--mono);font-size:.82rem;padding:28px}
-
-/* ── FLOW STATUS CARDS ── */
-.flow-row{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin:8px 0 0}
-.fcard{flex:1 1 200px;max-width:260px;padding:16px 18px;border-radius:12px;
-  background:linear-gradient(165deg,#0e0f12,#080909);
-  border:1px solid var(--ng-line);
-  box-shadow:inset 0 1px 0 rgba(57,255,20,.06),0 10px 26px rgba(0,0,0,.4);
-}
-.fcard .flabel{font-family:var(--mono);font-size:.56rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-.fcard .fval{font-family:var(--disp);font-weight:600;font-size:1.7rem;line-height:1;
-  background:linear-gradient(180deg,var(--ng-hi),var(--ng));
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(0 0 6px rgba(57,255,20,.4));
-}
-.fcard .fsub{font-family:var(--mono);font-size:.58rem;color:var(--muted);margin-top:6px;line-height:1.5;overflow-wrap:break-word;word-break:normal;hyphens:none}
-.scope-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
-.scope-tag{font-family:var(--mono);font-size:.52rem;letter-spacing:.06em;padding:2px 8px;border-radius:999px;background:rgba(57,255,20,.07);border:1px solid rgba(57,255,20,.2);color:var(--ng-leaf);overflow-wrap:break-word;word-break:normal;hyphens:none}
-
-/* ── STEER PANEL ── */
-.steer-panel{background:linear-gradient(165deg,#0e0f12,#080909);border:1px solid var(--ng-line);border-radius:16px;padding:26px 24px 22px;position:relative;overflow:hidden;
-  box-shadow:inset 0 1px 0 rgba(57,255,20,.07),0 0 40px rgba(57,255,20,.04),0 20px 48px rgba(0,0,0,.55);
-}
-.steer-panel::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,var(--ng-leaf),transparent);
-}
-.steer-panel textarea{width:100%;min-height:64px;resize:vertical;background:#080a08;border:1px solid var(--faint);color:var(--bone);font-family:var(--mono);font-size:13px;padding:10px;border-radius:6px;line-height:1.55;overflow-wrap:break-word;word-break:normal;hyphens:none}
-.steer-panel textarea::placeholder{color:var(--faint)}
-.steer-panel textarea:focus{outline:none;border-color:var(--ng);box-shadow:0 0 0 1px rgba(57,255,20,.2)}
-.btn-row{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
-.btn{cursor:pointer;border:1px solid var(--faint);background:transparent;color:var(--bone);font-family:var(--mono);font-weight:500;letter-spacing:.08em;padding:8px 14px;border-radius:4px;font-size:11px;text-transform:uppercase;transition:.15s}
-.btn:hover{border-color:var(--ng);color:var(--ng-hi);box-shadow:0 0 10px rgba(57,255,20,.15)}
-.btn.go{
-  background:linear-gradient(180deg,var(--ng-hi),var(--ng) 55%,var(--ng-deep));
-  color:#020d01;border:none;font-weight:700;
-  box-shadow:0 0 22px rgba(57,255,20,.5),inset 0 1px 0 rgba(255,255,255,.35);
-}
-.btn.go:hover{filter:brightness(1.1);box-shadow:0 0 32px rgba(57,255,20,.7)}
-.hint{color:var(--faint);font-family:var(--mono);font-size:.58rem;letter-spacing:.02em}
-
-/* ── TASK LIST ── */
-#steer-list{margin-top:14px;display:flex;flex-direction:column;gap:7px}
-.task{display:flex;align-items:flex-start;gap:9px;
-  background:linear-gradient(165deg,#0e0f12,#080909);
-  border:1px solid rgba(57,255,20,.14);border-left:2px solid var(--ng-deep);
-  border-radius:5px;padding:10px 11px;cursor:grab;transition:.12s;
-}
-.task:hover{border-color:rgba(57,255,20,.32);border-left-color:var(--ng-leaf)}
-.task.dragging{opacity:.35}
-.grip{color:var(--faint);font-family:var(--mono);font-size:12px;line-height:1.3;cursor:grab;user-select:none;padding-top:1px}
-.tpill{flex:0 0 auto;font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 8px;border-radius:3px;cursor:pointer;user-select:none;letter-spacing:.1em;border:1px solid transparent;transition:.1s}
-.tpill.P0{background:rgba(194,91,74,.16);color:var(--ox);border-color:var(--ox)}
-.tpill.P1{background:rgba(255,194,74,.12);color:var(--amber);border-color:rgba(255,194,74,.6)}
-.tpill.P2{background:rgba(57,255,20,.10);color:var(--ng);border-color:rgba(57,255,20,.4)}
-.tpill.P3{background:rgba(147,140,124,.10);color:var(--muted);border-color:var(--faint)}
-.tpill:hover{filter:brightness(1.2)}
-.txt{flex:1;font-family:var(--body);font-weight:400;font-size:13px;line-height:1.45;color:var(--bone);overflow-wrap:break-word;word-break:normal;hyphens:none}
-.txt[contenteditable]:focus{outline:1px solid var(--ng);border-radius:3px}
-.src{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.08em;padding:2px 5px;border-radius:3px;align-self:center;border:1px solid}
-.s-mac{color:var(--ng-leaf);border-color:rgba(57,255,20,.4)}
-.s-win{color:var(--amber);border-color:rgba(255,194,74,.4)}
-.s-xen{color:var(--ng);border-color:rgba(57,255,20,.5)}
-.s-rev{color:var(--ox);border-color:rgba(194,91,74,.4)}
-.s-qi{color:var(--bone);border-color:var(--faint)}
-.del{color:var(--faint);cursor:pointer;font-size:14px;line-height:1;padding:2px 4px;align-self:center}
-.del:hover{color:var(--ox)}
-.fire{margin-left:auto;font-family:var(--mono);font-size:8px;letter-spacing:.1em;color:var(--ng-leaf);align-self:center;text-transform:uppercase;text-shadow:0 0 9px rgba(57,255,20,.65);animation:fpulse 1.8s infinite}
-@keyframes fpulse{0%,100%{opacity:.25}50%{opacity:.85}}
-#steer-out{margin-top:20px;border:1px solid var(--ng-line);border-radius:6px;padding:14px 16px;background:linear-gradient(165deg,#0b0d0b,#070909);display:none}
-#steer-out pre{white-space:pre-wrap;font-family:var(--mono);font-size:12px;color:var(--ng-hi);margin:0;line-height:1.55}
-
-/* ── SUGG PANEL ── */
-.sugg-panel{margin:28px 0 0;border:1px solid rgba(57,255,20,.16);border-radius:10px;background:rgba(5,7,5,.55);padding:16px 16px 14px;backdrop-filter:blur(8px)}
-.sugg-panel h3{font-family:var(--mono);font-size:10px;letter-spacing:.38em;text-transform:uppercase;color:var(--ng);margin:0 0 12px;opacity:.8}
-#sugg-list{display:flex;flex-wrap:wrap;gap:7px}
-.sugg-btn{font-family:var(--body);font-size:12px;font-weight:400;background:rgba(57,255,20,.06);border:1px solid rgba(57,255,20,.2);border-radius:20px;color:var(--bone);padding:6px 13px;cursor:pointer;text-align:left;transition:.14s;overflow-wrap:break-word;word-break:normal;hyphens:none}
-.sugg-btn:hover{background:rgba(57,255,20,.14);border-color:var(--ng);color:#fff;box-shadow:0 0 12px rgba(57,255,20,.18)}
-
-/* ── LEDGER ── */
-.ledger{max-width:760px;margin:0 auto;border:1px solid var(--ng-line);border-radius:14px;overflow:hidden;background:linear-gradient(165deg,rgba(14,15,18,.7),rgba(8,9,10,.5));backdrop-filter:blur(8px);box-shadow:inset 0 1px 0 rgba(57,255,20,.05),0 20px 56px rgba(0,0,0,.5)}
-.entry{display:grid;grid-template-columns:56px 1fr auto;align-items:center;gap:18px;padding:18px 22px;border-bottom:1px solid rgba(57,255,20,.07)}
-.entry:last-child{border-bottom:none}
-.entry:hover{background:linear-gradient(90deg,rgba(57,255,20,.04),transparent)}
-.entry .no{font-family:var(--disp);font-weight:600;font-size:1.4rem;font-style:italic;color:rgba(57,255,20,.3);text-align:center}
-.entry .ti{font-family:var(--disp);font-weight:600;font-size:1.1rem;overflow-wrap:break-word;word-break:normal;hyphens:none}
-.entry .de{color:var(--muted);font-size:.87rem;line-height:1.5;font-weight:300;margin-top:3px;overflow-wrap:break-word;word-break:normal;hyphens:none}
-.entry .st{font-family:var(--mono);font-size:.56rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ng-leaf);border:1px solid rgba(57,255,20,.2);border-radius:999px;padding:5px 11px;white-space:nowrap;display:flex;align-items:center;gap:6px}
-.entry .st .lit{width:5px;height:5px;border-radius:50%;background:var(--ng);box-shadow:0 0 8px var(--ng)}
-
-/* ── FOOTER ── */
-footer{padding:56px 0 72px;text-align:center}
-footer .ngrule{max-width:180px;margin:0 auto 20px}
-footer .f1{font-family:var(--disp);font-style:italic;font-weight:500;color:var(--bone);font-size:1rem}
-footer .f2{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;color:var(--faint);margin-top:9px;text-transform:uppercase}
-footer .f2 em{color:var(--ng)}
-
-/* ── MOBILE ── */
-@media(max-width:600px){
-  .plate nav{display:none}
-  h1{font-size:2.2rem}
-  .gauges{gap:10px}
-  .gauge{width:140px;padding:14px 10px 12px}
-  .gauge .v{font-size:1.8rem}
-  .entry{grid-template-columns:44px 1fr;gap:12px;padding:14px 16px}
-  .entry .st{display:none}
-  .fcard{flex:1 1 140px}
-}
-</style>
-</head>
-<body>
-
-<div class="plate">
-  <div class="mk"><span class="ember"></span>hitthe.link · life</div>
-  <nav>
-    <a href="#scopes" class="active">Scopes</a>
-    <a href="#flow">Flow</a>
-    <a href="#goals">Goals</a>
-    <a href="#steer">Steer</a>
-    <a href="#ledger">Ledger</a>
-    <a href="/">Gallery</a>
-  </nav>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0f;color:#e8e8ee;font:14px/1.5 -apple-system,'Segoe UI',system-ui,sans-serif;padding:24px}
+h1{font-size:22px;font-weight:700;letter-spacing:.5px;background:linear-gradient(90deg,#ffd166,#e0b0ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.meta{color:#8a8a99;font-size:12px;margin:6px 0 20px}
+.counts{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:24px}
+.ct{background:#14141c;border:1px solid #23232e;border-radius:10px;padding:10px 16px;text-align:center}
+.ct b{display:block;font-size:24px;font-weight:700}
+.ct span{font-size:11px;color:#8a8a99;text-transform:uppercase;letter-spacing:.5px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+.col{background:#0f0f16;border:1px solid #1e1e28;border-radius:14px;padding:16px}
+.col h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;color:#b8b8c8}
+.card{background:#15151e;border-radius:9px;padding:11px 13px;margin-bottom:9px}
+.lbl{font-weight:600;font-size:13.5px}
+.sub{color:#8a8a99;font-size:11.5px;margin-top:3px}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;margin-top:7px;letter-spacing:.3px}
+.foot{margin-top:24px;color:#6a6a78;font-size:11px}
+</style></head><body>
+<h1>XEN LIFE — MASTER SCOPE</h1>
+<div class="meta">29 open items · distilled by a 31-agent parallel swarm · 2026-06-18 01:56 PT · auto-shipped to hitthe.link/life</div>
+<div class="counts">
+  <div class="ct"><b style="color:#06d6a0">14</b><span>Done / Shipped</span></div>
+  <div class="ct"><b style="color:#ff9f1c">1</b><span>In-Progress</span></div>
+  <div class="ct"><b style="color:#ef476f">6</b><span>Blocked on qi</span></div>
+  <div class="ct"><b style="color:#8d99ae">5</b><span>qi-Owned</span></div>
 </div>
-
-<header class="hero wrap">
-  <div class="eyebrow">— Command Dashboard · Xen Life —</div>
-  <h1>XEN · <i>Life</i></h1>
-  <div class="ngrule"></div>
-  <p class="lede">Goal swarm + steer control. One obsidian surface. Real-time or graceful fallback — always showing what's true.</p>
-
-  <div class="health">
-    <div class="top"><span class="lab">Network Completion</span><span class="big" id="net-pct">··%</span></div>
-    <div class="track"><div class="fill" id="net-fill"></div></div>
-    <div class="sub"><span class="pulse"></span><span id="net-sub">scanning…</span></div>
-  </div>
-
-  <div class="gauges">
-    <div class="gauge"><div class="v" id="g-total">—</div><div class="k">Active Goals</div></div>
-    <div class="gauge"><div class="v" id="g-live">—</div><div class="k">Live · 100%</div></div>
-    <div class="gauge"><div class="v" id="g-gap">—</div><div class="k">With Gaps</div></div>
-    <div class="gauge"><div class="v" id="g-tasks">—</div><div class="k">Tasks Total</div></div>
-    <div class="gauge"><div class="v" id="g-cost">—</div><div class="k">$/mo stack</div></div>
-  </div>
-</header>
-
-<!-- FLOW STATUS -->
-<section class="wrap" id="flow">
-  <div class="sechead">
-    <div class="ix">I · Live Flow Status</div>
-    <h2>System pulse</h2>
-    <div class="rule"></div>
-    <div class="note" id="flow-updated">reading xen/live.json…</div>
-  </div>
-  <div class="flow-row" id="flow-cards">
-    <div class="fcard"><div class="flabel">Tasks Total</div><div class="fval" id="fs-tasks">—</div><div class="fsub">tracked in xen/live.json</div></div>
-    <div class="fcard"><div class="flabel">Tasks Today</div><div class="fval" id="fs-today">—</div><div class="fsub">completed this session</div></div>
-    <div class="fcard"><div class="flabel">Stack Cost</div><div class="fval" id="fs-cost">—</div><div class="fsub" id="fs-cost-sub">vs $1500/seat industry avg</div></div>
-    <div class="fcard" style="flex:2 1 300px;max-width:520px">
-      <div class="flabel">Active Scope</div>
-      <div class="scope-list" id="fs-scope"></div>
-    </div>
-  </div>
-</section>
-
-<!-- MASTER SCOPE TREE -->
-<style>
-.scope-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 auto 18px;max-width:820px;justify-content:center}
-.tree{max-width:820px;margin:0 auto;font-family:var(--mono)}
-.tdir{display:flex;align-items:center;gap:8px;cursor:pointer;padding:7px 10px;border-radius:6px;color:var(--ng-leaf);font-size:.74rem;letter-spacing:.06em;user-select:none;transition:.15s}
-.tdir:hover{background:rgba(57,255,20,.06)}
-.tdir .tw{color:var(--faint);width:12px;display:inline-block;transition:transform .2s}
-.tdir.collapsed .tw{transform:rotate(-90deg)}
-.tdir .tnote{color:var(--faint);font-size:.6rem;font-style:italic;margin-left:6px;letter-spacing:.02em}
-.tdir .tprog{margin-left:auto;color:var(--muted);font-size:.6rem}
-.tchildren{margin-left:14px;border-left:1px solid var(--ng-line);padding-left:8px}
-.tchildren.hidden{display:none}
-.tscope{margin:6px 0}
-.tscope-h{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;user-select:none;flex-wrap:wrap}
-.tscope-h:hover{background:rgba(57,255,20,.05)}
-.tscope-h .nm{font-family:var(--disp);font-weight:600;font-size:.92rem;color:var(--bone)}
-.tscope-h .tag{font-family:var(--mono);font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ng);border:1px solid var(--ng-line);border-radius:999px;padding:2px 7px}
-.tscope-h .tprog{margin-left:auto;font-size:.6rem;color:var(--muted)}
-.tscope-h .bar{width:60px;height:4px;border-radius:99px;background:rgba(0,0,0,.6);overflow:hidden;margin-left:8px}
-.tscope-h .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--ng-deep),var(--ng-hi));box-shadow:0 0 8px var(--ng-glow);width:0}
-.titems{margin:2px 0 8px 16px;border-left:1px solid var(--ng-faint);padding-left:10px}
-.titem{display:flex;align-items:flex-start;gap:9px;padding:5px 4px;font-family:var(--body);font-size:.82rem;line-height:1.4;color:var(--bone)}
-.titem input{appearance:none;-webkit-appearance:none;width:15px;height:15px;border:1px solid var(--faint);border-radius:4px;flex:none;margin-top:2px;cursor:pointer;position:relative;transition:.15s;background:#080a08}
-.titem input:checked{background:linear-gradient(180deg,var(--ng-hi),var(--ng-deep));border-color:var(--ng)}
-.titem input:checked::after{content:"\2713";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#031200;font-size:11px;font-weight:700}
-.titem.done .lab{color:var(--faint);text-decoration:line-through}
-.titem .lab{cursor:default}
-.tleaf-note{font-size:.62rem;color:var(--faint);font-style:italic;padding:4px 8px}
-.scopes-out{display:none;max-width:820px;margin:16px auto 0;border:1px solid var(--ng-line);border-radius:6px;padding:14px 16px;background:linear-gradient(165deg,#0b0d0b,#070909)}
-.scopes-out pre{white-space:pre-wrap;font-family:var(--mono);font-size:12px;color:var(--ng-hi);margin:0;line-height:1.55}
-</style>
-<section class="wrap" id="scopes">
-  <div class="sechead">
-    <div class="ix">I+ &middot; Master Scope Tree</div>
-    <h2>Every scope, every action &mdash; audit &amp; verify</h2>
-    <div class="rule"></div>
-    <div class="note">filetree mirrors the M4 <code>sync_/</code> layout &middot; check to mark done &middot; auto-saves &middot; <span id="scope-prog">&mdash;</span></div>
-  </div>
-  <div class="scope-toolbar">
-    <button class="btn" id="sc-expand">&#8862; Expand all</button>
-    <button class="btn" id="sc-collapse">&#8863; Collapse all</button>
-    <button class="btn go" id="sc-compile">&#9889; Compile open items</button>
-    <span class="hint">open items only &middot; copies + fires to Xen</span>
-  </div>
-  <div id="scopes-tree" class="tree"><div class="loading">building scope tree&hellip;</div></div>
-  <div id="scopes-out" class="scopes-out"><pre id="scopes-outtxt"></pre></div>
-</section>
-
-<!-- QUATERNITY / XQL CONTROL PLANE -->
-<section class="wrap" id="quaternity">
-  <div class="sechead">
-    <div class="ix">I· · Quaternity · Control Plane</div>
-    <h2>The four · live<span id="xql-updated" style="font-size:11px;color:var(--faint);font-weight:400"></span></h2>
-    <div class="rule"></div>
-    <div class="note">genesis · exodus · leviticus + xql · all inputs → all 3 + sink</div>
-  </div>
-  <div id="xql-members" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0">
-    <span style="color:var(--faint);font-size:11px">▸ resolving the four…</span>
-  </div>
-  <h3 style="margin-top:16px;font-size:13px">Input stream · all channels → all 3 + xql</h3>
-  <div id="xql-feed" style="font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--faint)">Loading…</div>
-</section>
-
-<!-- GOAL SWARM -->
-<section class="wrap" id="goals">
-  <div class="sechead">
-    <div class="ix">II · Parallel Goal Swarm</div>
-    <h2>Active goals, live-tracked</h2>
-    <div class="rule"></div>
-    <div class="note">every property scanned · auto gap analysis · re-checks every 45s</div>
-  </div>
-  <div id="goals-body"><div class="loading">▸ scanning the estate…</div></div>
-</section>
-
-<!-- STEER CONTROL -->
-<section id="steer" style="padding:52px 0">
-  <div class="wrap-narrow">
-    <div class="sechead">
-      <div class="ix">III · Steer Control</div>
-      <h2>Fire to Xen</h2>
-      <div class="rule"></div>
-      <div class="note">one ledger · pills weight attention · every line fires at once</div>
-    </div>
-    <div class="steer-panel">
-      <textarea id="bulk" placeholder="bulk paste — one task per line (paste a whole block, then ⊕ Add all)"></textarea>
-      <div class="btn-row">
-        <button class="btn go" id="addall">⊕ Add all</button>
-        <button class="btn" id="dictate">🎙 Dictate</button>
-        <button class="btn" id="send">⬡ Send to Xen</button>
-        <button class="btn" id="reset">↺ Reset</button>
-        <span class="hint">click pill to cycle P0→P3 · drag ⋮ to reorder · click text to edit</span>
-      </div>
-    </div>
-    <div id="steer-list"></div>
-    <div id="steer-out"><pre id="steer-outtxt"></pre></div>
-
-    <div class="sugg-panel">
-      <h3>⚡ Suggested next prompts</h3>
-      <div id="sugg-list"><span style="color:var(--faint);font-size:11px">Loading…</span></div>
-    </div>
-  </div>
-</section>
-
-<!-- LEDGER -->
-<section class="wrap" id="ledger">
-  <div class="sechead">
-    <div class="ix">IV · This Cycle</div>
-    <h2>Latest, struck</h2>
-    <div class="rule"></div>
-  </div>
-  <div class="ledger">
-    <div class="entry"><div class="no">01</div><div><div class="ti">Lead factory → nineteen live</div><div class="de">Griffins Automotive &amp; Lyfe Lawn completed — web-verified, real review counts, grok logos, heroes &amp; videos. The trade portfolio stands at nineteen.</div></div><div class="st"><span class="lit"></span>Live</div></div>
-    <div class="entry"><div class="no">02</div><div><div class="ti">Eleven marks, grok-forged</div><div class="de">Six SVG violations replaced and three weak marks rebuilt — every logo a true-transparent raster, matched to its trade.</div></div><div class="st"><span class="lit"></span>Live</div></div>
-    <div class="entry"><div class="no">03</div><div><div class="ti">The grids, set true</div><div class="de">Lead sites and the ledger carried stranded last-row cards — re-struck to zero orphans, centered.</div></div><div class="st"><span class="lit"></span>Live</div></div>
-    <div class="entry"><div class="no">04</div><div><div class="ti">M_B — live client edits</div><div class="de">Glass audio players, duplicate reel pulled, YouTube cut self-hosted, mislabeled flyers re-housed. Same-day turns.</div></div><div class="st"><span class="lit"></span>Live</div></div>
-    <div class="entry"><div class="no">05</div><div><div class="ti">A leak, sealed</div><div class="de">Nine internal sales briefs were serving publicly — owner contacts and scripts. Pulled from the repo and warded going forward.</div></div><div class="st"><span class="lit"></span>Secured</div></div>
-    <div class="entry"><div class="no">06</div><div><div class="ti">The watch, always on</div><div class="de">A persistent inbound monitor with logon auto-start — every message logged so nothing slips between sessions.</div></div><div class="st"><span class="lit"></span>Live</div></div>
-  </div>
-</section>
-
-<footer class="wrap">
-  <div class="ngrule"></div>
-  <div class="f1">hitthe.link · life — the command dashboard</div>
-  <div class="f2">forged by <em>Xen</em> · East Allen · <span id="ts"></span></div>
-</footer>
-
-<script>
-// ── FLOW STATUS from xen/live.json ──────────────────────────────────────────
-async function loadFlow() {
-  try {
-    const r = await fetch('/xen/live.json?_='+Date.now(), {cache:'no-store'});
-    if (!r.ok) throw new Error(r.status);
-    const d = await r.json();
-    document.getElementById('fs-tasks').textContent = d.tasks_total ?? '—';
-    document.getElementById('fs-today').textContent = d.tasks_today ?? '—';
-    document.getElementById('fs-cost').textContent = d.cost_monthly ? '$'+d.cost_monthly : '—';
-    document.getElementById('fs-cost-sub').textContent = d.cost_subline || 'vs $1500/seat industry avg';
-    document.getElementById('g-tasks').textContent = d.tasks_total ?? '—';
-    document.getElementById('g-cost').textContent = d.cost_monthly ? '$'+d.cost_monthly : '—';
-    const scope = d.scope || [];
-    const scEl = document.getElementById('fs-scope');
-    if (scope.length) {
-      scEl.innerHTML = scope.map(s => `<span class="scope-tag">${escH(s)}</span>`).join('');
-    } else {
-      scEl.innerHTML = '<span style="color:var(--faint);font-size:11px">—</span>';
-    }
-    if (d.updated) {
-      const ts = new Date(d.updated);
-      document.getElementById('flow-updated').textContent = 'last updated ' + ts.toLocaleString();
-    }
-  } catch(e) {
-    // Graceful — just show dashes, never show fake data
-    ['fs-tasks','fs-today','fs-cost'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el && el.textContent === '—') el.textContent = '—';
-    });
-    document.getElementById('flow-updated').textContent = 'xen/live.json not reachable — showing placeholders';
-    document.getElementById('fs-scope').innerHTML = '<span style="color:var(--faint);font-size:11px">—</span>';
-  }
-}
-loadFlow();
-
-// ── GOAL SWARM ───────────────────────────────────────────────────────────────
-const CAT_ORDER = ["Business & L7S","Client Sites","Music & Studio","Tools & Calculators","Builds & Apps","Xen / Voice OS"];
-const CHECKS = [
-  {k:'live',  w:34, label:'shipped & reachable'},
-  {k:'meta',  w:16, label:'title + description'},
-  {k:'social',w:14, label:'social card (og:image)'},
-  {k:'clean', w:14, label:'no placeholders'},
-  {k:'brand', w:10, label:'logo / favicon'},
-  {k:'mobile',w:8,  label:'mobile viewport'},
-  {k:'depth', w:4,  label:'substantial content'},
-];
-function scoreHtml(html) {
-  const has = {
-    live: true,
-    meta: /<title>[^<]{3,}<\/title>/i.test(html) && /name=["']description["']/i.test(html),
-    social: /property=["']og:image["']/i.test(html) || /name=["']twitter:image["']/i.test(html),
-    clean: !(/\{\{[a-z0-9_]/i.test(html) || /lorem ipsum/i.test(html) || /______/.test(html) || />\s*sample\s*</i.test(html)),
-    brand: /logo|favicon|rel=["']icon|apple-touch-icon/i.test(html),
-    mobile: /name=["']viewport["']/i.test(html),
-    depth: html.length > 4000,
-  };
-  let pct = 0; const gaps = [];
-  CHECKS.forEach(c => { if (has[c.k]) pct += c.w; else if (c.k !== 'live') gaps.push(c.label); });
-  return {pct, gaps};
-}
-async function analyze(url) {
-  try {
-    const res = await fetch(url, {cache:'no-store'});
-    if (!res.ok) return {pct:0, gaps:['unreachable ('+res.status+')'], state:'down'};
-    const html = await res.text();
-    const {pct, gaps} = scoreHtml(html);
-    return {pct, gaps, state: pct>=100?'up':(pct>=70?'warn':'down')};
-  } catch(e) { return {pct:0, gaps:['offline / blocked'], state:'down'}; }
-}
-async function pool(items, n, fn) {
-  let i = 0;
-  const run = async () => { while(i < items.length) { const idx = i++; await fn(items[idx], idx); } };
-  await Promise.all(Array.from({length:Math.min(n, items.length)}, run));
-}
-let GOALS = [];
-function renderGap(g) {
-  if (g.pct >= 100) return '<span class="complete">✓ complete · 100%</span>';
-  if (g.gaps && g.gaps.length) {
-    const top = g.gaps.slice(0,3).map(x => '<span class="miss">'+x+'</span>').join('<span class="lbl"> · </span>');
-    return '<span class="lbl">gap → </span>' + top;
-  }
-  return '<span class="pend">scanning…</span>';
-}
-function paint(el, g) {
-  el.classList.remove('up','warn','down');
-  el.classList.add(g.state||'warn');
-  el.querySelector('.fill').style.width = (g.pct||0)+'%';
-  el.querySelector('.pct').textContent = (g.pct||0)+'%';
-  const pri = g.pct>=100 ? {c:'p3',t:'P3 · stable'} : (g.pct>=70 ? {c:'p2',t:'P2 · active'} : {c:'p1',t:'P1 · priority'});
-  const pill = el.querySelector('.pill'); pill.className='pill '+pri.c; pill.textContent=pri.t;
-  el.querySelector('.gap').className = 'gap'+(g.pct>=100?' complete':'');
-  el.querySelector('.gap').innerHTML = renderGap(g);
-}
-async function trackAll() {
-  await pool(GOALS, 6, async(goal) => { const r = await analyze(goal.url); goal.result = r; paint(goal.el, r); });
-  const scored = GOALS.filter(g => g.result);
-  const avg = scored.length ? Math.round(scored.reduce((a,g) => a+g.result.pct, 0)/scored.length) : 0;
-  const live = scored.filter(g => g.result.pct >= 100).length;
-  const gap = scored.filter(g => g.result.pct < 100).length;
-  document.getElementById('net-pct').textContent = avg+'%';
-  document.getElementById('net-fill').style.width = avg+'%';
-  document.getElementById('g-live').textContent = live;
-  document.getElementById('g-gap').textContent = gap;
-  document.getElementById('net-sub').innerHTML = '<span class="pulse"></span>'+scored.length+' goals tracked · '+live+' at 100% · '+gap+' with open gaps · live re-scan every 45s';
-}
-fetch('/sites.json').then(r => r.json()).then(d => {
-  const sites = Array.isArray(d) ? d : (d.sites||d.builds||[]);
-  document.getElementById('g-total').textContent = sites.length;
-  const groups = {};
-  sites.forEach(s => { (groups[s.category||'Other']??=[]).push(s); });
-  const cats = Object.keys(groups).sort((a,b) => {
-    const ia=CAT_ORDER.indexOf(a), ib=CAT_ORDER.indexOf(b);
-    return (ia<0?99:ia)-(ib<0?99:ib);
-  });
-  const body = document.getElementById('goals-body'); body.innerHTML='';
-  cats.forEach(cat => {
-    const w = document.createElement('div'); w.className='cat';
-    const h = document.createElement('div'); h.className='cat-h';
-    h.innerHTML = cat+' <span class="avg">· '+groups[cat].length+'</span>'; w.appendChild(h);
-    const g = document.createElement('div'); g.className='grid';
-    groups[cat].forEach(s => {
-      const a = document.createElement('a'); a.className='goal'; a.href=s.url; a.target='_blank'; a.rel='noopener';
-      a.innerHTML = '<div class="gh"><div class="ct"><span class="lit"></span>'+(s.title||s.slug)+'</div><div class="meta"><span class="pill p2">P2 · queued</span><span class="pct">··%</span></div></div>'+
-        '<div class="cu">hitthe.link'+s.url+'</div>'+
-        '<div class="track"><div class="fill"></div></div>'+
-        '<div class="gap"><span class="pend">queued…</span></div>';
-      g.appendChild(a); GOALS.push({url:s.url, el:a, result:null});
-    });
-    w.appendChild(g); body.appendChild(w);
-  });
-  trackAll();
-  setInterval(trackAll, 45000);
-}).catch(e => {
-  document.getElementById('goals-body').innerHTML = '<div class="loading">sites.json unavailable — '+e+'</div>';
-});
-
-// ── STEER CONTROL ────────────────────────────────────────────────────────────
-const PILLS = ['P0','P1','P2','P3'];
-const SEED = [
-  {id:'nats',p:'P0',s:'mac',t:'Fix NATS omni-bridge blocker (create omni-nats-bridge.js)'},
-  {id:'p0life',p:'P0',s:'mac',t:'Audit P0 lifelines — what must survive if you step away (pre-hosp hardening)'},
-  {id:'vault',p:'P0',s:'xen',t:'Unify memory into xen-vault (full fidelity, instant, never watered down)'},
-  {id:'spog',p:'P0',s:'xen',t:'SPOG — every TUI/terminal event surfaces VERBOSE in chat, nothing hidden'},
-  {id:'distill',p:'P1',s:'xen',t:'grok-CLI memory distiller → _candidates/ (no auto-canonize)'},
-  {id:'macvault',p:'P1',s:'xen',t:'Point Mac-Xen at the unified synced vault'},
-  {id:'mesh',p:'P1',s:'mac',t:'Bridge Win↔Mac inbox state over NATS (symmetric omni-inbox)'},
-  {id:'beep',p:'P1',s:'mac',t:'Wire Beeper-beside + voice into XOS2 inbox panel'},
-  {id:'dash',p:'P1',s:'xen',t:'Single live status dashboard — every system green/red'},
-  {id:'ctx',p:'P1',s:'xen',t:'SessionStart CONTEXT.md deterministic inject + heartbeat'},
-  {id:'icons',p:'P2',s:'win',t:'Place the 10 grok chrome icons on hitthe.link'},
-  {id:'xos2',p:'P2',s:'mac',t:'Deploy XOS2 / XUI 3-panel live'},
-  {id:'harden',p:'P2',s:'xen',t:'Harden autonomous loops (EGBOps + comms + memory, lights-out)'},
-  {id:'egbship',p:'P2',s:'rev',t:'Ship queued EGBOps/Padre prospect sites (grok assets ready)'},
-  {id:'stylism',p:'P2',s:'win',t:'Confirm 700+ Pinterest stylism scrape → ready for training'},
-  {id:'exmig',p:'P2',s:'mac',t:'Confirm Exedus canonical-root migration (/Volumes/qi_)'},
-  {id:'skin',p:'P3',s:'mac',t:'Skin XUI to ledger / stylism aesthetic'},
-  {id:'xlrd',p:'P3',s:'xen',t:'xlrd.org apex → xlrd-org 3D-mascot landing (fix 525)'},
-  {id:'selgold',p:'P3',s:'win',t:'/sel gold — final pass (grok photoreal if wanted)'},
-  {id:'phound',p:'P3',s:'mac',t:'Phound — TCR submit + domain swap + API/programmatic efficiencies'},
-  {id:'egbbatch',p:'P3',s:'rev',t:'Run fresh EGBOps batch (EGBO local + XGBO remote) + Closer outreach'},
-];
-const KEY = 'xen-life-steer-v1';
-let T = load();
-function load() { try { const s=JSON.parse(localStorage.getItem(KEY)); if(s&&s.length) return s; } catch(e){} return JSON.parse(JSON.stringify(SEED)); }
-function save() { localStorage.setItem(KEY, JSON.stringify(T)); }
-function escH(s) { return s.replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
-const listEl = document.getElementById('steer-list');
-function render() {
-  listEl.innerHTML='';
-  T.forEach(task => {
-    const el = document.createElement('div'); el.className='task'; el.draggable=true; el.dataset.id=task.id;
-    const srcLbl = {mac:'MAC',win:'WIN',xen:'XEN',rev:'REV',qi:'QI'}[task.s]||'QI';
-    el.innerHTML=`<span class="grip">⋮⋮</span>
-      <span class="tpill ${task.p}" title="click to cycle priority">${task.p}</span>
-      <span class="txt" contenteditable spellcheck="false">${escH(task.t)}</span>
-      <span class="src s-${task.s}">${srcLbl}</span>
-      <span class="fire">▶ firing</span>
-      <span class="del" title="remove">×</span>`;
-    el.querySelector('.tpill').onclick = e => { e.stopPropagation(); task.p=PILLS[(PILLS.indexOf(task.p)+1)%PILLS.length]; save(); render(); };
-    el.querySelector('.del').onclick = e => { e.stopPropagation(); T=T.filter(x=>x.id!==task.id); save(); render(); };
-    const tx = el.querySelector('.txt');
-    tx.onblur = () => { task.t=tx.textContent.trim(); save(); };
-    el.addEventListener('dragstart', e => { el.classList.add('dragging'); e.dataTransfer.setData('text/plain',task.id); });
-    el.addEventListener('dragend', () => { el.classList.remove('dragging'); save(); });
-    listEl.appendChild(el);
-  });
-}
-listEl.addEventListener('dragover', e => {
-  e.preventDefault();
-  const dragging = listEl.querySelector('.dragging'); if(!dragging) return;
-  const after = getAfter(e.clientY);
-  if (after==null) listEl.appendChild(dragging); else listEl.insertBefore(dragging,after);
-});
-listEl.addEventListener('drop', e => {
-  e.preventDefault();
-  const ids = [...listEl.querySelectorAll('.task')].map(n=>n.dataset.id);
-  T.sort((a,b)=>ids.indexOf(a.id)-ids.indexOf(b.id)); save();
-});
-function getAfter(y) {
-  const els = [...listEl.querySelectorAll('.task:not(.dragging)')];
-  return els.reduce((c,ch) => {
-    const b=ch.getBoundingClientRect(); const o=y-b.top-b.height/2;
-    return (o<0&&o>c.offset)?{offset:o,element:ch}:c;
-  },{offset:-Infinity}).element||null;
-}
-document.getElementById('addall').onclick = () => {
-  const lines = document.getElementById('bulk').value.split('\n').map(l=>l.replace(/^\s*[\d.\-•*]+\s*/,'').trim()).filter(Boolean);
-  lines.forEach(l => T.unshift({id:'q'+Date.now()+Math.floor(Math.random()*999),p:'P0',s:'qi',t:l}));
-  document.getElementById('bulk').value=''; save(); render();
-};
-document.getElementById('send').onclick = () => {
-  let txt = 'XEN LIFE — '+T.length+' tasks, ALL PARALLEL / instant auto-manifest (pills = weight, not order):\n';
-  PILLS.forEach(p => { const g=T.filter(x=>x.p===p); if(g.length){txt+='\n['+p+']\n'; g.forEach(x=>txt+='  • '+x.t+'\n');} });
-  const out = document.getElementById('steer-out'), o = document.getElementById('steer-outtxt');
-  out.style.display='block'; o.textContent=txt; out.scrollIntoView({behavior:'smooth'});
-  navigator.clipboard?.writeText(txt);
-  try {
-    fetch('https://tui.xlrd.org/tui?q='+encodeURIComponent('[LIFE STEER] auto-inject — execute as PGS, all parallel:\n'+txt),{mode:'no-cors'});
-    o.textContent='⚡ auto-injected into Xen (tui.xlrd.org) — also copied as backup\n\n'+txt;
-  } catch(e) { o.textContent='(inject unreachable — copied to clipboard)\n\n'+txt; }
-};
-document.getElementById('reset').onclick = () => { if(confirm('Reset to the original gather?')){T=JSON.parse(JSON.stringify(SEED));save();render();} };
-const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
-function dictate(onText,btn) {
-  if(btn&&btn._rec){btn._rec.stop();btn._rec=null;btn.classList.remove('rec');return;}
-  if(!SR){alert('Dictation needs Chrome / Edge / Comet (Web Speech API + mic permission).');return;}
-  const r=new SR(); r.lang='en-US'; r.interimResults=true; r.continuous=true; let fin='';
-  r.onresult=e=>{let it='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)fin+=t+' ';else it+=t;}onText((fin+it).trim(),false);};
-  r.onend=()=>{if(btn){btn.classList.remove('rec');btn._rec=null;}onText(fin.trim(),true);};
-  r.onerror=()=>{if(btn){btn.classList.remove('rec');btn._rec=null;}};
-  if(btn){btn.classList.add('rec');btn._rec=r;}
-  r.start();
-}
-document.getElementById('dictate').onclick = e => {
-  const ta=document.getElementById('bulk'); const base=ta.value;
-  dictate((txt)=>{ta.value=(base?base+'\n':'')+txt;},e.currentTarget);
-};
-render();
-
-// ── SUGGESTED PROMPTS ────────────────────────────────────────────────────────
-const SUGG_KEY = 'xen-suggestions-v1';
-let SUGG = [];
-async function loadSuggestions() {
-  try {
-    const r = await fetch('https://api.xlrd.org/api/suggestions',{method:'GET',signal:AbortSignal.timeout(4000)});
-    if(r.ok){ SUGG=await r.json(); renderSugg(); return; }
-  } catch(e) {}
-  try { SUGG=JSON.parse(localStorage.getItem(SUGG_KEY)||'[]'); } catch(e){ SUGG=[]; }
-  renderSugg();
-}
-function renderSugg() {
-  const el = document.getElementById('sugg-list');
-  if(!el) return;
-  if(!SUGG.length){ el.innerHTML='<span style="color:var(--faint);font-size:11px">No suggestions yet — runs after each session turn</span>'; return; }
-  const all=[];
-  [...SUGG].reverse().forEach(entry=>{ (entry.suggestions||[]).forEach(s=>{if(s&&!all.includes(s))all.push(s);}); });
-  el.innerHTML=all.slice(0,20).map(s=>`<button class="sugg-btn" onclick="firesugg(this)" data-s="${escH(s)}">${escH(s)}</button>`).join('');
-}
-function firesugg(btn) {
-  const s=btn.dataset.s;
-  T.unshift({id:'s'+Date.now(),p:'P0',s:'qi',t:s}); save(); render();
-  try{ fetch('https://tui.xlrd.org/tui?q='+encodeURIComponent(s),{mode:'no-cors'}); }catch(e){}
-  btn.style.opacity='.4';
-}
-loadSuggestions();
-setInterval(loadSuggestions, 30000);
-
-document.getElementById('ts').textContent = new Date().toISOString().slice(0,10);
-
-// ── QUATERNITY / XQL control plane (unified hub, 2026-06-11) ──
-async function loadXql(){
-  try{
-    const r = await fetch('https://xen.xlrd.org/api/xql?_='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(6000)});
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const d = await r.json();
-    const roles = d.panes||{}; const inv={};
-    Object.entries(roles).forEach(function(e){inv[e[1]]=e[0];});
-    const members=[
-      ['genesis', inv.genesis||'', 'voice · heard via vvsvei'],
-      ['exodus', inv.exodus||'', 'hands · Opus ultracode'],
-      ['leviticus', inv.leviticus||'', 'quick · formatter'],
-      ['xql', 'process', 'control plane · no pane']
-    ];
-    document.getElementById('xql-members').innerHTML = members.map(function(m){
-      var name=m[0], pid=m[1], sub=m[2];
-      var ok = !!pid;
-      var show = pid==='process' ? 'live' : (pid||'—');
-      return '<div style="border:1px solid var(--line,rgba(255,255,255,.12));border-radius:12px;padding:12px;background:rgba(255,255,255,.03)">'
-        +'<div style="font-weight:700">'+name+'</div>'
-        +'<div style="font-size:18px;color:'+(ok?'#7fe3a3':'#ff6b6b')+'">'+show+'</div>'
-        +'<div style="font-size:10px;color:var(--faint)">'+sub+'</div></div>';
-    }).join('');
-    var feed=(d.feed||[]).slice(-8).reverse();
-    document.getElementById('xql-feed').innerHTML = feed.length ? feed.map(function(f){
-      var n=(f.ok!=null)? f.ok+'/3' : (Array.isArray(f.fanned)? f.fanned.length+'/3' : '·');
-      var lbl=String(f.label||'').replace(/</g,'&lt;');
-      var body=String(f.body||'').slice(0,70).replace(/</g,'&lt;');
-      return '<div>['+n+'] <b>'+lbl+'</b> '+body+'</div>';
-    }).join('') : '<span>no recent input</span>';
-    var u=document.getElementById('xql-updated'); if(u) u.textContent=' · live '+new Date().toLocaleTimeString();
-  }catch(e){
-    var el=document.getElementById('xql-feed'); if(el) el.innerHTML='<span style="color:#ff6b6b">control plane offline ('+e.message+')</span>';
-  }
-}
-loadXql(); setInterval(loadXql, 5000);
-
-// ── MASTER SCOPE TREE (audit + verify · mirrors M4 sync_/ layout) ──────────────
-const SCOPE_KEY='xen-life-scopes-v1';
-const TREE={name:'sync_',kind:'root',children:[
-  {name:'brain_',kind:'dir',children:[
-    {name:'projects/',kind:'dir',note:'book of business · by domain',children:[
-      {name:'selfexec.com',kind:'scope',tag:'Self Exec · clients',items:[
-        {id:'dcz-site',t:'Diamond Cutz — scroll-scrub rose-gold site LIVE',done:true},
-        {id:'dcz-dep',t:'DCZ — $111 deposit paid (Cash App ref #D-4E53XXOX8)',done:true},
-        {id:'dcz-email',t:'DCZ — brand email admin@dmndctz.com live',done:true},
-        {id:'dcz-dom',t:'DCZ — both domains registered (Spaceship)',done:true},
-        {id:'dcz-media',t:'DCZ — collect Andre media (streaming links, photos, flyers, tour dates)'},
-        {id:'dcz-social',t:'DCZ — social account setup + username lock-ins (East does it; client hands-off)'},
-        {id:'dcz-socialdash',t:'DCZ — build interactive account-setup dashboard (ref egbo layout)'},
-        {id:'dcz-bal',t:'DCZ — collect balance $111 on completion'},
-        {id:'dcz-domconnect',t:'DCZ — connect custom domain (FINAL step, after site complete + paid)'},
-      ]},
-      {name:'executiveleverage.com',kind:'scope',tag:'L7S · Luckie',items:[
-        {id:'l7s-checklist',t:'L7S — intake checklist live (/l7s/checklist)',done:true},
-        {id:'l7s-icp',t:'L7S — answer ICP / SOW / discovery questions'},
-        {id:'l7s-pain',t:'L7S — 5 pain points + offer discovery'},
-        {id:'l7s-leads',t:'L7S — lead consolidation'},
-        {id:'l7s-batman',t:'L7S — Project Batman (~$325M) — qi desk, NOT autonomous'},
-      ]},
-      {name:'xlrdtech.com',kind:'scope',tag:'Course · Tools',items:[
-        {id:'composio-dash',t:'Composio — dashboard of the 75 listed connections (ref egbo layout)'},
-        {id:'composio-mcp',t:'Composio — unified MCP master toolkit; power through / batch the OAuths'},
-        {id:'nblm-share',t:'NotebookLM — share all Google Pro notebooks to xlrdtech (siloed per-account → share/duplicate, no cross-account API)'},
-        {id:'course',t:'xlrdtech course platform (NotebookLM-fed, own the stack)'},
-      ]},
-      {name:'xlrd.org',kind:'scope',tag:'Padre Ops',items:[
-        {id:'padre',t:'Padre lead factory — ongoing'},
-      ]},
-      {name:'(domain shells)',kind:'note',t:'eastallen.com · executiveleverage.org · selscorp.com · hitthe.link'},
-    ]},
-    {name:'ventures/',kind:'dir',children:[
-      {name:'trackingtogether',kind:'scope',tag:'EliOS · Anthony',items:[
-        {id:'tt-menu',t:'Anthony — $111 menu sent',done:true},
-        {id:'tt-leadgather',t:'URGENT — gather ALL Anthony leads + Google-Sheets links (Beeper/iMessage/email, mixed filetypes) into one folder brain_/ventures/trackingtogether, then autoship the map'},
-        {id:'tt-accounts',t:'EliOS — account provisioning per state (East does it; client hands-off)'},
-        {id:'tt-color',t:'EliOS — per-account color schemes'},
-        {id:'tt-cal',t:'EliOS — lead → Google Calendar auto'},
-        {id:'tt-export',t:'EliOS — per-account export scoping'},
-        {id:'tt-callback',t:'Anthony — callback owed (qi)'},
-      ]},
-    ]},
-    {name:'root/memory',kind:'scope',tag:'Canon · distill',items:[
-      {id:'distill',t:'Distill ALL sessions across both machines + every Claude Max login + M4/sync_/brain_ + memories → scopes & action items into THIS life UI (Windows + M4 reachable; partial — re-run as new sessions land)'},
-      {id:'filetree-ui',t:'This tree mirrors the M4 sync_/ layout in-UI',done:true},
-      {id:'filetree-fs',t:'Organize the actual scope files into filetrees mirroring M4 subfolders verbatim (filesystem, not just UI)'},
-      {id:'masterlist',t:'Master checklist merged into hitthe.link/life',done:true},
-    ]},
-    {name:'agents/',kind:'note',t:'qi · xen (identity)'},
-    {name:'env_/',kind:'note',t:'creds — never served publicly'},
-  ]},
-  {name:'exedus/dev_/',kind:'dir',note:'code · ~20 repos',children:[
-    {name:'xen (VoiceOS)',kind:'scope',tag:'Voice',items:[
-      {id:'voice-stable',t:'VoiceOS stability — voice not truly stable yet'},
-      {id:'one-brain',t:'One-voice-one-brain — mirror the single-session auto-router into the M4 harness once voice is stable'},
-    ]},
-    {name:'scope-watch',kind:'scope',tag:'24/7 HOTL',items:[
-      {id:'sw-loop',t:'Durable watcher = E:\\scope-watch\\loop.ps1, Startup-folder shortcut Xen-ScopeWatch.lnk (interactive console loop), sweeps every 10 min',done:true},
-      {id:'sw-otlp',t:'Sweep emits to omni.event OTLP (super-logs + chat mirror)',done:true},
-      {id:'sw-s4u',t:'VERIFIED: Task Scheduler / S4U / ConPTY REFUTED — claude.exe hangs with no console; do NOT migrate watcher back to a scheduled task',done:true},
-      {id:'sw-loggedin',t:'GAP — runs only while qi is logged in (always-on box). True survive-full-logoff needs an API rewrite (no claude CLI in session 0)'},
-      {id:'sw-mirror',t:'Mirror the router loop logic into the M4 harness once VoiceOS is stable (prompt + playbooks are portable)'},
-      {id:'sw-teach',t:'S4U + headless-claude teaching captured (lesson: claude needs a console; scheduler/S4U/ConPTY all hang) — see memory scope-watch-claude-needs-console',done:true},
-    ]},
-    {name:'.deploy/hitthe.link',kind:'scope',tag:'Web',items:[
-      {id:'life-merge',t:'Master Scope Tree merged into /life',done:true},
-    ]},
-  ]},
-  {name:'inbox_/',kind:'note',t:'staging only — Anthony lead files land here, then promote → ventures/trackingtogether'},
-  {name:'notes_/',kind:'note',t:'notes'},
-  {name:'personal/',kind:'dir',note:'qi · life context — NOT autonomous',children:[
-    {name:'home',kind:'scope',tag:'Today · context',items:[
-      {id:'pers-company',t:'Company arriving — context only, do not action'},
-      {id:'pers-clean',t:'Grooming / cleaning before company — context only, do not action'},
-      {id:'pers-caretaker',t:'Elderly caretaker call OVERDUE ~2 days — qi to make this call (not autonomous)'},
-    ]},
-  ]},
-]};
-let SCDONE={}; try{ SCDONE=JSON.parse(localStorage.getItem(SCOPE_KEY))||{}; }catch(e){ SCDONE={}; }
-function saveSC(){ localStorage.setItem(SCOPE_KEY, JSON.stringify(SCDONE)); }
-(function seedDefaults(){ let ch=false; (function w(n){ (n.items||[]).forEach(it=>{ if(it.done && !(it.id in SCDONE)){ SCDONE[it.id]=true; ch=true; } }); (n.children||[]).forEach(w); })(TREE); if(ch) saveSC(); })();
-function scEsc(s){ return String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
-function scItems(n,acc){ acc=acc||[]; (n.items||[]).forEach(i=>acc.push(i)); (n.children||[]).forEach(c=>scItems(c,acc)); return acc; }
-function scStats(n){ const it=scItems(n); return {done:it.filter(i=>SCDONE[i.id]).length,total:it.length}; }
-function scRenderItems(items){ return '<div class="titems">'+items.map(it=>{ const d=!!SCDONE[it.id]; return '<label class="titem'+(d?' done':'')+'" data-id="'+it.id+'"><input type="checkbox" '+(d?'checked':'')+'><span class="lab">'+scEsc(it.t)+'</span></label>'; }).join('')+'</div>'; }
-function scRenderScope(n){ const s=scStats(n), p=s.total?Math.round(s.done/s.total*100):0; return '<div class="tscope"><div class="tscope-h"><span class="nm">'+scEsc(n.name)+'</span>'+(n.tag?'<span class="tag">'+scEsc(n.tag)+'</span>':'')+'<span class="bar"><i style="width:'+p+'%"></i></span><span class="tprog">'+s.done+'/'+s.total+'</span></div>'+scRenderItems(n.items||[])+'</div>'; }
-function scRenderNode(n){ if(n.kind==='scope') return scRenderScope(n); if(n.kind==='note') return '<div class="tleaf-note">'+scEsc(n.name)+(n.t?' — '+scEsc(n.t):'')+'</div>'; const s=scStats(n); return '<div class="tnode"><div class="tdir"><span class="tw">&#9662;</span>'+scEsc(n.name)+(n.note?'<span class="tnote">'+scEsc(n.note)+'</span>':'')+'<span class="tprog">'+s.done+'/'+s.total+'</span></div><div class="tchildren">'+(n.children||[]).map(scRenderNode).join('')+'</div></div>'; }
-function scProg(){ const s=scStats(TREE), p=s.total?Math.round(s.done/s.total*100):0; const el=document.getElementById('scope-prog'); if(el) el.textContent=s.done+' / '+s.total+' done · '+p+'%'; }
-function scRender(){
-  const root=document.getElementById('scopes-tree'); if(!root) return;
-  root.innerHTML=(TREE.children||[]).map(scRenderNode).join('');
-  root.querySelectorAll('.titem input').forEach(cb=>{ cb.onchange=()=>{ const id=cb.closest('.titem').dataset.id; SCDONE[id]=cb.checked; saveSC(); scRender(); }; });
-  root.querySelectorAll('.tdir').forEach(d=>{ d.onclick=()=>{ d.classList.toggle('collapsed'); const c=d.nextElementSibling; if(c&&c.classList.contains('tchildren')) c.classList.toggle('hidden'); }; });
-  scProg();
-}
-scRender();
-const scE=document.getElementById('sc-expand'); if(scE) scE.onclick=()=>{ document.querySelectorAll('#scopes-tree .tchildren').forEach(c=>c.classList.remove('hidden')); document.querySelectorAll('#scopes-tree .tdir').forEach(d=>d.classList.remove('collapsed')); };
-const scC=document.getElementById('sc-collapse'); if(scC) scC.onclick=()=>{ document.querySelectorAll('#scopes-tree > .tnode > .tchildren').forEach(c=>c.classList.add('hidden')); document.querySelectorAll('#scopes-tree > .tnode > .tdir').forEach(d=>d.classList.add('collapsed')); };
-const scK=document.getElementById('sc-compile'); if(scK) scK.onclick=()=>{
-  const open=scItems(TREE).filter(i=>!SCDONE[i.id]);
-  let txt='XEN LIFE — MASTER SCOPE · '+open.length+' open items:\n'; open.forEach(i=>txt+='  • '+i.t+'\n');
-  const out=document.getElementById('scopes-out'), o=document.getElementById('scopes-outtxt');
-  out.style.display='block'; o.textContent=txt; out.scrollIntoView({behavior:'smooth'});
-  navigator.clipboard?.writeText(txt);
-  try{ fetch('https://tui.xlrd.org/tui?q='+encodeURIComponent('[LIFE SCOPES] open items — execute as PGS, all parallel:\n'+txt),{mode:'no-cors'}); o.textContent='⚡ fired to Xen (tui.xlrd.org) + copied\n\n'+txt; }catch(e){ o.textContent='(inject unreachable — copied to clipboard)\n\n'+txt; }
-};
-</script>
-</body>
-</html>
+<div class="cols">
+  <div class="col"><h2>✓ Done / Shipped (14)</h2><div class="card" style="border-left:3px solid #e0b0ff">
+    <div class="lbl">DCZ collect Andre media</div>
+    <div class="sub">diamond-cutz · 8,967 chars</div>
+    <div class="badge" style="background:#e0b0ff22;color:#e0b0ff">✓ SHIPPED</div>
+    </div><div class="card" style="border-left:3px solid #e0b0ff">
+    <div class="lbl">DCZ account-setup dashboard (ref egbo)</div>
+    <div class="sub">diamond-cutz · 21,530 chars</div>
+    <div class="badge" style="background:#e0b0ff22;color:#e0b0ff">✓ SHIPPED</div>
+    </div><div class="card" style="border-left:3px solid #ffd166">
+    <div class="lbl">L7S ICP/SOW/discovery answers</div>
+    <div class="sub">l7s · 17,733 chars</div>
+    <div class="badge" style="background:#ffd16622;color:#ffd166">✓ SHIPPED</div>
+    </div><div class="card" style="border-left:3px solid #ffd166">
+    <div class="lbl">L7S 5 pain points + offer discovery</div>
+    <div class="sub">l7s · 9,514 chars</div>
+    <div class="badge" style="background:#ffd16622;color:#ffd166">✓ SHIPPED</div>
+    </div><div class="card" style="border-left:3px solid #ffd166">
+    <div class="lbl">L7S lead consolidation plan</div>
+    <div class="sub">l7s · 13,175 chars</div>
+    <div class="badge" style="background:#ffd16622;color:#ffd166">✓ SHIPPED</div>
+    </div><div class="card" style="border-left:3px solid #06d6a0">
+    <div class="lbl">Composio 75-connection dashboard (ref egbo)</div>
+    <div class="sub">composio · 19,382 chars</div>
+    <div class="badge" style="background:#06d6a022;color:#06d6a0">✓ SHIPPED</div>
+    </div><div class="card" style="border-left:3px solid #4cc9f0">
+    <div class="lbl">xlrdtech course platform spec</div>
+    <div class="sub">xlrdtech · 16,815 chars</div>
+    <div class="badge" style="background:#4cc9f022;color:#4cc9f0">✓ SHIPPED</div>
+    </div><div class="card" style="border-left:3px solid #f4a261">
+    <div class="lbl">Padre lead factory status + next</div>
+    <div class="sub">padre · 6,288 chars</div>
+    <div class="badge" style="background:#f4a26122;color:#f4a261">✓ SHIPPED</div>
+    </div><div class="card" style="border-left:3px solid #ff6b6b">
+    <div class="lbl">Anthony leads consolidation map (URGENT)</div>
+    <div class="sub">trackingtogether · 20,039 chars</div>
+    <div class="badge" style="background:#ff6b6b22;color:#ff6b6b">✓ SHIPPED</div>
+    </div><div class="card" style="border-left:3px solid #a0c4ff">
+    <div class="lbl">EliOS per-account color schemes</div>
+    <div class="sub">eliops · 10,560 chars</div>
+    <div class="badge" style="background:#a0c4ff22;color:#a0c4ff">✓ SHIPPED</div>
+    </div><div class="card" style="border-left:3px solid #a0c4ff">
+    <div class="lbl">EliOS lead -&gt; Google Calendar auto</div>
+    <div class="sub">eliops · 13,583 chars</div>
+    <div class="badge" style="background:#a0c4ff22;color:#a0c4ff">✓ SHIPPED</div>
+    </div><div class="card" style="border-left:3px solid #a0c4ff">
+    <div class="lbl">EliOS per-account export scoping</div>
+    <div class="sub">eliops · 11,478 chars</div>
+    <div class="badge" style="background:#a0c4ff22;color:#a0c4ff">✓ SHIPPED</div>
+    </div><div class="card" style="border-left:3px solid #bdb2ff">
+    <div class="lbl">VoiceOS stability assessment + path</div>
+    <div class="sub">voiceos · 14,018 chars</div>
+    <div class="badge" style="background:#bdb2ff22;color:#bdb2ff">✓ SHIPPED</div>
+    </div><div class="card" style="border-left:3px solid #bdb2ff">
+    <div class="lbl">One-voice-one-brain router mirror plan</div>
+    <div class="sub">voiceos · 15,900 chars</div>
+    <div class="badge" style="background:#bdb2ff22;color:#bdb2ff">✓ SHIPPED</div>
+    </div></div>
+  <div class="col"><h2>↻ In-Progress (1)</h2><div class="card" style="border-left:3px solid #ff9f1c">
+    <div class="lbl">Composio unified MCP master toolkit plan</div>
+    <div class="sub">REJECT. The artifact's central, load-bearing claim — repeated in its preamble "ground truth", TL;DR, and Section 2 "Live connection state (verified 2026-06-17)" — is that the xlrdtech workspace has "50 connected accounts, ALL EXPIRED" (zero ACTIVE), with a specific 50-slug enumeration and a derived "~15-20 scriptable / ~30+ interactive" auth split. I verified this against the live Composio API and it is FALSE/fabricated. (1) COMPOSIO_MANAGE_CONNECTIONS for gmail/slack/github/stripe/notion/supabase/firecrawl/perplexityai all returned status="initiated" with fresh redirect_urls and was_reinitiated=false — i.e. NO pre-existing connection (expired connections would reinitiate, not freshly initiate). (2) COMPOSIO_SEARCH_TOOLS returned toolkit_connection_statuses with has_active_connection=false and explicit messages "No Active connection for toolkit=gmail/firecrawl ... you MUST create a connection". There is no evidence of 50 connections in any state. The numbers presented as "verified live API state, not assumed" are exactly the fabricated-data / fake-verification failure mode the task says to reject. While the architecture section (Tool Router as single MCP surface, SELmcp two-layer hub, browser-automation boundary) is plausible and canon-aligned, the document is titled around and structurally built on a false "verified" connection-state premise, and its toolkit counts/auth split inherit that falsity. Not ship-ready.</div>
+    <div class="badge" style="background:#ff9f1c22;color:#ff9f1c">↻ IN-PROGRESS</div>
+    </div></div>
+  <div class="col"><h2>⛔ Blocked on qi (6)</h2><div class="card" style="border-left:3px solid #ef476f">
+    <div class="lbl">Composio batch OAuths</div>
+    <div class="sub">interactive OAuth needs qi at the browser; prep the connect-list + dashboard, qi clicks auth</div>
+    <div class="badge" style="background:#ef476f22;color:#ef476f">⛔ BLOCKED-ON-QI</div>
+    </div><div class="card" style="border-left:3px solid #ef476f">
+    <div class="lbl">NotebookLM share Google Pro notebooks to xlrdtech</div>
+    <div class="sub">siloed per-account, no cross-account API; qi duplicates/shares manually — prep the inventory + steps</div>
+    <div class="badge" style="background:#ef476f22;color:#ef476f">⛔ BLOCKED-ON-QI</div>
+    </div><div class="card" style="border-left:3px solid #ef476f">
+    <div class="lbl">DCZ collect $111 balance</div>
+    <div class="sub">on completion + client payment</div>
+    <div class="badge" style="background:#ef476f22;color:#ef476f">⛔ BLOCKED-ON-QI</div>
+    </div><div class="card" style="border-left:3px solid #ef476f">
+    <div class="lbl">DCZ connect custom domain</div>
+    <div class="sub">FINAL step after site complete + paid</div>
+    <div class="badge" style="background:#ef476f22;color:#ef476f">⛔ BLOCKED-ON-QI</div>
+    </div><div class="card" style="border-left:3px solid #ef476f">
+    <div class="lbl">DCZ social account setup + username lock-ins</div>
+    <div class="sub">East does it; client hands-off — prep the username availability map</div>
+    <div class="badge" style="background:#ef476f22;color:#ef476f">⛔ BLOCKED-ON-QI</div>
+    </div><div class="card" style="border-left:3px solid #ef476f">
+    <div class="lbl">EliOS account provisioning per state</div>
+    <div class="sub">East does it; client hands-off — prep the per-state checklist</div>
+    <div class="badge" style="background:#ef476f22;color:#ef476f">⛔ BLOCKED-ON-QI</div>
+    </div></div>
+  <div class="col"><h2>👤 qi-Owned — context only (5)</h2><div class="card" style="border-left:3px solid #8d99ae">
+    <div class="lbl">L7S Project Batman (~$325M)</div>
+    <div class="sub">qi desk, NOT autonomous</div>
+    <div class="badge" style="background:#8d99ae22;color:#8d99ae">👤 QI-OWNED</div>
+    </div><div class="card" style="border-left:3px solid #8d99ae">
+    <div class="lbl">Anthony callback owed</div>
+    <div class="sub">qi to call</div>
+    <div class="badge" style="background:#8d99ae22;color:#8d99ae">👤 QI-OWNED</div>
+    </div><div class="card" style="border-left:3px solid #8d99ae">
+    <div class="lbl">Company arriving</div>
+    <div class="sub">context only, do not action</div>
+    <div class="badge" style="background:#8d99ae22;color:#8d99ae">👤 QI-OWNED</div>
+    </div><div class="card" style="border-left:3px solid #8d99ae">
+    <div class="lbl">Grooming/cleaning before company</div>
+    <div class="sub">context only, do not action</div>
+    <div class="badge" style="background:#8d99ae22;color:#8d99ae">👤 QI-OWNED</div>
+    </div><div class="card" style="border-left:3px solid #8d99ae">
+    <div class="lbl">Elderly caretaker call OVERDUE ~2 days</div>
+    <div class="sub">qi to make this call, not autonomous</div>
+    <div class="badge" style="background:#8d99ae22;color:#8d99ae">👤 QI-OWNED</div>
+    </div></div>
+</div>
+<div class="foot">Each Done item = a real artifact written to brain_/ventures/&lt;scope&gt;. Blocked items have prep done; the named blocker is what only qi can clear. qi-Owned items are surfaced, never auto-actioned. ⚠ Elderly caretaker call flagged OVERDUE.</div>
+</body></html>

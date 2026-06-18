@@ -1,371 +1,410 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Composio Connections | XLRD Unified MCP Surface</title>
-<meta name="description" content="Live Composio connection status for the xlrdtech workspace and the unified MCP master-toolkit assessment. East / Self Exec / XLRD." />
-<meta name="robots" content="noindex" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Composio Toolkit Roster — xlrdtech Connect Console</title>
 <style>
   :root{
-    --bg:#0a0b0d; --bg2:#101216; --card:#14161b; --card2:#171a20;
-    --line:#23272f; --ink:#f3f0e8; --mut:#9aa0ab; --mut2:#6e7480;
-    --gold:#d9b35c; --gold2:#f1d999; --goldline:rgba(217,179,92,.35);
-    --green:#46c98b; --amber:#e2b24a; --red:#e2664a; --blue:#5aa6e6; --grey:#7c828d;
-    --rad:16px; --maxw:1180px;
+    --bg:#0a0c10; --panel:#11151c; --panel-2:#161b24; --line:#222a36;
+    --ink:#e8edf5; --ink-dim:#9aa6b8; --ink-faint:#5e6b7e;
+    --gold:#c8a04a; --gold-soft:#e6c87a;
+    --ok:#34d399; --ok-bg:rgba(52,211,153,.12); --ok-line:rgba(52,211,153,.4);
+    --warn:#fbbf24; --warn-bg:rgba(251,191,36,.12); --warn-line:rgba(251,191,36,.4);
+    --bad:#f87171; --bad-bg:rgba(248,113,113,.12); --bad-line:rgba(248,113,113,.4);
+    --pend:#7c8aa0; --pend-bg:rgba(124,138,160,.12); --pend-line:rgba(124,138,160,.35);
+    --radius:14px; --shadow:0 1px 0 rgba(255,255,255,.03), 0 8px 30px rgba(0,0,0,.45);
+    --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,'SF Mono','JetBrains Mono',Menlo,Consolas,monospace;
   }
-  *{box-sizing:border-box}
-  html,body{margin:0;padding:0}
-  body{
-    background:
-      radial-gradient(900px 500px at 85% -10%, rgba(217,179,92,.10), transparent 60%),
-      radial-gradient(700px 400px at -5% 0%, rgba(90,166,230,.06), transparent 55%),
-      var(--bg);
-    color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
-    line-height:1.5; -webkit-font-smoothing:antialiased;
-  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased}
+  body{padding:0 0 80px;line-height:1.5}
   a{color:inherit;text-decoration:none}
-  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 20px}
 
-  /* Header */
-  header{padding:54px 0 18px}
-  .eyebrow{
-    font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);
-    font-weight:600;margin:0 0 14px
+  /* ---------- Header ---------- */
+  header.topbar{
+    position:sticky;top:0;z-index:50;
+    background:linear-gradient(180deg,rgba(10,12,16,.96),rgba(10,12,16,.88));
+    backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line);
+    padding:22px clamp(16px,4vw,48px) 18px;
   }
-  h1{
-    font-size:clamp(28px,4.5vw,44px);line-height:1.08;margin:0 0 12px;font-weight:700;
-    background:linear-gradient(92deg,var(--gold2),var(--gold) 55%,#bd9647);
-    -webkit-background-clip:text;background-clip:text;color:transparent
+  .brandrow{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .logo{
+    width:38px;height:38px;border-radius:10px;flex:0 0 auto;
+    background:radial-gradient(120% 120% at 30% 20%,var(--gold-soft),var(--gold) 55%,#7a5e1f);
+    display:grid;place-items:center;font-weight:800;color:#1a1305;font-size:18px;
+    box-shadow:0 4px 18px rgba(200,160,74,.35);
   }
-  .sub{color:var(--mut);max-width:760px;font-size:15.5px;margin:0}
-  .meta{margin-top:14px;font-size:13px;color:var(--mut2)}
-  .meta b{color:var(--mut)}
+  .brandtxt h1{font-size:clamp(18px,2.4vw,24px);font-weight:700;letter-spacing:-.01em}
+  .brandtxt h1 .accent{color:var(--gold-soft)}
+  .brandtxt p{color:var(--ink-dim);font-size:13px;margin-top:2px}
+  .wsmeta{
+    margin-left:auto;display:flex;gap:18px;flex-wrap:wrap;align-items:center;
+    font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);
+  }
+  .wsmeta b{color:var(--ink-dim);font-weight:600}
 
-  /* Summary cards */
-  .summary{
-    display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:30px 0 8px
+  /* ---------- Stat strip ---------- */
+  .stats{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:12px;padding:20px clamp(16px,4vw,48px) 4px;
   }
-  @media(max-width:760px){.summary{grid-template-columns:repeat(2,1fr)}}
   .stat{
-    background:linear-gradient(180deg,var(--card2),var(--card));
-    border:1px solid var(--line);border-radius:var(--rad);padding:18px 18px 16px;position:relative;overflow:hidden
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px 18px;position:relative;overflow:hidden;
   }
-  .stat .n{font-size:34px;font-weight:750;line-height:1;letter-spacing:-.01em}
-  .stat .l{font-size:12px;color:var(--mut);margin-top:8px;letter-spacing:.04em;text-transform:uppercase}
-  .stat .bar{height:4px;border-radius:4px;margin-top:13px;background:var(--line);overflow:hidden}
-  .stat .bar i{display:block;height:100%;border-radius:4px}
-  .stat.active .n{color:var(--green)} .stat.active .bar i{background:var(--green)}
-  .stat.ready .n{color:var(--gold2)} .stat.ready .bar i{background:var(--gold)}
-  .stat.manual .n{color:var(--amber)} .stat.manual .bar i{background:var(--amber)}
-  .stat.total .n{color:var(--ink)} .stat.total .bar i{background:linear-gradient(90deg,var(--gold),var(--blue))}
+  .stat .num{font-size:28px;font-weight:800;letter-spacing:-.02em;line-height:1}
+  .stat .lbl{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-dim);margin-top:8px}
+  .stat .bar{position:absolute;left:0;top:0;bottom:0;width:4px}
+  .stat.total .bar{background:var(--gold)} .stat.total .num{color:var(--gold-soft)}
+  .stat.ok .bar{background:var(--ok)} .stat.ok .num{color:var(--ok)}
+  .stat.bad .bar{background:var(--bad)} .stat.bad .num{color:var(--bad)}
+  .stat.pend .bar{background:var(--pend)} .stat.pend .num{color:var(--ink)}
 
-  /* Verdict banner */
-  .verdict{
-    margin:26px 0 6px;background:linear-gradient(180deg,rgba(217,179,92,.06),rgba(217,179,92,.02));
-    border:1px solid var(--goldline);border-radius:var(--rad);padding:20px 22px
+  /* ---------- Priority banner ---------- */
+  .priority{
+    margin:18px clamp(16px,4vw,48px) 4px;
+    background:linear-gradient(90deg,rgba(248,113,113,.10),rgba(248,113,113,.02));
+    border:1px solid var(--bad-line);border-radius:var(--radius);
+    padding:16px 20px;display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;
   }
-  .verdict h2{margin:0 0 8px;font-size:16px;color:var(--gold2);letter-spacing:.02em}
-  .verdict p{margin:0 0 10px;font-size:14px;color:var(--mut)}
-  .verdict p:last-child{margin-bottom:0}
-  .verdict b{color:var(--ink)}
-  .verdict .path{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-  .verdict .path span{
-    font-size:12px;border:1px solid var(--line);background:var(--card);border-radius:999px;
-    padding:5px 11px;color:var(--mut)
+  .priority .picon{font-size:18px;line-height:1.2}
+  .priority .ptxt{flex:1;min-width:240px}
+  .priority .ptxt h3{font-size:14px;color:var(--bad);font-weight:700;letter-spacing:.01em}
+  .priority .ptxt p{font-size:13px;color:var(--ink-dim);margin-top:4px}
+  .priority .ptxt code{font-family:var(--mono);font-size:12px;color:var(--gold-soft)}
+  .priority .pchips{display:flex;gap:8px;flex-wrap:wrap}
+  .pchip{
+    font-family:var(--mono);font-size:11.5px;padding:5px 10px;border-radius:8px;
+    background:var(--bad-bg);border:1px solid var(--bad-line);color:var(--bad);font-weight:600;
   }
-  .verdict .path span b{color:var(--gold2);font-weight:600}
 
-  /* Controls */
-  .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:30px 0 16px}
-  .controls .h{font-size:13px;color:var(--mut2);margin-right:4px;letter-spacing:.04em;text-transform:uppercase}
-  .filter{
-    cursor:pointer;font-size:12.5px;border:1px solid var(--line);background:var(--card);
-    color:var(--mut);border-radius:999px;padding:7px 13px;transition:.15s;user-select:none
+  /* ---------- Controls ---------- */
+  .controls{
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+    padding:20px clamp(16px,4vw,48px) 6px;
   }
-  .filter:hover{border-color:var(--goldline);color:var(--ink)}
-  .filter.on{background:var(--gold);border-color:var(--gold);color:#191205;font-weight:600}
+  .search{
+    flex:1;min-width:200px;display:flex;align-items:center;gap:8px;
+    background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:0 12px;
+  }
+  .search input{
+    flex:1;background:none;border:none;outline:none;color:var(--ink);
+    font-family:var(--font);font-size:14px;padding:11px 0;
+  }
+  .search .ico{color:var(--ink-faint);font-size:14px}
+  .filterbtns{display:flex;gap:6px;flex-wrap:wrap}
+  .fbtn{
+    cursor:pointer;user-select:none;font-size:12.5px;font-weight:600;
+    padding:9px 14px;border-radius:9px;border:1px solid var(--line);
+    background:var(--panel-2);color:var(--ink-dim);transition:.15s;
+  }
+  .fbtn:hover{border-color:#33405285;color:var(--ink)}
+  .fbtn.active{background:var(--gold);color:#1a1305;border-color:var(--gold)}
+  .fbtn .c{opacity:.7;font-weight:700;margin-left:4px}
 
-  /* Grid — flex-center wrap so a lone trailing card centers (no orphan) */
+  /* ---------- Groups & grid ---------- */
+  main{padding:0 clamp(16px,4vw,48px)}
+  .group{margin-top:30px}
+  .group-h{display:flex;align-items:baseline;gap:12px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+  .group-h h2{font-size:15px;font-weight:700;letter-spacing:.02em;color:var(--ink)}
+  .group-h .gicon{font-size:16px}
+  .group-h .gcount{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);margin-left:auto}
+
   .grid{
-    display:flex;flex-wrap:wrap;gap:14px;margin:6px 0 10px;justify-content:center
+    display:grid;gap:14px;
+    grid-template-columns:repeat(auto-fill,minmax(248px,1fr));
   }
   .card{
-    flex:1 1 248px;max-width:282px;
-    background:linear-gradient(180deg,var(--card2),var(--card));
-    border:1px solid var(--line);border-radius:var(--rad);padding:16px 16px 14px;
-    display:flex;flex-direction:column;min-height:150px;position:relative;transition:.16s
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px 16px 14px;display:flex;flex-direction:column;gap:12px;
+    box-shadow:var(--shadow);transition:.16s;position:relative;overflow:hidden;
   }
-  @media(max-width:540px){.card{max-width:none}}
-  .card:hover{border-color:var(--goldline);transform:translateY(-2px)}
-  .card .top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-  .card .name{font-weight:650;font-size:15.5px;letter-spacing:-.01em}
-  .card .slug{font-size:11.5px;color:var(--mut2);margin-top:2px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-  .card .cat{font-size:11px;color:var(--mut);margin-top:11px;letter-spacing:.05em;text-transform:uppercase}
+  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--line);opacity:.0;transition:.16s}
+  .card:hover{transform:translateY(-2px);border-color:#33405290}
+  .card:hover::before{opacity:1}
+  .card[data-status="connected"]::before{background:var(--ok)}
+  .card[data-status="broken"]::before{background:var(--bad)}
+  .card[data-status="pending"]::before{background:var(--pend)}
 
-  .pill{
-    flex:0 0 auto;font-size:11px;font-weight:600;border-radius:999px;padding:4px 9px;
-    border:1px solid transparent;white-space:nowrap;display:inline-flex;align-items:center;gap:6px
+  .card .top{display:flex;align-items:center;gap:11px}
+  .avatar{
+    width:34px;height:34px;border-radius:9px;flex:0 0 auto;display:grid;place-items:center;
+    font-weight:800;font-size:14px;color:#0c0e12;letter-spacing:-.02em;
   }
-  .pill::before{content:"";width:7px;height:7px;border-radius:50%}
-  .pill.active{background:rgba(70,201,139,.12);color:var(--green);border-color:rgba(70,201,139,.3)}
-  .pill.active::before{background:var(--green)}
-  .pill.ready{background:rgba(217,179,92,.12);color:var(--gold2);border-color:var(--goldline)}
-  .pill.ready::before{background:var(--gold)}
-  .pill.manual{background:rgba(226,178,74,.1);color:var(--amber);border-color:rgba(226,178,74,.28)}
-  .pill.manual::before{background:var(--amber)}
+  .card .names{min-width:0}
+  .card .nm{font-size:14.5px;font-weight:650;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card .slug{font-family:var(--mono);font-size:11px;color:var(--ink-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-  .card .foot{margin-top:auto;padding-top:13px;display:flex;gap:8px;align-items:center}
-  .btn{
-    font-size:12.5px;font-weight:600;border-radius:9px;padding:8px 12px;display:inline-flex;
-    align-items:center;gap:6px;transition:.15s;border:1px solid transparent;cursor:pointer
+  .chip{
+    align-self:flex-start;display:inline-flex;align-items:center;gap:6px;
+    font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+    padding:5px 10px;border-radius:999px;border:1px solid;
   }
-  .btn.connect{background:var(--gold);color:#191205;flex:1;justify-content:center}
-  .btn.connect:hover{background:var(--gold2)}
-  .btn.live{background:transparent;border-color:var(--green);color:var(--green);flex:1;justify-content:center}
-  .btn.live:hover{background:rgba(70,201,139,.12)}
-  .btn.fast{background:transparent;border-color:var(--line);color:var(--mut);padding:8px 10px}
-  .btn.fast:hover{border-color:var(--goldline);color:var(--ink)}
-  .btn .ext{font-size:10px;opacity:.7}
-  .card .note{font-size:11px;color:var(--mut2);margin-top:10px;line-height:1.4}
+  .chip .dot{width:7px;height:7px;border-radius:50%}
+  .chip.connected{color:var(--ok);background:var(--ok-bg);border-color:var(--ok-line)}
+  .chip.connected .dot{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+  .chip.broken{color:var(--bad);background:var(--bad-bg);border-color:var(--bad-line)}
+  .chip.broken .dot{background:var(--bad);box-shadow:0 0 8px var(--bad)}
+  .chip.pending{color:var(--pend);background:var(--pend-bg);border-color:var(--pend-line)}
+  .chip.pending .dot{background:var(--pend)}
 
-  /* Footer */
-  footer{padding:40px 0 60px;color:var(--mut2);font-size:12.5px;border-top:1px solid var(--line);margin-top:34px}
-  footer b{color:var(--mut)}
-  footer a{color:var(--gold);border-bottom:1px solid var(--goldline)}
-  .legend{display:flex;flex-wrap:wrap;gap:16px;margin:0 0 16px}
-  .legend span{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--mut)}
-  .legend i{width:9px;height:9px;border-radius:50%}
-  .empty{display:none;text-align:center;color:var(--mut2);padding:40px 0;font-size:14px}
+  .substate{font-size:11.5px;color:var(--ink-dim);font-family:var(--mono)}
+  .substate b{color:var(--bad)}
+
+  .cta{
+    margin-top:auto;display:flex;align-items:center;justify-content:center;gap:7px;
+    font-size:12.5px;font-weight:650;padding:9px 12px;border-radius:9px;cursor:pointer;
+    border:1px solid var(--line);background:var(--panel-2);color:var(--ink-dim);transition:.15s;
+  }
+  .cta:hover{border-color:var(--gold);color:var(--gold-soft)}
+  .cta.fix{background:linear-gradient(90deg,rgba(248,113,113,.18),rgba(248,113,113,.06));border-color:var(--bad-line);color:#ffb4b4}
+  .cta.fix:hover{border-color:var(--bad);color:#fff}
+  .cta.connect{background:linear-gradient(90deg,rgba(200,160,74,.16),rgba(200,160,74,.04));border-color:rgba(200,160,74,.4);color:var(--gold-soft)}
+  .cta.connect:hover{border-color:var(--gold);color:#fff}
+  .cta.live{background:var(--ok-bg);border-color:var(--ok-line);color:var(--ok);cursor:default}
+  .cta.live:hover{color:var(--ok)}
+
+  .empty{padding:60px 20px;text-align:center;color:var(--ink-faint);font-size:14px;display:none}
+
+  footer{
+    margin-top:50px;padding:26px clamp(16px,4vw,48px);border-top:1px solid var(--line);
+    color:var(--ink-faint);font-size:12px;font-family:var(--mono);
+    display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  }
+  footer a.link{color:var(--gold-soft)}
+  .hidden{display:none!important}
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <header>
-    <p class="eyebrow">XLRD &middot; Self Exec &middot; Unified MCP Surface</p>
-    <h1>Composio Connections Dashboard</h1>
-    <p class="sub">Live connection status for qi's <b>xlrdtech</b> Composio workspace &mdash; one card per toolkit in the desired SaaS surface, each with a one-click path to authorize. Status checked live against the Composio tool-router. No mock data.</p>
-    <p class="meta">Org <b>xlrdtech</b> &middot; project <b>default</b> &middot; tool-router userId <b>user_lrd2re</b> &middot; status checked <b id="checkedAt">2026-06-17</b></p>
-  </header>
-
-  <!-- SUMMARY -->
-  <section class="summary" aria-label="Connection summary">
-    <div class="stat active"><div class="n">3</div><div class="l">Active now</div><div class="bar"><i style="width:100%"></i></div></div>
-    <div class="stat ready"><div class="n">57</div><div class="l">1-click ready</div><div class="bar"><i style="width:84%"></i></div></div>
-    <div class="stat manual"><div class="n">8</div><div class="l">Needs auth config</div><div class="bar"><i style="width:12%"></i></div></div>
-    <div class="stat total"><div class="n">68</div><div class="l">Toolkits tracked</div><div class="bar"><i style="width:100%"></i></div></div>
-  </section>
-
-  <!-- VERDICT -->
-  <section class="verdict">
-    <h2>Verdict &mdash; the unified Composio MCP master toolkit</h2>
-    <p>The tool-router MCP is <b>already the single master surface</b>: one endpoint (registered to org xlrdtech, userId user_lrd2re) fronts every toolkit below. You do not build 68 MCP servers &mdash; you authorize 68 connections behind the one router. <b>3 are live right now</b> (asana, gemini, composio_search). The blocker is purely OAuth consent, which only qi can click.</p>
-    <p><b>Auto-connectable (no qi click):</b> the no-auth toolkits &mdash; <b>gemini</b> and <b>composio_search</b> &mdash; are active with zero credentials. Everything else with an OAuth/managed config (<b>57 toolkits</b>) generates a working connect link instantly but needs qi's one-time consent click. <b>8 toolkits</b> (paypal, highlevel, docusign, tiktok, twitter, spotify, google_chat, googlecontacts) return &ldquo;Composio does not manage auth&rdquo; &mdash; they need a custom auth config (your own app credentials / API key) created in the dashboard first, then they become 1-click too.</p>
-    <p><b>Cleanest path to one master MCP:</b></p>
-    <div class="path">
-      <span><b>1.</b> Keep the tool-router MCP as the single surface</span>
-      <span><b>2.</b> qi powers through the 57 ready connect buttons below</span>
-      <span><b>3.</b> Add custom auth configs for the 8 manual ones</span>
-      <span><b>4.</b> Lean on <b>gemini + composio_search</b> today (already live)</span>
+<header class="topbar">
+  <div class="brandrow">
+    <div class="logo">X</div>
+    <div class="brandtxt">
+      <h1>Composio <span class="accent">Toolkit Roster</span> — Connect Console</h1>
+      <p>qi's unified SaaS surface · org <b style="color:var(--ink-dim)">xlrdtech</b> · project <b style="color:var(--ink-dim)">default</b></p>
     </div>
-  </section>
-
-  <!-- CONTROLS -->
-  <div class="controls" id="filters">
-    <span class="h">Filter</span>
-    <span class="filter on" data-f="all">All <em style="opacity:.6">68</em></span>
-    <span class="filter" data-f="active">Active</span>
-    <span class="filter" data-f="ready">1-click ready</span>
-    <span class="filter" data-f="manual">Needs auth config</span>
-    <span class="filter" data-f="Comms">Comms</span>
-    <span class="filter" data-f="Productivity">Productivity</span>
-    <span class="filter" data-f="CRM &amp; Payments">CRM &amp; Payments</span>
-    <span class="filter" data-f="Dev &amp; Infra">Dev &amp; Infra</span>
-    <span class="filter" data-f="AI &amp; Media">AI &amp; Media</span>
-    <span class="filter" data-f="Browser &amp; Scrape">Browser &amp; Scrape</span>
-    <span class="filter" data-f="Scheduling">Scheduling</span>
-    <span class="filter" data-f="Meta">Meta</span>
-  </div>
-
-  <div class="legend">
-    <span><i style="background:var(--green)"></i> Active &mdash; live, no action needed</span>
-    <span><i style="background:var(--gold)"></i> 1-click ready &mdash; qi clicks Connect to authorize</span>
-    <span><i style="background:var(--amber)"></i> Needs auth config &mdash; add app credentials first</span>
-  </div>
-
-  <main class="grid" id="grid"></main>
-  <div class="empty" id="empty">No toolkits match this filter.</div>
-
-  <footer class="wrap" style="padding-left:0;padding-right:0">
-    <div class="legend" style="margin-bottom:18px">
-      <span><b>Connect</b> &rarr; opens the toolkit page in qi's xlrdtech dashboard (login-gated) to authorize.</span>
-      <span><b>Fast link</b> &rarr; pre-generated direct connect link (expires ~10 min after page build; use Connect if expired).</span>
+    <div class="wsmeta">
+      <span><b>workspace</b> dashboard.composio.dev/xlrdtech/default/toolkits</span>
+      <span><b>userId</b> user_lrd2re</span>
+      <span><b>router</b> ✓ connected</span>
     </div>
-    <p><b>Status source:</b> Composio tool-router <code>COMPOSIO_MANAGE_CONNECTIONS</code>, checked 2026-06-17. &ldquo;Needs auth config&rdquo; = Composio returned &ldquo;does not manage auth for this toolkit&rdquo; &mdash; create a custom auth config (your OAuth app or API key) at <a href="https://dashboard.composio.dev/xlrdtech/default/toolkits" target="_blank" rel="noopener">dashboard.composio.dev/xlrdtech/default/toolkits</a>, then it becomes 1-click.</p>
-    <p style="margin-top:10px">East &middot; Self Exec &middot; XLRD &middot; <a href="https://hitthe.link" target="_blank" rel="noopener">hitthe.link</a></p>
-  </footer>
+  </div>
+</header>
 
+<section class="stats">
+  <div class="stat total"><div class="bar"></div><div class="num" id="s-total">0</div><div class="lbl">Toolkits Desired</div></div>
+  <div class="stat ok"><div class="bar"></div><div class="num" id="s-ok">0</div><div class="lbl">Connected · Live</div></div>
+  <div class="stat bad"><div class="bar"></div><div class="num" id="s-bad">0</div><div class="lbl">Broken · Needs Fix</div></div>
+  <div class="stat pend"><div class="bar"></div><div class="num" id="s-pend">0</div><div class="lbl">Pending OAuth Click</div></div>
+</section>
+
+<div class="priority">
+  <div class="picon">🔴</div>
+  <div class="ptxt">
+    <h3>Connect gap — fix these 3 FIRST</h3>
+    <p>~75 desired vs only 3 ever attempted, and all 3 are broken. Repair the auth path on these, then scale the identical one-click OAuth-consent flow to every pending toolkit. OAuth completion is always qi — the agent cannot enter credentials. Reconnect URLs are generated by BPGS <code>w9t0gsc77</code>.</p>
+  </div>
+  <div class="pchips">
+    <span class="pchip">github — INITIATED</span>
+    <span class="pchip">gmail — EXPIRED</span>
+    <span class="pchip">notion — REVOKED</span>
+  </div>
 </div>
 
+<div class="controls">
+  <label class="search">
+    <span class="ico">⌕</span>
+    <input id="q" type="text" placeholder="Search toolkits, slugs, groups…" autocomplete="off">
+  </label>
+  <div class="filterbtns" id="filters">
+    <span class="fbtn active" data-f="all">All <span class="c" id="f-all">0</span></span>
+    <span class="fbtn" data-f="broken">Broken <span class="c" id="f-broken">0</span></span>
+    <span class="fbtn" data-f="connected">Connected <span class="c" id="f-connected">0</span></span>
+    <span class="fbtn" data-f="pending">Pending <span class="c" id="f-pending">0</span></span>
+  </div>
+</div>
+
+<main id="board"></main>
+<div class="empty" id="empty">No toolkits match your filter.</div>
+
+<footer>
+  <span>Composio tool-router · ak_… key in ~/.config/composio/env (M4)</span>
+  <span>Hosted browser path → Browserbase (90% reliability) · Anchor · Firecrawl · Apify — scale beyond local. Local logged-in → <a class="link" href="#">Chrome DevTools MCP</a>.</span>
+  <span>Built from memory · composio-toolkit-roster.md</span>
+</footer>
+
 <script>
-// Real roster + live-checked status (Composio tool-router, xlrdtech/default, 2026-06-17).
-// status: active | ready (1-click OAuth/managed) | manual (needs custom auth config)
-// fast = pre-generated connect link from the live check (ephemeral ~10min).
-const DASH = "https://dashboard.composio.dev/xlrdtech/default/toolkits/";
-const DATA = [
- // --- Comms ---
- {n:"Slack",s:"slack",c:"Comms",st:"ready",f:"https://connect.composio.dev/link/lk_U9z81UD3_N39"},
- {n:"Slack Bot",s:"slackbot",c:"Comms",st:"ready",f:"https://connect.composio.dev/link/lk_Ozs7eKFrCabS"},
- {n:"Discord",s:"discord",c:"Comms",st:"ready",f:"https://connect.composio.dev/link/lk_VjctYSbLTva7"},
- {n:"Discord Bot",s:"discordbot",c:"Comms",st:"ready",f:"https://connect.composio.dev/link/lk_BJZLxU6TkYOC"},
- {n:"WhatsApp",s:"whatsapp",c:"Comms",st:"ready",f:"https://connect.composio.dev/link/lk_dS4JXhL0wvvT"},
- {n:"Telegram",s:"telegram",c:"Comms",st:"ready",f:"https://connect.composio.dev/link/lk_UAjKQ95dHA8m"},
- {n:"Microsoft Teams",s:"microsoft_teams",c:"Comms",st:"ready",f:"https://connect.composio.dev/link/lk_pSDOjY6ZswXt"},
- {n:"Google Chat",s:"google_chat",c:"Comms",st:"manual"},
- {n:"Dialpad",s:"dialpad",c:"Comms",st:"ready",f:"https://connect.composio.dev/link/lk_YFIm0jQYlupf"},
- {n:"Gmail",s:"gmail",c:"Comms",st:"ready",f:"https://connect.composio.dev/link/lk_qMGNt0AN36EM"},
- {n:"Outlook",s:"outlook",c:"Comms",st:"ready",f:"https://connect.composio.dev/link/lk_PSOsQFhGEa3k"},
-
- // --- Productivity (Google/MS + PM/docs) ---
- {n:"Google Drive",s:"googledrive",c:"Productivity",st:"ready",f:"https://connect.composio.dev/link/lk_gjS4gSX45O5m"},
- {n:"Google Docs",s:"googledocs",c:"Productivity",st:"ready",f:"https://connect.composio.dev/link/lk_ErjFx87gNrP9"},
- {n:"Google Sheets",s:"googlesheets",c:"Productivity",st:"ready",f:"https://connect.composio.dev/link/lk_VodKJmwRMUn0"},
- {n:"Google Slides",s:"googleslides",c:"Productivity",st:"ready",f:"https://connect.composio.dev/link/lk_Z0puzIHAi84k"},
- {n:"Google Calendar",s:"googlecalendar",c:"Productivity",st:"ready",f:"https://connect.composio.dev/link/lk_BIiqqje7a086"},
- {n:"Google Tasks",s:"googletasks",c:"Productivity",st:"ready",f:"https://connect.composio.dev/link/lk_cQ0HdWbgp2tx"},
- {n:"Google Contacts",s:"googlecontacts",c:"Productivity",st:"manual"},
- {n:"Google Photos",s:"googlephotos",c:"Productivity",st:"ready",f:"https://connect.composio.dev/link/lk_P7eKUrg2Nu01"},
- {n:"Google Analytics",s:"google_analytics",c:"Productivity",st:"ready",f:"https://connect.composio.dev/link/lk_1ZS8-1TtaKpG"},
- {n:"OneDrive",s:"one_drive",c:"Productivity",st:"ready",f:"https://connect.composio.dev/link/lk_wakA5pCgrRy0"},
- {n:"Excel",s:"excel",c:"Productivity",st:"ready",f:"https://connect.composio.dev/link/lk_ZTzj9QdRKMOT"},
- {n:"Notion",s:"notion",c:"Productivity",st:"ready",f:"https://connect.composio.dev/link/lk_ycZtdf51rjtU"},
- {n:"Asana",s:"asana",c:"Productivity",st:"active",acct:"hero@l7sinc.com"},
- {n:"Todoist",s:"todoist",c:"Productivity",st:"ready",f:"https://connect.composio.dev/link/lk_PTZMlvY3gIY1"},
- {n:"DocuSign",s:"docusign",c:"Productivity",st:"manual"},
- {n:"Make",s:"make",c:"Productivity",st:"ready",f:"https://connect.composio.dev/link/lk_9p1_eIh8RXlO"},
-
- // --- CRM & Payments ---
- {n:"HubSpot",s:"hubspot",c:"CRM & Payments",st:"ready",f:"https://connect.composio.dev/link/lk_Ak9mH3fCD95j"},
- {n:"HighLevel",s:"highlevel",c:"CRM & Payments",st:"manual"},
- {n:"Stripe",s:"stripe",c:"CRM & Payments",st:"ready",f:"https://connect.composio.dev/link/lk_19O8H54LjbSr"},
- {n:"Square",s:"square",c:"CRM & Payments",st:"ready",f:"https://connect.composio.dev/link/lk_kPhPCCZ7jfKG"},
- {n:"PayPal",s:"paypal",c:"CRM & Payments",st:"manual"},
- {n:"Ko-fi",s:"ko_fi",c:"CRM & Payments",st:"ready",f:"https://connect.composio.dev/link/lk_5WOCwTvJIDbz"},
- {n:"LinkedIn",s:"linkedin",c:"CRM & Payments",st:"ready",f:"https://connect.composio.dev/link/lk_ZRlNPKsNtXS7"},
-
- // --- Dev & Infra ---
- {n:"GitHub",s:"github",c:"Dev & Infra",st:"ready",f:"https://connect.composio.dev/link/lk_zwST-x-WnVNW"},
- {n:"Supabase",s:"supabase",c:"Dev & Infra",st:"ready",f:"https://connect.composio.dev/link/lk_TBUqIwLCBWMV"},
- {n:"Cloudflare",s:"cloudflare",c:"Dev & Infra",st:"ready",f:"https://connect.composio.dev/link/lk_QnA3ZdlIkSUR"},
- {n:"Vercel",s:"vercel",c:"Dev & Infra",st:"ready",f:"https://connect.composio.dev/link/lk_NWvJAogUh6Bh"},
- {n:"Docker Hub",s:"docker_hub",c:"Dev & Infra",st:"ready",f:"https://connect.composio.dev/link/lk_q44kE4MYcXP8"},
- {n:"DigitalOcean",s:"digital_ocean",c:"Dev & Infra",st:"ready",f:"https://connect.composio.dev/link/lk_h14paJOnBFp5"},
- {n:"Elasticsearch",s:"elasticsearch",c:"Dev & Infra",st:"ready",f:"https://connect.composio.dev/link/lk_ZRGdQA_i8QPf"},
- {n:"Context7 MCP",s:"context7_mcp",c:"Dev & Infra",st:"ready",f:"https://connect.composio.dev/link/lk_9JIYVL1WJYEF"},
-
- // --- AI & Media ---
- {n:"Perplexity AI",s:"perplexityai",c:"AI & Media",st:"ready",f:"https://connect.composio.dev/link/lk_6J1VG76rvoLs"},
- {n:"Gemini",s:"gemini",c:"AI & Media",st:"active",acct:"no auth required"},
- {n:"HeyGen",s:"heygen",c:"AI & Media",st:"ready",f:"https://connect.composio.dev/link/lk_7Hy3j9VfF4LC"},
- {n:"ElevenReader",s:"elevenreader",c:"AI & Media",st:"ready",f:"https://connect.composio.dev/link/lk_fLebQ0LoKfv9"},
- {n:"Canva",s:"canva",c:"AI & Media",st:"ready",f:"https://connect.composio.dev/link/lk_0gPq7Qmwjy0s"},
- {n:"Figma",s:"figma",c:"AI & Media",st:"ready",f:"https://connect.composio.dev/link/lk_CwEUC3Z757ey"},
- {n:"Mobbin MCP",s:"mobbin_mcp",c:"AI & Media",st:"ready",f:"https://connect.composio.dev/link/lk_K2RbA538VofJ"},
- {n:"YouTube",s:"youtube",c:"AI & Media",st:"ready",f:"https://connect.composio.dev/link/lk_jwJar3UQgf-b"},
- {n:"TikTok",s:"tiktok",c:"AI & Media",st:"manual"},
- {n:"X / Twitter",s:"twitter",c:"AI & Media",st:"manual"},
- {n:"Facebook",s:"facebook",c:"AI & Media",st:"ready",f:"https://connect.composio.dev/link/lk_Y8qKdfONTMTg"},
- {n:"Spotify",s:"spotify",c:"AI & Media",st:"manual"},
-
- // --- Browser & Scrape ---
- {n:"Browserbase",s:"browserbase_tool",c:"Browser & Scrape",st:"ready",f:"https://connect.composio.dev/link/lk_tfK2Q2562sdV"},
- {n:"Anchor Browser",s:"anchor_browser",c:"Browser & Scrape",st:"ready",f:"https://connect.composio.dev/link/lk_EDg4l2Sx0oqn"},
- {n:"Cloudflare Browser Rendering",s:"cloudflare_browser_rendering",c:"Browser & Scrape",st:"ready",f:"https://connect.composio.dev/link/lk_6SWmgAAlNstu"},
- {n:"Browserless",s:"browserless",c:"Browser & Scrape",st:"ready",f:"https://connect.composio.dev/link/lk_RPUlWFu4p0Jm"},
- {n:"Firecrawl",s:"firecrawl",c:"Browser & Scrape",st:"ready",f:"https://connect.composio.dev/link/lk_k60_rXNLb0Qf"},
- {n:"Apify MCP",s:"apify_mcp",c:"Browser & Scrape",st:"ready",f:"https://connect.composio.dev/link/lk_7llq8EjxnaRb"},
- {n:"Screenshot.fyi",s:"screenshot_fyi",c:"Browser & Scrape",st:"ready",f:"https://connect.composio.dev/link/lk_sgf16k1h4Fyp"},
-
- // --- Scheduling ---
- {n:"Cal.com",s:"cal",c:"Scheduling",st:"ready",f:"https://connect.composio.dev/link/lk_cv9I90zBQ16w"},
- {n:"Etermin",s:"etermin",c:"Scheduling",st:"ready",f:"https://connect.composio.dev/link/lk_e0ZQBACZEy_5"},
- {n:"Zoom",s:"zoom",c:"Scheduling",st:"ready",f:"https://connect.composio.dev/link/lk_6gNSElwzDwQL"},
- {n:"Google Meet",s:"googlemeet",c:"Scheduling",st:"ready",f:"https://connect.composio.dev/link/lk_lCN1l1Z1sYnR"},
- {n:"Granola MCP",s:"granola_mcp",c:"Scheduling",st:"ready",f:"https://connect.composio.dev/link/lk_opN9KfjkNKds"},
-
- // --- Meta ---
- {n:"Composio Search",s:"composio_search",c:"Meta",st:"active",acct:"no auth required"},
- {n:"Anthropic Administrator",s:"anthropic_administrator",c:"Meta",st:"ready",f:"https://connect.composio.dev/link/lk_7RxVxdxJ-iQJ"}
+/* ---------- DATA: grounded in composio-toolkit-roster.md ---------- */
+const BASE = "https://dashboard.composio.dev/xlrdtech/default/toolkits/";
+/* status: connected | broken | pending ; sub = broken substate */
+const GROUPS = [
+  { id:"comms", icon:"💬", name:"Comms", color:"#5b8def", items:[
+    "slack","slackbot","discord","discordbot","whatsapp","telegram",
+    "microsoft_teams","google_chat","dialpad",
+    {slug:"gmail",status:"broken",sub:"EXPIRED"},"outlook"
+  ]},
+  { id:"prod", icon:"📁", name:"Google / MS Productivity", color:"#3fb98b", items:[
+    "googledrive","googledocs","googlesheets","googleslides","googlecalendar",
+    "googletasks","googlecontacts","googlephotos","google_analytics","one_drive","excel"
+  ]},
+  { id:"pm", icon:"🗂️", name:"PM / Docs / Automation", color:"#c084fc", items:[
+    {slug:"notion",status:"broken",sub:"REVOKED"},"asana","todoist","docusign","make"
+  ]},
+  { id:"dev", icon:"⚙️", name:"Dev / Infra", color:"#f59e0b", items:[
+    {slug:"github",status:"broken",sub:"INITIATED"},"supabase","cloudflare","vercel",
+    "docker_hub","digital_ocean","elasticsearch","context7_mcp"
+  ]},
+  { id:"crm", icon:"💳", name:"CRM / Payments", color:"#34d399", items:[
+    "hubspot","highlevel","stripe","square","paypal","ko_fi","linkedin"
+  ]},
+  { id:"ai", icon:"✨", name:"AI / Content / Media", color:"#e879a6", items:[
+    "perplexityai","gemini","heygen","elevenreader","canva","figma",
+    "mobbin_mcp","youtube","tiktok","twitter","facebook","spotify"
+  ]},
+  { id:"browser", icon:"🌐", name:"Browser / Scrape Automation", color:"#38bdf8", items:[
+    "browserbase_tool","anchor_browser","cloudflare_browser_rendering",
+    "browserless","firecrawl","apify_mcp","screenshot_fyi"
+  ]},
+  { id:"sched", icon:"📅", name:"Scheduling / Meetings", color:"#fbbf24", items:[
+    "cal","etermin","zoom","googlemeet","granola_mcp"
+  ]},
+  { id:"meta", icon:"🧩", name:"Composio Meta", color:"#c8a04a", items:[
+    "composio","composio_search","anthropic_administrator"
+  ]}
 ];
 
-const ST = {
-  active:{cls:"active",lbl:"Active"},
-  ready:{cls:"ready",lbl:"1-click ready"},
-  manual:{cls:"manual",lbl:"Needs auth config"}
-};
-
-const grid = document.getElementById('grid');
-const empty = document.getElementById('empty');
-
-function card(t){
-  const meta = ST[t.st];
-  const el = document.createElement('article');
-  el.className = 'card';
-  el.dataset.cat = t.c; el.dataset.st = t.st;
-
-  let foot = '';
-  if(t.st === 'active'){
-    foot = `<a class="btn live" href="${DASH}${t.s}" target="_blank" rel="noopener">Manage <span class="ext">&#8599;</span></a>`;
-  } else if(t.st === 'ready'){
-    foot = `<a class="btn connect" href="${DASH}${t.s}" target="_blank" rel="noopener">Connect <span class="ext">&#8599;</span></a>`;
-    if(t.f){ foot += `<a class="btn fast" href="${t.f}" target="_blank" rel="noopener" title="Pre-generated direct connect link (expires ~10 min after build)">Fast</a>`; }
-  } else { // manual
-    foot = `<a class="btn connect" style="background:var(--amber)" href="${DASH}${t.s}" target="_blank" rel="noopener">Add auth config <span class="ext">&#8599;</span></a>`;
-  }
-
-  const note = t.st === 'active'
-    ? `<div class="note">Live${t.acct ? ' &middot; '+t.acct : ''}. Available through the tool-router now.</div>`
-    : t.st === 'manual'
-      ? `<div class="note">Composio doesn&rsquo;t manage auth for this toolkit. Create a custom auth config (your app / API key) first, then it&rsquo;s 1-click.</div>`
-      : '';
-
-  el.innerHTML = `
-    <div class="top">
-      <div>
-        <div class="name">${t.n}</div>
-        <div class="slug">${t.s}</div>
-      </div>
-      <span class="pill ${meta.cls}">${meta.lbl}</span>
-    </div>
-    <div class="cat">${t.c}</div>
-    ${note}
-    <div class="foot">${foot}</div>`;
-  return el;
+/* prettify slug → label */
+function label(slug){
+  const map = {
+    slackbot:"Slack Bot", discordbot:"Discord Bot", microsoft_teams:"Microsoft Teams",
+    google_chat:"Google Chat", googledrive:"Google Drive", googledocs:"Google Docs",
+    googlesheets:"Google Sheets", googleslides:"Google Slides", googlecalendar:"Google Calendar",
+    googletasks:"Google Tasks", googlecontacts:"Google Contacts", googlephotos:"Google Photos",
+    google_analytics:"Google Analytics", one_drive:"OneDrive", docker_hub:"Docker Hub",
+    digital_ocean:"DigitalOcean", context7_mcp:"Context7 MCP", perplexityai:"Perplexity AI",
+    elevenreader:"ElevenReader", mobbin_mcp:"Mobbin MCP", ko_fi:"Ko-fi",
+    browserbase_tool:"Browserbase", anchor_browser:"Anchor Browser",
+    cloudflare_browser_rendering:"Cloudflare Browser Rendering", apify_mcp:"Apify MCP",
+    screenshot_fyi:"Screenshot.fyi", googlemeet:"Google Meet", granola_mcp:"Granola MCP",
+    composio_search:"Composio Search", anthropic_administrator:"Anthropic Administrator",
+    highlevel:"HighLevel"
+  };
+  if(map[slug]) return map[slug];
+  return slug.replace(/_/g," ").replace(/\b\w/g,c=>c.toUpperCase());
 }
 
-function render(filter){
-  grid.innerHTML='';
-  let shown=0;
-  DATA.forEach(t=>{
-    const match = filter==='all'
-      || filter===t.st
-      || filter===t.c;
-    if(match){ grid.appendChild(card(t)); shown++; }
+/* deterministic avatar color from slug */
+function tint(slug){
+  let h=0; for(let i=0;i<slug.length;i++) h=(h*31+slug.charCodeAt(i))>>>0;
+  const hue=h%360;
+  return `linear-gradient(135deg,hsl(${hue} 65% 62%),hsl(${(hue+40)%360} 70% 50%))`;
+}
+
+/* normalize every item to an object */
+const TOOLKITS=[];
+GROUPS.forEach(g=>{
+  g.items=g.items.map(it=>{
+    const o = (typeof it==="string") ? {slug:it,status:"pending"} : it;
+    o.group=g.id; o.groupName=g.name; o.label=label(o.slug);
+    o.url=BASE+o.slug;
+    TOOLKITS.push(o);
+    return o;
   });
-  empty.style.display = shown ? 'none' : 'block';
-}
-
-document.getElementById('filters').addEventListener('click', e=>{
-  const f = e.target.closest('.filter');
-  if(!f) return;
-  document.querySelectorAll('.filter').forEach(x=>x.classList.remove('on'));
-  f.classList.add('on');
-  render(f.dataset.f);
 });
 
-render('all');
+/* ---------- counts ---------- */
+const counts = {all:TOOLKITS.length, connected:0, broken:0, pending:0};
+TOOLKITS.forEach(t=>counts[t.status]++);
+document.getElementById("s-total").textContent=counts.all;
+document.getElementById("s-ok").textContent=counts.connected;
+document.getElementById("s-bad").textContent=counts.broken;
+document.getElementById("s-pend").textContent=counts.pending;
+document.getElementById("f-all").textContent=counts.all;
+document.getElementById("f-connected").textContent=counts.connected;
+document.getElementById("f-broken").textContent=counts.broken;
+document.getElementById("f-pending").textContent=counts.pending;
+
+/* ---------- render ---------- */
+const board=document.getElementById("board");
+function ctaFor(t){
+  if(t.status==="connected")
+    return `<a class="cta live" href="${t.url}" target="_blank" rel="noopener">● Live · Manage</a>`;
+  if(t.status==="broken")
+    return `<a class="cta fix" href="${t.url}" target="_blank" rel="noopener">⟳ Reconnect (qi OAuth)</a>`;
+  return `<a class="cta connect" href="${t.url}" target="_blank" rel="noopener">+ Authorize (1-click)</a>`;
+}
+function statusChip(t){
+  const txt = t.status==="connected" ? "Connected"
+            : t.status==="broken" ? "Broken" : "Pending";
+  return `<span class="chip ${t.status}"><span class="dot"></span>${txt}</span>`;
+}
+function cardHTML(t){
+  const initials = t.label.replace(/[^A-Za-z0-9 ]/g,"").trim().split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+  const sub = t.status==="broken"
+      ? `<div class="substate">state: <b>${t.sub}</b></div>`
+      : t.status==="pending"
+      ? `<div class="substate">awaiting OAuth consent</div>`
+      : `<div class="substate">authorized · token live</div>`;
+  return `<article class="card" data-status="${t.status}"
+            data-slug="${t.slug}" data-name="${t.label.toLowerCase()}" data-group="${t.group}">
+    <div class="top">
+      <div class="avatar" style="background:${tint(t.slug)}">${initials}</div>
+      <div class="names">
+        <div class="nm">${t.label}</div>
+        <div class="slug">${t.slug}</div>
+      </div>
+    </div>
+    ${statusChip(t)}
+    ${sub}
+    ${ctaFor(t)}
+  </article>`;
+}
+function render(){
+  board.innerHTML = GROUPS.map(g=>{
+    const cards = g.items.map(cardHTML).join("");
+    return `<section class="group" data-group="${g.id}">
+      <div class="group-h">
+        <span class="gicon">${g.icon}</span>
+        <h2>${g.name}</h2>
+        <span class="gcount">${g.items.length} toolkits</span>
+      </div>
+      <div class="grid">${cards}</div>
+    </section>`;
+  }).join("");
+}
+render();
+
+/* ---------- filter + search ---------- */
+let activeFilter="all";
+const q=document.getElementById("q");
+const empty=document.getElementById("empty");
+function applyFilter(){
+  const term=q.value.trim().toLowerCase();
+  let anyVisible=false;
+  document.querySelectorAll(".group").forEach(grp=>{
+    let groupVisible=false;
+    grp.querySelectorAll(".card").forEach(c=>{
+      const okStatus = activeFilter==="all" || c.dataset.status===activeFilter;
+      const okTerm = !term || c.dataset.slug.includes(term)
+                    || c.dataset.name.includes(term) || c.dataset.group.includes(term);
+      const show = okStatus && okTerm;
+      c.classList.toggle("hidden",!show);
+      if(show){groupVisible=true;anyVisible=true;}
+    });
+    grp.classList.toggle("hidden",!groupVisible);
+  });
+  empty.style.display = anyVisible ? "none" : "block";
+}
+document.getElementById("filters").addEventListener("click",e=>{
+  const b=e.target.closest(".fbtn"); if(!b)return;
+  document.querySelectorAll(".fbtn").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active"); activeFilter=b.dataset.f; applyFilter();
+});
+q.addEventListener("input",applyFilter);
 </script>
 </body>
 </html>
