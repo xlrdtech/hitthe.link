@@ -38,12 +38,51 @@
   .takeaway b{color:var(--gold)}
   .foot{color:var(--faint);font-size:12px;margin-top:32px;border-top:1px solid var(--line);padding-top:13px}
   ul{margin:6px 0 0;padding-left:20px;color:var(--dim);font-size:13px}li{margin:3px 0}
+  /* daily ship-counter widget */
+  .ship{background:linear-gradient(180deg,#0f1620,#0c0e13);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:0 0 22px}
+  .ship .top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .ship .big{font-size:34px;font-weight:800;line-height:1;letter-spacing:-.02em}
+  .ship .big .of{font-size:16px;font-weight:700;color:var(--faint);letter-spacing:0}
+  .ship .lab{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.1em;margin-top:5px}
+  .ship .badge{font:700 10px/1 ui-monospace,Menlo,monospace;padding:5px 9px;border-radius:999px;letter-spacing:.04em;white-space:nowrap}
+  .ship .b-good{background:rgba(62,207,142,.13);color:var(--good);border:1px solid rgba(62,207,142,.35)}
+  .ship .b-under{background:rgba(255,207,107,.12);color:var(--warn);border:1px solid rgba(255,207,107,.35)}
+  .ship .bar{height:11px;border-radius:999px;background:#1b1f27;border:1px solid var(--line);overflow:hidden;margin:13px 0 6px;position:relative}
+  .ship .bar i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#ffcf6b,#ff9d4d);transition:width .9s cubic-bezier(.2,.7,.2,1)}
+  .ship .bar.met i{background:linear-gradient(90deg,#3ecf8e,#2bb877)}
+  .ship .bar .mk{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--gold);opacity:.7}
+  .ship .meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--faint)}
+  .ship .meta b{color:var(--dim);font-weight:700}
+  .ship .spark{display:flex;align-items:flex-end;gap:4px;height:38px;margin-top:12px}
+  .ship .spark .col{flex:1 1 0;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+  .ship .spark .col .v{width:100%;max-width:26px;border-radius:3px 3px 0 0;background:#2a3140}
+  .ship .spark .col.met .v{background:rgba(62,207,142,.55)}
+  .ship .spark .col .dd{font-size:8px;color:var(--faint);letter-spacing:.02em;white-space:nowrap}
+  .ship .src{font-size:10px;color:var(--faint);margin-top:11px;border-top:1px solid var(--line);padding-top:9px}
+  .ship .err{color:var(--warn);font-size:12px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>48-HOUR REVIEW <span class="g">·</span> overview + gap analysis</h1>
   <p class="sub">Grounded in git history 06-16 → 06-18. What shipped live, what's staged, and the gaps that remain.</p>
+
+  <div class="ship" id="shipCounter">
+    <div class="top">
+      <div>
+        <div class="big"><span id="shipToday">--</span><span class="of"> / 48</span></div>
+        <div class="lab" id="shipLab">ships today vs daily floor</div>
+      </div>
+      <span class="badge b-under" id="shipBadge">loading</span>
+    </div>
+    <div class="bar" id="shipBar"><i id="shipFill"></i><span class="mk" id="shipMark" style="left:100%"></span></div>
+    <div class="meta">
+      <span><b id="shipPct">--</b> of floor</span>
+      <span>ledger total <b id="shipTotal">--</b> <span id="shipRange"></span></span>
+    </div>
+    <div class="spark" id="shipSpark"></div>
+    <div class="src" id="shipSrc">reading ships.json…</div>
+  </div>
 
   <div class="row">
     <div class="stat"><div class="n good">17</div><div class="l">live deliverables</div></div>
@@ -126,5 +165,71 @@
 
   <div class="foot">Auto-generated 48h review · git 06-16→06-18 · real ledger, no placeholders · cross-ref /life · /unblock · scope-router-index</div>
 </div>
+<script>
+(function(){
+  var FLOOR = 48;
+  var $ = function(id){ return document.getElementById(id); };
+  function fmtDate(s){ if(!s) return ''; var p = String(s).slice(5,10).split('-'); return p.length===2 ? (+p[0])+'/'+(+p[1]) : s; }
+  function render(d){
+    var floor = (d && d.floor) || FLOOR;
+    $('shipMark').style.left = '100%';
+    // today, with honest fallback to lastKnown
+    var t = d && d.today, usedFallback = false, count = null, date = null, partial = false, src = '';
+    if(t && typeof t.count === 'number'){
+      count = t.count; date = t.date; partial = !!t.partial; src = t.source || '';
+    } else if(d && d.lastKnown && typeof d.lastKnown.count === 'number'){
+      usedFallback = true; count = d.lastKnown.count; date = d.lastKnown.date;
+      src = 'No count for today yet — showing last-known real number.';
+    }
+    if(count === null){ return fail('ships.json has no usable count.'); }
+
+    var met = count >= floor;
+    var pct = Math.max(0, Math.min(100, Math.round((count/floor)*100)));
+    $('shipToday').textContent = count;
+    $('shipLab').textContent = usedFallback
+      ? ('last-known ships ('+fmtDate(date)+') vs daily floor')
+      : ('ships ' + (partial ? 'so far today' : 'today') + ' vs daily floor');
+    $('shipPct').textContent = Math.round((count/floor)*100) + '%';
+    var bar = $('shipBar'); bar.classList.toggle('met', met);
+    requestAnimationFrame(function(){ $('shipFill').style.width = pct + '%'; });
+
+    var badge = $('shipBadge');
+    badge.className = 'badge ' + (met ? 'b-good' : 'b-under');
+    badge.textContent = met ? 'FLOOR MET' : (usedFallback ? 'STALE' : ((floor-count) + ' to floor'));
+
+    if(d.ledger){
+      $('shipTotal').textContent = d.ledger.total;
+      if(d.ledger.rangeStart && d.ledger.rangeEnd)
+        $('shipRange').textContent = '(' + fmtDate(d.ledger.rangeStart) + '–' + fmtDate(d.ledger.rangeEnd) + ')';
+    }
+
+    // sparkline of recent real days
+    if(d.recent && d.recent.length){
+      var max = Math.max(floor, d.recent.reduce(function(m,r){ return Math.max(m, r.count||0); }, 0));
+      var html = d.recent.map(function(r){
+        var h = Math.max(2, Math.round(((r.count||0)/max)*34));
+        var rm = (r.count||0) >= floor;
+        return '<div class="col'+(rm?' met':'')+'" title="'+r.date+': '+r.count+' ships"><div class="v" style="height:'+h+'px"></div><div class="dd">'+fmtDate(r.date)+'</div></div>';
+      }).join('');
+      $('shipSpark').innerHTML = html;
+    }
+
+    var asOf = d.asOf ? new Date(d.asOf) : null;
+    $('shipSrc').textContent = 'Floor 48/day (canon-autoship-floor-48-day). '
+      + (src ? src + ' ' : '')
+      + (asOf ? 'As of ' + asOf.toLocaleString() + '. ' : '')
+      + 'Source: review/ships.json (git-derived, no placeholders).';
+  }
+  function fail(msg){
+    $('shipBadge').className = 'badge b-under'; $('shipBadge').textContent = 'no data';
+    $('shipToday').textContent = '—';
+    $('shipSrc').innerHTML = '<span class="err">'+msg+' Add review/ships.json with a real git-derived count.</span>';
+  }
+  fetch('ships.json?ts=' + Date.now(), {cache:'no-store'})
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(render)
+    .catch(function(e){ fail('Could not load ships.json ('+e.message+').'); });
+})();
+</script>
 </body>
 </html>
