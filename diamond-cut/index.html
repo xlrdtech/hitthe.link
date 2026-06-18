@@ -113,10 +113,20 @@
 <!-- ── HERO: standalone scroll-scrub video (forward/back in sync with scroll) ── -->
 <section class="hero-pin" id="heroPin">
   <div class="hero-sticky">
-    <video class="hero-vid" data-scrub-video data-mode="pin" data-pin="#heroPin" data-ease="0.1"
-           muted playsinline webkit-playsinline preload="auto" poster="assets/hero-poster.jpg">
-      <source src="execute-scrub.mp4" type="video/mp4">
-    </video>
+    <video class="hero-vid" id="heroVid" data-scrub-video data-mode="pin" data-pin="#heroPin" data-ease="0.1"
+           muted playsinline webkit-playsinline preload="auto" poster="assets/hero-poster.jpg"></video>
+    <script>
+      /* Serve the aspect-correct hero: portrait on phones, landscape on desktop/tablet.
+         Both are blurred-fill + center-locked logo so object-fit:cover never crops the focal point. */
+      (function(){
+        var v=document.getElementById('heroVid');
+        var mobile=window.matchMedia('(max-width:680px)').matches;
+        var s=document.createElement('source');
+        s.src=mobile?'execute-mobile.mp4':'execute-desktop.mp4';
+        s.type='video/mp4';
+        v.appendChild(s); v.load();
+      })();
+    </script>
     <div class="scroll-cue">Scroll ◇</div>
   </div>
 </section>
