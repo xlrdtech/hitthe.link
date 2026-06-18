@@ -116,13 +116,13 @@
     <video class="hero-vid" id="heroVid" data-scrub-video data-mode="pin" data-pin="#heroPin" data-ease="0.1"
            muted playsinline webkit-playsinline preload="auto" poster="/diamond-cut/assets/hero-poster.jpg"></video>
     <script>
-      /* Serve the aspect-correct hero: portrait on phones, landscape on desktop/tablet.
-         Both are blurred-fill + center-locked logo so object-fit:cover never crops the focal point. */
+      /* Aspect-correct hero: portrait on phones, landscape on desktop/tablet.
+         BLEND build: sharp center feathered into the blurred field - no perceived edge/seam. */
       (function(){
         var v=document.getElementById('heroVid');
         var mobile=window.matchMedia('(max-width:680px)').matches;
         var s=document.createElement('source');
-        s.src=mobile?'/diamond-cut/execute-mobile.mp4':'/diamond-cut/execute-desktop.mp4';
+        s.src=mobile?'/diamond-cut/execute-mobile-blend.mp4':'/diamond-cut/execute-desktop-blend.mp4';
         s.type='video/mp4';
         v.appendChild(s); v.load();
       })();
