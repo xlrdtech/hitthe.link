@@ -119,27 +119,21 @@
   .hero3d.live .hero-fallback{opacity:0;pointer-events:none}
   .spin-cue{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);z-index:3;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:rgba(243,247,251,.5);animation:scue 2.6s ease-in-out infinite;pointer-events:none}
   @keyframes scue{0%,100%{opacity:.3}50%{opacity:.75}}
-  .dczload{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:13vh;pointer-events:none;transition:opacity .9s ease}
-  .dczload.done{opacity:0}
-  .dczload .lt{font-family:'Cinzel',serif;font-weight:600;font-size:clamp(13px,2.6vw,22px);letter-spacing:.52em;text-transform:uppercase;color:#eaf4ff;text-shadow:0 0 26px rgba(169,232,255,.55)}
-  .dczload .ls{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.42em;text-transform:uppercase;color:rgba(191,233,255,.6);margin-top:12px;animation:scue 1.6s ease-in-out infinite}
 </style>
 <section class="hero3d" id="hero3d">
   <canvas id="coin"></canvas>
   <img class="hero-fallback" src="/dcz/assets/emblem-platinum-c.png" alt="Diamond Cutz Studios emblem" decoding="async">
-  <div class="dczload" id="dczload"><div class="lt">Diamond Cutz</div><div class="ls">◇ cutting the stone ◇</div></div>
   <div class="spin-cue">✦ drag · move · scroll ✦</div>
 </section>
 <script type="importmap">{"imports":{"three":"/lib/three.module.min.js"}}</script>
 <script type="module">
   import * as THREE from 'three';
   (function(){
-    var host=document.getElementById('hero3d'), canvas=document.getElementById('coin'), loadEl=document.getElementById('dczload');
+    var host=document.getElementById('hero3d'), canvas=document.getElementById('coin');
     var renderer; try{ renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:true,powerPreference:'high-performance'}); }catch(e){ return; }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
     renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.25;
-    var scene=new THREE.Scene(); scene.background=new THREE.Color(0x06080d); var camera=new THREE.PerspectiveCamera(34,1,0.1,100); camera.position.set(0,0,5);
-    // bright brand-tinted studio env so chrome + diamond catch caustic fire
+    var scene=new THREE.Scene(); var camera=new THREE.PerspectiveCamera(34,1,0.1,100); camera.position.set(0,0,5);
     var ec=document.createElement('canvas'); ec.width=512; ec.height=256; var g=ec.getContext('2d');
     var grd=g.createLinearGradient(0,0,0,256); grd.addColorStop(0,'#10203a'); grd.addColorStop(.4,'#27406a'); grd.addColorStop(.5,'#eaf4ff'); grd.addColorStop(.6,'#1a2a44'); grd.addColorStop(1,'#05070a');
     g.fillStyle=grd; g.fillRect(0,0,512,256);
@@ -152,25 +146,12 @@
     var sp1=new THREE.SpotLight(0xffffff,130,24,0.6,0.5,1.2); sp1.position.set(-5,3,5); scene.add(sp1); scene.add(sp1.target);
     var sp2=new THREE.SpotLight(0xbfe0ff,95,24,0.7,0.5,1.2); sp2.position.set(5,-2,5); scene.add(sp2); scene.add(sp2.target);
     var rimViolet=new THREE.PointLight(0xc7a0ff,26,30); rimViolet.position.set(3.5,-3,2.5); scene.add(rimViolet);
-    var sparkle=new THREE.PointLight(0xffffff,40,20); scene.add(sparkle);
-
-    // ── LOADER: a clear, faceted, refractive brilliant-cut diamond (per ref) ──
-    var dia=new THREE.Group(); scene.add(dia);
-    (function(){
-      var pts=[ new THREE.Vector2(0.001,0.42), new THREE.Vector2(0.62,0.42), new THREE.Vector2(1.0,0.06), new THREE.Vector2(0.0,-1.05) ];
-      var geo=new THREE.LatheGeometry(pts,18); // low segments => real facets
-      var mat=new THREE.MeshPhysicalMaterial({ color:0xffffff, metalness:0, roughness:0.02, transmission:0.72, thickness:2.2, ior:2.42, clearcoat:1, clearcoatRoughness:0, envMapIntensity:3.3, iridescence:1, iridescenceIOR:2.0, reflectivity:1, specularIntensity:1, transparent:true, flatShading:true });
-      try{ mat.dispersion=5; }catch(e){}
-      var gem=new THREE.Mesh(geo,mat); gem.scale.setScalar(1.15); dia.add(gem);
-    })();
-
-    // ── EMBLEM: cropped (fills frame), LAYERED EXTRUSION = real depth ──
-    var grp=new THREE.Group(); scene.add(grp); grp.visible=false;
-    var W=3.5, H=W*1288/1540; // cropped emblem aspect
+    var sparkle=new THREE.PointLight(0xffffff,36,20); scene.add(sparkle);
+    var grp=new THREE.Group(); scene.add(grp);
+    var W=3.5, H=W*1288/1540;
     var planeGeo=new THREE.PlaneGeometry(W,H), LAYERS=12, TH=0.30, layers=[], tl=new THREE.TextureLoader();
     function lightMode(){ try{ return window.matchMedia('(prefers-color-scheme: light)').matches; }catch(e){ return false; } }
     function src(){ return lightMode()?'/dcz/assets/emblem-gold-c.png':'/dcz/assets/emblem-platinum-c.png'; }
-    var emblemReady=false;
     function build(tex){
       tex.colorSpace=THREE.SRGBColorSpace; tex.anisotropy=renderer.capabilities.getMaxAnisotropy();
       if(layers.length){ layers.forEach(function(m){ m.material.map=tex; if(m.material.emissiveMap)m.material.emissiveMap=tex; m.material.needsUpdate=true; }); return; }
@@ -180,39 +161,24 @@
         var m=new THREE.MeshPhysicalMaterial({ map:tex, transparent:true, alphaTest:0.07, color:col, metalness:front?0.85:0.92, roughness:front?0.26:(0.4+f*0.3), clearcoat:front?0.6:0, envMapIntensity:front?1.5:0.45, emissive:front?0xffffff:0x000000, emissiveMap:front?tex:null, emissiveIntensity:front?0.1:0 });
         var mesh=new THREE.Mesh(planeGeo,m); mesh.position.z=z; grp.add(mesh); layers.push(mesh);
       }
-      emblemReady=true;
+      host.classList.add('live');
     }
-    function loadEmblem(){ tl.load(src(), build, undefined, function(){ emblemReady=true; }); }
-    setTimeout(function(){ emblemReady=true; }, 4500);
+    function loadEmblem(){ tl.load(src(), build); }
     loadEmblem();
     try{ window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', loadEmblem); }catch(e){}
-
-    // ── interaction: follow mouse/touch (always) + drag-spin (inertia) + scroll-react ──
     var dragging=false, px=0, py=0, velX=0, velY=0, rotX=0, rotY=0, pX=0, pY=0, scrollP=0;
     window.addEventListener('pointermove',function(e){ pX=(e.clientX/window.innerWidth)*2-1; pY=(e.clientY/window.innerHeight)*2-1; if(dragging){ var dx=e.clientX-px, dy=e.clientY-py; px=e.clientX; py=e.clientY; rotY+=dx*0.008; rotX+=dy*0.008; velY=dx*0.008; velX=dy*0.008; rotX=Math.max(-0.9,Math.min(0.9,rotX)); } });
     canvas.addEventListener('pointerdown',function(e){ dragging=true; px=e.clientX; py=e.clientY; velX=velY=0; canvas.setPointerCapture(e.pointerId); });
     window.addEventListener('pointerup',function(){ dragging=false; });
     window.addEventListener('scroll',function(){ scrollP=Math.min(1,(window.scrollY||window.pageYOffset||0)/(window.innerHeight*0.9)); },{passive:true});
-
-    var revealed=false, t0=performance&&performance.now?performance.now():0;
-    function reveal(){ if(revealed)return; revealed=true; grp.visible=true; scene.background=null; host.classList.add('live'); loadEl.classList.add('done'); var f=0; (function fade(){ f+=0.04; dia.scale.setScalar(Math.max(0.001,1-f)); dia.rotation.z+=0.06; if(f<1){requestAnimationFrame(fade);} else { dia.visible=false; } })(); }
-
     var clock=new THREE.Clock();
     function resize(){ var w=host.clientWidth,h=host.clientHeight; renderer.setSize(w,h,false); var aspect=w/h; camera.aspect=aspect; var halfTan=Math.tan(camera.fov*Math.PI/180/2), margin=0.92; var dH=(H/2)/(margin*halfTan), dW=(W/2)/(margin*halfTan*aspect); camera.position.z=Math.max(dH,dW,2.4); camera.updateProjectionMatrix(); }
     window.addEventListener('resize',resize); resize();
-
     (function loop(){ requestAnimationFrame(loop); var t=clock.getElapsedTime();
-      var now=performance&&performance.now?performance.now():0;
-      if(!revealed){ // diamond loader phase
-        dia.rotation.y=t*1.1; dia.rotation.x=Math.sin(t*0.6)*0.25+0.15;
-        sparkle.position.set(Math.cos(t*2.2)*3, Math.sin(t*2.0)*3, 3);
-        if(emblemReady && (now-t0)>1900) reveal();
-      } else {
-        // follow mouse/touch + scroll-spin + living float; drag adds inertia
-        rotY+=velY; rotX+=velX; velY*=0.92; velX*=0.92;
-        if(!dragging){ var tgtY=pX*0.5 + scrollP*0.9 + Math.sin(t*0.35)*0.12, tgtX=pY*0.34 + scrollP*0.35 + Math.sin(t*0.3)*0.06; rotY+=(tgtY-rotY)*0.06; rotX+=(tgtX-rotX)*0.06; }
-        grp.rotation.y=rotY; grp.rotation.x=rotX; grp.position.y=Math.sin(t*0.7)*0.05 - scrollP*0.4; grp.position.z=-scrollP*1.2;
-      }
+      rotY+=velY; rotX+=velX; velY*=0.92; velX*=0.92;
+      if(!dragging){ var tgtY=pX*0.5 + scrollP*0.9 + Math.sin(t*0.35)*0.12, tgtX=pY*0.34 + scrollP*0.35 + Math.sin(t*0.3)*0.06; rotY+=(tgtY-rotY)*0.06; rotX+=(tgtX-rotX)*0.06; }
+      grp.rotation.y=rotY; grp.rotation.x=rotX; grp.position.y=Math.sin(t*0.7)*0.05 - scrollP*0.4; grp.position.z=-scrollP*1.2;
+      sparkle.position.set(Math.cos(t*1.6)*3.2, Math.sin(t*1.4)*2.4, 3.2);
       sp1.target.position.set(Math.sin(t*0.6)*1.6,0.3,0); sp1.position.x=Math.sin(t*0.6)*2.5-3;
       sp2.target.position.set(Math.sin(t*0.5+2)*1.6,-0.2,0); sp2.position.x=Math.sin(t*0.5+2)*2.5+3;
       renderer.render(scene,camera);
