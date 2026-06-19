@@ -132,7 +132,7 @@
     var host=document.getElementById('hero3d'), canvas=document.getElementById('coin');
     var renderer; try{ renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:true,powerPreference:'high-performance'}); }catch(e){ return; }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
-    renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.12;
+    renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.22;
     var scene=new THREE.Scene(); var camera=new THREE.PerspectiveCamera(34,1,0.1,100); camera.position.set(0,0,5);
     // brand-colored studio env (the metal reflects this)
     var ec=document.createElement('canvas'); ec.width=512; ec.height=256; var g=ec.getContext('2d');
@@ -173,7 +173,7 @@
     canvas.addEventListener('pointermove',function(e){ if(!dragging)return; var dx=e.clientX-px, dy=e.clientY-py; px=e.clientX; py=e.clientY; rotY+=dx*0.008; rotX+=dy*0.008; velY=dx*0.008; velX=dy*0.008; rotX=Math.max(-0.8,Math.min(0.8,rotX)); rotY=Math.max(-1.1,Math.min(1.1,rotY)); });
     window.addEventListener('pointerup',function(){ dragging=false; });
     var clock=new THREE.Clock();
-    function resize(){ var w=host.clientWidth,h=host.clientHeight; renderer.setSize(w,h,false); var aspect=w/h; camera.aspect=aspect; var halfTan=Math.tan(camera.fov*Math.PI/180/2), margin=0.82; var dH=(H/2)/(margin*halfTan), dW=(W/2)/(margin*halfTan*aspect); camera.position.z=Math.max(dH,dW,3); camera.updateProjectionMatrix(); }
+    function resize(){ var w=host.clientWidth,h=host.clientHeight; renderer.setSize(w,h,false); var aspect=w/h; camera.aspect=aspect; var halfTan=Math.tan(camera.fov*Math.PI/180/2), margin=0.66; var dH=(H/2)/(margin*halfTan), dW=(W/2)/(margin*halfTan*aspect); camera.position.z=Math.max(dH,dW,2.6); camera.updateProjectionMatrix(); }
     window.addEventListener('resize',resize); resize();
     (function loop(){ requestAnimationFrame(loop); var t=clock.getElapsedTime();
       if(!dragging){ rotY+=velY; rotX+=velX; velY*=0.93; velX*=0.93; idle+=0.016; var ease=Math.min(idle*idle*0.0009,0.05);
