@@ -21,6 +21,13 @@
     --rose:#d9a37a;--rosegold:#c98a5e;--rose-pale:#ecc9a6;--rose-hi:#f6e2cc;--copper:#a8643c;
     --diamond:#eaecf0;--silver:#b8bcc4;--line:rgba(224,176,136,.16);
   }
+  html[data-theme="light"]{ --void:#eef1f5;--abyss:#e6eaf0;--ash:#dfe4ec;--pearl:#15181d;--bone:#3a4048;--mute:#69707a;--dust:#9aa2ac;--line:rgba(40,60,90,.16) }
+  html[data-theme="light"] body{ background:radial-gradient(ellipse 1100px 580px at 50% 102%, rgba(201,138,94,.12), transparent 62%), linear-gradient(180deg,#f4f7fc,#e7ecf3) }
+  html[data-theme="light"] .hero3d{ background:radial-gradient(ellipse 78% 66% at 50% 46%, rgba(214,224,238,.75), transparent 72%),#eef1f5 !important }
+  html[data-theme="light"] .hero-fallback{ filter:drop-shadow(0 16px 70px rgba(168,110,60,.3)) }
+  .themebtn{position:fixed;top:14px;right:14px;z-index:60;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:rgba(10,9,8,.5);backdrop-filter:blur(8px);color:var(--pearl);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .2s,background .3s}
+  html[data-theme="light"] .themebtn{background:rgba(255,255,255,.65);box-shadow:0 4px 18px rgba(0,0,0,.12)}
+  .themebtn:hover{transform:scale(1.09)}
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   ::selection{background:var(--rose);color:var(--void)}
   html{scroll-behavior:smooth}
@@ -109,6 +116,7 @@
 </head>
 <body>
 <div class="facets"></div>
+<button class="themebtn" id="themebtn" title="Toggle light / dark" aria-label="Toggle theme">&#9790;</button>
 
 <!-- ── HERO: clear-diamond loader → BIG layered-depth 3D emblem; follows mouse/touch + reacts to scroll; platinum(dark)/gold(light) ── -->
 <style>
@@ -150,7 +158,7 @@
     var grp=new THREE.Group(); scene.add(grp);
     var W=3.5, H=W*1288/1540;
     var planeGeo=new THREE.PlaneGeometry(W,H), LAYERS=12, TH=0.30, layers=[], tl=new THREE.TextureLoader();
-    function lightMode(){ try{ return window.matchMedia('(prefers-color-scheme: light)').matches; }catch(e){ return false; } }
+    function lightMode(){ return document.documentElement.getAttribute('data-theme')==='light'; }catch(e){ return false; } }
     function src(){ return lightMode()?'/dcz/assets/emblem-gold-c.png':'/dcz/assets/emblem-platinum-c.png'; }
     function build(tex){
       tex.colorSpace=THREE.SRGBColorSpace; tex.anisotropy=renderer.capabilities.getMaxAnisotropy();
@@ -165,7 +173,7 @@
     }
     function loadEmblem(){ tl.load(src(), build); }
     loadEmblem();
-    try{ window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', loadEmblem); }catch(e){}
+    window.addEventListener('dcztheme', loadEmblem);
     var dragging=false, px=0, py=0, velX=0, velY=0, rotX=0, rotY=0, pX=0, pY=0, scrollP=0;
     window.addEventListener('pointermove',function(e){ pX=(e.clientX/window.innerWidth)*2-1; pY=(e.clientY/window.innerHeight)*2-1; if(dragging){ var dx=e.clientX-px, dy=e.clientY-py; px=e.clientX; py=e.clientY; rotY+=dx*0.008; rotX+=dy*0.008; velY=dx*0.008; velX=dy*0.008; rotX=Math.max(-0.9,Math.min(0.9,rotX)); } });
     canvas.addEventListener('pointerdown',function(e){ dragging=true; px=e.clientX; py=e.clientY; velX=velY=0; canvas.setPointerCapture(e.pointerId); });
@@ -281,5 +289,13 @@
 </script>
 <script src="https://hitthe.link/lib/scroll-scrub-video.js" defer></script>
 <script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
+<script>
+(function(){ var root=document.documentElement, b=document.getElementById('themebtn');
+  function set(m){ root.setAttribute('data-theme',m); try{localStorage.setItem('dcz-theme',m);}catch(e){} if(b)b.textContent=(m==='light'?'☀':'☾'); window.dispatchEvent(new CustomEvent('dcztheme',{detail:m})); }
+  var s; try{s=localStorage.getItem('dcz-theme');}catch(e){}
+  set(s || (window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));
+  if(b)b.addEventListener('click',function(){ set(root.getAttribute('data-theme')==='light'?'dark':'light'); });
+})();
+</script>
 </body>
 </html>
