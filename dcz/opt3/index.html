@@ -67,8 +67,8 @@
   @media (prefers-reduced-motion:reduce){.crest img{animation:none}}
   @media (max-width:680px){.crest img{width:min(280px,80vw)}}
 
-  /* ── STANDALONE SCROLL-SCRUB HERO ── video scrubs with scroll; nothing overlays it ── */
-  .hero-pin{position:relative;width:100%;height:260vh}
+  /* ── PLAYTHROUGH HERO ── sticky video plays FORWARD on first scroll-down, REVERSE back at top ── */
+  .hero-pin{position:relative;width:100%;height:150vh}
   .hero-sticky{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;background:#000}
   .hero-vid{width:100%;height:100%;object-fit:cover;display:block}
   .scroll-cue{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);z-index:3;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:rgba(243,247,251,.55);animation:cue 2.4s ease-in-out infinite;pointer-events:none}
@@ -133,7 +133,7 @@
   footer a{color:var(--cyan);text-decoration:none}
 
   @media (max-width:680px){
-    .hero-pin{height:215vh}
+    .hero-pin{height:140vh}
     .offer{border-right:0;border-bottom:1px solid rgba(174,214,255,.10);max-width:none}
     .offer:last-child{border-bottom:0}
   }
@@ -143,10 +143,10 @@
 <body>
 <div class="facets"></div>
 
-<!-- ── HERO: standalone scroll-scrub video (forward/back in sync with scroll) ── -->
+<!-- ── HERO: playthrough video — plays forward on first scroll-down, reverses back at top ── -->
 <section class="hero-pin" id="heroPin">
   <div class="hero-sticky">
-    <video class="hero-vid" id="heroVid" data-scrub-video data-mode="pin" data-pin="#heroPin" data-ease="0.1"
+    <video class="hero-vid" id="heroVid"
            muted playsinline webkit-playsinline preload="auto" poster="/diamond-cut/assets/hero-poster.jpg">
       <source src="/dcz/opt3/hero.mp4" type="video/mp4">
     </video>
@@ -249,7 +249,37 @@
     if(cue){window.addEventListener('scroll',function(){if(window.scrollY>40){cue.style.opacity='0';cue.style.transition='opacity .4s';}},{passive:true,once:true});}
   })();
 </script>
-<script src="https://hitthe.link/lib/scroll-scrub-video.js" defer></script>
+<script>
+  /* PLAYTHROUGH HERO — play the clip forward on the first scroll-down, and in reverse
+     once you scroll back to the very top. Natural playback (not scroll-scrubbed). */
+  (function(){
+    var v=document.getElementById('heroVid'); if(!v) return;
+    var raf=0, armedDown=true, lastY=window.scrollY||window.pageYOffset||0;
+    function stopRaf(){ if(raf){cancelAnimationFrame(raf);raf=0;} }
+    function forward(){
+      stopRaf();
+      try{ v.playbackRate=1; var p=v.play(); if(p&&p.catch)p.catch(function(){}); }catch(e){}
+    }
+    function reverse(){
+      stopRaf();
+      try{ v.pause(); }catch(e){}
+      if(v.currentTime<=0.03){ v.currentTime=0; return; }
+      var last=(performance&&performance.now)?performance.now():0, RATE=1.35;
+      (function step(now){
+        var dt=(now-last)/1000; last=now;
+        v.currentTime=Math.max(0, v.currentTime - dt*RATE);
+        if(v.currentTime>0.03){ raf=requestAnimationFrame(step); } else { v.currentTime=0; raf=0; }
+      })(last);
+    }
+    window.addEventListener('scroll', function(){
+      var y=window.scrollY||window.pageYOffset||0;
+      var dir = y>lastY ? 'down' : (y<lastY ? 'up' : null);
+      lastY=y;
+      if(dir==='down' && armedDown && y>4){ forward(); armedDown=false; }   // 1st scroll down -> forward
+      else if(dir==='up' && y<=2){ reverse(); armedDown=true; }              // back at top -> reverse + re-arm
+    },{passive:true});
+  })();
+</script>
 <script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
 </body>
 </html>
