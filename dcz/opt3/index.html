@@ -16,11 +16,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;800&family=Inter:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <!--
   ====================================================================
-  /dcz/opt3 — the CINEMATIC variant (sibling of opt1 rose-gold + opt2
-  scroll-scrub). A full-bleed AUTOPLAY-LOOP hero video (1280x720, 20s)
-  with the diamond brand lockup laid over it and a scrim feathering the
-  footage into the dark field, then the same real Diamond Cutz content.
-  Hero video: /dcz/opt3/hero.mp4
+  /dcz/opt3 — SCROLL-SCRUB video hero variant (the video scrubs
+  forward/back in sync with scroll, mirroring opt2's mechanic) on the
+  new 20s clip. Nothing overlays the footage; the diamond brand lockup
+  animates in beneath it. Hero video: /dcz/opt3/hero.mp4 (1280x720).
   ====================================================================
 -->
 <style>
@@ -56,45 +55,41 @@
   @keyframes fire{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
   @media (prefers-reduced-motion:reduce){.diamond-text{animation:none;background-position:30% 50%}}
 
-  /* ── CINEMATIC HERO: full-bleed autoplay-loop video + brand lockup over it ── */
-  .hero{position:relative;width:100%;height:100vh;height:100svh;overflow:hidden;background:#000;display:flex;align-items:center;justify-content:center}
-  .hero video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:0}
-  /* scrim: darken for legibility + feather the footage into the page at the bottom */
-  .hero::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
-    background:
-      radial-gradient(ellipse 90% 70% at 50% 42%, transparent 38%, rgba(0,0,0,.34) 72%, rgba(0,0,0,.62) 100%),
-      linear-gradient(180deg, rgba(0,0,0,.42) 0%, rgba(0,0,0,.12) 26%, rgba(0,0,0,.18) 62%, rgba(0,0,0,.78) 90%, var(--void) 100%)}
-  .hero-lock{position:relative;z-index:2;text-align:center;padding:0 26px;transform:translateY(-2vh)}
-  .hero-lock .kicker{font-family:'Cinzel',serif;font-size:clamp(9px,1.5vw,11px);letter-spacing:.5em;text-transform:uppercase;color:var(--glacier);margin-bottom:16px;text-shadow:0 2px 18px rgba(0,0,0,.7)}
-  .hero-lock h1{font-family:'Cinzel',serif;font-weight:800;font-size:clamp(34px,8vw,86px);line-height:.98;letter-spacing:.02em;margin-bottom:14px;text-shadow:0 6px 40px rgba(0,0,0,.6)}
-  .hero-lock .tag{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;font-size:clamp(16px,2.6vw,27px);color:var(--pearl);text-shadow:0 2px 22px rgba(0,0,0,.85);margin-bottom:8px}
-  .hero-lock .stallione{font-family:'Cinzel',serif;font-weight:600;font-size:clamp(10px,1.5vw,13px);letter-spacing:.42em;color:var(--bone);text-transform:uppercase;text-shadow:0 2px 18px rgba(0,0,0,.8)}
-  .hero-lock .stallione span{color:var(--cyan)}
-  .hero-cta{display:flex;gap:13px;justify-content:center;flex-wrap:wrap;margin-top:30px}
-  .scroll-cue{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);z-index:3;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:rgba(243,247,251,.6);animation:cue 2.4s ease-in-out infinite;pointer-events:none}
-  @keyframes cue{0%,100%{opacity:.3;transform:translateX(-50%) translateY(0)}50%{opacity:.8;transform:translateX(-50%) translateY(5px)}}
-
-  .btn{display:inline-flex;align-items:center;gap:9px;padding:15px 28px;text-decoration:none;border-radius:3px;font-family:'Inter';font-size:13px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;transition:transform .2s,box-shadow .2s,border-color .2s,background .2s}
-  .btn.primary{background:linear-gradient(135deg,#ffffff 0%,var(--glacier) 38%,var(--azure) 72%,var(--cyan) 100%);color:#04121f;font-weight:600;box-shadow:0 8px 34px rgba(127,184,255,.42),inset 0 1px 0 rgba(255,255,255,.85)}
-  .btn.primary:hover{transform:translateY(-2px);box-shadow:0 12px 42px rgba(169,232,255,.55)}
-  .btn.ghost{background:rgba(5,7,10,.35);color:var(--pearl);border:1px solid rgba(191,233,255,.35);backdrop-filter:blur(3px)}
-  .btn.ghost:hover{border-color:var(--cyan);background:rgba(127,184,255,.16)}
-
-  .wrap{position:relative;z-index:10;max-width:1080px;margin:0 auto;padding:0 28px}
-  .reveal{opacity:0;transform:translateY(30px);filter:blur(5px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1),filter .7s ease;will-change:opacity,transform}
-  .reveal.in{opacity:1;transform:none;filter:none}
-
   .crest{display:flex;justify-content:center;margin:0 auto 22px;width:100%}
-  .crest img{width:min(300px,68vw);height:auto;display:block;
+  .crest img{
+    width:min(330px,72vw);height:auto;display:block;
     -webkit-mask-image:radial-gradient(ellipse 62% 62% at 50% 48%, #000 52%, rgba(0,0,0,.55) 74%, transparent 92%);
             mask-image:radial-gradient(ellipse 62% 62% at 50% 48%, #000 52%, rgba(0,0,0,.55) 74%, transparent 92%);
     filter:drop-shadow(0 10px 40px rgba(127,184,255,.28)) drop-shadow(0 0 70px rgba(199,160,255,.14));
-    animation:crestFloat 7s ease-in-out infinite}
+    animation:crestFloat 7s ease-in-out infinite;
+  }
   @keyframes crestFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  @media (prefers-reduced-motion:reduce){.crest img{animation:none}}
+  @media (max-width:680px){.crest img{width:min(280px,80vw)}}
 
-  .intro{padding:70px 0 50px;text-align:center}
+  /* ── STANDALONE SCROLL-SCRUB HERO ── video scrubs with scroll; nothing overlays it ── */
+  .hero-pin{position:relative;width:100%;height:260vh}
+  .hero-sticky{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;background:#000}
+  .hero-vid{width:100%;height:100%;object-fit:cover;display:block}
+  .scroll-cue{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);z-index:3;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:rgba(243,247,251,.55);animation:cue 2.4s ease-in-out infinite;pointer-events:none}
+  @keyframes cue{0%,100%{opacity:.25;transform:translateX(-50%) translateY(0)}50%{opacity:.7;transform:translateX(-50%) translateY(5px)}}
+
+  .wrap{position:relative;z-index:10;max-width:1080px;margin:0 auto;padding:0 28px}
+
+  .reveal{opacity:0;transform:translateY(30px);filter:blur(5px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1),filter .7s ease;will-change:opacity,transform}
+  .reveal.in{opacity:1;transform:none;filter:none}
+
+  .intro{padding:74px 0 56px;text-align:center}
   .intro .kicker{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.5em;text-transform:uppercase;color:var(--glacier);margin-bottom:18px}
-  .intro h2{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;font-size:clamp(24px,4.6vw,46px);line-height:1.1}
+  .intro h1{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;font-size:clamp(26px,5vw,52px);line-height:1.08;margin-bottom:16px}
+  .intro .stallione{font-family:'Cinzel',serif;font-weight:600;font-size:clamp(12px,1.6vw,15px);letter-spacing:.42em;color:var(--bone);text-transform:uppercase}
+  .intro .stallione span{color:var(--cyan)}
+  .cta-row{display:flex;gap:13px;justify-content:center;flex-wrap:wrap;margin-top:32px}
+  .btn{display:inline-flex;align-items:center;gap:9px;padding:15px 28px;text-decoration:none;border-radius:3px;font-family:'Inter';font-size:13px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;transition:transform .2s,box-shadow .2s,border-color .2s,background .2s}
+  .btn.primary{background:linear-gradient(135deg,#ffffff 0%,var(--glacier) 38%,var(--azure) 72%,var(--cyan) 100%);color:#04121f;font-weight:600;box-shadow:0 8px 34px rgba(127,184,255,.42),inset 0 1px 0 rgba(255,255,255,.85)}
+  .btn.primary:hover{transform:translateY(-2px);box-shadow:0 12px 42px rgba(169,232,255,.55)}
+  .btn.ghost{background:transparent;color:var(--pearl);border:1px solid var(--line)}
+  .btn.ghost:hover{border-color:var(--cyan);background:rgba(127,184,255,.10)}
 
   section.band{padding:60px 0;border-top:1px solid var(--line)}
   .eyebrow{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.5em;text-transform:uppercase;color:var(--glacier);text-align:center;margin-bottom:18px}
@@ -138,6 +133,7 @@
   footer a{color:var(--cyan);text-decoration:none}
 
   @media (max-width:680px){
+    .hero-pin{height:215vh}
     .offer{border-right:0;border-bottom:1px solid rgba(174,214,255,.10);max-width:none}
     .offer:last-child{border-bottom:0}
   }
@@ -147,33 +143,32 @@
 <body>
 <div class="facets"></div>
 
-<!-- ── CINEMATIC HERO: autoplay-loop video with brand lockup over it ── -->
-<section class="hero">
-  <video autoplay muted loop playsinline webkit-playsinline preload="auto" poster="/diamond-cut/assets/hero-poster.jpg">
-    <source src="/dcz/opt3/hero.mp4" type="video/mp4">
-  </video>
-  <div class="hero-lock">
-    <div class="kicker">◆  Recording · Production · Live Entertainment  ◆</div>
-    <h1 class="diamond-text">DIAMOND CUTZ</h1>
-    <div class="tag">For all your music &amp; entertainment needs.</div>
-    <div class="stallione">A House of <span>STAL'LYON</span> · Atlanta, GA</div>
-    <div class="hero-cta">
-      <a class="btn primary" href="#booking">◆  Book the studio</a>
-      <a class="btn ghost" href="#music">Hear the sound</a>
-    </div>
+<!-- ── HERO: standalone scroll-scrub video (forward/back in sync with scroll) ── -->
+<section class="hero-pin" id="heroPin">
+  <div class="hero-sticky">
+    <video class="hero-vid" id="heroVid" data-scrub-video data-mode="pin" data-pin="#heroPin" data-ease="0.1"
+           muted playsinline webkit-playsinline preload="auto" poster="/diamond-cut/assets/hero-poster.jpg">
+      <source src="/dcz/opt3/hero.mp4" type="video/mp4">
+    </video>
+    <div class="scroll-cue">Scroll ◇</div>
   </div>
-  <div class="scroll-cue">Scroll ◇</div>
 </section>
 
 <div class="wrap">
 
+  <!-- INTRO (animates in beneath the hero) -->
   <section class="intro reveal">
     <div class="crest">
       <img src="/diamond-cut/assets/dcz-logo-diamond.png" width="864" height="864"
            alt="Diamond Cutz Studios — faceted diamond DS monogram crest" loading="eager" decoding="async">
     </div>
-    <div class="kicker">◆  Atlanta · Southern Soul  ◆</div>
-    <h2 class="diamond-text">Cut something timeless.</h2>
+    <div class="kicker">◆  Recording · Production · Live Entertainment  ◆</div>
+    <h1 class="diamond-text">For all your music &amp; entertainment needs.</h1>
+    <div class="stallione">A house of <span>STAL'LYON</span> · Atlanta, GA</div>
+    <div class="cta-row">
+      <a class="btn primary" href="#booking">◆  Book the studio</a>
+      <a class="btn ghost" href="#music">Hear the sound</a>
+    </div>
   </section>
 
   <section class="band reveal" id="about">
@@ -254,6 +249,7 @@
     if(cue){window.addEventListener('scroll',function(){if(window.scrollY>40){cue.style.opacity='0';cue.style.transition='opacity .4s';}},{passive:true,once:true});}
   })();
 </script>
+<script src="https://hitthe.link/lib/scroll-scrub-video.js" defer></script>
 <script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
 </body>
 </html>
