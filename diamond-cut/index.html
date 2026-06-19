@@ -110,26 +110,81 @@
 <body>
 <div class="facets"></div>
 
-<!-- ── HERO: standalone scroll-scrub video (forward/back in sync with scroll) ── -->
-<section class="hero-pin" id="heroPin">
-  <div class="hero-sticky">
-    <video class="hero-vid" id="heroVid" data-scrub-video data-mode="pin" data-pin="#heroPin" data-ease="0.1"
-           muted playsinline webkit-playsinline preload="auto" poster="assets/hero-poster.jpg"></video>
-    <script>
-      /* Serve the aspect-correct hero: portrait on phones, landscape on desktop/tablet.
-         Both are blurred-fill + center-locked logo so object-fit:cover never crops the focal point. */
-      (function(){
-        var v=document.getElementById('heroVid');
-        var mobile=window.matchMedia('(max-width:680px)').matches;
-        var s=document.createElement('source');
-        s.src=mobile?'execute-mobile.mp4':'execute-desktop.mp4';
-        s.type='video/mp4';
-        v.appendChild(s); v.load();
-      })();
-    </script>
-    <div class="scroll-cue">Scroll ◇</div>
-  </div>
+<!-- ── HERO: 3D arch emblem in real 3D space — extruded, lit, floating/tilting; platinum (dark) / gold (light); drag to tilt; never crops ── -->
+<style>
+  .hero3d{position:relative;width:100%;height:100vh;height:100svh;overflow:hidden;background:radial-gradient(ellipse 72% 62% at 50% 46%, rgba(20,30,52,.55), transparent 70%),#000;touch-action:pan-y}
+  #coin{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;cursor:grab}
+  #coin:active{cursor:grabbing}
+  .hero-fallback{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(86vmin,860px);z-index:0;opacity:1;transition:opacity .6s;filter:drop-shadow(0 14px 60px rgba(127,184,255,.3))}
+  .hero3d.live .hero-fallback{opacity:0;pointer-events:none}
+  .spin-cue{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:3;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:rgba(243,247,251,.5);animation:scue 2.6s ease-in-out infinite;pointer-events:none}
+  @keyframes scue{0%,100%{opacity:.3}50%{opacity:.75}}
+</style>
+<section class="hero3d" id="hero3d">
+  <canvas id="coin"></canvas>
+  <img class="hero-fallback" src="/dcz/assets/emblem-platinum.png" alt="Diamond Cutz Studios emblem" decoding="async">
+  <div class="spin-cue">✦ drag to tilt ✦</div>
 </section>
+<script type="importmap">{"imports":{"three":"/lib/three.module.min.js"}}</script>
+<script type="module">
+  import * as THREE from 'three';
+  (function(){
+    var host=document.getElementById('hero3d'), canvas=document.getElementById('coin');
+    var renderer; try{ renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:true,powerPreference:'high-performance'}); }catch(e){ return; }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+    renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.12;
+    var scene=new THREE.Scene(); var camera=new THREE.PerspectiveCamera(34,1,0.1,100); camera.position.set(0,0,5);
+    // brand-colored studio env (the metal reflects this)
+    var ec=document.createElement('canvas'); ec.width=512; ec.height=256; var g=ec.getContext('2d');
+    var grd=g.createLinearGradient(0,0,0,256); grd.addColorStop(0,'#0b1320'); grd.addColorStop(.42,'#1a2a44'); grd.addColorStop(.5,'#dCeaff'); grd.addColorStop(.58,'#16243a'); grd.addColorStop(1,'#05070a');
+    g.fillStyle=grd; g.fillRect(0,0,512,256);
+    function blob(x,y,r,c){ g.fillStyle=c; g.beginPath(); g.arc(x,y,r,0,Math.PI*2); g.fill(); }
+    blob(120,66,36,'rgba(255,255,255,.95)'); blob(380,56,48,'rgba(169,232,255,.85)'); blob(300,150,60,'rgba(199,160,255,.5)'); blob(70,150,30,'rgba(255,232,192,.6)');
+    var envTex=new THREE.CanvasTexture(ec); envTex.mapping=THREE.EquirectangularReflectionMapping; envTex.colorSpace=THREE.SRGBColorSpace;
+    var pmrem=new THREE.PMREMGenerator(renderer); var envRT=pmrem.fromEquirectangular(envTex); scene.environment=envRT.texture; envTex.dispose(); pmrem.dispose();
+    scene.add(new THREE.AmbientLight(0x8198b8,0.55));
+    var key=new THREE.DirectionalLight(0xffffff,2.0); key.position.set(2,3.2,4); scene.add(key);
+    // two sweeping spotlights for moving highlights across the chrome
+    var sp1=new THREE.SpotLight(0xffffff,120,22,0.6,0.5,1.2); sp1.position.set(-5,3,5); scene.add(sp1); scene.add(sp1.target);
+    var sp2=new THREE.SpotLight(0xbfe0ff,90,22,0.7,0.5,1.2); sp2.position.set(5,-2,5); scene.add(sp2); scene.add(sp2.target);
+    var rimViolet=new THREE.PointLight(0xc7a0ff,26,30); rimViolet.position.set(3.5,-3,2.5); scene.add(rimViolet);
+    // ── the emblem in 3D space: front face + darker back copy = real extruded depth ──
+    var grp=new THREE.Group(); scene.add(grp);
+    var W=3.6, H=W*1440/2560; // emblem aspect 16:9
+    var emblem=null, back=null, tl=new THREE.TextureLoader();
+    function lightMode(){ try{ return window.matchMedia('(prefers-color-scheme: light)').matches; }catch(e){ return false; } }
+    function src(){ return lightMode() ? '/dcz/assets/emblem-gold.png' : '/dcz/assets/emblem-platinum.png'; }
+    function applyTex(tex){
+      tex.colorSpace=THREE.SRGBColorSpace; tex.anisotropy=renderer.capabilities.getMaxAnisotropy();
+      if(!emblem){
+        var mat=new THREE.MeshPhysicalMaterial({ map:tex, transparent:true, alphaTest:0.06, metalness:0.85, roughness:0.3, clearcoat:0.55, clearcoatRoughness:0.22, envMapIntensity:1.35, emissive:0xffffff, emissiveMap:tex, emissiveIntensity:0.1 });
+        emblem=new THREE.Mesh(new THREE.PlaneGeometry(W,H), mat); grp.add(emblem);
+        var bmat=new THREE.MeshPhysicalMaterial({ map:tex, transparent:true, alphaTest:0.06, color:0x4a4f57, metalness:0.9, roughness:0.55, envMapIntensity:0.5 });
+        back=new THREE.Mesh(new THREE.PlaneGeometry(W,H), bmat); back.position.z=-0.07; grp.add(back);
+        host.classList.add('live');
+      } else { emblem.material.map=tex; emblem.material.emissiveMap=tex; emblem.material.needsUpdate=true; back.material.map=tex; back.material.needsUpdate=true; }
+    }
+    function loadEmblem(){ tl.load(src(), applyTex); }
+    loadEmblem();
+    try{ window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', loadEmblem); }catch(e){}
+    // interaction: drag-to-tilt in 3D + inertia, easing back to a living float/tilt
+    var dragging=false, px=0, py=0, velX=0, velY=0, rotX=0, rotY=0, idle=0;
+    canvas.addEventListener('pointerdown',function(e){ dragging=true; px=e.clientX; py=e.clientY; velX=velY=0; idle=0; canvas.setPointerCapture(e.pointerId); });
+    canvas.addEventListener('pointermove',function(e){ if(!dragging)return; var dx=e.clientX-px, dy=e.clientY-py; px=e.clientX; py=e.clientY; rotY+=dx*0.008; rotX+=dy*0.008; velY=dx*0.008; velX=dy*0.008; rotX=Math.max(-0.8,Math.min(0.8,rotX)); rotY=Math.max(-1.1,Math.min(1.1,rotY)); });
+    window.addEventListener('pointerup',function(){ dragging=false; });
+    var clock=new THREE.Clock();
+    function resize(){ var w=host.clientWidth,h=host.clientHeight; renderer.setSize(w,h,false); var aspect=w/h; camera.aspect=aspect; var halfTan=Math.tan(camera.fov*Math.PI/180/2), margin=0.82; var dH=(H/2)/(margin*halfTan), dW=(W/2)/(margin*halfTan*aspect); camera.position.z=Math.max(dH,dW,3); camera.updateProjectionMatrix(); }
+    window.addEventListener('resize',resize); resize();
+    (function loop(){ requestAnimationFrame(loop); var t=clock.getElapsedTime();
+      if(!dragging){ rotY+=velY; rotX+=velX; velY*=0.93; velX*=0.93; idle+=0.016; var ease=Math.min(idle*idle*0.0009,0.05);
+        var wobY=Math.sin(t*0.4)*0.34, wobX=Math.sin(t*0.32)*0.11; rotY+=(wobY-rotY)*ease; rotX+=(wobX-rotX)*ease; }
+      grp.rotation.y=rotY; grp.rotation.x=rotX; grp.position.y=Math.sin(t*0.7)*0.06;
+      sp1.target.position.set(Math.sin(t*0.6)*1.6, 0.3, 0); sp1.position.x=Math.sin(t*0.6)*2.5-3;
+      sp2.target.position.set(Math.sin(t*0.5+2)*1.6, -0.2, 0); sp2.position.x=Math.sin(t*0.5+2)*2.5+3;
+      renderer.render(scene,camera);
+    })();
+  })();
+</script>
 
 <div class="wrap">
 
