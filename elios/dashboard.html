@@ -494,8 +494,14 @@
     if(/[",\n\r]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
     return s;
   }
+  // Honor the active rep filter in the export: when a specific rep/username is
+  // selected (FILT.rep), export ONLY that rep's rows and name the file after the
+  // rep. "All Reps" (FILT.rep === '') keeps the full export. visibleLeads()
+  // already enforces FILT.rep + status/event/search, so it is the source of truth.
+  function repSlug(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
   function exportCsv(){
-    var rows = (typeof visibleLeads === 'function') ? visibleLeads() : MY_LEADS;
+    var rows = (typeof visibleLeads === 'function') ? visibleLeads()
+      : (FILT.rep ? MY_LEADS.filter(function(l){ return l.rep === FILT.rep; }) : MY_LEADS);
     var cols = ['name','phone','address','project_type','event','rep','pipeline_stage','disposition','block_value','notes'];
     var lines = [cols.join(',')];
     rows.forEach(function(l){
@@ -503,10 +509,11 @@
     });
     var d = new Date();
     var stamp = d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2);
+    var who = FILT.rep ? ('-rep-' + repSlug(FILT.rep)) : '';
     var blob = new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
-    a.href = url; a.download = 'tracking-together-leads-' + stamp + '.csv';
+    a.href = url; a.download = 'tracking-together-leads' + who + '-' + stamp + '.csv';
     document.body.appendChild(a); a.click();
     setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
   }
