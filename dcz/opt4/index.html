@@ -204,7 +204,15 @@
     window.addEventListener('pointerup',up);
 
     var clock=new THREE.Clock();
-    function resize(){ var w=host.clientWidth,h=host.clientHeight; renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); }
+    function resize(){
+      var w=host.clientWidth,h=host.clientHeight; renderer.setSize(w,h,false);
+      var aspect=w/h; camera.aspect=aspect;
+      // frame the medallion with margin on whichever axis is the constraint (fits portrait + desktop)
+      var halfTan=Math.tan(camera.fov*Math.PI/180/2), margin=0.80;
+      var dH=R/(margin*halfTan), dW=R/(margin*halfTan*aspect);
+      camera.position.z=Math.max(dH,dW,3.2);
+      camera.updateProjectionMatrix();
+    }
     window.addEventListener('resize',resize); resize();
 
     (function loop(){
