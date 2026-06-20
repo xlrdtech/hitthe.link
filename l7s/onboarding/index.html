@@ -2,232 +2,236 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>L7 Solutions — Onboarding System v1 · Yes → Pay → Sign → Upload</title>
-<meta name="description" content="L7 Solutions onboarding: a clean, compliant path from yes to activated. Confirm your offer, pay securely, sign your agreement, upload documents through a secure portal — no scrambling.">
-<meta name="theme-color" content="#0b0b0d">
-<meta property="og:title" content="L7 Solutions — Onboarding System v1">
-<meta property="og:description" content="Yes → Pay → Sign → Upload → Activate. A clean, compliant onboarding flow.">
-<meta property="og:type" content="website">
-<meta property="og:image" content="https://hitthe.link/l7s/assets/hero-emblem.png">
-<link rel="icon" type="image/svg+xml" href="/l7s/assets/logo.svg">
-<script>(function(){var t=localStorage.getItem('l7s-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>L7S — Onboarding System v1 · Yes → Pay → Sign → Upload</title>
+<meta name="description" content="L7S Onboarding System v1 — the standard client intake flow: confirm yes, take payment via Stripe, send agreement & intake, collect documents through a secure uploader, verify, then activate and archive.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <style>
-  :root{ /* LIGHT — default */
-    --bg:#f6f5f1; --bg2:#ffffff; --panel:#ffffff; --line:#e7e4dc;
-    --ink:#16161b; --mut:#5c5c66; --red:#dc2626; --red2:#d11320; --gold:#a9781a;
-    --rad:14px; --max:1120px;
-    --redgrad:linear-gradient(135deg,#ff3b46,#b3121d);
-    --glow1:rgba(220,38,38,.09); --glow2:rgba(199,154,58,.08);
-    --cardgrad:linear-gradient(180deg,#ffffff,#fbfaf6);
-    --bandgrad:linear-gradient(135deg,rgba(220,38,38,.08),rgba(199,154,58,.05));
-    --chkbg:rgba(220,38,38,.08); --chkline:rgba(220,38,38,.28);
-    --disc:#8a8a93; --shadow:0 12px 34px rgba(20,20,30,.10);
-    color-scheme:light;
-  }
-  html[data-theme="dark"]{
-    --bg:#0b0b0d; --bg2:#121215; --panel:#161619; --line:#262629;
-    --ink:#f4f4f6; --mut:#a2a2ad; --red:#e11d2a; --red2:#ff3b46; --gold:#d9b25a;
-    --glow1:rgba(225,29,42,.18); --glow2:rgba(225,29,42,.08);
-    --cardgrad:linear-gradient(180deg,#161619,#121215);
-    --bandgrad:linear-gradient(135deg,rgba(225,29,42,.14),rgba(225,29,42,.05));
-    --chkbg:rgba(225,29,42,.12); --chkline:rgba(225,29,42,.35);
-    --disc:#7c7c86; --shadow:0 8px 28px rgba(0,0,0,.4);
-    color-scheme:dark;
-  }
-  body,.step,.docs,.tcard,.band,.btn,.pill,.glow{transition:background .25s,color .25s,border-color .25s}
-  *{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth}
-  body{background:var(--bg);color:var(--ink);font:16px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Inter,Roboto,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-  a{color:inherit;text-decoration:none}
-  .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+:root{
+  --void:#000;--abyss:#0a0a08;--card:#15140f;
+  --pearl:#f5f3ec;--bone:#cfc9b8;--mute:#8f897a;--dust:#5b5648;
+  --gold:#d4af37;--gold-hi:#f4e3a1;--gold-deep:#9a7b2e;--ember:#caa24a;
+  --green:#39d98a;--line:rgba(212,175,55,.16);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--void);color:var(--pearl);font-family:'Inter',sans-serif;font-weight:300;-webkit-font-smoothing:antialiased}
+body{background:radial-gradient(ellipse 1100px 560px at 50% -5%,rgba(212,175,55,.14),transparent 60%),var(--void);min-height:100vh;line-height:1.55;padding-bottom:70px}
 
-  .glow{position:fixed;inset:0;z-index:0;pointer-events:none;
-    background:
-      radial-gradient(600px 420px at 80% -8%,var(--glow1),transparent 60%),
-      radial-gradient(700px 480px at 6% 4%,var(--glow2),transparent 60%);}
-  .theme-toggle{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;font-size:16px;display:grid;place-items:center;flex:none;transition:.18s}
-  .theme-toggle:hover{border-color:var(--red2);color:var(--red2)}
-  header,main,footer{position:relative;z-index:1}
+/* sticky top bar — mirrors the checklist bar */
+.bar-wrap{position:sticky;top:0;z-index:40;background:rgba(8,8,5,.88);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.bar-inner{max-width:820px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;gap:14px}
+.bar-mark{font-family:'Cinzel',serif;font-weight:600;font-size:12px;letter-spacing:.26em;color:var(--gold);white-space:nowrap}
+.bar-flow{flex:1;display:flex;align-items:center;gap:8px;justify-content:flex-end;flex-wrap:wrap;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.14em;color:var(--mute);text-transform:uppercase}
+.bar-flow b{color:var(--bone);font-weight:600}
+.bar-flow .arw{color:var(--gold);font-weight:600}
+@media(max-width:560px){.bar-flow{display:none}}
 
-  nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
-  .brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:-.01em;font-size:18px}
-  .mark{width:36px;height:36px;border-radius:9px;box-shadow:0 0 20px rgba(225,29,42,.45);flex:none;display:block}
-  .brand small{display:block;color:var(--mut);font-weight:500;font-size:11px;letter-spacing:.02em;margin-top:1px}
-  .nav-links{display:flex;gap:24px;color:var(--mut);font-size:14px;font-weight:500}
-  .nav-links a:hover{color:var(--red2)}
-  .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 21px;border-radius:10px;font-weight:700;font-size:14.5px;border:1px solid transparent;cursor:pointer;transition:.18s}
-  .btn-pri{background:var(--redgrad);color:#fff;box-shadow:0 8px 28px rgba(225,29,42,.3)}
-  .btn-pri:hover{transform:translateY(-2px);box-shadow:0 12px 38px rgba(225,29,42,.42)}
-  .btn-ghost{border-color:var(--line);color:var(--ink)}
-  .btn-ghost:hover{border-color:var(--red2);color:var(--red2)}
-  @media(max-width:860px){.nav-links{display:none}}
+.wrap{max-width:820px;margin:0 auto;padding:0 18px}
 
-  .hero{padding:64px 0 48px;text-align:center;max-width:820px;margin:0 auto}
-  .pill{display:inline-flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--red2);background:rgba(225,29,42,.08);border:1px solid rgba(225,29,42,.28);padding:6px 14px;border-radius:999px;margin-bottom:24px}
-  .dot{width:7px;height:7px;border-radius:50%;background:var(--red2);box-shadow:0 0 10px var(--red2);animation:pulse 1.8s infinite}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-  h1{font-size:clamp(34px,5.4vw,60px);line-height:1.04;letter-spacing:-.025em;font-weight:850}
-  h1 .g{background:var(--redgrad);-webkit-background-clip:text;background-clip:text;color:transparent}
-  .sub{color:var(--mut);font-size:18.5px;margin:22px auto 32px;max-width:600px}
-  .cta-row{display:flex;gap:14px;flex-wrap:wrap;align-items:center;justify-content:center}
+/* hero */
+header.hero{padding:46px 0 22px;text-align:center}
+.kick{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.5em;text-transform:uppercase;color:var(--gold);margin-bottom:16px}
+.hero h1{font-family:'Cinzel',serif;font-weight:800;font-size:clamp(28px,6.5vw,48px);line-height:1.04;letter-spacing:.02em;background:linear-gradient(180deg,var(--gold-hi),var(--gold) 50%,var(--gold-deep) 78%,var(--gold-hi));-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:12px}
+.hero p{font-family:'Instrument Serif',serif;font-style:italic;font-size:clamp(16px,2.4vw,20px);color:var(--bone);max-width:600px;margin:0 auto}
+.note{max-width:640px;margin:18px auto 0;padding:14px 18px;background:rgba(212,175,55,.06);border:1px solid var(--line);border-radius:10px;font-size:13.5px;color:var(--bone)}
+.note b{color:var(--pearl)}
 
-  .flowbar{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:40px 0 0;color:var(--mut);font-weight:700;font-size:14px}
-  .flowbar b{color:var(--ink)}
-  .flowbar .arw{color:var(--red2)}
+/* flow rail under hero */
+.rail{max-width:640px;margin:22px auto 0;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;font-family:'Cinzel',serif;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--bone)}
+.rail .arw{color:var(--gold)}
+.rail b{color:var(--gold-hi);font-weight:600}
 
-  section{padding:66px 0}
-  .eyebrow{color:var(--red2);font-weight:700;font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:13px}
-  h2{font-size:clamp(26px,3.6vw,40px);letter-spacing:-.02em;line-height:1.1;font-weight:820}
-  .lead{color:var(--mut);font-size:17px;max-width:600px;margin-top:14px}
-  .center{text-align:center}.center .lead{margin-left:auto;margin-right:auto}
+/* section heads — mirror the checklist card heads */
+.sec-h{display:flex;align-items:baseline;gap:10px;margin:34px 0 4px}
+.sec-n{font-family:'Cinzel',serif;font-weight:600;font-size:13px;color:var(--gold);letter-spacing:.1em}
+.sec-h h2{font-family:'Cinzel',serif;font-weight:600;font-size:clamp(17px,2.6vw,21px);color:var(--pearl)}
+.sec-sub{color:var(--mute);font-size:13px;margin:2px 0 8px}
 
-  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:42px}
-  @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
-  @media(max-width:520px){.grid{grid-template-columns:1fr}}
-  .step{background:var(--cardgrad);border:1px solid var(--line);border-radius:var(--rad);padding:26px;transition:.2s;position:relative;overflow:hidden;box-shadow:var(--shadow)}
-  .step:hover{border-color:rgba(225,29,42,.45);transform:translateY(-4px)}
-  .step .num{font-family:Georgia,serif;font-size:13px;font-weight:800;color:var(--red2);background:rgba(225,29,42,.1);border:1px solid rgba(225,29,42,.25);width:34px;height:34px;border-radius:9px;display:grid;place-items:center;margin-bottom:16px}
-  .step h3{font-size:18px;letter-spacing:-.01em;margin-bottom:8px}
-  .step p{color:var(--mut);font-size:14px}
+/* the visual stepper */
+.stepper{position:relative;margin:14px 0 6px;padding-left:0}
+.step{position:relative;background:linear-gradient(180deg,var(--card),rgba(21,20,15,.6));border:1px solid var(--line);border-radius:14px;padding:20px 20px 20px 22px;margin:14px 0;display:flex;gap:16px;transition:border-color .2s,transform .15s}
+.step:hover{border-color:rgba(212,175,55,.4);transform:translateY(-2px)}
+.step .rod{flex:none;display:flex;flex-direction:column;align-items:center}
+.step .num{width:42px;height:42px;border-radius:11px;flex:none;display:grid;place-items:center;font-family:'Cinzel',serif;font-weight:800;font-size:16px;color:#1a1405;background:linear-gradient(135deg,var(--gold-hi),var(--gold-deep));box-shadow:0 4px 16px rgba(212,175,55,.28)}
+.step .wire{flex:1;width:2px;margin-top:8px;background:linear-gradient(180deg,rgba(212,175,55,.4),rgba(212,175,55,.05));border-radius:2px;min-height:6px}
+.step:last-child .wire{display:none}
+.step .body{flex:1;min-width:0;padding-bottom:2px}
+.step .lab{font-family:'Inter';font-weight:600;font-size:16.5px;color:var(--pearl);letter-spacing:-.01em}
+.step .help{font-size:13.5px;color:var(--bone);margin-top:6px;line-height:1.6}
+.step .help b{color:var(--pearl);font-weight:600}
+.tag{display:inline-block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border:1px solid rgba(212,175,55,.4);border-radius:4px;padding:2px 7px;margin-left:8px;vertical-align:middle;font-weight:500}
 
-  .split{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center}
-  @media(max-width:860px){.split{grid-template-columns:1fr}}
-  .docs{background:var(--cardgrad);border:1px solid var(--line);border-radius:18px;padding:30px;box-shadow:var(--shadow)}
-  .docs h3{font-size:16px;margin-bottom:16px;letter-spacing:-.01em}
-  .docitem{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14.5px}
-  .docitem:last-child{border-bottom:0}
-  .chk{width:22px;height:22px;border-radius:6px;background:var(--chkbg);border:1px solid var(--chkline);display:grid;place-items:center;color:var(--red2);font-size:12px;flex:none}
+/* integration plug-in chips */
+.plugs{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.plug{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:500;color:var(--bone);background:rgba(212,175,55,.07);border:1px solid var(--line);border-radius:999px;padding:5px 12px}
+.plug .pd{width:6px;height:6px;border-radius:50%;background:var(--gold);flex:none}
+.plug b{color:var(--gold-hi);font-weight:600}
 
-  .trust{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:42px}
-  @media(max-width:680px){.trust{grid-template-columns:1fr}}
-  .tcard{padding:24px;background:var(--panel);border:1px solid var(--line);border-radius:var(--rad);text-align:center;box-shadow:var(--shadow)}
-  .tcard .ic{font-size:24px;margin-bottom:10px}
-  .tcard h4{font-size:15.5px;margin-bottom:6px}
-  .tcard p{color:var(--mut);font-size:13.5px}
+/* required documents card */
+.docs{background:linear-gradient(180deg,var(--card),rgba(21,20,15,.6));border:1px solid var(--line);border-radius:14px;padding:22px 20px;margin:18px 0}
+.docs h3{font-family:'Cinzel',serif;font-weight:600;font-size:15px;color:var(--pearl);margin-bottom:4px}
+.docs .sub{color:var(--mute);font-size:12.5px;margin-bottom:14px}
+.docrow{display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-top:1px solid rgba(212,175,55,.09);font-size:14.5px;color:var(--bone)}
+.docrow:first-of-type{border-top:0}
+.docrow .chk{flex:none;width:22px;height:22px;border-radius:6px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.35);display:grid;place-items:center;color:var(--gold);font-size:12px;margin-top:1px}
+.docrow b{color:var(--pearl);font-weight:600}
+.docs .seal{margin-top:14px;padding-top:13px;border-top:1px solid rgba(212,175,55,.12);font-size:12px;color:var(--mute);line-height:1.55}
+.docs .seal b{color:var(--gold)}
 
-  .band{background:var(--bandgrad);border:1px solid rgba(225,29,42,.3);border-radius:24px;padding:56px;text-align:center;margin:24px 0}
-  .band h2{margin-bottom:14px}.band .lead{margin:0 auto 28px}
+/* CTA band */
+.band{background:linear-gradient(135deg,rgba(212,175,55,.1),rgba(154,123,46,.05));border:1px solid rgba(212,175,55,.3);border-radius:18px;padding:38px 26px;text-align:center;margin:34px 0 8px}
+.band h2{font-family:'Cinzel',serif;font-weight:600;font-size:clamp(20px,3.2vw,28px);color:var(--pearl);margin-bottom:10px}
+.band p{font-family:'Instrument Serif',serif;font-style:italic;font-size:16px;color:var(--bone);max-width:520px;margin:0 auto 22px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:14px 24px;border-radius:9px;font-family:'Inter';font-weight:600;font-size:14.5px;text-decoration:none;cursor:pointer;border:1px solid transparent;transition:transform .15s,box-shadow .2s}
+.btn.primary{background:linear-gradient(135deg,var(--gold-hi),var(--gold-deep));color:#1a1405;box-shadow:0 6px 24px rgba(212,175,55,.32)}
+.btn.primary:hover{transform:translateY(-1px)}
 
-  footer{border-top:1px solid var(--line);padding:36px 0;color:var(--mut);font-size:13px}
-  .fcols{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:center}
-  .disc{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);color:var(--disc);font-size:12px;line-height:1.6}
-  .credit{margin-top:14px;color:var(--disc);font-size:12px}
-  .credit a{color:var(--red2)}
+footer{text-align:center;padding:32px 0 12px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.45em;text-transform:uppercase;color:var(--dust)}
+footer a{color:var(--gold);text-decoration:none}
+.disc{max-width:680px;margin:0 auto;padding:0 18px 6px;font-family:'Inter';font-weight:300;font-size:11.5px;letter-spacing:normal;text-transform:none;color:var(--dust);line-height:1.6;text-align:center}
+
+@media print{
+  body{background:#fff;color:#111;padding-bottom:0}
+  .bar-wrap,.band,.rail{display:none}
+  .step,.docs{break-inside:avoid;border-color:#ccc;background:#fff;box-shadow:none}
+  .hero h1{color:#9a7b2e;-webkit-text-fill-color:#9a7b2e}
+  .step .num{color:#fff;background:#9a7b2e;box-shadow:none}
+  .step .lab,.sec-h h2,.docs h3,.docrow b,.step .help b{color:#111}
+  .step .help,.docrow,.hero p{color:#333}
+  .plug,.tag{border-color:#bbb;color:#444}
+  footer,.disc{color:#666}
+}
 </style>
 </head>
 <body>
-<div class="glow"></div>
-<header class="wrap">
-  <nav>
-    <div class="brand"><svg class="mark" viewBox="0 0 200 200" role="img" aria-label="L7S"><rect width="200" height="200" rx="22" fill="#dc2626"/><rect x="6" y="6" width="188" height="188" rx="17" fill="#000"/><rect x="35" y="26" width="20" height="116" fill="#fff"/><rect x="35" y="122" width="96" height="20" fill="#fff"/><rect x="80" y="58" width="85" height="20" fill="#dc2626"/><rect x="145" y="58" width="20" height="112" fill="#dc2626"/></svg><div>L7 Solutions<small>Onboarding System v1</small></div></div>
-    <div class="nav-links">
-      <a href="#flow">How it works</a>
-      <a href="#docs">What you'll need</a>
-      <a href="#trust">Secure &amp; compliant</a>
-      <a href="#start">Get started</a>
-    </div>
-    <div style="display:flex;align-items:center;gap:12px">
-      <button class="theme-toggle" id="themeToggle" aria-label="Toggle light or dark mode" title="Toggle light / dark">🌙</button>
-      <a href="#start" class="btn btn-pri">Start onboarding</a>
-    </div>
-  </nav>
+<div class="bar-wrap">
+  <div class="bar-inner">
+    <span class="bar-mark">◆ L7S · ONBOARDING v1</span>
+    <div class="bar-flow"><b>Yes</b><span class="arw">→</span><b>Pay</b><span class="arw">→</span><b>Sign</b><span class="arw">→</span><b>Upload</b><span class="arw">→</span><b>Verify</b><span class="arw">→</span><b>Activate</b></div>
+  </div>
+</div>
+
+<div class="wrap">
+<header class="hero">
+  <div class="kick">◆  Onboarding System v1  ◆</div>
+  <h1>Yes → Pay → Sign → Upload</h1>
+  <p>The standard L7S client intake flow — one clean, repeatable path from a verbal yes to an activated, archived client. Every client onboarded the same way, every time.</p>
+  <div class="note">This is the <b>seven-step S.O.P.</b> the team runs on every new client. Follow it top to bottom — nothing gets skipped, nothing slips. Stripe handles payment, DocuSign handles the agreement, and the secure uploader handles documents. — East 💎</div>
+  <div class="rail"><b>Yes</b><span class="arw">→</span><b>Pay</b><span class="arw">→</span><b>Sign</b><span class="arw">→</span><b>Upload</b><span class="arw">→</span><b>Verify</b><span class="arw">→</span><b>Activate</b></div>
 </header>
 
-<main>
-  <section class="wrap hero">
-    <span class="pill"><span class="dot"></span> Onboarding System v1 · live</span>
-    <h1>From <span class="g">“yes”</span> to activated —<br>without the scramble.</h1>
-    <p class="sub">One clean, compliant path: confirm your offer, pay securely, sign your agreement, and upload your documents through a secure portal. No piecemeal transfers. No sensitive docs over text.</p>
-    <div class="cta-row">
-      <a href="#start" class="btn btn-pri">Start onboarding →</a>
-      <a href="#flow" class="btn btn-ghost">See the steps</a>
-    </div>
-    <div class="flowbar">
-      <b>Yes</b><span class="arw">→</span><b>Pay</b><span class="arw">→</span><b>Sign</b><span class="arw">→</span><b>Upload</b><span class="arw">→</span><b>Activate</b>
-    </div>
-  </section>
+<div class="sec-h"><span class="sec-n">SOP</span><h2>The 7-Step Onboarding Pipeline</h2></div>
+<div class="sec-sub">From commitment to kickoff — the exact intake sequence.</div>
 
-  <section class="wrap" id="flow">
-    <div class="center">
-      <div class="eyebrow" style="display:inline-block">The flow</div>
-      <h2>Four steps from commitment to kickoff.</h2>
-      <p class="lead">A repeatable system — so every client is onboarded the same clean way, every time.</p>
-    </div>
-    <div class="grid">
-      <div class="step"><div class="num">01</div><h3>Pay securely</h3><p>You receive a secure checkout link for your agreed offer. Pay by card — confirmation is instant and logged.</p></div>
-      <div class="step"><div class="num">02</div><h3>Sign your agreement</h3><p>We email your branded agreement and intake form. Review, sign, and return — fillable and e-sign ready.</p></div>
-      <div class="step"><div class="num">03</div><h3>Upload documents</h3><p>A secure portal link lets you upload required documents. Encrypted, compliant — never over text or email.</p></div>
-      <div class="step"><div class="num">04</div><h3>Activate &amp; kickoff</h3><p>Once payment, agreement, and documents are verified, we activate your service and confirm your kickoff call.</p></div>
-    </div>
-  </section>
+<div class="stepper">
 
-  <section class="wrap" id="docs">
-    <div class="split">
-      <div>
-        <div class="eyebrow">What you'll need</div>
-        <h2>Have these ready for a same-day start.</h2>
-        <p class="lead">Gather your documents once. Upload them through the secure portal — we handle the rest and confirm receipt.</p>
-        <div class="cta-row" style="justify-content:flex-start;margin-top:24px">
-          <a href="#start" class="btn btn-pri">Begin securely →</a>
-        </div>
-      </div>
-      <div class="docs">
-        <h3>Required for onboarding</h3>
-        <div class="docitem"><span class="chk">✓</span> Government-issued ID (driver's license or passport)</div>
-        <div class="docitem"><span class="chk">✓</span> Signed service agreement &amp; intake form</div>
-        <div class="docitem"><span class="chk">✓</span> Proof of payment confirmation</div>
-        <div class="docitem"><span class="chk">✓</span> Supporting documents for your specific offer</div>
-        <div class="docitem"><span class="chk">✓</span> Best contact details for your kickoff</div>
-      </div>
-    </div>
-  </section>
-
-  <section class="wrap" id="trust" style="padding-top:6px">
-    <div class="center">
-      <div class="eyebrow" style="display:inline-block">Secure &amp; compliant by design</div>
-      <h2>Your information is handled the right way.</h2>
-      <p class="lead">Sensitive documents move through a secure, encrypted portal — never ad-hoc email or text.</p>
-    </div>
-    <div class="trust">
-      <div class="tcard"><div class="ic">🔒</div><h4>Encrypted uploads</h4><p>Documents are transmitted and stored through a secure portal, not scattered across inboxes and chats.</p></div>
-      <div class="tcard"><div class="ic">📋</div><h4>Clear paper trail</h4><p>Every step — payment, signature, upload — is confirmed and logged, so nothing falls through the cracks.</p></div>
-      <div class="tcard"><div class="ic">🤝</div><h4>Facilitator model</h4><p>L7 Solutions acts as your commercial facilitator, coordinator, and technology/process support partner.</p></div>
-    </div>
-  </section>
-
-  <section class="wrap" id="start">
-    <div class="band">
-      <div class="eyebrow" style="display:inline-block">Ready when you are</div>
-      <h2>Let's get you onboarded.</h2>
-      <p class="lead">Book a quick call to confirm your offer and receive your secure checkout, agreement, and upload links — and you're moving.</p>
-      <div class="cta-row">
-        <a href="https://cal.com/ctoeast" class="btn btn-pri">Book your onboarding call →</a>
-        <a href="#flow" class="btn btn-ghost">Review the process</a>
-      </div>
-    </div>
-  </section>
-</main>
-
-<script>
-(function(){var KEY='l7s-theme';function icon(t){return t==='dark'?'☀️':'🌙';}
-var b=document.getElementById('themeToggle');
-if(b){b.textContent=icon(document.documentElement.getAttribute('data-theme'));
-b.addEventListener('click',function(){var cur=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',cur);localStorage.setItem(KEY,cur);b.textContent=icon(cur);});}})();
-</script>
-
-<footer class="wrap">
-  <div class="fcols">
-    <div class="brand"><svg class="mark" viewBox="0 0 200 200" role="img" aria-label="L7S"><rect width="200" height="200" rx="22" fill="#dc2626"/><rect x="6" y="6" width="188" height="188" rx="17" fill="#000"/><rect x="35" y="26" width="20" height="116" fill="#fff"/><rect x="35" y="122" width="96" height="20" fill="#fff"/><rect x="80" y="58" width="85" height="20" fill="#dc2626"/><rect x="145" y="58" width="20" height="112" fill="#dc2626"/></svg><div>L7 Solutions<small>Onboarding System v1</small></div></div>
-    <div style="display:flex;gap:22px;flex-wrap:wrap">
-      <a href="#flow">How it works</a><a href="#docs">Documents</a><a href="#trust">Security</a><a href="#start">Get started</a>
+  <!-- 1 -->
+  <div class="step">
+    <div class="rod"><div class="num">1</div><div class="wire"></div></div>
+    <div class="body">
+      <div class="lab">Prospect says &ldquo;Yes&rdquo;</div>
+      <div class="help">Confirm <b>in writing</b> that the prospect is ready to move forward with the agreed <b>[Offer]</b> at the agreed <b>[Price]</b>. A clear written yes is what starts the clock — no ambiguity, no verbal-only commitments.</div>
     </div>
   </div>
-  <div class="disc">
-    L7S, INC. (d/b/a L7 Solutions) and/or its appointed representatives act solely as a commercial facilitator, coordinator, and technology/process support provider. L7 Solutions is not a lender, law firm, or licensed financial advisor, and does not provide legal, tax, or investment advice. Services are provided under a separate written agreement.
+
+  <!-- 2 -->
+  <div class="step">
+    <div class="rod"><div class="num">2</div><div class="wire"></div></div>
+    <div class="body">
+      <div class="lab">Send Stripe Checkout link</div>
+      <div class="help">Share the <b>v1 payment link</b> for the agreed offer and confirm once payment clears. Card payment is secure and confirmation is instant.</div>
+      <div class="plugs"><span class="plug"><span class="pd"></span><b>Stripe</b>&nbsp;Checkout link &amp; payment confirmation plug in here</span></div>
+    </div>
   </div>
-  <div class="credit">© 2026 L7S, INC. · Onboarding System v1 — Yes → Pay → Sign → Upload → Activate · Built by <a href="https://cal.com/ctoeast">XLRD</a></div>
-</footer>
+
+  <!-- 3 -->
+  <div class="step">
+    <div class="rod"><div class="num">3</div><div class="wire"></div></div>
+    <div class="body">
+      <div class="lab">Payment confirmation</div>
+      <div class="help">Once paid, log the client in Asana under <b>&ldquo;Client Onboarding v1&rdquo;</b> and tag <b>East / Luckie</b>. This creates the tracked record so the rest of the pipeline has a single source of truth.</div>
+      <div class="plugs"><span class="plug"><span class="pd"></span><b>Asana</b>&nbsp;&ldquo;Client Onboarding v1&rdquo; · tag East / Luckie</span></div>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="step">
+    <div class="rod"><div class="num">4</div><div class="wire"></div></div>
+    <div class="body">
+      <div class="lab">Send agreement + intake form</div>
+      <div class="help">Send the <b>branded service agreement</b> together with a <b>fillable intake form</b> for the client to review, complete, and sign. Delivered as a PDF or via e-signature.</div>
+      <div class="plugs"><span class="plug"><span class="pd"></span><b>DocuSign</b>&nbsp;agreement + fillable intake (PDF / e-sign) plug in here</span></div>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div class="step">
+    <div class="rod"><div class="num">5</div><div class="wire"></div></div>
+    <div class="body">
+      <div class="lab">Send secure uploader link</div>
+      <div class="help">Send the client a <b>secure uploader link</b> with the list of required documents &mdash; ID, SSN, bank statements, and any other documents specific to the offer. Sensitive documents go through the encrypted portal, never over text or email.</div>
+      <div class="plugs"><span class="plug"><span class="pd"></span><b>Secure Uploader</b>&nbsp;encrypted document portal link plugs in here</span></div>
+    </div>
+  </div>
+
+  <!-- 6 -->
+  <div class="step">
+    <div class="rod"><div class="num">6</div><div class="wire"></div></div>
+    <div class="body">
+      <div class="lab">Verify documents &amp; forms</div>
+      <div class="help">Confirm all three are in: <b>payment received</b>, <b>agreement signed</b>, and <b>documents uploaded</b>. When every box is checked, log the client as <b>&ldquo;Complete&rdquo;</b>.</div>
+      <div class="plugs">
+        <span class="plug"><span class="pd"></span>Payment received</span>
+        <span class="plug"><span class="pd"></span>Agreement signed</span>
+        <span class="plug"><span class="pd"></span>Documents uploaded</span>
+        <span class="plug"><span class="pd"></span><b>Log &ldquo;Complete&rdquo;</b></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7 -->
+  <div class="step">
+    <div class="rod"><div class="num">7</div></div>
+    <div class="body">
+      <div class="lab">Activate service &amp; archive <span class="tag">final</span></div>
+      <div class="help">Move the client to the correct board, save an <b>S.O.S. Snapshot</b> of the offer, scope, and status, and schedule the kickoff. The client is now live and the record is archived for reference.</div>
+      <div class="plugs">
+        <span class="plug"><span class="pd"></span>Move to correct board</span>
+        <span class="plug"><span class="pd"></span><b>S.O.S. Snapshot</b> · offer / scope / status</span>
+        <span class="plug"><span class="pd"></span>Schedule kickoff</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="sec-h"><span class="sec-n">DOCS</span><h2>Documents the Client Provides</h2></div>
+<div class="sec-sub">Requested in Step 5 through the secure uploader.</div>
+<div class="docs">
+  <h3>Required for onboarding</h3>
+  <div class="sub">All collected through the encrypted uploader &mdash; never over text or email.</div>
+  <div class="docrow"><span class="chk">✓</span><div><b>Government-issued ID</b> &mdash; driver&rsquo;s license or passport</div></div>
+  <div class="docrow"><span class="chk">✓</span><div><b>SSN</b> &mdash; for identity and account setup</div></div>
+  <div class="docrow"><span class="chk">✓</span><div><b>Bank statements</b> &mdash; as required for the offer</div></div>
+  <div class="docrow"><span class="chk">✓</span><div><b>Signed agreement &amp; intake form</b> &mdash; returned from Step 4</div></div>
+  <div class="docrow"><span class="chk">✓</span><div><b>Additional documents specific to the offer</b> &mdash; as listed on the uploader</div></div>
+  <div class="seal"><b>Secure &amp; compliant.</b> Payment, signature, and every upload are confirmed and logged, so nothing falls through the cracks.</div>
+</div>
+
+<div class="band">
+  <h2>Start an onboarding</h2>
+  <p>Confirm the offer and price, then run the seven steps top to bottom. Stripe, DocuSign, and the secure uploader plug in along the way.</p>
+  <a class="btn primary" href="https://cal.com/ctoeast">◆ Book onboarding call →</a>
+</div>
+
+</div>
+
+<footer>◆ L7S · Onboarding System v1 · East · Self Exec · 💎</footer>
+<div class="disc">L7S, INC. and/or its appointed representatives act solely as a commercial facilitator, coordinator, and technology/process support provider. L7S is not a lender, law firm, or licensed financial advisor, and does not provide legal, tax, or investment advice. Services are provided under a separate written agreement.</div>
+
 <script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
 </body>
 </html>
