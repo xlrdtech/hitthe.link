@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Otto · Literary Devices Generator</title>
-<meta name="description" content="Otto — the creative scope. A literary-devices generator: type a subject, get device-correct examples across 18 devices, each with its definition. Reroll any line.">
+<title>Literary Devices Generator · hitthe.link</title>
+<meta name="description" content="A literary-devices generator: type a subject, get a device-correct example across 18 devices, each with its definition. Reroll any line, tap to copy.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -35,7 +35,6 @@ body{min-height:100vh;line-height:1.6;padding-bottom:70px;
 .bar{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg2) 84%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
 .bar-in{max-width:880px;margin:0 auto;padding:12px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .mark{font-family:'Fraunces',serif;font-weight:600;font-size:14px;letter-spacing:.02em;background:var(--irid);-webkit-background-clip:text;background-clip:text;color:transparent}
-.mark .dot{opacity:.6;font-weight:400}
 .toggle{background:transparent;border:1px solid var(--edge);color:var(--soft);font:600 12.5px Inter;padding:7px 13px;border-radius:9px;cursor:pointer;transition:.2s}
 .toggle:hover{border-color:var(--accent);color:var(--ink)}
 .toggle .l{display:none}[data-theme="light"] .toggle .l{display:inline}[data-theme="light"] .toggle .d{display:none}
@@ -74,13 +73,13 @@ footer a{color:var(--mute);text-decoration:none;border-bottom:1px solid var(--li
 </head>
 <body>
 <div class="bar"><div class="bar-in">
-  <span class="mark">Otto <span class="dot">·</span> Literary Devices</span>
+  <span class="mark">Literary Devices</span>
   <button class="toggle" onclick="tog()"><span class="d">&#9788; Light</span><span class="l">&#9789; Dark</span></button>
 </div></div>
 
 <div class="wrap">
   <header class="hero">
-    <div class="kick">Otto &middot; the creative scope</div>
+    <div class="kick">for writers, lyricists &amp; copy</div>
     <h1>Literary&nbsp;Devices, <em>on demand</em></h1>
     <p class="lede">Type any subject. Get a device-correct example across 18 figures of speech — each with its definition. Reroll any line. Tap a card to copy.</p>
   </header>
@@ -93,19 +92,18 @@ footer a{color:var(--mute);text-decoration:none;border-bottom:1px solid var(--li
 
   <div id="grid" class="grid"></div>
 </div>
-<footer>Otto &mdash; XLRD creative scope &middot; <a href="/">hitthe.link</a></footer>
+<footer>XLRD &middot; <a href="/">hitthe.link</a></footer>
 <div id="ch" class="copyhint">Copied &#10003;</div>
 
 <script>
-function tog(){var r=document.documentElement,n=r.getAttribute('data-theme')==='light'?'dark':'light';r.setAttribute('data-theme',n);try{localStorage.setItem('otto-theme',n)}catch(e){}}
-try{var s=localStorage.getItem('otto-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}
+function tog(){var r=document.documentElement,n=r.getAttribute('data-theme')==='light'?'dark':'light';r.setAttribute('data-theme',n);try{localStorage.setItem('litdev-theme',n)}catch(e){}}
+try{var s=localStorage.getItem('litdev-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}
 
 var pick=function(a){return a[Math.floor(Math.random()*a.length)]};
 var cap=function(s){return s.charAt(0).toUpperCase()+s.slice(1)};
-// word banks
 var B={
   adj:['restless','ancient','silver','hollow','burning','endless','fragile','golden','bitter','electric','weary','luminous','reckless','quiet','vast','tender','iron','crimson','wild','patient'],
-  noun:['cathedral','machine','river','ember','wound','engine','garden','mirror','tide','furnace','ghost','kingdom','wound','lantern','storm','cage','threshold','harvest','anchor','flame'],
+  noun:['cathedral','machine','river','ember','wound','engine','garden','mirror','tide','furnace','ghost','kingdom','lantern','storm','cage','threshold','harvest','anchor','flame','citadel'],
   abstr:['hunger','memory','grief','hope','time','silence','desire','ruin','mercy','fury','wonder','longing','doubt','glory','fear'],
   hverb:['whispers','remembers','mourns','breathes','waits','forgives','dreams','listens','aches','laughs','keeps secrets','holds its breath','refuses to sleep','calls out','grieves'],
   sense:['the smell of rain on hot stone','a low copper hum','the taste of old pennies','light pooling like spilled honey','a chill that climbs the spine'],
@@ -118,48 +116,29 @@ var B={
 function alliterate(word){
   var L=(word.replace(/^(the|a|an|her|his|their)\s+/i,'').trim()[0]||'s').toLowerCase();
   var pool={adj:B.adj.filter(w=>w[0]===L),noun:B.noun.filter(w=>w[0]===L),hv:B.hverb.filter(w=>w[0]===L)};
-  var adj=pool.adj.length?pick(pool.adj):pick(B.adj), nn=pool.noun.length?pick(pool.noun):pick(B.noun);
+  var adj=pool.adj.length?pick(pool.adj):pick(B.adj);
   return cap(adj)+' '+word.replace(/^(the|a|an)\s+/i,'')+', '+ (pool.hv.length?pick(pool.hv):pick(B.hverb));
 }
-// device generators: each returns an HTML string (subject highlighted)
 function hl(s){return '<span class="hl">'+s+'</span>';}
 var DEV=[
- {n:'Metaphor',d:'States one thing IS another, no "like/as".',
-  g:s=>cap(s)+' is a '+pick(B.adj)+' '+pick(B.noun)+' of '+pick(B.abstr)+'.'},
- {n:'Simile',d:'Compares with "like" or "as".',
-  g:s=>cap(s)+' moves like a '+pick(B.adj)+' '+pick(B.noun)+', heavy with '+pick(B.abstr)+'.'},
- {n:'Personification',d:'Gives human traits to the non-human.',
-  g:s=>cap(s)+' '+pick(B.hverb)+' as if it had a name.'},
- {n:'Alliteration',d:'Repeats an initial consonant sound.',
-  g:s=>alliterate(s)+'.'},
- {n:'Hyperbole',d:'Deliberate, dramatic exaggeration.',
-  g:s=>cap(s)+' '+pick(B.huge)+'.'},
- {n:'Onomatopoeia',d:'A word that imitates its sound.',
-  g:s=>'The '+s.replace(/^(the|a|an)\s+/i,'')+' — '+pick(B.onom)+', '+pick(B.onom)+' — and then nothing.'},
- {n:'Oxymoron',d:'Two contradictory terms, joined.',
-  g:s=>{var o=pick(B.oxy);return cap(s)+', a '+o[0]+' '+o[1]+'.';}},
- {n:'Personified Imagery',d:'Sensory detail you can almost touch.',
-  g:s=>cap(s)+' arrives with '+pick(B.sense)+'.'},
- {n:'Symbolism',d:'A concrete thing standing for an idea.',
-  g:s=>cap(s)+' became our '+pick(B.noun)+' — everything we meant by '+pick(B.abstr)+'.'},
- {n:'Anaphora',d:'Repeats the opening words of clauses.',
-  g:s=>'Here is '+s+'. Here is the '+pick(B.abstr)+'. Here is what we do not say.'},
- {n:'Allusion',d:'A nod to a known myth, text, or figure.',
-  g:s=>cap(s)+', '+pick(B.allude)+'.'},
- {n:'Apostrophe',d:'Directly addresses an absent thing.',
-  g:s=>'O '+s.replace(/^(the|a|an)\s+/i,'')+', you '+pick(B.hverb)+' — and still I stay.'},
- {n:'Juxtaposition',d:'Places two contrasts side by side.',
-  g:s=>cap(s)+': '+pick(B.pair)+'.'},
- {n:'Metonymy',d:'Names a thing by something associated.',
-  g:s=>'All of '+s+' answered to a single '+pick(['crown','hand','voice','ledger','key','flag'])+'.'},
- {n:'Synecdoche',d:'A part stands for the whole.',
-  g:s=>'Not '+s+' — just its '+pick(['hands','shadow','footsteps','smoke','silhouette'])+', and that was enough.'},
- {n:'Assonance',d:'Repeats internal vowel sounds.',
-  g:s=>cap(s)+' — a slow glow, a low road home.'},
- {n:'Irony',d:'Says the opposite of what is meant.',
-  g:s=>'Of course '+s+' was '+pick(['fine','nothing','easy','forgotten'])+'. Of course it was.'},
- {n:'Enjambment',d:'A line breaks before the thought ends.',
-  g:s=>cap(s)+' keeps<br>going where the sentence<br>was supposed to stop.'}
+ {n:'Metaphor',d:'States one thing IS another, no "like/as".',g:s=>cap(s)+' is a '+pick(B.adj)+' '+pick(B.noun)+' of '+pick(B.abstr)+'.'},
+ {n:'Simile',d:'Compares with "like" or "as".',g:s=>cap(s)+' moves like a '+pick(B.adj)+' '+pick(B.noun)+', heavy with '+pick(B.abstr)+'.'},
+ {n:'Personification',d:'Gives human traits to the non-human.',g:s=>cap(s)+' '+pick(B.hverb)+' as if it had a name.'},
+ {n:'Alliteration',d:'Repeats an initial consonant sound.',g:s=>alliterate(s)+'.'},
+ {n:'Hyperbole',d:'Deliberate, dramatic exaggeration.',g:s=>cap(s)+' '+pick(B.huge)+'.'},
+ {n:'Onomatopoeia',d:'A word that imitates its sound.',g:s=>'The '+s.replace(/^(the|a|an)\s+/i,'')+' — '+pick(B.onom)+', '+pick(B.onom)+' — and then nothing.'},
+ {n:'Oxymoron',d:'Two contradictory terms, joined.',g:s=>{var o=pick(B.oxy);return cap(s)+', a '+o[0]+' '+o[1]+'.';}},
+ {n:'Imagery',d:'Sensory detail you can almost touch.',g:s=>cap(s)+' arrives with '+pick(B.sense)+'.'},
+ {n:'Symbolism',d:'A concrete thing standing for an idea.',g:s=>cap(s)+' became our '+pick(B.noun)+' — everything we meant by '+pick(B.abstr)+'.'},
+ {n:'Anaphora',d:'Repeats the opening words of clauses.',g:s=>'Here is '+s+'. Here is the '+pick(B.abstr)+'. Here is what we do not say.'},
+ {n:'Allusion',d:'A nod to a known myth, text, or figure.',g:s=>cap(s)+', '+pick(B.allude)+'.'},
+ {n:'Apostrophe',d:'Directly addresses an absent thing.',g:s=>'O '+s.replace(/^(the|a|an)\s+/i,'')+', you '+pick(B.hverb)+' — and still I stay.'},
+ {n:'Juxtaposition',d:'Places two contrasts side by side.',g:s=>cap(s)+': '+pick(B.pair)+'.'},
+ {n:'Metonymy',d:'Names a thing by something associated.',g:s=>'All of '+s+' answered to a single '+pick(['crown','hand','voice','ledger','key','flag'])+'.'},
+ {n:'Synecdoche',d:'A part stands for the whole.',g:s=>'Not '+s+' — just its '+pick(['hands','shadow','footsteps','smoke','silhouette'])+', and that was enough.'},
+ {n:'Assonance',d:'Repeats internal vowel sounds.',g:s=>cap(s)+' — a slow glow, a low road home.'},
+ {n:'Irony',d:'Says the opposite of what is meant.',g:s=>'Of course '+s+' was '+pick(['fine','nothing','easy','forgotten'])+'. Of course it was.'},
+ {n:'Enjambment',d:'A line breaks before the thought ends.',g:s=>cap(s)+' keeps<br>going where the sentence<br>was supposed to stop.'}
 ];
 var SUBJ='the ocean';
 function card(dev,i){
