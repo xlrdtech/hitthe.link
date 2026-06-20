@@ -78,6 +78,12 @@
     <div class="fix"><span class="st todo">VERIFY</span><div class="body"><div class="ttl">FIX 8 — STT supervision</div><div class="d">61 <code>ECONNREFUSED</code> suggest ragged restarts — confirm launchd actually supervises the STT process (it was once an orphan).</div></div></div>
   </div>
 
+  <h2><span class="n">?</span>Why 3 concurrent requests happened</h2>
+  <div class="card">
+    <p class="note" style="margin:0 0 8px;">The receiver doesn't <i>receive</i> 3 requests — it <b>manufactures</b> them. It chops your continuous speech into chunks and flushes one to transcription every 250ms when it hears a pause. But each transcription takes <b>14-16 seconds</b> on this hardware. So while request #1 is still inferring, the tick fires #2 and #3 for your next words. The old <code>inflightSTT&lt;3</code> allowed all three; the single-threaded server queued them, they hit the 20s timeout, and crashed it.</p>
+    <p class="note" style="margin:0;"><b>Deeper root (next optimization):</b> 14-16s/transcription is slow. Serializing stops the crash, but truly snappy voice needs a faster STT path — tiny/int8 whisper, streaming partials, Metal/GPU acceleration, Apple on-device Speech, or a cloud STT for the call leg.</p>
+  </div>
+
   <h2><span class="n">✕</span>Rejected as red herrings</h2>
   <div class="card">
     <p class="reject"><b>"8k-vs-16k header is the cause of empties."</b> Refuted by a live model test — a genuine-8k buffer transcribes non-empty at <i>both</i> header rates. A wrong header mangles words; it doesn't blank them.</p>
