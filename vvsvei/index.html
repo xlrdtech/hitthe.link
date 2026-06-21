@@ -1793,7 +1793,7 @@ function renderEvent(d) {
   // was dropped at the !txt guard = total silence. Unwrap the inner payload.
   // (qi 2026-05-30, verified against live /events capture.) Dedup catches the
   // duplicate when both shapes arrive for the same reply.
-  if (d && d.data && typeof d.data === 'object' && (d.data.text || d.data.body || d.data.message)) {
+  if (d && d.data && typeof d.data === 'object' && (d.data.text || d.data.body || d.data.message || d.data.preview || d.data.chatId || d.data.chatID)) {
     d = d.data;
   }
   // CANONICAL sentinel (qi 2026-05-30, grok+gemini-3.1-pro+codex converged): the
@@ -1956,7 +1956,13 @@ function renderEvent(d) {
     // on VVSVEI's stable+persistent base). Route back to the originating thread via
     // the inbound event's source + chatId (chatId added to the firehose emit
     // server-side in parallel; degrade gracefully if absent — never throw).
-    try { attachReplyAction(fdiv, { source: (d.source || d.sender || tag || ''), chatId: (d.chatId || d.chatID || d.recipient || ''), label: labelSrc }); } catch (_) {}
+    // Resolve route from d OR a still-wrapped d.data (defense: if any frame slips
+    // past the unwrap above, the inner payload still carries source/chatId). qi
+    // 2026-06-21: empty chatId here = /api/reply 400 "chatId required" = silent fail.
+    const _rd = (d && d.data && typeof d.data === 'object') ? d.data : d;
+    const _routeSrc = (_rd.source || d.source || _rd.sender || d.sender || tag || '');
+    const _routeChat = (_rd.chatId || _rd.chatID || _rd.recipient || d.chatId || d.chatID || d.recipient || '');
+    try { attachReplyAction(fdiv, { source: _routeSrc, chatId: _routeChat, label: labelSrc }); } catch (_) {}
     transcript.appendChild(fdiv);
     _pruneBacklogDom();   // cap DOM during backlog replay so reopen paints instantly
     transcript.scrollTop = transcript.scrollHeight;
@@ -1987,6 +1993,31 @@ function attachReplyAction(bubbleEl, route) {
       const text = (input.value || '').trim();
       if (!text) return;
       send.disabled = true; send.textContent = '…';
+      // FAILSAFE (qi 2026-06-21): if this inbound bubble has no chatId we cannot
+      // route an outbound reply — but qi's words must NEVER vanish. Fall back to
+      // the proven dictate-inject path with a quoted prefix so the reply still
+      // reaches the one brain WITH context (same contract as .xen-reply replies),
+      // instead of a silent /api/reply 400. Outbound-to-thread requires chatId.
+      if (!route.chatId) {
+        try {
+          const q = String((bubbleEl.querySelector('.bubble-txt') || {}).textContent || '').replace(/\s+/g, ' ').trim().slice(0, 140);
+          const payloadText = 're: "' + q + '" — ' + text;
+          const res2 = await fetch(API_URL, {
+            method: 'POST', headers: HEADERS,
+            body: JSON.stringify({ source: 'xen-vei', ts: Date.now(), text: payloadText })
+          });
+          if (!res2.ok) throw new Error('inject ' + res2.status);
+          box.remove();
+          try { const d3 = appendFinal(text, true); if (d3 && typeof attachBubbleActions === 'function') attachBubbleActions(d3, text); } catch (_) {}
+          try { saveHistory({ role: 'you', text: payloadText, ts: Date.now() }); } catch (_) {}
+        } catch (e3) {
+          const err = document.createElement('span'); err.className = 'src';
+          err.textContent = 'reply error: ' + (e3 && e3.message ? e3.message : 'no route');
+          box.appendChild(err);
+          send.disabled = false; send.textContent = 'SEND';
+        }
+        return;
+      }
       try {
         const res = await fetch(REPLY_URL, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
