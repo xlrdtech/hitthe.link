@@ -314,9 +314,25 @@ body.drop-active::after {
   .final .bubble-actions, .xen-reply .bubble-actions, .firehose .bubble-actions { opacity:1; }
 }
 .final.actions-open .bubble-actions, .xen-reply.actions-open .bubble-actions, .firehose.actions-open .bubble-actions { opacity:1; }
-.firehose .reply-box { display:flex; gap:6px; margin-top:6px; }
-.firehose .reply-box input { flex:1; min-width:0; background:rgba(0,0,0,.25); border:1px solid rgba(0,255,136,.28); color:var(--fg); border-radius:6px; padding:6px 8px; font:inherit; }
-.firehose .reply-box button { background:rgba(0,255,136,.16); color:var(--accent); border:1px solid rgba(0,255,136,.28); border-radius:6px; padding:6px 10px; cursor:pointer; }
+/* qi 2026-06-21 ("on my interface-output bubbles the reply box has a white background
+   and the send button is real big — ugly ugly"): the reply-box styling was scoped to
+   .firehose only, so on .xen-reply/.final bubbles it fell back to browser defaults
+   (white input + oversized button). GENERIC now so it matches the green-glass pill
+   look on every bubble type, and SEND is sized like the other pill actions. */
+.reply-box { display:flex; gap:6px; margin-top:6px; align-items:center; }
+.reply-box input {
+  flex:1; min-width:0; background:rgba(0,0,0,.25);
+  border:1px solid rgba(0,255,136,.28); color:var(--fg);
+  border-radius:var(--r-pill); padding:5px 10px; font:inherit; font-size:11px;
+}
+.reply-box button {
+  flex:0 0 auto; padding:4px 12px; font-size:9.5px; font-weight:600; letter-spacing:.06em;
+  background:rgba(0,255,136,.16); color:var(--accent);
+  border:1px solid rgba(0,255,136,.28); border-radius:var(--r-pill); cursor:pointer;
+  transition:background .12s, color .12s;
+}
+.reply-box button:hover:not(:disabled) { background:rgba(0,255,136,.26); }
+.reply-box button:disabled { opacity:.4; cursor:default; }
 .bubble-actions button {
   padding:3px 8px; font-size:9.5px; font-weight:600; letter-spacing:.06em;
   background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.18);
