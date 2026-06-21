@@ -509,15 +509,15 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
 <!-- Threads picker overlay (toggled by Threads button) -->
 <div id="thread-picker" style="display:none; position:absolute; top:60px; left:20px; right:20px; max-height:50vh; overflow-y:auto; background:rgba(20,40,28,.94); border:1px solid var(--line-strong); border-radius:var(--r-card); backdrop-filter:blur(18px); padding:10px; z-index:10; box-shadow:0 12px 36px rgba(0,0,0,.5);"></div>
 
-<!-- Events panel toggle (Task #10) -->
-<button id="er-toggle" aria-label="Toggle events panel" aria-expanded="false" style="display:none">
+<!-- Events panel toggle (Task #10) · un-hidden 2026-06-21 so the step lane (Operator · Firehose) is reachable from the glass without interleaving the conversation. -->
+<button id="er-toggle" aria-label="Toggle events panel" aria-expanded="false">
   <span class="pip" id="er-pip"></span>
   <span>Events</span>
   <span class="count zero" id="er-count">0</span>
 </button>
 
-<!-- Events panel (operator state · in-pane) -->
-<aside id="events-rail" aria-label="Operator events" style="display:none">
+<!-- Events panel (operator state · in-pane) · un-hidden 2026-06-21: this is the SEPARATE step/telemetry lane; step events render here, not in the conversation. -->
+<aside id="events-rail" aria-label="Operator events">
   <div class="er-head">
     <span>Operator · Firehose</span>
     <span style="display:flex; gap:8px; align-items:center">
@@ -1838,6 +1838,21 @@ function renderEvent(d) {
   // "PM, in:" / "AM, in:" (with optional leading mangled colons) is removed.
   txt = txt.replace(/^[\s:]*\d{1,2}:\d{2}(?::\d{2})?\s*[AP]M\s*,\s*(?:in|typed|omi|aua|sms|bee|spark|mail|note):\s*/i, '').trim();
   if (!txt) return;
+  // qi 2026-06-21 STEP-LANE: per-step telemetry (tool-call narrations) must show
+  // for omni-awareness but NEVER interleave with qi's actual conversation bubbles.
+  // The emit side re-tags these source:"XEN-STEP" / sender:"xen-step" / lane:"steps"
+  // (xen-exodus-narrate-hook.py). Route them to the SEPARATE Operator · Firehose
+  // rail (appendEventItem → #er-list) and skip the conversation transcript entirely.
+  // Conversation = qi's input (.final) + Xen's real replies (.xen-reply, *-primary).
+  {
+    const _stepSrc = (d.source || '').toString().toLowerCase();
+    const _stepSender = (d.sender || '').toString().toLowerCase();
+    const _stepLane = (d.lane || '').toString().toLowerCase();
+    if (_stepSrc === 'xen-step' || _stepSender === 'xen-step' || _stepLane === 'steps') {
+      try { appendEventItem('step', String(txt).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 600), d.ts); } catch (_) {}
+      return;
+    }
+  }
   // qi 2026-06-11: [VVSVEI] speak-gate telemetry must NEVER render as a chat
   // bubble. omnimind broadcasts it as an xen-dictate-in event, so it was being
   // mis-shown as user input tagged `in:`. It belongs in the dim telemetry HUD
