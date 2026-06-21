@@ -305,6 +305,10 @@ body.drop-active::after {
   opacity:0; transition:opacity .15s;
 }
 .final:hover .bubble-actions, .xen-reply:hover .bubble-actions { opacity:1; }
+.firehose:hover .bubble-actions { opacity:1; }
+.firehose .reply-box { display:flex; gap:6px; margin-top:6px; }
+.firehose .reply-box input { flex:1; min-width:0; background:rgba(0,0,0,.25); border:1px solid rgba(0,255,136,.28); color:var(--fg); border-radius:6px; padding:6px 8px; font:inherit; }
+.firehose .reply-box button { background:rgba(0,255,136,.16); color:var(--accent); border:1px solid rgba(0,255,136,.28); border-radius:6px; padding:6px 10px; cursor:pointer; }
 .bubble-actions button {
   padding:3px 8px; font-size:9.5px; font-weight:600; letter-spacing:.06em;
   background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.18);
@@ -1847,10 +1851,73 @@ function renderEvent(d) {
     const fsrc = document.createElement('span'); fsrc.className = 'src'; fsrc.textContent = labelSrc;
     const fbody = document.createElement('span'); fbody.className = 'bubble-txt'; fbody.textContent = cleanBody;
     fdiv.appendChild(fsrc); fdiv.appendChild(fbody);
+    // qi 2026-06-21: REPLY-IN-PANE. Inbound messages get a REPLY affordance so qi
+    // answers Luckie/etc. right here (resurrects the triple-M omni-comm reply, now
+    // on VVSVEI's stable+persistent base). Route back to the originating thread via
+    // the inbound event's source + chatId (chatId added to the firehose emit
+    // server-side in parallel; degrade gracefully if absent — never throw).
+    try { attachReplyAction(fdiv, { source: (d.source || d.sender || tag || ''), chatId: (d.chatId || d.chatID || d.recipient || ''), label: labelSrc }); } catch (_) {}
     transcript.appendChild(fdiv);
     _pruneBacklogDom();   // cap DOM during backlog replay so reopen paints instantly
     transcript.scrollTop = transcript.scrollHeight;
   }
+}
+
+// ── REPLY affordance for inbound (.firehose) bubbles (qi 2026-06-21) ──────────
+// Minimal + defensive: a REPLY button reveals an inline composer; SEND POSTs
+// {source, chatId, text} to /api/reply, then renders qi's reply as a persistent
+// .final bubble (saveHistory) so the thread stays in the pane across reloads.
+const REPLY_URL = 'https://xen.xlrd.org/api/reply';
+function attachReplyAction(bubbleEl, route) {
+  const row = document.createElement('div');
+  row.className = 'bubble-actions';
+  const replyBtn = document.createElement('button');
+  replyBtn.textContent = 'REPLY';
+  replyBtn.onclick = (e) => {
+    e.stopPropagation();
+    if (bubbleEl.querySelector('.reply-box')) return;   // already open
+    const box = document.createElement('div');
+    box.className = 'reply-box';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Reply to ' + (route.label || 'thread') + '…';
+    const send = document.createElement('button');
+    send.textContent = 'SEND';
+    const doSend = async () => {
+      const text = (input.value || '').trim();
+      if (!text) return;
+      send.disabled = true; send.textContent = '…';
+      try {
+        const res = await fetch(REPLY_URL, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ source: route.source || '', chatId: route.chatId || '', text })
+        });
+        if (!res.ok) {
+          const err = document.createElement('span'); err.className = 'src';
+          err.textContent = 'reply failed (' + res.status + ')';
+          box.appendChild(err);
+          send.disabled = false; send.textContent = 'SEND';
+          return;
+        }
+        // success: render qi's reply as a persistent sent bubble + save to history
+        box.remove();
+        try { const d2 = appendFinal(text, true); if (d2 && typeof attachBubbleActions === 'function') attachBubbleActions(d2, text); } catch (_) {}
+        try { saveHistory({ role: 'you', text: text, ts: Date.now() }); } catch (_) {}
+      } catch (e2) {
+        const err = document.createElement('span'); err.className = 'src';
+        err.textContent = 'reply error: ' + (e2 && e2.message ? e2.message : 'network');
+        box.appendChild(err);
+        send.disabled = false; send.textContent = 'SEND';
+      }
+    };
+    send.onclick = (ev) => { ev.stopPropagation(); doSend(); };
+    input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); doSend(); } });
+    box.appendChild(input); box.appendChild(send);
+    bubbleEl.appendChild(box);
+    try { input.focus(); } catch (_) {}
+  };
+  row.appendChild(replyBtn);
+  bubbleEl.appendChild(row);
 }
 
 // ── Events panel wiring (Task #10) ──────────────────────────────────────
