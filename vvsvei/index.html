@@ -306,6 +306,14 @@ body.drop-active::after {
 }
 .final:hover .bubble-actions, .xen-reply:hover .bubble-actions { opacity:1; }
 .firehose:hover .bubble-actions { opacity:1; }
+/* qi 2026-06-21 ("when I tap nothing shows up — no reply buttons"): touch screens
+   never :hover, so on his phone the action row stayed invisible. On touch (hover:none)
+   the actions are ALWAYS visible; desktop keeps hover-to-reveal. Plus a tapped-open
+   class so a tap can explicitly reveal a bubble's actions anywhere. */
+@media (hover: none) {
+  .final .bubble-actions, .xen-reply .bubble-actions, .firehose .bubble-actions { opacity:1; }
+}
+.final.actions-open .bubble-actions, .xen-reply.actions-open .bubble-actions, .firehose.actions-open .bubble-actions { opacity:1; }
 .firehose .reply-box { display:flex; gap:6px; margin-top:6px; }
 .firehose .reply-box input { flex:1; min-width:0; background:rgba(0,0,0,.25); border:1px solid rgba(0,255,136,.28); color:var(--fg); border-radius:6px; padding:6px 8px; font:inherit; }
 .firehose .reply-box button { background:rgba(0,255,136,.16); color:var(--accent); border:1px solid rgba(0,255,136,.28); border-radius:6px; padding:6px 10px; cursor:pointer; }
@@ -1296,6 +1304,19 @@ function _openQuoteReply(bubbleEl, quotedText) {
   try { input.focus(); } catch (_) {}
 }
 
+// TAP-TO-REVEAL (qi 2026-06-21): on touch, a tap on a bubble toggles its action
+// row open (the media-query already makes them visible, but this also lets a tap
+// dismiss/open explicitly and gives desktop-touch hybrids a reveal path). Tapping
+// a button inside the row does NOT toggle (those stopPropagation already).
+try {
+  transcript.addEventListener('click', (ev) => {
+    const bubble = ev.target.closest('.final, .xen-reply, .firehose');
+    if (!bubble) return;
+    if (ev.target.closest('.bubble-actions') || ev.target.closest('.reply-box')) return; // let buttons work
+    bubble.classList.toggle('actions-open');
+  });
+} catch (_) {}
+
 // Wrap appendFinal to add bubble actions
 const _origAppendFinal = appendFinal;
 // Double-input fix (qi 2026-05-30): qi's dictation renders LOCALLY here (Web
@@ -1905,7 +1926,11 @@ function renderEvent(d) {
     const _rawSrc = (d.source || d.sender || d.title || tag || 'firehose').toString().toLowerCase();
     const _srcMap = { beside: 'sms:', 'beside-sms': 'sms:', omi: 'omi:', 'omi:': 'omi:', 'bee:': 'bee:', bee: 'bee:' };
     const labelSrc = (_srcMap[_rawSrc] || (d.source || d.sender || d.title || tag || 'firehose').toString()).slice(0, 24);
-    const cleanBody = String(txt).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 300);
+    // qi 2026-06-21 ("it cuts off halfway, I need to see/hear the whole thing"):
+    // the old .slice(0,300) chopped firehose bubbles mid-sentence. Raised to 4000
+    // so the full inbound message renders. (Speech path _ssSpeakClip already chunks
+    // by sentence with a resume() heartbeat, so it speaks to the end regardless.)
+    const cleanBody = String(txt).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 4000);
     const fdiv = document.createElement('div');
     fdiv.className = 'firehose';
     const fsrc = document.createElement('span'); fsrc.className = 'src'; fsrc.textContent = labelSrc;
