@@ -306,13 +306,12 @@ body.drop-active::after {
 }
 .final:hover .bubble-actions, .xen-reply:hover .bubble-actions { opacity:1; }
 .firehose:hover .bubble-actions { opacity:1; }
-/* qi 2026-06-21 ("when I tap nothing shows up — no reply buttons"): touch screens
-   never :hover, so on his phone the action row stayed invisible. On touch (hover:none)
-   the actions are ALWAYS visible; desktop keeps hover-to-reveal. Plus a tapped-open
-   class so a tap can explicitly reveal a bubble's actions anywhere. */
-@media (hover: none) {
-  .final .bubble-actions, .xen-reply .bubble-actions, .firehose .bubble-actions { opacity:1; }
-}
+/* qi 2026-06-21 v2 ("it's just THERE instead of on hover — supposed to be on hover"):
+   the first touch fix made the actions ALWAYS visible via @media(hover:none), which on
+   his touch device read as cluttered "just sitting there." REMOVED that always-on rule.
+   Now: desktop = reveal on :hover (above); touch = reveal on TAP (the .actions-open class
+   below, toggled by the bubble tap handler — touch can't hover, so tap is its "hover").
+   Either way the actions appear ON INTERACTION, never permanently parked. */
 .final.actions-open .bubble-actions, .xen-reply.actions-open .bubble-actions, .firehose.actions-open .bubble-actions { opacity:1; }
 /* qi 2026-06-21 ("on my interface-output bubbles the reply box has a white background
    and the send button is real big — ugly ugly"): the reply-box styling was scoped to
