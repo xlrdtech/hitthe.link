@@ -4,15 +4,23 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Diamond Cutz Studios — Recording Studio</title>
-<meta name="description" content="Diamond Cutz Studios — a recording studio where raw talent gets cut, polished, and set. Now booking sessions.">
+<meta name="description" content="Diamond Cutz Studios — a recording studio where raw talent gets cut, polished, and set. Recording · Mixing · Mastering. Now booking sessions.">
 <meta name="theme-color" content="#0a0e1c">
 <meta property="og:title" content="Diamond Cutz Studios">
-<meta property="og:description" content="Recording studio. Now booking sessions.">
+<meta property="og:description" content="Recording · Mixing · Mastering. Now booking sessions.">
 <meta property="og:image" content="https://hitthe.link/dcz/assets/logo-final.png">
-<link rel="icon" href="/dcz/assets/logo-final.png">
+<meta property="og:type" content="website">
+<link rel="icon" href="/dcz/assets/logo-final.png?v=2">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!--
+  /dcz — Diamond Cutz Studios one-pager. HERO = real-time three.js 3D medallion:
+  the CHOSEN emblem (navy/rose-gold/platinum, alpha) mapped on a coin with true
+  thickness + polished rose-gold/platinum rim, brand env reflections, gentle
+  auto-wobble + drag-to-spin (mouse + touch), inertia. three.js vendored at
+  /lib/three.module.min.js. Coin texture: /dcz/assets/logo-final.png.
+-->
 <style>
   :root{
     --black:#04060c; --ink:#0a0e1c; --navy:#0d1b3e; --navy-2:#13254e;
@@ -22,21 +30,17 @@
     --serif:'Cinzel',serif; --sans:'Inter',system-ui,sans-serif;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  ::selection{background:var(--rose);color:#1a0f0a}
   html{scroll-behavior:smooth}
-  body{background:var(--black);color:var(--ice);font-family:var(--sans);font-weight:300;line-height:1.6;overflow-x:hidden}
-  .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+  body{background:var(--black);color:var(--ice);font-family:var(--sans);font-weight:300;line-height:1.6;overflow-x:clip}
   a{color:var(--rose-hi);text-decoration:none}
 
-  /* environment */
   .env{position:fixed;inset:0;z-index:-1;background:
     radial-gradient(900px 600px at 50% -8%, rgba(19,37,78,.85), transparent 60%),
     radial-gradient(700px 500px at 85% 30%, rgba(215,160,138,.10), transparent 55%),
     radial-gradient(700px 600px at 10% 80%, rgba(120,150,210,.08), transparent 55%),
     var(--black)}
-  .grain{position:fixed;inset:0;z-index:-1;opacity:.04;pointer-events:none;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 
-  /* nav */
   nav{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
     padding:13px 22px;backdrop-filter:blur(10px);background:rgba(4,6,12,.55);border-bottom:1px solid var(--line-cool)}
   nav .nm{font-family:var(--serif);font-weight:600;font-size:13px;letter-spacing:.3em;text-transform:uppercase;
@@ -45,31 +49,35 @@
     border:1px solid var(--line);border-radius:999px;padding:8px 16px;transition:.2s}
   nav a.cta:hover{border-color:var(--rose);background:rgba(215,160,138,.1)}
 
-  /* hero */
-  .hero{min-height:92vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 22px 60px;perspective:1400px}
-  .coin{width:min(70vw,420px);aspect-ratio:1;position:relative;transform-style:preserve-3d;
-    animation:float 7s ease-in-out infinite;filter:drop-shadow(0 30px 60px rgba(0,0,0,.7)) drop-shadow(0 0 50px rgba(215,160,138,.18))}
-  .coin img{width:100%;height:100%;object-fit:contain;display:block}
-  .coin::before{content:"";position:absolute;inset:-8%;border-radius:50%;z-index:-1;
-    background:radial-gradient(circle, rgba(215,160,138,.22), transparent 65%);filter:blur(30px)}
-  @keyframes float{0%,100%{transform:rotateX(6deg) translateY(0)}50%{transform:rotateX(6deg) translateY(-16px)}}
-  .hero h1{font-family:var(--serif);font-weight:800;font-size:clamp(30px,7vw,62px);letter-spacing:.06em;line-height:1.02;margin-top:36px;
+  /* ── 3D MEDALLION HERO ── */
+  .hero3d{position:relative;width:100%;height:78vh;height:78svh;min-height:440px;overflow:hidden;
+    background:radial-gradient(ellipse 70% 60% at 50% 42%, rgba(19,37,78,.55), transparent 70%);touch-action:pan-y}
+  #coin{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;cursor:grab}
+  #coin:active{cursor:grabbing}
+  .hero-fallback{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(64vmin,440px);z-index:0;opacity:1;transition:opacity .6s;
+    filter:drop-shadow(0 20px 60px rgba(0,0,0,.7)) drop-shadow(0 0 50px rgba(215,160,138,.18))}
+  .hero3d.live .hero-fallback{opacity:0;pointer-events:none}
+  .spin-cue{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);z-index:3;font-family:var(--serif);
+    font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:rgba(234,242,255,.5);animation:cue 2.6s ease-in-out infinite;pointer-events:none}
+  @keyframes cue{0%,100%{opacity:.3}50%{opacity:.78}}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+  header.intro{text-align:center;padding:30px 22px 56px}
+  header.intro h1{font-family:var(--serif);font-weight:800;font-size:clamp(30px,7vw,60px);letter-spacing:.06em;line-height:1.02;
     background:linear-gradient(105deg,var(--plat-hi) 8%,var(--rose) 50%,var(--plat-hi) 92%);-webkit-background-clip:text;background-clip:text;color:transparent}
-  .hero .tag{font-size:clamp(13px,2.4vw,16px);letter-spacing:.26em;text-transform:uppercase;color:var(--steel);margin-top:16px}
-  .hero .sub{max-width:46ch;margin:20px auto 0;color:#bcc6d8;font-size:15.5px}
-  .btns{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:34px}
+  header.intro .tag{font-size:clamp(13px,2.4vw,16px);letter-spacing:.26em;text-transform:uppercase;color:var(--steel);margin-top:16px}
+  header.intro .sub{max-width:46ch;margin:20px auto 0;color:#bcc6d8;font-size:15.5px}
+  .btns{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:30px}
   .btn{font-family:var(--sans);font-weight:500;font-size:13.5px;letter-spacing:.06em;padding:13px 26px;border-radius:11px;transition:.2s;border:1px solid transparent;cursor:pointer}
   .btn.primary{color:#1a0f0a;background:linear-gradient(135deg,var(--rose-hi),var(--rose) 60%,var(--rose-deep));box-shadow:0 10px 26px rgba(184,125,104,.35)}
   .btn.primary:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(184,125,104,.45)}
   .btn.ghost{color:var(--ice);border-color:var(--line-cool);background:rgba(205,212,222,.04)}
   .btn.ghost:hover{border-color:var(--plat);background:rgba(205,212,222,.09)}
 
-  /* sections */
-  section{padding:74px 0;border-top:1px solid var(--line-cool)}
+  section{padding:70px 0;border-top:1px solid var(--line-cool)}
   .kicker{font-family:var(--serif);font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--rose);text-align:center}
   h2{font-family:var(--serif);font-weight:700;font-size:clamp(24px,4.4vw,38px);text-align:center;margin-top:12px;color:var(--plat-hi)}
   .lead{max-width:60ch;margin:18px auto 0;text-align:center;color:#bcc6d8;font-size:16px}
-
   .cards{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin-top:42px}
   .card{flex:1 1 220px;max-width:260px;background:linear-gradient(180deg,rgba(19,37,78,.5),rgba(10,14,28,.6));
     border:1px solid var(--line-cool);border-radius:16px;padding:26px 22px;position:relative;overflow:hidden;transition:.2s}
@@ -79,7 +87,6 @@
   .card p{margin-top:9px;font-size:13.5px;color:#a9b3c6}
   .card .n{font-family:var(--serif);font-size:12px;color:var(--rose);letter-spacing:.2em}
 
-  /* contact */
   .contact{text-align:center}
   .links{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:30px}
   .chip{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line-cool);border-radius:999px;padding:11px 20px;font-size:14px;color:var(--ice);transition:.2s}
@@ -88,19 +95,116 @@
   footer{text-align:center;padding:40px 22px 60px;border-top:1px solid var(--line-cool)}
   footer .nm{font-family:var(--serif);letter-spacing:.3em;color:var(--steel);font-size:12px;text-transform:uppercase}
   footer .fine{margin-top:10px;color:#5b6577;font-size:11.5px}
-  @media(max-width:600px){ section{padding:58px 0} .coin{width:min(82vw,340px)} }
+  @media(max-width:600px){ section{padding:54px 0} .hero3d{height:60vh;height:60svh} }
+  @media (prefers-reduced-motion:reduce){.spin-cue{display:none}}
 </style>
 </head>
 <body>
-<div class="env"></div><div class="grain"></div>
+<div class="env"></div>
 
 <nav>
   <span class="nm">Diamond&nbsp;Cutz</span>
   <a class="cta" href="mailto:admin@dmndctz.com?subject=Studio%20Booking%20Inquiry">Book a Session</a>
 </nav>
 
-<header class="hero">
-  <div class="coin"><img src="/dcz/assets/logo-final.png?v=2" alt="Diamond Cutz Studios emblem"></div>
+<!-- ── 3D MEDALLION HERO ── -->
+<section class="hero3d" id="hero3d">
+  <canvas id="coin"></canvas>
+  <img class="hero-fallback" src="/dcz/assets/logo-final.png?v=2" alt="Diamond Cutz Studios emblem" decoding="async">
+  <div class="spin-cue">✦ drag to spin ✦</div>
+</section>
+
+<script type="importmap">{"imports":{"three":"/lib/three.module.min.js"}}</script>
+<script type="module">
+  import * as THREE from 'three';
+  (function(){
+    var host=document.getElementById('hero3d'), canvas=document.getElementById('coin');
+    var renderer;
+    try{ renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:true,powerPreference:'high-performance'}); }
+    catch(e){ return; }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+    renderer.outputColorSpace=THREE.SRGBColorSpace;
+    renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.12;
+
+    var scene=new THREE.Scene();
+    var camera=new THREE.PerspectiveCamera(34,1,0.1,100); camera.position.set(0,0,4.3);
+
+    // brand-colored studio environment (navy + rose-gold + platinum) the metal reflects
+    var ec=document.createElement('canvas'); ec.width=512; ec.height=256; var g=ec.getContext('2d');
+    var grd=g.createLinearGradient(0,0,0,256);
+    grd.addColorStop(0,'#0b1320'); grd.addColorStop(.42,'#16243a'); grd.addColorStop(.5,'#f0d8c8');
+    grd.addColorStop(.58,'#13254e'); grd.addColorStop(1,'#05070a');
+    g.fillStyle=grd; g.fillRect(0,0,512,256);
+    function blob(x,y,r,c){ g.fillStyle=c; g.beginPath(); g.arc(x,y,r,0,Math.PI*2); g.fill(); }
+    blob(120,70,34,'rgba(255,255,255,.92)'); blob(380,60,46,'rgba(240,196,173,.85)');
+    blob(300,150,60,'rgba(205,212,222,.5)'); blob(60,150,30,'rgba(215,160,138,.6)');
+    var envTex=new THREE.CanvasTexture(ec); envTex.mapping=THREE.EquirectangularReflectionMapping; envTex.colorSpace=THREE.SRGBColorSpace;
+    var pmrem=new THREE.PMREMGenerator(renderer); var envRT=pmrem.fromEquirectangular(envTex);
+    scene.environment=envRT.texture; envTex.dispose(); pmrem.dispose();
+
+    scene.add(new THREE.AmbientLight(0x8198b8,0.5));
+    var key=new THREE.DirectionalLight(0xffffff,2.2); key.position.set(2.5,3.5,4); scene.add(key);
+    var rimRose=new THREE.PointLight(0xf0c4ad,38,30); rimRose.position.set(-4,1.5,2); scene.add(rimRose);
+    var rimPlat=new THREE.PointLight(0xcdd4de,30,30); rimPlat.position.set(3,-2.5,2.5); scene.add(rimPlat);
+    var glint=new THREE.PointLight(0xffffff,28,18); scene.add(glint);
+
+    var pivot=new THREE.Group(); scene.add(pivot);
+    var R=1.32, T=0.16;
+    var tl=new THREE.TextureLoader();
+    tl.load('/dcz/assets/logo-final.png?v=2', function(tex){
+      tex.colorSpace=THREE.SRGBColorSpace; tex.anisotropy=renderer.capabilities.getMaxAnisotropy();
+      var faceMat=new THREE.MeshPhysicalMaterial({ map:tex, transparent:true, alphaTest:0.02,
+        metalness:0.6, roughness:0.26, clearcoat:0.7, clearcoatRoughness:0.22,
+        envMapIntensity:1.5, emissive:0xffffff, emissiveMap:tex, emissiveIntensity:0.15 });
+      var face=new THREE.Mesh(new THREE.CircleGeometry(R,160), faceMat); face.position.z=T/2+0.001; pivot.add(face);
+      var backTex=tex.clone(); backTex.colorSpace=THREE.SRGBColorSpace; backTex.wrapS=THREE.RepeatWrapping; backTex.repeat.x=-1; backTex.offset.x=1; backTex.needsUpdate=true;
+      var backMat=new THREE.MeshPhysicalMaterial({ map:backTex, transparent:true, alphaTest:0.02, metalness:0.6, roughness:0.3, envMapIntensity:1.2 });
+      var back=new THREE.Mesh(new THREE.CircleGeometry(R,160), backMat); back.position.z=-T/2-0.001; back.rotation.y=Math.PI; pivot.add(back);
+      host.classList.add('live');
+    });
+    // polished rose-gold/platinum rim
+    var rim=new THREE.Mesh(
+      new THREE.CylinderGeometry(R,R,T,160,1,true),
+      new THREE.MeshPhysicalMaterial({ color:0xe7d3c4, metalness:1, roughness:0.14, clearcoat:1, clearcoatRoughness:0.08, envMapIntensity:1.7 })
+    );
+    rim.rotation.x=Math.PI/2; pivot.add(rim);
+
+    var dragging=false, px=0, py=0, velX=0, velY=0, rotX=0, rotY=0, idle=0;
+    function down(x,y){ dragging=true; px=x; py=y; velX=velY=0; idle=0; }
+    function move(x,y){ if(!dragging)return; var dx=x-px, dy=y-py; px=x; py=y; rotY+=dx*0.01; rotX+=dy*0.01; velY=dx*0.01; velX=dy*0.01; rotX=Math.max(-1.0,Math.min(1.0,rotX)); }
+    function up(){ dragging=false; }
+    canvas.addEventListener('pointerdown',function(e){ down(e.clientX,e.clientY); canvas.setPointerCapture(e.pointerId); });
+    canvas.addEventListener('pointermove',function(e){ move(e.clientX,e.clientY); });
+    window.addEventListener('pointerup',up);
+
+    var clock=new THREE.Clock();
+    function resize(){
+      var w=host.clientWidth,h=host.clientHeight; renderer.setSize(w,h,false);
+      var aspect=w/h; camera.aspect=aspect;
+      var halfTan=Math.tan(camera.fov*Math.PI/180/2), margin=0.82;
+      var dH=R/(margin*halfTan), dW=R/(margin*halfTan*aspect);
+      camera.position.z=Math.max(dH,dW,3.2);
+      camera.updateProjectionMatrix();
+    }
+    window.addEventListener('resize',resize); resize();
+
+    (function loop(){
+      requestAnimationFrame(loop);
+      var t=clock.getElapsedTime();
+      if(!dragging){
+        rotY+=velY; rotX+=velX; velY*=0.94; velX*=0.94; idle+=0.016;
+        var ease=Math.min(idle*idle*0.0008,0.04);
+        var wobY=Math.sin(t*0.5)*0.42, wobX=Math.sin(t*0.35)*0.13;
+        rotY+= (wobY-rotY)*ease; rotX+= (wobX-rotX)*ease;
+      }
+      pivot.rotation.y=rotY; pivot.rotation.x=rotX;
+      glint.position.set(Math.cos(t*1.3)*3.4, Math.sin(t*1.1)*2.2, 3.2);
+      renderer.render(scene,camera);
+    })();
+  })();
+</script>
+
+<header class="intro">
   <h1>Diamond Cutz Studios</h1>
   <div class="tag">Recording&nbsp;·&nbsp;Mixing&nbsp;·&nbsp;Mastering</div>
   <p class="sub">A recording studio where raw talent gets cut, polished, and set — until the sound shines like the name.</p>
@@ -132,8 +236,8 @@
     <div class="links">
       <a class="chip" href="mailto:admin@dmndctz.com?subject=Studio%20Booking%20Inquiry">✉&nbsp; admin@dmndctz.com</a>
       <a class="chip" href="https://diamondcutzstudios.com">🌐&nbsp; diamondcutzstudios.com</a>
+      <a class="chip" href="https://soundcloud.com/diamondcutzstudios">♪&nbsp; SoundCloud</a>
       <span class="chip"><span class="soon">Soon</span>&nbsp; @diamondcutzstudios</span>
-      <span class="chip"><span class="soon">Soon</span>&nbsp; Studio voice line</span>
     </div>
   </div>
 </section>
