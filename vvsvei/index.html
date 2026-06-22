@@ -509,8 +509,10 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
 <!-- Threads picker overlay (toggled by Threads button) -->
 <div id="thread-picker" style="display:none; position:absolute; top:60px; left:20px; right:20px; max-height:50vh; overflow-y:auto; background:rgba(20,40,28,.94); border:1px solid var(--line-strong); border-radius:var(--r-card); backdrop-filter:blur(18px); padding:10px; z-index:10; box-shadow:0 12px 36px rgba(0,0,0,.5);"></div>
 
-<!-- Events panel toggle (Task #10) · un-hidden 2026-06-21 so the step lane (Operator · Firehose) is reachable from the glass without interleaving the conversation. -->
-<button id="er-toggle" aria-label="Toggle events panel" aria-expanded="false">
+<!-- Events panel toggle — HIDDEN 2026-06-22 (qi: "I still see the events button at the top right corner not in line").
+     Step/OTLP events now render INLINE in the conversation transcript (Omni, C29), so the corner toggle
+     is no longer the surface. Hidden; the rail stays in DOM (still receives appendEventItem mirror). -->
+<button id="er-toggle" aria-label="Toggle events panel" aria-expanded="false" style="display:none">
   <span class="pip" id="er-pip"></span>
   <span>Events</span>
   <span class="count zero" id="er-count">0</span>
@@ -1838,18 +1840,33 @@ function renderEvent(d) {
   // "PM, in:" / "AM, in:" (with optional leading mangled colons) is removed.
   txt = txt.replace(/^[\s:]*\d{1,2}:\d{2}(?::\d{2})?\s*[AP]M\s*,\s*(?:in|typed|omi|aua|sms|bee|spark|mail|note):\s*/i, '').trim();
   if (!txt) return;
-  // qi 2026-06-21 STEP-LANE: per-step telemetry (tool-call narrations) must show
-  // for omni-awareness but NEVER interleave with qi's actual conversation bubbles.
-  // The emit side re-tags these source:"XEN-STEP" / sender:"xen-step" / lane:"steps"
-  // (xen-exodus-narrate-hook.py). Route them to the SEPARATE Operator · Firehose
-  // rail (appendEventItem → #er-list) and skip the conversation transcript entirely.
-  // Conversation = qi's input (.final) + Xen's real replies (.xen-reply, *-primary).
+  // qi 2026-06-22 OMNI RESTORE (reverses the 2026-06-21 STEP-LANE split): qi —
+  // "you are violating Omni" + "the OTLP view was directly within the chat... now its
+  // somewhere else where you have to click it" + "still see the events button at top
+  // right not inline". Canon C29 (Akashic): ALL sources — step/OTLP telemetry — flow
+  // INLINE in the ONE conversation stream, never behind a click. Step events now render
+  // as an inline .firehose bubble in the transcript AND still mirror to the Operator·
+  // Firehose rail (#er-list). Dual-render: visible in chat, logged in rail, nothing lost.
   {
     const _stepSrc = (d.source || '').toString().toLowerCase();
     const _stepSender = (d.sender || '').toString().toLowerCase();
     const _stepLane = (d.lane || '').toString().toLowerCase();
     if (_stepSrc === 'xen-step' || _stepSender === 'xen-step' || _stepLane === 'steps') {
-      try { appendEventItem('step', String(txt).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 600), d.ts); } catch (_) {}
+      const _clean = String(txt).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+      try { appendEventItem('step', _clean.slice(0, 600), d.ts); } catch (_) {}
+      // ALSO render inline in the conversation as a step bubble (Omni — in the chat).
+      try {
+        const _d = document.createElement('div');
+        _d.className = 'firehose step';
+        const _ts = document.createElement('span'); _ts.className = 'bubble-ts';
+        _ts.textContent = (typeof _fmtTs === 'function' ? _fmtTs(d.ts) : '');
+        const _sr = document.createElement('div'); _sr.className = 'src'; _sr.textContent = '◆ step';
+        const _bd = document.createElement('div'); _bd.textContent = _clean.slice(0, 600);
+        _d.appendChild(_ts); _d.appendChild(_sr); _d.appendChild(_bd);
+        if (typeof transcript !== 'undefined' && transcript) {
+          transcript.appendChild(_d); transcript.scrollTop = transcript.scrollHeight;
+        }
+      } catch (_) {}
       return;
     }
   }
