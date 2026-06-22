@@ -95,6 +95,24 @@
   footer{text-align:center;padding:40px 22px 60px;border-top:1px solid var(--line-cool)}
   footer .nm{font-family:var(--serif);letter-spacing:.3em;color:var(--steel);font-size:12px;text-transform:uppercase}
   footer .fine{margin-top:10px;color:#5b6577;font-size:11.5px}
+  .card h3 a, .card p a{color:var(--rose-hi)}
+
+  /* ── booking modal ── */
+  .modal-bg{position:fixed;inset:0;z-index:100;background:rgba(2,4,8,.8);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px}
+  .modal{position:relative;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;background:linear-gradient(180deg,var(--navy),var(--ink));border:1px solid var(--line);border-radius:18px;padding:30px 26px 26px;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  .modal::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;border-radius:18px 18px 0 0;background:linear-gradient(90deg,var(--rose),var(--plat),transparent)}
+  .modal-x{position:absolute;top:12px;right:15px;background:none;border:0;color:var(--steel);font-size:28px;line-height:1;cursor:pointer;transition:.2s}
+  .modal-x:hover{color:var(--rose-hi)}
+  .m-title{font-family:var(--serif);font-weight:700;font-size:24px;color:var(--plat-hi);margin:4px 0 6px}
+  .m-sub{color:#a9b3c6;font-size:13.5px;margin-bottom:18px}
+  #bookForm label{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--steel);margin-bottom:14px}
+  #bookForm input,#bookForm select,#bookForm textarea{width:100%;margin-top:6px;background:rgba(0,0,0,.4);border:1px solid var(--line-cool);border-radius:10px;color:var(--ice);font-family:var(--sans);font-size:14px;font-weight:300;padding:11px 13px;transition:.2s}
+  #bookForm input:focus,#bookForm select:focus,#bookForm textarea:focus{outline:none;border-color:var(--rose);box-shadow:0 0 0 3px rgba(215,160,138,.15)}
+  #bookForm textarea{resize:vertical}
+  .m-direct{margin-top:18px;padding-top:16px;border-top:1px solid var(--line-cool);text-align:center;font-size:13px;color:#a9b3c6}
+  .m-direct a{color:var(--rose-hi);white-space:nowrap}
+  button.btn{font-family:var(--sans)}
+
   @media(max-width:600px){ section{padding:54px 0} .hero3d{height:60vh;height:60svh} }
   @media (prefers-reduced-motion:reduce){.spin-cue{display:none}}
 </style>
@@ -206,46 +224,133 @@
 
 <header class="intro">
   <h1>Diamond Cutz Studios</h1>
-  <div class="tag">Recording&nbsp;·&nbsp;Mixing&nbsp;·&nbsp;Mastering</div>
-  <p class="sub">A recording studio where raw talent gets cut, polished, and set — until the sound shines like the name.</p>
+  <div class="tag">Recording&nbsp;·&nbsp;Production&nbsp;·&nbsp;Live&nbsp;Entertainment</div>
+  <p class="sub">A house of Stal'lyon — Atlanta, GA. For all your music &amp; entertainment needs.</p>
   <div class="btns">
-    <a class="btn primary" href="mailto:admin@dmndctz.com?subject=Studio%20Booking%20Inquiry">Book a Session</a>
-    <a class="btn ghost" href="#studio">What We Do</a>
+    <button class="btn primary" data-book>Book a Session</button>
+    <a class="btn ghost" href="#music">Hear the Sound</a>
   </div>
 </header>
 
+<section id="about">
+  <div class="wrap">
+    <div class="kicker">The House</div>
+    <h2>Southern Soul, cut in Atlanta</h2>
+    <p class="lead">Diamond Cutz Studios is the home of Stal'lyon's signature sound — a Southern Soul recording and live-entertainment house rooted in Atlanta. We build records from the ground up: recording, producing, mixing, and mastering with that hyper-real shine and a guitar-meets-808 groove you can feel. From the studio booth to the live stage, the DJ booth to the dance floor, we bring the soul. Pull up — let's cut something timeless.</p>
+  </div>
+</section>
+
 <section id="studio">
   <div class="wrap">
-    <div class="kicker">The Studio</div>
-    <h2>Sound, cut to brilliance</h2>
-    <p class="lead">Every record starts rough. Diamond Cutz is where it gets shaped — tracked clean, mixed with intention, and mastered to hit on every system. Built for artists who take their sound seriously.</p>
+    <div class="kicker">What We Do</div>
+    <h2>Studio &amp; Stage</h2>
     <div class="cards">
-      <div class="card"><div class="n">01</div><h3>Recording</h3><p>Clean, professional tracking sessions built around the artist and the take.</p></div>
-      <div class="card"><div class="n">02</div><h3>Mixing</h3><p>Balance, depth, and clarity — every element sitting exactly where it belongs.</p></div>
-      <div class="card"><div class="n">03</div><h3>Mastering</h3><p>The final polish: loud, translation-ready, and consistent across every platform.</p></div>
-      <div class="card"><div class="n">04</div><h3>Artist Development</h3><p>Helping the talent in the room grow into the artist on the marquee.</p></div>
+      <div class="card"><div class="n">01</div><h3>Recording</h3><p>Full sessions in-house — vocal chains, instrument tracking, comp &amp; edit, ready for mix.</p></div>
+      <div class="card"><div class="n">02</div><h3>Production</h3><p>Guitar-and-808 hybrid beats, arrangement, and full records built around your voice.</p></div>
+      <div class="card"><div class="n">03</div><h3>Mixing &amp; Mastering</h3><p>Every vocal, lick and 808 dialed in — mastered loud and clean for any speaker.</p></div>
+      <div class="card"><div class="n">04</div><h3>Live &amp; Events</h3><p>Stal'lyon live, DJ sets and full-band energy — parties, weddings, trail rides, all events.</p></div>
     </div>
+  </div>
+</section>
+
+<section id="music">
+  <div class="wrap">
+    <div class="kicker">The Music</div>
+    <h2>Stal'lyon</h2>
+    <p class="lead">Andre — known on stage as Stal'lyon — is a Southern Soul artist out of Atlanta with a sound all his own: gritty guitar riffs riding hard over knocking 808s. Charismatic, authentic, built for the stage, he turns every set into a celebration while keeping the grown-folks soul tradition alive for a new generation.</p>
+    <div class="cards">
+      <div class="card"><div class="n">♪</div><h3>Stallion Shuffle</h3><p>The single — with the dance.</p></div>
+      <div class="card"><div class="n">♪</div><h3>Grown Folks</h3><p>Single.</p></div>
+      <div class="card"><div class="n">✦</div><h3>More on the way</h3><p>New music loading — streaming links dropping here soon.</p></div>
+    </div>
+    <p class="lead" style="margin-top:26px;font-size:14px">Follow <a href="https://instagram.com/diamondcutzstudios">@diamondcutzstudios</a> so you don't miss a release.</p>
+  </div>
+</section>
+
+<section id="events" class="contact">
+  <div class="wrap">
+    <div class="kicker">Book Us</div>
+    <h2>From the studio to the stage — we do it all</h2>
+    <div class="links">
+      <span class="chip">Parties</span><span class="chip">Weddings</span><span class="chip">Trail Rides</span>
+      <span class="chip">Live Sets</span><span class="chip">DJ</span><span class="chip">Studio Time</span><span class="chip">All Events</span>
+    </div>
+    <div class="btns" style="margin-top:28px"><button class="btn primary" data-book>Book Us</button></div>
   </div>
 </section>
 
 <section id="book" class="contact">
   <div class="wrap">
-    <div class="kicker">Booking</div>
-    <h2>Come cut something diamond</h2>
-    <p class="lead">Now booking sessions. Reach out and we'll lock in your time.</p>
-    <div class="links">
-      <a class="chip" href="mailto:admin@dmndctz.com?subject=Studio%20Booking%20Inquiry">✉&nbsp; admin@dmndctz.com</a>
+    <div class="kicker">Direct Line</div>
+    <h2>Let's cut something</h2>
+    <p class="lead">Atlanta, GA · Studio &amp; live entertainment · Booking 7 days a week.</p>
+    <div class="cards" style="margin-top:34px">
+      <div class="card"><div class="n">Booking &amp; Management</div><h3>LaTina McAllister</h3>
+        <p><a href="tel:+17702565492">(770) 256-5492</a><br><a href="mailto:admin@dmndctz.com?subject=Diamond%20Cutz%20Booking%20Inquiry">admin@dmndctz.com</a></p></div>
+      <div class="card"><div class="n">Artist</div><h3>Andre "Stal'lyon"</h3>
+        <p><a href="tel:+14702341117">(470) 234-1117</a></p></div>
+    </div>
+    <div class="links" style="margin-top:24px">
+      <button class="btn primary" data-book>Book a Session</button>
+      <a class="chip" href="https://instagram.com/diamondcutzstudios">◇&nbsp; @diamondcutzstudios</a>
       <a class="chip" href="https://diamondcutzstudios.com">🌐&nbsp; diamondcutzstudios.com</a>
-      <a class="chip" href="https://soundcloud.com/diamondcutzstudios">♪&nbsp; SoundCloud</a>
-      <span class="chip"><span class="soon">Soon</span>&nbsp; @diamondcutzstudios</span>
     </div>
   </div>
 </section>
 
 <footer>
-  <div class="nm">Diamond Cutz Studios</div>
+  <div class="nm">Diamond Cutz Studios · A House of Stal'lyon · Atlanta, GA</div>
   <div class="fine">© 2026 Diamond Cutz Studios · diamondcutzstudios.com</div>
 </footer>
+
+<!-- ── BOOKING MODAL ── -->
+<div class="modal-bg" id="bookModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Book Diamond Cutz Studios">
+    <button class="modal-x" id="bookClose" aria-label="Close">&times;</button>
+    <div class="kicker" style="text-align:left">Booking</div>
+    <h3 class="m-title">Book Diamond Cutz</h3>
+    <p class="m-sub">Tell us what you need — we'll lock in your time. Goes straight to the studio inbox.</p>
+    <form id="bookForm">
+      <label>Name<input type="text" name="name" required placeholder="Your name"></label>
+      <label>Phone or email<input type="text" name="contact" required placeholder="Best way to reach you"></label>
+      <label>What do you need?
+        <select name="need">
+          <option>Studio session (recording)</option>
+          <option>Production / beats</option>
+          <option>Mixing &amp; mastering</option>
+          <option>Live performance — Stal'lyon</option>
+          <option>DJ / event</option>
+          <option>Other</option>
+        </select>
+      </label>
+      <label>Date / timeframe<input type="text" name="date" placeholder="e.g. next Saturday, or flexible"></label>
+      <label>Details<textarea name="msg" rows="3" placeholder="Tell us about the project or event"></textarea></label>
+      <button type="submit" class="btn primary" style="width:100%;justify-content:center">Send Booking Request</button>
+    </form>
+    <div class="m-direct">
+      Prefer to call? <a href="tel:+17702565492">LaTina · (770) 256-5492</a> &nbsp;·&nbsp; <a href="tel:+14702341117">Andre · (470) 234-1117</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    var bg=document.getElementById('bookModal'), x=document.getElementById('bookClose'), form=document.getElementById('bookForm');
+    function open(){ bg.hidden=false; document.body.style.overflow='hidden'; }
+    function close(){ bg.hidden=true; document.body.style.overflow=''; }
+    document.querySelectorAll('[data-book]').forEach(function(b){ b.addEventListener('click',open); });
+    x.addEventListener('click',close);
+    bg.addEventListener('click',function(e){ if(e.target===bg) close(); });
+    window.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!bg.hidden) close(); });
+    form.addEventListener('submit',function(e){
+      e.preventDefault();
+      var f=form.elements;
+      var subj='Diamond Cutz Booking — '+(f.need.value)+' — '+(f.name.value);
+      var body='Name: '+f.name.value+'\nContact: '+f.contact.value+'\nNeed: '+f.need.value+'\nDate/timeframe: '+f.date.value+'\n\nDetails:\n'+f.msg.value;
+      window.location.href='mailto:admin@dmndctz.com?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);
+    });
+  })();
+</script>
 
 <script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
 </body>
