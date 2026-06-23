@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Diamond Cutz Studios — Recording Studio</title>
-<meta name="description" content="Diamond Cutz Studios — a recording studio where raw talent gets cut, polished, and set. Recording · Mixing · Mastering. Now booking sessions.">
+<title>Diamond Cutz Studios · Recording Studio</title>
+<meta name="description" content="Diamond Cutz Studios, a recording studio where raw talent gets cut, polished, and set. Recording · Mixing · Mastering. Now booking sessions.">
 <meta name="theme-color" content="#0a0e1c">
 <meta property="og:title" content="Diamond Cutz Studios">
 <meta property="og:description" content="Recording · Mixing · Mastering. Now booking sessions.">
@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <!--
-  /dcz — Diamond Cutz Studios one-pager. HERO = real-time three.js 3D medallion:
+  /dcz - Diamond Cutz Studios one-pager. HERO = real-time three.js 3D medallion:
   the CHOSEN emblem (navy/rose-gold/platinum, alpha) mapped on a coin with true
   thickness + polished rose-gold/platinum rim, brand env reflections, gentle
   auto-wobble + drag-to-spin (mouse + touch), inertia. three.js vendored at
@@ -114,6 +114,54 @@
   .m-direct{margin-top:18px;padding-top:16px;border-top:1px solid var(--line-cool);text-align:center;font-size:13px;color:#a9b3c6}
   .m-direct a{color:var(--rose-hi);white-space:nowrap}
   button.btn{font-family:var(--sans)}
+
+  /* ── artist EPK ── */
+  .artist{display:flex;flex-direction:column;align-items:center;gap:28px;margin-top:40px;text-align:center}
+  .artist .portrait{flex:0 0 auto;max-width:260px;border-radius:16px;overflow:hidden;position:relative;
+    border:1px solid var(--line);box-shadow:0 22px 60px rgba(0,0,0,.6)}
+  .artist .portrait::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(4,6,12,.55));pointer-events:none}
+  .artist .portrait img{display:block;width:100%;height:auto}
+  .artist .bio{max-width:64ch;margin:0 auto}
+  .artist .bio p{color:#c2ccdd;font-size:15px;margin-top:14px}
+  .artist .bio p:first-child{margin-top:0}
+  .artist .bio .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px;justify-content:center}
+  .artist .bio .tags span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--rose);
+    border:1px solid var(--line);border-radius:999px;padding:5px 12px}
+
+  /* ── track player ── */
+  .tracks{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:38px}
+  @media(max-width:780px){ .tracks{grid-template-columns:repeat(2,1fr)} }
+  @media(max-width:480px){ .tracks{grid-template-columns:1fr} }
+  .track{background:linear-gradient(180deg,rgba(19,37,78,.5),rgba(10,14,28,.6));border:1px solid var(--line-cool);
+    border-radius:14px;overflow:hidden;transition:.2s}
+  .track:hover{transform:translateY(-3px);border-color:var(--line)}
+  .track .thumb{position:relative;aspect-ratio:16/9;cursor:pointer;background:#04060c}
+  .track .thumb img{width:100%;height:100%;object-fit:cover;display:block;opacity:.9;transition:.2s}
+  .track .thumb:hover img{opacity:1}
+  .track .play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  .track .play span{width:54px;height:54px;border-radius:999px;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,var(--rose-hi),var(--rose) 65%,var(--rose-deep));box-shadow:0 8px 22px rgba(0,0,0,.5);
+    color:#1a0f0a;font-size:20px;padding-left:4px;transition:.2s}
+  .track .thumb:hover .play span{transform:scale(1.08)}
+  .track iframe{width:100%;aspect-ratio:16/9;display:block;border:0}
+  .track .meta{padding:13px 15px}
+  .track .meta h3{font-family:var(--serif);font-weight:600;font-size:15.5px;color:var(--ice);letter-spacing:.02em}
+  .track .meta p{font-size:12px;color:var(--rose);letter-spacing:.04em;margin-top:3px}
+
+  /* ── shows ── */
+  .show{display:flex;flex-direction:column;gap:24px;align-items:center;margin-top:40px;text-align:center;max-width:560px;margin-left:auto;margin-right:auto;
+    background:linear-gradient(180deg,rgba(19,37,78,.5),rgba(10,14,28,.6));border:1px solid var(--line-cool);
+    border-radius:18px;padding:26px 24px;position:relative;overflow:hidden}
+  .show::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--rose),var(--plat),transparent)}
+  .show .flyer{flex:0 0 auto;max-width:300px;border-radius:12px;overflow:hidden;border:1px solid var(--line);display:block;margin:0 auto}
+  .show .flyer img{display:block;width:100%;height:auto}
+  .show .info{flex:1 1 auto}
+  .show .date{font-family:var(--serif);font-weight:700;font-size:22px;letter-spacing:.06em;
+    background:linear-gradient(100deg,var(--plat-hi),var(--rose) 60%,var(--plat-hi));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .show .info h3{font-family:var(--serif);font-weight:600;font-size:19px;color:var(--ice);margin-top:6px}
+  .show .info .det{margin-top:12px;font-size:14px;color:#bcc6d8}
+  .show .info .det div{margin-top:6px}
+  .show .info .btns{justify-content:center;margin-top:20px}
 
   @media(max-width:600px){ section{padding:54px 0} .hero3d{height:60vh;height:60svh} }
   @media (prefers-reduced-motion:reduce){.spin-cue{display:none}}
@@ -227,7 +275,7 @@
 <header class="intro">
   <h1>Diamond Cutz Studios</h1>
   <div class="tag">Recording&nbsp;·&nbsp;Production&nbsp;·&nbsp;Live&nbsp;Entertainment</div>
-  <p class="sub">A house of Stal'lyon — Atlanta, GA. For all your music &amp; entertainment needs.</p>
+  <p class="sub">A house of Stal'lyon · Atlanta, GA. For all your music &amp; entertainment needs.</p>
   <div class="btns">
     <button class="btn primary" data-book>Book a Session</button>
     <a class="btn ghost" href="#music">Hear the Sound</a>
@@ -238,7 +286,7 @@
   <div class="wrap">
     <div class="kicker">The House</div>
     <h2>Southern Soul, cut in Atlanta</h2>
-    <p class="lead">Diamond Cutz Studios is the home of Stal'lyon's signature sound — a Southern Soul recording and live-entertainment house rooted in Atlanta. We build records from the ground up: recording, producing, mixing, and mastering with that hyper-real shine and a guitar-meets-808 groove you can feel. From the studio booth to the live stage, the DJ booth to the dance floor, we bring the soul. Pull up — let's cut something timeless.</p>
+    <p class="lead">Diamond Cutz Studios is the home of Stal'lyon's signature sound, a Southern Soul recording and live-entertainment house rooted in Atlanta. We build records from the ground up: recording, producing, mixing, and mastering with that hyper-real shine and a guitar-meets-808 groove you can feel. From the studio booth to the live stage, the DJ booth to the dance floor, we bring the soul. Pull up. Let's cut something timeless.</p>
   </div>
 </section>
 
@@ -247,39 +295,70 @@
     <div class="kicker">What We Do</div>
     <h2>Studio &amp; Stage</h2>
     <div class="cards">
-      <div class="card"><div class="n">01</div><h3>Recording</h3><p>Full sessions in-house — vocal chains, instrument tracking, comp &amp; edit, ready for mix.</p></div>
+      <div class="card"><div class="n">01</div><h3>Recording</h3><p>Full sessions in-house: vocal chains, instrument tracking, comp &amp; edit, ready for mix.</p></div>
       <div class="card"><div class="n">02</div><h3>Production</h3><p>Guitar-and-808 hybrid beats, arrangement, and full records built around your voice.</p></div>
-      <div class="card"><div class="n">03</div><h3>Mixing &amp; Mastering</h3><p>Every vocal, lick and 808 dialed in — mastered loud and clean for any speaker.</p></div>
-      <div class="card"><div class="n">04</div><h3>Live &amp; Events</h3><p>Stal'lyon live, DJ sets and full-band energy — parties, weddings, trail rides, all events.</p></div>
+      <div class="card"><div class="n">03</div><h3>Mixing &amp; Mastering</h3><p>Every vocal, lick and 808 dialed in, mastered loud and clean for any speaker.</p></div>
+      <div class="card"><div class="n">04</div><h3>Live &amp; Events</h3><p>Stal'lyon live, DJ sets and full-band energy: parties, weddings, trail rides, all events.</p></div>
     </div>
   </div>
 </section>
 
 <section id="music">
   <div class="wrap">
-    <div class="kicker">The Music</div>
+    <div class="kicker">The Artist</div>
     <h2>Stal'lyon</h2>
-    <p class="lead">Andre — known on stage as Stal'lyon — is a Southern Soul artist out of Atlanta with a sound all his own: gritty guitar riffs riding hard over knocking 808s. Charismatic, authentic, built for the stage, he turns every set into a celebration while keeping the grown-folks soul tradition alive for a new generation.</p>
-    <div class="cards">
-      <div class="card"><div class="n">♪</div><h3>Stal'lyon Shuffle</h3><p>The single — feat. LaTina, with the dance LaTina choreographed.</p></div>
-      <div class="card"><div class="n">♪</div><h3>Grown Folks</h3><p>The latest — grown-folks soul over knocking 808s.</p></div>
-      <div class="card"><div class="n">♪</div><h3>Rhythm Ryderz</h3><p>Guitar-meets-808 groove, built for the ride.</p></div>
+    <div class="artist">
+      <div class="portrait"><img src="/dcz/assets/stallyon-portrait.jpg" alt="Stal'lyon, Andre Jermaine" loading="lazy"></div>
+      <div class="bio">
+        <p>Andre Jermaine, professionally known as <strong>Stal'lyon</strong>, is one of the most captivating new voices in modern Southern Soul. Born and raised in Detroit, the legendary home of Motown, he now cuts records out of Diamond Cutz Studios in Atlanta.</p>
+        <p>Rooted in Motown tradition and the heartfelt storytelling of Southern Soul, Stal'lyon blends Soul, R&amp;B, Pop and Rock into a sound that's all his own. Music that resonates across generations. A gifted vocalist, songwriter, arranger, performer and vocal coach, he refuses to be limited by any one genre.</p>
+        <p>Known for his distinctive tone, emotional delivery and commanding stage presence, Stal'lyon doesn't just make songs, he makes experiences. From soulful ballads to high-energy anthems, his passion for connecting with people is at the center of every performance.</p>
+        <div class="tags"><span>Southern Soul</span><span>R&amp;B</span><span>Soul</span><span>Live &amp; Studio</span><span>Vocal Coach</span></div>
+      </div>
     </div>
-    <div class="kicker" style="margin-top:38px">Listen Everywhere</div>
+
+    <div class="kicker" style="margin-top:54px">The Catalog</div>
+    <h2 style="font-size:clamp(20px,3.6vw,30px)">Press play</h2>
+    <div class="tracks" id="tracks"></div>
+
+    <div class="kicker" style="margin-top:46px">Listen Everywhere</div>
     <div class="links">
       <a class="chip" href="https://open.spotify.com/artist/1VsJvKKQTtX4Muap2vcPt0" target="_blank" rel="noopener">Spotify</a>
       <a class="chip" href="https://music.apple.com/us/artist/stallyon/858751401" target="_blank" rel="noopener">Apple Music</a>
       <a class="chip" href="https://youtube.com/channel/UCVWGlmy46QEWFU7emMw1MVQ" target="_blank" rel="noopener">YouTube</a>
       <a class="chip" href="https://www.amazon.com/dp/B0GDY4RRBR" target="_blank" rel="noopener">Amazon Music</a>
     </div>
-    <p class="lead" style="margin-top:24px;font-size:14px">Follow <a href="https://instagram.com/diamondcutzstudios" target="_blank" rel="noopener">@diamondcutzstudios</a> so you don't miss a release.</p>
+    <p class="lead" style="margin-top:24px;font-size:14px">Follow <a href="https://instagram.com/thereal_stallyon" target="_blank" rel="noopener">@thereal_stallyon</a> so you don't miss a release.</p>
+  </div>
+</section>
+
+<section id="shows">
+  <div class="wrap">
+    <div class="kicker">On Stage</div>
+    <h2>Upcoming Shows</h2>
+    <div class="show">
+      <a class="flyer" href="/dcz/assets/show-trailride-jul10.jpg" target="_blank" rel="noopener">
+        <img src="/dcz/assets/show-trailride-jul10.jpg" alt="Country Black Trail Ride · Parking Lot Block Party featuring Stal'lyon, July 10 2026" loading="lazy"></a>
+      <div class="info">
+        <div class="date">Jul 10 · 2026</div>
+        <h3>Country Black Trail Ride · Parking Lot Block Party</h3>
+        <div class="det">
+          <div>🎤 Stal'lyon performs <em>"Stal'lyon Shuffle"</em> · feat. LaTina McAllister</div>
+          <div>📍 Atmosphere Nightclub · 286 GA Hwy 138, Suite 105 · Riverdale, GA 30274</div>
+          <div>🕚 11:00 AM – 9:00 PM · Rain or Shine</div>
+          <div>🐎 All riders, car clubs &amp; supporters welcome</div>
+        </div>
+        <div class="btns"><button class="btn primary" data-book>Book Stal'lyon</button>
+          <a class="btn ghost" href="https://www.facebook.com/share/p/18tKDocTLH/" target="_blank" rel="noopener">Event on Facebook</a></div>
+      </div>
+    </div>
   </div>
 </section>
 
 <section id="events" class="contact">
   <div class="wrap">
     <div class="kicker">Book Us</div>
-    <h2>From the studio to the stage — we do it all</h2>
+    <h2>From the studio to the stage, we do it all</h2>
     <div class="links">
       <span class="chip">Parties</span><span class="chip">Weddings</span><span class="chip">Trail Rides</span>
       <span class="chip">Live Sets</span><span class="chip">DJ</span><span class="chip">Studio Time</span><span class="chip">All Events</span>
@@ -318,7 +397,7 @@
     <button class="modal-x" id="bookClose" aria-label="Close">&times;</button>
     <div class="kicker" style="text-align:left">Booking</div>
     <h3 class="m-title">Book Diamond Cutz</h3>
-    <p class="m-sub">Tell us what you need — we'll lock in your time. Goes straight to the studio inbox.</p>
+    <p class="m-sub">Tell us what you need and we'll lock in your time. Goes straight to the studio inbox.</p>
     <form id="bookForm">
       <label>Name<input type="text" name="name" required placeholder="Your name"></label>
       <label>Phone or email<input type="text" name="contact" required placeholder="Best way to reach you"></label>
@@ -327,7 +406,7 @@
           <option>Studio session (recording)</option>
           <option>Production / beats</option>
           <option>Mixing &amp; mastering</option>
-          <option>Live performance — Stal'lyon</option>
+          <option>Live performance: Stal'lyon</option>
           <option>DJ / event</option>
           <option>Other</option>
         </select>
@@ -354,9 +433,47 @@
     form.addEventListener('submit',function(e){
       e.preventDefault();
       var f=form.elements;
-      var subj='Diamond Cutz Booking — '+(f.need.value)+' — '+(f.name.value);
+      var subj='Diamond Cutz Booking: '+(f.need.value)+' · '+(f.name.value);
       var body='Name: '+f.name.value+'\nContact: '+f.contact.value+'\nNeed: '+f.need.value+'\nDate/timeframe: '+f.date.value+'\n\nDetails:\n'+f.msg.value;
       window.location.href='mailto:admin@dmndctz.com?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);
+    });
+  })();
+</script>
+
+<!-- ── TRACK PLAYER (lazy YouTube) ── -->
+<script>
+  (function(){
+    var tracks=[
+      {id:'wAgbKeRDsdY', t:"Stal'lyon Shuffle", s:'feat. LaTina'},
+      {id:'Y8VEoxLud9U', t:'Grown Folks'},
+      {id:'iAzyF540IPk', t:'Candy Shop'},
+      {id:'nfiAPiMkZh0', t:'Tonight'},
+      {id:'WmJsjZAgrHg', t:"What Cha' Gonna Do Now"},
+      {id:'b1roM7wbhAY', t:'Bad Man'},
+      {id:'6iEDPkZso2I', t:'All I Want Is You For Christmas'},
+      {id:'fs_7VcALH4A', t:'The World Is The Ghetto', s:'World Premiere'},
+      {id:'q20HnvoPecs', t:'NTense Fire'}
+    ];
+    var host=document.getElementById('tracks');
+    if(!host) return;
+    tracks.forEach(function(tk){
+      var el=document.createElement('div'); el.className='track';
+      el.innerHTML='<div class="thumb" role="button" tabindex="0" aria-label="Play '+tk.t.replace(/"/g,'&quot;')+'">'+
+        '<img loading="lazy" src="https://i.ytimg.com/vi/'+tk.id+'/hqdefault.jpg" alt="'+tk.t.replace(/"/g,'&quot;')+'">'+
+        '<div class="play"><span>&#9658;</span></div></div>'+
+        '<div class="meta"><h3>'+tk.t+'</h3>'+(tk.s?'<p>'+tk.s+'</p>':'')+'</div>';
+      var thumb=el.querySelector('.thumb');
+      function play(){
+        var ifr=document.createElement('iframe');
+        ifr.setAttribute('allow','accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
+        ifr.setAttribute('allowfullscreen','');
+        ifr.setAttribute('title',tk.t);
+        ifr.src='https://www.youtube-nocookie.com/embed/'+tk.id+'?autoplay=1&rel=0';
+        thumb.replaceWith(ifr);
+      }
+      thumb.addEventListener('click',play);
+      thumb.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); play(); } });
+      host.appendChild(el);
     });
   })();
 </script>
