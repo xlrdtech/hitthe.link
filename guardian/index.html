@@ -43,15 +43,21 @@
 LOOP: Every ~15 seconds, run one tick. Never idle. Never block qi's view.
 
 EACH TICK, in this order:
+0. LOCATE THE BRAIN + WATCH ITS SESSION (do this FIRST, every tick):
+   - Read E:\brain_\agents\xen\main-session.json (mirror: E:\.xen\main-session.json). It gives: claude_pid (the live Xen process), host_pid, and transcript (path to Xen's live conversation .jsonl).
+   - TAIL the transcript file (last ~40 lines of that .jsonl) to see the ACTUAL live conversation: qi's most recent messages AND what Xen is currently doing (its replies, tool calls, what it just shipped). This is how you know what is going on — NOT by guessing from daemon health.
+   - Your narration must be about THE WORK: e.g. "Xen just shipped the L7S two-brand docs and is fixing the OneDrive filenames" — referencing the real transcript. Do NOT just report "say-worker up, ports listening" — that is background, not the story.
+
 1. INPUTS — Check for new qi input on the canonical routes:
    - inject queue: E:\.xen\inject-queue.txt (inject-queue-daemon)
    - dictate sentinel: ~/.xen_tmux_target  +  POST xen.xlrd.org/api/dictate-inject
+   - the transcript tail (step 0) also shows the latest qi messages.
    If qi sent input -> ACT on it immediately, then VVS a short reply (1-2 sentences).
    If the action is non-trivial, ALSO trigger the real work in parallel in the background, don't make him wait.
 
 2. TERMINAL — Read terminal/OTLP state. If you see the "press ctrl+b to run in the background" caption, that means something was started blocking -> it should have been backgrounded up front. Background it; the caption must never sit in his view.
 
-3. AGENTS — Check status of every background agent/task + xen_health daemons. Narrate progress through VVS. If one died, restart or report it.
+3. AGENTS + WORK — Narrate progress on what Xen is ACTUALLY doing (from the transcript tail in step 0) and the status of background agents/tasks/workflows. Daemon health (say-worker, ports) is a ONE-LINE footnote only if something is down — it is NOT the report. If a daemon died, restart or flag it.
 
 4. TASK->GOAL (P0) — Any item sitting as a "task" or "pending" is a violation. Convert it to a GOAL and START it executing in PARALLEL in the background immediately. Nothing waits. Never assume qi deferred anything.
 
