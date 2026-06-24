@@ -561,8 +561,8 @@
       pointerNDC.x=((e.clientX-r.left)/r.width)*2-1; pointerNDC.y=-(((e.clientY-r.top)/r.height)*2-1);
       if(dragging){ var dx=e.clientX-lastX, dy=e.clientY-lastY; lastX=e.clientX; lastY=e.clientY;
         tUserOrbY+=dx*0.006; tUserOrbX+=dy*0.004;
-        tUserOrbX=Math.max(-0.5,Math.min(0.55,tUserOrbX)); // clamp so it tilts "slightly"
-        tUserOrbY=Math.max(-0.9,Math.min(0.9,tUserOrbY));
+        tUserOrbX=Math.max(-0.35,Math.min(1.0,tUserOrbX)); // vertical: from the side up to near top-down (never under the floor)
+        // horizontal (tUserOrbY): UNCLAMPED → full 360° spin all the way around the desk
       }
     });
     canvas.addEventListener('pointerleave',function(){ pointerNDC.set(-2,-2); });
@@ -648,7 +648,7 @@
       pulseV+=(0-pulseV)*0.07; if(target.pulse){ pulseV=1; target.pulse=0; }
       userOrbX+=(tUserOrbX-userOrbX)*0.1; userOrbY+=(tUserOrbY-userOrbY)*0.1;
       userZoom+=(tUserZoom-userZoom)*0.12;
-      if(!dragging){ tUserOrbX*=0.985; tUserOrbY*=0.985; } // ease back toward neutral when released
+      if(!dragging){ tUserOrbX*=0.985; } // tilt eases back; horizontal angle HOLDS so you can rest at any point of the full 360° spin
 
       // gentle idle motion + user orbit + drag lift
       deskGroup.rotation.y=Math.sin(t*0.22)*0.13 + userOrbY;
