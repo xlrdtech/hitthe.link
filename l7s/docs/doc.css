@@ -49,13 +49,15 @@ html[data-theme="dark"] body{background:#3a3a40}
 .h-doc{font-size:26px;letter-spacing:-.01em;margin:0 0 4px;font-weight:700}
 .doc-lead{font-family:var(--sans);color:var(--mut);font-size:12.5px;margin:0 0 22px}
 
-/* Sections */
-.section{margin:0 0 18px;line-height:1.6;font-size:13px;color:var(--ink-soft)}
-.section > h2{font-family:var(--sans);font-size:13px;font-weight:800;letter-spacing:.02em;color:var(--ink);margin:0 0 8px;text-transform:uppercase}
+/* Sections — each section is an atomic block that never splits across a page */
+.section{margin:0 0 18px;line-height:1.6;font-size:13px;color:var(--ink-soft);break-inside:avoid;page-break-inside:avoid}
+.section > h2{font-family:var(--sans);font-size:13px;font-weight:800;letter-spacing:.02em;color:var(--ink);margin:0 0 8px;text-transform:uppercase;break-after:avoid;page-break-after:avoid}
 .section > h2 .n{color:var(--red);margin-right:8px}
-.section p{margin:0 0 9px}
-.section ul,.section ol{margin:0 0 9px;padding-left:20px}
+.section p{margin:0 0 9px;orphans:3;widows:3}
+.section ul,.section ol{margin:0 0 9px;padding-left:20px;break-inside:avoid;page-break-inside:avoid}
 .section li{margin:0 0 5px}
+/* A top-level section that must begin on a fresh page (apply alongside .section) */
+.section.break{break-before:page;page-break-before:always}
 
 /* Fillable fields + placeholders */
 .placeholder{color:var(--mut);font-style:italic;background:var(--wash);border:1px dashed var(--gold);border-radius:4px;padding:1px 6px;font-family:var(--sans);font-size:12px}
@@ -87,16 +89,51 @@ html[data-theme="dark"] body{background:#3a3a40}
   *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
   html,body,html[data-theme="dark"] body{ background:#fff !important; }
   .toolbar{ display:none !important; }
-  @page{ size:letter; margin:0; }
-  /* Body pages flow to their natural height (no forced 11in => no big white gaps when content spills); each still starts on a fresh sheet. */
-  .page{ box-shadow:none !important; margin:0; width:auto; min-height:auto; page-break-after:always; break-after:page; }
+
+  /* US Letter with sane margins. The page-number counter increments per printed sheet
+     and is surfaced through the .doc-footer (see counter below). */
+  @page{
+    size:letter;
+    margin:0.75in;
+    counter-increment:page;
+    /* Progressive enhancement: print engines that support @page margin boxes
+       (Chrome/Edge, print-to-PDF) render an automatic "Page N" bottom-right.
+       Engines that ignore it fall back to the explicit per-sheet number baked
+       into each .doc-footer, so a page number is ALWAYS present. */
+    @bottom-right{
+      content:"Page " counter(page);
+      font-family:"Inter",system-ui,sans-serif;
+      font-size:8pt;
+      color:#6b6b6b;
+    }
+  }
+
+  /* The .page sets its own interior padding for screen; in print the @page margin owns the
+     whitespace, so we zero the .page padding and let each section flow on the printed sheet. */
+  .page{
+    box-shadow:none !important; margin:0; width:auto; min-height:auto;
+    padding:0;
+    page-break-after:always; break-after:page;
+  }
   .page:last-child{ page-break-after:auto; break-after:auto; }
-  /* The cover is the one page that fills the whole sheet (border-box makes 11in exact). */
-  .page.cover{ min-height:11in; }
-  /* Never split these across a page boundary. */
-  .section, .party, .fieldgrid, .sigblock, .sig, .notice, .field, .docitem, .cover{ page-break-inside:avoid; break-inside:avoid; }
-  .doc-header{ break-after:avoid; }
-  h2, h1.h-doc{ break-after:avoid; }
+  /* The cover fills its whole sheet and is centered. */
+  .page.cover{ min-height:9.5in; padding:0; }
+  .cover .meta{ position:static; margin-top:40px; }
+
+  /* HARD RULE — no section/clause/table/sig/notice block may ever split across a page break. */
+  .section, .party, .fieldgrid, .sigblock, .sig, .notice, .field, .docitem,
+  .cover, table, tr, .field .line, .row{
+    page-break-inside:avoid !important; break-inside:avoid !important;
+  }
+  /* Headings never get orphaned from the content that follows them. */
+  .doc-header, h1, h2, h3, .h-doc, .section > h2{
+    break-after:avoid !important; page-break-after:avoid !important;
+  }
+  /* Body copy keeps at least 3 lines together at a page boundary. */
+  p,li{ orphans:3; widows:3; }
+  /* A section explicitly marked .break starts on the next sheet if it won't fit. */
+  .section.break{ break-before:page; page-break-before:always; }
+
   a{ color:inherit; text-decoration:none; }
 }
 @media(max-width:900px){.page{width:auto;max-width:96vw;padding:6vw 6vw 5vw}.cover h1{font-size:34px}.fieldgrid,.sigblock{grid-template-columns:1fr}}
