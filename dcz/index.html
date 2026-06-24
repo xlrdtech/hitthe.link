@@ -16,7 +16,7 @@
   "@context":"https://schema.org",
   "@graph":[
     {"@type":"MusicGroup","name":"Stal'lyon","alternateName":"Andre Jermaine","genre":"Southern Soul","foundingLocation":"Detroit, MI","url":"https://hitthe.link/dcz/","image":"https://hitthe.link/dcz/assets/stallyon-portrait.jpg","sameAs":["https://instagram.com/thereal_stallyon","https://open.spotify.com/artist/1VsJvKKQTtX4Muap2vcPt0","https://music.apple.com/us/artist/stallyon/858751401","https://youtube.com/channel/UCVWGlmy46QEWFU7emMw1MVQ","https://www.amazon.com/dp/B0GDY4RRBR"]},
-    {"@type":["MusicVenue","LocalBusiness"],"name":"Diamond Cutz Studios","description":"Recording studio — recording, production, mixing & mastering, and live events.","areaServed":"Atlanta, GA","address":{"@type":"PostalAddress","addressLocality":"Atlanta","addressRegion":"GA","addressCountry":"US"},"email":"admin@dmndctz.com","telephone":"+1-770-256-5492","url":"https://hitthe.link/dcz/","image":"https://hitthe.link/dcz/assets/logo-final.png","sameAs":["https://instagram.com/diamondcutzstudios"]},
+    {"@type":["MusicVenue","LocalBusiness"],"name":"Diamond Cutz Studios","description":"Recording studio — recording, production, mixing & mastering, and live events.","areaServed":"Atlanta, GA","address":{"@type":"PostalAddress","addressLocality":"Atlanta","addressRegion":"GA","addressCountry":"US"},"email":"lmcallister26@gmail.com","telephone":"+1-770-256-5492","url":"https://hitthe.link/dcz/","image":"https://hitthe.link/dcz/assets/logo-final.png","sameAs":["https://instagram.com/diamondcutzstudios"]},
     {"@type":"Event","name":"Country Black Trail Ride","startDate":"2026-07-10","eventStatus":"https://schema.org/EventScheduled","performer":{"@type":"MusicGroup","name":"Stal'lyon"},"location":{"@type":"Place","name":"Atmosphere Nightclub","address":"Riverdale, GA"}}
   ]
 }
@@ -38,6 +38,14 @@
     --plat:#cdd4de; --plat-hi:#f4f8fd; --steel:#8893a6;
     --ice:#eaf2ff; --line:rgba(215,160,138,.22); --line-cool:rgba(205,212,222,.16);
     --serif:'Cinzel',serif; --sans:'Inter',system-ui,sans-serif;
+    /* hyper-real metallic gold */
+    --gold-1:#f7e7b0; --gold-2:#e7b96b; --gold-3:#b9892f; --gold-deep:#8a611d; --gold-ink:#2a1c06;
+    --gold-grad:linear-gradient(135deg,#f7e7b0 0%,#e7b96b 38%,#b9892f 62%,#e7b96b 100%);
+    --gold-text:linear-gradient(105deg,#fbf0c8 6%,#f3d58a 30%,#caa047 52%,#f3d58a 74%,#fbf0c8 96%);
+    /* hyper-real glass */
+    --glass-fill:rgba(18,26,46,.42); --glass-fill-hi:rgba(28,40,68,.55);
+    --glass-border:rgba(255,255,255,.18); --glass-inset:inset 0 1px 0 rgba(255,255,255,.25);
+    --glass-blur:blur(14px) saturate(160%);
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   ::selection{background:var(--rose);color:#1a0f0a}
@@ -55,10 +63,11 @@
     padding:13px 22px;backdrop-filter:blur(10px);background:rgba(4,6,12,.55);border-bottom:1px solid var(--line-cool)}
   nav .nm{font-family:var(--serif);font-weight:600;font-size:13px;letter-spacing:.3em;text-transform:uppercase;
     background:linear-gradient(100deg,var(--plat-hi),var(--rose) 55%,var(--plat-hi));-webkit-background-clip:text;background-clip:text;color:transparent}
-  nav .cta{font-family:var(--sans);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#1a0f0a;cursor:pointer;
-    border:1px solid transparent;border-radius:999px;padding:9px 18px;transition:.2s;
-    background:linear-gradient(135deg,var(--rose-hi),var(--rose) 65%,var(--rose-deep));box-shadow:0 6px 18px rgba(184,125,104,.3)}
-  nav .cta:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(184,125,104,.45)}
+  nav .cta{font-family:var(--sans);font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-ink);cursor:pointer;
+    border:1px solid rgba(247,231,176,.55);border-radius:999px;padding:9px 18px;transition:.22s;
+    background:var(--gold-grad);
+    box-shadow:0 6px 18px rgba(138,97,29,.4), var(--glass-inset), inset 0 -1px 2px rgba(110,76,16,.5)}
+  nav .cta:hover{transform:translateY(-1px);box-shadow:0 10px 26px rgba(231,185,107,.5), 0 0 22px rgba(231,185,107,.35), var(--glass-inset), inset 0 -1px 2px rgba(110,76,16,.5)}
 
   /* ── 3D MEDALLION HERO ── */
   .hero3d{position:relative;width:100%;height:56vh;height:56svh;min-height:360px;overflow:hidden;
@@ -75,18 +84,26 @@
   .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
   header.intro{text-align:center;padding:30px 22px 56px}
   header.intro h1{font-family:var(--serif);font-weight:800;font-size:clamp(30px,7vw,60px);letter-spacing:.06em;line-height:1.02;
-    background:linear-gradient(105deg,var(--plat-hi) 8%,var(--rose) 50%,var(--plat-hi) 92%);-webkit-background-clip:text;background-clip:text;color:transparent}
+    background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 2px 10px rgba(231,185,107,.22))}
   header.intro .tag{font-size:clamp(13px,2.4vw,16px);letter-spacing:.26em;text-transform:uppercase;color:var(--steel);margin-top:16px}
   header.intro .sub{max-width:46ch;margin:20px auto 0;color:#bcc6d8;font-size:15.5px}
   .btns{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:30px}
-  .btn{font-family:var(--sans);font-weight:500;font-size:13.5px;letter-spacing:.06em;padding:13px 26px;border-radius:11px;transition:.2s;border:1px solid transparent;cursor:pointer}
-  .btn.primary{color:#1a0f0a;background:linear-gradient(135deg,var(--rose-hi),var(--rose) 60%,var(--rose-deep));box-shadow:0 10px 26px rgba(184,125,104,.35)}
-  .btn.primary:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(184,125,104,.45)}
-  .btn.ghost{color:var(--ice);border-color:var(--line-cool);background:rgba(205,212,222,.04)}
-  .btn.ghost:hover{border-color:var(--plat);background:rgba(205,212,222,.09)}
+  .btn{font-family:var(--sans);font-weight:500;font-size:13.5px;letter-spacing:.06em;padding:13px 26px;border-radius:11px;transition:.22s;border:1px solid transparent;cursor:pointer}
+  /* hyper-real metallic gold primary */
+  .btn.primary{color:var(--gold-ink);font-weight:600;border:1px solid rgba(247,231,176,.55);background:var(--gold-grad);
+    box-shadow:0 10px 26px rgba(138,97,29,.4), var(--glass-inset), inset 0 -1px 2px rgba(110,76,16,.5)}
+  .btn.primary:hover{transform:translateY(-2px);box-shadow:0 16px 38px rgba(231,185,107,.5), 0 0 26px rgba(231,185,107,.35), var(--glass-inset), inset 0 -1px 2px rgba(110,76,16,.5)}
+  /* hyper-real frosted glass ghost */
+  .btn.ghost{color:var(--ice);border:1px solid var(--glass-border);background:var(--glass-fill);
+    -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+    box-shadow:var(--glass-inset), 0 8px 22px rgba(0,0,0,.32)}
+  .btn.ghost:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.32);background:var(--glass-fill-hi);
+    box-shadow:var(--glass-inset), 0 12px 28px rgba(0,0,0,.4)}
 
   section{padding:70px 0;border-top:1px solid var(--line-cool)}
-  .kicker{font-family:var(--serif);font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--rose);text-align:center}
+  .kicker{font-family:var(--serif);font-size:12px;letter-spacing:.3em;text-transform:uppercase;text-align:center;
+    background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent}
   h2{font-family:var(--serif);font-weight:700;font-size:clamp(24px,4.4vw,38px);text-align:center;margin-top:12px;color:var(--plat-hi)}
   .lead{max-width:60ch;margin:18px auto 0;text-align:center;color:#bcc6d8;font-size:16px}
   .cards{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin-top:42px}
@@ -100,18 +117,38 @@
 
   .contact{text-align:center}
   .links{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:30px}
-  .chip{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line-cool);border-radius:999px;padding:11px 20px;font-size:14px;color:var(--ice);transition:.2s}
-  .chip:hover{border-color:var(--rose);background:rgba(215,160,138,.08)}
+  /* hyper-real frosted glass chips (streaming links + service pills) */
+  .chip{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--glass-border);border-radius:999px;padding:11px 20px;font-size:14px;color:var(--ice);transition:.22s;cursor:pointer;font-family:var(--sans);font-weight:400;
+    background:var(--glass-fill);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+    box-shadow:var(--glass-inset), 0 6px 18px rgba(0,0,0,.28)}
+  .chip:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.32);background:var(--glass-fill-hi);
+    box-shadow:var(--glass-inset), 0 10px 24px rgba(0,0,0,.36)}
+  button.chip{font:inherit;font-size:14px}
+  .chip:focus-visible{outline:none;border-color:var(--gold-2);box-shadow:0 0 0 3px rgba(231,185,107,.3), var(--glass-inset)}
   .soon{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--steel);border:1px dashed var(--line-cool);border-radius:999px;padding:4px 10px}
-  footer{text-align:center;padding:40px 22px 60px;border-top:1px solid var(--line-cool)}
-  footer .nm{font-family:var(--serif);letter-spacing:.3em;color:var(--steel);font-size:12px;text-transform:uppercase}
-  footer .fine{margin-top:10px;color:#5b6577;font-size:11.5px}
+  /* ── premium glass footer ── */
+  footer{text-align:center;padding:46px 22px 60px;border-top:1px solid var(--line-cool);position:relative;
+    background:linear-gradient(180deg,rgba(13,27,62,.34),rgba(4,6,12,.6));
+    -webkit-backdrop-filter:blur(16px) saturate(150%);backdrop-filter:blur(16px) saturate(150%)}
+  footer .f-inner{max-width:680px;margin:0 auto}
+  footer .nm{font-family:var(--serif);letter-spacing:.26em;font-size:13px;text-transform:uppercase;
+    background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent}
+  footer .f-tag{margin-top:8px;color:#9aa6bb;font-size:12.5px;letter-spacing:.04em}
+  footer .f-socials{display:flex;flex-wrap:wrap;justify-content:center;gap:13px;margin:24px auto 0}
+  footer .f-contact{margin-top:22px;display:flex;flex-wrap:wrap;justify-content:center;gap:8px 18px;font-size:13px;color:#b3bdcf}
+  footer .f-contact a{color:var(--rose-hi);white-space:nowrap}
+  footer .fine{margin-top:18px;color:#5b6577;font-size:11.5px}
   .card h3 a, .card p a{color:var(--rose-hi)}
 
   /* ── booking modal ── */
   .modal-bg{position:fixed;inset:0;z-index:100;background:rgba(2,4,8,.8);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px}
   .modal-bg[hidden]{display:none}
-  .modal{position:relative;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;background:linear-gradient(180deg,var(--navy),var(--ink));border:1px solid var(--line);border-radius:18px;padding:30px 26px 26px;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  /* hyper-real frosted glass booking dialog */
+  .modal{position:relative;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;
+    background:linear-gradient(180deg,rgba(28,40,68,.55),rgba(10,14,28,.6));
+    -webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);
+    border:1px solid var(--glass-border);border-radius:18px;padding:30px 26px 26px;
+    box-shadow:0 30px 80px rgba(0,0,0,.6), var(--glass-inset)}
   .modal::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;border-radius:18px 18px 0 0;background:linear-gradient(90deg,var(--rose),var(--plat),transparent)}
   .modal-x{position:absolute;top:12px;right:15px;background:none;border:0;color:var(--steel);font-size:28px;line-height:1;cursor:pointer;transition:.2s}
   .modal-x:hover{color:var(--rose-hi)}
@@ -125,18 +162,38 @@
   .m-direct a{color:var(--rose-hi);white-space:nowrap}
   button.btn{font-family:var(--sans)}
 
-  /* ── artist EPK ── */
-  .artist{display:flex;flex-direction:column;align-items:center;gap:28px;margin-top:40px;text-align:center}
-  .artist .portrait{flex:0 0 auto;max-width:260px;border-radius:16px;overflow:hidden;position:relative;
-    border:1px solid var(--line);box-shadow:0 22px 60px rgba(0,0,0,.6)}
-  .artist .portrait::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(4,6,12,.55));pointer-events:none}
-  .artist .portrait img{display:block;width:100%;height:auto}
-  .artist .bio{max-width:64ch;margin:0 auto}
-  .artist .bio p{color:#c2ccdd;font-size:15px;margin-top:14px}
+  /* ── artist EPK — portrait as full-bleed section background ── */
+  .artist{position:relative;margin-top:40px;border-radius:22px;overflow:hidden;isolation:isolate;
+    min-height:clamp(520px,82vh,860px);display:flex;align-items:flex-end;justify-content:center;
+    border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  .artist .portrait-bg{position:absolute;inset:0;z-index:0;cursor:zoom-in}
+  .artist .portrait-bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 22%;display:block}
+  .artist .portrait-bg::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(180deg,rgba(4,6,12,.18) 0%,rgba(4,6,12,.05) 30%,rgba(4,6,12,.45) 66%,rgba(4,6,12,.82) 100%)}
+  .artist .portrait-zoom{position:absolute;top:14px;right:14px;z-index:3;display:inline-flex;align-items:center;gap:7px;
+    border:1px solid var(--glass-border);border-radius:999px;padding:8px 14px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--ice);cursor:zoom-in;background:var(--glass-fill);
+    -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+    box-shadow:var(--glass-inset), 0 6px 16px rgba(0,0,0,.35);transition:.2s}
+  .artist .portrait-zoom:hover{transform:translateY(-2px);background:var(--glass-fill-hi);border-color:rgba(255,255,255,.32)}
+  /* hyper-real frosted glass bio panel sitting over the portrait */
+  .artist .bio{position:relative;z-index:2;max-width:62ch;width:calc(100% - 36px);margin:0 auto 26px;text-align:center;
+    padding:30px 30px 26px;border-radius:18px;border:1px solid var(--glass-border);
+    background:linear-gradient(180deg,rgba(10,14,28,.52),rgba(6,9,18,.62));
+    -webkit-backdrop-filter:blur(20px) saturate(165%);backdrop-filter:blur(20px) saturate(165%);
+    box-shadow:var(--glass-inset), 0 22px 60px rgba(0,0,0,.5)}
+  .artist .bio p{color:#dbe3f1;font-size:15px;margin-top:14px;text-shadow:0 1px 3px rgba(0,0,0,.45)}
   .artist .bio p:first-child{margin-top:0}
   .artist .bio .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px;justify-content:center}
-  .artist .bio .tags span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--rose);
-    border:1px solid var(--line);border-radius:999px;padding:5px 12px}
+  .artist .bio .tags span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--rose-hi);
+    border:1px solid var(--glass-border);border-radius:999px;padding:5px 12px;
+    background:var(--glass-fill);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+  @media(max-width:600px){
+    .artist{min-height:auto;border-radius:18px}
+    .artist .portrait-bg{position:relative;height:62vh;min-height:380px}
+    .artist .portrait-bg img{position:absolute}
+    .artist .bio{width:calc(100% - 22px);margin:-70px auto 16px;padding:24px 20px 22px}
+  }
 
   /* ── track player ── */
   .tracks{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:38px}
@@ -159,15 +216,18 @@
   .track .meta p{font-size:12px;color:var(--rose);letter-spacing:.04em;margin-top:3px}
 
   /* ── shows ── */
+  /* hyper-real frosted glass show card */
   .show{display:flex;flex-direction:column;gap:24px;align-items:center;margin-top:40px;text-align:center;max-width:560px;margin-left:auto;margin-right:auto;
-    background:linear-gradient(180deg,rgba(19,37,78,.5),rgba(10,14,28,.6));border:1px solid var(--line-cool);
-    border-radius:18px;padding:26px 24px;position:relative;overflow:hidden}
+    background:linear-gradient(180deg,rgba(28,40,68,.42),rgba(10,14,28,.55));border:1px solid var(--glass-border);
+    -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+    border-radius:18px;padding:26px 24px;position:relative;overflow:hidden;
+    box-shadow:var(--glass-inset), 0 22px 60px rgba(0,0,0,.45)}
   .show::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--rose),var(--plat),transparent)}
   .show .flyer{flex:0 0 auto;max-width:300px;border-radius:12px;overflow:hidden;border:1px solid var(--line);display:block;margin:0 auto}
   .show .flyer img{display:block;width:100%;height:auto}
   .show .info{flex:1 1 auto}
   .show .date{font-family:var(--serif);font-weight:700;font-size:22px;letter-spacing:.06em;
-    background:linear-gradient(100deg,var(--plat-hi),var(--rose) 60%,var(--plat-hi));-webkit-background-clip:text;background-clip:text;color:transparent}
+    background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent}
   .show .info h3{font-family:var(--serif);font-weight:600;font-size:19px;color:var(--ice);margin-top:6px}
   .show .info .det{margin-top:12px;font-size:14px;color:#bcc6d8}
   .show .info .det div{margin-top:6px}
@@ -318,11 +378,17 @@
     <div class="kicker">The Artist</div>
     <h2>Stal'lyon</h2>
     <div class="artist">
-      <div class="portrait"><img class="zoomable" src="/dcz/assets/stallyon-portrait.jpg" alt="Stal'lyon, Andre Jermaine" loading="lazy"></div>
+      <div class="portrait-bg">
+        <img class="zoomable" src="/dcz/assets/stallyon-portrait.jpg" alt="Stal'lyon, Andre Jermaine" loading="lazy">
+      </div>
+      <span class="portrait-zoom zoomable" data-zoom-src="/dcz/assets/stallyon-portrait.jpg" data-zoom-alt="Stal'lyon, Andre Jermaine" role="button" tabindex="0" aria-label="View full portrait">⤢ View portrait</span>
       <div class="bio">
-        <p>Andre Jermaine, professionally known as <strong>Stal'lyon</strong>, is one of the most captivating new voices in modern Southern Soul. Born and raised in Detroit, the legendary home of Motown, he now cuts records out of Diamond Cutz Studios in Atlanta.</p>
-        <p>Rooted in Motown tradition and the heartfelt storytelling of Southern Soul, Stal'lyon blends Soul, R&amp;B, Pop and Rock into a sound that's all his own. Music that resonates across generations. A gifted vocalist, songwriter, arranger, performer and vocal coach, he refuses to be limited by any one genre.</p>
-        <p>Known for his distinctive tone, emotional delivery and commanding stage presence, Stal'lyon doesn't just make songs, he makes experiences. From soulful ballads to high-energy anthems, his passion for connecting with people is at the center of every performance.</p>
+        <p>ANDRE' JERMAINE, professionally known as <strong>STAL' LYON</strong>, is emerging as one of the most captivating new voices in modern Southern Soul. Born and raised in Detroit, Michigan, the legendary home of Motown, STAL' LYON is bringing a fresh, powerful, and genre-defying sound to audiences across the country.</p>
+        <p>Rooted in the rich traditions of Motown while embracing the heartfelt storytelling of Southern Soul, STAL' LYON has crafted a musical identity that is uniquely his own. His sound effortlessly blends Soul, R&amp;B, Southern Soul, Pop, and Rock influences, creating music that resonates across generations and musical tastes.</p>
+        <p>What makes STAL' LYON stand apart is his extraordinary versatility. A gifted vocalist, songwriter, arranger, performer, vocal coach, and creative visionary, he refuses to be limited by any one genre or style. His ability to transition seamlessly from smooth, soulful melodies to powerful, high-energy performances showcases a level of artistry rarely found in today's music landscape.</p>
+        <p>Known for his distinctive vocal tone, emotional delivery, and commanding stage presence, STAL' LYON creates more than songs, he creates experiences. Whether performing heartfelt ballads, Southern Soul anthems, crossover hits, commercial jingles, or inspirational music, his passion for connecting with people remains at the center of every performance.</p>
+        <p>With Detroit's musical excellence in his foundation and Southern Soul flowing through his artistry, STAL' LYON represents the next evolution of soul music. His commitment to authenticity, creativity, and musical excellence continues to attract attention from fans, promoters, and industry professionals alike.</p>
+        <p>As Southern Soul continues its rise across the nation, STAL' LYON stands ready to leave an undeniable mark on the industry. With new music, live performances, and exciting projects on the horizon, he is proving that true artistry knows no boundaries.</p>
         <div class="tags"><span>Southern Soul</span><span>R&amp;B</span><span>Soul</span><span>Live &amp; Studio</span><span>Vocal Coach</span></div>
       </div>
     </div>
@@ -362,6 +428,22 @@
           <a class="btn ghost" href="https://www.facebook.com/share/p/18tKDocTLH/" target="_blank" rel="noopener">Event on Facebook</a></div>
       </div>
     </div>
+    <div class="show">
+      <a class="flyer" href="/dcz/assets/show-tnal-trailride-aug29.jpg" target="_blank" rel="noopener">
+        <img class="zoomable" src="/dcz/assets/show-tnal-trailride-aug29.jpg" alt="1st Annual TN to AL Trail Ride featuring Stal'lyon, August 29 2026, Hayes Park, Magnolia AL" loading="lazy"></a>
+      <div class="info">
+        <div class="date">Aug 29 · 2026</div>
+        <h3>1st Annual "TN to AL" Trail Ride · Krystal x Dani</h3>
+        <div class="det">
+          <div>🎤 Stal'lyon performing live · with Mike Clark Jr., McKenneth Cherry &amp; TN Da Entertainer · host Peejay · DJ RayRay</div>
+          <div>📍 Hayes Park · 2568 Co. Rd 73 · Magnolia, AL 36753</div>
+          <div>🕛 Gates: Vendors 12PM · Public 2PM · 🎟️ $25 at the gate · advance on Eventbrite · $100 vendors</div>
+          <div>🐎 Mechanical bull · tents &amp; coolers welcome · best-dressed trophies (1st/2nd/3rd)</div>
+          <div>ℹ️ More info: Krystal 901.213.6790 · Danielle 731.267.0906</div>
+        </div>
+        <div class="btns"><button class="btn primary" data-book>Book Stal'lyon</button></div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -370,8 +452,8 @@
     <div class="kicker">Book Us</div>
     <h2>From the studio to the stage, we do it all</h2>
     <div class="links">
-      <span class="chip">Parties</span><span class="chip">Weddings</span><span class="chip">Trail Rides</span>
-      <span class="chip">Live Sets</span><span class="chip">DJ</span><span class="chip">Studio Time</span><span class="chip">All Events</span>
+      <button type="button" class="chip" data-book data-service="Parties">Parties</button><button type="button" class="chip" data-book data-service="Weddings">Weddings</button><button type="button" class="chip" data-book data-service="Trail Rides">Trail Rides</button>
+      <button type="button" class="chip" data-book data-service="Live Sets">Live Sets</button><button type="button" class="chip" data-book data-service="DJ">DJ</button><button type="button" class="chip" data-book data-service="Studio Time">Studio Time</button><button type="button" class="chip" data-book data-service="All Events">All Events</button>
     </div>
     <div class="btns" style="margin-top:28px"><button class="btn primary" data-book>Book Us</button></div>
   </div>
@@ -384,9 +466,9 @@
     <p class="lead">Atlanta, GA · Studio &amp; live entertainment · Booking 7 days a week.</p>
     <div class="cards" style="margin-top:34px">
       <div class="card"><div class="n">Booking &amp; Management</div><h3>LaTina McAllister</h3>
-        <p><a href="tel:+17702565492">(770) 256-5492</a><br><a href="mailto:admin@dmndctz.com?subject=Diamond%20Cutz%20Booking%20Inquiry">admin@dmndctz.com</a></p></div>
-      <div class="card"><div class="n">Artist</div><h3>Andre "Stal'lyon"</h3>
-        <p><a href="tel:+14702341117">(470) 234-1117</a></p></div>
+        <p><a href="tel:+17702565492">(770) 256-5492</a><br><a href="mailto:lmcallister26@gmail.com?subject=Diamond%20Cutz%20Booking%20Inquiry">lmcallister26@gmail.com</a></p></div>
+      <div class="card"><div class="n">Artist</div><h3>Andre "Stal'lyon" Jermaine</h3>
+        <p><a href="tel:+14702341117">(470) 234-1117</a><br><a href="mailto:Stallyon7@gmail.com?subject=Diamond%20Cutz%20Inquiry">Stallyon7@gmail.com</a></p></div>
     </div>
     <div class="links" style="margin-top:24px">
       <button class="btn primary" data-book>Book a Session</button>
@@ -401,16 +483,38 @@
       <a class="soc" href="https://www.facebook.com/share/p/18tKDocTLH/" target="_blank" rel="noopener" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12Z"/></svg></a>
     </div>
     <style>
-      .soc{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:50%;color:var(--ink,#f3ece6);border:1px solid rgba(231,185,107,.35);background:rgba(231,185,107,.06);transition:.18s}
-      .soc:hover{color:#1a1008;background:linear-gradient(180deg,#e7b96b,#b78c44);border-color:#e7b96b;transform:translateY(-2px)}
+      /* hyper-real frosted glass social icons */
+      .soc{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:50%;color:var(--ice);
+        border:1px solid var(--glass-border);background:var(--glass-fill);
+        -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+        box-shadow:var(--glass-inset), 0 6px 16px rgba(0,0,0,.32);transition:.2s}
+      .soc:hover{color:#fff;transform:translateY(-2px);border-color:rgba(255,255,255,.34);background:var(--glass-fill-hi);
+        box-shadow:var(--glass-inset), 0 10px 22px rgba(0,0,0,.42)}
     </style>
     <p class="lead" style="margin-top:18px;font-size:13px;opacity:.85">diamondcutzstudios.com — launching with the studio</p>
   </div>
 </section>
 
 <footer>
-  <div class="nm">Diamond Cutz Studios · A House of Stal'lyon · Atlanta, GA</div>
-  <div class="fine">© 2026 Diamond Cutz Studios · diamondcutzstudios.com</div>
+  <div class="f-inner">
+    <div class="nm">Diamond Cutz Studios</div>
+    <div class="f-tag">A House of Stal'lyon · Recording · Production · Live Entertainment · Atlanta, GA</div>
+    <div class="f-socials" aria-label="Follow Stal'lyon &amp; Diamond Cutz Studios">
+      <a class="soc" href="https://instagram.com/thereal_stallyon" target="_blank" rel="noopener" aria-label="Instagram — Stal'lyon" title="@thereal_stallyon"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.06 1.8.25 2.2.42.56.22.96.48 1.38.9.42.42.68.82.9 1.38.17.4.36 1 .42 2.2.06 1.3.07 1.7.07 4.9s0 3.6-.07 4.9c-.06 1.2-.25 1.8-.42 2.2a3.7 3.7 0 0 1-.9 1.38c-.42.42-.82.68-1.38.9-.4.17-1 .36-2.2.42-1.3.06-1.7.07-4.9.07s-3.6 0-4.9-.07c-1.2-.06-1.8-.25-2.2-.42a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.17-.4-.36-1-.42-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.07-4.9c.06-1.2.25-1.8.42-2.2.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.4-.17 1-.36 2.2-.42C8.4 2.2 8.8 2.2 12 2.2Zm0 4.86A4.94 4.94 0 1 1 12 17a4.94 4.94 0 0 1 0-9.88Zm0 1.8a3.14 3.14 0 1 0 0 6.28 3.14 3.14 0 0 0 0-6.28Zm5.15-.62a1.15 1.15 0 1 1-2.3 0 1.15 1.15 0 0 1 2.3 0Z"/></svg></a>
+      <a class="soc" href="https://instagram.com/diamondcutzstudios" target="_blank" rel="noopener" aria-label="Instagram — Diamond Cutz Studios" title="@diamondcutzstudios"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.06 1.8.25 2.2.42.56.22.96.48 1.38.9.42.42.68.82.9 1.38.17.4.36 1 .42 2.2.06 1.3.07 1.7.07 4.9s0 3.6-.07 4.9c-.06 1.2-.25 1.8-.42 2.2a3.7 3.7 0 0 1-.9 1.38c-.42.42-.82.68-1.38.9-.4.17-1 .36-2.2.42-1.3.06-1.7.07-4.9.07s-3.6 0-4.9-.07c-1.2-.06-1.8-.25-2.2-.42a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.17-.4-.36-1-.42-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.07-4.9c.06-1.2.25-1.8.42-2.2.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.4-.17 1-.36 2.2-.42C8.4 2.2 8.8 2.2 12 2.2Zm0 4.86A4.94 4.94 0 1 1 12 17a4.94 4.94 0 0 1 0-9.88Zm0 1.8a3.14 3.14 0 1 0 0 6.28 3.14 3.14 0 0 0 0-6.28Zm5.15-.62a1.15 1.15 0 1 1-2.3 0 1.15 1.15 0 0 1 2.3 0Z"/></svg></a>
+      <a class="soc" href="https://open.spotify.com/artist/1VsJvKKQTtX4Muap2vcPt0" target="_blank" rel="noopener" aria-label="Spotify" title="Spotify"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm4.6 14.43a.62.62 0 0 1-.86.21c-2.35-1.44-5.3-1.76-8.79-.96a.62.62 0 1 1-.28-1.22c3.8-.87 7.08-.5 9.72 1.11.3.18.39.57.21.86Zm1.23-2.74a.78.78 0 0 1-1.07.26c-2.69-1.65-6.79-2.13-9.97-1.17a.78.78 0 1 1-.45-1.49c3.63-1.1 8.15-.56 11.24 1.33.37.23.49.71.25 1.07Zm.1-2.85C14.8 8.96 9.5 8.78 6.42 9.71a.93.93 0 1 1-.54-1.78c3.53-1.07 9.38-.86 13.08 1.34a.93.93 0 1 1-.95 1.6Z"/></svg></a>
+      <a class="soc" href="https://music.apple.com/us/artist/stallyon/858751401" target="_blank" rel="noopener" aria-label="Apple Music" title="Apple Music"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M17.6 3H6.4A3.4 3.4 0 0 0 3 6.4v11.2A3.4 3.4 0 0 0 6.4 21h11.2a3.4 3.4 0 0 0 3.4-3.4V6.4A3.4 3.4 0 0 0 17.6 3Zm-1.2 3.3v8.36a2.06 2.06 0 0 1-1.5 2 2.04 2.04 0 0 1-2.6-1.96c0-.96.66-1.74 1.6-1.95.3-.06.62-.1.92-.17.2-.05.28-.16.28-.37V8.6c0-.3-.13-.38-.4-.32l-3.7.75c-.25.06-.34.17-.34.43v6.6a2.06 2.06 0 0 1-1.52 2.02 2.04 2.04 0 0 1-2.58-1.97c0-.96.66-1.74 1.6-1.95.3-.07.62-.1.92-.17.2-.05.28-.16.28-.37V7.07c0-.42.2-.66.6-.74l5.9-1.2c.4-.08.7.13.7.55v.62Z"/></svg></a>
+      <a class="soc" href="https://youtube.com/channel/UCVWGlmy46QEWFU7emMw1MVQ" target="_blank" rel="noopener" aria-label="YouTube" title="YouTube"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M23 12s0-3.2-.4-4.7a2.5 2.5 0 0 0-1.77-1.77C19.3 5.13 12 5.13 12 5.13s-7.3 0-8.83.4A2.5 2.5 0 0 0 1.4 7.3C1 8.8 1 12 1 12s0 3.2.4 4.7a2.5 2.5 0 0 0 1.77 1.77c1.53.4 8.83.4 8.83.4s7.3 0 8.83-.4a2.5 2.5 0 0 0 1.77-1.77C23 15.2 23 12 23 12ZM9.75 15.02V8.98L15 12l-5.25 3.02Z"/></svg></a>
+      <a class="soc" href="https://www.amazon.com/dp/B0GDY4RRBR" target="_blank" rel="noopener" aria-label="Amazon Music" title="Amazon Music"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M18.4 16.9c-2 1.5-4.9 2.3-7.4 2.3-3.5 0-6.6-1.3-9-3.4-.18-.17-.02-.4.2-.27 2.5 1.46 5.6 2.34 8.8 2.34 2.2 0 4.6-.46 6.8-1.4.34-.14.62.22.3.5Zm.8-.95c-.26-.33-1.7-.16-2.34-.08-.2.02-.23-.15-.05-.27 1.15-.8 3.03-.57 3.25-.3.22.27-.06 2.16-1.14 3.06-.16.14-.32.07-.25-.11.24-.6.77-1.96.52-2.3ZM16.6 3.9 8.9 14.5c-.9 1.2-2 1.4-3.1.6L1.6 12c-.27-.2-.05-.5.2-.36l4 1.7c.5.2.95.1 1.3-.36L14.4 3.4c.2-.27.6-.06.4.3l1.8.2Z"/></svg></a>
+      <a class="soc" href="https://www.facebook.com/share/p/18tKDocTLH/" target="_blank" rel="noopener" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12Z"/></svg></a>
+    </div>
+    <div class="f-contact">
+      <span>Booking: <a href="mailto:lmcallister26@gmail.com?subject=Diamond%20Cutz%20Booking%20Inquiry">lmcallister26@gmail.com</a></span>
+      <span><a href="tel:+17702565492">LaTina · (770) 256-5492</a></span>
+      <span><a href="tel:+14702341117">Andre · (470) 234-1117</a></span>
+    </div>
+    <div class="fine">© 2026 Diamond Cutz Studios · diamondcutzstudios.com</div>
+  </div>
 </footer>
 
 <!-- ── BOOKING MODAL ── -->
@@ -424,12 +528,19 @@
       <label>Name<input type="text" name="name" required placeholder="Your name"></label>
       <label>Phone or email<input type="text" name="contact" required placeholder="Best way to reach you"></label>
       <label>What do you need?
-        <select name="need">
+        <select name="need" id="bookNeed">
           <option>Studio session (recording)</option>
           <option>Production / beats</option>
           <option>Mixing &amp; mastering</option>
           <option>Live performance: Stal'lyon</option>
           <option>DJ / event</option>
+          <option>Parties</option>
+          <option>Weddings</option>
+          <option>Trail Rides</option>
+          <option>Live Sets</option>
+          <option>DJ</option>
+          <option>Studio Time</option>
+          <option>All Events</option>
           <option>Other</option>
         </select>
       </label>
@@ -446,9 +557,20 @@
 <script>
   (function(){
     var bg=document.getElementById('bookModal'), x=document.getElementById('bookClose'), form=document.getElementById('bookForm');
-    function open(){ bg.hidden=false; document.body.style.overflow='hidden'; }
+    var need=document.getElementById('bookNeed');
+    function preselect(service){
+      if(!service||!need) return;
+      var matched=false;
+      for(var i=0;i<need.options.length;i++){
+        if(need.options[i].value===service||need.options[i].text===service){ need.selectedIndex=i; matched=true; break; }
+      }
+      if(!matched){ need.value=service; }
+    }
+    function open(service){ preselect(typeof service==='string'?service:null); bg.hidden=false; document.body.style.overflow='hidden'; }
     function close(){ bg.hidden=true; document.body.style.overflow=''; }
-    document.querySelectorAll('[data-book]').forEach(function(b){ b.addEventListener('click',open); });
+    document.querySelectorAll('[data-book]').forEach(function(b){
+      b.addEventListener('click',function(){ open(b.getAttribute('data-service')); });
+    });
     x.addEventListener('click',close);
     bg.addEventListener('click',function(e){ if(e.target===bg) close(); });
     window.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!bg.hidden) close(); });
@@ -457,7 +579,7 @@
       var f=form.elements;
       var subj='Diamond Cutz Booking: '+(f.need.value)+' · '+(f.name.value);
       var body='Name: '+f.name.value+'\nContact: '+f.contact.value+'\nNeed: '+f.need.value+'\nDate/timeframe: '+f.date.value+'\n\nDetails:\n'+f.msg.value;
-      window.location.href='mailto:admin@dmndctz.com?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);
+      window.location.href='mailto:lmcallister26@gmail.com?cc=Stallyon7@gmail.com&subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);
     });
   })();
 </script>
@@ -485,13 +607,33 @@
         '<div class="play"><span>&#9658;</span></div></div>'+
         '<div class="meta"><h3>'+tk.t+'</h3>'+(tk.s?'<p>'+tk.s+'</p>':'')+'</div>';
       var thumb=el.querySelector('.thumb');
+      function closePlayer(){
+        var o=document.getElementById('dcz-player'); if(!o) return;
+        o.style.display='none'; var fr=o.querySelector('.pl-frame'); if(fr) fr.innerHTML='';
+        document.body.style.overflow='';
+        try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(_){}
+      }
       function play(){
+        // qi 2026-06-24: every track's cover art plays FULL SCREEN (like World Is Ghetto / NTense Fire).
+        var o=document.getElementById('dcz-player');
+        if(!o){
+          o=document.createElement('div'); o.id='dcz-player';
+          o.style.cssText='position:fixed;inset:0;z-index:9998;display:none;background:#000';
+          o.innerHTML='<button class="pl-x" aria-label="Close" style="position:absolute;top:14px;right:18px;z-index:2;font:30px/1 system-ui;color:#fff;background:rgba(0,0,0,.45);border:0;border-radius:9px;padding:2px 14px;cursor:pointer">&times;</button><div class="pl-frame" style="position:absolute;inset:0"></div>';
+          document.body.appendChild(o);
+          o.querySelector('.pl-x').addEventListener('click',closePlayer);
+          document.addEventListener('keydown',function(e){ if(e.key==='Escape') closePlayer(); });
+        }
+        var frame=o.querySelector('.pl-frame');
         var ifr=document.createElement('iframe');
         ifr.setAttribute('allow','accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
         ifr.setAttribute('allowfullscreen','');
         ifr.setAttribute('title',tk.t);
-        ifr.src='https://www.youtube-nocookie.com/embed/'+tk.id+'?autoplay=1&rel=0';
-        thumb.replaceWith(ifr);
+        ifr.style.cssText='width:100%;height:100%;border:0;display:block';
+        ifr.src='https://www.youtube-nocookie.com/embed/'+tk.id+'?autoplay=1&rel=0&playsinline=1';
+        frame.innerHTML=''; frame.appendChild(ifr);
+        o.style.display='block'; document.body.style.overflow='hidden';
+        try{ (o.requestFullscreen||o.webkitRequestFullscreen||function(){}).call(o); }catch(_){}
       }
       thumb.addEventListener('click',play);
       thumb.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); play(); } });
@@ -523,13 +665,22 @@
   var lb=document.getElementById('lightbox'),img=document.getElementById('lb-img'),cap=document.getElementById('lb-cap');
   function open(src,alt){img.src=src;img.alt=alt||'';cap.textContent=alt||'';lb.classList.add('on');document.body.style.overflow='hidden';}
   function close(){lb.classList.remove('on');img.src='';document.body.style.overflow='';}
+  function fire(el){
+    var a=el.closest('a');
+    var src=el.getAttribute('data-zoom-src')||el.getAttribute('src')||(a&&a.getAttribute('href'));
+    var alt=el.getAttribute('data-zoom-alt')||el.getAttribute('alt');
+    open(src,alt);
+  }
   document.querySelectorAll('.zoomable').forEach(function(el){
     el.addEventListener('click',function(e){
       // if wrapped in an anchor (the flyer), stop the new-tab navigation and overlay instead
       e.preventDefault();
-      var a=el.closest('a');
-      open(el.getAttribute('src')||(a&&a.getAttribute('href')),el.getAttribute('alt'));
+      fire(el);
     });
+    // keyboard access for non-img controls (the portrait View button)
+    if(el.getAttribute('role')==='button'){
+      el.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); fire(el); } });
+    }
   });
   lb.addEventListener('click',close);
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&lb.classList.contains('on'))close();});
