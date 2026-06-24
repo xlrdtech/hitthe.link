@@ -339,6 +339,33 @@ body.drop-active::after {
   cursor:pointer; transition:background .12s, color .12s;
 }
 .bubble-actions button:hover { background:rgba(0,255,136,.16); color:var(--accent); }
+/* ── Per-reply thumbs feedback (qi rates Xen replies → Xen learns good vs not) ──
+   Absolute bottom-right inside each .xen-reply bubble (bubble is position:relative).
+   Subtle until hover/tap, small always-on footprint. Does NOT touch voice/SSE. */
+.xen-feedback {
+  position:absolute; right:8px; bottom:6px; z-index:2;
+  display:flex; gap:4px;
+  opacity:.28; transition:opacity .15s;
+}
+.xen-reply:hover .xen-feedback,
+.xen-reply.actions-open .xen-feedback { opacity:1; }
+.xen-feedback button {
+  width:24px; height:24px; padding:0; line-height:1;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px;
+  background:rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.16);
+  color:var(--fg-dim); border-radius:var(--r-pill);
+  cursor:pointer; transition:background .12s, color .12s, border-color .12s, transform .12s;
+}
+.xen-feedback button:hover { transform:translateY(-1px); }
+.xen-feedback button.fb-up.active {
+  background:rgba(0,255,136,.22); border-color:var(--good); color:var(--good);
+  box-shadow:0 0 8px var(--accent-glow);
+}
+.xen-feedback button.fb-down.active {
+  background:rgba(255,107,90,.22); border-color:var(--bad); color:var(--bad);
+  box-shadow:0 0 8px rgba(255,107,90,.35);
+}
 /* Top transcript toolbar — copy-all / export / share */
 .transcript-toolbar {
   display:flex; gap:6px; padding:0 4px 8px;
@@ -614,6 +641,29 @@ const AUDIO_URL = 'https://xen.xlrd.org/api/dictate-audio';
 const RTC_SIGNAL_URL = 'https://xen.xlrd.org/api/rtc-signal';
 const HEADERS = { 'Content-Type': 'application/json' };
 const CHUNK_MS = 5000;
+
+// ── Reply feedback (qi rates Xen replies 👍/👎 → Xen learns good vs not) ───────
+// Endpoint may not exist yet — POST is fire-and-forget, no-cors, errors swallowed.
+// localStorage is the source of truth so nothing is lost when the endpoint is down.
+const FEEDBACK_URL = 'https://xen.xlrd.org/api/feedback';
+const FEEDBACK_LOG_KEY = 'xen-feedback-log';
+function logFeedback(entry) {
+  // (b) persist locally first — never lose a rating even if the network is down.
+  let log = [];
+  try { log = JSON.parse(localStorage.getItem(FEEDBACK_LOG_KEY) || '[]'); } catch (_) { log = []; }
+  if (!Array.isArray(log)) log = [];
+  log.push(entry);
+  if (log.length > 500) log.splice(0, log.length - 500);   // bound growth
+  try { localStorage.setItem(FEEDBACK_LOG_KEY, JSON.stringify(log)); } catch (_) {}
+  // (a) fire-and-forget POST — graceful: endpoint may 404/not-exist, swallow all.
+  try {
+    fetch(FEEDBACK_URL, {
+      method: 'POST', mode: 'no-cors', keepalive: true,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(entry),
+    }).catch(() => {});
+  } catch (_) {}
+}
 
 // ── VEI RTC: transport Mac say-worker voice to phone over WebRTC (peer-to-peer,
 // identical audio bytes, no re-synthesis). qi 2026-05-25 "vei rtc... public".
@@ -1248,6 +1298,39 @@ function attachBubbleActions(bubbleEl, text) {
       window.location.href = 'tel:+16783452142';
     };
     row.appendChild(callBtn);
+    // 👍 / 👎 feedback — bottom-right of the bubble, one rating per bubble, toggle-able.
+    // Captures {id, text(first ~200), rating, ts}, persists to localStorage + POSTs.
+    if (!bubbleEl.querySelector('.xen-feedback')) {
+      const fb = document.createElement('div');
+      fb.className = 'xen-feedback';
+      const replyId = bubbleEl.dataset.fbId || ('xr-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7));
+      bubbleEl.dataset.fbId = replyId;
+      const snippet = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+      const up = document.createElement('button');
+      up.className = 'fb-up'; up.type = 'button'; up.textContent = '👍';
+      up.setAttribute('aria-label', 'Good reply — thumbs up');
+      const down = document.createElement('button');
+      down.className = 'fb-down'; down.type = 'button'; down.textContent = '👎';
+      down.setAttribute('aria-label', 'Bad reply — thumbs down');
+      const rate = (rating, btn, other) => (e) => {
+        e.stopPropagation();
+        const now = btn.classList.contains('active');
+        up.classList.remove('active'); down.classList.remove('active');   // one rating per bubble
+        if (!now) {
+          btn.classList.add('active');
+          btn.setAttribute('aria-pressed', 'true'); other.setAttribute('aria-pressed', 'false');
+          logFeedback({ id: replyId, text: snippet, rating, ts: Date.now() });
+        } else {
+          // toggled OFF — record the retraction so the learner sees the un-rate too.
+          btn.setAttribute('aria-pressed', 'false');
+          logFeedback({ id: replyId, text: snippet, rating: null, ts: Date.now() });
+        }
+      };
+      up.onclick = rate('up', up, down);
+      down.onclick = rate('down', down, up);
+      fb.appendChild(up); fb.appendChild(down);
+      bubbleEl.appendChild(fb);
+    }
   }
   if (navigator.share) {
     const shareBtn = document.createElement('button');
@@ -1894,6 +1977,15 @@ function renderEvent(d) {
       || /^otlp$/i.test((d.source || '').toString())
       || (d.kind || '').toString().toLowerCase() === 'otlp') {
     try { _hud(txt.slice(0, 72)); } catch (_) {}
+    return;
+  }
+  // qi 2026-06-24: bee & omi are the AMBIENT wearable tier (always-on life capture).
+  // Priority is VVSVEI/SMS first, THEN bee/omi — so in the interface they belong in the
+  // dim background telemetry HUD, never a foreground conversation bubble. Match ONLY the
+  // ambient-wearable source/tag (Beeper/SMS tag by network, so they are untouched).
+  var _amb = (d.source || d.sender || d.event || d.kind || '').toString().toLowerCase().replace(/:$/, '').trim();
+  if (_amb === 'bee' || _amb === 'omi' || _amb === 'bee-ambient' || _amb === 'omi-ambient' || _amb === 'com.xen.bee-ambient') {
+    try { _hud((_amb.indexOf('omi') >= 0 ? 'omi · ' : 'bee · ') + txt.slice(0, 60)); } catch (_) {}
     return;
   }
   const tag = (d.event || d.kind || '').toString().toLowerCase();
