@@ -102,6 +102,35 @@
   .btn.ghost:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.32);background:var(--glass-fill-hi);
     box-shadow:var(--glass-inset), 0 12px 28px rgba(0,0,0,.4)}
 
+  /* ── HERO with Stal'lyon cut-out figure ── (qi 2026-06-24)
+     Desktop: two columns — transparent cut-out on the LEFT, headline + Book CTA on the RIGHT.
+     The PNG is transparent so it composites on the page's own dark background (NO box/border).
+     The 3D medallion (.hero3d) above and the headline/CTA stay fully intact. */
+  header.intro{position:relative}
+  .intro-grid{display:flex;align-items:center;justify-content:center;gap:clamp(18px,4vw,52px);max-width:1080px;margin:0 auto;text-align:left}
+  .intro-figure{flex:0 0 auto;align-self:flex-end;width:clamp(180px,30vw,360px);pointer-events:none}
+  .intro-figure img{display:block;width:100%;height:auto;object-fit:contain;pointer-events:auto;
+    filter:drop-shadow(0 24px 48px rgba(0,0,0,.6)) drop-shadow(0 0 36px rgba(215,160,138,.12))}
+  .intro-copy{flex:1 1 460px;max-width:560px}
+  .intro-copy h1{text-align:left}
+  .intro-copy .tag,.intro-copy .sub{text-align:left;margin-left:0;margin-right:0}
+  .intro-copy .btns{justify-content:flex-start}
+  /* entrance animation — figure fades + rises on load (consistent with site reveal style) */
+  .intro-figure{opacity:0;transform:translateY(28px) scale(.985);
+    transition:opacity .8s cubic-bezier(.22,.61,.36,1), transform .8s cubic-bezier(.22,.61,.36,1)}
+  .intro-figure.in{opacity:1;transform:none}
+  @media(max-width:760px){
+    /* phone: headline + CTA first (above the fold), figure beneath — centered, transparent, no box */
+    .intro-grid{flex-direction:column;text-align:center;gap:18px}
+    .intro-copy{order:1;flex:1 1 auto;max-width:none}
+    .intro-copy h1,.intro-copy .tag,.intro-copy .sub{text-align:center;margin-left:auto;margin-right:auto}
+    .intro-copy .btns{justify-content:center}
+    .intro-figure{order:2;align-self:center;width:clamp(190px,62vw,300px)}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .intro-figure{opacity:1 !important;transform:none !important;transition:none !important}
+  }
+
   section{padding:70px 0;border-top:1px solid var(--line-cool)}
   .kicker{font-family:var(--serif);font-size:12px;letter-spacing:.28em;text-transform:uppercase;text-align:center;text-wrap:balance;
     background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -183,17 +212,28 @@
   .m-direct a{color:var(--rose-hi);white-space:nowrap;display:inline-block}
   button.btn{font-family:var(--sans)}
 
-  /* ── artist EPK — portrait as full-bleed section background ── */
-  /* align-items:flex-start + vertical padding so a tall bio panel never gets vertically
-     centered and clipped by overflow:hidden — the FIRST line stays visible (qi 2026-06-24). */
+  /* ── artist EPK — transparent cut-out FIGURE standing in the section ── */
+  /* The cut-out is a transparent PNG: NO background box. He floats on the section's own
+     dark gradient and stands bottom-aligned on the LEFT; glass bio panel anchors RIGHT.
+     align-items:flex-end so he "stands"; the bio panel realigns to flex-start via its own rule. */
   .artist{position:relative;margin-top:40px;border-radius:22px;overflow:hidden;isolation:isolate;
-    min-height:clamp(540px,80vh,820px);display:flex;align-items:flex-start;justify-content:flex-end;
-    padding:34px 0;border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.6)}
-  .artist .portrait-bg{position:absolute;inset:0;z-index:0;cursor:zoom-in;overflow:hidden}
-  /* full-height portrait, parallax headroom (translateY on scroll). Keep HIM visible left; panel sits right. */
-  .artist .portrait-bg img{position:absolute;left:0;right:0;top:-14%;width:100%;height:128%;object-fit:cover;object-position:30% 16%;display:block;will-change:transform}
-  .artist .portrait-bg::after{content:"";position:absolute;inset:0;pointer-events:none;
-    background:linear-gradient(90deg,rgba(4,6,12,0) 0%,rgba(4,6,12,.04) 42%,rgba(4,6,12,.5) 70%,rgba(4,6,12,.86) 100%)}
+    min-height:clamp(540px,80vh,820px);display:flex;align-items:flex-end;justify-content:flex-end;
+    padding:34px 0 0;border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.6);
+    background:
+      radial-gradient(120% 90% at 22% 100%, rgba(19,37,78,.55), transparent 62%),
+      radial-gradient(90% 70% at 80% 18%, rgba(215,160,138,.10), transparent 60%),
+      linear-gradient(180deg, rgba(8,11,22,.7), rgba(4,6,12,.92))}
+  /* transparent cut-out figure: occupies the LEFT, full-height, bottom-aligned, contained
+     (head/hat never clipped). parallax via translateY on scroll. No box / no border. */
+  .artist .portrait-bg{position:absolute;left:0;bottom:0;top:0;z-index:0;cursor:zoom-in;
+    width:62%;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;overflow:visible}
+  .artist .portrait-bg img{display:block;width:auto;max-width:100%;height:100%;
+    object-fit:contain;object-position:bottom center;pointer-events:auto;
+    filter:drop-shadow(0 26px 50px rgba(0,0,0,.65)) drop-shadow(0 0 38px rgba(215,160,138,.10));
+    will-change:transform}
+  /* soft contact-shadow / floor so he doesn't look pasted; sits under his feet, transparent edges */
+  .artist .portrait-bg::after{content:"";position:absolute;left:8%;right:8%;bottom:0;height:90px;z-index:-1;pointer-events:none;
+    background:radial-gradient(60% 100% at 50% 100%, rgba(0,0,0,.55), transparent 72%)}
   .artist .portrait-zoom{position:absolute;top:14px;right:14px;z-index:3;display:inline-flex;align-items:center;gap:7px;
     border:1px solid var(--glass-border);border-radius:999px;padding:8px 14px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
     color:var(--ice);cursor:zoom-in;background:var(--glass-fill);
@@ -203,7 +243,7 @@
   /* hyper-real frosted glass bio panel sitting over the portrait.
      Sizes to its content (no fixed height) and gets generous top padding so the heading
      line is always fully visible; if it ever exceeds the section it scrolls internally. */
-  .artist .bio{position:relative;z-index:2;width:min(440px,46%);margin:0 26px;text-align:left;
+  .artist .bio{position:relative;z-index:2;width:min(440px,46%);margin:34px 26px;text-align:left;align-self:flex-start;
     padding:32px 30px 30px;border-radius:18px;border:1px solid var(--glass-border);
     max-height:calc(100% - 4px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
     background:linear-gradient(165deg,rgba(244,247,252,.10),rgba(232,238,248,.05));
@@ -222,12 +262,16 @@
     border:1px solid var(--glass-border);border-radius:999px;padding:5px 12px;
     background:var(--glass-fill);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
   @media(max-width:760px){
-    /* portrait stacks above the bio; the bio grows to fit ALL text (no clipping, no internal scroll) */
-    .artist{min-height:auto;border-radius:18px;justify-content:center;align-items:flex-end;padding:0;flex-direction:column}
-    .artist .portrait-bg{position:relative;width:100%;height:58vh;min-height:380px}
-    .artist .portrait-bg img{position:absolute;object-position:50% 16%}
-    .artist .portrait-bg::after{background:linear-gradient(180deg,rgba(4,6,12,.1) 0%,rgba(4,6,12,.05) 32%,rgba(4,6,12,.55) 70%,rgba(4,6,12,.88) 100%)}
-    .artist .bio{width:calc(100% - 22px);max-height:none;overflow:visible;margin:-80px auto 16px;text-align:center;padding:26px 20px 22px}
+    /* portrait FIGURE stacks above the bio; transparent cut-out, contained (hat never clipped),
+       bottom-aligned so he stands on the bio below. The bio grows to fit ALL text. */
+    .artist{min-height:auto;border-radius:18px;justify-content:center;align-items:center;padding:18px 0 0;flex-direction:column;
+      background:
+        radial-gradient(120% 60% at 50% 100%, rgba(19,37,78,.5), transparent 64%),
+        linear-gradient(180deg, rgba(8,11,22,.55), rgba(4,6,12,.92))}
+    .artist .portrait-bg{position:relative;left:auto;top:auto;width:100%;height:auto;max-height:54vh;min-height:300px}
+    .artist .portrait-bg img{height:auto;max-height:54vh;width:auto;max-width:88%;object-position:bottom center}
+    .artist .portrait-bg::after{left:18%;right:18%;height:60px}
+    .artist .bio{width:calc(100% - 22px);max-height:none;overflow:visible;margin:-44px auto 16px;text-align:center;padding:26px 20px 22px;align-self:center}
     .artist .bio p{text-wrap:pretty}
     .artist .bio .tags{justify-content:center}
     .artist .bio p:first-of-type::first-letter{float:none;font-size:1em;margin:0}
@@ -418,12 +462,19 @@
 </script>
 
 <header class="intro">
-  <h1>Diamond Cutz Studios</h1>
-  <div class="tag">Recording&nbsp;·&nbsp;Production&nbsp;·&nbsp;Live&nbsp;Entertainment</div>
-  <p class="sub">A house of Stal'lyon · Atlanta, GA. For all your music &amp; entertainment needs.</p>
-  <div class="btns">
-    <button class="btn primary" data-book>Book a Session</button>
-    <a class="btn ghost" href="#music">Hear the Sound</a>
+  <div class="intro-grid">
+    <div class="intro-figure" id="introFigure">
+      <img src="/dcz/assets/stallyon-cutout.png" alt="Stal'lyon, Andre Jermaine" decoding="async" fetchpriority="high">
+    </div>
+    <div class="intro-copy">
+      <h1>Diamond Cutz Studios</h1>
+      <div class="tag">Recording&nbsp;·&nbsp;Production&nbsp;·&nbsp;Live&nbsp;Entertainment</div>
+      <p class="sub">A house of Stal'lyon · Atlanta, GA. For all your music &amp; entertainment needs.</p>
+      <div class="btns">
+        <button class="btn primary" data-book>Book a Session</button>
+        <a class="btn ghost" href="#music">Hear the Sound</a>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -454,9 +505,9 @@
     <h2>Stal'lyon</h2>
     <div class="artist">
       <div class="portrait-bg">
-        <img class="zoomable" src="/dcz/assets/stallyon-portrait.jpg" alt="Stal'lyon, Andre Jermaine" loading="lazy">
+        <img class="zoomable" src="/dcz/assets/stallyon-cutout.png" alt="Stal'lyon, Andre Jermaine" loading="lazy">
       </div>
-      <span class="portrait-zoom zoomable" data-zoom-src="/dcz/assets/stallyon-portrait.jpg" data-zoom-alt="Stal'lyon, Andre Jermaine" role="button" tabindex="0" aria-label="View full portrait">⤢ View portrait</span>
+      <span class="portrait-zoom zoomable" data-zoom-src="/dcz/assets/stallyon-cutout.png" data-zoom-alt="Stal'lyon, Andre Jermaine" role="button" tabindex="0" aria-label="View full portrait">⤢ View portrait</span>
       <div class="bio">
         <span class="nm">Stal'lyon — The Artist</span>
         <p>ANDRE' JERMAINE, professionally known as <strong>STAL' LYON</strong>, is emerging as one of the most captivating new voices in modern Southern Soul. Born and raised in Detroit, Michigan, the legendary home of Motown, STAL' LYON is bringing a fresh, powerful, and genre-defying sound to audiences across the country.</p>
@@ -782,9 +833,11 @@
     row.addEventListener('scroll',function(){ if(!sync._r) sync._r=requestAnimationFrame(function(){sync._r=0;sync();}); },{passive:true}); sync(); }
 })();
 </script>
-<!-- artist portrait parallax (qi 2026-06-24) -->
+<!-- artist cut-out figure parallax (qi 2026-06-24) — subtle float, stays grounded, honors reduced-motion -->
 <script>
 (function(){
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce) return;
   var bg=document.querySelector('.artist .portrait-bg img'), sec=document.querySelector('.artist');
   if(!bg||!sec) return;
   var raf=0;
@@ -793,11 +846,21 @@
     var r=sec.getBoundingClientRect(), vh=window.innerHeight||1;
     var prog=(r.top + r.height/2 - vh/2)/(vh/2 + r.height/2); // -1 below .. +1 above
     prog=Math.max(-1,Math.min(1,prog));
-    bg.style.transform='translateY('+(prog*8).toFixed(2)+'%)';   // glide within the 28% headroom
+    // gentle vertical drift (px) — he subtly rises as the section scrolls up, never leaves the floor
+    bg.style.transform='translateY('+(prog*-22).toFixed(1)+'px)';
   }
   function onScroll(){ if(!raf) raf=requestAnimationFrame(apply); }
   window.addEventListener('scroll',onScroll,{passive:true});
   window.addEventListener('resize',onScroll); apply();
+})();
+</script>
+<!-- hero cut-out figure entrance: fade + rise on arrival (qi 2026-06-24), honors reduced-motion -->
+<script>
+(function(){
+  var fig=document.getElementById('introFigure'); if(!fig) return;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce){ fig.classList.add('in'); return; }
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){ fig.classList.add('in'); }); });
 })();
 </script>
 <!-- scroll-reveal: every section animates in as it enters the viewport (qi 2026-06-24).
