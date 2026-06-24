@@ -344,27 +344,36 @@ body.drop-active::after {
    Subtle until hover/tap, small always-on footprint. Does NOT touch voice/SSE. */
 .xen-feedback {
   position:absolute; right:8px; bottom:6px; z-index:2;
-  display:flex; gap:4px;
-  opacity:.28; transition:opacity .15s;
+  display:flex; gap:6px;
+  opacity:0; pointer-events:none; transition:opacity .18s;   /* hidden until hover, like everything else */
 }
 .xen-reply:hover .xen-feedback,
-.xen-reply.actions-open .xen-feedback { opacity:1; }
+.xen-reply.actions-open .xen-feedback { opacity:1; pointer-events:auto; }
+/* white CLEAR-GLASS thumb tiles */
 .xen-feedback button {
-  width:24px; height:24px; padding:0; line-height:1;
+  width:26px; height:26px; padding:0;
   display:flex; align-items:center; justify-content:center;
-  font-size:12px;
-  background:rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.16);
-  color:var(--fg-dim); border-radius:var(--r-pill);
-  cursor:pointer; transition:background .12s, color .12s, border-color .12s, transform .12s;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.28);
+  -webkit-backdrop-filter:blur(9px) saturate(160%); backdrop-filter:blur(9px) saturate(160%);
+  border-radius:9px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4), 0 2px 8px rgba(0,0,0,.3);
+  cursor:pointer; transition:background .14s, border-color .14s, transform .14s, box-shadow .14s;
 }
-.xen-feedback button:hover { transform:translateY(-1px); }
+.xen-feedback button svg { width:15px; height:15px; display:block; fill:none; stroke:#fff; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; filter:drop-shadow(0 1px 1px rgba(0,0,0,.35)); }
+.xen-feedback button.fb-down svg { transform:rotate(180deg); }
+.xen-feedback button:hover {
+  transform:translateY(-1px);
+  background:rgba(255,255,255,.16); border-color:rgba(255,255,255,.55);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55), 0 4px 12px rgba(0,0,0,.4);
+}
 .xen-feedback button.fb-up.active {
-  background:rgba(0,255,136,.22); border-color:var(--good); color:var(--good);
-  box-shadow:0 0 8px var(--accent-glow);
+  background:rgba(120,255,190,.16); border-color:var(--good);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 0 10px var(--accent-glow);
 }
 .xen-feedback button.fb-down.active {
-  background:rgba(255,107,90,.22); border-color:var(--bad); color:var(--bad);
-  box-shadow:0 0 8px rgba(255,107,90,.35);
+  background:rgba(255,140,120,.16); border-color:var(--bad);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 0 10px rgba(255,107,90,.4);
 }
 /* Top transcript toolbar — copy-all / export / share */
 .transcript-toolbar {
@@ -1306,11 +1315,13 @@ function attachBubbleActions(bubbleEl, text) {
       const replyId = bubbleEl.dataset.fbId || ('xr-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7));
       bubbleEl.dataset.fbId = replyId;
       const snippet = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+      // white clear-glass thumb (outline). Down button reuses it, rotated 180deg via CSS.
+      const THUMB_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11v9H4a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h3zm0 0 4.2-7.4a1.8 1.8 0 0 1 3.3 1.3l-.8 4.1h4.6a2 2 0 0 1 2 2.4l-1.2 6A2 2 0 0 1 17.1 20H7"/></svg>';
       const up = document.createElement('button');
-      up.className = 'fb-up'; up.type = 'button'; up.textContent = '👍';
+      up.className = 'fb-up'; up.type = 'button'; up.innerHTML = THUMB_SVG;
       up.setAttribute('aria-label', 'Good reply — thumbs up');
       const down = document.createElement('button');
-      down.className = 'fb-down'; down.type = 'button'; down.textContent = '👎';
+      down.className = 'fb-down'; down.type = 'button'; down.innerHTML = THUMB_SVG;
       down.setAttribute('aria-label', 'Bad reply — thumbs down');
       const rate = (rating, btn, other) => (e) => {
         e.stopPropagation();
