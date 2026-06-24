@@ -167,9 +167,9 @@
   .artist{position:relative;margin-top:40px;border-radius:22px;overflow:hidden;isolation:isolate;
     min-height:clamp(540px,80vh,820px);display:flex;align-items:center;justify-content:flex-end;
     border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.6)}
-  .artist .portrait-bg{position:absolute;inset:0;z-index:0;cursor:zoom-in}
-  /* keep HIM visible — show the portrait on the left, panel sits on the right */
-  .artist .portrait-bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:28% 18%;display:block}
+  .artist .portrait-bg{position:absolute;inset:0;z-index:0;cursor:zoom-in;overflow:hidden}
+  /* full-height portrait, parallax headroom (translateY on scroll). Keep HIM visible left; panel sits right. */
+  .artist .portrait-bg img{position:absolute;left:0;right:0;top:-14%;width:100%;height:128%;object-fit:cover;object-position:30% 16%;display:block;will-change:transform}
   .artist .portrait-bg::after{content:"";position:absolute;inset:0;pointer-events:none;
     background:linear-gradient(90deg,rgba(4,6,12,0) 0%,rgba(4,6,12,.04) 42%,rgba(4,6,12,.5) 70%,rgba(4,6,12,.86) 100%)}
   .artist .portrait-zoom{position:absolute;top:14px;right:14px;z-index:3;display:inline-flex;align-items:center;gap:7px;
@@ -226,17 +226,23 @@
 
   /* ── shows ── */
   /* hyper-real frosted glass show card */
-  .shows-row{display:flex;flex-wrap:wrap;gap:22px;justify-content:center;margin-top:40px;align-items:stretch}
-  .show{flex:1 1 380px;max-width:480px;display:flex;flex-direction:column;gap:20px;align-items:center;text-align:center;
+  /* horizontal scroll-snap slider — uniform slides, symmetric */
+  .shows-row{display:flex;gap:18px;margin-top:40px;overflow-x:auto;scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;padding:4px 2px 18px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .shows-row::-webkit-scrollbar{height:8px}
+  .shows-row::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px}
+  .shows-row::-webkit-scrollbar-track{background:transparent}
+  .show{flex:0 0 min(440px,86%);scroll-snap-align:center;display:flex;flex-direction:column;gap:18px;align-items:center;text-align:center;
     background:linear-gradient(180deg,rgba(28,40,68,.42),rgba(10,14,28,.55));border:1px solid var(--glass-border);
     -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
-    border-radius:18px;padding:24px 22px;position:relative;overflow:hidden;
+    border-radius:18px;padding:22px 20px;position:relative;overflow:hidden;
     box-shadow:var(--glass-inset), 0 22px 60px rgba(0,0,0,.45)}
   .show::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--rose),var(--plat),transparent)}
-  .show .flyer{flex:0 0 auto;width:100%;border-radius:13px;overflow:hidden;border:1px solid var(--line);display:block;
+  /* both flyers render IDENTICAL size — fixed 4:5 box, cover (symmetry, no different sizes) */
+  .show .flyer{flex:0 0 auto;width:100%;aspect-ratio:4/5;border-radius:13px;overflow:hidden;border:1px solid var(--line);display:block;
     box-shadow:0 14px 34px rgba(0,0,0,.5);transition:.25s}
   .show .flyer:hover{transform:translateY(-3px);box-shadow:0 20px 44px rgba(0,0,0,.6);border-color:rgba(231,170,140,.4)}
-  .show .flyer img{display:block;width:100%;height:auto}
+  .show .flyer img{display:block;width:100%;height:100%;object-fit:cover}
   .show .info{flex:1 1 auto}
   .show .date{font-family:var(--serif);font-weight:700;font-size:22px;letter-spacing:.06em;
     background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -488,17 +494,8 @@
     <div class="links" style="margin-top:24px">
       <button class="btn primary" data-book>Book a Session</button>
     </div>
-    <div class="social" style="margin-top:22px;display:flex;flex-wrap:wrap;justify-content:center;gap:14px" aria-label="Follow Diamond Cutz Studios">
-      <a class="soc" href="https://instagram.com/thereal_stallyon" target="_blank" rel="noopener" aria-label="Instagram — Stal'lyon" title="@thereal_stallyon"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.06 1.8.25 2.2.42.56.22.96.48 1.38.9.42.42.68.82.9 1.38.17.4.36 1 .42 2.2.06 1.3.07 1.7.07 4.9s0 3.6-.07 4.9c-.06 1.2-.25 1.8-.42 2.2a3.7 3.7 0 0 1-.9 1.38c-.42.42-.82.68-1.38.9-.4.17-1 .36-2.2.42-1.3.06-1.7.07-4.9.07s-3.6 0-4.9-.07c-1.2-.06-1.8-.25-2.2-.42a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.17-.4-.36-1-.42-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.07-4.9c.06-1.2.25-1.8.42-2.2.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.4-.17 1-.36 2.2-.42C8.4 2.2 8.8 2.2 12 2.2Zm0 1.8c-3.1 0-3.5 0-4.7.06-.9.04-1.4.2-1.7.32-.43.17-.74.37-1.06.7-.32.31-.52.62-.7 1.05-.12.3-.28.8-.32 1.7C3.96 9.05 3.96 9.4 3.96 12s0 2.95.06 4.15c.04.9.2 1.4.32 1.7.17.43.37.74.7 1.06.31.32.62.52 1.05.7.3.12.8.28 1.7.32 1.2.06 1.6.06 4.7.06s3.5 0 4.7-.06c.9-.04 1.4-.2 1.7-.32.43-.17.74-.37 1.06-.7.32-.31.52-.62.7-1.05.12-.3.28-.8.32-1.7.06-1.2.06-1.6.06-4.15s0-2.95-.06-4.15c-.04-.9-.2-1.4-.32-1.7a2.8 2.8 0 0 0-.7-1.06 2.8 2.8 0 0 0-1.05-.7c-.3-.12-.8-.28-1.7-.32C15.5 4 15.1 4 12 4Zm0 3.06A4.94 4.94 0 1 1 12 17a4.94 4.94 0 0 1 0-9.88Zm0 1.8a3.14 3.14 0 1 0 0 6.28 3.14 3.14 0 0 0 0-6.28Zm5.15-.62a1.15 1.15 0 1 1-2.3 0 1.15 1.15 0 0 1 2.3 0Z"/></svg></a>
-      <a class="soc" href="https://instagram.com/diamondcutzstudios" target="_blank" rel="noopener" aria-label="Instagram — Diamond Cutz Studios" title="@diamondcutzstudios"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.06 1.8.25 2.2.42.56.22.96.48 1.38.9.42.42.68.82.9 1.38.17.4.36 1 .42 2.2.06 1.3.07 1.7.07 4.9s0 3.6-.07 4.9c-.06 1.2-.25 1.8-.42 2.2a3.7 3.7 0 0 1-.9 1.38c-.42.42-.82.68-1.38.9-.4.17-1 .36-2.2.42-1.3.06-1.7.07-4.9.07s-3.6 0-4.9-.07c-1.2-.06-1.8-.25-2.2-.42a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.17-.4-.36-1-.42-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.07-4.9c.06-1.2.25-1.8.42-2.2.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.4-.17 1-.36 2.2-.42C8.4 2.2 8.8 2.2 12 2.2Zm0 4.86A4.94 4.94 0 1 1 12 17a4.94 4.94 0 0 1 0-9.88Zm0 1.8a3.14 3.14 0 1 0 0 6.28 3.14 3.14 0 0 0 0-6.28Zm5.15-.62a1.15 1.15 0 1 1-2.3 0 1.15 1.15 0 0 1 2.3 0Z"/></svg></a>
-      <a class="soc" href="https://open.spotify.com/artist/1VsJvKKQTtX4Muap2vcPt0" target="_blank" rel="noopener" aria-label="Spotify" title="Spotify"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm4.6 14.43a.62.62 0 0 1-.86.21c-2.35-1.44-5.3-1.76-8.79-.96a.62.62 0 1 1-.28-1.22c3.8-.87 7.08-.5 9.72 1.11.3.18.39.57.21.86Zm1.23-2.74a.78.78 0 0 1-1.07.26c-2.69-1.65-6.79-2.13-9.97-1.17a.78.78 0 1 1-.45-1.49c3.63-1.1 8.15-.56 11.24 1.33.37.23.49.71.25 1.07Zm.1-2.85C14.8 8.96 9.5 8.78 6.42 9.71a.93.93 0 1 1-.54-1.78c3.53-1.07 9.38-.86 13.08 1.34a.93.93 0 1 1-.95 1.6Z"/></svg></a>
-      <a class="soc" href="https://music.apple.com/us/artist/stallyon/858751401" target="_blank" rel="noopener" aria-label="Apple Music" title="Apple Music"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M17.6 3H6.4A3.4 3.4 0 0 0 3 6.4v11.2A3.4 3.4 0 0 0 6.4 21h11.2a3.4 3.4 0 0 0 3.4-3.4V6.4A3.4 3.4 0 0 0 17.6 3Zm-1.2 3.3v8.36a2.06 2.06 0 0 1-1.5 2 2.04 2.04 0 0 1-2.6-1.96c0-.96.66-1.74 1.6-1.95.3-.06.62-.1.92-.17.2-.05.28-.16.28-.37V8.6c0-.3-.13-.38-.4-.32l-3.7.75c-.25.06-.34.17-.34.43v6.6a2.06 2.06 0 0 1-1.52 2.02 2.04 2.04 0 0 1-2.58-1.97c0-.96.66-1.74 1.6-1.95.3-.07.62-.1.92-.17.2-.05.28-.16.28-.37V7.07c0-.42.2-.66.6-.74l5.9-1.2c.4-.08.7.13.7.55v.62Z"/></svg></a>
-      <a class="soc" href="https://youtube.com/channel/UCVWGlmy46QEWFU7emMw1MVQ" target="_blank" rel="noopener" aria-label="YouTube" title="YouTube"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M23 12s0-3.2-.4-4.7a2.5 2.5 0 0 0-1.77-1.77C19.3 5.13 12 5.13 12 5.13s-7.3 0-8.83.4A2.5 2.5 0 0 0 1.4 7.3C1 8.8 1 12 1 12s0 3.2.4 4.7a2.5 2.5 0 0 0 1.77 1.77c1.53.4 8.83.4 8.83.4s7.3 0 8.83-.4a2.5 2.5 0 0 0 1.77-1.77C23 15.2 23 12 23 12ZM9.75 15.02V8.98L15 12l-5.25 3.02Z"/></svg></a>
-      <a class="soc" href="https://www.amazon.com/dp/B0GDY4RRBR" target="_blank" rel="noopener" aria-label="Amazon Music" title="Amazon Music"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M18.4 16.9c-2 1.5-4.9 2.3-7.4 2.3-3.5 0-6.6-1.3-9-3.4-.18-.17-.02-.4.2-.27 2.5 1.46 5.6 2.34 8.8 2.34 2.2 0 4.6-.46 6.8-1.4.34-.14.62.22.3.5Zm.8-.95c-.26-.33-1.7-.16-2.34-.08-.2.02-.23-.15-.05-.27 1.15-.8 3.03-.57 3.25-.3.22.27-.06 2.16-1.14 3.06-.16.14-.32.07-.25-.11.24-.6.77-1.96.52-2.3ZM16.6 3.9 8.9 14.5c-.9 1.2-2 1.4-3.1.6L1.6 12c-.27-.2-.05-.5.2-.36l4 1.7c.5.2.95.1 1.3-.36L14.4 3.4c.2-.27.6-.06.4.3l1.8.2Z"/></svg></a>
-      <a class="soc" href="https://www.facebook.com/share/p/18tKDocTLH/" target="_blank" rel="noopener" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12Z"/></svg></a>
-    </div>
     <style>
-      /* hyper-real frosted glass social icons */
+      /* hyper-real frosted glass social icons (used in the footer) */
       .soc{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:50%;color:var(--ice);
         border:1px solid var(--glass-border);background:var(--glass-fill);
         -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
@@ -506,7 +503,6 @@
       .soc:hover{color:#fff;transform:translateY(-2px);border-color:rgba(255,255,255,.34);background:var(--glass-fill-hi);
         box-shadow:var(--glass-inset), 0 10px 22px rgba(0,0,0,.42)}
     </style>
-    <p class="lead" style="margin-top:18px;font-size:13px;opacity:.85">diamondcutzstudios.com — launching with the studio</p>
   </div>
 </section>
 
@@ -524,11 +520,11 @@
       <a class="soc" href="https://www.facebook.com/share/p/18tKDocTLH/" target="_blank" rel="noopener" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12Z"/></svg></a>
     </div>
     <div class="f-contact">
-      <span>Booking: <a href="mailto:lmcallister26@gmail.com?subject=Diamond%20Cutz%20Booking%20Inquiry">lmcallister26@gmail.com</a></span>
-      <span><a href="tel:+17702565492">LaTina · (770) 256-5492</a></span>
-      <span><a href="tel:+14702341117">Andre · (470) 234-1117</a></span>
+      <span><strong>Booking &amp; Management</strong> · LaTina McAllister · <a href="tel:+17702565492">(770) 256-5492</a> · <a href="mailto:lmcallister26@gmail.com?subject=Diamond%20Cutz%20Booking%20Inquiry">lmcallister26@gmail.com</a></span>
+      <span><strong>Artist</strong> · Andre "Stal'lyon" Jermaine · <a href="tel:+14702341117">(470) 234-1117</a> · <a href="mailto:Stallyon7@gmail.com?subject=Diamond%20Cutz%20Inquiry">Stallyon7@gmail.com</a></span>
+      <span>📍 Atlanta, GA · Studio &amp; live entertainment · booking 7 days a week</span>
     </div>
-    <div class="fine">© 2026 Diamond Cutz Studios · diamondcutzstudios.com</div>
+    <div class="fine">© 2026 Diamond Cutz Studios · A House of Stal'lyon · diamondcutzstudios.com</div>
   </div>
 </footer>
 
@@ -699,6 +695,24 @@
   });
   lb.addEventListener('click',close);
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&lb.classList.contains('on'))close();});
+})();
+</script>
+<!-- artist portrait parallax (qi 2026-06-24) -->
+<script>
+(function(){
+  var bg=document.querySelector('.artist .portrait-bg img'), sec=document.querySelector('.artist');
+  if(!bg||!sec) return;
+  var raf=0;
+  function apply(){
+    raf=0;
+    var r=sec.getBoundingClientRect(), vh=window.innerHeight||1;
+    var prog=(r.top + r.height/2 - vh/2)/(vh/2 + r.height/2); // -1 below .. +1 above
+    prog=Math.max(-1,Math.min(1,prog));
+    bg.style.transform='translateY('+(prog*8).toFixed(2)+'%)';   // glide within the 28% headroom
+  }
+  function onScroll(){ if(!raf) raf=requestAnimationFrame(apply); }
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',onScroll); apply();
 })();
 </script>
 <script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
