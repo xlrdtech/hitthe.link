@@ -88,6 +88,10 @@ html[data-theme="dark"] body{background:#3a3a40}
   /* Force backgrounds + colors to render (browsers strip them by default — this keeps the dark cover, logo, emblem and washes intact). */
   *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
   html,body,html[data-theme="dark"] body{ background:#fff !important; }
+  /* Dark mode must NEVER print dark — force interior pages to light + readable. */
+  html[data-theme="dark"]{ --ink:#111; --ink-soft:#3a3a3a; --mut:#6b6b6b; --line:#d8d8d8; --paper:#fff; --wash:#faf8f3; }
+  html[data-theme="dark"] body{ color:#111 !important; }
+  html[data-theme="dark"] .page:not(.cover){ background:#fff !important; }
   .toolbar{ display:none !important; }
 
   /* US Letter with sane margins. The page-number counter increments per printed sheet
@@ -117,7 +121,7 @@ html[data-theme="dark"] body{background:#3a3a40}
   }
   .page:last-child{ page-break-after:auto; break-after:auto; }
   /* The cover fills its whole sheet and is centered. */
-  .page.cover{ min-height:9.5in; padding:0; }
+  .page.cover{ min-height:9in; padding:0; }   /* slack vs 9.5in printable so the cover never spills to a blank sheet */
   .cover .meta{ position:static; margin-top:40px; }
 
   /* HARD RULE — no section/clause/table/sig/notice block may ever split across a page break. */
