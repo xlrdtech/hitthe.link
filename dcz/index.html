@@ -291,11 +291,13 @@
     transform:scale(1.18);filter:blur(18px) saturate(125%) brightness(.7);opacity:.9;z-index:0;pointer-events:none}
   .track .thumb img.art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:1;opacity:.94;transition:.2s}
   .track .thumb:hover img.art{opacity:1}
-  .track .play{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center}
-  .track .play span{width:54px;height:54px;border-radius:999px;display:flex;align-items:center;justify-content:center;
-    background:linear-gradient(135deg,var(--rose-hi),var(--rose) 65%,var(--rose-deep));box-shadow:0 8px 22px rgba(0,0,0,.5);
-    color:#1a0f0a;font-size:20px;padding-left:4px;transition:.2s}
-  .track .thumb:hover .play span{transform:scale(1.08)}
+  /* play button sits in the BOTTOM-RIGHT corner (not over the cover/face) — smaller, dark glassy disc */
+  .track .play{position:absolute;right:10px;bottom:10px;z-index:2;display:flex;align-items:center;justify-content:center}
+  .track .play span{width:40px;height:40px;border-radius:999px;display:flex;align-items:center;justify-content:center;
+    background:rgba(8,11,22,.55);-webkit-backdrop-filter:blur(6px) saturate(150%);backdrop-filter:blur(6px) saturate(150%);
+    border:1px solid rgba(240,196,173,.5);box-shadow:0 6px 16px rgba(0,0,0,.55), var(--glass-inset);
+    color:var(--rose-hi);font-size:15px;padding-left:3px;transition:.2s}
+  .track .thumb:hover .play span{transform:scale(1.1);background:rgba(13,27,62,.7);color:#fff;border-color:rgba(240,196,173,.85)}
   .track iframe{width:100%;aspect-ratio:16/9;display:block;border:0}
   .track .meta{padding:13px 15px;text-align:center}
   .track .meta h3{font-family:var(--serif);font-weight:600;font-size:15.5px;color:var(--ice);letter-spacing:.02em;text-wrap:balance}
@@ -605,17 +607,14 @@
       <button class="btn primary" data-book>Book a Session</button>
     </div>
     <style>
-      /* black glossy obsidian app-icon tiles w/ chrome beveled rim (footer socials) */
-      /* navy-obsidian tile + polished chrome beveled rim + engraved/embossed chrome glyph — matches qi's IMG_1042 icon style */
-      .soc{display:inline-flex;align-items:center;justify-content:center;width:54px;height:54px;border-radius:15px;color:#dfe6f2;
-        border:1px solid rgba(202,214,234,.55);
-        background:linear-gradient(155deg,#2a3360 0%,#161d3e 46%,#0a0f24 100%);
-        box-shadow:inset 0 1.5px 1px rgba(228,236,250,.7), inset 0 -2px 3px rgba(0,0,0,.6), inset 0 0 0 1px rgba(120,140,180,.22), 0 7px 18px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.12);
-        transition:.22s ease}
-      .soc svg{filter:drop-shadow(0 1px 0 rgba(255,255,255,.4)) drop-shadow(0 -1px 1px rgba(0,0,0,.55))}
-      .soc:hover{color:#f2f6ff;transform:translateY(-2px);border-color:rgba(228,236,250,.9);
-        background:linear-gradient(155deg,#34416f 0%,#1c2348 46%,#0c1230 100%);
-        box-shadow:inset 0 1.5px 1px rgba(242,247,255,.85), inset 0 -2px 3px rgba(0,0,0,.6), inset 0 0 0 1px rgba(150,170,210,.3), 0 12px 30px rgba(0,0,0,.6)}
+      /* footer socials: qi's real navy-chrome icon PNGs are COMPLETE tiles (bevel+glyph baked in),
+         so .soc is a TRANSPARENT container — no gradient, border, or inset bevel (would double-tile). */
+      .soc{display:inline-flex;align-items:center;justify-content:center;width:54px;height:54px;
+        background:none;border:0;border-radius:14px;transition:transform .22s ease, filter .22s ease;
+        filter:drop-shadow(0 6px 14px rgba(0,0,0,.45))}
+      .soc img{width:100%;height:100%;object-fit:contain;display:block}
+      .soc:hover{transform:translateY(-2px);filter:drop-shadow(0 12px 22px rgba(0,0,0,.55))}
+      @media(max-width:560px){ .soc{width:clamp(44px,12.5vw,52px);height:clamp(44px,12.5vw,52px)} }
     </style>
   </div>
 </section>
@@ -625,14 +624,12 @@
     <div class="nm">Diamond Cutz Studios</div>
     <div class="f-tag">A House of Stal'lyon · Recording · Production · Live Entertainment · Atlanta, GA</div>
     <div class="f-socials" aria-label="Follow Stal'lyon &amp; Diamond Cutz Studios">
-      <a class="soc" href="https://instagram.com/thereal_stallyon" target="_blank" rel="noopener" aria-label="Instagram — Stal'lyon" title="@thereal_stallyon"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.06 1.8.25 2.2.42.56.22.96.48 1.38.9.42.42.68.82.9 1.38.17.4.36 1 .42 2.2.06 1.3.07 1.7.07 4.9s0 3.6-.07 4.9c-.06 1.2-.25 1.8-.42 2.2a3.7 3.7 0 0 1-.9 1.38c-.42.42-.82.68-1.38.9-.4.17-1 .36-2.2.42-1.3.06-1.7.07-4.9.07s-3.6 0-4.9-.07c-1.2-.06-1.8-.25-2.2-.42a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.17-.4-.36-1-.42-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.07-4.9c.06-1.2.25-1.8.42-2.2.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.4-.17 1-.36 2.2-.42C8.4 2.2 8.8 2.2 12 2.2Zm0 4.86A4.94 4.94 0 1 1 12 17a4.94 4.94 0 0 1 0-9.88Zm0 1.8a3.14 3.14 0 1 0 0 6.28 3.14 3.14 0 0 0 0-6.28Zm5.15-.62a1.15 1.15 0 1 1-2.3 0 1.15 1.15 0 0 1 2.3 0Z"/></svg></a>
-      <a class="soc" href="https://instagram.com/diamondcutzstudio" target="_blank" rel="noopener" aria-label="Instagram — Diamond Cutz Studio" title="@diamondcutzstudio"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.06 1.8.25 2.2.42.56.22.96.48 1.38.9.42.42.68.82.9 1.38.17.4.36 1 .42 2.2.06 1.3.07 1.7.07 4.9s0 3.6-.07 4.9c-.06 1.2-.25 1.8-.42 2.2a3.7 3.7 0 0 1-.9 1.38c-.42.42-.82.68-1.38.9-.4.17-1 .36-2.2.42-1.3.06-1.7.07-4.9.07s-3.6 0-4.9-.07c-1.2-.06-1.8-.25-2.2-.42a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.17-.4-.36-1-.42-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.07-4.9c.06-1.2.25-1.8.42-2.2.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.4-.17 1-.36 2.2-.42C8.4 2.2 8.8 2.2 12 2.2Zm0 4.86A4.94 4.94 0 1 1 12 17a4.94 4.94 0 0 1 0-9.88Zm0 1.8a3.14 3.14 0 1 0 0 6.28 3.14 3.14 0 0 0 0-6.28Zm5.15-.62a1.15 1.15 0 1 1-2.3 0 1.15 1.15 0 0 1 2.3 0Z"/></svg></a>
-      <a class="soc" href="https://www.tiktok.com/@diamondcutzstudios" target="_blank" rel="noopener" aria-label="TikTok — Diamond Cutz Studios" title="@diamondcutzstudios"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M16.6 2h-3.1v13.05a2.37 2.37 0 1 1-1.7-2.27V9.6a5.6 5.6 0 1 0 4.8 5.54V8.66a6.9 6.9 0 0 0 4.04 1.3V6.83a3.86 3.86 0 0 1-2.84-1.26A3.86 3.86 0 0 1 16.6 3V2Z"/></svg></a>
-      <a class="soc" href="https://open.spotify.com/artist/1VsJvKKQTtX4Muap2vcPt0" target="_blank" rel="noopener" aria-label="Spotify" title="Spotify"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm4.6 14.43a.62.62 0 0 1-.86.21c-2.35-1.44-5.3-1.76-8.79-.96a.62.62 0 1 1-.28-1.22c3.8-.87 7.08-.5 9.72 1.11.3.18.39.57.21.86Zm1.23-2.74a.78.78 0 0 1-1.07.26c-2.69-1.65-6.79-2.13-9.97-1.17a.78.78 0 1 1-.45-1.49c3.63-1.1 8.15-.56 11.24 1.33.37.23.49.71.25 1.07Zm.1-2.85C14.8 8.96 9.5 8.78 6.42 9.71a.93.93 0 1 1-.54-1.78c3.53-1.07 9.38-.86 13.08 1.34a.93.93 0 1 1-.95 1.6Z"/></svg></a>
-      <a class="soc" href="https://music.apple.com/us/artist/stallyon/858751401" target="_blank" rel="noopener" aria-label="Apple Music" title="Apple Music"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M17.6 3H6.4A3.4 3.4 0 0 0 3 6.4v11.2A3.4 3.4 0 0 0 6.4 21h11.2a3.4 3.4 0 0 0 3.4-3.4V6.4A3.4 3.4 0 0 0 17.6 3Zm-1.2 3.3v8.36a2.06 2.06 0 0 1-1.5 2 2.04 2.04 0 0 1-2.6-1.96c0-.96.66-1.74 1.6-1.95.3-.06.62-.1.92-.17.2-.05.28-.16.28-.37V8.6c0-.3-.13-.38-.4-.32l-3.7.75c-.25.06-.34.17-.34.43v6.6a2.06 2.06 0 0 1-1.52 2.02 2.04 2.04 0 0 1-2.58-1.97c0-.96.66-1.74 1.6-1.95.3-.07.62-.1.92-.17.2-.05.28-.16.28-.37V7.07c0-.42.2-.66.6-.74l5.9-1.2c.4-.08.7.13.7.55v.62Z"/></svg></a>
-      <a class="soc" href="https://youtube.com/channel/UCVWGlmy46QEWFU7emMw1MVQ" target="_blank" rel="noopener" aria-label="YouTube" title="YouTube"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M23 12s0-3.2-.4-4.7a2.5 2.5 0 0 0-1.77-1.77C19.3 5.13 12 5.13 12 5.13s-7.3 0-8.83.4A2.5 2.5 0 0 0 1.4 7.3C1 8.8 1 12 1 12s0 3.2.4 4.7a2.5 2.5 0 0 0 1.77 1.77c1.53.4 8.83.4 8.83.4s7.3 0 8.83-.4a2.5 2.5 0 0 0 1.77-1.77C23 15.2 23 12 23 12ZM9.75 15.02V8.98L15 12l-5.25 3.02Z"/></svg></a>
-      <a class="soc" href="https://www.amazon.com/dp/B0GDY4RRBR" target="_blank" rel="noopener" aria-label="Amazon Music" title="Amazon Music"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M18.4 16.9c-2 1.5-4.9 2.3-7.4 2.3-3.5 0-6.6-1.3-9-3.4-.18-.17-.02-.4.2-.27 2.5 1.46 5.6 2.34 8.8 2.34 2.2 0 4.6-.46 6.8-1.4.34-.14.62.22.3.5Zm.8-.95c-.26-.33-1.7-.16-2.34-.08-.2.02-.23-.15-.05-.27 1.15-.8 3.03-.57 3.25-.3.22.27-.06 2.16-1.14 3.06-.16.14-.32.07-.25-.11.24-.6.77-1.96.52-2.3ZM16.6 3.9 8.9 14.5c-.9 1.2-2 1.4-3.1.6L1.6 12c-.27-.2-.05-.5.2-.36l4 1.7c.5.2.95.1 1.3-.36L14.4 3.4c.2-.27.6-.06.4.3l1.8.2Z"/></svg></a>
-      <a class="soc" href="https://www.facebook.com/share/p/18tKDocTLH/" target="_blank" rel="noopener" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12Z"/></svg></a>
+      <a class="soc" href="https://instagram.com/thereal_stallyon" target="_blank" rel="noopener" aria-label="Instagram — Stal'lyon" title="@thereal_stallyon"><img src="/dcz/assets/icon-instagram.png" alt="Instagram" width="52" height="52" loading="lazy"></a>
+      <a class="soc" href="https://instagram.com/diamondcutzstudio" target="_blank" rel="noopener" aria-label="Instagram — Diamond Cutz Studio" title="@diamondcutzstudio"><img src="/dcz/assets/icon-instagram.png" alt="Instagram" width="52" height="52" loading="lazy"></a>
+      <a class="soc" href="https://www.tiktok.com/@diamondcutzstudios" target="_blank" rel="noopener" aria-label="TikTok — Diamond Cutz Studios" title="@diamondcutzstudios"><img src="/dcz/assets/icon-tiktok.png" alt="TikTok" width="52" height="52" loading="lazy"></a>
+      <a class="soc" href="https://open.spotify.com/artist/1VsJvKKQTtX4Muap2vcPt0" target="_blank" rel="noopener" aria-label="Spotify" title="Spotify"><img src="/dcz/assets/icon-spotify.png" alt="Spotify" width="52" height="52" loading="lazy"></a>
+      <a class="soc" href="https://youtube.com/channel/UCVWGlmy46QEWFU7emMw1MVQ" target="_blank" rel="noopener" aria-label="YouTube" title="YouTube"><img src="/dcz/assets/icon-youtube.png" alt="YouTube" width="52" height="52" loading="lazy"></a>
+      <a class="soc" href="https://www.facebook.com/share/p/18tKDocTLH/" target="_blank" rel="noopener" aria-label="Facebook" title="Facebook"><img src="/dcz/assets/icon-messenger.png" alt="Facebook" width="52" height="52" loading="lazy"></a>
     </div>
     <div class="f-contact">
       <span class="fc-row"><strong>Booking &amp; Management</strong> · LaTina McAllister<br>
