@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>desk · XEN's universal inbox</title>
+<meta name="description" content="desk — one universal place to drop any file, any type, any size. It reaches XEN.">
+<meta name="theme-color" content="#0a0a0c">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="desk">
+<meta property="og:title" content="desk · XEN's universal inbox">
+<meta property="og:description" content="Drop any file, any size. It reaches XEN.">
+<meta property="og:type" content="website">
+
+<link rel="manifest" href="/desk/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/desk/icon.png">
+<link rel="icon" href="/desk/icon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<!--
+  /desk — XEN's universal inbox. Drop ANY file (any type, any size) here and it
+  reaches XEN, who carries qi's (East Allen / Self Exec) identity across channels
+  that won't accept every file. HERO = real-time three.js 3D hyper-realistic desk
+  (dark wood top, soft env light, gentle idle drift, drag-to-react). three.js is
+  vendored locally at /lib/three.module.min.js (same as /dcz). On drop, each file
+  is read as base64 and POSTed as JSON to DESK_UPLOAD_URL (wired separately).
+  No secrets in this page — it is public + client-facing.
+-->
+<style>
+  :root{
+    --bg:#0a0a0c; --bg-2:#101015; --ink:#eef1f6; --mute:#9aa3b2; --faint:#5c6473;
+    --wood-1:#3a2a1c; --wood-2:#241910; --wood-edge:#0f0a06;
+    --accent:#b8c6ff; --accent-2:#8ea0ff; --good:#74e0a8; --bad:#ff8d8d;
+    --line:rgba(255,255,255,.10);
+    --glass-fill:rgba(20,22,30,.55); --glass-fill-hi:rgba(30,33,44,.66);
+    --glass-border:rgba(255,255,255,.14); --glass-inset:inset 0 1px 0 rgba(255,255,255,.16);
+    --glass-blur:blur(16px) saturate(160%);
+    --sans:'Inter',system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  ::selection{background:var(--accent);color:#0a0a0c}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-weight:300;line-height:1.6;
+    overflow-x:clip;min-height:100svh;-webkit-font-smoothing:antialiased}
+
+  .env{position:fixed;inset:0;z-index:-1;background:
+    radial-gradient(900px 620px at 50% -6%, rgba(120,135,210,.16), transparent 60%),
+    radial-gradient(700px 560px at 86% 28%, rgba(150,120,90,.10), transparent 55%),
+    radial-gradient(760px 640px at 8% 86%, rgba(90,110,180,.08), transparent 55%),
+    var(--bg)}
+
+  nav{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;
+    padding:14px 20px;backdrop-filter:blur(10px);background:rgba(10,10,12,.55);border-bottom:1px solid var(--line);
+    padding-top:max(14px,env(safe-area-inset-top))}
+  nav .nm{font-weight:700;font-size:15px;letter-spacing:.34em;text-transform:lowercase;
+    background:linear-gradient(100deg,#f4f7ff,var(--accent) 60%,#f4f7ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  nav .by{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+
+  /* ── 3D DESK HERO ── */
+  .hero{position:relative;width:100%;height:54vh;height:54svh;min-height:340px;overflow:hidden;touch-action:pan-y;
+    background:radial-gradient(ellipse 72% 62% at 50% 46%, rgba(120,135,210,.10), transparent 70%)}
+  #deskCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1}
+  /* CSS fallback desk (shown until WebGL confirms live, or permanently if it fails) */
+  .hero-fallback{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:min(70vmin,440px);aspect-ratio:1.4/1;z-index:0;opacity:1;transition:opacity .6s}
+  .hero.live .hero-fallback{opacity:0;pointer-events:none}
+  .hero-fallback .top{position:absolute;left:6%;right:6%;top:30%;bottom:14%;border-radius:14px;
+    background:linear-gradient(170deg,#4a3522 0%,#33241593 40%,#241910 100%);
+    box-shadow:0 30px 60px rgba(0,0,0,.6),inset 0 2px 0 rgba(255,225,180,.12),inset 0 -10px 30px rgba(0,0,0,.5);
+    border:1px solid #1c130a}
+  .hero-fallback .top::before{content:"";position:absolute;inset:0;border-radius:14px;
+    background:repeating-linear-gradient(96deg,rgba(255,220,170,.05) 0 9px,rgba(0,0,0,.06) 9px 19px);mix-blend-mode:overlay}
+  .hero-fallback .sheet{position:absolute;left:30%;top:38%;width:40%;aspect-ratio:3/4;border-radius:5px;
+    background:linear-gradient(180deg,#f6f7fb,#dfe3ec);transform:rotate(-5deg);
+    box-shadow:0 14px 26px rgba(0,0,0,.5)}
+  .hero-fallback .shadow{position:absolute;left:12%;right:12%;bottom:6%;height:9%;border-radius:50%;
+    background:radial-gradient(ellipse,rgba(0,0,0,.55),transparent 70%);filter:blur(6px)}
+
+  /* drag-over landing zone overlay on the hero */
+  .drop-ring{position:absolute;inset:8% 10%;z-index:5;border-radius:22px;pointer-events:none;
+    border:2px dashed rgba(184,198,255,.55);background:radial-gradient(ellipse at center,rgba(142,160,255,.16),transparent 72%);
+    opacity:0;transform:scale(.96);transition:opacity .2s,transform .2s}
+  body.dragging .drop-ring{opacity:1;transform:scale(1)}
+  .drop-ring b{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;
+    font-weight:600;font-size:14px;letter-spacing:.16em;text-transform:uppercase;color:#dfe5ff;text-shadow:0 2px 10px rgba(0,0,0,.6)}
+
+  .grab-cue{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:6;
+    font-size:10px;letter-spacing:.34em;text-transform:uppercase;color:rgba(238,241,246,.42);
+    animation:cue 2.8s ease-in-out infinite;pointer-events:none}
+  @keyframes cue{0%,100%{opacity:.28}50%{opacity:.72}}
+
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px}
+  header.intro{text-align:center;padding:26px 20px 8px}
+  header.intro h1{font-weight:700;font-size:clamp(28px,7vw,48px);letter-spacing:.01em;line-height:1.04;
+    background:linear-gradient(102deg,#f6f8ff 8%,#cdd6ff 48%,#f6f8ff 92%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  header.intro .tag{font-size:clamp(12px,2.4vw,15px);letter-spacing:.04em;color:var(--mute);margin-top:14px;max-width:52ch;margin-left:auto;margin-right:auto}
+
+  /* ── universal drop card ── */
+  .dropcard{max-width:560px;margin:30px auto 0;border-radius:20px;padding:30px 24px 26px;text-align:center;position:relative;overflow:hidden;
+    background:linear-gradient(180deg,var(--glass-fill-hi),var(--glass-fill));
+    -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+    border:1px solid var(--glass-border);box-shadow:var(--glass-inset),0 26px 70px rgba(0,0,0,.5)}
+  .dropcard::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--accent),var(--accent-2),transparent)}
+  .dropcard .big{font-weight:600;font-size:18px;color:var(--ink)}
+  .dropcard .small{font-size:13.5px;color:var(--mute);margin-top:8px}
+  .pick{display:inline-flex;align-items:center;gap:10px;margin-top:20px;cursor:pointer;
+    font-weight:600;font-size:14.5px;letter-spacing:.02em;padding:14px 26px;border-radius:13px;transition:.2s;
+    color:#0a0a0c;border:1px solid rgba(184,198,255,.6);
+    background:linear-gradient(135deg,#eef2ff 0%,#b8c6ff 48%,#8ea0ff 100%);
+    box-shadow:0 12px 30px rgba(120,135,210,.4),var(--glass-inset)}
+  .pick:hover{transform:translateY(-2px);box-shadow:0 18px 42px rgba(142,160,255,.5),0 0 26px rgba(142,160,255,.3),var(--glass-inset)}
+  .pick:active{transform:translateY(0)}
+  .pick svg{width:19px;height:19px}
+  .note{display:block;width:100%;margin-top:18px;background:rgba(0,0,0,.34);border:1px solid var(--line);border-radius:12px;
+    color:var(--ink);font-family:var(--sans);font-size:14px;font-weight:300;padding:12px 14px;resize:vertical;min-height:48px;transition:.2s}
+  .note::placeholder{color:var(--faint)}
+  .note:focus{outline:none;border-color:rgba(184,198,255,.6);box-shadow:0 0 0 3px rgba(142,160,255,.18)}
+  .hint{font-size:12px;color:var(--faint);margin-top:14px;letter-spacing:.02em}
+
+  /* ── the "desk" stack of dropped sheets ── */
+  .deskstack{max-width:560px;margin:26px auto 0;display:flex;flex-direction:column;gap:12px}
+  .deskstack:empty{margin:0}
+  .file{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;position:relative;overflow:hidden;
+    background:linear-gradient(180deg,rgba(28,31,42,.7),rgba(16,18,25,.74));
+    border:1px solid var(--glass-border);box-shadow:var(--glass-inset),0 14px 34px rgba(0,0,0,.42);
+    animation:land .5s cubic-bezier(.2,.9,.25,1.4) both}
+  @keyframes land{0%{opacity:0;transform:translateY(-22px) rotate(-3deg) scale(.94)}100%{opacity:1;transform:none}}
+  .file .ic{flex:0 0 auto;width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(160deg,rgba(184,198,255,.22),rgba(142,160,255,.12));border:1px solid var(--line);font-size:18px}
+  .file .body{flex:1 1 auto;min-width:0;text-align:left}
+  .file .nm2{font-size:14px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .file .meta{font-size:11.5px;color:var(--mute);margin-top:2px;letter-spacing:.02em}
+  .file .state{flex:0 0 auto;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;letter-spacing:.02em}
+  .file .bar{position:absolute;left:0;bottom:0;height:2px;width:0;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .2s}
+  .spinner{width:16px;height:16px;border-radius:50%;border:2px solid rgba(184,198,255,.25);border-top-color:var(--accent);animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .file.ok .state{color:var(--good)}
+  .file.err .state{color:var(--bad)}
+  .retry{cursor:pointer;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);
+    border:1px solid rgba(184,198,255,.4);background:rgba(184,198,255,.08);border-radius:999px;padding:5px 11px;transition:.18s}
+  .retry:hover{background:rgba(184,198,255,.18);border-color:rgba(184,198,255,.7)}
+
+  section.how{padding:46px 0 20px;border-top:1px solid var(--line);margin-top:44px}
+  .how .kicker{font-size:11px;letter-spacing:.3em;text-transform:uppercase;text-align:center;color:var(--accent-2)}
+  .how h2{font-weight:600;font-size:clamp(20px,4vw,28px);text-align:center;margin-top:10px;color:var(--ink)}
+  .how .lead{max-width:54ch;margin:14px auto 0;text-align:center;color:var(--mute);font-size:15px}
+  .steps{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:30px}
+  .step{flex:1 1 200px;max-width:230px;background:linear-gradient(180deg,rgba(28,31,42,.5),rgba(16,18,25,.6));
+    border:1px solid var(--line);border-radius:14px;padding:20px 18px;text-align:left}
+  .step .n{font-size:12px;letter-spacing:.2em;color:var(--accent)}
+  .step h3{font-weight:600;font-size:15px;color:var(--ink);margin-top:8px}
+  .step p{font-size:13px;color:var(--mute);margin-top:6px}
+
+  footer{text-align:center;padding:40px 20px max(48px,env(safe-area-inset-bottom));border-top:1px solid var(--line);margin-top:36px;
+    background:linear-gradient(180deg,rgba(16,18,25,.34),rgba(10,10,12,.6));
+    -webkit-backdrop-filter:blur(16px) saturate(150%);backdrop-filter:blur(16px) saturate(150%)}
+  footer .nm{font-weight:700;letter-spacing:.3em;font-size:13px;text-transform:lowercase;
+    background:linear-gradient(100deg,#f4f7ff,var(--accent) 60%,#f4f7ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  footer .f-tag{margin-top:8px;color:var(--mute);font-size:12.5px}
+  footer .fine{margin-top:14px;color:var(--faint);font-size:11.5px}
+
+  /* full-window drag tint */
+  body.dragging::after{content:"";position:fixed;inset:0;z-index:30;pointer-events:none;
+    border:2px dashed rgba(184,198,255,.45);box-shadow:inset 0 0 120px rgba(142,160,255,.18);transition:opacity .2s}
+
+  @media(max-width:600px){ .hero{height:50vh;height:50svh} section.how{padding:40px 0 16px} }
+  @media (prefers-reduced-motion:reduce){.grab-cue{display:none} .file{animation:none}}
+</style>
+</head>
+<body>
+<div class="env"></div>
+
+<nav>
+  <span class="nm">desk</span>
+  <span class="by">by Self Exec · XEN</span>
+</nav>
+
+<!-- ── 3D DESK HERO ── -->
+<section class="hero" id="hero">
+  <canvas id="deskCanvas"></canvas>
+  <div class="hero-fallback" aria-hidden="true">
+    <div class="shadow"></div>
+    <div class="top"><div class="sheet"></div></div>
+  </div>
+  <div class="drop-ring"><b>Release to drop on the desk</b></div>
+  <div class="grab-cue">✦ drop a file anywhere ✦</div>
+</section>
+
+<script type="importmap">{"imports":{"three":"/lib/three.module.min.js"}}</script>
+<script type="module">
+  import * as THREE from 'three';
+  // exposes window.__deskReact(state) — state: 'hover' | 'rest' | 'drop'
+  (function(){
+    var host=document.getElementById('hero'), canvas=document.getElementById('deskCanvas');
+    var renderer;
+    try{ renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:true,powerPreference:'high-performance'}); }
+    catch(e){ window.__deskReact=function(){}; return; }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+    renderer.outputColorSpace=THREE.SRGBColorSpace;
+    renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.06;
+    renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+
+    var scene=new THREE.Scene();
+    var camera=new THREE.PerspectiveCamera(38,1,0.1,100);
+    camera.position.set(0,2.6,4.4); camera.lookAt(0,0.1,0);
+
+    // soft studio environment (cool key + warm fill) the wood + clearcoat reflect
+    var ec=document.createElement('canvas'); ec.width=512; ec.height=256; var g=ec.getContext('2d');
+    var grd=g.createLinearGradient(0,0,0,256);
+    grd.addColorStop(0,'#10131c'); grd.addColorStop(.4,'#1b2233'); grd.addColorStop(.52,'#cdd6ff');
+    grd.addColorStop(.62,'#2a2118'); grd.addColorStop(1,'#070707');
+    g.fillStyle=grd; g.fillRect(0,0,512,256);
+    function blob(x,y,r,c){ g.fillStyle=c; g.beginPath(); g.arc(x,y,r,0,Math.PI*2); g.fill(); }
+    blob(130,66,40,'rgba(255,255,255,.85)'); blob(390,58,46,'rgba(184,198,255,.6)');
+    blob(300,150,60,'rgba(150,120,90,.4)');
+    var envTex=new THREE.CanvasTexture(ec); envTex.mapping=THREE.EquirectangularReflectionMapping; envTex.colorSpace=THREE.SRGBColorSpace;
+    var pmrem=new THREE.PMREMGenerator(renderer); var envRT=pmrem.fromEquirectangular(envTex);
+    scene.environment=envRT.texture; envTex.dispose(); pmrem.dispose();
+
+    scene.add(new THREE.AmbientLight(0x8a93ab,0.55));
+    var key=new THREE.DirectionalLight(0xfff4e6,2.2); key.position.set(3,5.5,3.5);
+    key.castShadow=true; key.shadow.mapSize.set(1024,1024);
+    key.shadow.camera.left=-3; key.shadow.camera.right=3; key.shadow.camera.top=3; key.shadow.camera.bottom=-3;
+    key.shadow.camera.near=1; key.shadow.camera.far=14; key.shadow.bias=-0.0006; scene.add(key);
+    var fill=new THREE.PointLight(0xb8c6ff,18,30); fill.position.set(-4,2,3); scene.add(fill);
+    var warm=new THREE.PointLight(0xffcaa0,10,24); warm.position.set(3.5,-1,2); scene.add(warm);
+
+    var deskGroup=new THREE.Group(); scene.add(deskGroup);
+
+    // procedural wood-grain texture on a canvas (dark walnut)
+    var wc=document.createElement('canvas'); wc.width=512; wc.height=512; var w=wc.getContext('2d');
+    w.fillStyle='#2c1f13'; w.fillRect(0,0,512,512);
+    for(var i=0;i<512;i+=3){
+      var n=Math.sin(i*0.06)+Math.sin(i*0.013)*0.6+(Math.random()-0.5)*0.4;
+      var L=22+n*9; var a=Math.max(10,Math.min(60,Math.round(L)));
+      w.strokeStyle='rgba('+(a+24)+','+(a+12)+','+Math.round(a*0.6)+',0.5)';
+      w.beginPath(); w.moveTo(0,i+Math.sin(i*0.02)*8); w.lineTo(512,i-Math.sin(i*0.025)*8); w.stroke();
+    }
+    for(var k=0;k<5;k++){ var cx=60+Math.random()*390, cy=40+Math.random()*430;
+      for(var r=4;r<26;r+=4){ w.strokeStyle='rgba(60,40,22,'+(0.18-r*0.005)+')'; w.beginPath(); w.ellipse(cx,cy,r,r*1.5,0.4,0,Math.PI*2); w.stroke(); } }
+    var woodTex=new THREE.CanvasTexture(wc); woodTex.colorSpace=THREE.SRGBColorSpace;
+    woodTex.wrapS=woodTex.wrapT=THREE.RepeatWrapping; woodTex.repeat.set(1,1);
+    woodTex.anisotropy=renderer.capabilities.getMaxAnisotropy();
+
+    // desktop slab — rounded-ish box with thickness
+    var top=new THREE.Mesh(
+      new THREE.BoxGeometry(3.4,0.18,2.1),
+      new THREE.MeshPhysicalMaterial({ map:woodTex, color:0xffffff, metalness:0.0, roughness:0.5,
+        clearcoat:0.55, clearcoatRoughness:0.35, envMapIntensity:0.9, sheen:0.2, sheenColor:0x6a5236 })
+    );
+    top.castShadow=true; top.receiveShadow=true; deskGroup.add(top);
+    // thin warm edge band
+    var band=new THREE.Mesh(new THREE.BoxGeometry(3.46,0.05,2.16),
+      new THREE.MeshPhysicalMaterial({ color:0x4a3522, metalness:0.1, roughness:0.45, clearcoat:0.4 }));
+    band.position.y=-0.07; band.castShadow=true; deskGroup.add(band);
+    // four legs
+    var legMat=new THREE.MeshPhysicalMaterial({ color:0x1d140c, metalness:0.2, roughness:0.55, clearcoat:0.3 });
+    [[-1.5,-1.4,-0.8],[1.5,-1.4,-0.8],[-1.5,-1.4,0.8],[1.5,-1.4,0.8]].forEach(function(p){
+      var leg=new THREE.Mesh(new THREE.CylinderGeometry(0.085,0.07,2.6,20),legMat);
+      leg.position.set(p[0],p[1],p[2]); leg.castShadow=true; deskGroup.add(leg);
+    });
+
+    // soft contact shadow plane under the desk
+    var floor=new THREE.Mesh(new THREE.PlaneGeometry(20,20),
+      new THREE.ShadowMaterial({ opacity:0.32 }));
+    floor.rotation.x=-Math.PI/2; floor.position.y=-2.72; floor.receiveShadow=true; scene.add(floor);
+
+    // animated "sheets" that land on the desk on drop
+    var sheets=[]; var sheetMat=new THREE.MeshPhysicalMaterial({ color:0xf4f6fb, roughness:0.85, clearcoat:0.1, side:THREE.DoubleSide });
+    function landSheet(){
+      var s=new THREE.Mesh(new THREE.PlaneGeometry(0.62,0.82),sheetMat.clone());
+      s.castShadow=true; s.receiveShadow=true;
+      s.rotation.x=-Math.PI/2;
+      s.position.set((Math.random()-0.5)*1.6, 2.4, (Math.random()-0.5)*1.0);
+      s.rotation.z=(Math.random()-0.5)*0.7;
+      s.userData={vy:0, rest:0.11+( Math.random()*0.02), landed:false, settle:0};
+      deskGroup.add(s); sheets.push(s);
+      if(sheets.length>12){ var old=sheets.shift(); deskGroup.remove(old); }
+    }
+    window.__deskLandSheet=landSheet;
+
+    // interaction state: hover lift/glow + drop pulse
+    var target={lift:0,glow:0,pulse:0};
+    window.__deskReact=function(state){
+      if(state==='hover'){ target.lift=0.22; target.glow=1; }
+      else if(state==='drop'){ target.pulse=1; landSheet(); }
+      else { target.lift=0; target.glow=0; }
+    };
+
+    // gentle pointer parallax
+    var px=0,py=0,tpx=0,tpy=0;
+    host.addEventListener('pointermove',function(e){
+      var r=host.getBoundingClientRect();
+      tpx=((e.clientX-r.left)/r.width-0.5); tpy=((e.clientY-r.top)/r.height-0.5);
+    });
+    host.addEventListener('pointerleave',function(){ tpx=0; tpy=0; });
+
+    var clock=new THREE.Clock();
+    function resize(){
+      var ww=host.clientWidth,hh=host.clientHeight; renderer.setSize(ww,hh,false);
+      camera.aspect=ww/hh; camera.updateProjectionMatrix();
+    }
+    window.addEventListener('resize',resize); resize();
+
+    var lift=0,glow=0,pulse=0;
+    (function loop(){
+      requestAnimationFrame(loop);
+      var t=clock.getElapsedTime(), dt=Math.min(clock.getDelta(),0.05);
+      px+=(tpx-px)*0.06; py+=(tpy-py)*0.06;
+      lift+=(target.lift-lift)*0.12; glow+=(target.glow-glow)*0.12;
+      pulse+=(0-pulse)*0.08; if(target.pulse){ pulse=1; target.pulse=0; }
+
+      // idle drift + parallax + drag lift
+      deskGroup.rotation.y=Math.sin(t*0.28)*0.18 + px*0.5;
+      deskGroup.rotation.x=Math.sin(t*0.2)*0.03 - py*0.22;
+      deskGroup.position.y=lift + Math.sin(t*0.8)*0.015 + pulse*0.08;
+
+      // reactive lighting: brighten + cool when hovering / on pulse
+      key.intensity=2.2+glow*0.9+pulse*1.4;
+      fill.intensity=18+glow*22+pulse*30;
+      camera.position.z=4.4-lift*0.3;
+
+      // settle sheets onto the desktop surface (top sits at y≈0.09)
+      for(var i=0;i<sheets.length;i++){ var s=sheets[i], u=s.userData;
+        if(!u.landed){ u.vy-=9.8*dt*0.12; s.position.y+=u.vy;
+          if(s.position.y<=u.rest){ s.position.y=u.rest; u.vy*=-0.32; u.settle++; if(u.settle>3){u.landed=true;s.position.y=u.rest;} }
+        }
+      }
+      renderer.render(scene,camera);
+    })();
+
+    // signal hero is live (fade the CSS fallback) once first frame is drawn
+    requestAnimationFrame(function(){ host.classList.add('live'); });
+  })();
+</script>
+
+<header class="intro">
+  <h1>Drop anything. It reaches Xen.</h1>
+  <p class="tag">desk is Xen's universal inbox. Messaging apps choke on big files and odd formats — desk doesn't. Drop any file, any type, any size, and it lands straight with Xen, who carries East Allen's identity across every channel.</p>
+</header>
+
+<!-- ── universal drop card ── -->
+<div class="dropcard">
+  <div class="big">Drag a file onto the desk</div>
+  <div class="small">…or anywhere on this page. Photos, video, PDFs, audio, zips, design files — all of it.</div>
+
+  <label class="pick" for="fileInput">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+    Tap to choose files
+  </label>
+  <input id="fileInput" type="file" accept="*/*" multiple webkitdirectory="" style="display:none" data-dir="0">
+
+  <textarea class="note" id="noteField" placeholder="Note for Xen (optional) — what is this, who's it from?"></textarea>
+  <div class="hint">Files are sent securely to Xen. No size cap — large files just take a moment.</div>
+</div>
+
+<!-- the "desk" — dropped files land here as sheets -->
+<div class="deskstack" id="deskstack" aria-live="polite"></div>
+
+<section class="how">
+  <div class="wrap">
+    <div class="kicker">How it works</div>
+    <h2>One universal place to hand Xen a file</h2>
+    <p class="lead">Built by Self Exec so clients — like Diamond Cutz, and anyone Xen works with — always have a frictionless way to deliver files, no matter the size or format.</p>
+    <div class="steps">
+      <div class="step"><div class="n">01</div><h3>Drop it</h3><p>Drag a file onto the desk, or tap to choose. Multiple files and whole folders work too.</p></div>
+      <div class="step"><div class="n">02</div><h3>It uploads</h3><p>Each file streams up with your optional note. You'll see a checkmark when Xen has it.</p></div>
+      <div class="step"><div class="n">03</div><h3>Xen takes it</h3><p>It arrives in Xen's inbox and gets routed wherever it needs to go — no channel limits.</p></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="nm">desk</div>
+  <div class="f-tag">Xen's universal inbox · built by Self Exec / East Allen</div>
+  <div class="fine">Drop any file, any size. It reaches Xen.</div>
+</footer>
+
+<script>
+  // ─────────────────────────────────────────────────────────────────────────
+  //  UPLOAD ENDPOINT — change here only. Wired separately on the backend.
+  const DESK_UPLOAD_URL = "https://xen.xlrd.org/api/desk-drop";
+  // ─────────────────────────────────────────────────────────────────────────
+
+  (function(){
+    var stack=document.getElementById('deskstack');
+    var input=document.getElementById('fileInput');
+    var noteField=document.getElementById('noteField');
+    var hero=document.getElementById('hero');
+    var dragDepth=0;
+
+    // some mobile browsers don't support directory pick — drop the attribute so
+    // the picker still opens a normal multi-file chooser.
+    try{ if(!('webkitdirectory' in input)) input.removeAttribute('webkitdirectory'); }catch(e){}
+    // webkitdirectory forces folder-only on desktop; we want files OR folders.
+    // Default to files; folders are still supported via drag-and-drop below.
+    input.removeAttribute('webkitdirectory');
+
+    function react(s){ if(typeof window.__deskReact==='function') window.__deskReact(s); }
+
+    function fmtSize(b){
+      if(b<1024) return b+' B';
+      var u=['KB','MB','GB','TB'], i=-1; do{ b/=1024; i++; }while(b>=1024&&i<u.length-1);
+      return b.toFixed(b<10?1:0)+' '+u[i];
+    }
+    function iconFor(type,name){
+      var t=(type||'')+' '+(name||'').toLowerCase();
+      if(/image\//.test(type)||/\.(png|jpe?g|gif|webp|heic|svg|avif)$/.test(name)) return '🖼️';
+      if(/video\//.test(type)||/\.(mp4|mov|mkv|webm|avi)$/.test(name)) return '🎬';
+      if(/audio\//.test(type)||/\.(mp3|wav|m4a|aac|flac|ogg)$/.test(name)) return '🎵';
+      if(/pdf/.test(t)) return '📄';
+      if(/zip|rar|7z|tar|gz/.test(t)) return '🗜️';
+      if(/\.(doc|docx|pages|txt|rtf|md)$/.test(name)) return '📝';
+      if(/\.(xls|xlsx|csv|numbers)$/.test(name)) return '📊';
+      if(/\.(ppt|pptx|key)$/.test(name)) return '📽️';
+      if(/\.(psd|ai|fig|sketch|xd)$/.test(name)) return '🎨';
+      return '📎';
+    }
+
+    function readAsBase64(file){
+      return new Promise(function(resolve,reject){
+        var fr=new FileReader();
+        fr.onload=function(){
+          var s=String(fr.result||'');
+          var comma=s.indexOf(',');
+          resolve(comma>=0 ? s.slice(comma+1) : s); // strip "data:...;base64,"
+        };
+        fr.onerror=function(){ reject(fr.error||new Error('read failed')); };
+        fr.readAsDataURL(file);
+      });
+    }
+
+    function makeRow(file){
+      var row=document.createElement('div'); row.className='file';
+      row.innerHTML=
+        '<div class="ic">'+iconFor(file.type,file.name)+'</div>'+
+        '<div class="body"><div class="nm2"></div><div class="meta"></div></div>'+
+        '<div class="state"><span class="spinner"></span><span class="txt">Uploading…</span></div>'+
+        '<div class="bar"></div>';
+      row.querySelector('.nm2').textContent=file.name||'file';
+      row.querySelector('.meta').textContent=fmtSize(file.size)+(file.type?(' · '+file.type):'');
+      stack.prepend(row);
+      return row;
+    }
+    function setState(row,kind,msg){
+      var st=row.querySelector('.state');
+      row.classList.remove('ok','err');
+      if(kind==='ok'){ row.classList.add('ok'); st.innerHTML='<span class="txt">✓ Sent to Xen</span>'; }
+      else if(kind==='err'){ row.classList.add('err');
+        st.innerHTML='<span class="txt">✗ '+(msg||'Failed')+'</span> <button class="retry" type="button">Retry</button>'; }
+      else { st.innerHTML='<span class="spinner"></span><span class="txt">'+(msg||'Uploading…')+'</span>'; }
+    }
+
+    // Upload one file with progress via XHR (so we don't block the UI and can show %).
+    function uploadFile(file,row){
+      setState(row,'progress','Reading…');
+      var bar=row.querySelector('.bar');
+      return readAsBase64(file).then(function(b64){
+        return new Promise(function(resolve,reject){
+          var xhr=new XMLHttpRequest();
+          xhr.open('POST',DESK_UPLOAD_URL,true);
+          xhr.setRequestHeader('Content-Type','application/json');
+          xhr.upload.onprogress=function(e){
+            if(e.lengthComputable){ var p=Math.round(e.loaded/e.total*100);
+              bar.style.width=p+'%'; setState(row,'progress','Uploading '+p+'%'); }
+          };
+          xhr.onload=function(){
+            if(xhr.status>=200&&xhr.status<300){ bar.style.width='100%'; resolve(); }
+            else reject(new Error('Server '+xhr.status));
+          };
+          xhr.onerror=function(){ reject(new Error('Network error')); };
+          xhr.send(JSON.stringify({
+            filename:file.name||'file',
+            contentType:file.type||'application/octet-stream',
+            size:file.size,
+            caption:(noteField.value||'').trim(),
+            b64:b64
+          }));
+        });
+      }).then(function(){ setState(row,'ok'); }).catch(function(err){
+        setState(row,'err',(err&&err.message)||'Failed');
+        row.querySelector('.retry').addEventListener('click',function(){ uploadFile(file,row); },{once:true});
+      });
+    }
+
+    function handleFiles(list){
+      var files=Array.prototype.slice.call(list||[]).filter(function(f){ return f && (f.size>0 || f.type); });
+      if(!files.length) return;
+      react('drop');
+      files.forEach(function(file){ var row=makeRow(file); uploadFile(file,row); });
+    }
+
+    // ── file input (tap to choose) ──
+    input.addEventListener('change',function(){ handleFiles(input.files); input.value=''; });
+
+    // ── full-window drag & drop (incl. folders via DataTransferItem) ──
+    function readEntries(reader){ return new Promise(function(res){ reader.readEntries(function(e){ res(e); }); }); }
+    function entryFile(entry){ return new Promise(function(res){ entry.file(function(f){ res(f); }, function(){ res(null); }); }); }
+    async function walkEntry(entry,out){
+      if(!entry) return;
+      if(entry.isFile){ var f=await entryFile(entry); if(f) out.push(f); }
+      else if(entry.isDirectory){ var reader=entry.createReader(), batch;
+        do{ batch=await readEntries(reader); for(var i=0;i<batch.length;i++) await walkEntry(batch[i],out); }while(batch.length); }
+    }
+    async function filesFromItems(items){
+      var out=[], promises=[];
+      for(var i=0;i<items.length;i++){
+        var it=items[i];
+        var entry=it.webkitGetAsEntry?it.webkitGetAsEntry():null;
+        if(entry) promises.push(walkEntry(entry,out));
+        else if(it.kind==='file'){ var f=it.getAsFile(); if(f) out.push(f); }
+      }
+      await Promise.all(promises);
+      return out;
+    }
+
+    window.addEventListener('dragenter',function(e){ e.preventDefault(); dragDepth++; document.body.classList.add('dragging'); react('hover'); });
+    window.addEventListener('dragover',function(e){ e.preventDefault(); e.dataTransfer.dropEffect='copy'; });
+    window.addEventListener('dragleave',function(e){ e.preventDefault(); dragDepth=Math.max(0,dragDepth-1);
+      if(dragDepth===0){ document.body.classList.remove('dragging'); react('rest'); } });
+    window.addEventListener('drop',function(e){
+      e.preventDefault(); dragDepth=0; document.body.classList.remove('dragging'); react('rest');
+      var dt=e.dataTransfer;
+      if(dt.items && dt.items.length && dt.items[0].webkitGetAsEntry){
+        filesFromItems(dt.items).then(function(files){ handleFiles(files); });
+      } else { handleFiles(dt.files); }
+    });
+
+    // ── PWA service worker ──
+    if('serviceWorker' in navigator){
+      window.addEventListener('load',function(){ navigator.serviceWorker.register('/desk/sw.js').catch(function(){}); });
+    }
+  })();
+</script>
+
+<script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
+</body>
+</html>
