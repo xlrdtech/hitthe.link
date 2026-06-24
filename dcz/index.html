@@ -197,9 +197,9 @@
   footer .nm{font-family:var(--serif);letter-spacing:.26em;font-size:13px;text-transform:uppercase;
     background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent}
   footer .f-tag{margin-top:8px;color:#9aa6bb;font-size:12.5px;letter-spacing:.04em;text-wrap:balance;max-width:46ch;margin-left:auto;margin-right:auto}
-  /* one row, never wraps: responsive gap + width-capped so all 6 icons fit edge-to-edge on a 360px phone */
-  footer .f-socials{display:flex;flex-wrap:nowrap;justify-content:center;align-items:center;gap:clamp(6px,2.4vw,13px);margin:24px auto 0;max-width:min(460px,94vw)}
-  footer .f-socials .soc{flex:0 0 auto}
+  /* one row, never wraps: icons flex-shrink to always fit (even on a 320px phone), tighter responsive gap */
+  footer .f-socials{display:flex;flex-wrap:nowrap;justify-content:center;align-items:center;gap:clamp(5px,1.8vw,13px);margin:24px auto 0;max-width:min(460px,96vw)}
+  footer .f-socials .soc{flex:0 1 auto;min-width:0}
   /* Symmetric, centered contact block: each entry is its own balanced line; phone/email never split. */
   footer .f-contact{margin-top:24px;display:flex;flex-direction:column;align-items:center;gap:12px;font-size:13px;color:#b3bdcf}
   footer .f-contact span{display:block;text-wrap:balance;line-height:1.7}
@@ -590,45 +590,73 @@
   <div class="wrap">
     <div class="kicker">On Stage</div>
     <h2>Upcoming Shows</h2>
-    <div class="gallery">
-    <button class="gal-btn gal-prev" aria-label="Previous show">&#8249;</button>
-    <div class="shows-row" id="showsRow">
-    <div class="show">
-      <a class="flyer" href="/dcz/assets/show-trailride-jul10.jpg" target="_blank" rel="noopener">
-        <img class="zoomable" src="/dcz/assets/show-trailride-jul10.jpg" alt="Country Black Trail Ride · Parking Lot Block Party featuring Stal'lyon, July 10 2026" loading="lazy"></a>
-      <div class="info">
-        <div class="date">Jul 10 · 2026</div>
-        <h3>Country Black Trail Ride · Parking Lot Block Party</h3>
-        <div class="det">
-          <div>🎤 Stal'lyon performs <em>"Stal'lyon Shuffle"</em> · feat. LaTina McAllister</div>
-          <div>📍 Atmosphere Nightclub · 286 GA Hwy 138, Suite 105 · Riverdale, GA 30274</div>
-          <div>🕚 11:00 AM – 9:00 PM · Rain or Shine</div>
-          <div>🐎 All riders, car clubs &amp; supporters welcome</div>
+    <div class="shows-gallery" id="showsGallery" role="group" aria-roledescription="carousel" aria-label="Upcoming shows">
+  <div class="gal-stage">
+    <button type="button" class="gal-nav gal-prev" aria-label="Previous show"><i aria-hidden="true">&#8249;</i></button>
+
+    <div class="shows-track" id="showsTrack" tabindex="0" aria-label="Upcoming shows, use left and right arrow keys to change show">
+
+      <article class="show is-active" aria-roledescription="slide" aria-label="Show 1 of 2: Country Black Trail Ride, July 10 2026">
+        <div class="poster">
+          <a class="flyer" href="/dcz/assets/show-trailride-jul10.jpg" target="_blank" rel="noopener" aria-label="Open flyer in full size: Country Black Trail Ride, July 10 2026">
+            <span class="flyer-bg" style="background-image:url('/dcz/assets/show-trailride-jul10.jpg')" aria-hidden="true"></span>
+            <span class="date-chip" aria-hidden="true"><span class="d-mo">Jul 10</span><span class="d-yr">2026</span></span>
+            <img class="zoomable" src="/dcz/assets/show-trailride-jul10.jpg" alt="Country Black Trail Ride · Parking Lot Block Party featuring Stal'lyon, July 10 2026" width="900" height="1350" loading="lazy" decoding="async">
+            <span class="flyer-cue" aria-hidden="true">&#10138; View flyer</span>
+          </a>
+          <div class="caption">
+            <div class="eyebrow" aria-hidden="true">Live Performance</div>
+            <h3>Country Black Trail Ride <span class="sub">Parking Lot Block Party</span></h3>
+            <div class="det">
+              <div><span class="ic" aria-hidden="true">🎤</span><span>Stal'lyon performs <em>"Stal'lyon Shuffle"</em> · feat. LaTina McAllister</span></div>
+              <div><span class="ic" aria-hidden="true">📍</span><span>Atmosphere Nightclub · 286 GA Hwy 138, Suite 105 · Riverdale, GA 30274</span></div>
+              <div><span class="ic" aria-hidden="true">🕚</span><span>11:00 AM – 9:00 PM · Rain or Shine</span></div>
+              <div><span class="ic" aria-hidden="true">🐎</span><span>All riders, car clubs &amp; supporters welcome</span></div>
+            </div>
+            <div class="btns">
+              <button class="btn primary" data-book>Book Stal'lyon</button>
+              <a class="btn ghost" href="https://www.facebook.com/share/p/18tKDocTLH/" target="_blank" rel="noopener">Event on Facebook</a>
+            </div>
+          </div>
         </div>
-        <div class="btns"><button class="btn primary" data-book>Book Stal'lyon</button>
-          <a class="btn ghost" href="https://www.facebook.com/share/p/18tKDocTLH/" target="_blank" rel="noopener">Event on Facebook</a></div>
-      </div>
-    </div>
-    <div class="show">
-      <a class="flyer" href="/dcz/assets/show-tnal-trailride-aug29.jpg" target="_blank" rel="noopener">
-        <img class="zoomable" src="/dcz/assets/show-tnal-trailride-aug29.jpg" alt="1st Annual TN to AL Trail Ride featuring Stal'lyon, August 29 2026, Hayes Park, Magnolia AL" loading="lazy"></a>
-      <div class="info">
-        <div class="date">Aug 29 · 2026</div>
-        <h3>1st Annual "TN to AL" Trail Ride · Krystal x Dani</h3>
-        <div class="det">
-          <div>🎤 Stal'lyon performing live · with Mike Clark Jr., McKenneth Cherry &amp; TN Da Entertainer · host Peejay · DJ RayRay</div>
-          <div>📍 Hayes Park · 2568 Co. Rd 73 · Magnolia, AL 36753</div>
-          <div>🕛 Gates: Vendors 12PM · Public 2PM · 🎟️ $25 at the gate · advance on Eventbrite · $100 vendors</div>
-          <div>🐎 Mechanical bull · tents &amp; coolers welcome · best-dressed trophies (1st/2nd/3rd)</div>
-          <div>ℹ️ More info: <span class="nb">Krystal 901.213.6790</span> · <span class="nb">Danielle 731.267.0906</span></div>
+      </article>
+
+      <article class="show" aria-roledescription="slide" aria-label="Show 2 of 2: 1st Annual TN to AL Trail Ride, August 29 2026">
+        <div class="poster">
+          <a class="flyer" href="/dcz/assets/show-tnal-trailride-aug29.jpg" target="_blank" rel="noopener" aria-label="Open flyer in full size: 1st Annual TN to AL Trail Ride, August 29 2026">
+            <span class="flyer-bg" style="background-image:url('/dcz/assets/show-tnal-trailride-aug29.jpg')" aria-hidden="true"></span>
+            <span class="date-chip" aria-hidden="true"><span class="d-mo">Aug 29</span><span class="d-yr">2026</span></span>
+            <img class="zoomable" src="/dcz/assets/show-tnal-trailride-aug29.jpg" alt="1st Annual TN to AL Trail Ride featuring Stal'lyon, August 29 2026, Hayes Park, Magnolia AL" width="775" height="1076" loading="lazy" decoding="async">
+            <span class="flyer-cue" aria-hidden="true">&#10138; View flyer</span>
+          </a>
+          <div class="caption">
+            <div class="eyebrow" aria-hidden="true">Live Performance</div>
+            <h3>1st Annual "TN to AL" Trail Ride <span class="sub">Krystal x Dani</span></h3>
+            <div class="det">
+              <div><span class="ic" aria-hidden="true">🎤</span><span>Stal'lyon performing live · with Mike Clark Jr., McKenneth Cherry &amp; TN Da Entertainer · host Peejay · DJ RayRay</span></div>
+              <div><span class="ic" aria-hidden="true">📍</span><span>Hayes Park · 2568 Co. Rd 73 · Magnolia, AL 36753</span></div>
+              <div><span class="ic" aria-hidden="true">🕛</span><span>Gates: Vendors 12PM · Public 2PM · 🎟️ $25 at the gate · advance on Eventbrite · $100 vendors</span></div>
+              <div><span class="ic" aria-hidden="true">🐎</span><span>Mechanical bull · tents &amp; coolers welcome · best-dressed trophies (1st/2nd/3rd)</span></div>
+              <div><span class="ic" aria-hidden="true">ℹ️</span><span>More info: <span class="nb">Krystal 901.213.6790</span> · <span class="nb">Danielle 731.267.0906</span></span></div>
+            </div>
+            <div class="btns">
+              <button class="btn primary" data-book>Book Stal'lyon</button>
+            </div>
+          </div>
         </div>
-        <div class="btns"><button class="btn primary" data-book>Book Stal'lyon</button></div>
-      </div>
+      </article>
+
     </div>
-    </div>
-    <button class="gal-btn gal-next" aria-label="Next show">&#8250;</button>
-    </div>
-    <div class="gal-dots" id="galDots"></div>
+
+    <button type="button" class="gal-nav gal-next" aria-label="Next show"><i aria-hidden="true">&#8250;</i></button>
+  </div>
+
+  <div class="gal-foot">
+    <div class="gal-progress" aria-hidden="true"><i></i></div>
+    <div class="gal-dots" role="tablist" aria-label="Choose a show"></div>
+  </div>
+  <p class="gal-live" aria-live="polite"></p>
+</div>
   </div>
 </section>
 
@@ -833,6 +861,117 @@
   #lightbox .lb-x{position:absolute;top:18px;right:22px;color:#fff;font-size:30px;line-height:1;cursor:pointer;opacity:.8;font-family:system-ui}
   #lightbox .lb-x:hover{opacity:1}
   #lightbox .lb-cap{position:absolute;bottom:20px;left:0;right:0;text-align:center;color:#cbd5e1;font-size:13px;padding:0 24px}
+
+  /* ══ Upcoming Shows: Editorial Gallery-Print slider (qi 2026-06-24, redesigned from scratch) ══ */
+/* ════════ #shows · Editorial Gallery-Print slider — all scoped under #shows ════════
+   Supersedes the legacy #showsRow slider (its script bails when #showsRow is absent).
+   NOTE: this section also resets a few legacy .gal-dots / .gallery rules that still
+   live in the page CSS, so they cannot bleed into the new gallery. */
+
+#shows .shows-gallery{position:relative;margin-top:clamp(26px,5vw,44px);--peek:13%;--gap:clamp(14px,3.4vw,26px)}
+#shows .shows-gallery *{box-sizing:border-box}
+
+#shows .gal-stage{position:relative;overflow:hidden;border-radius:22px;padding:6px 0}
+
+/* the scroll-snap track */
+#shows .shows-track{display:flex;gap:var(--gap);overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:4px clamp(14px,4vw,26px);scroll-padding-left:clamp(14px,4vw,26px);outline:none;border-radius:20px}
+#shows .shows-track::-webkit-scrollbar{display:none}
+#shows .shows-track:focus-visible{box-shadow:0 0 0 2px var(--black),0 0 0 4px var(--rose-hi)}
+
+/* one poster per view; ~13% of the next peeks (9% on desktop). Last card fills so the
+   second show snaps flush to the left edge with no orphan gutter. */
+#shows .show{position:relative;flex:0 0 calc(100% - var(--peek) - var(--gap));scroll-snap-align:start;scroll-snap-stop:always}
+#shows .show:last-child{flex-basis:calc(100% - 8px)}
+
+/* the framed gallery print + caption */
+#shows .poster{position:relative;display:grid;grid-template-rows:auto auto;border-radius:20px;overflow:hidden;border:1px solid var(--line);background:linear-gradient(180deg,rgba(19,37,78,.55),rgba(10,14,28,.72));-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-inset),0 28px 70px -28px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.04);transition:transform .5s cubic-bezier(.2,.7,.2,1),box-shadow .5s,opacity .5s}
+#shows .show.is-active .poster{box-shadow:var(--glass-inset),0 34px 86px -26px rgba(0,0,0,.9),0 0 40px -10px rgba(215,160,138,.28),0 0 0 1px rgba(240,196,173,.18)}
+#shows .show:not(.is-active) .poster{opacity:.6;transform:scale(.965)}
+/* rose-gold header hairline = curated-print top rule */
+#shows .poster::before{content:"";position:absolute;inset:0 0 auto 0;height:2px;z-index:5;background:linear-gradient(90deg,transparent,var(--rose-hi) 22%,var(--rose) 50%,var(--rose-hi) 78%,transparent)}
+
+/* ── flyer = framed gallery print. Blurred copy of the SAME art fills the contain
+   gutters so the two different portrait ratios never show dead bars (grafted from #2). ── */
+#shows .flyer{display:block;position:relative;margin:0;padding:clamp(14px,3.6vw,22px);overflow:hidden;cursor:zoom-in;isolation:isolate;min-height:0}
+#shows .flyer-bg{position:absolute;inset:0;z-index:0;background-size:cover;background-position:center;transform:scale(1.3);filter:blur(30px) saturate(135%) brightness(.5);opacity:.9}
+/* obsidian/navy vignette over the blurred fill keeps it a "mat", not a busy photo */
+#shows .flyer::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(125% 90% at 50% 0%,rgba(19,37,78,.35),rgba(4,6,12,.86) 86%)}
+/* thin rose-gold inner border that frames the print region */
+#shows .flyer::before{content:"";position:absolute;inset:clamp(9px,2.6vw,15px);z-index:3;border-radius:10px;border:1px solid rgba(215,160,138,.42);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);pointer-events:none}
+#shows .flyer img.zoomable{position:relative;z-index:2;display:block;width:100%;height:clamp(380px,64vw,520px);object-fit:contain;border-radius:6px;filter:drop-shadow(0 18px 36px rgba(0,0,0,.6));transition:transform .35s ease}
+#shows .flyer:hover img.zoomable{transform:scale(1.015)}
+
+/* frosted-glass date chip — Cinzel month in the rose-gold text gradient, year in Inter */
+#shows .date-chip{position:absolute;top:clamp(20px,4.6vw,30px);left:clamp(20px,4.6vw,30px);z-index:4;display:flex;flex-direction:column;align-items:center;gap:1px;padding:9px 15px;border-radius:12px;font-family:var(--serif);line-height:1;border:1px solid var(--glass-border);background:rgba(8,12,24,.5);-webkit-backdrop-filter:blur(14px) saturate(170%);backdrop-filter:blur(14px) saturate(170%);box-shadow:var(--glass-inset),0 10px 24px -8px rgba(0,0,0,.7)}
+#shows .date-chip .d-mo{font-size:13px;letter-spacing:.22em;text-transform:uppercase;background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent}
+#shows .date-chip .d-yr{font-size:10px;letter-spacing:.3em;color:var(--rose-hi);opacity:.82;font-family:var(--sans);margin-top:3px;padding-left:.3em}
+
+/* "view flyer" zoom cue (grafted from #3) — only on hover/focus, never covers the print on mobile idle */
+#shows .flyer-cue{position:absolute;z-index:4;right:clamp(16px,4vw,24px);bottom:clamp(16px,4vw,24px);display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:999px;font-family:var(--sans);font-weight:500;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ice);background:rgba(8,12,24,.55);border:1px solid var(--glass-border);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);opacity:0;transform:translateY(4px);transition:opacity .25s,transform .25s;pointer-events:none}
+#shows .flyer:hover .flyer-cue,#shows .flyer:focus-visible .flyer-cue{opacity:.95;transform:none}
+
+/* ── caption (glass) ── */
+#shows .caption{padding:clamp(16px,4.2vw,24px) clamp(16px,4.4vw,26px) clamp(18px,4.6vw,26px);border-top:1px solid var(--line);background:linear-gradient(180deg,rgba(236,240,248,.07),rgba(236,240,248,.02))}
+#shows .caption .eyebrow{font-family:var(--sans);font-weight:600;font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--steel);margin-bottom:9px}
+#shows .caption h3{font-family:var(--serif);font-weight:600;font-size:clamp(17px,4.6vw,22px);line-height:1.2;color:var(--plat-hi);margin:0 0 13px;text-wrap:balance}
+#shows .caption h3 .sub{display:block;font-size:.76em;font-weight:500;color:var(--rose);letter-spacing:.04em;margin-top:5px}
+#shows .det{display:grid;gap:10px;margin:0 0 18px}
+#shows .det div{display:flex;gap:11px;align-items:flex-start;font-family:var(--sans);font-size:13.5px;line-height:1.5;color:var(--ice);opacity:.92;text-wrap:pretty}
+#shows .det .ic{flex:0 0 auto;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:13px;border-radius:8px;margin-top:1px;background:var(--glass-fill);border:1px solid var(--line);box-shadow:var(--glass-inset)}
+#shows .det div > span:last-child{flex:1 1 auto;min-width:0}
+#shows .det em{font-style:italic;color:var(--rose-hi)}
+#shows .det .nb{white-space:nowrap}
+#shows .caption .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:0;width:auto;justify-content:flex-start}
+#shows .caption .btns .btn{flex:1 1 auto;justify-content:center;text-align:center}
+
+/* ── arrows (glass pills) ── */
+#shows .gal-nav{position:absolute;top:0;bottom:0;width:clamp(44px,9vw,58px);display:flex;align-items:center;justify-content:center;border:0;cursor:pointer;z-index:6;background:transparent;padding:0}
+#shows .gal-nav i{display:grid;place-items:center;width:46px;height:46px;border-radius:50%;font-family:var(--sans);font-size:24px;line-height:1;color:var(--ice);border:1px solid var(--glass-border);background:rgba(8,12,24,.5);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-inset),0 8px 22px -8px rgba(0,0,0,.7);transition:transform .25s,background .25s,border-color .25s,opacity .25s;font-style:normal}
+#shows .gal-prev{left:0}
+#shows .gal-next{right:0}
+#shows .gal-nav:hover i{background:var(--glass-fill-hi);border-color:rgba(240,196,173,.4);color:var(--rose-hi);transform:scale(1.08)}
+#shows .gal-nav:disabled{cursor:default}
+#shows .gal-nav:disabled i{opacity:.26}
+
+/* ── foot: progress rail + expanding dots ── */
+#shows .gal-foot{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:clamp(18px,4vw,26px)}
+#shows .gal-progress{position:relative;flex:0 1 160px;height:2px;border-radius:99px;background:rgba(215,160,138,.18);overflow:hidden}
+#shows .gal-progress > i{position:absolute;inset:0 auto 0 0;width:0;border-radius:99px;background:var(--gold-grad,var(--gold-text));box-shadow:0 0 10px rgba(240,196,173,.4);transition:width .5s cubic-bezier(.2,.7,.2,1)}
+/* reset legacy `.gal-dots` rules so they cannot fight the new ones */
+#shows .gal-dots{display:flex;gap:9px;align-items:center;justify-content:center;margin-top:0}
+#shows .gal-dots button{width:9px;height:9px;padding:0;border-radius:99px;border:1px solid rgba(215,160,138,.5);background:transparent;cursor:pointer;transition:width .3s,background .3s,border-color .3s,box-shadow .3s}
+#shows .gal-dots button:hover{border-color:var(--rose-hi)}
+#shows .gal-dots button.on{width:26px;background:var(--gold-grad,var(--rose));border-color:var(--rose-hi);box-shadow:0 0 12px rgba(240,196,173,.5)}
+
+/* shared visible focus ring */
+#shows .gal-dots button:focus-visible,#shows .gal-nav:focus-visible i,#shows .flyer:focus-visible{outline:2px solid var(--rose-hi);outline-offset:3px}
+
+/* visually-hidden live region */
+#shows .gal-live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;margin:-1px;padding:0;border:0}
+
+/* ════════ desktop ≥820px: poster becomes 2-col (print left / caption right) ════════ */
+@media (min-width:820px){
+  #shows .shows-gallery{--peek:9%}
+  #shows .poster{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);grid-template-rows:none;align-items:stretch}
+  #shows .flyer{display:flex;align-items:center;justify-content:center}
+  #shows .flyer img.zoomable{height:auto;width:auto;max-width:100%;max-height:540px;min-height:420px}
+  #shows .caption{border-top:0;border-left:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}
+  #shows .caption .btns .btn{flex:0 1 auto}
+}
+
+/* ════════ very narrow phones (≤380px): keep the chip clear of the frame edge ════════ */
+@media (max-width:380px){
+  #shows .date-chip .d-mo{letter-spacing:.16em}
+  #shows .gal-nav i{width:42px;height:42px;font-size:22px}
+}
+
+/* ════════ reduced motion: no autoplay / smooth-scroll / dim-scale / hover scale ════════ */
+@media (prefers-reduced-motion:reduce){
+  #shows .poster,#shows .flyer img.zoomable,#shows .gal-nav i,#shows .gal-dots button,#shows .gal-progress > i,#shows .flyer-cue{transition:none}
+  #shows .shows-track{scroll-behavior:auto}
+  #shows .show:not(.is-active) .poster{opacity:1;transform:none}
+  #shows .flyer:hover img.zoomable{transform:none}
+}
 </style>
 <div id="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer">
   <span class="lb-x" aria-label="Close">&times;</span>
@@ -867,19 +1006,115 @@
 </script>
 <!-- shows sliding gallery: arrows + dots + swipe (qi 2026-06-24) -->
 <script>
+/* ── #shows · Editorial Gallery-Print slider — vanilla, no deps, scoped IIFE ──
+   Keyed off #showsGallery so it never collides with the legacy #showsRow script
+   (which returns early when #showsRow is absent). Drives state from pure
+   offsetLeft math (no live getBoundingClientRect rail to mismeasure).
+   Preserves .flyer/.zoomable lightbox + [data-book] handlers untouched.        */
 (function(){
-  var row=document.getElementById('showsRow'); if(!row) return;
-  var slides=[].slice.call(row.querySelectorAll('.show'));
-  var dotsWrap=document.getElementById('galDots');
-  var prev=document.querySelector('.gal-prev'), next=document.querySelector('.gal-next');
-  if(slides.length<2){ if(prev)prev.style.display='none'; if(next)next.style.display='none'; }
-  function idx(){ return Math.round(row.scrollLeft/row.clientWidth); }
-  function go(i){ i=Math.max(0,Math.min(slides.length-1,i)); row.scrollTo({left:i*row.clientWidth,behavior:'smooth'}); }
-  if(prev)prev.addEventListener('click',function(){go(idx()-1);});
-  if(next)next.addEventListener('click',function(){go(idx()+1);});
-  if(dotsWrap){ slides.forEach(function(_,i){ var b=document.createElement('button'); b.setAttribute('aria-label','Show '+(i+1)); b.addEventListener('click',function(){go(i);}); dotsWrap.appendChild(b); });
-    function sync(){ var c=idx(); [].forEach.call(dotsWrap.children,function(d,i){ d.classList.toggle('on',i===c); }); }
-    row.addEventListener('scroll',function(){ if(!sync._r) sync._r=requestAnimationFrame(function(){sync._r=0;sync();}); },{passive:true}); sync(); }
+  'use strict';
+  var root = document.getElementById('showsGallery'); if(!root) return;
+  var track = document.getElementById('showsTrack'); if(!track) return;
+  var slides = [].slice.call(track.querySelectorAll('.show')); if(!slides.length) return;
+  var prevBtn = root.querySelector('.gal-prev'), nextBtn = root.querySelector('.gal-next');
+  var dotsWrap = root.querySelector('.gal-dots'), bar = root.querySelector('.gal-progress > i');
+  var live = root.querySelector('.gal-live');
+
+  var mq = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+  var reduce = !!(mq && mq.matches);
+  var n = slides.length, cur = 0, auto = null, AUTO_MS = 7000;
+  var hovering = false, focused = false;
+
+  // ── build one dot per show (roving-tabindex tablist) ──
+  var dots = [];
+  if(dotsWrap){
+    slides.forEach(function(s, i){
+      var b = document.createElement('button');
+      b.type = 'button'; b.setAttribute('role','tab');
+      b.setAttribute('aria-label','Show ' + (i+1) + ' of ' + n);
+      b.addEventListener('click', function(){ stop(); go(i, true); });
+      dotsWrap.appendChild(b); dots.push(b);
+    });
+  }
+
+  function clamp(i){ return Math.max(0, Math.min(n-1, i)); }
+  function slideLeft(i){ return slides[i].offsetLeft - track.offsetLeft; }
+
+  function paint(i){
+    cur = i;
+    dots.forEach(function(d, k){
+      var on = k === i;
+      d.classList.toggle('on', on);
+      d.setAttribute('aria-selected', on ? 'true' : 'false');
+      d.tabIndex = on ? 0 : -1;
+    });
+    slides.forEach(function(s, k){
+      s.classList.toggle('is-active', k === i);
+      s.setAttribute('aria-hidden', k === i ? 'false' : 'true');
+    });
+    if(bar) bar.style.width = (n > 1 ? (i/(n-1))*100 : 100) + '%';
+    if(prevBtn) prevBtn.disabled = (i <= 0);
+    if(nextBtn) nextBtn.disabled = (i >= n-1);
+    if(live) live.textContent = 'Show ' + (i+1) + ' of ' + n;
+  }
+
+  function go(i, smooth){
+    i = clamp(i);
+    try{ track.scrollTo({ left: slideLeft(i), behavior: (smooth && !reduce) ? 'smooth' : 'auto' }); }
+    catch(e){ track.scrollLeft = slideLeft(i); }
+    paint(i);
+  }
+
+  // sync active state to whatever the user swipe / scroll-snaps to
+  var rafId = 0;
+  track.addEventListener('scroll', function(){
+    if(rafId) return;
+    rafId = requestAnimationFrame(function(){
+      rafId = 0;
+      var best = 0, bestD = Infinity, sl = track.scrollLeft;
+      for(var k = 0; k < n; k++){ var d = Math.abs(slideLeft(k) - sl); if(d < bestD){ bestD = d; best = k; } }
+      if(best !== cur) paint(best);
+    });
+  }, { passive: true });
+
+  // ── arrows ──
+  if(prevBtn) prevBtn.addEventListener('click', function(){ stop(); go(cur-1, true); });
+  if(nextBtn) nextBtn.addEventListener('click', function(){ stop(); go(cur+1, true); });
+
+  // ── keyboard (arrows/Home/End anywhere focus is inside the gallery) ──
+  root.addEventListener('keydown', function(e){
+    if(e.key === 'ArrowLeft'){ e.preventDefault(); stop(); go(cur-1, true); }
+    else if(e.key === 'ArrowRight'){ e.preventDefault(); stop(); go(cur+1, true); }
+    else if(e.key === 'Home'){ e.preventDefault(); stop(); go(0, true); }
+    else if(e.key === 'End'){ e.preventDefault(); stop(); go(n-1, true); }
+  });
+
+  // ── autoplay: paused on hover/focus/touch + tab hidden; off under reduced-motion ──
+  function tick(){ go(cur >= n-1 ? 0 : cur+1, true); }
+  function start(){ if(reduce || n < 2 || auto || hovering || focused || document.hidden) return; auto = setInterval(tick, AUTO_MS); }
+  function stop(){ if(auto){ clearInterval(auto); auto = null; } }
+
+  root.addEventListener('mouseenter', function(){ hovering = true; stop(); });
+  root.addEventListener('mouseleave', function(){ hovering = false; start(); });
+  root.addEventListener('focusin', function(){ focused = true; stop(); });
+  root.addEventListener('focusout', function(e){ if(!root.contains(e.relatedTarget)){ focused = false; start(); } });
+  root.addEventListener('touchstart', function(){ stop(); }, { passive: true });
+  root.addEventListener('pointerdown', function(){ stop(); }, { passive: true });
+  document.addEventListener('visibilitychange', function(){ if(document.hidden) stop(); else start(); });
+
+  // react if the user toggles reduced-motion at runtime (grafted from #2)
+  function onMotionPref(){
+    reduce = !!(mq && mq.matches);
+    if(reduce){ stop(); paint(cur); } else { start(); }
+  }
+  if(mq){ if(mq.addEventListener) mq.addEventListener('change', onMotionPref); else if(mq.addListener) mq.addListener(onMotionPref); }
+
+  if(n < 2){ if(prevBtn) prevBtn.hidden = true; if(nextBtn) nextBtn.hidden = true; if(dotsWrap) dotsWrap.hidden = true; }
+
+  paint(0);
+  // re-pin geometry after resize and after fonts/layout settle
+  window.addEventListener('resize', function(){ go(cur, false); });
+  setTimeout(function(){ go(0, false); start(); }, 80);
 })();
 </script>
 <!-- artist cut-out figure parallax (qi 2026-06-24) — subtle float, stays grounded, honors reduced-motion -->
@@ -933,7 +1168,7 @@
     '.artist',                 // Stal'lyon parallax section (panel/tags animate; bg img untouched)
     '#music .tracks',          // Press play grid
     '#music .links',           // Listen Everywhere chips
-    '.gallery',                // Upcoming Shows sliding gallery
+    '.shows-gallery',                // Upcoming Shows sliding gallery
     '#events .wrap',           // services
     '#book .wrap',             // direct line / booking cards
     'footer .f-inner'          // footer + socials
