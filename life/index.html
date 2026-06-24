@@ -404,19 +404,29 @@ footer .f2 em{color:var(--ng)}
   <div id="scopes-out" class="scopes-out"><pre id="scopes-outtxt"></pre></div>
 </section>
 
-<!-- QUATERNITY / XQL CONTROL PLANE -->
-<section class="wrap" id="quaternity">
+<!-- LAST 48 HOURS — roadmap recap (merged into life; canonical home) -->
+<style>
+.r48{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.r48 .ri{background:linear-gradient(165deg,#0d0e10,#090a0b);border:1px solid var(--ng-line);border-left:2px solid var(--ng-deep);border-radius:10px;padding:14px 16px}
+.r48 .ri .when{font-family:var(--mono);font-size:.54rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ng-leaf)}
+.r48 .ri .t{font-family:var(--disp);font-weight:600;font-size:1.02rem;margin:5px 0 3px}
+.r48 .ri .d{color:var(--muted);font-size:.82rem;line-height:1.5}
+.r48 .ri a{color:var(--ng-leaf)}
+</style>
+<section class="wrap" id="roadmap">
   <div class="sechead">
-    <div class="ix">I· · Quaternity · Control Plane</div>
-    <h2>The four · live<span id="xql-updated" style="font-size:11px;color:var(--faint);font-weight:400"></span></h2>
+    <div class="ix">I· · Last 48 Hours</div>
+    <h2>What shipped · live work log</h2>
     <div class="rule"></div>
-    <div class="note">genesis · exodus · leviticus + xql · all inputs → all 3 + sink</div>
+    <div class="note">brain + comms infra restored · scope universe mapped · auto-generated from the work log</div>
   </div>
-  <div id="xql-members" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0">
-    <span style="color:var(--faint);font-size:11px">▸ resolving the four…</span>
+  <div class="r48">
+    <div class="ri"><div class="when">Jun 23 · Infra</div><div class="t">Claude Code login fixed (root cause)</div><div class="d">The psmux sign-in failure was an empty <code>CLAUDE_CONFIG_DIR</code> — Claude treated set-but-empty as a real-but-missing config dir and fell to "API Usage Billing." Removed from HKCU + profile guard. Confirmed not in secrets.env, so it survives reboots.</div></div>
+    <div class="ri"><div class="when">Jun 23 · Topology</div><div class="t">Brain topology resolved → Design B</div><div class="d"><code>exedus</code>/<code>xen</code> → M4 <code>xen-up</code> → tmux window 0 = ssh into Nitro, <code>claude --continue</code> on <code>E:\.claude</code> with bypass. The immortal session lives on the Nitro side; M4 is harness/voice/brain-store.</div></div>
+    <div class="ri"><div class="when">Jun 23 · Cleanup</div><div class="t">Retired cruft removed</div><div class="d">Trinity (genesis/exodus/leviticus) stripped from the router and this dashboard. The retired <code>com.xen.exedus</code> launch agent (rooted on banned volumes) was disabled — it was auto-spawning a duplicate brain and splitting the inject socket.</div></div>
+    <div class="ri"><div class="when">Jun 22–23 · Shipped</div><div class="t">Diamond Cutz · Stal'lyon live</div><div class="d">Real 3D medallion hero, booking CTA + modal, real music links, track player, show date, portrait + bio. Placeholders removed. <a href="/dcz/">/dcz</a></div></div>
+    <div class="ri"><div class="when">Jun 21 · Mapped</div><div class="t">Scope universe — 766 scopes</div><div class="d">11 curated entities · 155 fulfillment artifacts · 600 conversational threads. Main line 9983.</div></div>
   </div>
-  <h3 style="margin-top:16px;font-size:13px">Input stream · all channels → all 3 + xql</h3>
-  <div id="xql-feed" style="font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--faint)">Loading…</div>
 </section>
 
 <!-- GOAL SWARM -->
@@ -789,43 +799,6 @@ loadSuggestions();
 setInterval(loadSuggestions, 30000);
 
 document.getElementById('ts').textContent = new Date().toISOString().slice(0,10);
-
-// ── QUATERNITY / XQL control plane (unified hub, 2026-06-11) ──
-async function loadXql(){
-  try{
-    const r = await fetch('https://xen.xlrd.org/api/xql?_='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(6000)});
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const d = await r.json();
-    const roles = d.panes||{}; const inv={};
-    Object.entries(roles).forEach(function(e){inv[e[1]]=e[0];});
-    const members=[
-      ['genesis', inv.genesis||'', 'voice · heard via vvsvei'],
-      ['exodus', inv.exodus||'', 'hands · Opus ultracode'],
-      ['leviticus', inv.leviticus||'', 'quick · formatter'],
-      ['xql', 'process', 'control plane · no pane']
-    ];
-    document.getElementById('xql-members').innerHTML = members.map(function(m){
-      var name=m[0], pid=m[1], sub=m[2];
-      var ok = !!pid;
-      var show = pid==='process' ? 'live' : (pid||'—');
-      return '<div style="border:1px solid var(--line,rgba(255,255,255,.12));border-radius:12px;padding:12px;background:rgba(255,255,255,.03)">'
-        +'<div style="font-weight:700">'+name+'</div>'
-        +'<div style="font-size:18px;color:'+(ok?'#7fe3a3':'#ff6b6b')+'">'+show+'</div>'
-        +'<div style="font-size:10px;color:var(--faint)">'+sub+'</div></div>';
-    }).join('');
-    var feed=(d.feed||[]).slice(-8).reverse();
-    document.getElementById('xql-feed').innerHTML = feed.length ? feed.map(function(f){
-      var n=(f.ok!=null)? f.ok+'/3' : (Array.isArray(f.fanned)? f.fanned.length+'/3' : '·');
-      var lbl=String(f.label||'').replace(/</g,'&lt;');
-      var body=String(f.body||'').slice(0,70).replace(/</g,'&lt;');
-      return '<div>['+n+'] <b>'+lbl+'</b> '+body+'</div>';
-    }).join('') : '<span>no recent input</span>';
-    var u=document.getElementById('xql-updated'); if(u) u.textContent=' · live '+new Date().toLocaleTimeString();
-  }catch(e){
-    var el=document.getElementById('xql-feed'); if(el) el.innerHTML='<span style="color:#ff6b6b">control plane offline ('+e.message+')</span>';
-  }
-}
-loadXql(); setInterval(loadXql, 5000);
 
 // ── MASTER SCOPE TREE (audit + verify · mirrors M4 sync_/ layout) ──────────────
 const SCOPE_KEY='xen-life-scopes-v1';
