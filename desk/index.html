@@ -112,7 +112,17 @@
     -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);max-width:280px}
   .note::placeholder{color:var(--faint)}
   .note:focus{outline:none;border-color:rgba(184,198,255,.6);box-shadow:0 0 0 3px rgba(142,160,255,.16)}
-  @media(max-width:560px){ .note{display:none} .dock{width:auto} }
+  @media(max-width:560px){
+    .note{display:none}
+    /* on phones the dock spans the width and the picker becomes a big, obvious,
+       thumb-friendly tap target (no drag possible on touch → tap to add). */
+    .dock{width:calc(100vw - 24px);max-width:none;left:0;right:0;transform:none;
+      padding:0 12px;justify-content:center;
+      bottom:max(16px,calc(env(safe-area-inset-bottom) + 10px))}
+    .pick{flex:1 1 auto;justify-content:center;font-size:16px;padding:17px 22px;border-radius:18px;
+      max-width:520px;min-height:56px}
+  }
+  @media(max-width:560px) and (pointer:coarse){ .pick svg{width:20px;height:20px} }
 
   /* full-window drag tint + landing ring */
   .dropring{position:fixed;inset:5vmin;z-index:30;border-radius:28px;pointer-events:none;
@@ -250,8 +260,25 @@
 
     var scene=new THREE.Scene();
     var camera=new THREE.PerspectiveCamera(40,1,0.1,100);
+    // CAM_BASE is recomputed responsively in frameCamera(): landscape pulls in
+    // tight, portrait phones pull WAY back + raise FOV so the whole desk fits.
     var CAM_BASE={x:0,y:3.1,z:5.4};
-    camera.position.set(CAM_BASE.x,CAM_BASE.y,CAM_BASE.z); camera.lookAt(0,0.05,0);
+    function frameCamera(){
+      var vv=window.visualViewport;
+      var w=(vv&&vv.width)||stage.clientWidth||window.innerWidth;
+      var h=(vv&&vv.height)||stage.clientHeight||window.innerHeight;
+      var aspect=w/h;
+      // t = how "portrait/narrow" we are (0 = wide desktop, 1 = tall phone portrait)
+      var t=Math.max(0, Math.min(1, (1.0 - aspect) / 0.85));
+      // wider FOV + further/higher camera as the viewport narrows so the full
+      // desk (and dropped objects) stays comfortably in frame in portrait.
+      camera.fov   = 40 + t*30;                 // 40° landscape → 70° portrait
+      CAM_BASE.y   = 3.1 + t*1.7;               // raise camera in portrait
+      CAM_BASE.z   = 5.4 + t*4.2;               // pull back hard in portrait
+      camera.position.set(CAM_BASE.x,CAM_BASE.y,CAM_BASE.z);
+      camera.aspect=aspect; camera.lookAt(0,0.05,0); camera.updateProjectionMatrix();
+    }
+    frameCamera();
 
     // ── studio environment (cool key + warm fill) for glossy obsidian reflections ──
     var ec=document.createElement('canvas'); ec.width=512; ec.height=256; var g=ec.getContext('2d');
@@ -307,29 +334,79 @@
     var floor=new THREE.Mesh(new THREE.PlaneGeometry(30,30),new THREE.ShadowMaterial({ opacity:0.34 }));
     floor.rotation.x=-Math.PI/2; floor.position.y=LY-LEGH/2-0.01; floor.receiveShadow=true; scene.add(floor);
 
-    // ── label canvas helper (filename text drawn onto the object) ──
+    // ── procedural paper/card surface texture (subtle fibre grain) — cached &
+    //    cheap: one small canvas reused for all light cards, one for dark, so it
+    //    never tanks mobile framerate. Gives a real paper micro-roughness sheen. ──
+    var _paperCache={};
+    function paperTexture(light){
+      var k=light?'l':'d'; if(_paperCache[k]) return _paperCache[k];
+      var c=document.createElement('canvas'); c.width=256; c.height=256; var x=c.getContext('2d');
+      x.fillStyle=light?'#ffffff':'#3a3f4d'; x.fillRect(0,0,256,256);
+      // fine speckle grain (very low contrast so it reads as fibre, not noise)
+      var img=x.getImageData(0,0,256,256), d=img.data;
+      for(var i=0;i<d.length;i+=4){ var n=(Math.random()*2-1)* (light?10:14);
+        d[i]=Math.max(0,Math.min(255,d[i]+n)); d[i+1]=Math.max(0,Math.min(255,d[i+1]+n)); d[i+2]=Math.max(0,Math.min(255,d[i+2]+n)); }
+      x.putImageData(img,0,0);
+      var tex=new THREE.CanvasTexture(c); tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+      tex.repeat.set(2,2); tex.colorSpace=THREE.SRGBColorSpace; tex.anisotropy=2;
+      _paperCache[k]=tex; return tex;
+    }
+
+    // ── soft round contact-shadow sprite (a blurred radial alpha) baked once and
+    //    reused per object, so each file casts a believable soft shadow on the wood
+    //    even at grazing angles — cheaper & softer than relying on shadow maps alone. ──
+    var _contactTex=null;
+    function contactShadowTexture(){
+      if(_contactTex) return _contactTex;
+      var c=document.createElement('canvas'); c.width=128; c.height=128; var x=c.getContext('2d');
+      var g=x.createRadialGradient(64,64,4,64,64,62);
+      g.addColorStop(0,'rgba(0,0,0,.55)'); g.addColorStop(.55,'rgba(0,0,0,.28)'); g.addColorStop(1,'rgba(0,0,0,0)');
+      x.fillStyle=g; x.beginPath(); x.arc(64,64,62,0,Math.PI*2); x.fill();
+      _contactTex=new THREE.CanvasTexture(c); _contactTex.colorSpace=THREE.SRGBColorSpace; return _contactTex;
+    }
+
+    // ── label canvas helper (filename text drawn onto the object, printed-ink look) ──
     function labelTexture(name,tint){
       var c=document.createElement('canvas'); c.width=512; c.height=128; var x=c.getContext('2d');
       x.clearRect(0,0,512,128);
       var t=(name||'file'); if(t.length>30) t=t.slice(0,14)+'…'+t.slice(-13);
-      x.fillStyle='rgba(20,22,30,.0)'; x.fillRect(0,0,512,128);
       x.font='600 40px Inter, system-ui, sans-serif'; x.textAlign='center'; x.textBaseline='middle';
-      x.fillStyle='rgba(0,0,0,.35)'; x.fillText(t,257,67);
+      x.fillStyle='rgba(0,0,0,.3)'; x.fillText(t,257,67);            // soft drop for ink depth
       x.fillStyle=tint||'#2a2f3d'; x.fillText(t,256,64);
       var tex=new THREE.CanvasTexture(c); tex.colorSpace=THREE.SRGBColorSpace; tex.anisotropy=4; return tex;
     }
 
-    // category → look (color of card + emoji tint). Real type only, no fake content.
+    // ── small colored corner-tag texture (file-type cue: PDF / IMG / VID …) ──
+    function cornerTagTexture(cue,hexAccent){
+      var c=document.createElement('canvas'); c.width=128; c.height=128; var x=c.getContext('2d');
+      x.clearRect(0,0,128,128);
+      var col='#'+('000000'+(hexAccent>>>0).toString(16)).slice(-6);
+      // a folded corner triangle in the accent color
+      x.fillStyle=col; x.beginPath(); x.moveTo(128,0); x.lineTo(128,128); x.lineTo(0,0); x.closePath(); x.fill();
+      // crease highlight
+      x.strokeStyle='rgba(255,255,255,.35)'; x.lineWidth=3; x.beginPath(); x.moveTo(0,0); x.lineTo(128,128); x.stroke();
+      // type letters on the tag
+      x.save(); x.translate(86,42); x.rotate(Math.PI/4);
+      x.fillStyle='rgba(8,9,14,.92)'; x.font='700 30px Inter, system-ui, sans-serif';
+      x.textAlign='center'; x.textBaseline='middle'; x.fillText((cue||'•'),0,0); x.restore();
+      var tex=new THREE.CanvasTexture(c); tex.colorSpace=THREE.SRGBColorSpace; tex.anisotropy=4; return tex;
+    }
+
+    // category → look (color of card + accent corner + short type cue). Real type
+    // only, never fake content. kind drives realism: 'paper' = thick page stack,
+    // 'card' = single beveled card. cue = tiny type tag printed on the corner.
     function look(meta){
       var n=(meta.name||'').toLowerCase(), tp=(meta.type||'');
-      if(/image\//.test(tp)||/\.(png|jpe?g|gif|webp|heic|svg|avif)$/.test(n)) return {c:0xeef1f8,kind:'photo',accent:0x8ea0ff};
-      if(/video\//.test(tp)||/\.(mp4|mov|mkv|webm|avi)$/.test(n)) return {c:0x1c1f2b,kind:'card',accent:0xff9d8d};
-      if(/audio\//.test(tp)||/\.(mp3|wav|m4a|aac|flac|ogg)$/.test(n)) return {c:0x16202a,kind:'card',accent:0x74e0a8};
-      if(/pdf/.test(tp)||/\.pdf$/.test(n)) return {c:0xf3efe6,kind:'paper',accent:0xff8d8d};
-      if(/zip|rar|7z|tar|gz/.test(tp+n)) return {c:0x2a2622,kind:'card',accent:0xffcaa0};
-      if(/\.(psd|ai|fig|sketch|xd)$/.test(n)) return {c:0x231a2c,kind:'card',accent:0xb88eff};
-      if(/\.(doc|docx|pages|txt|rtf|md)$/.test(n)) return {c:0xf6f7fb,kind:'paper',accent:0x8ea0ff};
-      return {c:0xf2f3f8,kind:'paper',accent:0xb8c6ff};
+      if(/image\//.test(tp)||/\.(png|jpe?g|gif|webp|heic|svg|avif)$/.test(n)) return {c:0xeef1f8,kind:'photo',accent:0x8ea0ff,cue:'IMG'};
+      if(/video\//.test(tp)||/\.(mp4|mov|mkv|webm|avi)$/.test(n)) return {c:0x1c1f2b,kind:'card',accent:0xff9d8d,cue:'VID'};
+      if(/audio\//.test(tp)||/\.(mp3|wav|m4a|aac|flac|ogg)$/.test(n)) return {c:0x16202a,kind:'card',accent:0x74e0a8,cue:'AUD'};
+      if(/pdf/.test(tp)||/\.pdf$/.test(n)) return {c:0xf3efe6,kind:'paper',accent:0xff8d8d,cue:'PDF'};
+      if(/zip|rar|7z|tar|gz/.test(tp+n)) return {c:0x2a2622,kind:'card',accent:0xffcaa0,cue:'ZIP'};
+      if(/\.(psd|ai|fig|sketch|xd)$/.test(n)) return {c:0x231a2c,kind:'card',accent:0xb88eff,cue:'ART'};
+      if(/\.(xls|xlsx|csv|numbers)$/.test(n)) return {c:0xeaf4ec,kind:'paper',accent:0x74e0a8,cue:'XLS'};
+      if(/\.(ppt|pptx|key)$/.test(n)) return {c:0x2a2226,kind:'card',accent:0xffcaa0,cue:'PPT'};
+      if(/\.(doc|docx|pages|txt|rtf|md)$/.test(n)) return {c:0xf6f7fb,kind:'paper',accent:0x8ea0ff,cue:'DOC'};
+      return {c:0xf2f3f8,kind:'paper',accent:0xb8c6ff,cue:'FILE'};
     }
 
     // ── objects on the desk (real files only) ──
@@ -345,40 +422,88 @@
       return { x:(Math.random()*2-1)*mx*0.92, z:(Math.random()*2-1)*mz*0.9, rot:(Math.random()-0.5)*0.9 };
     }
 
+    // shared geometries/materials reused across objects (perf: no per-file allocs
+    // of the same shape — only the textured top card + tag are unique per file).
+    var EDGE_MAT=new THREE.MeshStandardMaterial({ color:0xd9dbe0, roughness:0.9, metalness:0.0 });
+    var EDGE_MAT_DARK=new THREE.MeshStandardMaterial({ color:0x2a2e38, roughness:0.92, metalness:0.0 });
+
     function buildMesh(meta){
       var lk=look(meta);
       var grp=new THREE.Group();
-      var w=0.78, h=0.56, thick=0.018;
-      // a small stack of pages gives a paper/card feel
-      var pageMat=new THREE.MeshPhysicalMaterial({ color:lk.c, roughness:0.82, clearcoat:0.12, clearcoatRoughness:0.6, side:THREE.DoubleSide });
-      var base=new THREE.Mesh(new THREE.BoxGeometry(w,thick,h),pageMat);
-      base.castShadow=true; base.receiveShadow=true; grp.add(base);
-      // accent strip across the top of the card (real category color, not fake data)
-      var strip=new THREE.Mesh(new THREE.BoxGeometry(w,thick+0.002,h*0.16),
-        new THREE.MeshPhysicalMaterial({ color:lk.accent, metalness:0.3, roughness:0.4, emissive:lk.accent, emissiveIntensity:0.12 }));
-      strip.position.set(0,0.001,-h/2+h*0.1); grp.add(strip);
-      // filename label printed flat on the card (dark ink on light cards, light ink on dark cards)
       var lightCard=(lk.c>0x808080);
+      var w=0.80, h=0.58;
+      // real thickness: paper stacks are taller, single cards thinner. Randomize a
+      // touch so no two look identical.
+      var isPaper=(lk.kind==='paper');
+      var thick=(isPaper?0.05:0.03) + Math.random()*0.018;
+
+      // ── the body: a thick slab with paper grain (map + roughnessMap) so the
+      //    edges read as a real stack of sheets, not a flat plane ──
+      var grain=paperTexture(lightCard);
+      var bodyMat=new THREE.MeshPhysicalMaterial({
+        color:lk.c, map:grain, roughnessMap:grain,
+        roughness:isPaper?0.86:0.62, metalness:0.0,
+        clearcoat:isPaper?0.06:0.28, clearcoatRoughness:isPaper?0.7:0.35,
+        envMapIntensity:0.6 });
+      var body=new THREE.Mesh(new THREE.BoxGeometry(w,thick,h),bodyMat);
+      body.castShadow=true; body.receiveShadow=true; grp.add(body);
+
+      // ── beveled top card: a slightly smaller, slightly raised sheet with a
+      //    crisp lighter edge → gives the "card with beveled edges" silhouette ──
+      var topW=w*0.965, topH=h*0.965, topT=0.006;
+      var topMat2=new THREE.MeshPhysicalMaterial({
+        color:lk.c, map:grain, roughnessMap:grain,
+        roughness:isPaper?0.8:0.5, metalness:0.0,
+        clearcoat:isPaper?0.1:0.4, clearcoatRoughness:0.3, envMapIntensity:0.7 });
+      var topCard=new THREE.Mesh(new THREE.BoxGeometry(topW,topT,topH),topMat2);
+      topCard.position.y=thick/2+topT/2-0.001; topCard.castShadow=true; topCard.receiveShadow=true; grp.add(topCard);
+      var topY=topCard.position.y+topT/2; // surface objects print onto
+
+      // ── thin edge liners on the sheet sides (the "pages" highlight) ──
+      var liner=new THREE.Mesh(new THREE.BoxGeometry(w*0.998,thick*0.5,h*0.998), lightCard?EDGE_MAT:EDGE_MAT_DARK);
+      liner.position.y=-thick*0.18; grp.add(liner);
+
+      // ── filename label printed flat on the top card (ink that suits the card) ──
       var labMat=new THREE.MeshBasicMaterial({ map:labelTexture(meta.name, lightCard?'#2a2f3d':'#dfe5ff'), transparent:true });
-      var lab=new THREE.Mesh(new THREE.PlaneGeometry(w*0.92,(w*0.92)*0.25),labMat);
-      lab.rotation.x=-Math.PI/2; lab.position.set(0,thick/2+0.001,h*0.08); grp.add(lab);
+      var lab=new THREE.Mesh(new THREE.PlaneGeometry(topW*0.9,(topW*0.9)*0.25),labMat);
+      lab.rotation.x=-Math.PI/2; lab.position.set(0,topY+0.0015,h*0.1); grp.add(lab);
+
+      // ── file-type cue: folded colored corner tag in the top-right ──
+      var tagMat=new THREE.MeshBasicMaterial({ map:cornerTagTexture(lk.cue,lk.accent), transparent:true });
+      var tagSz=Math.min(topW,topH)*0.26;
+      var tag=new THREE.Mesh(new THREE.PlaneGeometry(tagSz,tagSz),tagMat);
+      tag.rotation.x=-Math.PI/2; tag.position.set(topW/2-tagSz/2, topY+0.0016, -topH/2+tagSz/2); grp.add(tag);
+
+      // ── soft contact shadow that hugs the desk under this object ──
+      var shMat=new THREE.MeshBasicMaterial({ map:contactShadowTexture(), transparent:true, depthWrite:false,
+        opacity:0.5, blending:THREE.NormalBlending });
+      var sh=new THREE.Mesh(new THREE.PlaneGeometry(w*1.5,h*1.5),shMat);
+      // sit the shadow just above the glaze plane (SURF_Y+0.002) to avoid z-fight
+      sh.rotation.x=-Math.PI/2; sh.position.y=-thick/2+0.0035; sh.renderOrder=2; grp.add(sh);
+      grp.userData.contact=sh; grp.userData.thick=thick;
 
       var pl=placement();
       grp.position.set(pl.x, SURF_Y+2.6+Math.random()*0.8, pl.z); // start high, fall
       grp.rotation.y=pl.rot;
-      grp.userData.restY=SURF_Y+thick/2 + objects.length*0.0; // stacking offset added later if overlapping
+      // slight natural tilt so a pile of files never looks machine-stacked
+      grp.rotation.x=(Math.random()-0.5)*0.04; grp.rotation.z=(Math.random()-0.5)*0.04;
+      grp.userData.restY=SURF_Y+thick/2; // stacking offset added in stackAdjust
       return grp;
     }
 
     function stackAdjust(mesh){
-      // if landing near another object, sit slightly on top (natural stacking)
-      var rest=SURF_Y+0.009, near=0;
+      // rest height so the slab's bottom sits flush on the desk; if landing near
+      // another object, sit slightly on top of it (natural stacking).
+      var myThick=mesh.userData.thick||0.04;
+      var rest=SURF_Y+myThick/2+0.001, near=0;
       for(var i=0;i<objects.length;i++){
         var o=objects[i].mesh; if(o===mesh) continue;
         var dx=o.position.x-mesh.position.x, dz=o.position.z-mesh.position.z;
-        if(dx*dx+dz*dz<0.34){ rest=Math.max(rest, o.userData.restY+0.024); near++; }
+        if(dx*dx+dz*dz<0.34){ var ot=o.userData.thick||0.04; rest=Math.max(rest, o.userData.restY+ot/2+myThick/2+0.002); near++; }
       }
       mesh.userData.restY=rest;
+      // when stacked above the desk, fade the contact shadow (it's no longer on wood)
+      if(mesh.userData.contact){ var lift=rest-(SURF_Y+myThick/2); mesh.userData.contact.material.opacity=Math.max(0.12, 0.5-lift*4); }
     }
 
     // public: add a real object
@@ -416,9 +541,12 @@
         else { target.lift=0; target.glow=0; }
       }, add:add, setStatus:setStatus, has:has, count:count };
 
-    // ── DRAG-TO-ORBIT (pointer/touch) + idle drift ──
+    // ── DRAG-TO-ORBIT (pointer/touch) + idle drift + pinch-zoom (touch) ──
     var dragging=false, lastX=0,lastY=0, userOrbX=0,userOrbY=0, tUserOrbX=0,tUserOrbY=0;
     var pointerNDC=new THREE.Vector2(-2,-2), hovering=false;
+    // user zoom: 1 = framed default, <1 = closer, >1 = further. Pinch + wheel.
+    var userZoom=1, tUserZoom=1;
+    function clampZoom(z){ return Math.max(0.55, Math.min(1.9, z)); }
     canvas.addEventListener('pointerdown',function(e){ dragging=true; lastX=e.clientX; lastY=e.clientY; canvas.classList.add('grabbing'); canvas.setPointerCapture&&canvas.setPointerCapture(e.pointerId); });
     window.addEventListener('pointerup',function(){ dragging=false; canvas.classList.remove('grabbing'); });
     window.addEventListener('pointermove',function(e){
@@ -431,6 +559,25 @@
       }
     });
     canvas.addEventListener('pointerleave',function(){ pointerNDC.set(-2,-2); });
+
+    // desktop scroll-wheel zoom
+    canvas.addEventListener('wheel',function(e){ e.preventDefault(); tUserZoom=clampZoom(tUserZoom*(1+e.deltaY*0.0012)); },{passive:false});
+
+    // ── TOUCH: 1-finger orbit (via pointer above), 2-finger pinch-zoom ──
+    var pinchStartDist=0, pinchStartZoom=1, pinching=false;
+    function touchDist(t){ var a=t[0],b=t[1]; var dx=a.clientX-b.clientX,dy=a.clientY-b.clientY; return Math.hypot(dx,dy); }
+    canvas.addEventListener('touchstart',function(e){
+      if(e.touches.length===2){ pinching=true; dragging=false; canvas.classList.remove('grabbing');
+        pinchStartDist=touchDist(e.touches); pinchStartZoom=tUserZoom; e.preventDefault(); }
+    },{passive:false});
+    canvas.addEventListener('touchmove',function(e){
+      if(pinching && e.touches.length===2){
+        var d=touchDist(e.touches); if(pinchStartDist>0){ tUserZoom=clampZoom(pinchStartZoom*(pinchStartDist/d)); }
+        e.preventDefault();
+      }
+    },{passive:false});
+    function endPinch(e){ if(e.touches && e.touches.length<2){ pinching=false; pinchStartDist=0; } }
+    canvas.addEventListener('touchend',endPinch); canvas.addEventListener('touchcancel',endPinch);
 
     // ── raycast hover/tap → tooltip (filename + size + status) ──
     var ray=new THREE.Raycaster();
@@ -466,11 +613,22 @@
       var u=['KB','MB','GB','TB'],i=-1; do{b/=1024;i++;}while(b>=1024&&i<u.length-1);
       return b.toFixed(b<10?1:0)+' '+u[i]; }
 
-    // ── resize ──
+    // ── resize ── use the REAL visible viewport (visualViewport handles iOS
+    // Safari dynamic bars / dvh), cap DPR at 2 for mobile perf, and re-frame the
+    // camera responsively on every resize + orientation change.
     var clock=new THREE.Clock();
-    function resize(){ var ww=stage.clientWidth,hh=stage.clientHeight; renderer.setSize(ww,hh,false);
-      camera.aspect=ww/hh; camera.updateProjectionMatrix(); }
-    window.addEventListener('resize',resize); window.addEventListener('orientationchange',resize); resize();
+    function resize(){
+      var vv=window.visualViewport;
+      var ww=(vv&&vv.width)||stage.clientWidth||window.innerWidth;
+      var hh=(vv&&vv.height)||stage.clientHeight||window.innerHeight;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+      renderer.setSize(ww,hh,false);
+      frameCamera();
+    }
+    window.addEventListener('resize',resize);
+    window.addEventListener('orientationchange',function(){ resize(); setTimeout(resize,250); });
+    if(window.visualViewport){ window.visualViewport.addEventListener('resize',resize); }
+    resize();
 
     // ── render loop ──
     var lift=0,glow=0,pulseV=0;
@@ -480,6 +638,7 @@
       lift+=(target.lift-lift)*0.1; glow+=(target.glow-glow)*0.1;
       pulseV+=(0-pulseV)*0.07; if(target.pulse){ pulseV=1; target.pulse=0; }
       userOrbX+=(tUserOrbX-userOrbX)*0.1; userOrbY+=(tUserOrbY-userOrbY)*0.1;
+      userZoom+=(tUserZoom-userZoom)*0.12;
       if(!dragging){ tUserOrbX*=0.985; tUserOrbY*=0.985; } // ease back toward neutral when released
 
       // gentle idle motion + user orbit + drag lift
@@ -491,7 +650,8 @@
       key.intensity=2.1+glow*0.7+pulseV*1.0;
       fill.intensity=16+glow*16+pulseV*22;
       rim.intensity+=(0-rim.intensity)*0.05; if(glow>0.5) rim.intensity=Math.max(rim.intensity,1.4*glow);
-      camera.position.y=CAM_BASE.y-lift*0.5; camera.position.z=CAM_BASE.z-lift*0.4; camera.lookAt(0,0.05,0);
+      // apply responsive base framing + user pinch/wheel zoom + drag-lift offset
+      camera.position.y=CAM_BASE.y*userZoom-lift*0.5; camera.position.z=CAM_BASE.z*userZoom-lift*0.4; camera.lookAt(0,0.05,0);
 
       // physics: objects fall and settle with a little bounce
       for(var i=0;i<objects.length;i++){ var o=objects[i].mesh, u=o.userData;
@@ -536,6 +696,18 @@
     var countEl=document.getElementById('count');
     var cue=document.getElementById('cue');
     var dragDepth=0, gotFirstDrop=false;
+
+    // touch-aware affordance: you can't drag a file on a phone, so make the cue +
+    // picker label say "tap to add" on touch devices (tapping opens the picker,
+    // and the chosen file lands on the desk + uploads through the same pipeline).
+    var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints>0);
+    if(isTouch){
+      try{
+        cue.textContent='✦ tap below to add a file ✦';
+        var pickLabel=document.querySelector('.pick');
+        if(pickLabel){ pickLabel.lastChild.textContent=' Tap to add a file'; }
+      }catch(e){}
+    }
 
     function react(s){ try{ window.__desk.react(s); }catch(e){} }
     function deskHas(key){ try{ return window.__desk.has(key); }catch(e){ return false; } }
