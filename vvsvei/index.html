@@ -1886,6 +1886,16 @@ function renderEvent(d) {
     try { _hud(txt.replace(/^\[VVSVEI\]\s*/, '').slice(0, 60)); } catch (_) {}
     return;
   }
+  // qi 2026-06-23: brain per-step OTLP (tool calls + cost) is the BACKGROUND
+  // stream — it belongs in the dim telemetry HUD lane, NOT a foreground reply
+  // bubble, and must NEVER be spoken. Route to _hud() like the speak-gate
+  // telemetry above and skip the chat bubble entirely.
+  if ((d.event || d.kind || '').toString().toLowerCase() === 'xen-otlp-step'
+      || /^otlp$/i.test((d.source || '').toString())
+      || (d.kind || '').toString().toLowerCase() === 'otlp') {
+    try { _hud(txt.slice(0, 72)); } catch (_) {}
+    return;
+  }
   const tag = (d.event || d.kind || '').toString().toLowerCase();
   const src = (d.source || d.sender || '').toString().toLowerCase();
   // qi 2026-06-11: SOURCE-AGNOSTIC echo/cross-source dedup. Keep every capture
