@@ -84,11 +84,11 @@
 
   .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
   header.intro{text-align:center;padding:30px 22px 56px}
-  header.intro h1{font-family:var(--serif);font-weight:800;font-size:clamp(30px,7vw,60px);letter-spacing:.06em;line-height:1.02;
+  header.intro h1{font-family:var(--serif);font-weight:800;font-size:clamp(30px,7vw,60px);letter-spacing:.06em;line-height:1.02;text-wrap:balance;
     background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent;
     filter:drop-shadow(0 2px 10px rgba(231,185,107,.22))}
-  header.intro .tag{font-size:clamp(13px,2.4vw,16px);letter-spacing:.26em;text-transform:uppercase;color:var(--steel);margin-top:16px}
-  header.intro .sub{max-width:46ch;margin:20px auto 0;color:#bcc6d8;font-size:15.5px}
+  header.intro .tag{font-size:clamp(12.5px,2.4vw,16px);letter-spacing:.22em;text-transform:uppercase;color:var(--steel);margin-top:16px;text-wrap:balance}
+  header.intro .sub{max-width:42ch;margin:20px auto 0;color:#bcc6d8;font-size:clamp(14.5px,3.6vw,15.5px);text-wrap:pretty}
   .btns{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:30px}
   .btn{font-family:var(--sans);font-weight:500;font-size:13.5px;letter-spacing:.06em;padding:13px 26px;border-radius:11px;transition:.22s;border:1px solid transparent;cursor:pointer}
   /* hyper-real metallic gold primary */
@@ -103,18 +103,27 @@
     box-shadow:var(--glass-inset), 0 12px 28px rgba(0,0,0,.4)}
 
   section{padding:70px 0;border-top:1px solid var(--line-cool)}
-  .kicker{font-family:var(--serif);font-size:12px;letter-spacing:.3em;text-transform:uppercase;text-align:center;
+  .kicker{font-family:var(--serif);font-size:12px;letter-spacing:.28em;text-transform:uppercase;text-align:center;text-wrap:balance;
     background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent}
-  h2{font-family:var(--serif);font-weight:700;font-size:clamp(24px,4.4vw,38px);text-align:center;margin-top:12px;color:var(--plat-hi)}
-  .lead{max-width:60ch;margin:18px auto 0;text-align:center;color:#bcc6d8;font-size:16px}
+  h2{font-family:var(--serif);font-weight:700;font-size:clamp(24px,4.4vw,38px);text-align:center;margin-top:12px;color:var(--plat-hi);text-wrap:balance}
+  .lead{max-width:56ch;margin:18px auto 0;text-align:center;color:#bcc6d8;font-size:clamp(15px,3.8vw,16px);text-wrap:pretty}
   .cards{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin-top:42px}
   .card{flex:1 1 220px;max-width:260px;background:linear-gradient(180deg,rgba(19,37,78,.5),rgba(10,14,28,.6));
     border:1px solid var(--line-cool);border-radius:16px;padding:26px 22px;position:relative;overflow:hidden;transition:.2s}
+  /* keep the 4 studio cards balanced (2×2) instead of a lopsided 3+1 at mid widths */
+  @media(min-width:561px) and (max-width:920px){
+    #studio .cards .card{flex:1 1 calc(50% - 16px);max-width:calc(50% - 16px)}
+  }
+  @media(max-width:560px){
+    .cards .card{flex:1 1 100%;max-width:340px}
+  }
   .card:hover{transform:translateY(-3px);border-color:var(--line)}
   .card::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--rose),var(--plat),transparent)}
-  .card h3{font-family:var(--serif);font-weight:600;font-size:18px;letter-spacing:.04em;color:var(--ice)}
-  .card p{margin-top:9px;font-size:13.5px;color:#a9b3c6}
-  .card .n{font-family:var(--serif);font-size:12px;color:var(--rose);letter-spacing:.2em}
+  .card h3{font-family:var(--serif);font-weight:600;font-size:18px;letter-spacing:.04em;color:var(--ice);text-wrap:balance}
+  .card p{margin-top:9px;font-size:13.5px;color:#a9b3c6;text-wrap:pretty}
+  .card .n{font-family:var(--serif);font-size:12px;color:var(--rose);letter-spacing:.2em;text-wrap:balance}
+  /* contact cards: phone numbers & emails must never break mid-string */
+  #book .card p a{white-space:nowrap;display:inline-block}
 
   .contact{text-align:center}
   .links{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:30px}
@@ -134,11 +143,22 @@
   footer .f-inner{max-width:680px;margin:0 auto}
   footer .nm{font-family:var(--serif);letter-spacing:.26em;font-size:13px;text-transform:uppercase;
     background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent}
-  footer .f-tag{margin-top:8px;color:#9aa6bb;font-size:12.5px;letter-spacing:.04em}
-  footer .f-socials{display:flex;flex-wrap:wrap;justify-content:center;gap:13px;margin:24px auto 0}
-  footer .f-contact{margin-top:22px;display:flex;flex-wrap:wrap;justify-content:center;gap:8px 18px;font-size:13px;color:#b3bdcf}
+  footer .f-tag{margin-top:8px;color:#9aa6bb;font-size:12.5px;letter-spacing:.04em;text-wrap:balance;max-width:46ch;margin-left:auto;margin-right:auto}
+  footer .f-socials{display:flex;flex-wrap:wrap;justify-content:center;gap:13px;margin:24px auto 0;max-width:380px}
+  /* Symmetric, centered contact block: each entry is its own balanced line; phone/email never split. */
+  footer .f-contact{margin-top:24px;display:flex;flex-direction:column;align-items:center;gap:12px;font-size:13px;color:#b3bdcf}
+  footer .f-contact span{display:block;text-wrap:balance;line-height:1.7}
+  footer .f-contact .fc-row{max-width:42ch;margin:0 auto}
+  footer .f-contact .fc-row br{display:none}      /* desktop: name + contacts share one tidy line */
+  footer .f-contact .fc-loc{color:#9aa6bb;font-size:12.5px;max-width:40ch;margin:0 auto}
+  footer .f-contact strong{color:#cdd6e6;font-weight:600;white-space:nowrap}
   footer .f-contact a{color:var(--rose-hi);white-space:nowrap}
-  footer .fine{margin-top:18px;color:#5b6577;font-size:11.5px}
+  @media(max-width:560px){
+    /* portrait phone: break name and contacts onto two centered lines for clean symmetry */
+    footer .f-contact .fc-row br{display:inline}
+    footer .f-contact .fc-row{max-width:none}
+  }
+  footer .fine{margin-top:20px;color:#5b6577;font-size:11.5px;text-wrap:balance}
   .card h3 a, .card p a{color:var(--rose-hi)}
 
   /* ── booking modal ── */
@@ -153,20 +173,22 @@
   .modal::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;border-radius:18px 18px 0 0;background:linear-gradient(90deg,var(--rose),var(--plat),transparent)}
   .modal-x{position:absolute;top:12px;right:15px;background:none;border:0;color:var(--steel);font-size:28px;line-height:1;cursor:pointer;transition:.2s}
   .modal-x:hover{color:var(--rose-hi)}
-  .m-title{font-family:var(--serif);font-weight:700;font-size:24px;color:var(--plat-hi);margin:4px 0 6px}
-  .m-sub{color:#a9b3c6;font-size:13.5px;margin-bottom:18px}
+  .m-title{font-family:var(--serif);font-weight:700;font-size:24px;color:var(--plat-hi);margin:4px 0 6px;text-wrap:balance}
+  .m-sub{color:#a9b3c6;font-size:13.5px;margin-bottom:18px;text-wrap:pretty}
   #bookForm label{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--steel);margin-bottom:14px}
   #bookForm input,#bookForm select,#bookForm textarea{width:100%;margin-top:6px;background:rgba(0,0,0,.4);border:1px solid var(--line-cool);border-radius:10px;color:var(--ice);font-family:var(--sans);font-size:14px;font-weight:300;padding:11px 13px;transition:.2s}
   #bookForm input:focus,#bookForm select:focus,#bookForm textarea:focus{outline:none;border-color:var(--rose);box-shadow:0 0 0 3px rgba(215,160,138,.15)}
   #bookForm textarea{resize:vertical}
-  .m-direct{margin-top:18px;padding-top:16px;border-top:1px solid var(--line-cool);text-align:center;font-size:13px;color:#a9b3c6}
-  .m-direct a{color:var(--rose-hi);white-space:nowrap}
+  .m-direct{margin-top:18px;padding-top:16px;border-top:1px solid var(--line-cool);text-align:center;font-size:13px;color:#a9b3c6;text-wrap:balance}
+  .m-direct a{color:var(--rose-hi);white-space:nowrap;display:inline-block}
   button.btn{font-family:var(--sans)}
 
   /* ── artist EPK — portrait as full-bleed section background ── */
+  /* align-items:flex-start + vertical padding so a tall bio panel never gets vertically
+     centered and clipped by overflow:hidden — the FIRST line stays visible (qi 2026-06-24). */
   .artist{position:relative;margin-top:40px;border-radius:22px;overflow:hidden;isolation:isolate;
-    min-height:clamp(540px,80vh,820px);display:flex;align-items:center;justify-content:flex-end;
-    border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.6)}
+    min-height:clamp(540px,80vh,820px);display:flex;align-items:flex-start;justify-content:flex-end;
+    padding:34px 0;border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.6)}
   .artist .portrait-bg{position:absolute;inset:0;z-index:0;cursor:zoom-in;overflow:hidden}
   /* full-height portrait, parallax headroom (translateY on scroll). Keep HIM visible left; panel sits right. */
   .artist .portrait-bg img{position:absolute;left:0;right:0;top:-14%;width:100%;height:128%;object-fit:cover;object-position:30% 16%;display:block;will-change:transform}
@@ -178,15 +200,20 @@
     -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
     box-shadow:var(--glass-inset), 0 6px 16px rgba(0,0,0,.35);transition:.2s}
   .artist .portrait-zoom:hover{transform:translateY(-2px);background:var(--glass-fill-hi);border-color:rgba(255,255,255,.32)}
-  /* hyper-real frosted glass bio panel sitting over the portrait */
+  /* hyper-real frosted glass bio panel sitting over the portrait.
+     Sizes to its content (no fixed height) and gets generous top padding so the heading
+     line is always fully visible; if it ever exceeds the section it scrolls internally. */
   .artist .bio{position:relative;z-index:2;width:min(440px,46%);margin:0 26px;text-align:left;
-    padding:30px 30px 30px;border-radius:18px;border:1px solid var(--glass-border);
+    padding:32px 30px 30px;border-radius:18px;border:1px solid var(--glass-border);
+    max-height:calc(100% - 4px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
     background:linear-gradient(165deg,rgba(244,247,252,.10),rgba(232,238,248,.05));
     -webkit-backdrop-filter:blur(26px) saturate(185%);backdrop-filter:blur(26px) saturate(185%);
     box-shadow:var(--glass-inset), 0 24px 64px rgba(0,0,0,.55)}
-  .artist .bio .nm{display:block;font-family:var(--serif);font-weight:700;font-size:13px;letter-spacing:.32em;text-transform:uppercase;
-    margin-bottom:16px;background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent}
-  .artist .bio p{color:#e4eaf4;font-size:14.5px;line-height:1.72;margin-top:13px;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+  .artist .bio::-webkit-scrollbar{width:0;height:0}
+  .artist .bio{scrollbar-width:none}
+  .artist .bio .nm{display:block;font-family:var(--serif);font-weight:700;font-size:13px;letter-spacing:.3em;text-transform:uppercase;
+    margin-bottom:16px;text-wrap:balance;background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .artist .bio p{color:#e4eaf4;font-size:14.5px;line-height:1.72;margin-top:13px;text-wrap:pretty;text-shadow:0 1px 3px rgba(0,0,0,.5)}
   .artist .bio p:first-of-type{margin-top:0}
   .artist .bio p:first-of-type::first-letter{font-family:var(--serif);font-weight:700;font-size:2.7em;line-height:.8;float:left;margin:4px 10px 0 0;
     background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -195,11 +222,13 @@
     border:1px solid var(--glass-border);border-radius:999px;padding:5px 12px;
     background:var(--glass-fill);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
   @media(max-width:760px){
-    .artist{min-height:auto;border-radius:18px;justify-content:center;align-items:flex-end}
-    .artist .portrait-bg{position:relative;height:64vh;min-height:400px}
+    /* portrait stacks above the bio; the bio grows to fit ALL text (no clipping, no internal scroll) */
+    .artist{min-height:auto;border-radius:18px;justify-content:center;align-items:flex-end;padding:0;flex-direction:column}
+    .artist .portrait-bg{position:relative;width:100%;height:58vh;min-height:380px}
     .artist .portrait-bg img{position:absolute;object-position:50% 16%}
     .artist .portrait-bg::after{background:linear-gradient(180deg,rgba(4,6,12,.1) 0%,rgba(4,6,12,.05) 32%,rgba(4,6,12,.55) 70%,rgba(4,6,12,.88) 100%)}
-    .artist .bio{width:calc(100% - 22px);margin:-80px auto 16px;text-align:center;padding:24px 20px 22px}
+    .artist .bio{width:calc(100% - 22px);max-height:none;overflow:visible;margin:-80px auto 16px;text-align:center;padding:26px 20px 22px}
+    .artist .bio p{text-wrap:pretty}
     .artist .bio .tags{justify-content:center}
     .artist .bio p:first-of-type::first-letter{float:none;font-size:1em;margin:0}
   }
@@ -211,18 +240,22 @@
   .track{background:linear-gradient(180deg,rgba(19,37,78,.5),rgba(10,14,28,.6));border:1px solid var(--line-cool);
     border-radius:14px;overflow:hidden;transition:.2s}
   .track:hover{transform:translateY(-3px);border-color:var(--line)}
-  .track .thumb{position:relative;aspect-ratio:16/9;cursor:pointer;background:#04060c}
-  .track .thumb img{width:100%;height:100%;object-fit:cover;display:block;opacity:.9;transition:.2s}
-  .track .thumb:hover img{opacity:1}
-  .track .play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  /* RECTANGLE media tiles, NO white space: a blurred copy of the same art fills the slot,
+     the sharp cover sits on top cropped to fill (qi 2026-06-24). Consistent on every track. */
+  .track .thumb{position:relative;aspect-ratio:16/9;cursor:pointer;background:#04060c;overflow:hidden}
+  .track .thumb .fill{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+    transform:scale(1.18);filter:blur(18px) saturate(125%) brightness(.7);opacity:.9;z-index:0;pointer-events:none}
+  .track .thumb img.art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:1;opacity:.94;transition:.2s}
+  .track .thumb:hover img.art{opacity:1}
+  .track .play{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center}
   .track .play span{width:54px;height:54px;border-radius:999px;display:flex;align-items:center;justify-content:center;
     background:linear-gradient(135deg,var(--rose-hi),var(--rose) 65%,var(--rose-deep));box-shadow:0 8px 22px rgba(0,0,0,.5);
     color:#1a0f0a;font-size:20px;padding-left:4px;transition:.2s}
   .track .thumb:hover .play span{transform:scale(1.08)}
   .track iframe{width:100%;aspect-ratio:16/9;display:block;border:0}
-  .track .meta{padding:13px 15px}
-  .track .meta h3{font-family:var(--serif);font-weight:600;font-size:15.5px;color:var(--ice);letter-spacing:.02em}
-  .track .meta p{font-size:12px;color:var(--rose);letter-spacing:.04em;margin-top:3px}
+  .track .meta{padding:13px 15px;text-align:center}
+  .track .meta h3{font-family:var(--serif);font-weight:600;font-size:15.5px;color:var(--ice);letter-spacing:.02em;text-wrap:balance}
+  .track .meta p{font-size:12px;color:var(--rose);letter-spacing:.04em;margin-top:3px;text-wrap:balance}
 
   /* ── shows ── */
   /* hyper-real frosted glass show card */
@@ -253,13 +286,30 @@
   .show .info{flex:1 1 auto}
   .show .date{font-family:var(--serif);font-weight:700;font-size:22px;letter-spacing:.06em;
     background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent}
-  .show .info h3{font-family:var(--serif);font-weight:600;font-size:19px;color:var(--ice);margin-top:6px}
-  .show .info .det{margin-top:12px;font-size:14px;color:#bcc6d8}
-  .show .info .det div{margin-top:6px}
+  .show .info h3{font-family:var(--serif);font-weight:600;font-size:clamp(17px,4.4vw,19px);color:var(--ice);margin-top:6px;text-wrap:balance}
+  .show .info .det{margin-top:12px;font-size:clamp(13px,3.6vw,14px);color:#bcc6d8;max-width:48ch;margin-left:auto;margin-right:auto}
+  .show .info .det div{margin-top:8px;text-wrap:pretty}
+  .show .info .det div .nb{white-space:nowrap}
   .show .info .btns{justify-content:center;margin-top:20px}
 
   @media(max-width:600px){ section{padding:54px 0} .hero3d{height:60vh;height:60svh} }
   @media (prefers-reduced-motion:reduce){.spin-cue{display:none}}
+
+  /* ── SCROLL-REVEAL (qi 2026-06-24: every section animates in on scroll, mobile-first) ──
+     Graceful: content is visible by default. JS adds .will-animate to opt blocks IN to the
+     hidden-then-reveal hook, so no-JS users always see everything. GPU-only (transform/opacity). */
+  .will-animate{opacity:0;transform:translateY(26px) scale(.985);
+    transition:opacity .7s cubic-bezier(.22,.61,.36,1), transform .7s cubic-bezier(.22,.61,.36,1);
+    will-change:opacity,transform}
+  .will-animate.in-view{opacity:1;transform:none}
+  /* staggered children cascade once the parent block is in view */
+  .will-animate .reveal-child{opacity:0;transform:translateY(18px) scale(.99);
+    transition:opacity .6s cubic-bezier(.22,.61,.36,1), transform .6s cubic-bezier(.22,.61,.36,1);
+    transition-delay:var(--rd,0ms);will-change:opacity,transform}
+  .will-animate.in-view .reveal-child{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){
+    .will-animate,.will-animate .reveal-child{opacity:1 !important;transform:none !important;transition:none !important}
+  }
 </style>
 </head>
 <body>
@@ -468,7 +518,7 @@
           <div>📍 Hayes Park · 2568 Co. Rd 73 · Magnolia, AL 36753</div>
           <div>🕛 Gates: Vendors 12PM · Public 2PM · 🎟️ $25 at the gate · advance on Eventbrite · $100 vendors</div>
           <div>🐎 Mechanical bull · tents &amp; coolers welcome · best-dressed trophies (1st/2nd/3rd)</div>
-          <div>ℹ️ More info: Krystal 901.213.6790 · Danielle 731.267.0906</div>
+          <div>ℹ️ More info: <span class="nb">Krystal 901.213.6790</span> · <span class="nb">Danielle 731.267.0906</span></div>
         </div>
         <div class="btns"><button class="btn primary" data-book>Book Stal'lyon</button></div>
       </div>
@@ -526,6 +576,7 @@
     <div class="f-socials" aria-label="Follow Stal'lyon &amp; Diamond Cutz Studios">
       <a class="soc" href="https://instagram.com/thereal_stallyon" target="_blank" rel="noopener" aria-label="Instagram — Stal'lyon" title="@thereal_stallyon"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.06 1.8.25 2.2.42.56.22.96.48 1.38.9.42.42.68.82.9 1.38.17.4.36 1 .42 2.2.06 1.3.07 1.7.07 4.9s0 3.6-.07 4.9c-.06 1.2-.25 1.8-.42 2.2a3.7 3.7 0 0 1-.9 1.38c-.42.42-.82.68-1.38.9-.4.17-1 .36-2.2.42-1.3.06-1.7.07-4.9.07s-3.6 0-4.9-.07c-1.2-.06-1.8-.25-2.2-.42a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.17-.4-.36-1-.42-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.07-4.9c.06-1.2.25-1.8.42-2.2.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.4-.17 1-.36 2.2-.42C8.4 2.2 8.8 2.2 12 2.2Zm0 4.86A4.94 4.94 0 1 1 12 17a4.94 4.94 0 0 1 0-9.88Zm0 1.8a3.14 3.14 0 1 0 0 6.28 3.14 3.14 0 0 0 0-6.28Zm5.15-.62a1.15 1.15 0 1 1-2.3 0 1.15 1.15 0 0 1 2.3 0Z"/></svg></a>
       <a class="soc" href="https://instagram.com/diamondcutzstudios" target="_blank" rel="noopener" aria-label="Instagram — Diamond Cutz Studios" title="@diamondcutzstudios"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.06 1.8.25 2.2.42.56.22.96.48 1.38.9.42.42.68.82.9 1.38.17.4.36 1 .42 2.2.06 1.3.07 1.7.07 4.9s0 3.6-.07 4.9c-.06 1.2-.25 1.8-.42 2.2a3.7 3.7 0 0 1-.9 1.38c-.42.42-.82.68-1.38.9-.4.17-1 .36-2.2.42-1.3.06-1.7.07-4.9.07s-3.6 0-4.9-.07c-1.2-.06-1.8-.25-2.2-.42a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.17-.4-.36-1-.42-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.07-4.9c.06-1.2.25-1.8.42-2.2.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.4-.17 1-.36 2.2-.42C8.4 2.2 8.8 2.2 12 2.2Zm0 4.86A4.94 4.94 0 1 1 12 17a4.94 4.94 0 0 1 0-9.88Zm0 1.8a3.14 3.14 0 1 0 0 6.28 3.14 3.14 0 0 0 0-6.28Zm5.15-.62a1.15 1.15 0 1 1-2.3 0 1.15 1.15 0 0 1 2.3 0Z"/></svg></a>
+      <a class="soc" href="https://www.tiktok.com/@diamondcutzstudios" target="_blank" rel="noopener" aria-label="TikTok — Diamond Cutz Studios" title="@diamondcutzstudios"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M16.6 2h-3.1v13.05a2.37 2.37 0 1 1-1.7-2.27V9.6a5.6 5.6 0 1 0 4.8 5.54V8.66a6.9 6.9 0 0 0 4.04 1.3V6.83a3.86 3.86 0 0 1-2.84-1.26A3.86 3.86 0 0 1 16.6 3V2Z"/></svg></a>
       <a class="soc" href="https://open.spotify.com/artist/1VsJvKKQTtX4Muap2vcPt0" target="_blank" rel="noopener" aria-label="Spotify" title="Spotify"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm4.6 14.43a.62.62 0 0 1-.86.21c-2.35-1.44-5.3-1.76-8.79-.96a.62.62 0 1 1-.28-1.22c3.8-.87 7.08-.5 9.72 1.11.3.18.39.57.21.86Zm1.23-2.74a.78.78 0 0 1-1.07.26c-2.69-1.65-6.79-2.13-9.97-1.17a.78.78 0 1 1-.45-1.49c3.63-1.1 8.15-.56 11.24 1.33.37.23.49.71.25 1.07Zm.1-2.85C14.8 8.96 9.5 8.78 6.42 9.71a.93.93 0 1 1-.54-1.78c3.53-1.07 9.38-.86 13.08 1.34a.93.93 0 1 1-.95 1.6Z"/></svg></a>
       <a class="soc" href="https://music.apple.com/us/artist/stallyon/858751401" target="_blank" rel="noopener" aria-label="Apple Music" title="Apple Music"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M17.6 3H6.4A3.4 3.4 0 0 0 3 6.4v11.2A3.4 3.4 0 0 0 6.4 21h11.2a3.4 3.4 0 0 0 3.4-3.4V6.4A3.4 3.4 0 0 0 17.6 3Zm-1.2 3.3v8.36a2.06 2.06 0 0 1-1.5 2 2.04 2.04 0 0 1-2.6-1.96c0-.96.66-1.74 1.6-1.95.3-.06.62-.1.92-.17.2-.05.28-.16.28-.37V8.6c0-.3-.13-.38-.4-.32l-3.7.75c-.25.06-.34.17-.34.43v6.6a2.06 2.06 0 0 1-1.52 2.02 2.04 2.04 0 0 1-2.58-1.97c0-.96.66-1.74 1.6-1.95.3-.07.62-.1.92-.17.2-.05.28-.16.28-.37V7.07c0-.42.2-.66.6-.74l5.9-1.2c.4-.08.7.13.7.55v.62Z"/></svg></a>
       <a class="soc" href="https://youtube.com/channel/UCVWGlmy46QEWFU7emMw1MVQ" target="_blank" rel="noopener" aria-label="YouTube" title="YouTube"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M23 12s0-3.2-.4-4.7a2.5 2.5 0 0 0-1.77-1.77C19.3 5.13 12 5.13 12 5.13s-7.3 0-8.83.4A2.5 2.5 0 0 0 1.4 7.3C1 8.8 1 12 1 12s0 3.2.4 4.7a2.5 2.5 0 0 0 1.77 1.77c1.53.4 8.83.4 8.83.4s7.3 0 8.83-.4a2.5 2.5 0 0 0 1.77-1.77C23 15.2 23 12 23 12ZM9.75 15.02V8.98L15 12l-5.25 3.02Z"/></svg></a>
@@ -533,9 +584,11 @@
       <a class="soc" href="https://www.facebook.com/share/p/18tKDocTLH/" target="_blank" rel="noopener" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12Z"/></svg></a>
     </div>
     <div class="f-contact">
-      <span><strong>Booking &amp; Management</strong> · LaTina McAllister · <a href="tel:+17702565492">(770) 256-5492</a> · <a href="mailto:lmcallister26@gmail.com?subject=Diamond%20Cutz%20Booking%20Inquiry">lmcallister26@gmail.com</a></span>
-      <span><strong>Artist</strong> · Andre "Stal'lyon" Jermaine · <a href="tel:+14702341117">(470) 234-1117</a> · <a href="mailto:Stallyon7@gmail.com?subject=Diamond%20Cutz%20Inquiry">Stallyon7@gmail.com</a></span>
-      <span>📍 Atlanta, GA · Studio &amp; live entertainment · booking 7 days a week</span>
+      <span class="fc-row"><strong>Booking &amp; Management</strong> · LaTina McAllister<br>
+        <a href="tel:+17702565492">(770)&nbsp;256-5492</a> &nbsp;·&nbsp; <a href="mailto:lmcallister26@gmail.com?subject=Diamond%20Cutz%20Booking%20Inquiry">lmcallister26@gmail.com</a></span>
+      <span class="fc-row"><strong>Artist</strong> · Andre "Stal'lyon" Jermaine<br>
+        <a href="tel:+14702341117">(470)&nbsp;234-1117</a> &nbsp;·&nbsp; <a href="mailto:Stallyon7@gmail.com?subject=Diamond%20Cutz%20Inquiry">Stallyon7@gmail.com</a></span>
+      <span class="fc-loc">📍 Atlanta, GA · Studio &amp; live entertainment · booking 7 days a week</span>
     </div>
     <div class="fine">© 2026 Diamond Cutz Studios · A House of Stal'lyon · diamondcutzstudios.com</div>
   </div>
@@ -626,8 +679,10 @@
     if(!host) return;
     tracks.forEach(function(tk){
       var el=document.createElement('div'); el.className='track';
+      var poster='https://i.ytimg.com/vi/'+tk.id+'/hqdefault.jpg';
       el.innerHTML='<div class="thumb" role="button" tabindex="0" aria-label="Play '+tk.t.replace(/"/g,'&quot;')+'">'+
-        '<img loading="lazy" src="https://i.ytimg.com/vi/'+tk.id+'/hqdefault.jpg" alt="'+tk.t.replace(/"/g,'&quot;')+'">'+
+        '<img class="fill" aria-hidden="true" loading="lazy" src="'+poster+'" alt="">'+
+        '<img class="art" loading="lazy" src="'+poster+'" alt="'+tk.t.replace(/"/g,'&quot;')+'">'+
         '<div class="play"><span>&#9658;</span></div></div>'+
         '<div class="meta"><h3>'+tk.t+'</h3>'+(tk.s?'<p>'+tk.s+'</p>':'')+'</div>';
       var thumb=el.querySelector('.thumb');
@@ -743,6 +798,75 @@
   function onScroll(){ if(!raf) raf=requestAnimationFrame(apply); }
   window.addEventListener('scroll',onScroll,{passive:true});
   window.addEventListener('resize',onScroll); apply();
+})();
+</script>
+<!-- scroll-reveal: every section animates in as it enters the viewport (qi 2026-06-24).
+     Mobile-first + GPU-only (opacity/transform). Graceful: if JS fails or is off, nothing is
+     hidden — content stays visible because .will-animate is only added by this script.
+     Honors prefers-reduced-motion. Does NOT touch the parallax portrait <img>. -->
+<script>
+(function(){
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce) return; // leave everything visible, no animation
+
+  // Major blocks that reveal as a whole. Order = top-to-bottom of the page.
+  var blockSel = [
+    'header.intro',
+    '#about .wrap',
+    '#studio .wrap',
+    '.artist',                 // Stal'lyon parallax section (panel/tags animate; bg img untouched)
+    '#music .tracks',          // Press play grid
+    '#music .links',           // Listen Everywhere chips
+    '.gallery',                // Upcoming Shows sliding gallery
+    '#events .wrap',           // services
+    '#book .wrap',             // direct line / booking cards
+    'footer .f-inner'          // footer + socials
+  ];
+
+  // Within a revealed block, these children cascade with incremental delay.
+  var childSel = '.card, .chip, .track, .show, .soc, .tags span, .btns .btn, .cards .card, .f-contact span';
+
+  var blocks = [];
+  blockSel.forEach(function(sel){
+    document.querySelectorAll(sel).forEach(function(el){ if(blocks.indexOf(el)===-1) blocks.push(el); });
+  });
+  if(!blocks.length) return;
+
+  blocks.forEach(function(el){
+    el.classList.add('will-animate');
+    var kids = el.querySelectorAll(childSel);
+    var i=0;
+    kids.forEach(function(k){
+      // only stagger direct-ish descendants of THIS block (skip ones owned by a nested will-animate)
+      if(k.closest('.will-animate') !== el) return;
+      k.classList.add('reveal-child');
+      k.style.setProperty('--rd', Math.min(i*70, 560) + 'ms');
+      i++;
+    });
+  });
+
+  if(!('IntersectionObserver' in window)){
+    // no observer support: just reveal everything immediately
+    blocks.forEach(function(el){ el.classList.add('in-view'); });
+    return;
+  }
+
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){ e.target.classList.add('in-view'); io.unobserve(e.target); }
+    });
+  }, {root:null, rootMargin:'0px 0px -8% 0px', threshold:0.12});
+
+  blocks.forEach(function(el){ io.observe(el); });
+
+  // Safety net: if anything is already in view on load (or layout shifts), reveal after a tick.
+  setTimeout(function(){
+    blocks.forEach(function(el){
+      if(el.classList.contains('in-view')) return;
+      var r=el.getBoundingClientRect();
+      if(r.top < (window.innerHeight||0) && r.bottom > 0){ el.classList.add('in-view'); io.unobserve(el); }
+    });
+  }, 120);
 })();
 </script>
 <script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
