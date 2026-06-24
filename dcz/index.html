@@ -70,31 +70,60 @@
     box-shadow:0 6px 18px rgba(138,97,29,.4), var(--glass-inset), inset 0 -1px 2px rgba(110,76,16,.5)}
   nav .cta:hover{transform:translateY(-1px);box-shadow:0 10px 26px rgba(231,185,107,.5), 0 0 22px rgba(231,185,107,.35), var(--glass-inset), inset 0 -1px 2px rgba(110,76,16,.5)}
 
-  /* ── 3D MEDALLION HERO ── */
-  .hero3d{position:relative;width:100%;height:56vh;height:56svh;min-height:360px;overflow:hidden;
-    background:radial-gradient(ellipse 70% 60% at 50% 42%, rgba(19,37,78,.55), transparent 70%);touch-action:pan-y}
+  /* ── 3D MEDALLION (sits inside the unified hero) ──
+     Mobile-first: sized so it never dominates a 390px phone and leaves the wordmark + CTAs
+     above the fold. Scales up gracefully on larger viewports. */
+  .hero3d{position:relative;width:100%;height:clamp(168px,34vh,240px);overflow:visible;margin:0 auto;
+    background:transparent;touch-action:pan-y}
   #coin{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;cursor:grab}
   #coin:active{cursor:grabbing}
-  .hero-fallback{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(64vmin,440px);z-index:0;opacity:1;transition:opacity .6s;
+  .hero-fallback{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(46vmin,230px);z-index:0;opacity:1;transition:opacity .6s;
     filter:drop-shadow(0 20px 60px rgba(0,0,0,.7)) drop-shadow(0 0 50px rgba(215,160,138,.18))}
   .hero3d.live .hero-fallback{opacity:0;pointer-events:none}
-  .spin-cue{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);z-index:3;font-family:var(--serif);
-    font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:rgba(234,242,255,.5);animation:cue 2.6s ease-in-out infinite;pointer-events:none}
+  .spin-cue{position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);z-index:3;font-family:var(--serif);
+    font-size:9px;letter-spacing:.42em;text-transform:uppercase;color:rgba(234,242,255,.5);animation:cue 2.6s ease-in-out infinite;pointer-events:none}
   @keyframes cue{0%,100%{opacity:.3}50%{opacity:.78}}
+  @media(min-width:760px){
+    .hero3d{height:clamp(240px,38vh,400px)}
+    .hero-fallback{width:min(56vmin,360px)}
+    .spin-cue{bottom:6px;font-size:10px}
+  }
 
   .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
-  header.intro{text-align:center;padding:30px 22px 56px}
-  header.intro h1{font-family:var(--serif);font-weight:800;font-size:clamp(30px,7vw,60px);letter-spacing:.06em;line-height:1.02;text-wrap:balance;
+
+  /* ── UNIFIED PREMIUM HERO ──  (rebuilt 2026-06-24)
+     One vertical stack: medallion → wordmark → tagline → sub → CTAs.
+     Mobile-first: every size in clamp() so it fits a 390px iPhone above the fold and
+     scales up cleanly. Obsidian/navy stage, rose-gold gradient wordmark, glass CTAs. */
+  header.intro{position:relative;text-align:center;
+    padding:clamp(10px,2.4vw,22px) 20px clamp(40px,7vw,72px);
+    display:flex;flex-direction:column;align-items:center}
+  /* a soft rose-gold halo behind the whole hero so the medallion + wordmark read as one stage */
+  header.intro::before{content:"";position:absolute;left:50%;top:-2%;transform:translateX(-50%);
+    width:min(120vw,860px);height:min(78vh,640px);z-index:-1;pointer-events:none;
+    background:radial-gradient(ellipse 60% 52% at 50% 38%, rgba(215,160,138,.16), transparent 66%),
+      radial-gradient(ellipse 58% 60% at 50% 30%, rgba(19,37,78,.42), transparent 72%);
+    filter:blur(2px)}
+  .hero-medallion{width:100%;max-width:540px;margin:0 auto}
+  .hero-copy{width:100%;max-width:640px;margin:clamp(6px,1.6vw,16px) auto 0;display:flex;flex-direction:column;align-items:center}
+  header.intro h1{font-family:var(--serif);font-weight:800;
+    font-size:clamp(33px,9.6vw,74px);letter-spacing:.03em;line-height:1.0;text-wrap:balance;
     background:var(--gold-text);-webkit-background-clip:text;background-clip:text;color:transparent;
-    filter:drop-shadow(0 2px 10px rgba(231,185,107,.22))}
-  header.intro .tag{font-size:clamp(12.5px,2.4vw,16px);letter-spacing:.22em;text-transform:uppercase;color:var(--steel);margin-top:16px;text-wrap:balance}
-  header.intro .sub{max-width:42ch;margin:20px auto 0;color:#bcc6d8;font-size:clamp(14.5px,3.6vw,15.5px);text-wrap:pretty}
-  .btns{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:30px}
-  .btn{font-family:var(--sans);font-weight:500;font-size:13.5px;letter-spacing:.06em;padding:13px 26px;border-radius:11px;transition:.22s;border:1px solid transparent;cursor:pointer}
-  /* hyper-real metallic gold primary */
-  .btn.primary{color:var(--gold-ink);font-weight:600;border:1px solid rgba(247,231,176,.55);background:var(--gold-grad);
-    box-shadow:0 10px 26px rgba(138,97,29,.4), var(--glass-inset), inset 0 -1px 2px rgba(110,76,16,.5)}
-  .btn.primary:hover{transform:translateY(-2px);box-shadow:0 16px 38px rgba(231,185,107,.5), 0 0 26px rgba(231,185,107,.35), var(--glass-inset), inset 0 -1px 2px rgba(110,76,16,.5)}
+    filter:drop-shadow(0 2px 14px rgba(231,170,140,.28)) drop-shadow(0 1px 1px rgba(0,0,0,.35))}
+  header.intro .tag{font-size:clamp(11px,3vw,15px);letter-spacing:.26em;text-transform:uppercase;
+    color:var(--rose-hi);margin-top:clamp(12px,2.4vw,18px);text-wrap:balance;opacity:.92}
+  header.intro .sub{max-width:40ch;margin:clamp(12px,2.6vw,18px) auto 0;color:#c2ccde;
+    font-size:clamp(14px,3.7vw,16px);line-height:1.55;text-wrap:balance}
+  /* thin diamond/glass divider between tagline and sub for that "cut" accent */
+  header.intro .rule{width:clamp(60px,18vw,120px);height:1px;margin:clamp(14px,2.6vw,18px) auto 0;
+    background:linear-gradient(90deg,transparent,var(--rose),transparent);opacity:.7}
+  .btns{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:clamp(22px,4vw,32px);width:100%}
+  .btn{font-family:var(--sans);font-weight:500;font-size:13.5px;letter-spacing:.06em;padding:13px 26px;border-radius:11px;transition:.22s;border:1px solid transparent;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;text-align:center;min-height:48px}
+  /* hyper-real ROSE-GOLD primary with a soft glow */
+  .btn.primary{color:var(--gold-ink);font-weight:600;border:1px solid rgba(251,228,214,.6);background:var(--gold-grad);
+    box-shadow:0 10px 26px rgba(156,98,73,.42), 0 0 24px rgba(227,170,140,.32), var(--glass-inset), inset 0 -1px 2px rgba(124,76,53,.5)}
+  .btn.primary:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(156,98,73,.55), 0 0 32px rgba(240,196,173,.45), var(--glass-inset), inset 0 -1px 2px rgba(124,76,53,.5)}
   /* hyper-real frosted glass ghost */
   .btn.ghost{color:var(--ice);border:1px solid var(--glass-border);background:var(--glass-fill);
     -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
@@ -102,33 +131,28 @@
   .btn.ghost:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.32);background:var(--glass-fill-hi);
     box-shadow:var(--glass-inset), 0 12px 28px rgba(0,0,0,.4)}
 
-  /* ── HERO with Stal'lyon cut-out figure ── (qi 2026-06-24)
-     Desktop: two columns — transparent cut-out on the LEFT, headline + Book CTA on the RIGHT.
-     The PNG is transparent so it composites on the page's own dark background (NO box/border).
-     The 3D medallion (.hero3d) above and the headline/CTA stay fully intact. */
-  header.intro{position:relative}
-  .intro-grid{display:flex;align-items:center;justify-content:center;gap:clamp(18px,4vw,52px);max-width:1080px;margin:0 auto;text-align:left}
-  .intro-figure{flex:0 0 auto;align-self:flex-end;width:clamp(180px,30vw,360px);pointer-events:none}
-  .intro-figure img{display:block;width:100%;height:auto;object-fit:contain;pointer-events:auto;
-    filter:drop-shadow(0 24px 48px rgba(0,0,0,.6)) drop-shadow(0 0 36px rgba(215,160,138,.12))}
-  .intro-copy{flex:1 1 460px;max-width:560px}
-  .intro-copy h1{text-align:left}
-  .intro-copy .tag,.intro-copy .sub{text-align:left;margin-left:0;margin-right:0}
-  .intro-copy .btns{justify-content:flex-start}
-  /* entrance animation — figure fades + rises on load (consistent with site reveal style) */
-  .intro-figure{opacity:0;transform:translateY(28px) scale(.985);
-    transition:opacity .8s cubic-bezier(.22,.61,.36,1), transform .8s cubic-bezier(.22,.61,.36,1)}
-  .intro-figure.in{opacity:1;transform:none}
-  @media(max-width:760px){
-    /* phone: headline + CTA first (above the fold), figure beneath — centered, transparent, no box */
-    .intro-grid{flex-direction:column;text-align:center;gap:18px}
-    .intro-copy{order:1;flex:1 1 auto;max-width:none}
-    .intro-copy h1,.intro-copy .tag,.intro-copy .sub{text-align:center;margin-left:auto;margin-right:auto}
-    .intro-copy .btns{justify-content:center}
-    .intro-figure{order:2;align-self:center;width:clamp(190px,62vw,300px)}
+  /* HERO CTAs — mobile-first: full-width-friendly + thumb-tappable on phones,
+     side-by-side from ~440px up. "Book a Session" leads. */
+  header.intro .btns .btn{flex:1 1 auto;min-width:0}
+  @media(max-width:439px){
+    header.intro .btns{flex-direction:column}
+    header.intro .btns .btn{width:100%;flex:0 0 auto}
   }
+  @media(min-width:440px){
+    header.intro .btns .btn{flex:0 1 auto;min-width:190px}
+  }
+
+  /* ── HERO ENTRANCE — tasteful staggered fade + rise (rebuilt 2026-06-24).
+     Medallion settles first, then wordmark → tagline → rule → sub → CTAs.
+     GRACEFUL: hiding only applies once JS arms the header with .js-anim, so no-JS
+     users always see the full hero. Honors prefers-reduced-motion. */
+  header.intro.js-anim .reveal{opacity:0;transform:translateY(22px) scale(.99);
+    transition:opacity .8s cubic-bezier(.22,.61,.36,1), transform .8s cubic-bezier(.22,.61,.36,1);
+    transition-delay:var(--d,0ms);will-change:opacity,transform}
+  header.intro.js-anim .hero-medallion.reveal{transform:translateY(14px) scale(.965)}
+  header.intro.js-anim.in .reveal{opacity:1;transform:none}
   @media (prefers-reduced-motion:reduce){
-    .intro-figure{opacity:1 !important;transform:none !important;transition:none !important}
+    header.intro.js-anim .reveal{opacity:1 !important;transform:none !important;transition:none !important}
   }
 
   section{padding:70px 0;border-top:1px solid var(--line-cool)}
@@ -338,7 +362,7 @@
   .show .info .det div .nb{white-space:nowrap}
   .show .info .btns{justify-content:center;margin-top:20px}
 
-  @media(max-width:600px){ section{padding:54px 0} .hero3d{height:60vh;height:60svh} }
+  @media(max-width:600px){ section{padding:54px 0} }
   @media (prefers-reduced-motion:reduce){.spin-cue{display:none}}
 
   /* ── SCROLL-REVEAL (qi 2026-06-24: every section animates in on scroll, mobile-first) ──
@@ -366,12 +390,28 @@
   <button class="cta" data-book>Book a Session</button>
 </nav>
 
-<!-- ── 3D MEDALLION HERO ── -->
-<section class="hero3d" id="hero3d">
-  <canvas id="coin"></canvas>
-  <img class="hero-fallback" src="/dcz/assets/logo-final.png?v=2" alt="Diamond Cutz Studios emblem" decoding="async">
-  <div class="spin-cue">✦ drag to spin ✦</div>
-</section>
+<!-- ── PREMIUM HERO ── (rebuilt 2026-06-24)
+     One unified stage: interactive 3D rose-gold medallion, then the wordmark, tagline,
+     sub, and CTAs. Mobile-first — fits a 390px iPhone above the fold; scales up cleanly.
+     The medallion section keeps id="hero3d"/#coin/.hero-fallback so the three.js below
+     (a deferred module — runs after parse) still binds to it. -->
+<header class="intro" id="heroIntro">
+  <section class="hero3d hero-medallion reveal" id="hero3d" style="--d:0ms">
+    <canvas id="coin"></canvas>
+    <img class="hero-fallback" src="/dcz/assets/logo-final.png?v=2" alt="Diamond Cutz Studios emblem" decoding="async">
+    <div class="spin-cue">✦ drag to spin ✦</div>
+  </section>
+  <div class="hero-copy">
+    <h1 class="reveal" style="--d:90ms">Diamond Cutz Studios</h1>
+    <div class="tag reveal" style="--d:200ms">Recording&nbsp;·&nbsp;Production&nbsp;·&nbsp;Live&nbsp;Entertainment</div>
+    <div class="rule reveal" style="--d:280ms" aria-hidden="true"></div>
+    <p class="sub reveal" style="--d:340ms">A House of Stal'lyon · Atlanta, GA. For all your music &amp; entertainment needs.</p>
+    <div class="btns reveal" style="--d:440ms">
+      <button class="btn primary" data-book>Book a Session</button>
+      <a class="btn ghost" href="#music">Hear the Sound</a>
+    </div>
+  </div>
+</header>
 
 <script type="importmap">{"imports":{"three":"/lib/three.module.min.js"}}</script>
 <script type="module">
@@ -462,20 +502,6 @@
     })();
   })();
 </script>
-
-<header class="intro">
-  <div class="intro-grid">
-    <div class="intro-copy">
-      <h1>Diamond Cutz Studios</h1>
-      <div class="tag">Recording&nbsp;·&nbsp;Production&nbsp;·&nbsp;Live&nbsp;Entertainment</div>
-      <p class="sub">A house of Stal'lyon · Atlanta, GA. For all your music &amp; entertainment needs.</p>
-      <div class="btns">
-        <button class="btn primary" data-book>Book a Session</button>
-        <a class="btn ghost" href="#music">Hear the Sound</a>
-      </div>
-    </div>
-  </div>
-</header>
 
 <section id="about">
   <div class="wrap">
@@ -851,13 +877,16 @@
   window.addEventListener('resize',onScroll); apply();
 })();
 </script>
-<!-- hero cut-out figure entrance: fade + rise on arrival (qi 2026-06-24), honors reduced-motion -->
+<!-- hero entrance: medallion → wordmark → tagline → sub → CTAs cascade on load
+     (rebuilt 2026-06-24). Graceful: only arms hiding (.js-anim) when JS runs and motion
+     is allowed, so no-JS / reduced-motion users see the full hero immediately. -->
 <script>
 (function(){
-  var fig=document.getElementById('introFigure'); if(!fig) return;
+  var hero=document.getElementById('heroIntro'); if(!hero) return;
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(reduce){ fig.classList.add('in'); return; }
-  requestAnimationFrame(function(){ requestAnimationFrame(function(){ fig.classList.add('in'); }); });
+  if(reduce) return; // leave the hero fully visible, no animation
+  hero.classList.add('js-anim'); // now the .reveal children are hidden, ready to rise
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){ hero.classList.add('in'); }); });
 })();
 </script>
 <!-- scroll-reveal: every section animates in as it enters the viewport (qi 2026-06-24).
@@ -870,8 +899,9 @@
   if(reduce) return; // leave everything visible, no animation
 
   // Major blocks that reveal as a whole. Order = top-to-bottom of the page.
+  // NOTE: header.intro is intentionally NOT here — the hero has its own dedicated
+  // load-time entrance cascade (see hero entrance script above).
   var blockSel = [
-    'header.intro',
     '#about .wrap',
     '#studio .wrap',
     '.artist',                 // Stal'lyon parallax section (panel/tags animate; bg img untouched)
