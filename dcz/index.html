@@ -24,6 +24,17 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script>
+  /* Force-animate override: visit ?motion=1 to preview animations even when the OS has
+     Reduce Motion ON (persists per-device); ?motion=0 clears it. Default = respect the OS,
+     so the public site stays accessible. Sets .allow-motion on <html> early. */
+  try{
+    var __m = new URLSearchParams(location.search).get('motion');
+    if(__m==='1') localStorage.setItem('dcz-motion','1');
+    if(__m==='0') localStorage.removeItem('dcz-motion');
+    if(localStorage.getItem('dcz-motion')==='1') document.documentElement.classList.add('allow-motion');
+  }catch(e){}
+</script>
 <!--
   /dcz - Diamond Cutz Studios one-pager. HERO = real-time three.js 3D medallion:
   the CHOSEN emblem (navy/rose-gold/platinum, alpha) mapped on a coin with true
@@ -152,7 +163,7 @@
   header.intro.js-anim .hero-medallion.reveal{transform:translateY(14px) scale(.965)}
   header.intro.js-anim.in .reveal{opacity:1;transform:none}
   @media (prefers-reduced-motion:reduce){
-    header.intro.js-anim .reveal{opacity:1 !important;transform:none !important;transition:none !important}
+    html:not(.allow-motion) header.intro.js-anim .reveal{opacity:1 !important;transform:none !important;transition:none !important}
   }
 
   section{padding:70px 0;border-top:1px solid var(--line-cool)}
@@ -366,7 +377,7 @@
   .show .info .btns{justify-content:center;margin-top:20px}
 
   @media(max-width:600px){ section{padding:54px 0} }
-  @media (prefers-reduced-motion:reduce){.spin-cue{display:none}}
+  @media (prefers-reduced-motion:reduce){html:not(.allow-motion) .spin-cue{display:none}}
 
   /* ── SCROLL-REVEAL (qi 2026-06-24: every section animates in on scroll, mobile-first) ──
      Graceful: content is visible by default. JS adds .will-animate to opt blocks IN to the
@@ -381,7 +392,7 @@
     transition-delay:var(--rd,0ms);will-change:opacity,transform}
   .will-animate.in-view .reveal-child{opacity:1;transform:none}
   @media (prefers-reduced-motion:reduce){
-    .will-animate,.will-animate .reveal-child{opacity:1 !important;transform:none !important;transition:none !important}
+    html:not(.allow-motion) .will-animate,html:not(.allow-motion) .will-animate .reveal-child{opacity:1 !important;transform:none !important;transition:none !important}
   }
 </style>
 </head>
@@ -971,10 +982,10 @@
 
 /* ════════ reduced motion: no autoplay / smooth-scroll / dim-scale / hover scale ════════ */
 @media (prefers-reduced-motion:reduce){
-  #shows .poster,#shows .flyer img.zoomable,#shows .gal-nav i,#shows .gal-dots button,#shows .gal-progress > i,#shows .flyer-cue{transition:none}
-  #shows .shows-track{scroll-behavior:auto}
-  #shows .show:not(.is-active) .poster{opacity:1;transform:none}
-  #shows .flyer:hover img.zoomable{transform:none}
+  html:not(.allow-motion) #shows .poster,html:not(.allow-motion) #shows .flyer img.zoomable,html:not(.allow-motion) #shows .gal-nav i,html:not(.allow-motion) #shows .gal-dots button,html:not(.allow-motion) #shows .gal-progress > i,html:not(.allow-motion) #shows .flyer-cue{transition:none}
+  html:not(.allow-motion) #shows .shows-track{scroll-behavior:auto}
+  html:not(.allow-motion) #shows .show:not(.is-active) .poster{opacity:1;transform:none}
+  html:not(.allow-motion) #shows .flyer:hover img.zoomable{transform:none}
 }
 </style>
 <div id="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer">
@@ -1025,7 +1036,7 @@
   var live = root.querySelector('.gal-live');
 
   var mq = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
-  var reduce = !!(mq && mq.matches);
+  var reduce = !!(mq && mq.matches) && !document.documentElement.classList.contains('allow-motion');
   var n = slides.length, cur = 0, auto = null, AUTO_MS = 7000;
   var hovering = false, focused = false;
 
@@ -1108,7 +1119,7 @@
 
   // react if the user toggles reduced-motion at runtime (grafted from #2)
   function onMotionPref(){
-    reduce = !!(mq && mq.matches);
+    reduce = !!(mq && mq.matches) && !document.documentElement.classList.contains('allow-motion');
     if(reduce){ stop(); paint(cur); } else { start(); }
   }
   if(mq){ if(mq.addEventListener) mq.addEventListener('change', onMotionPref); else if(mq.addListener) mq.addListener(onMotionPref); }
@@ -1124,7 +1135,7 @@
 <!-- artist cut-out figure parallax (qi 2026-06-24) — subtle float, stays grounded, honors reduced-motion -->
 <script>
 (function(){
-  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches && !document.documentElement.classList.contains('allow-motion');
   if(reduce) return;
   var bg=document.querySelector('.artist .portrait-bg img'), sec=document.querySelector('.artist');
   if(!bg||!sec) return;
@@ -1148,7 +1159,7 @@
 <script>
 (function(){
   var hero=document.getElementById('heroIntro'); if(!hero) return;
-  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches && !document.documentElement.classList.contains('allow-motion');
   if(reduce) return; // leave the hero fully visible, no animation
   hero.classList.add('js-anim'); // now the .reveal children are hidden, ready to rise
   requestAnimationFrame(function(){ requestAnimationFrame(function(){ hero.classList.add('in'); }); });
@@ -1160,7 +1171,7 @@
      Honors prefers-reduced-motion. Does NOT touch the parallax portrait <img>. -->
 <script>
 (function(){
-  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches && !document.documentElement.classList.contains('allow-motion');
   if(reduce) return; // leave everything visible, no animation
 
   // Major blocks that reveal as a whole. Order = top-to-bottom of the page.
