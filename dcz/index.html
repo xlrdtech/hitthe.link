@@ -254,18 +254,18 @@
      dark gradient and stands bottom-aligned on the LEFT; glass bio panel anchors RIGHT.
      align-items:flex-end so he "stands"; the bio panel realigns to flex-start via its own rule. */
   .artist{position:relative;margin-top:40px;border-radius:22px;overflow:hidden;isolation:isolate;
-    height:clamp(520px,64vh,640px);display:flex;align-items:stretch;justify-content:center;gap:clamp(14px,3vw,34px);
-    padding:clamp(18px,3vw,30px);border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.6);
+    height:clamp(520px,64vh,640px);display:flex;align-items:stretch;justify-content:flex-start;gap:0;
+    padding:0;border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.6);
     background:
       radial-gradient(120% 90% at 22% 100%, rgba(19,37,78,.55), transparent 62%),
       radial-gradient(90% 70% at 80% 18%, rgba(215,160,138,.10), transparent 60%),
       linear-gradient(180deg, rgba(8,11,22,.7), rgba(4,6,12,.92))}
   /* transparent cut-out figure: occupies the LEFT, full-height, bottom-aligned, contained
      (head/hat never clipped). parallax via translateY on scroll. No box / no border. */
-  .artist .portrait-bg{position:relative;z-index:0;cursor:zoom-in;flex:1 1 52%;align-self:stretch;
-    display:flex;align-items:flex-end;justify-content:center;pointer-events:none;overflow:visible}
-  .artist .portrait-bg img{display:block;width:auto;max-width:100%;height:100%;
-    object-fit:contain;object-position:bottom center;pointer-events:auto;
+  .artist .portrait-bg{position:relative;z-index:0;cursor:zoom-in;flex:0 0 auto;align-self:stretch;
+    display:flex;align-items:flex-end;justify-content:flex-start;pointer-events:none;overflow:hidden}
+  .artist .portrait-bg img{display:block;width:auto;max-width:none;height:100%;
+    object-fit:contain;object-position:left bottom;pointer-events:auto;
     filter:drop-shadow(0 26px 50px rgba(0,0,0,.65)) drop-shadow(0 0 38px rgba(215,160,138,.10));
     will-change:transform}
   /* soft contact-shadow / floor so he doesn't look pasted; sits under his feet, transparent edges */
@@ -280,7 +280,7 @@
   /* hyper-real frosted glass bio panel sitting over the portrait.
      Sizes to its content (no fixed height) and gets generous top padding so the heading
      line is always fully visible; if it ever exceeds the section it scrolls internally. */
-  .artist .bio{position:relative;z-index:2;flex:1 1 48%;margin:0;text-align:left;align-self:stretch;display:flex;flex-direction:column;justify-content:flex-start;
+  .artist .bio{position:relative;z-index:2;flex:1 1 48%;margin:clamp(18px,3vw,30px);text-align:left;align-self:stretch;display:flex;flex-direction:column;justify-content:flex-start;
     padding:clamp(24px,3vw,38px);border-radius:18px;border:1px solid var(--glass-border);
     overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
     background:linear-gradient(165deg,rgba(244,247,252,.10),rgba(232,238,248,.05));
@@ -567,9 +567,9 @@
     <h2>Stal'lyon</h2>
     <div class="artist">
       <div class="portrait-bg">
-        <img class="zoomable" src="/dcz/assets/stallyon-cutout-2.png" alt="Stal'lyon, Andre Jermaine" loading="lazy">
+        <img class="zoomable" src="/dcz/assets/stallyon-cutout-3.png" alt="Stal'lyon, Andre Jermaine" loading="lazy">
       </div>
-      <span class="portrait-zoom zoomable" data-zoom-src="/dcz/assets/stallyon-cutout-2.png" data-zoom-alt="Stal'lyon, Andre Jermaine" role="button" tabindex="0" aria-label="View full portrait">⤢ View portrait</span>
+      <span class="portrait-zoom zoomable" data-zoom-src="/dcz/assets/stallyon-cutout-3.png" data-zoom-alt="Stal'lyon, Andre Jermaine" role="button" tabindex="0" aria-label="View full portrait">⤢ View portrait</span>
       <div class="bio">
         <span class="nm">Stal'lyon — The Artist</span>
         <div data-ed-html="bio">
