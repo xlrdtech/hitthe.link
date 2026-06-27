@@ -8,9 +8,13 @@
 (function () {
   const { useState, useRef, useEffect, useCallback } = React;
 
-  // Default bridge = tailnet-only WSS (valid cert). Phone must be on the tailnet (mesh is home).
+  // When the PWA is served from the mesh bridge itself (ts.net:8444), use same-origin so there is
+  // no CORS and no Chrome Local Network Access wall (public origin -> local IP is blocked).
+  // When loaded from public hitthe.link, point at the tailnet bridge absolutely (works on iOS WebKit;
+  // Chrome desktop/Android will hit the LNA wall, so the canonical live URL is the ts.net one).
   // Override for local dev with localStorage['xos.bridge'] = 'http://localhost:8044'.
-  const BRIDGE = localStorage.getItem('xos.bridge') || 'https://nitro.salmon-alkaline.ts.net:8444';
+  const sameOrigin = (location.port === '8444') || /\.ts\.net$/i.test(location.hostname);
+  const BRIDGE = localStorage.getItem('xos.bridge') || (sameOrigin ? location.origin : 'https://nitro.salmon-alkaline.ts.net:8444');
   const WSBASE = BRIDGE.replace(/^http/, 'ws');
   let cachedTok = null;
   async function getToken() {
