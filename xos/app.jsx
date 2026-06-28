@@ -1051,7 +1051,7 @@ function Dialpad({ callers }) {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
             <path d="M20 15.5c-1.2 0-2.5-.2-3.6-.6-.3-.1-.7 0-1 .3l-2.2 2.2c-2.8-1.4-5.2-3.7-6.6-6.6l2.2-2.2c.3-.3.4-.7.3-1-.4-1.1-.6-2.3-.6-3.6 0-.6-.4-1-1-1H4c-.6 0-1 .4-1 1 0 9.4 7.6 17 17 17 .6 0 1-.4 1-1v-3.5c0-.6-.4-1-1-1z"/>
           </svg>
-          <span>{num ? "call" : "voicemail"}</span>
+          <span>call</span>
         </a>
         <button className="ca-btn" aria-label="backspace" onClick={back}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
