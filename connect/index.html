@@ -118,9 +118,26 @@ async function login(pw){
   const j=await api('POST','/_matrix/client/v3/login',{type:'m.login.password',identifier:{type:'m.id.user',user:'qi'},password:pw});
   TOKEN=j.access_token; UID=j.user_id; LS.setItem('htlmx_token',TOKEN); LS.setItem('htlmx_uid',UID);
 }
+// IMPORTANT: mautrix bridges only consume interactive login input (cookies/QR) in the
+// bot's MANAGEMENT room (the first DM, greeted "marked as your management room").
+// A fresh DM silently drops the step input — so we must find & reuse the management room.
 async function dmRoom(net){
-  const key='htlmx_room_'+net.k; let rid=LS.getItem(key);
-  if(rid){ try{ await api('GET',`/_matrix/client/v3/rooms/${enc(rid)}/state/m.room.create/`); return rid; }catch{ LS.removeItem(key); } }
+  const key='htlmx_room_'+net.k; const cached=LS.getItem(key);
+  if(cached){ try{ await api('GET',`/_matrix/client/v3/rooms/${enc(cached)}/state/m.room.create/`); return cached; }catch{ LS.removeItem(key); } }
+  // gather candidate DM rooms with this bot (m.direct first, then joined-rooms scan)
+  let cands=[];
+  try{ const dm=await api('GET',`/_matrix/client/v3/user/${encodeURIComponent(UID)}/account_data/m.direct`); cands=(dm[net.mxid]||[]).slice(); }catch{}
+  if(!cands.length){
+    try{ const jr=await api('GET','/_matrix/client/v3/joined_rooms');
+      for(const rid of (jr.joined_rooms||[])){ try{ const m=await api('GET',`/_matrix/client/v3/rooms/${enc(rid)}/joined_members`); if(m.joined&&m.joined[net.mxid]&&Object.keys(m.joined).length<=2) cands.push(rid);}catch{} } }catch{}
+  }
+  // prefer the room marked as the management room
+  for(const rid of cands){
+    try{ const t=await api('GET',`/_matrix/client/v3/rooms/${enc(rid)}/messages?dir=f&limit=20`);
+      if((t.chunk||[]).some(e=>((e.content&&e.content.body)||'').includes('management room'))){ LS.setItem(key,rid); return rid; } }catch{}
+  }
+  if(cands.length){ LS.setItem(key,cands[0]); return cands[0]; }
+  // none exist yet -> creating the first DM makes it the management room
   const j=await api('POST','/_matrix/client/v3/createRoom',{invite:[net.mxid],is_direct:true,preset:'trusted_private_chat'});
   LS.setItem(key,j.room_id); return j.room_id;
 }
