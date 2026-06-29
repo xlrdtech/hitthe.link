@@ -47,7 +47,7 @@
   <div class="foot" id="foot"></div>
 
 <script>
-const PAL={canon_save:'#bf5af2',design_system:'#2f8cff',ship:'#39ff14',autoship:'#39ff14',voice:'#ff9f0a',bridge:'#25d366',inbox:'#64d2ff',telephony:'#ff453a',memory:'#bf5af2',scope:'#ffd60a',goal:'#ff7ab6'};
+const PAL={canon_save:'#bf5af2',design_system:'#2f8cff',ship:'#39ff14',autoship:'#39ff14',voice:'#ff9f0a',bridge:'#25d366',inbox:'#64d2ff',telephony:'#ff453a',memory:'#bf5af2',scope:'#ffd60a',goal:'#ff7ab6',hn:'#ff6600',anthropic:'#d97757',feed:'#9aa4b2'};
 const col=(t)=>{ if(PAL[t])return PAL[t]; let h=0; for(const c of(t||''))h=(h*31+c.charCodeAt(0))>>>0; const P=['#2f8cff','#0fbf3f','#ff9f0a','#bf5af2','#ff453a','#64d2ff','#ffd60a','#ff7ab6']; return P[h%P.length]; };
 const ini=(s)=>{const w=(s||'').replace(/[^A-Za-z0-9 ]/g,' ').trim().split(/\s+/).filter(Boolean);return(((w[0]||'?')[0]||'?')+((w[1]||'')[0]||'')).toUpperCase();};
 const ago=(ts)=>{const d=(Date.now()-new Date(ts).getTime())/1000;if(isNaN(d))return'';if(d<60)return Math.max(1,d|0)+'s';if(d<3600)return (d/60|0)+'m';if(d<86400)return (d/3600|0)+'h';if(d<2592000)return (d/86400|0)+'d';return new Date(ts).toLocaleDateString();};
@@ -74,7 +74,7 @@ function render(){
       <div class="nb">
         <div class="nh"><span class="ncat">${esc(i.catName)}</span><span class="nt">${ago(i.ts)}</span></div>
         <div class="ntx">${esc(i.text)}</div>
-        <div class="npersona">${esc(i.persona)}${i.proof?` · <a href="${esc(i.proof)}" target="_blank">proof ↗</a>`:''}</div>
+        <div class="npersona">${esc(i.persona)}${i.proof?` · <a href="${esc(i.proof)}" target="_blank">open ↗</a>`:''}</div>
       </div></div>`).join('');
 }
 function buildFilters(){
@@ -86,12 +86,17 @@ function buildFilters(){
   f.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{filter=b.dataset.c;f.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b));render();});
 }
 function load(){
-  fetch('/xen/live.json',{cache:'no-store'}).then(r=>r.json()).then(d=>{
-    ITEMS=flatten(d);
-    document.getElementById('meta').innerHTML=`<b>${ITEMS.length}</b> events · ${d.tasks_total||0} tasks · updated ${ago(d.updated)} ago`;
-    document.getElementById('foot').innerHTML=`XEN RSS · live from xen/live.json · feeds the omni OTLP lane → XOS notification center · <a href="/life/" style="color:#2f8cff;text-decoration:none">/life</a>`;
+  Promise.all([
+    fetch('/xen/live.json',{cache:'no-store'}).then(r=>r.json()).catch(()=>({})),
+    fetch('/rss/external.json',{cache:'no-store'}).then(r=>r.json()).catch(()=>({items:[]}))
+  ]).then(([d,ext])=>{
+    const xen=flatten(d);
+    const e=(ext.items||[]).map(i=>({ts:i.ts,text:i.text,cat:i.cat,catName:i.catName,persona:i.persona,proof:i.proof||null}));
+    ITEMS=[...xen,...e].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+    document.getElementById('meta').innerHTML=`<b>${ITEMS.length}</b> events · ${xen.length} XEN · ${e.length} feeds · updated ${ago(d.updated)} ago`;
+    document.getElementById('foot').innerHTML=`XEN RSS · xen/live.json + ${e.length} subscribed feed item(s) → omni OTLP → XOS · <a href="/life/" style="color:#2f8cff;text-decoration:none">/life</a> · <a href="/rss/feed.xml" style="color:#2f8cff;text-decoration:none">feed.xml</a>`;
     buildFilters(); render();
-  }).catch(e=>{document.getElementById('feed').innerHTML='<div class="empty">could not load xen/live.json</div>';});
+  }).catch(e=>{document.getElementById('feed').innerHTML='<div class="empty">could not load feed</div>';});
 }
 load(); setInterval(load, 30000);
 </script>
