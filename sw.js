@@ -2,7 +2,7 @@
    SAFE AT ROOT: only intercepts its OWN shell assets + the root document.
    Every other hitthe.link path (/aod, /999, /auth, /apps/*, ...) passes straight
    through to the network untouched — the SW never calls respondWith for them. */
-const CACHE = 'htl-v3';
+const CACHE = 'htl-v4';
 const SHELL = [
   './', 'index.html',
   'css/os.css', 'js/icons.js', 'js/apps.js', 'js/os.js', 'js/sites.js',
