@@ -337,6 +337,54 @@ footer .f2 em{color:var(--ng)}
   </div>
 </section>
 
+<!-- OMNI-INBOX · MATRIX BRIDGES -->
+<style>
+#omni .ob-grid{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px}
+#omni .ob-card{flex:1 1 200px;max-width:300px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px 16px}
+#omni .ob-net{font-size:.92rem;font-weight:600;letter-spacing:.01em}
+#omni .ob-acct{font-size:.62rem;color:var(--faint,#888);margin-top:3px;font-family:ui-monospace,monospace;word-break:break-all}
+#omni .ob-pill{display:inline-flex;align-items:center;gap:6px;margin-top:9px;font-size:.58rem;text-transform:uppercase;letter-spacing:.1em;padding:4px 9px;border-radius:999px;font-weight:700}
+#omni .ob-pill.on{color:#0c1a0c;background:#39ff14;box-shadow:0 0 12px rgba(57,255,20,.45)}
+#omni .ob-pill.act{color:#1a1405;background:#ffb43a;box-shadow:0 0 12px rgba(255,180,58,.35)}
+#omni .ob-todo{margin-top:26px}
+#omni .ob-todo h3{font-size:.82rem;letter-spacing:.04em;color:#fff;margin:0 0 12px}
+#omni .ob-item{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-left:2px solid #ffb43a;background:rgba(255,180,58,.05);border-radius:0 10px 10px 0;margin-bottom:9px}
+#omni .ob-item b{color:#ffd98a}
+#omni .ob-item .s{font-size:.74rem;color:var(--muted,#aaa);line-height:1.45}
+#omni .ob-cta{display:inline-block;margin-top:18px;background:#39ff14;color:#06140a;font-weight:700;font-size:.78rem;letter-spacing:.03em;padding:11px 20px;border-radius:11px;text-decoration:none}
+</style>
+<section class="wrap" id="omni">
+  <div class="sechead">
+    <div class="ix">&#937; &middot; Omni-Inbox</div>
+    <h2>Matrix bridges &mdash; one inbox</h2>
+    <div class="rule"></div>
+    <div class="note" id="omni-note">every messaging network into your <code>@self</code> homeserver &middot; <span id="omni-count">&mdash;</span> &middot; as of 2026-06-29</div>
+  </div>
+  <div class="ob-grid" id="omni-grid"></div>
+  <div class="ob-todo" id="omni-todo"></div>
+  <a class="ob-cta" href="/connect/">&#9889; Open Connect &rarr;</a>
+</section>
+<script>
+(function(){
+  var NETS=[
+    {n:'Telegram', a:'xlrdtech', on:true},
+    {n:'Facebook / Messenger', a:'East Allen', on:true},
+    {n:'Instagram', a:'XLRD999', on:true},
+    {n:'Google Voice', a:'+1 470 615 9983', on:true},
+    {n:'LinkedIn', a:'East Allen', on:false, step:'Re-export linkedin.com cookies from an <b>Incognito tab</b>, then <b>close that window</b> before pasting &mdash; LinkedIn invalidates the token if the source browser stays open.'},
+    {n:'WhatsApp', a:'scan to link', on:false, step:'Open <b>hitthe.link/connect</b> &rarr; passcode <b>0000</b> &rarr; tap WhatsApp &rarr; scan the QR with WhatsApp &rarr; Linked Devices.'},
+    {n:'Discord', a:'scan to link', on:false, step:'Open <b>hitthe.link/connect</b> &rarr; tap Discord &rarr; scan the QR with the Discord mobile app.'},
+    {n:'Slack', a:'token to link', on:false, step:'On <b>app.slack.com</b>: DevTools &rarr; Network &rarr; right-click a request &rarr; <b>Copy as cURL</b> &rarr; paste it (Slack&rsquo;s token isn&rsquo;t a cookie).'}
+  ];
+  var on=NETS.filter(function(x){return x.on}).length;
+  var g=document.getElementById('omni-grid');
+  g.innerHTML=NETS.map(function(x){return '<div class="ob-card"><div class="ob-net">'+x.n+'</div><div class="ob-acct">'+x.a+'</div><span class="ob-pill '+(x.on?'on':'act')+'">'+(x.on?'&#9679; connected':'&#9888; action')+'</span></div>'}).join('');
+  var c=document.getElementById('omni-count'); if(c) c.innerHTML='<b style="color:#39ff14">'+on+' connected</b> / '+NETS.length+' networks';
+  var todo=NETS.filter(function(x){return !x.on});
+  document.getElementById('omni-todo').innerHTML='<h3>Action items &mdash; '+todo.length+' left (only you can do these)</h3>'+todo.map(function(x){return '<div class="ob-item"><b>'+x.n+'</b><div class="s">'+x.step+'</div></div>'}).join('');
+})();
+</script>
+
 <!-- CRON SCHEDULER (24/7 HOTL autopilot) -->
 <style>
 .cron-dot{font-size:.62em;vertical-align:middle;margin-left:8px;color:#444}
