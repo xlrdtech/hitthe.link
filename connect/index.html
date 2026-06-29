@@ -115,7 +115,7 @@ async function api(method,path,body){
   return j;
 }
 async function login(pw){
-  const j=await api('POST','/_matrix/client/v3/login',{type:'m.login.password',identifier:{type:'m.id.user',user:'qi'},password:pw});
+  const j=await api('POST','/_matrix/client/v3/login',{type:'m.login.password',identifier:{type:'m.id.user',user:'self'},password:pw});
   TOKEN=j.access_token; UID=j.user_id; LS.setItem('htlmx_token',TOKEN); LS.setItem('htlmx_uid',UID);
 }
 // IMPORTANT: mautrix bridges only consume interactive login input (cookies/QR) in the
