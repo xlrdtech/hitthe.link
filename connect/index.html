@@ -163,8 +163,26 @@ function openPanel(k){
   $('#log').innerHTML=`<div class="msg sys">${net.how}</div><div class="msg sys">opening management room…</div>`;
   $('#p-hint').classList.add('hide'); $('#p-in').value='';
   $('#panel').classList.add('open');
-  dmRoom(net).then(rid=>{ net.rid=rid; refresh(); POLL=setInterval(refresh,2800); })
-    .catch(e=>$('#log').innerHTML=`<div class="msg sys">error: ${e.message}</div>`);
+  dmRoom(net).then(async rid=>{
+    net.rid=rid; await refresh(); POLL=setInterval(refresh,2800);
+    // wait for the bridge bot to actually join the room, then auto-start login once
+    const joined=await waitBotJoin(net);
+    const lg=$('#log');
+    const already = lg.querySelector('.msg img') || /logged in|connected as/i.test(lg.textContent);
+    if(joined && !already && /^login/.test(net.quick[0])){
+      $('#log').insertAdjacentHTML('beforeend','<div class="msg sys">starting '+net.quick[0]+'…</div>');
+      doSend(net.quick[0]);
+    } else if(!joined){
+      $('#log').insertAdjacentHTML('beforeend','<div class="msg sys">bot is waking up — tap a button below if nothing appears.</div>');
+    }
+  }).catch(e=>$('#log').innerHTML=`<div class="msg sys">error: ${e.message}</div>`);
+}
+async function waitBotJoin(net){
+  for(let i=0;i<10;i++){
+    try{ const j=await api('GET',`/_matrix/client/v3/rooms/${enc(net.rid)}/joined_members`); if(j.joined && j.joined[net.mxid]) return true; }catch{}
+    await new Promise(r=>setTimeout(r,1500));
+  }
+  return false;
 }
 function closePanel(){ $('#panel').classList.remove('open'); clearInterval(POLL); POLL=null; CUR=null; }
 $('#p-x').onclick=closePanel;
