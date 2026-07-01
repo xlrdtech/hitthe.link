@@ -71,6 +71,13 @@
   .mbody select:focus,.mbody textarea:focus{outline:none;border-color:rgba(216,180,106,.6);box-shadow:0 0 0 3px rgba(216,180,106,.13)}
   .mbody textarea{resize:vertical;min-height:80px}
   .mfoot{display:flex;gap:10px;align-items:center;justify-content:flex-end;padding:16px 22px;border-top:1px solid var(--line)}
+  .image-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+  .image-list .img-card{width:74px;height:74px;border-radius:8px;border:1px solid var(--line);
+    background:var(--surface);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+  .image-list .img-card img{width:100%;height:100%;object-fit:cover}
+  .image-list .img-card .kind-badge{position:absolute;bottom:0;left:0;right:0;font-size:9px;letter-spacing:.03em;
+    text-transform:uppercase;text-align:center;background:rgba(0,0,0,.55);color:#fff;padding:2px 0}
+  .image-list .img-card.pdf{font-size:11px;color:var(--mut);flex-direction:column;gap:4px}
 
   /* --- animated gradient background toggle (ported from /eliops/) --- */
   body.elios-bg::before{
@@ -177,6 +184,20 @@
       <input type="hidden" id="e-id">
       <div><label for="e-stage">Status</label><select id="e-stage"></select></div>
       <div><label for="e-notes">Notes</label><textarea id="e-notes" rows="4" placeholder="Call outcome, next step, details..."></textarea></div>
+      <div id="imagesSection">
+        <label>Images (invoices, logos &middot; permanent)</label>
+        <div id="imageList" class="image-list"></div>
+        <input type="file" id="imageFile" accept="image/png,image/jpeg,image/webp,application/pdf" style="display:none">
+        <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+          <select id="imageKind" style="width:auto;flex:none">
+            <option value="invoice">Invoice</option>
+            <option value="logo">Logo</option>
+            <option value="other">Other</option>
+          </select>
+          <button class="btn ghost" id="imageUploadBtn" type="button">Upload image</button>
+          <span id="imageUploadMsg" class="note hidden" style="margin:0"></span>
+        </div>
+      </div>
     </div>
     <div id="editMsg" class="note hidden" style="margin:6px 22px 0"></div>
     <div class="mfoot">
@@ -418,12 +439,58 @@
   }
   function showEditMsg(t,k){ var m=$('#editMsg'); m.className='note'+(k?' '+k:''); m.textContent=t; m.classList.remove('hidden'); }
   function closeEditModal(){ $('#editScrim').classList.remove('on'); $('#editMsg').classList.add('hidden'); }
+  async function loadImages(leadId){
+    var list = $('#imageList'); list.innerHTML = '';
+    if(!leadId) return;
+    var res = await sb.from('lead_images').select('id, storage_path, kind, file_name, content_type').eq('lead_id', leadId).order('created_at', {ascending:false});
+    if(res.error){ return; }
+    for(var i=0;i<(res.data||[]).length;i++){
+      var img = res.data[i];
+      var card = document.createElement('div'); card.className = 'img-card';
+      if((img.content_type||'').indexOf('pdf') !== -1){
+        card.classList.add('pdf'); card.textContent = 'PDF';
+      } else {
+        var signed = await sb.storage.from('lead-images').createSignedUrl(img.storage_path, 3600);
+        var el = document.createElement('img');
+        el.src = (signed.data && signed.data.signedUrl) || '';
+        el.alt = img.file_name || img.kind;
+        card.appendChild(el);
+      }
+      var badge = document.createElement('div'); badge.className='kind-badge'; badge.textContent = img.kind;
+      card.appendChild(badge);
+      list.appendChild(card);
+    }
+  }
+  function showImageUploadMsg(t,k){ var m=$('#imageUploadMsg'); m.className='note'+(k?' '+k:''); m.textContent=t; m.classList.remove('hidden'); }
+  $('#imageUploadBtn').addEventListener('click', function(){ $('#imageFile').click(); });
+  $('#imageFile').addEventListener('change', async function(){
+    var file = this.files && this.files[0]; this.value = '';
+    if(!file) return;
+    var leadId = $('#e-id').value; if(!leadId) return;
+    var kind = $('#imageKind').value;
+    var btn = $('#imageUploadBtn'); btn.disabled = true; var orig = btn.textContent; btn.textContent = 'Uploading...';
+    try{
+      var path = leadId + '/' + crypto.randomUUID() + '-' + file.name;
+      var up = await sb.storage.from('lead-images').upload(path, file, { contentType: file.type });
+      if(up.error){ showImageUploadMsg('Upload failed: ' + esc(up.error.message||'error'), 'err'); return; }
+      var reg = await sb.rpc('add_lead_image', {
+        p_lead_id: leadId, p_storage_path: path, p_kind: kind,
+        p_file_name: file.name, p_content_type: file.type, p_size_bytes: file.size
+      });
+      if(reg.error){ showImageUploadMsg('Registration failed: ' + esc(reg.error.message||'error'), 'err'); return; }
+      showImageUploadMsg('Uploaded.', 'ok');
+      await loadImages(leadId);
+    } catch(err){ showImageUploadMsg('Upload error: ' + esc((err&&err.message)||String(err)), 'err'); }
+    finally{ btn.disabled = false; btn.textContent = orig; }
+  });
   function openEdit(l){
     $('#e-id').value = l.id;
     $('#editLeadName').textContent = l.name || 'Lead';
     fillStageSelect(l.pipeline_stage || 'New');
     $('#e-notes').value = l.notes || '';
     $('#editMsg').classList.add('hidden');
+    $('#imageUploadMsg').classList.add('hidden');
+    loadImages(l.id);
     $('#editScrim').classList.add('on');
   }
   $('#editClose').addEventListener('click', closeEditModal);

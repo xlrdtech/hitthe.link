@@ -107,6 +107,14 @@
   .pick:hover{transform:translateY(-2px);box-shadow:0 20px 46px rgba(142,160,255,.5),0 0 26px rgba(142,160,255,.3),var(--glass-inset)}
   .pick:active{transform:translateY(0)}
   .pick svg{width:18px;height:18px}
+  .connect{display:none;align-items:center;gap:8px;cursor:pointer;
+    font-weight:600;font-size:13px;letter-spacing:.01em;padding:11px 16px;border-radius:14px;transition:.2s;
+    color:var(--ink);border:1px solid var(--line);background:rgba(10,11,18,.62);
+    -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);white-space:nowrap}
+  .connect[data-supported="1"]{display:inline-flex}
+  .connect.on{border-color:rgba(116,224,168,.5);color:#74e0a8}
+  .connect:hover{transform:translateY(-2px)}
+  .connect svg{width:16px;height:16px}
   .note{flex:1 1 auto;min-width:0;background:rgba(10,11,18,.62);border:1px solid var(--line);border-radius:14px;
     color:var(--ink);font-family:var(--sans);font-size:14px;font-weight:300;padding:13px 16px;transition:.2s;
     -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);max-width:280px}
@@ -114,6 +122,7 @@
   .note:focus{outline:none;border-color:rgba(184,198,255,.6);box-shadow:0 0 0 3px rgba(142,160,255,.16)}
   @media(max-width:560px){
     .note{display:none}
+    .connect{display:none!important}
     /* on phones the dock spans the width and the picker becomes a big, obvious,
        thumb-friendly tap target (no drag possible on touch → tap to add). */
     .dock{width:calc(100vw - 24px);max-width:none;left:0;right:0;transform:none;
@@ -223,6 +232,10 @@
     Drop a file
   </label>
   <input id="fileInput" type="file" accept="*/*" multiple style="display:none">
+  <button class="connect" id="connectFolderBtn" type="button" data-supported="0" title="Sync new files from a local folder automatically">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+    <span id="connectFolderLabel">Connect a folder</span>
+  </button>
 </div>
 
 <!-- object tooltip -->
@@ -892,6 +905,135 @@
     setStatusBar('busy','connecting…');
     pollList();
     setInterval(pollList,5000);
+
+    // ── CONNECTED FOLDER — File System Access API (desktop Chrome/Edge only).
+    // User picks a local folder once; the handle is remembered in IndexedDB so
+    // future visits don't need re-picking (browser still requires a one-click
+    // permission re-grant per session — that's a security boundary, not a bug).
+    // Every ~10s we re-scan the folder for files not yet seen and upload them
+    // through the SAME uploadFile() pipeline as a manual drop. No new deps,
+    // no server changes — this is purely a client-side automated "drop".
+    (function(){
+      var btn=document.getElementById('connectFolderBtn');
+      var label=document.getElementById('connectFolderLabel');
+      var supported = !!(window.showDirectoryPicker);
+      btn.dataset.supported = supported ? '1' : '0';
+      if(!supported) return;
+
+      var DB_NAME='desk-folder-connect', STORE='handles', KEY='dir';
+      var seen=Object.create(null); // relative path -> true, resets per session (fresh dir load re-walks but re-uploads are skipped via desk key de-dupe too)
+      var dirHandle=null, scanTimer=null;
+
+      function idbOpen(){
+        return new Promise(function(resolve,reject){
+          var req=indexedDB.open(DB_NAME,1);
+          req.onupgradeneeded=function(){ req.result.createObjectStore(STORE); };
+          req.onsuccess=function(){ resolve(req.result); };
+          req.onerror=function(){ reject(req.error); };
+        });
+      }
+      function idbGet(){
+        return idbOpen().then(function(db){
+          return new Promise(function(resolve){
+            var tx=db.transaction(STORE,'readonly').objectStore(STORE).get(KEY);
+            tx.onsuccess=function(){ resolve(tx.result||null); };
+            tx.onerror=function(){ resolve(null); };
+          });
+        });
+      }
+      function idbSet(handle){
+        return idbOpen().then(function(db){
+          return new Promise(function(resolve){
+            var tx=db.transaction(STORE,'readwrite').objectStore(STORE).put(handle,KEY);
+            tx.onsuccess=function(){ resolve(); };
+            tx.onerror=function(){ resolve(); };
+          });
+        });
+      }
+      function idbClear(){
+        return idbOpen().then(function(db){
+          return new Promise(function(resolve){
+            var tx=db.transaction(STORE,'readwrite').objectStore(STORE).delete(KEY);
+            tx.onsuccess=function(){ resolve(); }; tx.onerror=function(){ resolve(); };
+          });
+        });
+      }
+
+      async function walkDir(handle,prefix,out){
+        for await (var entry of handle.values()){
+          var path=prefix?(prefix+'/'+entry.name):entry.name;
+          if(entry.kind==='file') out.push({path:path,handle:entry});
+          else if(entry.kind==='directory') await walkDir(entry,path,out);
+        }
+      }
+      async function scanAndUpload(){
+        if(!dirHandle) return;
+        var perm;
+        try{ perm=await dirHandle.queryPermission({mode:'read'}); }catch(e){ return stopConnection(true); }
+        if(perm!=='granted') return; // don't re-prompt automatically mid-poll; wait for user to reconnect
+        var files=[];
+        try{ await walkDir(dirHandle,'',files); }catch(e){ return; }
+        var fresh=[];
+        for(var i=0;i<files.length;i++){
+          if(seen[files[i].path]) continue;
+          seen[files[i].path]=true;
+          fresh.push(files[i]);
+        }
+        if(!fresh.length) return;
+        for(var j=0;j<fresh.length;j++){
+          try{
+            var file=await fresh[j].handle.getFile();
+            handleFiles([file]);
+          }catch(e){}
+        }
+      }
+      function startConnection(handle){
+        dirHandle=handle;
+        btn.classList.add('on'); label.textContent='Connected: '+handle.name;
+        seen=Object.create(null);
+        scanAndUpload();
+        if(scanTimer) clearInterval(scanTimer);
+        scanTimer=setInterval(scanAndUpload,10000);
+      }
+      function stopConnection(keepHandle){
+        dirHandle=null;
+        btn.classList.remove('on'); label.textContent='Connect a folder';
+        if(scanTimer){ clearInterval(scanTimer); scanTimer=null; }
+        if(!keepHandle) idbClear();
+      }
+
+      var pendingHandle=null; // set only while a previously-connected folder needs a fresh permission grant
+
+      btn.addEventListener('click', async function(){
+        if(dirHandle){ stopConnection(); return; }
+        if(pendingHandle){
+          var h=pendingHandle; pendingHandle=null;
+          try{
+            var re=await h.requestPermission({mode:'read'});
+            if(re==='granted') startConnection(h); else { idbClear(); label.textContent='Connect a folder'; }
+          }catch(e){ idbClear(); label.textContent='Connect a folder'; }
+          return;
+        }
+        try{
+          var handle=await window.showDirectoryPicker({mode:'read'});
+          await idbSet(handle);
+          startConnection(handle);
+        }catch(e){ /* user cancelled the picker */ }
+      });
+
+      // on load, try to resume a previously-connected folder (needs a fresh
+      // permission grant per browser session — if denied/revoked, just clear it
+      // rather than nagging).
+      idbGet().then(async function(handle){
+        if(!handle) return;
+        try{
+          var perm=await handle.queryPermission({mode:'read'});
+          if(perm==='granted'){ startConnection(handle); return; }
+          if(perm==='prompt'){ pendingHandle=handle; label.textContent='Reconnect folder'; return; }
+          idbClear();
+        }catch(e){ idbClear(); }
+      });
+    })();
 
     // ── PWA service worker ──
     if('serviceWorker' in navigator){
