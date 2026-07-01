@@ -1673,7 +1673,6 @@ function App() {
 
           <div className="panes" ref={panesRef}>
             <div className="pane"><OmniboxPane voice={t.voice} onNewEvent={handleNewEvent} onOpenLink={openLink} /></div>
-            <div className="pane"><MatrixClientPane /></div>
             <div className="pane"><BrowserPane openTabs={openTabs} activeTabId={activeTabId} setActiveTabId={setActiveTabId} onCloseTab={closeTab} onCloseAll={closeAllTabs} onOpenUrl={(raw) => { const u = /^https?:\/\//i.test(raw) ? raw : ("https://" + raw); try { const host = new URL(u).host; openLink({ id: u, url: u, name: host, host }); } catch (_) { openLink({ id: u, url: u, name: raw, host: raw }); } }} /></div>
             <div className="pane"><PhonePane /></div>
           </div>
