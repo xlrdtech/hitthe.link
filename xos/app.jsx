@@ -893,8 +893,9 @@ function BrowserPane({ openTabs, activeTabId, setActiveTabId, onCloseTab, onClos
   const showChrome = tabCount >= 1;
 
   if (tabCount === 0) {
-    /* clean middle pane - no chrome, no URL bar, no tabs. Just the OS pane. */
-    return <div className="webview-empty" />;
+    /* clean middle pane - no chrome, no URL bar, no tabs. Just the OS pane.
+       qi 2026-07-01: ambient VVS voice-pulse orb as the idle background. */
+    return <div className="webview-empty"><div className="voice-pulse-orb" /></div>;
   }
 
   const parts = activeTab ? urlParts(activeTab.url || "") : { scheme: "", host: "", path: "" };
