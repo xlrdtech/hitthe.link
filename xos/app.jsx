@@ -247,6 +247,31 @@ function linkifyBody(body, onOpenLink) {
   return out;
 }
 
+/* qi 2026-07-01: replay button on chat bubbles — canonical VVS /api/tts (say
+   primary, 350-char gist cap per canon), Web Audio API playback matching the
+   already-proven VVSVEI pattern (AudioContext + decodeAudioData), not a new
+   engine. One shared AudioContext, armed lazily on first tap. */
+let __xosAudioCtx = null;
+function playBubble(text) {
+  if (!text) return;
+  if (!__xosAudioCtx) __xosAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const ctx = __xosAudioCtx;
+  fetch("https://xen.xlrd.org/api/tts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text: text.slice(0, 350) }),
+  })
+    .then((r) => r.arrayBuffer())
+    .then((buf) => ctx.decodeAudioData(buf))
+    .then((decoded) => {
+      const src = ctx.createBufferSource();
+      src.buffer = decoded;
+      src.connect(ctx.destination);
+      src.start(0);
+    })
+    .catch(() => {});
+}
+
 function MirrorCard({ ev, fresh, onReply, onOpenLink }) {
   const [open, setOpen] = useState(false);
   const [val, setVal] = useState("");
@@ -280,6 +305,12 @@ function MirrorCard({ ev, fresh, onReply, onOpenLink }) {
     <article className={"mcard" + (fresh ? " fresh" : "")} data-src={ev.src}>
       <div className="meta-row">
         <span className="ts"><b>{when}</b>:{sec}</span>
+        <button
+          className="mpill play"
+          title="Play this message aloud"
+          onClick={(ce) => { ce.stopPropagation(); playBubble(ev.body); }}
+          style={{ cursor: "pointer" }}
+        >▶</button>
         <span className="mpill src">{ev.src}</span>
         <span className={"mpill dir " + (isOut ? "out" : "")}>
           {isOut ? `out · ${ev.recipient}` : "in"}
