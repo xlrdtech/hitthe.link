@@ -768,23 +768,11 @@ function _nowStamp() {
   const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
   return h + ':' + m + ':' + s + ' ' + ap;   // seconds so qi can measure latency
 }
-// qi 2026-07-01: replay button per bubble — reuses the SAME confirmed-working
-// <audio> element + api.xlrd.org/api/tts path as the live Ava voice-out
-// (WebAudio decodeAudioData is disabled/broken for this TTS's MP3, see
-// _avaDrain above — do not re-introduce it here). Independent one-shot
-// playback, does not touch the live _avaQueue/_avaPlaying drain state.
-function _replayBubble(text) {
-  if (!text) return;
-  const a = new Audio(AVA_TTS_URL + '?text=' + encodeURIComponent(text));
-  a.play().catch(() => {});
-}
 function appendFinal(text, postedFlag) {
   const div = document.createElement('div');
   div.className = 'final';
   div.innerHTML = '<span class="bubble-ts">' + _nowStamp() + '</span><span class="bubble-txt">' +
-                  escapeHtml(text) + '</span>' +
-                  ' <button class="bubble-play" title="play this message" onclick="_replayBubble(' + JSON.stringify(text) + ')">▶</button>' +
-                  (postedFlag ? ' <span class="posted">✓ posted</span>' : '');
+                  escapeHtml(text) + '</span>' + (postedFlag ? ' <span class="posted">✓ posted</span>' : '');
   transcript.appendChild(div);
   transcript.scrollTop = transcript.scrollHeight;
   if (interimEl) { interimEl.remove(); interimEl = null; }
@@ -1304,6 +1292,19 @@ function attachBubbleActions(bubbleEl, text) {
     });
   };
   row.appendChild(copyBtn);
+  // PLAY button — every bubble. Replays this exact text through the SAME
+  // canonical VVS TTS path Xen speaks through (api.xlrd.org/api/tts via a
+  // native <audio> element). No WebAudio/decodeAudioData — broken for this
+  // MP3 (see AVA_TTS_URL usage elsewhere). qi 2026-07-01: pill goes in this row.
+  const playBtn = document.createElement('button');
+  playBtn.textContent = '▶ PLAY';
+  playBtn.onclick = (e) => {
+    e.stopPropagation();
+    if (!text) return;
+    const a = new Audio(AVA_TTS_URL + '?text=' + encodeURIComponent(text));
+    a.play().catch(() => {});
+  };
+  row.appendChild(playBtn);
   // CALL button — only on Xen-reply bubbles. Triggers a voice call so qi can
   // hear Xen live. Native dial to 678-345-2142 per qi 2026-05-25 07:29 PT
   // (was 4047348672 / 8672). The call
