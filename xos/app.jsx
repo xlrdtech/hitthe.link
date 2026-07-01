@@ -247,29 +247,15 @@ function linkifyBody(body, onOpenLink) {
   return out;
 }
 
-/* qi 2026-07-01: replay button on chat bubbles — canonical VVS /api/tts (say
-   primary, 350-char gist cap per canon), Web Audio API playback matching the
-   already-proven VVSVEI pattern (AudioContext + decodeAudioData), not a new
-   engine. One shared AudioContext, armed lazily on first tap. */
-let __xosAudioCtx = null;
+/* qi 2026-07-01: replay button on chat bubbles — MUST be the exact canonical
+   VVS voice queue (Ava, api.xlrd.org/api/tts via <audio> element), same path
+   as vvsvei/index.html's _avaDrain. WebAudio decodeAudioData is DISABLED
+   there (2026-06-06 note: fails on this TTS's MP3 encoding) — do not use it
+   here either. One-shot playback via a plain Audio element, GET ?text=. */
 function playBubble(text) {
   if (!text) return;
-  if (!__xosAudioCtx) __xosAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const ctx = __xosAudioCtx;
-  fetch("https://xen.xlrd.org/api/tts", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text: text.slice(0, 350) }),
-  })
-    .then((r) => r.arrayBuffer())
-    .then((buf) => ctx.decodeAudioData(buf))
-    .then((decoded) => {
-      const src = ctx.createBufferSource();
-      src.buffer = decoded;
-      src.connect(ctx.destination);
-      src.start(0);
-    })
-    .catch(() => {});
+  const a = new Audio("https://api.xlrd.org/api/tts?text=" + encodeURIComponent(text.slice(0, 350)));
+  a.play().catch(() => {});
 }
 
 function MirrorCard({ ev, fresh, onReply, onOpenLink }) {
