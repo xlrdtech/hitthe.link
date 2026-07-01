@@ -342,6 +342,125 @@ function MirrorCard({ ev, fresh, onReply, onOpenLink }) {
   );
 }
 
+/* ===========================================================
+   MATRIX CLIENT PANE - qi 2026-06-30/07-01: "make XOS a true
+   matrix client... everything goes through there, nothing left
+   behind." Raw Client-Server API via fetch (no bundler here, so
+   matrix-js-sdk is out - same /sync long-poll pattern already
+   proven in matrix-omni-sync.js). Sees every bridged room
+   (GV/WhatsApp/Telegram/Meta-FB-IG/Slack/Discord/LinkedIn)
+   directly from the homeserver, not the omni-curated subset.
+   =========================================================== */
+const MATRIX_HS = "https://matrix.xlrd.org";
+
+function matrixSenderLabel(sender) {
+  const m = /^@([a-z]+)_/.exec(sender || "");
+  if (m) return m[1];
+  if (sender === "@self:mymatrix.local") return "you";
+  return (sender || "").replace(/^@/, "").split(":")[0];
+}
+
+function MatrixClientPane() {
+  const [status, setStatus] = useState("connecting");
+  const [events, setEvents] = useState([]);
+  const tokenRef = useRef(null);
+  const nextBatchRef = useRef(null);
+  const cancelledRef = useRef(false);
+
+  useEffect(() => {
+    cancelledRef.current = false;
+
+    async function login() {
+      const r = await fetch(MATRIX_HS + "/_matrix/client/v3/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "m.login.password",
+          identifier: { type: "m.id.user", user: "self" },
+          password: "0000",
+        }),
+      });
+      const d = await r.json();
+      if (!d.access_token) throw new Error("matrix login failed");
+      tokenRef.current = d.access_token;
+    }
+
+    async function syncOnce() {
+      const params = new URLSearchParams({
+        timeout: nextBatchRef.current ? "25000" : "0",
+        ...(nextBatchRef.current ? { since: nextBatchRef.current } : {}),
+        filter: JSON.stringify({
+          room: { timeline: { limit: 20, types: ["m.room.message"] }, state: { types: [] } },
+          presence: { not_types: ["*"] },
+        }),
+      });
+      const r = await fetch(MATRIX_HS + "/_matrix/client/v3/sync?" + params, {
+        headers: { Authorization: "Bearer " + tokenRef.current },
+      });
+      if (r.status === 401) throw new Error("token expired");
+      const d = await r.json();
+      if (d.next_batch) nextBatchRef.current = d.next_batch;
+      const joins = (d.rooms && d.rooms.join) || {};
+      const fresh = [];
+      for (const [roomId, rd] of Object.entries(joins)) {
+        for (const ev of ((rd.timeline && rd.timeline.events) || [])) {
+          if (ev.type !== "m.room.message") continue;
+          const body = ev.content && ev.content.body;
+          if (!body) continue;
+          fresh.push({
+            id: ev.event_id,
+            src: matrixSenderLabel(ev.sender),
+            dir: ev.sender === "@self:mymatrix.local" ? "out" : "in",
+            sender: ev.sender,
+            body,
+            chatID: roomId,
+            _absTs: ev.origin_server_ts || Date.now(),
+          });
+        }
+      }
+      if (fresh.length) {
+        setEvents((prev) => {
+          const seen = new Set(prev.map((p) => p.id));
+          const add = fresh.filter((f) => !seen.has(f.id));
+          return add.length ? [...add.reverse(), ...prev].slice(0, 100) : prev;
+        });
+      }
+    }
+
+    async function loop() {
+      try {
+        await login();
+        await syncOnce();
+        setStatus("live");
+        while (!cancelledRef.current) {
+          await syncOnce();
+        }
+      } catch (e) {
+        if (cancelledRef.current) return;
+        setStatus("reconnecting");
+        setTimeout(loop, 4000);
+      }
+    }
+    loop();
+    return () => { cancelledRef.current = true; };
+  }, []);
+
+  return (
+    <div style={{ height: "100%", overflowY: "auto", padding: "12px", fontSize: 13, color: "#e8e8ea" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, opacity: 0.7 }}>
+        <span style={{ width: 6, height: 6, borderRadius: 99, background: status === "live" ? "#00dc82" : "#f5a623", display: "inline-block" }} />
+        <span>matrix - {status} - {events.length} events</span>
+      </div>
+      {events.map((e) => (
+        <div key={e.id} style={{ padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <div style={{ opacity: 0.55, fontSize: 11 }}>{e.src}{e.dir === "out" ? " (you)" : ""}</div>
+          <div>{e.body}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
   const [q, setQ] = useState("");
   const [unread, setUnread] = useState(false);
@@ -1554,6 +1673,7 @@ function App() {
 
           <div className="panes" ref={panesRef}>
             <div className="pane"><OmniboxPane voice={t.voice} onNewEvent={handleNewEvent} onOpenLink={openLink} /></div>
+            <div className="pane"><MatrixClientPane /></div>
             <div className="pane"><BrowserPane openTabs={openTabs} activeTabId={activeTabId} setActiveTabId={setActiveTabId} onCloseTab={closeTab} onCloseAll={closeAllTabs} onOpenUrl={(raw) => { const u = /^https?:\/\//i.test(raw) ? raw : ("https://" + raw); try { const host = new URL(u).host; openLink({ id: u, url: u, name: host, host }); } catch (_) { openLink({ id: u, url: u, name: raw, host: raw }); } }} /></div>
             <div className="pane"><PhonePane /></div>
           </div>
