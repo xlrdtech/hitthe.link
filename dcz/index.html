@@ -413,9 +413,9 @@
 <div class="env"></div>
 
 <div id="siteLoader" aria-hidden="true">
-  <video autoplay muted playsinline preload="auto" poster="/dcz/assets/logo-final.png?v=2">
-    <source src="/dcz/assets/loader.webm" type="video/webm">
+  <video id="loaderVid" autoplay muted playsinline preload="auto">
     <source src="/dcz/assets/loader.mp4" type="video/mp4">
+    <source src="/dcz/assets/loader.webm" type="video/webm">
   </video>
 </div>
 <style>
@@ -436,7 +436,7 @@
   }
   var loader=document.getElementById('siteLoader'), body=document.body;
   var vid=loader && loader.querySelector('video');
-  var done=false;
+  var done=false, started=false;
   function finish(){
     if(done) return; done=true;
     body.classList.remove('preload-active');
@@ -444,9 +444,16 @@
     setTimeout(function(){ loader.remove(); }, 550);
   }
   if(!loader || !vid){ finish(); return; }
+  vid.addEventListener('playing', function(){ started=true; });
   vid.addEventListener('ended', finish);
   vid.addEventListener('error', finish);
-  setTimeout(finish, 5000);
+  // Kick playback (autoplay attr alone can be ignored). If it never starts within
+  // 2.5s, the video is blocked/undecodable -> reveal the site rather than sit blank.
+  var p=vid.play();
+  if(p && p.catch) p.catch(finish);
+  setTimeout(function(){ if(!started) finish(); }, 2500);
+  // Absolute cap: even a playing clip can't hold the site hostage past 12s.
+  setTimeout(finish, 12000);
 })();
 </script>
 
