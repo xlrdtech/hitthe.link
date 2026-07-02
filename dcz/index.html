@@ -276,15 +276,15 @@
       linear-gradient(180deg, rgba(8,11,22,.7), rgba(4,6,12,.92))}
   /* transparent cut-out figure: occupies the LEFT, full-height, bottom-aligned, contained
      (head/hat never clipped). parallax via translateY on scroll. No box / no border. */
-  .artist .portrait-bg{position:relative;z-index:0;cursor:zoom-in;flex:0 0 auto;align-self:stretch;
-    display:flex;align-items:flex-end;justify-content:flex-start;pointer-events:none;overflow:hidden}
-  .artist .portrait-bg img{display:block;width:auto;max-width:none;height:100%;
-    object-fit:contain;object-position:left bottom;pointer-events:auto;
-    filter:drop-shadow(0 26px 50px rgba(0,0,0,.65)) drop-shadow(0 0 38px rgba(215,160,138,.10));
-    will-change:transform}
-  /* soft contact-shadow / floor so he doesn't look pasted; sits under his feet, transparent edges */
-  .artist .portrait-bg::after{content:"";position:absolute;left:8%;right:8%;bottom:0;height:90px;z-index:-1;pointer-events:none;
-    background:radial-gradient(60% 100% at 50% 100%, rgba(0,0,0,.55), transparent 72%)}
+  .artist .portrait-bg{position:relative;z-index:0;cursor:zoom-in;flex:0 0 46%;align-self:stretch;
+    display:flex;align-items:stretch;justify-content:center;pointer-events:none;overflow:hidden}
+  .artist .portrait-bg img{display:block;width:100%;height:100%;
+    object-fit:cover;object-position:center top;pointer-events:auto;will-change:transform}
+  /* the portrait bg is near-black already; feather the right + bottom edges so the square
+     dissolves into the section instead of showing a hard seam against the bio panel. */
+  .artist .portrait-bg::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:linear-gradient(90deg, transparent 62%, var(--ink) 100%),
+               linear-gradient(0deg, var(--ink) 0%, transparent 22%)}
   .artist .portrait-zoom{position:absolute;top:14px;right:14px;z-index:3;display:inline-flex;align-items:center;gap:7px;
     border:1px solid var(--glass-border);border-radius:999px;padding:8px 14px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
     color:var(--ice);cursor:zoom-in;background:var(--glass-fill);
@@ -318,10 +318,10 @@
       background:
         radial-gradient(120% 60% at 50% 100%, rgba(19,37,78,.5), transparent 64%),
         linear-gradient(180deg, rgba(8,11,22,.55), rgba(4,6,12,.92))}
-    .artist .portrait-bg{position:relative;left:auto;top:auto;width:100%;height:auto;min-height:auto}
-    /* qi 2026-06-24: photo bleeds edge-to-edge to the section sides — no negative space, larger, NOT extra-cropped (natural ratio) */
-    .artist .portrait-bg img{display:block;width:100%;max-width:none;height:auto;max-height:none;margin:0 auto;object-fit:contain;object-position:bottom center}
-    .artist .portrait-bg::after{left:18%;right:18%;height:60px}
+    .artist .portrait-bg{position:relative;left:auto;top:auto;width:100%;height:auto;min-height:auto;flex-basis:auto}
+    /* stacked on mobile: full-width square, feather only the BOTTOM edge into the bio below */
+    .artist .portrait-bg img{display:block;width:100%;max-width:none;height:auto;max-height:none;margin:0 auto;object-fit:cover;object-position:center top}
+    .artist .portrait-bg::after{background:linear-gradient(0deg, var(--ink) 0%, transparent 26%)}
     .artist .bio{width:calc(100% - 22px);max-height:none;overflow:visible;margin:-44px auto 16px;text-align:center;padding:26px 20px 22px;align-self:center}
     .artist .bio p{text-wrap:pretty}
     .artist .bio .tags{justify-content:center}
@@ -424,18 +424,18 @@
   #siteLoader{position:fixed;inset:0;z-index:9999;background:#000;
     display:flex;align-items:center;justify-content:center;opacity:1}
   #siteLoader video{width:100vw;height:auto;max-height:100vh;object-fit:contain;background:#000}
-  /* GLITCH exit: rapid jitter + RGB channel split + flicker, then snap out. No fade. */
-  #siteLoader.loader-out{animation:loaderGlitch .5s steps(1,end) forwards;pointer-events:none}
+  /* CINEMATIC GLITCH exit: RGB channel-split shimmer builds into two controlled
+     displacement kicks, then dissolves smoothly with scale + fade. Smooth easing,
+     not hard steps -> reads as an intentional digital dissolve, not chaos. */
+  #siteLoader.loader-out{animation:loaderGlitch .95s cubic-bezier(.5,.05,.2,1) forwards;pointer-events:none}
   @keyframes loaderGlitch{
-    0%  {transform:translate(0,0);         clip-path:inset(0 0 0 0);      filter:none}
-    12% {transform:translate(-8px,3px);     clip-path:inset(0 0 62% 0);    filter:hue-rotate(90deg) saturate(3)}
-    24% {transform:translate(9px,-4px);     clip-path:inset(48% 0 0 0);    filter:invert(1)}
-    36% {transform:translate(-14px,2px);    clip-path:inset(0 0 30% 0);    filter:drop-shadow(6px 0 0 #f0c4ad) drop-shadow(-6px 0 0 #6cf)}
-    48% {transform:translate(12px,6px) scale(1.02); clip-path:inset(72% 0 8% 0); filter:brightness(2.4) contrast(2)}
-    60% {transform:translate(-6px,-8px);    clip-path:inset(12% 0 40% 0);  filter:drop-shadow(-10px 0 0 #f00) drop-shadow(10px 0 0 #0ff)}
-    72% {transform:translate(20px,0);       clip-path:inset(0 0 84% 0);    filter:invert(1) brightness(3)}
-    84% {transform:translate(0,0);          clip-path:inset(90% 0 0 0);    filter:none;opacity:1}
-    100%{transform:translate(0,0);          clip-path:inset(0 0 100% 0);   filter:none;opacity:0}
+    0%   {transform:translate(0,0) scale(1);       filter:none;opacity:1}
+    14%  {transform:translate(-3px,0) scale(1);    filter:drop-shadow(3px 0 0 rgba(240,196,173,.7)) drop-shadow(-3px 0 0 rgba(108,204,255,.7))}
+    26%  {transform:translate(5px,-1px) scale(1.005); filter:drop-shadow(-6px 0 0 rgba(255,60,80,.8)) drop-shadow(6px 0 0 rgba(0,255,240,.7)) brightness(1.15)}
+    30%  {transform:translate(-6px,2px) scale(1.005); filter:drop-shadow(8px 0 0 rgba(240,196,173,.85)) drop-shadow(-8px 0 0 rgba(108,204,255,.8))}
+    44%  {transform:translate(2px,0) scale(1.01);  filter:drop-shadow(-4px 0 0 rgba(255,60,80,.6)) drop-shadow(4px 0 0 rgba(0,255,240,.6))}
+    58%  {transform:translate(-2px,0) scale(1.02); filter:drop-shadow(2px 0 0 rgba(240,196,173,.5)) brightness(1.1)}
+    100% {transform:translate(0,0) scale(1.12);    filter:blur(6px) brightness(1.25);opacity:0}
   }
   @media (prefers-reduced-motion:reduce){
     #siteLoader{display:none}
@@ -458,9 +458,9 @@
   function finish(){
     if(done) return; done=true;
     body.classList.remove('preload-active');
-    loader.classList.add('loader-out');  // 0.5s glitch-out, then snap gone
+    loader.classList.add('loader-out');  // 0.95s cinematic glitch-dissolve
     revealSite();                        // hero rises in as the glitch resolves
-    setTimeout(function(){ if(loader.parentNode) loader.remove(); }, 600);
+    setTimeout(function(){ if(loader.parentNode) loader.remove(); }, 1000);
   }
   if(!loader || !vid){ finish(); return; }
   vid.addEventListener('playing', function(){ started=true; });
@@ -644,9 +644,9 @@
     <h2>Stal'lyon</h2>
     <div class="artist">
       <div class="portrait-bg">
-        <img class="zoomable" src="/dcz/assets/stallyon-cutout-3.png" alt="Stal'lyon, Andre Jermaine" loading="lazy">
+        <img class="zoomable" src="/dcz/assets/stallyon-portrait-4.jpg" alt="Stal'lyon, Andre Jermaine" width="1020" height="1020" loading="lazy" decoding="async">
       </div>
-      <span class="portrait-zoom zoomable" data-zoom-src="/dcz/assets/stallyon-cutout-3.png" data-zoom-alt="Stal'lyon, Andre Jermaine" role="button" tabindex="0" aria-label="View full portrait">⤢ View portrait</span>
+      <span class="portrait-zoom zoomable" data-zoom-src="/dcz/assets/stallyon-portrait-4.jpg" data-zoom-alt="Stal'lyon, Andre Jermaine" role="button" tabindex="0" aria-label="View full portrait">⤢ View portrait</span>
       <div class="bio">
         <span class="nm">Stal'lyon — The Artist</span>
         <div data-ed-html="bio">
