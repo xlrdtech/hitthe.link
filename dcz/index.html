@@ -420,28 +420,43 @@
 </div>
 <style>
   body.preload-active{overflow:hidden}
+  /* Site sits slightly pushed-back + dark while the loader plays; it surges forward
+     to rest as the loader clears, so the video "opens into" the page. */
+  body.preload-active > *:not(#siteLoader):not(.env){
+    transform:scale(1.06);transform-origin:50% 42%;filter:brightness(.4);
+    transition:transform 1.1s cubic-bezier(.16,1,.3,1), filter 1.1s ease}
+  body:not(.preload-active) > *:not(#siteLoader){transform:none;filter:none}
   #siteLoader{position:fixed;inset:0;z-index:9999;background:var(--black,#04060c);
     display:flex;align-items:center;justify-content:center;
-    transition:opacity .5s ease;opacity:1}
+    transition:opacity .9s cubic-bezier(.7,0,.84,0), transform 1.1s cubic-bezier(.7,0,.84,0), filter .9s ease;
+    opacity:1;transform:scale(1);filter:blur(0)}
   #siteLoader video{width:100vw;height:auto;max-height:100vh;object-fit:contain}
-  #siteLoader.loader-out{opacity:0;pointer-events:none}
+  /* loader dives forward, blurs and fades -> you get pulled through it into the site */
+  #siteLoader.loader-out{opacity:0;pointer-events:none;transform:scale(1.35);filter:blur(24px)}
   @media (prefers-reduced-motion:reduce){
     #siteLoader{display:none}
+    body.preload-active > *{transform:none !important;filter:none !important}
   }
 </style>
 <script>
 (function(){
+  // Signal the hero to reveal in sync with the loader exit (one continuous motion).
+  function revealSite(){
+    document.documentElement.classList.add('loader-cleared');
+    document.dispatchEvent(new Event('dcz:loader-done'));
+  }
   if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-    document.body.classList.remove('preload-active'); return;
+    document.body.classList.remove('preload-active'); revealSite(); return;
   }
   var loader=document.getElementById('siteLoader'), body=document.body;
   var vid=loader && loader.querySelector('video');
   var done=false, started=false;
   function finish(){
     if(done) return; done=true;
-    body.classList.remove('preload-active');
-    loader.classList.add('loader-out');
-    setTimeout(function(){ loader.remove(); }, 550);
+    body.classList.remove('preload-active');  // site surges forward
+    loader.classList.add('loader-out');        // loader dives through + blurs out
+    revealSite();                              // hero copy rises in on the same beat
+    setTimeout(function(){ if(loader.parentNode) loader.remove(); }, 1200);
   }
   if(!loader || !vid){ finish(); return; }
   vid.addEventListener('playing', function(){ started=true; });
@@ -1220,7 +1235,12 @@
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches && !document.documentElement.classList.contains('allow-motion');
   if(reduce) return; // leave the hero fully visible, no animation
   hero.classList.add('js-anim'); // now the .reveal children are hidden, ready to rise
-  requestAnimationFrame(function(){ requestAnimationFrame(function(){ hero.classList.add('in'); }); });
+  // Rise in on the SAME beat the loader clears, so the video hands off into the hero.
+  function riseIn(){ requestAnimationFrame(function(){ requestAnimationFrame(function(){ hero.classList.add('in'); }); }); }
+  if(document.documentElement.classList.contains('loader-cleared')) riseIn();
+  else document.addEventListener('dcz:loader-done', riseIn, {once:true});
+  // Fallback: if no loader ever signals (e.g. removed), reveal after a beat anyway.
+  setTimeout(function(){ if(!hero.classList.contains('in')) riseIn(); }, 6000);
 })();
 </script>
 <!-- scroll-reveal: every section animates in as it enters the viewport (qi 2026-06-24).
