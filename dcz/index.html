@@ -409,8 +409,46 @@
   }
 </style>
 </head>
-<body>
+<body class="preload-active">
 <div class="env"></div>
+
+<div id="siteLoader" aria-hidden="true">
+  <video autoplay muted playsinline preload="auto" poster="/dcz/assets/logo-final.png?v=2">
+    <source src="/dcz/assets/loader.webm" type="video/webm">
+    <source src="/dcz/assets/loader.mp4" type="video/mp4">
+  </video>
+</div>
+<style>
+  body.preload-active{overflow:hidden}
+  #siteLoader{position:fixed;inset:0;z-index:9999;background:var(--black,#04060c);
+    display:flex;align-items:center;justify-content:center;
+    transition:opacity .5s ease;opacity:1}
+  #siteLoader video{width:100%;height:100%;object-fit:cover}
+  #siteLoader.loader-out{opacity:0;pointer-events:none}
+  @media (prefers-reduced-motion:reduce){
+    #siteLoader{display:none}
+  }
+</style>
+<script>
+(function(){
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    document.body.classList.remove('preload-active'); return;
+  }
+  var loader=document.getElementById('siteLoader'), body=document.body;
+  var vid=loader && loader.querySelector('video');
+  var done=false;
+  function finish(){
+    if(done) return; done=true;
+    body.classList.remove('preload-active');
+    loader.classList.add('loader-out');
+    setTimeout(function(){ loader.remove(); }, 550);
+  }
+  if(!loader || !vid){ finish(); return; }
+  vid.addEventListener('ended', finish);
+  vid.addEventListener('error', finish);
+  setTimeout(finish, 5000);
+})();
+</script>
 
 <nav>
   <span class="nm">Diamond&nbsp;Cutz</span>
