@@ -292,6 +292,7 @@ footer .f2 em{color:var(--ng)}
     <a href="#flow">Flow</a>
     <a href="#goals">Goals</a>
     <a href="#steer">Steer</a>
+    <a href="#checklist">Checklist</a>
     <a href="#ledger">Ledger</a>
     <a href="/">Gallery</a>
   </nav>
@@ -522,6 +523,46 @@ footer .f2 em{color:var(--ng)}
 </section>
 
 <!-- LEDGER -->
+<!-- RECOVERY CHECKLIST -->
+<section class="wrap" id="checklist" style="padding:52px 0">
+  <div class="sechead">
+    <div class="ix">IV · Recovery Checklist</div>
+    <h2>Back-up-and-running plan</h2>
+    <div class="rule"></div>
+    <div class="note">2026-07-05 night · click to toggle · saved to this browser</div>
+  </div>
+  <div id="checklist-body" style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+    <label class="ck"><input type="checkbox" data-ck="c1"><span>Matrix homeserver alive on M4 (Cloudflare = proxy) — <b>verified 200</b></span></label>
+    <label class="ck"><input type="checkbox" data-ck="c2"><span>Bridges are Docker on Nitro — <b>Nitro won't power on (hardware)</b></span></label>
+    <label class="ck"><input type="checkbox" data-ck="c3"><span>Stand up cloud Docker host (Hetzner ~$4/mo) — <b>needs qi signup + card</b></span></label>
+    <label class="ck"><input type="checkbox" data-ck="c4"><span>Deploy 8 mautrix bridges (compose + registrations staged on M4)</span></label>
+    <label class="ck"><input type="checkbox" data-ck="c5"><span>Point bridges at M4 Synapse (matrix.xlrd.org)</span></label>
+    <label class="ck"><input type="checkbox" data-ck="c6"><span>Feed cookies per network via cookie-MCP — bridges log in</span></label>
+    <label class="ck"><input type="checkbox" data-ck="c7"><span>Verify each bridge CONNECTED — Matrix + Beside sales flow restored</span></label>
+    <label class="ck"><input type="checkbox" data-ck="c8"><span>Close sales — Claude bill due in &lt;4 days</span></label>
+  </div>
+  <style>
+    .ck{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:1px solid var(--ng-line);border-radius:10px;background:var(--ng-faint);cursor:pointer;transition:border-color .2s,background .2s;font-family:var(--mono);font-size:.82rem;line-height:1.5;color:var(--bone)}
+    .ck:hover{border-color:var(--ng);background:rgba(57,255,20,.06)}
+    .ck input{margin-top:3px;accent-color:var(--ng);width:16px;height:16px;flex-shrink:0}
+    .ck input:checked+span{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--ng-deep)}
+    .ck b{color:var(--ng-leaf);font-weight:700}
+  </style>
+  <script>
+    (function(){
+      var K='xen-life-checklist';
+      var saved=JSON.parse(localStorage.getItem(K)||'{}');
+      document.querySelectorAll('#checklist-body input[data-ck]').forEach(function(el){
+        if(saved[el.dataset.ck])el.checked=true;
+        el.addEventListener('change',function(){
+          saved[el.dataset.ck]=el.checked;
+          localStorage.setItem(K,JSON.stringify(saved));
+        });
+      });
+    })();
+  </script>
+</section>
+
 <section class="wrap" id="ledger">
   <div class="sechead">
     <div class="ix">IV · This Cycle</div>
