@@ -48,4 +48,15 @@ POST /api/organizations/{org}/subscription/refund/eligibility</pre>
 <p>Real MCP server: <code>xen/mcp/claude-web-api/server.js</code> — tools: list_sessions, get_session, send_message, list_repos, org_usage. Auth rides qi's real Chrome profile session (no token scraping).</p>
 <p>Skill: <code>claude-web-orchestrate</code> in .claude-state/skills/</p>
 <p class="meta">Auth note: no bearer token surfaces in any request — everything rides session cookies via the authenticated browser.</p>
+
+<h2>Delta — exhaustive re-pass (second sweep)</h2>
+<p class="meta">Settings sidebar is only 6 real tabs: General, Account, Usage, Capabilities, Connectors, Claude Code. "Appearance" and "Data controls" do NOT exist as separate tabs — both 404 to blank.</p>
+<pre>GET /api/account/deletion-allowed
+GET /api/bendep/verifications
+GET /api/auth/trusted_devices
+GET /api/auth/sessions/list-active?page={n}&per_page=10&application_slug=claude-ai
+GET /api/organizations/{org}/memory   (distinct from /memory/settings — returns actual content)
+GET /api/organizations/{org}/is_pure_usage_based</pre>
+<p>Chat composer has inline connector quick-actions: "From Drive" / "From Calendar" / "From Gmail" buttons, not just a settings list.</p>
+<p class="meta">Not yet reached: admin console beyond billing, artifacts panel interior, chat edit/regenerate/branch controls, /design, the "Customize" surface (Skills moved there per the Capabilities page). Not silently skipped — named here as open.</p>
 </body></html>
