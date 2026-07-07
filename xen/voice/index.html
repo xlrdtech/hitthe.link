@@ -1828,7 +1828,9 @@ function _unlockAvaAudio() {
   // Also arm the <audio> element as a backup path.
   const a = _ensureAvaAudio();
   try { a.src = _AVA_SILENT; const p = a.play(); if (p && p.then) p.then(() => { _avaAudioUnlocked = true; _renderAvaPill(); }).catch(() => {}); } catch (_) {}
-  _avaAudioUnlocked = true; _renderAvaPill();
+  // 2026-07-07: gate unlock on the robust Web Audio ctx (armed at 1824-25), NOT the unconfirmed <audio> play() —
+  // setting the flag unconditionally here let the <audio> fallback leg fire on a still-loading element → AbortError.
+  if (_avaCtx) { _avaAudioUnlocked = true; } _renderAvaPill();
 }
 // Barge-in: the instant qi's mic catches speech, cut my voice (qi 2026-05-30).
 let _avaCurrentSource = null;  // track the active AudioBufferSourceNode for barge-in
