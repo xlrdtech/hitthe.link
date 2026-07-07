@@ -594,6 +594,12 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
         <polygon points="22 2 15 22 11 13 2 9 22 2"/>
       </svg>
     </button>
+    <!-- qi 2026-07-07: manual escalate stopgap "until we get your architecture perfect" -->
+    <button class="icon-btn" id="fb-escalate" title="Escalate" style="color:#ff5e3a">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 2 L3 14 h7 l-1 8 L21 10 h-7 Z"/>
+      </svg>
+    </button>
   </div>
   <input type="file" id="file-input" hidden multiple>
   <button class="start" id="start-btn" hidden>Start</button>
@@ -742,6 +748,26 @@ async function sendFallback() {
   fbText.value = '';
   fbSend.disabled = false;
   fbText.focus();
+}
+
+// qi 2026-07-07: manual escalate stopgap — one tap forces a marked priority
+// message through the SAME dictate-inject path (no new backend route needed).
+// Uses whatever's in the composer, or a bare "ESCALATE" if it's empty.
+const fbEscalate = document.getElementById('fb-escalate');
+async function sendEscalate() {
+  const raw = fbText.value.trim();
+  const text = '[ESCALATE] ' + (raw || 'immediate escalation requested');
+  fbEscalate.disabled = true;
+  appendFinal(text, false);
+  const posted = await postTranscript(text, 'typed');
+  if (posted) {
+    const lastFinal = transcript.querySelector('.final:last-child');
+    if (lastFinal && !lastFinal.innerHTML.includes('posted')) {
+      lastFinal.innerHTML += ' <span class="posted">✓ posted</span>';
+    }
+  }
+  fbText.value = '';
+  fbEscalate.disabled = false;
 }
 
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -2910,6 +2936,7 @@ function _renderAvaPill() {
 })();
 
 fbSend.addEventListener('click', sendFallback);
+fbEscalate.addEventListener('click', sendEscalate);
 fbText.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
