@@ -73,4 +73,12 @@ GET  /api/organizations/{org}/is_overage_billing_enabled</pre>
 <p class="meta">Message UI structure (accessibility tree, not guessed): user messages have Retry/Edit/Copy; Claude messages have Retry/Copy/Read-aloud/thumbs-up/thumbs-down.</p>
 <p><b>/customize</b> — route exists (resolves to /new#settings/customize-skills) but UI-ONLY-NO-API this pass: rendered as a plain new-chat screen, no Skills modal, no skills-specific network call fired. Inconclusive, needs a dedicated follow-up that finds the actual Skills panel trigger.</p>
 <p class="meta">Still not reached: Edit button specifically (forks a conversation), artifacts panel's own interior chrome (Publish/version-scrubber/tab-switcher — artifact itself is confirmed real), branch switcher (no branch exists yet since Edit wasn't tested), Customize/Skills panel (see above). Named plainly, not hidden.</p>
+
+<h2>Delta — fourth pass (closed the three named gaps above)</h2>
+<p><b>Edit / branching</b> — VERIFIED WORKING. Clicking Edit shows "Editing this message will create a new conversation branch," Save fires the same completion endpoint as a normal send:</p>
+<pre>POST /api/organizations/{org}/chat_conversations/{id}/completion   <- also the real branch-create call
+PUT  /api/organizations/{org}/chat_conversations/{id}/current_leaf_message_uuid   <- version scrubber (Previous/Next), confirmed 200</pre>
+<p><b>Branch switcher (‹ ›)</b> — VERIFIED WORKING after the edit above; message count went 1/2 → 2/2. No separate endpoint on arrow click — client-side re-render from already-fetched branch data.</p>
+<p><b>Customize / Skills — resolved.</b> Not a hidden route: it's a 7th Settings-modal tab called "Skills" (alongside General/Account/Usage/Capabilities/Claude Code/Connectors). The top-level "Customize" sidebar link just opens this same modal on the Skills tab. Confirmed via screenshot: real skill listed ("skill-creator", author Anthropic, updated 7/2/26), with Browse and Add buttons.</p>
+<p class="meta">Still open: artifacts panel's Publish button and Code/Preview tab switcher — version scrubber was tested, these two weren't. Four independent passes done; this is the one remaining named gap, not a blocker.</p>
 </body></html>
