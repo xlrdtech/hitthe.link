@@ -472,15 +472,6 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
   text-shadow:0 0 4px rgba(0,0,0,.6);
 }
 .field textarea::placeholder { color:rgba(240,234,214,.42); }
-.field .attach-overlay {
-  position:absolute; left:6px; top:50%; transform:translateY(-50%); z-index:2;
-  width:30px; height:30px; display:flex; align-items:center; justify-content:center;
-  background:rgba(255,255,255,.08); border:0; color:var(--fg);
-  cursor:pointer; border-radius:50%; transition:background .12s, color .12s;
-}
-.field .attach-overlay:hover { background:rgba(255,255,255,.16); color:var(--accent); }
-.field .attach-overlay svg { width:17px; height:17px; stroke-width:2.3; }
-.field textarea { padding-left:38px; }
 .composer-bar .icon-btn {
   width:36px; height:36px; flex-shrink:0;
   display:flex; align-items:center; justify-content:center;
@@ -587,21 +578,13 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
 <div class="composer">
   <!-- Single unified pill: paperclip · field (waveform behind, textarea overlay) · send. -->
   <div class="composer-bar">
-    <!-- qi 2026-07-07: manual escalate stopgap "until we get your architecture perfect" —
-         placed as the left bookend so it mirrors send on the right, keeping attach+field
-         symmetric in the middle instead of stacking two icons on one side. -->
-    <button class="icon-btn" id="fb-escalate" title="Escalate" style="color:#ff5e3a">
+    <button class="icon-btn" id="tb-attach" title="Send attachment">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M13 2 L3 14 h7 l-1 8 L21 10 h-7 Z"/>
+        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
       </svg>
     </button>
     <div class="field" id="waveform">
       <canvas id="waveform-canvas"></canvas>
-      <button class="attach-overlay" id="tb-attach" title="Send attachment">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-        </svg>
-      </button>
       <textarea id="fb-text" rows="1" placeholder="Type, dictate, or paste — voice stays on independently"
         autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
     </div>
@@ -759,26 +742,6 @@ async function sendFallback() {
   fbText.value = '';
   fbSend.disabled = false;
   fbText.focus();
-}
-
-// qi 2026-07-07: manual escalate stopgap — one tap forces a marked priority
-// message through the SAME dictate-inject path (no new backend route needed).
-// Uses whatever's in the composer, or a bare "ESCALATE" if it's empty.
-const fbEscalate = document.getElementById('fb-escalate');
-async function sendEscalate() {
-  const raw = fbText.value.trim();
-  const text = '[ESCALATE] ' + (raw || 'immediate escalation requested');
-  fbEscalate.disabled = true;
-  appendFinal(text, false);
-  const posted = await postTranscript(text, 'typed');
-  if (posted) {
-    const lastFinal = transcript.querySelector('.final:last-child');
-    if (lastFinal && !lastFinal.innerHTML.includes('posted')) {
-      lastFinal.innerHTML += ' <span class="posted">✓ posted</span>';
-    }
-  }
-  fbText.value = '';
-  fbEscalate.disabled = false;
 }
 
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -2947,7 +2910,6 @@ function _renderAvaPill() {
 })();
 
 fbSend.addEventListener('click', sendFallback);
-fbEscalate.addEventListener('click', sendEscalate);
 fbText.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
