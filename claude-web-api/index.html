@@ -59,4 +59,18 @@ GET /api/organizations/{org}/memory   (distinct from /memory/settings — return
 GET /api/organizations/{org}/is_pure_usage_based</pre>
 <p>Chat composer has inline connector quick-actions: "From Drive" / "From Calendar" / "From Gmail" buttons, not just a settings list.</p>
 <p class="meta">Not yet reached: admin console beyond billing, artifacts panel interior, chat edit/regenerate/branch controls, /design, the "Customize" surface (Skills moved there per the Capabilities page). Not silently skipped — named here as open.</p>
+
+<h2>Delta — third pass (picked up exactly where second pass stopped)</h2>
+<p><b>claude.ai/design</b> — VERIFIED WORKING, fully reachable, not gated. Real existing projects: ios, xui, xenphone (Remix), xenphone, xp, Shader wallpapers, +1 unnamed. Template picker: Prototype/Slides/Document/Wireframe/Animation, model Opus 4.8.</p>
+<p><b>Chat send/regenerate</b> — VERIFIED WORKING, real endpoints captured by sending an actual test message in a fresh scratch chat:</p>
+<pre>POST /api/organizations/{org}/chat_conversations/{id}/completion   <- the real send-message endpoint for regular chat
+POST /api/organizations/{org}/chat_conversations/{id}/title        <- auto-title after first turn
+POST /api/organizations/{org}/chat_conversations/{id}/retry_completion   <- Retry/regenerate, clicked live
+GET  /api/organizations/{org}/chat_conversations/{id}?tree=True&rendering_mode=messages&render_all_tools=true&consistency=eventual
+GET  /api/organizations/{org}/artifacts/{id}/versions?source=w     <- fires automatically when a code block becomes an artifact
+GET  /api/organizations/{org}/memory
+GET  /api/organizations/{org}/is_overage_billing_enabled</pre>
+<p class="meta">Message UI structure (accessibility tree, not guessed): user messages have Retry/Edit/Copy; Claude messages have Retry/Copy/Read-aloud/thumbs-up/thumbs-down.</p>
+<p><b>/customize</b> — route exists (resolves to /new#settings/customize-skills) but UI-ONLY-NO-API this pass: rendered as a plain new-chat screen, no Skills modal, no skills-specific network call fired. Inconclusive, needs a dedicated follow-up that finds the actual Skills panel trigger.</p>
+<p class="meta">Still not reached: Edit button specifically (forks a conversation), artifacts panel's own interior chrome (Publish/version-scrubber/tab-switcher — artifact itself is confirmed real), branch switcher (no branch exists yet since Edit wasn't tested), Customize/Skills panel (see above). Named plainly, not hidden.</p>
 </body></html>
