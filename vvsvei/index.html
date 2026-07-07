@@ -472,6 +472,15 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
   text-shadow:0 0 4px rgba(0,0,0,.6);
 }
 .field textarea::placeholder { color:rgba(240,234,214,.42); }
+.field .attach-overlay {
+  position:absolute; left:4px; top:50%; transform:translateY(-50%); z-index:2;
+  width:28px; height:28px; display:flex; align-items:center; justify-content:center;
+  background:transparent; border:0; color:var(--fg-dim); cursor:pointer;
+  border-radius:50%; transition:background .12s, color .12s;
+}
+.field .attach-overlay:hover { background:rgba(255,255,255,.10); color:var(--accent); }
+.field .attach-overlay svg { width:15px; height:15px; }
+.field textarea { padding-left:32px; }
 .composer-bar .icon-btn {
   width:36px; height:36px; flex-shrink:0;
   display:flex; align-items:center; justify-content:center;
@@ -586,13 +595,13 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
         <path d="M13 2 L3 14 h7 l-1 8 L21 10 h-7 Z"/>
       </svg>
     </button>
-    <button class="icon-btn" id="tb-attach" title="Send attachment">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-      </svg>
-    </button>
     <div class="field" id="waveform">
       <canvas id="waveform-canvas"></canvas>
+      <button class="attach-overlay" id="tb-attach" title="Send attachment">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+        </svg>
+      </button>
       <textarea id="fb-text" rows="1" placeholder="Type, dictate, or paste — voice stays on independently"
         autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
     </div>
