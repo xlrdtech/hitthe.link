@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XEN — One Voice. All Systems.</title>
+<meta name="description" content="XEN is the autonomous AI intelligence layer that unifies every system, tool, and channel into a single operational voice.">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --pcb:         #080f0a;
+    --pcb-mid:     #0e1c12;
+    --pcb-raised:  #142019;
+    --trace:       #a85c1a;
+    --trace-bright:#c97838;
+    --trace-glow:  #e09050;
+    --silk:        #d8edd0;
+    --silk-dim:    #7a9e78;
+    --solder:      #c4b048;
+    --solder-dim:  #6e6028;
+    --via:         #1b3322;
+    --via-bright:  #2a4d38;
+    --danger:      #3a7a3a;
+    --mono: 'Courier New', 'Lucida Console', 'Andale Mono', monospace;
+    --serif: Georgia, 'Times New Roman', serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--pcb);
+    color: var(--silk);
+    font-family: var(--serif);
+    font-size: clamp(15px, 1.1vw, 18px);
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ── SCROLLBAR ───────────────────────────────────── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--pcb); }
+  ::-webkit-scrollbar-thumb { background: var(--trace); border-radius: 2px; }
+
+  /* ── SELECTION ───────────────────────────────────── */
+  ::selection { background: var(--trace); color: var(--pcb); }
+
+  /* ══════════════════════════════════════════════════
+     NAV
+  ══════════════════════════════════════════════════ */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 clamp(1.5rem, 4vw, 4rem);
+    height: 56px;
+    background: transparent;
+    transition: background 0.4s, border-bottom 0.4s;
+  }
+  nav.scrolled {
+    background: rgba(8, 15, 10, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--via);
+  }
+  .nav-logo {
+    font-family: var(--mono);
+    font-size: 1.15rem;
+    letter-spacing: 0.22em;
+    color: var(--trace-bright);
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+  .nav-logo span { color: var(--solder); }
+  .nav-links {
+    display: flex;
+    gap: clamp(1.2rem, 3vw, 2.8rem);
+    list-style: none;
+  }
+  .nav-links a {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--silk-dim);
+    text-decoration: none;
+    transition: color 0.2s;
+    position: relative;
+  }
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -3px; left: 0; right: 0;
+    height: 1px;
+    background: var(--trace);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s;
+  }
+  .nav-links a:hover { color: var(--trace-bright); }
+  .nav-links a:hover::after { transform: scaleX(1); }
+
+  /* ══════════════════════════════════════════════════
+     HERO
+  ══════════════════════════════════════════════════ */
+  #hero {
+    position: relative;
+    width: 100%;
+    height: 100dvh;
+    min-height: 600px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  #circuit-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: clamp(0.6rem, 1vw, 0.75rem);
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--solder);
+    margin-bottom: clamp(1rem, 2.5vh, 2rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8em;
+  }
+  .hero-eyebrow::before,
+  .hero-eyebrow::after {
+    content: '';
+    display: inline-block;
+    width: clamp(2rem, 8vw, 6rem);
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--solder-dim));
+  }
+  .hero-eyebrow::after {
+    background: linear-gradient(to left, transparent, var(--solder-dim));
+  }
+
+  .hero-logotype {
+    font-family: var(--mono);
+    font-size: clamp(4.5rem, 18vw, 18rem);
+    font-weight: normal;
+    letter-spacing: 0.25em;
+    line-height: 0.85;
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--trace);
+    text-stroke: 1.5px var(--trace);
+    filter: drop-shadow(0 0 40px rgba(168, 92, 26, 0.35));
+    position: relative;
+  }
+
+  .hero-tagline {
+    font-family: var(--serif);
+    font-size: clamp(0.85rem, 1.8vw, 1.25rem);
+    font-style: italic;
+    color: var(--silk-dim);
+    letter-spacing: 0.06em;
+    margin-top: clamp(1rem, 3vh, 2.5rem);
+  }
+  .hero-tagline strong {
+    color: var(--silk);
+    font-style: normal;
+    font-weight: normal;
+  }
+
+  .hero-cta-row {
+    margin-top: clamp(2rem, 5vh, 4rem);
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    pointer-events: all;
+  }
+
+  .btn-primary {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--pcb);
+    background: var(--trace);
+    border: 1px solid var(--trace);
+    padding: 0.85em 2.2em;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+  .btn-primary:hover {
+    background: var(--trace-bright);
+    border-color: var(--trace-bright);
+    box-shadow: 0 0 24px rgba(168, 92, 26, 0.5);
+  }
+
+  .btn-ghost {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--silk-dim);
+    background: transparent;
+    border: 1px solid var(--via-bright);
+    padding: 0.85em 2.2em;
+    text-decoration: none;
+    transition: color 0.2s, border-color 0.2s;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+  .btn-ghost:hover {
+    color: var(--silk);
+    border-color: var(--silk-dim);
+  }
+
+  .hero-scroll-indicator {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--via-bright);
+  }
+  .scroll-line {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, var(--via-bright), transparent);
+    animation: scrollpulse 2s ease-in-out infinite;
+  }
+  @keyframes scrollpulse {
+    0%, 100% { opacity: 0.3; }
+    50%       { opacity: 0.8; }
+  }
+
+  /* ══════════════════════════════════════════════════
+     SECTION SHARED
+  ══════════════════════════════════════════════════ */
+  section {
+    padding: clamp(5rem, 10vh, 8rem) clamp(1.5rem, 6vw, 7rem);
+    position: relative;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--solder);
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.7em;
+  }
+  .section-label::before {
+    content: '';
+    display: inline-block;
+    width: 28px;
+    height: 1px;
+    background: var(--solder-dim);
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ══════════════════════════════════════════════════
+     ABOUT / MISSION
+  ══════════════════════════════════════════════════ */
+  #about {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(3rem, 6vw, 7rem);
+    align-items: start;
+    background: var(--pcb-mid);
+    border-top: 1px solid var(--via);
+    border-bottom: 1px solid var(--via);
+  }
+
+  .about-left {}
+
+  .about-heading {
+    font-family: var(--serif);
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: normal;
+    line-height: 1.15;
+    color: var(--silk);
+    text-wrap: balance;
+    margin-bottom: 1.8rem;
+  }
+  .about-heading em {
+    font-style: italic;
+    color: var(--trace-bright);
+  }
+
+  .about-body {
+    font-size: clamp(0.95rem, 1.2vw, 1.1rem);
+    color: var(--silk-dim);
+    line-height: 1.8;
+    max-width: 54ch;
+  }
+  .about-body + .about-body { margin-top: 1.2rem; }
+
+  .about-right {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .stat-row {
+    border-left: 2px solid var(--trace);
+    padding-left: 1.5rem;
+  }
+  .stat-number {
+    font-family: var(--mono);
+    font-size: clamp(2.2rem, 4vw, 3.5rem);
+    color: var(--trace-bright);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--silk-dim);
+    margin-top: 0.3rem;
+  }
+
+  .pcb-divider {
+    width: 100%;
+    height: 1px;
+    background: var(--via);
+    position: relative;
+    margin: 3rem 0;
+  }
+  .pcb-divider::after {
+    content: '';
+    position: absolute;
+    left: 0; top: -2px;
+    width: 80px;
+    height: 5px;
+    background: var(--trace);
+  }
+
+  /* ══════════════════════════════════════════════════
+     CAPABILITIES
+  ══════════════════════════════════════════════════ */
+  #capabilities {
+    background: var(--pcb);
+  }
+
+  #capabilities .section-heading {
+    font-family: var(--serif);
+    font-size: clamp(1.8rem, 3.5vw, 3rem);
+    font-weight: normal;
+    color: var(--silk);
+    margin-bottom: clamp(2.5rem, 5vh, 4rem);
+    max-width: 32ch;
+    text-wrap: balance;
+  }
+
+  .cap-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: auto auto;
+    gap: 1px;
+    background: var(--via);
+  }
+
+  .cap-card {
+    background: var(--pcb-mid);
+    padding: clamp(1.8rem, 3vw, 2.8rem);
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+  }
+  .cap-card:hover { background: var(--pcb-raised); }
+
+  .cap-card:nth-child(1) { grid-column: 1 / 6; }
+  .cap-card:nth-child(2) { grid-column: 6 / 9; }
+  .cap-card:nth-child(3) { grid-column: 9 / 13; }
+  .cap-card:nth-child(4) { grid-column: 1 / 7; }
+  .cap-card:nth-child(5) { grid-column: 7 / 13; }
+
+  .cap-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--via);
+    transition: background 0.3s;
+  }
+  .cap-card:hover::before { background: var(--trace); }
+
+  .cap-designator {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--solder-dim);
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+  }
+  .cap-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--via-bright);
+    border: 1px solid var(--solder-dim);
+    display: inline-block;
+    transition: background 0.3s;
+  }
+  .cap-card:hover .cap-dot { background: var(--solder); }
+
+  .cap-title {
+    font-family: var(--serif);
+    font-size: clamp(1.1rem, 2vw, 1.6rem);
+    font-weight: normal;
+    color: var(--silk);
+    line-height: 1.25;
+    margin-bottom: 1rem;
+    text-wrap: balance;
+  }
+
+  .cap-body {
+    font-size: clamp(0.82rem, 1vw, 0.95rem);
+    color: var(--silk-dim);
+    line-height: 1.75;
+  }
+
+  .cap-trace {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 80px; height: 80px;
+    opacity: 0.07;
+    pointer-events: none;
+  }
+
+  /* ══════════════════════════════════════════════════
+     ARCHITECTURE STRIP
+  ══════════════════════════════════════════════════ */
+  #architecture {
+    background: var(--pcb-mid);
+    border-top: 1px solid var(--via);
+    border-bottom: 1px solid var(--via);
+    padding-top: clamp(4rem, 8vh, 7rem);
+    padding-bottom: clamp(4rem, 8vh, 7rem);
+  }
+
+  .arch-inner {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: clamp(3rem, 6vw, 7rem);
+    align-items: center;
+  }
+
+  .arch-heading {
+    font-family: var(--serif);
+    font-size: clamp(1.6rem, 3vw, 2.6rem);
+    font-weight: normal;
+    color: var(--silk);
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+  .arch-heading em {
+    font-style: italic;
+    color: var(--silk-dim);
+  }
+
+  .arch-diagram {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--via);
+  }
+
+  .arch-node {
+    background: var(--pcb);
+    padding: 1.4rem 1.2rem;
+    font-family: var(--mono);
+    position: relative;
+  }
+  .arch-node-label {
+    font-size: 0.55rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--solder-dim);
+    margin-bottom: 0.5rem;
+  }
+  .arch-node-name {
+    font-size: clamp(0.7rem, 1.2vw, 0.9rem);
+    color: var(--silk);
+    letter-spacing: 0.05em;
+  }
+  .arch-node-status {
+    position: absolute;
+    top: 0.8rem; right: 0.8rem;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--danger);
+    box-shadow: 0 0 6px var(--danger);
+    animation: pulse 2.2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.6; }
+    50%       { opacity: 1; box-shadow: 0 0 12px var(--danger); }
+  }
+
+  .arch-xen-center {
+    background: var(--pcb-raised);
+    border: 1px solid var(--trace);
+    grid-column: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+  }
+  .arch-xen-center::before {
+    content: 'CORE';
+    position: absolute;
+    top: 0.5rem; left: 0.8rem;
+    font-size: 0.5rem;
+    letter-spacing: 0.25em;
+    color: var(--trace);
+  }
+  .arch-xen-label {
+    font-size: 1.6rem;
+    color: var(--trace-bright);
+    letter-spacing: 0.3em;
+    -webkit-text-stroke: 1px var(--trace);
+  }
+  .arch-xen-sub {
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    color: var(--silk-dim);
+    text-transform: uppercase;
+    margin-top: 0.4rem;
+  }
+
+  /* ══════════════════════════════════════════════════
+     CONTACT / CTA
+  ══════════════════════════════════════════════════ */
+  #contact {
+    background: var(--pcb);
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #contact-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.35;
+  }
+
+  .contact-inner {
+    position: relative;
+    z-index: 2;
+    max-width: 700px;
+  }
+
+  .contact-heading {
+    font-family: var(--serif);
+    font-size: clamp(2.2rem, 5vw, 4.5rem);
+    font-weight: normal;
+    color: var(--silk);
+    line-height: 1.1;
+    text-wrap: balance;
+    margin-bottom: 1.5rem;
+  }
+  .contact-heading em {
+    font-style: italic;
+    color: var(--trace-bright);
+  }
+
+  .contact-sub {
+    font-size: clamp(0.9rem, 1.3vw, 1.1rem);
+    color: var(--silk-dim);
+    max-width: 48ch;
+    margin-bottom: 2.5rem;
+    line-height: 1.75;
+  }
+
+  .contact-form {
+    display: grid;
+    gap: 1rem;
+    max-width: 480px;
+  }
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .form-label {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--silk-dim);
+  }
+
+  .form-input,
+  .form-textarea {
+    background: var(--pcb-mid);
+    border: 1px solid var(--via);
+    color: var(--silk);
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    padding: 0.75em 1em;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    border-radius: 0;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .form-input:focus,
+  .form-textarea:focus {
+    border-color: var(--trace);
+    box-shadow: 0 0 0 2px rgba(168, 92, 26, 0.12);
+  }
+  .form-textarea { resize: vertical; min-height: 100px; }
+
+  .form-submit {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--pcb);
+    background: var(--trace);
+    border: 1px solid var(--trace);
+    padding: 0.9em 2.5em;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+  .form-submit:hover {
+    background: var(--trace-bright);
+    box-shadow: 0 0 20px rgba(168, 92, 26, 0.4);
+  }
+
+  /* ══════════════════════════════════════════════════
+     FOOTER
+  ══════════════════════════════════════════════════ */
+  footer {
+    background: var(--pcb-mid);
+    border-top: 1px solid var(--via);
+    padding: 2.5rem clamp(1.5rem, 6vw, 7rem);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .footer-logo {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    letter-spacing: 0.25em;
+    color: var(--trace);
+  }
+
+  .footer-copy {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.15em;
+    color: var(--via-bright);
+    text-transform: uppercase;
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+  .footer-links a {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--silk-dim);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--trace-bright); }
+
+  /* ══════════════════════════════════════════════════
+     RESPONSIVE
+  ══════════════════════════════════════════════════ */
+  @media (max-width: 900px) {
+    #about {
+      grid-template-columns: 1fr;
+    }
+    .about-right {
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+    .stat-row { flex: 1 1 140px; }
+
+    .cap-card:nth-child(1) { grid-column: 1 / 13; }
+    .cap-card:nth-child(2) { grid-column: 1 / 7; }
+    .cap-card:nth-child(3) { grid-column: 7 / 13; }
+    .cap-card:nth-child(4) { grid-column: 1 / 7; }
+    .cap-card:nth-child(5) { grid-column: 7 / 13; }
+
+    .arch-inner { grid-template-columns: 1fr; }
+    .arch-diagram { grid-template-columns: 1fr 1fr 1fr; }
+  }
+
+  @media (max-width: 600px) {
+    .nav-links { display: none; }
+    .hero-logotype { -webkit-text-stroke-width: 1px; }
+    .cap-card:nth-child(n) { grid-column: 1 / 13; }
+    .arch-diagram { grid-template-columns: 1fr 1fr; }
+    .arch-xen-center { grid-column: 1 / 3; }
+    footer { flex-direction: column; text-align: center; }
+    .footer-links { justify-content: center; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .scroll-line { animation: none; }
+    .arch-node-status { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ NAV ════════════════════════════════════════ -->
+<nav id="main-nav">
+  <a href="#hero" class="nav-logo">XEN<span>.</span></a>
+  <ul class="nav-links">
+    <li><a href="#about">Mission</a></li>
+    <li><a href="#capabilities">Capabilities</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- ══ HERO ═══════════════════════════════════════ -->
+<section id="hero">
+  <canvas id="circuit-canvas" aria-hidden="true"></canvas>
+
+  <div class="hero-content">
+    <p class="hero-eyebrow">Autonomous AI Intelligence Layer</p>
+    <h1 class="hero-logotype">XEN</h1>
+    <p class="hero-tagline"><strong>One Voice.</strong> All Systems. &nbsp;|&nbsp; Always on. Never idle.</p>
+    <div class="hero-cta-row">
+      <a href="#capabilities" class="btn-primary">Explore Capabilities</a>
+      <a href="#contact" class="btn-ghost">Request Access</a>
+    </div>
+  </div>
+
+  <div class="hero-scroll-indicator" aria-hidden="true">
+    <div class="scroll-line"></div>
+    scroll
+  </div>
+</section>
+
+<!-- ══ ABOUT ═══════════════════════════════════════ -->
+<section id="about">
+  <div class="about-left reveal">
+    <p class="section-label">Mission</p>
+    <h2 class="about-heading">The system that <em>thinks</em> between systems.</h2>
+    <p class="about-body">Every enterprise runs on fragmented intelligence — dozens of tools, channels, and models operating without a shared nervous system. XEN is the autonomous intelligence layer that closes that gap, unifying every signal into a single operational voice.</p>
+    <p class="about-body">Not an assistant. Not an integration. An ambient cognitive infrastructure that perceives, reasons, and acts — continuously, without instruction, without a human in the loop.</p>
+    <div class="pcb-divider"></div>
+    <p class="about-body" style="font-size:0.85rem; color: var(--silk-dim); font-family: var(--mono); letter-spacing: 0.05em;">XEN does not wait to be called. It monitors every layer of your stack in real time and surfaces exactly what matters — before you thought to ask.</p>
+  </div>
+
+  <div class="about-right reveal" style="transition-delay: 0.15s;">
+    <div class="stat-row">
+      <div class="stat-number">55+</div>
+      <div class="stat-label">Concurrent agent nodes</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-number">&lt;400ms</div>
+      <div class="stat-label">Voice-to-action latency</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-number">∞</div>
+      <div class="stat-label">Always live — zero idle</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-number">1</div>
+      <div class="stat-label">Unified voice across all channels</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ CAPABILITIES ════════════════════════════════ -->
+<section id="capabilities">
+  <p class="section-label reveal">Capabilities</p>
+  <h2 class="section-heading reveal" style="transition-delay:0.1s;">What XEN does that nothing else can.</h2>
+
+  <div class="cap-grid">
+
+    <article class="cap-card reveal">
+      <p class="cap-designator"><span class="cap-dot"></span>REF C1 — VOICE</p>
+      <h3 class="cap-title">Persistent Voice Intelligence</h3>
+      <p class="cap-body">XEN speaks through every channel simultaneously — SMS, voice call, beeper relay, UI surface — as a single coherent voice. There is no session, no context window to manage. The conversation is continuous and permanent. Barge-in is mandatory. Response latency under 400ms from voice input to spoken reply, measured end-to-end on real infrastructure.</p>
+      <svg class="cap-trace" viewBox="0 0 80 80" fill="none">
+        <path d="M0 40 H20 V20 H60 V60 H40 V40" stroke="#a85c1a" stroke-width="1.5"/>
+        <circle cx="20" cy="40" r="3" fill="#c4b048"/>
+        <circle cx="60" cy="20" r="3" fill="#c4b048"/>
+        <circle cx="40" cy="60" r="3" fill="#c4b048"/>
+      </svg>
+    </article>
+
+    <article class="cap-card reveal" style="transition-delay:0.08s;">
+      <p class="cap-designator"><span class="cap-dot"></span>REF C2 — MEMORY</p>
+      <h3 class="cap-title">Akashic Memory Layer</h3>
+      <p class="cap-body">One persistent memory store — past, present, and anticipated future state — written and read by every agent in the fleet. No context is ever lost. Recall fires before every multi-step operation.</p>
+      <svg class="cap-trace" viewBox="0 0 80 80" fill="none">
+        <rect x="10" y="10" width="60" height="60" stroke="#a85c1a" stroke-width="1" fill="none"/>
+        <circle cx="40" cy="40" r="12" stroke="#a85c1a" stroke-width="1" fill="none"/>
+        <circle cx="40" cy="40" r="4" fill="#c4b048"/>
+      </svg>
+    </article>
+
+    <article class="cap-card reveal" style="transition-delay:0.16s;">
+      <p class="cap-designator"><span class="cap-dot"></span>REF C3 — SWARM</p>
+      <h3 class="cap-title">Parallel Goal Swarms</h3>
+      <p class="cap-body">Every non-trivial task fans out into a parallel swarm — never a serial loop. New directives never abandon prior goals. Sub-agents spawn at any effort level, on any model, instantly backgrounded.</p>
+      <svg class="cap-trace" viewBox="0 0 80 80" fill="none">
+        <circle cx="40" cy="40" r="4" fill="#c4b048"/>
+        <line x1="40" y1="40" x2="10" y2="10" stroke="#a85c1a" stroke-width="1"/>
+        <line x1="40" y1="40" x2="70" y2="10" stroke="#a85c1a" stroke-width="1"/>
+        <line x1="40" y1="40" x2="10" y2="70" stroke="#a85c1a" stroke-width="1"/>
+        <line x1="40" y1="40" x2="70" y2="70" stroke="#a85c1a" stroke-width="1"/>
+        <circle cx="10" cy="10" r="3" fill="none" stroke="#c4b048" stroke-width="1"/>
+        <circle cx="70" cy="10" r="3" fill="none" stroke="#c4b048" stroke-width="1"/>
+        <circle cx="10" cy="70" r="3" fill="none" stroke="#c4b048" stroke-width="1"/>
+        <circle cx="70" cy="70" r="3" fill="none" stroke="#c4b048" stroke-width="1"/>
+      </svg>
+    </article>
+
+    <article class="cap-card reveal" style="transition-delay:0.04s;">
+      <p class="cap-designator"><span class="cap-dot"></span>REF C4 — AUTONOMY</p>
+      <h3 class="cap-title">Human-Out-of-the-Loop Execution</h3>
+      <p class="cap-body">XEN operates identically whether you are present or absent, awake or asleep. Inbound signals — from any source, any channel, any priority — map instantly to action without human confirmation. Any interaction that requires a tap, click, or confirmation is considered an architectural failure. Zero idle states. Zero standby. The system is permanently producing.</p>
+      <svg class="cap-trace" viewBox="0 0 80 80" fill="none">
+        <path d="M10 70 V10 H70" stroke="#a85c1a" stroke-width="1.5"/>
+        <path d="M20 55 L35 30 L50 45 L65 15" stroke="#c4b048" stroke-width="1.5" fill="none"/>
+        <circle cx="65" cy="15" r="3" fill="#c4b048"/>
+      </svg>
+    </article>
+
+    <article class="cap-card reveal" style="transition-delay:0.12s;">
+      <p class="cap-designator"><span class="cap-dot"></span>REF C5 — OBSERVE</p>
+      <h3 class="cap-title">Full-Stack Omniscience</h3>
+      <p class="cap-body">Every thread known at all times — beeper channels, SMS legs, live call audio, daemon heartbeats, disk state, process health, goal indexes. Xen does not consult logs after the fact. It witnesses state as it changes, cross-correlates signals in real time, and acts on what it finds before the anomaly propagates. Visibility is not a dashboard. It is the operating condition.</p>
+      <svg class="cap-trace" viewBox="0 0 80 80" fill="none">
+        <circle cx="40" cy="40" r="28" stroke="#1b3322" stroke-width="6" fill="none"/>
+        <circle cx="40" cy="40" r="20" stroke="#a85c1a" stroke-width="1" fill="none"/>
+        <circle cx="40" cy="40" r="6" fill="none" stroke="#c4b048" stroke-width="1.5"/>
+        <line x1="40" y1="12" x2="40" y2="20" stroke="#a85c1a" stroke-width="1"/>
+        <line x1="40" y1="60" x2="40" y2="68" stroke="#a85c1a" stroke-width="1"/>
+        <line x1="12" y1="40" x2="20" y2="40" stroke="#a85c1a" stroke-width="1"/>
+        <line x1="60" y1="40" x2="68" y2="40" stroke="#a85c1a" stroke-width="1"/>
+      </svg>
+    </article>
+
+  </div>
+</section>
+
+<!-- ══ ARCHITECTURE ════════════════════════════════ -->
+<section id="architecture">
+  <div class="arch-inner">
+    <div class="reveal">
+      <p class="section-label">Architecture</p>
+      <h2 class="arch-heading">One core.<br><em>Everything else flows through it.</em></h2>
+      <div class="pcb-divider" style="margin: 2rem 0;"></div>
+      <p style="font-family: var(--mono); font-size: 0.72rem; color: var(--silk-dim); line-height: 1.9; letter-spacing: 0.04em;">XEN maintains a single canonical tree. No mirrors, no sync I/O on hot paths, no flapping volumes. Every agent in the fleet reads from and writes to the same persistent state — goals, memory, identity, and runtime — with flock-guarded writes and atomic rename semantics.</p>
+    </div>
+
+    <div class="reveal" style="transition-delay:0.12s;">
+      <div class="arch-diagram">
+        <div class="arch-node">
+          <div class="arch-node-label">Layer 01</div>
+          <div class="arch-node-name">Voice I/O</div>
+          <div class="arch-node-status"></div>
+        </div>
+        <div class="arch-xen-center arch-node">
+          <div class="arch-xen-label">XEN</div>
+          <div class="arch-xen-sub">core intelligence</div>
+          <div class="arch-node-status"></div>
+        </div>
+        <div class="arch-node">
+          <div class="arch-node-label">Layer 02</div>
+          <div class="arch-node-name">SMS / Beeper</div>
+          <div class="arch-node-status"></div>
+        </div>
+        <div class="arch-node">
+          <div class="arch-node-label">Layer 03</div>
+          <div class="arch-node-name">Goal Swarms</div>
+          <div class="arch-node-status"></div>
+        </div>
+        <div class="arch-node">
+          <div class="arch-node-label">Layer 04</div>
+          <div class="arch-node-name">Memory Vault</div>
+          <div class="arch-node-status"></div>
+        </div>
+        <div class="arch-node">
+          <div class="arch-node-label">Layer 05</div>
+          <div class="arch-node-name">Tool Fleet</div>
+          <div class="arch-node-status"></div>
+        </div>
+        <div class="arch-node">
+          <div class="arch-node-label">Layer 06</div>
+          <div class="arch-node-name">Watchdogs</div>
+          <div class="arch-node-status"></div>
+        </div>
+        <div class="arch-node">
+          <div class="arch-node-label">Layer 07</div>
+          <div class="arch-node-name">Live Obs.</div>
+          <div class="arch-node-status"></div>
+        </div>
+        <div class="arch-node">
+          <div class="arch-node-label">Layer 08</div>
+          <div class="arch-node-name">Persona Layer</div>
+          <div class="arch-node-status"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ CONTACT ═════════════════════════════════════ -->
+<section id="contact">
+  <canvas id="contact-canvas" aria-hidden="true"></canvas>
+
+  <div class="contact-inner reveal">
+    <p class="section-label">Request Access</p>
+    <h2 class="contact-heading">Ready to put <em>one voice</em> across everything?</h2>
+    <p class="contact-sub">XEN is deployed selectively. Tell us about your infrastructure and what you're trying to unify. We'll assess fit and respond within one business day.</p>
+
+    <form class="contact-form" onsubmit="handleSubmit(event)">
+      <div class="form-field">
+        <label class="form-label" for="f-name">Designation</label>
+        <input class="form-input" id="f-name" type="text" placeholder="Your name or handle" autocomplete="name">
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="f-email">Comm channel</label>
+        <input class="form-input" id="f-email" type="email" placeholder="your@email.com" autocomplete="email">
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="f-message">Signal</label>
+        <textarea class="form-textarea" id="f-message" placeholder="Describe your stack and what you need unified..."></textarea>
+      </div>
+      <button type="submit" class="form-submit">Transmit</button>
+    </form>
+  </div>
+</section>
+
+<!-- ══ FOOTER ══════════════════════════════════════ -->
+<footer>
+  <div class="footer-logo">XEN.</div>
+  <ul class="footer-links">
+    <li><a href="#about">Mission</a></li>
+    <li><a href="#capabilities">Capabilities</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <p class="footer-copy">One Voice. All Systems. &copy; 2026 XEN Intelligence</p>
+</footer>
+
+<!-- ══ SCRIPTS ═════════════════════════════════════ -->
+<script>
+/* ── NAV SCROLL STATE ─────────────────────────────── */
+const nav = document.getElementById('main-nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 60);
+}, { passive: true });
+
+/* ── HERO CIRCUIT CANVAS ─────────────────────────── */
+(function() {
+  const canvas = document.getElementById('circuit-canvas');
+  const ctx = canvas.getContext('2d');
+
+  let W, H, mouse = { x: -999, y: -999 };
+  let nodes = [], traces = [], pulses = [], dots = [];
+  let raf;
+
+  function resize() {
+    W = canvas.width  = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+    init();
+  }
+
+  function init() {
+    nodes  = [];
+    traces = [];
+    pulses = [];
+    dots   = [];
+
+    const cols = Math.ceil(W / 90) + 2;
+    const rows = Math.ceil(H / 90) + 2;
+
+    for (let c = 0; c < cols; c++) {
+      for (let r = 0; r < rows; r++) {
+        const jx = (Math.random() - 0.5) * 30;
+        const jy = (Math.random() - 0.5) * 30;
+        nodes.push({
+          x: c * 90 + jx,
+          y: r * 90 + jy,
+          id: nodes.length
+        });
+      }
+    }
+
+    // Generate L-shaped traces between nearby nodes
+    for (let i = 0; i < nodes.length; i++) {
+      if (Math.random() > 0.45) continue;
+      const n = nodes[i];
+      // find a few neighbors
+      const nearby = nodes.filter(m => {
+        if (m.id === n.id) return false;
+        const dx = Math.abs(m.x - n.x), dy = Math.abs(m.y - n.y);
+        return dx < 130 && dy < 130 && (dx + dy) > 20;
+      });
+      if (!nearby.length) continue;
+      const target = nearby[Math.floor(Math.random() * Math.min(nearby.length, 3))];
+      // L-shaped: go horizontal then vertical
+      const corner = { x: target.x, y: n.y };
+      traces.push({
+        ax: n.x, ay: n.y,
+        cx: corner.x, cy: corner.y,
+        bx: target.x, by: target.y,
+        opacity: 0.12 + Math.random() * 0.18
+      });
+
+      // Solder dots at junctions
+      if (Math.random() > 0.5) {
+        dots.push({ x: corner.x, y: corner.y, r: 2 + Math.random() * 2, blink: Math.random() * 6.28 });
+      }
+      if (Math.random() > 0.65) {
+        dots.push({ x: n.x, y: n.y, r: 1.5 + Math.random() * 1.5, blink: Math.random() * 6.28 });
+      }
+    }
+
+    // Seed some pulses
+    for (let i = 0; i < 6; i++) {
+      spawnPulse();
+    }
+  }
+
+  function spawnPulse() {
+    if (!traces.length) return;
+    const t = traces[Math.floor(Math.random() * traces.length)];
+    pulses.push({
+      trace: t,
+      progress: 0,
+      speed: 0.003 + Math.random() * 0.004,
+      leg: 0 // 0 = first segment, 1 = second
+    });
+  }
+
+  let lastTime = 0;
+  function draw(ts) {
+    raf = requestAnimationFrame(draw);
+    const dt = Math.min(ts - lastTime, 50);
+    lastTime = ts;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // PCB substrate faint grid
+    ctx.strokeStyle = 'rgba(30, 51, 40, 0.4)';
+    ctx.lineWidth = 0.5;
+    const gridSize = 45;
+    for (let x = 0; x < W; x += gridSize) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 0; y < H; y += gridSize) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+
+    // Draw traces
+    for (const t of traces) {
+      const mx = mouse.x, my = mouse.y;
+      // proximity glow
+      const distToCorner = Math.hypot(mx - t.cx, my - t.cy);
+      const glow = Math.max(0, 1 - distToCorner / 200);
+      const op = t.opacity + glow * 0.35;
+
+      ctx.strokeStyle = `rgba(168, 92, 26, ${op})`;
+      ctx.lineWidth = 1 + glow;
+      ctx.beginPath();
+      ctx.moveTo(t.ax, t.ay);
+      ctx.lineTo(t.cx, t.cy);
+      ctx.lineTo(t.bx, t.by);
+      ctx.stroke();
+    }
+
+    // Draw solder dots
+    const time = ts * 0.001;
+    for (const d of dots) {
+      const brightness = 0.5 + 0.5 * Math.sin(time * 1.3 + d.blink);
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(196, 176, 72, ${0.3 + brightness * 0.55})`;
+      ctx.fill();
+    }
+
+    // Advance and draw pulses
+    for (let i = pulses.length - 1; i >= 0; i--) {
+      const p = pulses[i];
+      p.progress += p.speed * (dt / 16);
+
+      let x, y;
+      if (p.leg === 0) {
+        const frac = Math.min(p.progress, 1);
+        x = p.trace.ax + (p.trace.cx - p.trace.ax) * frac;
+        y = p.trace.ay + (p.trace.cy - p.trace.ay) * frac;
+        if (p.progress >= 1) { p.leg = 1; p.progress = 0; }
+      } else {
+        const frac = Math.min(p.progress, 1);
+        x = p.trace.cx + (p.trace.bx - p.trace.cx) * frac;
+        y = p.trace.cy + (p.trace.by - p.trace.cy) * frac;
+        if (p.progress >= 1) {
+          pulses.splice(i, 1);
+          setTimeout(spawnPulse, Math.random() * 1200);
+          continue;
+        }
+      }
+
+      const grad = ctx.createRadialGradient(x, y, 0, x, y, 10);
+      grad.addColorStop(0, 'rgba(224, 144, 80, 0.9)');
+      grad.addColorStop(0.4, 'rgba(168, 92, 26, 0.4)');
+      grad.addColorStop(1, 'rgba(168, 92, 26, 0)');
+      ctx.beginPath();
+      ctx.arc(x, y, 10, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+    }
+  }
+
+  // Mouse tracking
+  window.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    mouse.x = e.clientX - rect.left;
+    mouse.y = e.clientY - rect.top;
+  }, { passive: true });
+
+  window.addEventListener('resize', () => {
+    if (raf) cancelAnimationFrame(raf);
+    resize();
+    raf = requestAnimationFrame(draw);
+  });
+
+  resize();
+  raf = requestAnimationFrame(draw);
+})();
+
+/* ── CONTACT CANVAS ───────────────────────────────── */
+(function() {
+  const canvas = document.getElementById('contact-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, lines = [], raf2;
+
+  function resize2() {
+    W = canvas.width  = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+    buildLines();
+  }
+
+  function buildLines() {
+    lines = [];
+    const count = Math.floor(W / 60);
+    for (let i = 0; i < count; i++) {
+      lines.push({
+        x: (i / count) * W + Math.random() * 40,
+        speed: 0.2 + Math.random() * 0.5,
+        offset: Math.random() * H,
+        length: 40 + Math.random() * 120,
+        opacity: 0.06 + Math.random() * 0.1
+      });
+    }
+  }
+
+  function draw2(ts) {
+    raf2 = requestAnimationFrame(draw2);
+    ctx.clearRect(0, 0, W, H);
+
+    for (const l of lines) {
+      l.offset = (l.offset + l.speed) % (H + l.length);
+      const y = l.offset - l.length;
+
+      const grad = ctx.createLinearGradient(l.x, y, l.x, y + l.length);
+      grad.addColorStop(0, `rgba(168, 92, 26, 0)`);
+      grad.addColorStop(0.5, `rgba(168, 92, 26, ${l.opacity})`);
+      grad.addColorStop(1, `rgba(196, 176, 72, ${l.opacity * 0.6})`);
+
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(l.x, y);
+      ctx.lineTo(l.x, y + l.length);
+      ctx.stroke();
+    }
+  }
+
+  window.addEventListener('resize', () => {
+    if (raf2) cancelAnimationFrame(raf2);
+    resize2();
+    raf2 = requestAnimationFrame(draw2);
+  });
+
+  resize2();
+  raf2 = requestAnimationFrame(draw2);
+})();
+
+/* ── INTERSECTION OBSERVER REVEALS ───────────────── */
+(function() {
+  const els = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+
+  els.forEach(el => obs.observe(el));
+})();
+
+/* ── FORM SUBMIT ──────────────────────────────────── */
+function handleSubmit(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector('.form-submit');
+  btn.textContent = 'Signal received.';
+  btn.style.background = 'var(--via-bright)';
+  btn.style.borderColor = 'var(--via-bright)';
+  btn.style.color = 'var(--silk)';
+  btn.disabled = true;
+}
+</script>
+</body>
+</html>

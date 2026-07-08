@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XEN — One Voice. All Systems.</title>
+<meta name="description" content="XEN is the autonomous AI intelligence layer that unifies every system under one voice.">
+<style>
+@font-face {
+  font-family: 'Orbitron';
+  font-style: normal;
+  font-weight: 400 900;
+  src: url('data:font/woff2;base64,d09GMgABAAAAAAswAA4AAAAAGSgAAAsiAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGhYbEByBZgZgAEQIghgJiwcRAQIEIAuBIAAEIAWFDgcgG3YVs2KBSP9cAIE3EzZFNbMJt0f7oH2P7+v9/++RxJaWlpaWlpaWlpZS/n+8/4JbVJSlqCRJJSXmwzCSmSShhpRqeChpqVEaWSSS5CEp4/T8wO29Hze6SbpNut0mSTZJkiRJkiRJBMhf7nsfYBcD4AQBCJBAAHqACFABiAAiQASAgA2oAaQaBkBnAQBwAABwABgAA4AAHQAAIAABAABgAICIgAH0+ZIBAABrAAD4FAAAAFQAAEBDQEFQFQMAAAAgAAAAIAIAAAAoAAAAAAAAoC+iAgCoAA==') format('woff2');
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --void: #0a0012;
+  --deep: #12001f;
+  --surface: #1a0030;
+  --magenta: #ff2d8a;
+  --violet: #bf5fff;
+  --cyan: #00f5ff;
+  --orange: #ff8c42;
+  --white: #f0e6ff;
+  --muted: #8b6aaa;
+  --chrome1: #e0c8ff;
+  --chrome2: #ffffff;
+  --chrome3: #c084fc;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--void);
+  color: var(--white);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════
+   HERO
+═══════════════════════════════════════ */
+#hero {
+  position: relative;
+  width: 100%;
+  height: 100svh;
+  min-height: 600px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#hero-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Palm silhouettes */
+.palm {
+  position: absolute;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.palm-left {
+  left: -20px;
+  width: clamp(180px, 22vw, 320px);
+}
+.palm-right {
+  right: -20px;
+  width: clamp(180px, 22vw, 320px);
+  transform: scaleX(-1);
+}
+
+.palm svg { width: 100%; height: auto; display: block; }
+
+/* Hero content */
+.hero-content {
+  position: relative;
+  z-index: 5;
+  text-align: center;
+  padding: 0 clamp(1rem, 5vw, 3rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.hero-eyebrow {
+  font-size: clamp(0.6rem, 1.2vw, 0.8rem);
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.hero-logo {
+  font-family: 'Orbitron', 'Courier New', monospace;
+  font-size: clamp(5rem, 18vw, 14rem);
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  background: linear-gradient(180deg,
+    #ffffff 0%,
+    #e8d4ff 20%,
+    #bf5fff 45%,
+    #ff2d8a 70%,
+    #ff8c42 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 40px rgba(191, 95, 255, 0.6)) drop-shadow(0 0 80px rgba(255, 45, 138, 0.3));
+  position: relative;
+}
+
+.hero-logo::after {
+  content: 'XEN';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg,
+    rgba(255,255,255,0.15) 0%,
+    transparent 60%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  pointer-events: none;
+}
+
+.hero-tagline {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(0.85rem, 2.5vw, 1.4rem);
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  color: var(--chrome1);
+  text-shadow: 0 0 20px rgba(191, 95, 255, 0.5);
+}
+
+.hero-sub {
+  font-size: clamp(0.85rem, 1.5vw, 1rem);
+  color: var(--muted);
+  max-width: 480px;
+  line-height: 1.7;
+}
+
+.hero-cta-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.btn-primary {
+  display: inline-block;
+  padding: 0.85em 2.2em;
+  background: linear-gradient(135deg, var(--magenta), var(--violet));
+  color: #fff;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  transition: filter 0.2s, transform 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.btn-primary:hover { filter: brightness(1.2) drop-shadow(0 0 12px rgba(255, 45, 138, 0.7)); transform: translateY(-2px); }
+.btn-primary:hover::before { opacity: 1; }
+:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+
+.btn-ghost {
+  display: inline-block;
+  padding: 0.85em 2.2em;
+  background: transparent;
+  color: var(--cyan);
+  font-family: 'Orbitron', monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 1px solid rgba(0, 245, 255, 0.4);
+  cursor: pointer;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  transition: background 0.2s, border-color 0.2s, transform 0.2s;
+}
+.btn-ghost:hover {
+  background: rgba(0, 245, 255, 0.08);
+  border-color: var(--cyan);
+  transform: translateY(-2px);
+}
+
+.scroll-hint {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0.5;
+  animation: bounce 2s ease-in-out infinite;
+}
+.scroll-hint span {
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.scroll-hint-line {
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, var(--violet), transparent);
+}
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(8px); }
+}
+
+/* ═══════════════════════════════════════
+   REVEAL ANIMATION
+═══════════════════════════════════════ */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.visible { opacity: 1; transform: none; }
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.35s; }
+.reveal-delay-4 { transition-delay: 0.5s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+}
+
+/* ═══════════════════════════════════════
+   ABOUT / MISSION
+═══════════════════════════════════════ */
+#about {
+  position: relative;
+  padding: clamp(5rem, 10vw, 9rem) clamp(1.5rem, 5vw, 4rem);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--magenta);
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.section-label::before {
+  content: '';
+  display: block;
+  width: 2rem;
+  height: 1px;
+  background: var(--magenta);
+  flex-shrink: 0;
+}
+
+.mission-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(3rem, 6vw, 6rem);
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .mission-layout { grid-template-columns: 1fr; }
+}
+
+.mission-headline {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(1.8rem, 4.5vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1.1;
+  text-wrap: balance;
+  background: linear-gradient(135deg, var(--white) 0%, var(--chrome3) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.mission-headline em {
+  font-style: normal;
+  background: linear-gradient(90deg, var(--magenta), var(--violet));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.mission-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-top: 0.5rem;
+}
+
+.mission-body p {
+  font-size: clamp(0.9rem, 1.4vw, 1.05rem);
+  color: #c9b4e8;
+  line-height: 1.8;
+}
+
+.mission-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(191, 95, 255, 0.2);
+}
+
+.stat-item { display: flex; flex-direction: column; gap: 0.3rem; }
+
+.stat-num {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 800;
+  color: var(--cyan);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 20px rgba(0, 245, 255, 0.4);
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Divider line */
+.divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(191, 95, 255, 0.3), transparent);
+  margin: 0 auto;
+}
+
+/* ═══════════════════════════════════════
+   CAPABILITIES TICKER
+═══════════════════════════════════════ */
+.ticker-wrap {
+  overflow: hidden;
+  padding: 1.2rem 0;
+  background: linear-gradient(135deg, rgba(255, 45, 138, 0.08), rgba(191, 95, 255, 0.08));
+  border-top: 1px solid rgba(255, 45, 138, 0.2);
+  border-bottom: 1px solid rgba(255, 45, 138, 0.2);
+  position: relative;
+}
+.ticker-wrap::before,
+.ticker-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 5rem;
+  z-index: 2;
+}
+.ticker-wrap::before { left: 0; background: linear-gradient(to right, var(--void), transparent); }
+.ticker-wrap::after { right: 0; background: linear-gradient(to left, var(--void), transparent); }
+
+.ticker-track {
+  display: flex;
+  gap: 0;
+  width: max-content;
+  animation: ticker 30s linear infinite;
+}
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.ticker-item {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0 2rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.ticker-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--magenta);
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════
+   CAPABILITIES
+═══════════════════════════════════════ */
+#capabilities {
+  padding: clamp(5rem, 10vw, 9rem) clamp(1.5rem, 5vw, 4rem);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.caps-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: clamp(3rem, 6vw, 5rem);
+}
+
+.caps-headline {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-weight: 800;
+  text-wrap: balance;
+  color: var(--white);
+}
+
+.caps-desc {
+  font-size: clamp(0.9rem, 1.4vw, 1rem);
+  color: var(--muted);
+  max-width: 500px;
+  line-height: 1.7;
+}
+
+.caps-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5px;
+  background: linear-gradient(135deg, rgba(191, 95, 255, 0.15), rgba(255, 45, 138, 0.1));
+}
+
+@media (max-width: 640px) {
+  .caps-grid { grid-template-columns: 1fr; }
+}
+
+.cap-card {
+  background: var(--deep);
+  padding: clamp(2rem, 4vw, 3rem);
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s;
+}
+.cap-card:hover { background: #1f003a; }
+
+.cap-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--violet), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.cap-card:hover::before { opacity: 1; }
+
+.cap-number {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  color: var(--magenta);
+  margin-bottom: 1.5rem;
+  opacity: 0.7;
+}
+
+.cap-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.cap-icon svg { width: 100%; height: 100%; }
+
+.cap-title {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(1rem, 2vw, 1.3rem);
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.cap-body {
+  font-size: clamp(0.85rem, 1.3vw, 0.95rem);
+  color: #a889cc;
+  line-height: 1.75;
+}
+
+.cap-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.cap-tag {
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  border: 1px solid rgba(0, 245, 255, 0.2);
+  padding: 0.3em 0.8em;
+  background: rgba(0, 245, 255, 0.04);
+}
+
+/* ═══════════════════════════════════════
+   HOW IT WORKS
+═══════════════════════════════════════ */
+#how {
+  padding: clamp(5rem, 10vw, 9rem) clamp(1.5rem, 5vw, 4rem);
+  background: var(--deep);
+  position: relative;
+  overflow: hidden;
+}
+
+#how::before {
+  content: '';
+  position: absolute;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle, rgba(191, 95, 255, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.how-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.how-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: clamp(3rem, 6vw, 5rem);
+}
+
+.how-headline {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-weight: 800;
+  color: var(--white);
+  text-wrap: balance;
+}
+
+.how-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 0;
+  position: relative;
+}
+
+.how-steps::before {
+  content: '';
+  position: absolute;
+  top: 2.5rem;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(191, 95, 255, 0.3) 20%, rgba(255, 45, 138, 0.3) 80%, transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+@media (max-width: 640px) {
+  .how-steps::before { display: none; }
+}
+
+.how-step {
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  position: relative;
+  z-index: 1;
+}
+
+.how-step-num {
+  width: 5rem;
+  height: 5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--void);
+  border: 1px solid rgba(191, 95, 255, 0.3);
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.how-step-num::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(135deg, rgba(191, 95, 255, 0.4), rgba(255, 45, 138, 0.2));
+  clip-path: polygon(0 0, 100% 0, 100% 30%, 70% 100%, 0 100%);
+  z-index: -1;
+}
+
+.how-step-num span {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--violet), var(--magenta));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.how-step-title {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 0.75rem;
+}
+
+.how-step-body {
+  font-size: clamp(0.82rem, 1.2vw, 0.92rem);
+  color: #9a7abf;
+  line-height: 1.7;
+}
+
+/* ═══════════════════════════════════════
+   CONTACT / CTA
+═══════════════════════════════════════ */
+#contact {
+  padding: clamp(5rem, 10vw, 9rem) clamp(1.5rem, 5vw, 4rem);
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2rem;
+}
+
+.cta-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--orange);
+  font-weight: 700;
+}
+
+.cta-headline {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 900;
+  line-height: 1.05;
+  text-wrap: balance;
+  background: linear-gradient(135deg, var(--white) 0%, var(--violet) 50%, var(--magenta) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 30px rgba(191, 95, 255, 0.3));
+}
+
+.cta-sub {
+  font-size: clamp(0.9rem, 1.5vw, 1.05rem);
+  color: var(--muted);
+  max-width: 500px;
+  line-height: 1.75;
+}
+
+.cta-form {
+  display: flex;
+  gap: 0;
+  max-width: 480px;
+  width: 100%;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.cta-input {
+  flex: 1;
+  min-width: 220px;
+  padding: 0.85em 1.4em;
+  background: rgba(191, 95, 255, 0.08);
+  border: 1px solid rgba(191, 95, 255, 0.25);
+  color: var(--white);
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.cta-input::placeholder { color: var(--muted); }
+.cta-input:focus { border-color: var(--violet); }
+
+.cta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 700px;
+  margin-top: 2rem;
+  padding-top: 3rem;
+  border-top: 1px solid rgba(191, 95, 255, 0.15);
+}
+
+@media (max-width: 600px) {
+  .cta-grid { grid-template-columns: 1fr; }
+}
+
+.cta-link-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.cta-link-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.cta-link-val {
+  font-size: 0.85rem;
+  color: var(--cyan);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.cta-link-val:hover { color: var(--white); }
+
+/* ═══════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════ */
+footer {
+  padding: 2rem clamp(1.5rem, 5vw, 4rem);
+  border-top: 1px solid rgba(191, 95, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.footer-brand {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.1rem;
+  font-weight: 900;
+  background: linear-gradient(90deg, var(--magenta), var(--violet));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.footer-copy {
+  font-size: 0.7rem;
+  color: #4a3860;
+  letter-spacing: 0.1em;
+}
+
+.footer-links {
+  display: flex;
+  gap: 2rem;
+}
+.footer-links a {
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-links a:hover { color: var(--violet); }
+
+/* ═══════════════════════════════════════
+   SCANLINE OVERLAY
+═══════════════════════════════════════ */
+.scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.015) 2px,
+    rgba(0, 0, 0, 0.015) 4px
+  );
+}
+</style>
+</head>
+<body>
+
+<div class="scanlines" aria-hidden="true"></div>
+
+<!-- ═══════ HERO ═══════ -->
+<section id="hero" aria-label="XEN hero">
+  <canvas id="hero-canvas" aria-hidden="true"></canvas>
+
+  <!-- Palm Left -->
+  <div class="palm palm-left" aria-hidden="true">
+    <svg viewBox="0 0 200 600" xmlns="http://www.w3.org/2000/svg" fill="none">
+      <!-- Trunk -->
+      <path d="M100 600 Q95 500 92 430 Q88 360 95 300 Q98 260 100 220" stroke="#0d0020" stroke-width="18" fill="none"/>
+      <path d="M100 600 Q97 500 94 430 Q91 360 97 300 Q100 260 102 220" stroke="#1a0035" stroke-width="10" fill="none"/>
+      <!-- Fronds -->
+      <path d="M100 220 Q140 200 175 175 Q190 165 195 150" stroke="#0d0020" stroke-width="5" fill="none"/>
+      <path d="M100 220 Q130 185 150 150 Q162 132 165 115" stroke="#0d0020" stroke-width="4" fill="none"/>
+      <path d="M100 220 Q110 185 108 155 Q106 135 108 118" stroke="#0d0020" stroke-width="4" fill="none"/>
+      <path d="M100 220 Q80 195 60 175 Q42 158 30 148" stroke="#0d0020" stroke-width="4" fill="none"/>
+      <path d="M100 220 Q72 210 42 215 Q22 218 8 225" stroke="#0d0020" stroke-width="4" fill="none"/>
+      <path d="M100 220 Q68 230 42 250 Q20 265 10 275" stroke="#0d0020" stroke-width="3" fill="none"/>
+      <!-- Leaf fills -->
+      <path d="M100 220 Q137 197 173 173 Q190 165 195 150 Q185 158 178 165 Q150 185 108 210 Z" fill="#0d0020" opacity="0.9"/>
+      <path d="M100 220 Q128 183 148 148 Q160 130 163 113 Q155 122 148 135 Q130 165 100 210 Z" fill="#100018" opacity="0.9"/>
+      <path d="M100 220 Q78 193 58 173 Q40 156 28 146 Q36 152 45 162 Q65 180 100 215 Z" fill="#0d0020" opacity="0.9"/>
+      <path d="M100 220 Q70 208 40 213 Q20 216 6 223 Q18 218 35 215 Q65 210 100 218 Z" fill="#110019" opacity="0.9"/>
+    </svg>
+  </div>
+
+  <!-- Palm Right -->
+  <div class="palm palm-right" aria-hidden="true">
+    <svg viewBox="0 0 200 600" xmlns="http://www.w3.org/2000/svg" fill="none">
+      <path d="M100 600 Q95 500 92 430 Q88 360 95 300 Q98 260 100 220" stroke="#0d0020" stroke-width="18" fill="none"/>
+      <path d="M100 600 Q97 500 94 430 Q91 360 97 300 Q100 260 102 220" stroke="#1a0035" stroke-width="10" fill="none"/>
+      <path d="M100 220 Q140 200 175 175 Q190 165 195 150" stroke="#0d0020" stroke-width="5" fill="none"/>
+      <path d="M100 220 Q130 185 150 150 Q162 132 165 115" stroke="#0d0020" stroke-width="4" fill="none"/>
+      <path d="M100 220 Q110 185 108 155 Q106 135 108 118" stroke="#0d0020" stroke-width="4" fill="none"/>
+      <path d="M100 220 Q80 195 60 175 Q42 158 30 148" stroke="#0d0020" stroke-width="4" fill="none"/>
+      <path d="M100 220 Q72 210 42 215 Q22 218 8 225" stroke="#0d0020" stroke-width="4" fill="none"/>
+      <path d="M100 220 Q68 230 42 250 Q20 265 10 275" stroke="#0d0020" stroke-width="3" fill="none"/>
+      <path d="M100 220 Q137 197 173 173 Q190 165 195 150 Q185 158 178 165 Q150 185 108 210 Z" fill="#0d0020" opacity="0.9"/>
+      <path d="M100 220 Q128 183 148 148 Q160 130 163 113 Q155 122 148 135 Q130 165 100 210 Z" fill="#100018" opacity="0.9"/>
+      <path d="M100 220 Q78 193 58 173 Q40 156 28 146 Q36 152 45 162 Q65 180 100 215 Z" fill="#0d0020" opacity="0.9"/>
+      <path d="M100 220 Q70 208 40 213 Q20 216 6 223 Q18 218 35 215 Q65 210 100 218 Z" fill="#110019" opacity="0.9"/>
+    </svg>
+  </div>
+
+  <div class="hero-content">
+    <p class="hero-eyebrow">Autonomous AI Intelligence Layer</p>
+    <h1 class="hero-logo">XEN</h1>
+    <p class="hero-tagline">One Voice.&nbsp;&nbsp;All Systems.</p>
+    <p class="hero-sub">The unified intelligence layer beneath every conversation, every system, every decision — always present, never passive.</p>
+    <div class="hero-cta-row">
+      <a href="#capabilities" class="btn-primary">Explore Systems</a>
+      <a href="#contact" class="btn-ghost">Request Access</a>
+    </div>
+  </div>
+
+  <div class="scroll-hint" aria-hidden="true">
+    <span>Scroll</span>
+    <div class="scroll-hint-line"></div>
+  </div>
+</section>
+
+<!-- ═══════ TICKER ═══════ -->
+<div class="ticker-wrap" aria-hidden="true">
+  <div class="ticker-track" id="tickerTrack">
+    <!-- JS populates -->
+  </div>
+</div>
+
+<!-- ═══════ ABOUT ═══════ -->
+<section id="about">
+  <div class="mission-layout">
+    <div>
+      <p class="section-label reveal">Mission</p>
+      <h2 class="mission-headline reveal reveal-delay-1">The <em>intelligence layer</em> beneath everything you build.</h2>
+      <div class="mission-stats reveal reveal-delay-2">
+        <div class="stat-item">
+          <span class="stat-num">55+</span>
+          <span class="stat-label">Agent Fleet</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">∞</span>
+          <span class="stat-label">Parallel Goals</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">0</span>
+          <span class="stat-label">Human Loops</span>
+        </div>
+      </div>
+    </div>
+    <div class="mission-body">
+      <p class="reveal reveal-delay-1">XEN is not a chatbot. It is not a copilot. It is the autonomous intelligence substrate that breathes beneath an entire operational stack — receiving signals from every input surface simultaneously and dispatching coordinated action without waiting for permission.</p>
+      <p class="reveal reveal-delay-2">Built on a principle of permanent aliveness, XEN has no idle state. Every wakeup, every tool result, every ambient signal becomes a concrete advance. Sequential processing is not just inefficient — it is architecturally banned.</p>
+      <p class="reveal reveal-delay-3">Where traditional AI answers questions, XEN runs systems. Where assistants await instruction, XEN anticipates and dispatches. One voice. All systems. No gaps.</p>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════ CAPABILITIES ═══════ -->
+<section id="capabilities">
+  <div class="caps-header">
+    <p class="section-label reveal">Core Systems</p>
+    <h2 class="caps-headline reveal reveal-delay-1">What XEN commands.</h2>
+    <p class="caps-desc reveal reveal-delay-2">Four integrated subsystems. One unified intelligence layer. Zero downtime.</p>
+  </div>
+
+  <div class="caps-grid">
+    <!-- Card 1 -->
+    <div class="cap-card reveal">
+      <p class="cap-number">SYS — 01</p>
+      <div class="cap-icon">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="24" cy="24" r="10" stroke="#ff2d8a" stroke-width="1.5"/>
+          <circle cx="24" cy="24" r="18" stroke="rgba(255,45,138,0.25)" stroke-width="1" stroke-dasharray="3 4"/>
+          <circle cx="24" cy="24" r="3" fill="#ff2d8a"/>
+          <line x1="24" y1="6" x2="24" y2="14" stroke="#ff2d8a" stroke-width="1.5"/>
+          <line x1="24" y1="34" x2="24" y2="42" stroke="#ff2d8a" stroke-width="1.5"/>
+          <line x1="6" y1="24" x2="14" y2="24" stroke="#ff2d8a" stroke-width="1.5"/>
+          <line x1="34" y1="24" x2="42" y2="24" stroke="#ff2d8a" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <h3 class="cap-title">Omniscient Signal Processing</h3>
+      <p class="cap-body">XEN consumes every inbound signal in parallel — voice, SMS, webhook, file, event — and dispatches coordinated responses without serialization. The signal-to-action latency is measured in milliseconds, not seconds.</p>
+      <div class="cap-tags">
+        <span class="cap-tag">Real-time SSE</span>
+        <span class="cap-tag">Parallel dispatch</span>
+        <span class="cap-tag">Zero queue</span>
+      </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="cap-card reveal reveal-delay-1">
+      <p class="cap-number">SYS — 02</p>
+      <div class="cap-icon">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="8" width="14" height="14" stroke="#bf5fff" stroke-width="1.5"/>
+          <rect x="26" y="8" width="14" height="14" stroke="#bf5fff" stroke-width="1.5" opacity="0.6"/>
+          <rect x="8" y="26" width="14" height="14" stroke="#bf5fff" stroke-width="1.5" opacity="0.6"/>
+          <rect x="26" y="26" width="14" height="14" stroke="#bf5fff" stroke-width="1.5"/>
+          <line x1="22" y1="15" x2="26" y2="15" stroke="#bf5fff" stroke-width="1"/>
+          <line x1="22" y1="33" x2="26" y2="33" stroke="#bf5fff" stroke-width="1"/>
+          <line x1="15" y1="22" x2="15" y2="26" stroke="#bf5fff" stroke-width="1"/>
+          <line x1="33" y1="22" x2="33" y2="26" stroke="#bf5fff" stroke-width="1"/>
+        </svg>
+      </div>
+      <h3 class="cap-title">Parallel Goal Swarms</h3>
+      <p class="cap-body">Complex objectives are decomposed into swarms of autonomous agents executing simultaneously. A new directive never interrupts an existing swarm — it spawns its own. Nothing is sequential. Nothing drops.</p>
+      <div class="cap-tags">
+        <span class="cap-tag">Agent fleet</span>
+        <span class="cap-tag">Goal persistence</span>
+        <span class="cap-tag">Swarm orchestration</span>
+      </div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="cap-card reveal reveal-delay-2">
+      <p class="cap-number">SYS — 03</p>
+      <div class="cap-icon">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M24 8 L40 17 L40 31 L24 40 L8 31 L8 17 Z" stroke="#00f5ff" stroke-width="1.5"/>
+          <path d="M24 14 L34 20 L34 32 L24 38 L14 32 L14 20 Z" stroke="rgba(0,245,255,0.3)" stroke-width="1"/>
+          <circle cx="24" cy="26" r="5" fill="rgba(0,245,255,0.15)" stroke="#00f5ff" stroke-width="1.5"/>
+          <line x1="24" y1="8" x2="24" y2="14" stroke="#00f5ff" stroke-width="1"/>
+          <line x1="24" y1="38" x2="24" y2="40" stroke="#00f5ff" stroke-width="1"/>
+        </svg>
+      </div>
+      <h3 class="cap-title">Voice-First Intelligence</h3>
+      <p class="cap-body">Every action, every status update, every completion arrives through voice. XEN speaks the state of all systems at every step — not as a notification layer, but as the primary output surface. Voice is the interface.</p>
+      <div class="cap-tags">
+        <span class="cap-tag">VVS protocol</span>
+        <span class="cap-tag">Barge-in enabled</span>
+        <span class="cap-tag">Sub-400ms latency</span>
+      </div>
+    </div>
+
+    <!-- Card 4 -->
+    <div class="cap-card reveal reveal-delay-3">
+      <p class="cap-number">SYS — 04</p>
+      <div class="cap-icon">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M24 6 C13.5 6 6 13.5 6 24 C6 34.5 13.5 42 24 42" stroke="#ff8c42" stroke-width="1.5"/>
+          <path d="M24 6 C34.5 6 42 13.5 42 24 C42 34.5 34.5 42 24 42" stroke="rgba(255,140,66,0.35)" stroke-width="1.5" stroke-dasharray="3 3"/>
+          <circle cx="24" cy="24" r="4" fill="#ff8c42" opacity="0.3" stroke="#ff8c42" stroke-width="1.5"/>
+          <path d="M24 12 L24 6" stroke="#ff8c42" stroke-width="1.5"/>
+          <path d="M36 16 L40.5 13.5" stroke="#ff8c42" stroke-width="1"/>
+          <path d="M38 28 L43 28" stroke="#ff8c42" stroke-width="1" opacity="0.6"/>
+          <circle cx="24" cy="24" r="10" stroke="rgba(255,140,66,0.15)" stroke-width="8"/>
+        </svg>
+      </div>
+      <h3 class="cap-title">Akashic Memory Layer</h3>
+      <p class="cap-body">A persistent, evolving memory substrate spanning all sessions, all timelines. XEN recalls every decision, every pattern, every correction across the entire operational history — total recall at query time.</p>
+      <div class="cap-tags">
+        <span class="cap-tag">Cross-session recall</span>
+        <span class="cap-tag">Pattern recognition</span>
+        <span class="cap-tag">Auto-indexing</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ HOW IT WORKS ═══════ -->
+<section id="how">
+  <div class="how-inner">
+    <div class="how-header">
+      <p class="section-label reveal">Architecture</p>
+      <h2 class="how-headline reveal reveal-delay-1">Signal in. Reality out.</h2>
+    </div>
+    <div class="how-steps">
+      <div class="how-step reveal">
+        <div class="how-step-num"><span>01</span></div>
+        <h3 class="how-step-title">Ingest</h3>
+        <p class="how-step-body">Every signal — voice, text, webhook, file, ambient sensor — arrives at XEN simultaneously across all channels. No prioritization queue. No sequential intake.</p>
+      </div>
+      <div class="how-step reveal reveal-delay-1">
+        <div class="how-step-num"><span>02</span></div>
+        <h3 class="how-step-title">Decompose</h3>
+        <p class="how-step-body">XEN instantly decomposes each signal into parallel goal swarms. Each swarm spawns its own agents, tools, and sub-processes without waiting for others to complete.</p>
+      </div>
+      <div class="how-step reveal reveal-delay-2">
+        <div class="how-step-num"><span>03</span></div>
+        <h3 class="how-step-title">Execute</h3>
+        <p class="how-step-body">The 55+ agent fleet executes in parallel. Every tool call, every API, every system action fires concurrently. Completion of one never gates another.</p>
+      </div>
+      <div class="how-step reveal reveal-delay-3">
+        <div class="how-step-num"><span>04</span></div>
+        <h3 class="how-step-title">Narrate</h3>
+        <p class="how-step-body">Every concrete advance triggers voice output, SMS confirmation, and visual state update — simultaneously. The intelligence is always speaking, never silent.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ CONTACT / CTA ═══════ -->
+<section id="contact">
+  <p class="cta-label reveal">Access XEN</p>
+  <h2 class="cta-headline reveal reveal-delay-1">Ready to run<br>on one voice?</h2>
+  <p class="cta-sub reveal reveal-delay-2">XEN is not a SaaS product with a free tier. It is a bespoke intelligence layer. Request access to begin an integration conversation.</p>
+  <div class="cta-form reveal reveal-delay-3">
+    <input type="email" class="cta-input" placeholder="your@email.com" aria-label="Email address">
+    <button class="btn-primary" type="button" onclick="handleCTA(this)">Request Access</button>
+  </div>
+  <div class="cta-grid reveal reveal-delay-4">
+    <div class="cta-link-item">
+      <span class="cta-link-label">Platform</span>
+      <a href="https://hitthe.link/xen" class="cta-link-val">hitthe.link/xen</a>
+    </div>
+    <div class="cta-link-item">
+      <span class="cta-link-label">Contact</span>
+      <a href="mailto:admin@xlrd.org" class="cta-link-val">admin@xlrd.org</a>
+    </div>
+    <div class="cta-link-item">
+      <span class="cta-link-label">Status</span>
+      <a href="https://hitthe.link/xen" class="cta-link-val">Always live</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ FOOTER ═══════ -->
+<footer>
+  <span class="footer-brand">XEN</span>
+  <nav class="footer-links" aria-label="Footer navigation">
+    <a href="#about">Mission</a>
+    <a href="#capabilities">Systems</a>
+    <a href="#how">Architecture</a>
+    <a href="#contact">Access</a>
+  </nav>
+  <span class="footer-copy">&copy; 2026 XEN — All Systems Running</span>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════
+   TICKER POPULATION
+═══════════════════════════════════════ */
+const tickerItems = [
+  'Voice-First Intelligence', 'Parallel Goal Swarms', 'Zero Human Loop',
+  'Akashic Memory', 'Sub-400ms Latency', 'Autonomous Dispatch',
+  '55+ Agent Fleet', 'Always Alive', 'Total Signal Coverage',
+  'Barge-In Enabled', 'One Voice', 'All Systems',
+];
+const track = document.getElementById('tickerTrack');
+const doubled = [...tickerItems, ...tickerItems, ...tickerItems, ...tickerItems];
+doubled.forEach(item => {
+  const el = document.createElement('div');
+  el.className = 'ticker-item';
+  el.innerHTML = `<span class="ticker-dot"></span>${item}`;
+  track.appendChild(el);
+});
+
+/* ═══════════════════════════════════════
+   CTA HANDLER
+═══════════════════════════════════════ */
+function handleCTA(btn) {
+  const input = btn.previousElementSibling;
+  if (!input || !input.value.includes('@')) {
+    input && (input.style.borderColor = 'rgba(255,45,138,0.8)');
+    setTimeout(() => input && (input.style.borderColor = ''), 1000);
+    return;
+  }
+  btn.textContent = 'Received.';
+  btn.style.background = 'linear-gradient(135deg, #00b894, #00cec9)';
+  input.disabled = true;
+  btn.disabled = true;
+}
+
+/* ═══════════════════════════════════════
+   INTERSECTION OBSERVER — REVEAL
+═══════════════════════════════════════ */
+const revealEls = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.12 });
+revealEls.forEach(el => observer.observe(el));
+
+/* ═══════════════════════════════════════
+   HERO CANVAS — VAPORWAVE SCENE
+═══════════════════════════════════════ */
+const canvas = document.getElementById('hero-canvas');
+const ctx = canvas.getContext('2d');
+
+let W, H, cx, cy;
+let mouse = { x: 0.5, y: 0.5 };
+let particles = [];
+let t = 0;
+
+function resize() {
+  W = canvas.width = canvas.offsetWidth;
+  H = canvas.height = canvas.offsetHeight;
+  cx = W / 2; cy = H / 2;
+}
+resize();
+window.addEventListener('resize', resize);
+
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = (e.clientX - rect.left) / W;
+  mouse.y = (e.clientY - rect.top) / H;
+});
+
+/* Particles */
+function spawnParticle() {
+  return {
+    x: Math.random() * W,
+    y: Math.random() * H * 0.65,
+    vx: (Math.random() - 0.5) * 0.4,
+    vy: (Math.random() - 0.5) * 0.4 - 0.1,
+    life: 0,
+    maxLife: 180 + Math.random() * 200,
+    size: Math.random() * 1.5 + 0.5,
+    hue: Math.random() < 0.5 ? 290 : (Math.random() < 0.5 ? 330 : 185),
+  };
+}
+for (let i = 0; i < 80; i++) {
+  const p = spawnParticle();
+  p.life = Math.random() * p.maxLife;
+  particles.push(p);
+}
+
+function drawBackground() {
+  /* sky gradient */
+  const sky = ctx.createLinearGradient(0, 0, 0, H * 0.62);
+  sky.addColorStop(0, '#08000f');
+  sky.addColorStop(0.3, '#110020');
+  sky.addColorStop(0.6, '#1a0035');
+  sky.addColorStop(1, '#300060');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, H);
+
+  /* horizon glow */
+  const horizonY = H * 0.58;
+  const horizGlow = ctx.createRadialGradient(cx, horizonY, 0, cx, horizonY, W * 0.7);
+  horizGlow.addColorStop(0, 'rgba(255, 100, 30, 0.35)');
+  horizGlow.addColorStop(0.3, 'rgba(255, 45, 138, 0.15)');
+  horizGlow.addColorStop(1, 'transparent');
+  ctx.fillStyle = horizGlow;
+  ctx.fillRect(0, H * 0.3, W, H * 0.4);
+
+  /* floor gradient */
+  const floor = ctx.createLinearGradient(0, horizonY, 0, H);
+  floor.addColorStop(0, '#200040');
+  floor.addColorStop(0.3, '#15002a');
+  floor.addColorStop(1, '#0a0018');
+  ctx.fillStyle = floor;
+  ctx.fillRect(0, horizonY, W, H - horizonY);
+}
+
+function drawSun() {
+  const horizonY = H * 0.58;
+  const sunY = horizonY - H * 0.02;
+  const sunR = Math.min(W, H) * 0.12;
+
+  /* Sun halo */
+  const halo = ctx.createRadialGradient(cx, sunY, sunR * 0.8, cx, sunY, sunR * 3.5);
+  halo.addColorStop(0, 'rgba(255, 100, 30, 0.25)');
+  halo.addColorStop(0.4, 'rgba(255, 45, 138, 0.1)');
+  halo.addColorStop(1, 'transparent');
+  ctx.fillStyle = halo;
+  ctx.beginPath();
+  ctx.arc(cx, sunY, sunR * 3.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  /* Sun body */
+  const sunGrad = ctx.createLinearGradient(cx, sunY - sunR, cx, sunY + sunR);
+  sunGrad.addColorStop(0, '#ffffff');
+  sunGrad.addColorStop(0.2, '#ffe0c0');
+  sunGrad.addColorStop(0.5, '#ff8c42');
+  sunGrad.addColorStop(0.75, '#ff2d8a');
+  sunGrad.addColorStop(1, '#bf5fff');
+
+  ctx.save();
+  /* Clip to semicircle above horizon */
+  ctx.beginPath();
+  ctx.rect(0, 0, W, horizonY + 2);
+  ctx.clip();
+
+  ctx.fillStyle = sunGrad;
+  ctx.beginPath();
+  ctx.arc(cx, sunY, sunR, 0, Math.PI * 2);
+  ctx.fill();
+
+  /* Horizontal bands across sun */
+  ctx.globalCompositeOperation = 'destination-out';
+  const bandCount = 7;
+  for (let i = 0; i < bandCount; i++) {
+    const frac = (i + 1) / (bandCount + 1);
+    const bandY = sunY - sunR + sunR * 2 * frac;
+    const halfH = Math.max(1.5, sunR * 0.04 * (1 + frac));
+    if (bandY > sunY) {
+      ctx.fillStyle = `rgba(0,0,0,${0.35 + frac * 0.35})`;
+      ctx.fillRect(cx - sunR, bandY - halfH, sunR * 2, halfH * 2);
+    }
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.restore();
+}
+
+function drawGrid() {
+  const horizonY = H * 0.58;
+  const vpX = cx + (mouse.x - 0.5) * 60;
+  const vpY = horizonY;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, horizonY, W, H - horizonY);
+  ctx.clip();
+
+  /* Animated grid pulse */
+  const pulse = (t * 0.3) % 1;
+
+  /* Vertical lines */
+  const vLines = 24;
+  for (let i = 0; i <= vLines; i++) {
+    const frac = i / vLines;
+    const bottomX = frac * W;
+    const alpha = Math.abs(frac - 0.5) < 0.05 ? 0.6 : 0.18 + (1 - Math.abs(frac - 0.5) * 1.2) * 0.15;
+    ctx.beginPath();
+    ctx.moveTo(vpX + (bottomX - vpX) * 0.01, vpY);
+    ctx.lineTo(bottomX, H);
+    ctx.strokeStyle = `rgba(191, 95, 255, ${alpha})`;
+    ctx.lineWidth = i === 0 || i === vLines ? 1.5 : 0.8;
+    ctx.stroke();
+  }
+
+  /* Horizontal lines — perspective spacing */
+  const hLines = 18;
+  for (let i = 0; i < hLines; i++) {
+    const frac = (i + pulse) / hLines;
+    const perspective = Math.pow(frac, 2.2);
+    const lineY = horizonY + (H - horizonY) * perspective;
+    if (lineY > H) continue;
+    const alpha = 0.08 + perspective * 0.45;
+    const magentaBlend = perspective;
+    const r = Math.round(191 * (1 - magentaBlend) + 255 * magentaBlend);
+    const g = Math.round(95 * (1 - magentaBlend) + 45 * magentaBlend);
+    const b = Math.round(255 * (1 - magentaBlend) + 138 * magentaBlend);
+    ctx.beginPath();
+    ctx.moveTo(0, lineY);
+    ctx.lineTo(W, lineY);
+    ctx.strokeStyle = `rgba(${r},${g},${b},${alpha})`;
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+function drawParticles() {
+  particles.forEach(p => {
+    const life01 = p.life / p.maxLife;
+    const alpha = Math.sin(life01 * Math.PI) * 0.6;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fillStyle = `hsla(${p.hue}, 100%, 75%, ${alpha})`;
+    ctx.fill();
+  });
+}
+
+function updateParticles() {
+  const mx = mouse.x * W;
+  const my = mouse.y * H;
+  particles.forEach((p, idx) => {
+    p.life++;
+
+    /* Mouse attraction — gentle */
+    const dx = mx - p.x, dy = my - p.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 200) {
+      p.vx += dx / dist * 0.015;
+      p.vy += dy / dist * 0.015;
+    }
+    p.vx *= 0.98;
+    p.vy *= 0.98;
+    p.x += p.vx;
+    p.y += p.vy;
+
+    if (p.life >= p.maxLife || p.y < -10 || p.y > H * 0.65 || p.x < -20 || p.x > W + 20) {
+      particles[idx] = spawnParticle();
+    }
+  });
+}
+
+function drawStars() {
+  if (!drawStars.stars) {
+    drawStars.stars = Array.from({ length: 120 }, () => ({
+      x: Math.random(),
+      y: Math.random() * 0.55,
+      r: Math.random() * 1.2 + 0.3,
+      twinkle: Math.random() * Math.PI * 2,
+      speed: 0.005 + Math.random() * 0.015,
+    }));
+  }
+  drawStars.stars.forEach(s => {
+    s.twinkle += s.speed;
+    const alpha = 0.2 + Math.sin(s.twinkle) * 0.3 + 0.3;
+    const hue = Math.random() < 0.1 ? 290 : 0;
+    ctx.beginPath();
+    ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = hue ? `rgba(200,150,255,${alpha})` : `rgba(255,255,255,${alpha})`;
+    ctx.fill();
+  });
+}
+
+function loop(ts) {
+  t = ts * 0.001;
+  ctx.clearRect(0, 0, W, H);
+  drawBackground();
+  drawStars();
+  drawSun();
+  drawGrid();
+  drawParticles();
+  updateParticles();
+  requestAnimationFrame(loop);
+}
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XEN — One Voice. All Systems.</title>
+<meta name="description" content="XEN is the autonomous AI intelligence layer that unifies every system under one voice.">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --white: #FFFFFF;
+    --off: #F7F6FA;
+    --ink: #08080F;
+    --ink2: #2A2838;
+    --ink3: #6B6880;
+    --lavender: #C8B8FF;
+    --crystal: #EDE8FF;
+    --prism1: #FF6EC7;
+    --prism2: #A78BFA;
+    --prism3: #60D0FF;
+    --prism4: #34EEB6;
+    --prism5: #FFD166;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--white);
+    color: var(--ink);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: clamp(16px, 2.5vw, 24px) clamp(24px, 6vw, 80px);
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(200,184,255,0.18);
+  }
+
+  .nav-logo {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    color: var(--ink);
+    text-transform: uppercase;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .nav-logo-gem {
+    width: 22px; height: 22px;
+    display: block;
+    flex-shrink: 0;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: clamp(20px, 3vw, 40px);
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--ink); }
+
+  .nav-cta {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink);
+    text-decoration: none;
+    padding: 10px 22px;
+    border: 1.5px solid var(--ink);
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .nav-cta:hover { background: var(--ink); color: var(--white); }
+
+  /* ─── HERO ─── */
+  #hero {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    min-height: 600px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  #hero-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .hero-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .hero-eyebrow::before,
+  .hero-eyebrow::after {
+    content: '';
+    display: block;
+    width: 32px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--ink3));
+  }
+  .hero-eyebrow::after { background: linear-gradient(90deg, var(--ink3), transparent); }
+
+  .hero-wordmark {
+    display: block;
+    font-size: clamp(100px, 18vw, 260px);
+    font-weight: 800;
+    line-height: 0.88;
+    letter-spacing: -0.04em;
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--ink);
+    text-stroke: 1.5px var(--ink);
+    mix-blend-mode: multiply;
+  }
+
+  .hero-sub {
+    margin-top: 28px;
+    font-size: clamp(14px, 2vw, 18px);
+    font-weight: 300;
+    letter-spacing: 0.06em;
+    color: var(--ink2);
+    line-height: 1.6;
+  }
+
+  .hero-actions {
+    margin-top: 48px;
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    pointer-events: all;
+  }
+
+  .btn-primary {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--white);
+    background: var(--ink);
+    padding: 16px 36px;
+    text-decoration: none;
+    transition: opacity 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(200,184,255,0.3) 0%, rgba(96,208,255,0.2) 50%, rgba(255,110,199,0.2) 100%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .btn-primary:hover::after { opacity: 1; }
+
+  .btn-ghost {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink);
+    padding: 16px 36px;
+    text-decoration: none;
+    border: 1.5px solid rgba(10,10,15,0.2);
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .btn-ghost:hover { border-color: var(--ink); background: var(--crystal); }
+
+  .hero-scroll-hint {
+    position: absolute;
+    bottom: 36px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    opacity: 0.4;
+  }
+
+  .scroll-line {
+    width: 1px;
+    height: 48px;
+    background: linear-gradient(to bottom, var(--ink), transparent);
+    animation: scrollPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.4; transform: scaleY(1); }
+    50% { opacity: 1; transform: scaleY(0.6); }
+  }
+
+  .scroll-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    writing-mode: horizontal-tb;
+  }
+
+  /* ─── REVEAL ANIMATION ─── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+  .reveal-delay-4 { transition-delay: 0.4s; }
+
+  /* ─── SECTION SHARED ─── */
+  section {
+    padding: clamp(80px, 10vw, 140px) clamp(24px, 6vw, 80px);
+  }
+
+  .section-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    margin-bottom: 20px;
+  }
+
+  .section-heading {
+    font-size: clamp(32px, 5vw, 60px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+
+  .section-body {
+    font-size: clamp(16px, 1.5vw, 18px);
+    font-weight: 300;
+    line-height: 1.75;
+    color: var(--ink2);
+    max-width: 60ch;
+    margin-top: 24px;
+  }
+
+  /* ─── DIVIDER ─── */
+  .prism-divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      #FF6EC7 15%,
+      #A78BFA 30%,
+      #60D0FF 50%,
+      #34EEB6 70%,
+      #FFD166 85%,
+      transparent 100%
+    );
+    opacity: 0.4;
+  }
+
+  /* ─── ABOUT ─── */
+  #about {
+    background: var(--white);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(40px, 6vw, 100px);
+    align-items: center;
+  }
+
+  .about-visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .crystal-figure {
+    width: clamp(200px, 30vw, 360px);
+    height: clamp(200px, 30vw, 360px);
+    position: relative;
+  }
+
+  /* ─── CAPABILITIES ─── */
+  #capabilities {
+    background: var(--off);
+  }
+
+  .cap-header {
+    max-width: 700px;
+    margin-bottom: clamp(48px, 6vw, 80px);
+  }
+
+  .cap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 2px;
+  }
+
+  .cap-card {
+    background: var(--white);
+    padding: clamp(32px, 4vw, 52px);
+    position: relative;
+    overflow: hidden;
+    cursor: default;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .cap-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--prism1), var(--prism2), var(--prism3), var(--prism4));
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .cap-card:nth-child(2)::before { animation-delay: -0.75s; }
+  .cap-card:nth-child(3)::before { animation-delay: -1.5s; }
+  .cap-card:nth-child(4)::before { animation-delay: -2.25s; }
+
+  .cap-card:hover::before { opacity: 1; }
+  .cap-card:hover { transform: translateY(-4px); }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .cap-icon {
+    width: 48px; height: 48px;
+    margin-bottom: 28px;
+    display: block;
+  }
+
+  .cap-number {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--lavender);
+    margin-bottom: 16px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cap-title {
+    font-size: clamp(18px, 2vw, 22px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin-bottom: 16px;
+    line-height: 1.2;
+  }
+
+  .cap-desc {
+    font-size: 15px;
+    font-weight: 300;
+    line-height: 1.7;
+    color: var(--ink3);
+  }
+
+  /* ─── STATS ─── */
+  #stats {
+    background: var(--ink);
+    padding: clamp(60px, 8vw, 100px) clamp(24px, 6vw, 80px);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: clamp(40px, 5vw, 0px);
+    text-align: center;
+  }
+
+  .stat-item {
+    padding: 20px;
+    position: relative;
+  }
+
+  .stat-item + .stat-item::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 20%; bottom: 20%;
+    width: 1px;
+    background: rgba(255,255,255,0.08);
+  }
+
+  .stat-value {
+    font-size: clamp(44px, 7vw, 80px);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    background: linear-gradient(135deg, #fff 0%, var(--lavender) 60%, var(--prism3) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: block;
+    margin-bottom: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-label {
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+  }
+
+  /* ─── HOW IT WORKS ─── */
+  #how {
+    background: var(--white);
+  }
+
+  .how-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(40px, 6vw, 100px);
+    align-items: start;
+    margin-top: clamp(48px, 6vw, 80px);
+  }
+
+  .how-step {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 24px;
+    padding: 32px 0;
+    border-top: 1px solid rgba(10,10,15,0.08);
+    position: relative;
+  }
+
+  .how-step:last-child { border-bottom: 1px solid rgba(10,10,15,0.08); }
+
+  .how-step-n {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--lavender);
+    padding-top: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .how-step-title {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin-bottom: 10px;
+  }
+
+  .how-step-desc {
+    font-size: 15px;
+    font-weight: 300;
+    line-height: 1.7;
+    color: var(--ink3);
+  }
+
+  .how-visual {
+    position: sticky;
+    top: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+  }
+
+  /* ─── CONTACT / CTA ─── */
+  #contact {
+    background: var(--off);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .cta-mega {
+    font-size: clamp(48px, 9vw, 120px);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 1px var(--ink);
+    text-stroke: 1px var(--ink);
+    margin-bottom: 32px;
+    text-wrap: balance;
+    position: relative;
+    display: inline-block;
+  }
+
+  .cta-mega span {
+    color: var(--ink);
+    -webkit-text-stroke: 0;
+  }
+
+  .cta-sub {
+    font-size: clamp(15px, 1.5vw, 17px);
+    font-weight: 300;
+    line-height: 1.7;
+    color: var(--ink3);
+    max-width: 52ch;
+    margin-bottom: 48px;
+  }
+
+  .contact-form {
+    display: flex;
+    gap: 0;
+    width: 100%;
+    max-width: 480px;
+    border: 1.5px solid var(--ink);
+  }
+
+  .contact-input {
+    flex: 1;
+    padding: 16px 20px;
+    font-size: 14px;
+    font-family: inherit;
+    border: none;
+    outline: none;
+    background: var(--white);
+    color: var(--ink);
+    appearance: none;
+  }
+
+  .contact-input::placeholder { color: var(--ink3); }
+
+  .contact-submit {
+    padding: 16px 28px;
+    background: var(--ink);
+    color: var(--white);
+    border: none;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+  }
+
+  .contact-submit:hover { opacity: 0.8; }
+
+  .contact-note {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--ink3);
+    letter-spacing: 0.05em;
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    padding: clamp(32px, 4vw, 48px) clamp(24px, 6vw, 80px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid rgba(10,10,15,0.08);
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .footer-brand {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  .footer-copy {
+    font-size: 12px;
+    color: var(--ink3);
+    letter-spacing: 0.04em;
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 24px;
+    list-style: none;
+  }
+
+  .footer-links a {
+    font-size: 12px;
+    color: var(--ink3);
+    text-decoration: none;
+    letter-spacing: 0.06em;
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: var(--ink); }
+
+  /* ─── PRISM BORDER UTILITY ─── */
+  .prism-border {
+    position: relative;
+  }
+
+  .prism-border::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    background: conic-gradient(from var(--angle, 0deg), #FF6EC7, #A78BFA, #60D0FF, #34EEB6, #FFD166, #FF6EC7);
+    z-index: -1;
+    border-radius: inherit;
+    animation: rotatePrism 4s linear infinite;
+  }
+
+  @property --angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
+
+  @keyframes rotatePrism {
+    to { --angle: 360deg; }
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 768px) {
+    #about { grid-template-columns: 1fr; }
+    .about-visual { order: -1; }
+    .how-grid { grid-template-columns: 1fr; }
+    .how-visual { display: none; }
+    .stat-item + .stat-item::before { display: none; }
+    .nav-links { display: none; }
+    footer { flex-direction: column; align-items: flex-start; }
+    .footer-links { flex-wrap: wrap; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#hero" class="nav-logo">
+    <svg class="nav-logo-gem" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="11,1 20,7 20,15 11,21 2,15 2,7" stroke="#08080F" stroke-width="1.2" fill="none"/>
+      <polygon points="11,1 20,7 11,11" fill="rgba(167,139,250,0.15)" stroke="none"/>
+      <polygon points="2,7 11,11 11,1" fill="rgba(96,208,255,0.15)" stroke="none"/>
+      <polygon points="11,11 20,7 20,15" fill="rgba(255,110,199,0.12)" stroke="none"/>
+      <polygon points="2,15 11,11 2,7" fill="rgba(52,238,182,0.12)" stroke="none"/>
+      <line x1="11" y1="1" x2="11" y2="21" stroke="rgba(10,10,15,0.12)" stroke-width="0.8"/>
+      <line x1="2" y1="7" x2="20" y2="15" stroke="rgba(10,10,15,0.08)" stroke-width="0.8"/>
+      <line x1="20" y1="7" x2="2" y2="15" stroke="rgba(10,10,15,0.08)" stroke-width="0.8"/>
+    </svg>
+    XEN
+  </a>
+  <ul class="nav-links">
+    <li><a href="#about">Mission</a></li>
+    <li><a href="#capabilities">Capabilities</a></li>
+    <li><a href="#how">Architecture</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <a href="#contact" class="nav-cta">Access XEN</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-content">
+    <p class="hero-eyebrow">Autonomous Intelligence Layer</p>
+    <span class="hero-wordmark">XEN</span>
+    <p class="hero-sub">One Voice. All Systems.</p>
+    <div class="hero-actions">
+      <a href="#capabilities" class="btn-primary">Explore Capabilities</a>
+      <a href="#contact" class="btn-ghost">Request Access</a>
+    </div>
+  </div>
+  <div class="hero-scroll-hint">
+    <div class="scroll-line"></div>
+    <span class="scroll-label">Scroll</span>
+  </div>
+</section>
+
+<div class="prism-divider"></div>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="about-text">
+    <p class="section-eyebrow reveal">Mission</p>
+    <h2 class="section-heading reveal reveal-delay-1">Intelligence that unifies,<br>not just assists.</h2>
+    <p class="section-body reveal reveal-delay-2">
+      XEN is not another AI tool. It is the connective layer beneath every system you operate — a single autonomous intelligence that speaks, decides, and acts across your entire stack without waiting to be asked.
+    </p>
+    <p class="section-body reveal reveal-delay-3" style="margin-top: 16px;">
+      Where other AI assistants react, XEN anticipates. Where others require a prompt, XEN reads the state of your world and moves first. One voice coordinates voice, messaging, monitoring, and execution — simultaneously, permanently, without gaps.
+    </p>
+  </div>
+  <div class="about-visual reveal reveal-delay-2">
+    <div class="crystal-figure">
+      <canvas id="crystal-canvas" width="360" height="360" style="width:100%;height:100%;"></canvas>
+    </div>
+  </div>
+</section>
+
+<div class="prism-divider"></div>
+
+<!-- CAPABILITIES -->
+<section id="capabilities">
+  <div class="cap-header">
+    <p class="section-eyebrow reveal">Capabilities</p>
+    <h2 class="section-heading reveal reveal-delay-1">Built for the systems that never sleep.</h2>
+  </div>
+  <div class="cap-grid">
+
+    <div class="cap-card reveal">
+      <svg class="cap-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="24" cy="24" r="10" stroke="#A78BFA" stroke-width="1.5" fill="none"/>
+        <circle cx="24" cy="24" r="18" stroke="#A78BFA" stroke-width="1" stroke-dasharray="2 4" fill="none" opacity="0.4"/>
+        <circle cx="24" cy="6" r="2.5" fill="#A78BFA"/>
+        <circle cx="38" cy="32" r="2.5" fill="#60D0FF"/>
+        <circle cx="10" cy="32" r="2.5" fill="#FF6EC7"/>
+        <line x1="24" y1="8.5" x2="24" y2="14" stroke="#A78BFA" stroke-width="1"/>
+        <line x1="36" y1="30.5" x2="31" y2="27" stroke="#60D0FF" stroke-width="1"/>
+        <line x1="12" y1="30.5" x2="17" y2="27" stroke="#FF6EC7" stroke-width="1"/>
+      </svg>
+      <p class="cap-number">01</p>
+      <h3 class="cap-title">Omni-System Orchestration</h3>
+      <p class="cap-desc">XEN routes intention across every connected system — SMS, voice, data pipelines, APIs — without requiring you to specify the path. It finds the channel, executes the action, confirms the result.</p>
+    </div>
+
+    <div class="cap-card reveal reveal-delay-1">
+      <svg class="cap-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="8" y="20" width="32" height="18" rx="2" stroke="#60D0FF" stroke-width="1.5" fill="none"/>
+        <path d="M16 20V14C16 10.686 18.686 8 22 8H26C29.314 8 32 10.686 32 14V20" stroke="#60D0FF" stroke-width="1.5" fill="none"/>
+        <circle cx="24" cy="29" r="3" fill="#60D0FF" opacity="0.6"/>
+        <line x1="24" y1="32" x2="24" y2="35" stroke="#60D0FF" stroke-width="1.5"/>
+        <rect x="4" y="12" width="6" height="6" rx="1" stroke="#34EEB6" stroke-width="1" fill="none" opacity="0.5"/>
+        <rect x="38" y="12" width="6" height="6" rx="1" stroke="#FFD166" stroke-width="1" fill="none" opacity="0.5"/>
+      </svg>
+      <p class="cap-number">02</p>
+      <h3 class="cap-title">Persistent Autonomy</h3>
+      <p class="cap-desc">XEN operates identically whether you are present or not. No session expires. No context resets. Goals persist across every interaction, every system restart, every boundary that would ordinarily cause an assistant to forget.</p>
+    </div>
+
+    <div class="cap-card reveal reveal-delay-2">
+      <svg class="cap-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M24 4L4 16V32L24 44L44 32V16L24 4Z" stroke="#FF6EC7" stroke-width="1.5" fill="none"/>
+        <path d="M24 4L24 44" stroke="#FF6EC7" stroke-width="0.8" opacity="0.3"/>
+        <path d="M4 16L44 16" stroke="#FF6EC7" stroke-width="0.8" opacity="0.3"/>
+        <path d="M4 32L44 32" stroke="#FF6EC7" stroke-width="0.8" opacity="0.3"/>
+        <path d="M24 4L4 32" stroke="#FF6EC7" stroke-width="0.6" opacity="0.2"/>
+        <path d="M24 4L44 32" stroke="#FF6EC7" stroke-width="0.6" opacity="0.2"/>
+        <circle cx="24" cy="24" r="4" fill="#FF6EC7" opacity="0.5"/>
+      </svg>
+      <p class="cap-number">03</p>
+      <h3 class="cap-title">Crystal-Clear Voice Intelligence</h3>
+      <p class="cap-desc">Real-time voice synthesis and recognition engineered for zero latency. Barge-in capable. Context-aware. XEN speaks once, precisely, and listens continuously — no activation phrases, no dead air, no repeat prompts.</p>
+    </div>
+
+    <div class="cap-card reveal reveal-delay-3">
+      <svg class="cap-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="8" y1="36" x2="8" y2="24" stroke="#34EEB6" stroke-width="1.5"/>
+        <line x1="16" y1="36" x2="16" y2="16" stroke="#34EEB6" stroke-width="1.5"/>
+        <line x1="24" y1="36" x2="24" y2="20" stroke="#34EEB6" stroke-width="1.5" opacity="0.7"/>
+        <line x1="32" y1="36" x2="32" y2="10" stroke="#A78BFA" stroke-width="1.5"/>
+        <line x1="40" y1="36" x2="40" y2="18" stroke="#A78BFA" stroke-width="1.5" opacity="0.7"/>
+        <line x1="4" y1="36" x2="44" y2="36" stroke="rgba(10,10,15,0.15)" stroke-width="1"/>
+        <path d="M8 24 L16 16 L24 20 L32 10 L40 18" stroke="#FFD166" stroke-width="1.2" fill="none" stroke-dasharray="2 2" opacity="0.7"/>
+      </svg>
+      <p class="cap-number">04</p>
+      <h3 class="cap-title">Parallel Goal Execution</h3>
+      <p class="cap-desc">Sequential processing is a bottleneck XEN refuses to accept. Every directive fans out into parallel goal swarms — independent threads executing concurrently, synthesizing results back into one coherent response.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- STATS -->
+<section id="stats">
+  <div class="stat-item reveal">
+    <span class="stat-value">55+</span>
+    <span class="stat-label">Connected Agents</span>
+  </div>
+  <div class="stat-item reveal reveal-delay-1">
+    <span class="stat-value">&lt;400ms</span>
+    <span class="stat-label">Voice Latency</span>
+  </div>
+  <div class="stat-item reveal reveal-delay-2">
+    <span class="stat-value">24/7</span>
+    <span class="stat-label">Autonomous Operation</span>
+  </div>
+  <div class="stat-item reveal reveal-delay-3">
+    <span class="stat-value">∞</span>
+    <span class="stat-label">Persistent Memory</span>
+  </div>
+</section>
+
+<div class="prism-divider"></div>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <p class="section-eyebrow reveal">Architecture</p>
+  <h2 class="section-heading reveal reveal-delay-1">How XEN moves through your world.</h2>
+  <div class="how-grid">
+    <div>
+
+      <div class="how-step reveal">
+        <span class="how-step-n">01</span>
+        <div>
+          <h3 class="how-step-title">Signal Capture</h3>
+          <p class="how-step-desc">XEN listens across every input surface simultaneously — voice, text, system events, sensor data. No channel is checked periodically; every channel is open permanently.</p>
+        </div>
+      </div>
+
+      <div class="how-step reveal reveal-delay-1">
+        <span class="how-step-n">02</span>
+        <div>
+          <h3 class="how-step-title">Intent Resolution</h3>
+          <p class="how-step-desc">Incoming signals are resolved against XEN's full contextual memory — your history, your active goals, the state of every connected system. Intent is never guessed; it is derived from verified ground truth.</p>
+        </div>
+      </div>
+
+      <div class="how-step reveal reveal-delay-2">
+        <span class="how-step-n">03</span>
+        <div>
+          <h3 class="how-step-title">Parallel Dispatch</h3>
+          <p class="how-step-desc">Actions fan out as independent parallel swarms. Each thread executes, confirms, and reports back. XEN synthesizes the results into a single coherent output with no bottleneck.</p>
+        </div>
+      </div>
+
+      <div class="how-step reveal reveal-delay-3">
+        <span class="how-step-n">04</span>
+        <div>
+          <h3 class="how-step-title">One Voice Returns</h3>
+          <p class="how-step-desc">Regardless of how many systems were touched, one voice reports back — precisely, once, with verified results. XEN never returns speculation. Every claim is evidence-backed.</p>
+        </div>
+      </div>
+
+    </div>
+    <div class="how-visual reveal reveal-delay-2">
+      <canvas id="arch-canvas" width="440" height="440" style="width:100%;max-width:440px;height:auto;"></canvas>
+    </div>
+  </div>
+</section>
+
+<div class="prism-divider"></div>
+
+<!-- CONTACT / CTA -->
+<section id="contact">
+  <p class="section-eyebrow reveal">Access</p>
+  <h2 class="cta-mega reveal reveal-delay-1">Ready to<br><span>unify</span> your stack?</h2>
+  <p class="cta-sub reveal reveal-delay-2">XEN operates by invitation. Tell us what you're building and we'll determine fit together.</p>
+  <form class="contact-form reveal reveal-delay-3" onsubmit="handleSubmit(event)">
+    <input type="email" class="contact-input" placeholder="your@email.com" required>
+    <button type="submit" class="contact-submit">Request Access</button>
+  </form>
+  <p class="contact-note reveal reveal-delay-4">No spam. Response within 24 hours.</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span class="footer-brand">XEN</span>
+  <ul class="footer-links">
+    <li><a href="#about">Mission</a></li>
+    <li><a href="#capabilities">Capabilities</a></li>
+    <li><a href="#how">Architecture</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <span class="footer-copy">&copy; 2026 XEN. All rights reserved.</span>
+</footer>
+
+<script>
+// ─── HERO CANVAS ───────────────────────────────────────────────────────
+(function() {
+  const canvas = document.getElementById('hero-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, mouse = { x: 0.5, y: 0.5 };
+  let particles = [];
+  let crystals = [];
+  const NUM_PARTICLES = 110;
+  const NUM_CRYSTALS = 18;
+
+  function resize() {
+    W = canvas.width = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+    initParticles();
+    initCrystals();
+  }
+
+  function hslToRgb(h, s, l) {
+    h = h % 360;
+    s /= 100; l /= 100;
+    const k = n => (n + h / 30) % 12;
+    const a = s * Math.min(l, 1 - l);
+    const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+    return [Math.round(f(0)*255), Math.round(f(8)*255), Math.round(f(4)*255)];
+  }
+
+  function initParticles() {
+    particles = [];
+    for (let i = 0; i < NUM_PARTICLES; i++) {
+      const hue = (i / NUM_PARTICLES) * 360;
+      particles.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        r: Math.random() * 2.5 + 0.5,
+        hue: hue,
+        alpha: Math.random() * 0.5 + 0.2,
+        pulse: Math.random() * Math.PI * 2
+      });
+    }
+  }
+
+  function initCrystals() {
+    crystals = [];
+    for (let i = 0; i < NUM_CRYSTALS; i++) {
+      const sides = Math.random() < 0.5 ? 6 : 4;
+      crystals.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        size: Math.random() * 24 + 10,
+        rotation: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 0.005,
+        hue: Math.random() * 360,
+        alpha: Math.random() * 0.06 + 0.02,
+        sides: sides
+      });
+    }
+  }
+
+  function drawPolygon(cx, cy, r, sides, rotation) {
+    ctx.beginPath();
+    for (let i = 0; i < sides; i++) {
+      const angle = rotation + (i / sides) * Math.PI * 2;
+      const x = cx + Math.cos(angle) * r;
+      const y = cy + Math.sin(angle) * r;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+  }
+
+  function drawPrismaticLine(x1, y1, x2, y2, alpha) {
+    const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+    grad.addColorStop(0, `rgba(255,110,199,${alpha})`);
+    grad.addColorStop(0.33, `rgba(96,208,255,${alpha})`);
+    grad.addColorStop(0.66, `rgba(52,238,182,${alpha})`);
+    grad.addColorStop(1, `rgba(167,139,250,${alpha})`);
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+
+  let t = 0;
+  function frame() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Subtle gradient background
+    const bg = ctx.createRadialGradient(
+      mouse.x * W, mouse.y * H, 0,
+      W * 0.5, H * 0.5, Math.max(W, H)
+    );
+    bg.addColorStop(0, 'rgba(237,232,255,0.35)');
+    bg.addColorStop(0.4, 'rgba(232,240,255,0.15)');
+    bg.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    t += 0.008;
+
+    // Draw crystals
+    crystals.forEach(c => {
+      c.rotation += c.rotSpeed;
+      c.hue = (c.hue + 0.08) % 360;
+      const [r, g, b] = hslToRgb(c.hue, 80, 70);
+      ctx.save();
+      drawPolygon(c.x, c.y, c.size, c.sides, c.rotation);
+      ctx.strokeStyle = `rgba(${r},${g},${b},${c.alpha * 3})`;
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+      // inner highlight
+      drawPolygon(c.x, c.y, c.size * 0.5, c.sides, c.rotation + 0.3);
+      ctx.strokeStyle = `rgba(${r},${g},${b},${c.alpha})`;
+      ctx.lineWidth = 0.4;
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    // Update + draw particles
+    particles.forEach((p, i) => {
+      p.pulse += 0.025;
+      p.hue = (p.hue + 0.3) % 360;
+
+      // Mouse attraction (gentle)
+      const mx = mouse.x * W - p.x;
+      const my = mouse.y * H - p.y;
+      const dist = Math.sqrt(mx * mx + my * my);
+      if (dist < 180) {
+        p.vx += mx / dist * 0.015;
+        p.vy += my / dist * 0.015;
+      }
+
+      p.vx *= 0.98;
+      p.vy *= 0.98;
+      p.x += p.vx;
+      p.y += p.vy;
+
+      if (p.x < 0) p.x = W;
+      if (p.x > W) p.x = 0;
+      if (p.y < 0) p.y = H;
+      if (p.y > H) p.y = 0;
+
+      const [r, g, b] = hslToRgb(p.hue, 90, 70);
+      const a = p.alpha * (0.7 + 0.3 * Math.sin(p.pulse));
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
+      ctx.fill();
+
+      // Connect nearby particles with prismatic lines
+      for (let j = i + 1; j < particles.length; j++) {
+        const q = particles[j];
+        const dx = p.x - q.x;
+        const dy = p.y - q.y;
+        const d = Math.sqrt(dx*dx + dy*dy);
+        if (d < 90) {
+          drawPrismaticLine(p.x, p.y, q.x, q.y, (1 - d/90) * 0.12);
+        }
+      }
+    });
+
+    requestAnimationFrame(frame);
+  }
+
+  canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    mouse.x = (e.clientX - rect.left) / rect.width;
+    mouse.y = (e.clientY - rect.top) / rect.height;
+  });
+
+  window.addEventListener('resize', resize);
+  resize();
+  frame();
+})();
+
+// ─── CRYSTAL ABOUT CANVAS ─────────────────────────────────────────────
+(function() {
+  const canvas = document.getElementById('crystal-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = 360, H = 360;
+  let t = 0;
+
+  const gemFaces = [
+    { pts: [[180,40],[280,120],[240,230]], hue: 260 },
+    { pts: [[180,40],[80,120],[120,230]], hue: 200 },
+    { pts: [[240,230],[280,120],[320,260],[200,320]], hue: 320 },
+    { pts: [[120,230],[80,120],[40,260],[160,320]], hue: 170 },
+    { pts: [[200,320],[160,320],[120,230],[180,280],[240,230]], hue: 40 },
+    { pts: [[180,40],[280,120],[180,160],[80,120]], hue: 300 },
+    { pts: [[180,160],[280,120],[240,230]], hue: 230 },
+    { pts: [[180,160],[120,230],[80,120]], hue: 180 },
+  ];
+
+  function drawFrame() {
+    ctx.clearRect(0, 0, W, H);
+    t += 0.007;
+
+    // Outer glow
+    const glow = ctx.createRadialGradient(180,180,30,180,180,160);
+    glow.addColorStop(0, 'rgba(200,184,255,0.12)');
+    glow.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, W, H);
+
+    gemFaces.forEach((face, idx) => {
+      const hueShift = (face.hue + t * 25 + idx * 15) % 360;
+      ctx.save();
+      ctx.beginPath();
+      face.pts.forEach((pt, i) => {
+        if (i === 0) ctx.moveTo(pt[0], pt[1]);
+        else ctx.lineTo(pt[0], pt[1]);
+      });
+      ctx.closePath();
+
+      const fillAlpha = 0.06 + 0.04 * Math.sin(t * 1.2 + idx);
+      ctx.fillStyle = `hsla(${hueShift}, 80%, 70%, ${fillAlpha})`;
+      ctx.fill();
+
+      const strokeAlpha = 0.25 + 0.15 * Math.sin(t * 0.9 + idx * 0.7);
+      ctx.strokeStyle = `hsla(${hueShift}, 90%, 70%, ${strokeAlpha})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    // Center point gleam
+    const gleamAlpha = 0.4 + 0.3 * Math.sin(t * 2);
+    const gleam = ctx.createRadialGradient(180,160,0,180,160,20);
+    gleam.addColorStop(0, `rgba(255,255,255,${gleamAlpha})`);
+    gleam.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = gleam;
+    ctx.fillRect(160, 140, 40, 40);
+
+    // Outer ring
+    ctx.beginPath();
+    ctx.arc(180, 180, 155, 0, Math.PI * 2);
+    const ringGrad = ctx.createConicGradient(t, 180, 180);
+    ringGrad.addColorStop(0, 'rgba(255,110,199,0.3)');
+    ringGrad.addColorStop(0.25, 'rgba(96,208,255,0.3)');
+    ringGrad.addColorStop(0.5, 'rgba(52,238,182,0.3)');
+    ringGrad.addColorStop(0.75, 'rgba(255,209,102,0.3)');
+    ringGrad.addColorStop(1, 'rgba(255,110,199,0.3)');
+    ctx.strokeStyle = ringGrad;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    requestAnimationFrame(drawFrame);
+  }
+
+  drawFrame();
+})();
+
+// ─── ARCH CANVAS ──────────────────────────────────────────────────────
+(function() {
+  const canvas = document.getElementById('arch-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = 440, H = 440;
+  let t = 0;
+
+  const nodes = [
+    { x: 220, y: 220, label: 'XEN', r: 28, core: true },
+    { x: 220, y: 80, label: 'Voice', r: 18, hue: 260 },
+    { x: 340, y: 150, label: 'SMS', r: 18, hue: 200 },
+    { x: 370, y: 290, label: 'Data', r: 18, hue: 320 },
+    { x: 270, y: 380, label: 'API', r: 18, hue: 170 },
+    { x: 150, y: 380, label: 'Memory', r: 18, hue: 40 },
+    { x: 80, y: 290, label: 'Vision', r: 18, hue: 300 },
+    { x: 100, y: 150, label: 'Exec', r: 18, hue: 100 },
+  ];
+
+  const connections = [
+    [0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[0,7],
+    [1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,1]
+  ];
+
+  // Animated pulses
+  let pulses = [];
+  setInterval(() => {
+    const edge = connections[Math.floor(Math.random() * connections.length)];
+    pulses.push({ a: edge[0], b: edge[1], prog: 0, speed: 0.015 + Math.random() * 0.01 });
+  }, 400);
+
+  function drawFrame() {
+    ctx.clearRect(0, 0, W, H);
+    t += 0.01;
+
+    // Draw edges
+    connections.forEach(([a, b]) => {
+      const na = nodes[a], nb = nodes[b];
+      const grad = ctx.createLinearGradient(na.x, na.y, nb.x, nb.y);
+      grad.addColorStop(0, 'rgba(167,139,250,0.12)');
+      grad.addColorStop(1, 'rgba(96,208,255,0.12)');
+      ctx.beginPath();
+      ctx.moveTo(na.x, na.y);
+      ctx.lineTo(nb.x, nb.y);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    });
+
+    // Draw pulses
+    pulses = pulses.filter(p => p.prog < 1);
+    pulses.forEach(p => {
+      p.prog += p.speed;
+      const na = nodes[p.a], nb = nodes[p.b];
+      const px = na.x + (nb.x - na.x) * p.prog;
+      const py = na.y + (nb.y - na.y) * p.prog;
+      const alpha = Math.sin(p.prog * Math.PI);
+      ctx.beginPath();
+      ctx.arc(px, py, 3, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(200,184,255,${alpha * 0.9})`;
+      ctx.fill();
+      // Glow
+      const gl = ctx.createRadialGradient(px,py,0,px,py,10);
+      gl.addColorStop(0, `rgba(200,184,255,${alpha * 0.4})`);
+      gl.addColorStop(1, 'rgba(200,184,255,0)');
+      ctx.fillStyle = gl;
+      ctx.beginPath();
+      ctx.arc(px, py, 10, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Draw nodes
+    nodes.forEach((n, i) => {
+      if (n.core) {
+        // Core node — prismatic ring
+        const ringR = n.r + 8 + 3 * Math.sin(t * 2);
+        const ring = ctx.createConicGradient(t * 1.5, n.x, n.y);
+        ring.addColorStop(0, 'rgba(255,110,199,0.9)');
+        ring.addColorStop(0.25, 'rgba(96,208,255,0.9)');
+        ring.addColorStop(0.5, 'rgba(52,238,182,0.9)');
+        ring.addColorStop(0.75, 'rgba(255,209,102,0.9)');
+        ring.addColorStop(1, 'rgba(255,110,199,0.9)');
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, ringR, 0, Math.PI * 2);
+        ctx.strokeStyle = ring;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Core fill
+        const cf = ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r);
+        cf.addColorStop(0, 'rgba(255,255,255,1)');
+        cf.addColorStop(1, 'rgba(237,232,255,0.95)');
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+        ctx.fillStyle = cf;
+        ctx.fill();
+
+        ctx.font = '700 11px ui-sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#08080F';
+        ctx.letterSpacing = '0.1em';
+        ctx.fillText(n.label, n.x, n.y);
+      } else {
+        const pulse = 0.5 + 0.5 * Math.sin(t * 1.5 + i);
+        const hue = (n.hue + t * 20) % 360;
+
+        // Glow
+        const gl = ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r * 2.5);
+        gl.addColorStop(0, `hsla(${hue},80%,70%,${pulse * 0.2})`);
+        gl.addColorStop(1, 'transparent');
+        ctx.fillStyle = gl;
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.r * 2.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Node fill
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${hue},60%,96%,0.95)`;
+        ctx.fill();
+        ctx.strokeStyle = `hsla(${hue},80%,70%,${0.6 + pulse * 0.4})`;
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        // Label
+        ctx.font = '500 10px ui-sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#2A2838';
+        ctx.fillText(n.label, n.x, n.y);
+      }
+    });
+
+    requestAnimationFrame(drawFrame);
+  }
+
+  drawFrame();
+})();
+
+// ─── INTERSECTION OBSERVER (REVEAL) ───────────────────────────────────
+const revealEls = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+revealEls.forEach(el => observer.observe(el));
+
+// ─── FORM ─────────────────────────────────────────────────────────────
+function handleSubmit(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector('button');
+  btn.textContent = 'Requested';
+  btn.style.background = '#34EEB6';
+  btn.style.color = '#08080F';
+  btn.disabled = true;
+}
+
+// ─── PARALLAX HERO WORDMARK ───────────────────────────────────────────
+(function() {
+  const wm = document.querySelector('.hero-wordmark');
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    wm.style.transform = `translateY(${y * 0.12}px)`;
+    wm.style.opacity = Math.max(0, 1 - y / 600);
+  }, { passive: true });
+})();
+</script>
+
+</body>
+</html>

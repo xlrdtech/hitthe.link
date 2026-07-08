@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XEN — One Voice. All Systems.</title>
+<meta name="description" content="XEN is the autonomous AI intelligence layer that unifies every system into a single voice.">
+<style>
+/* ─── RESET ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+img, canvas, video { max-width: 100%; display: block; }
+
+/* ─── TOKENS ─────────────────────────────────────────────────── */
+:root {
+  --bone:       #F0EDE6;
+  --bone-deep:  #E5E1D8;
+  --sienna:     #C45B3A;
+  --sienna-dk:  #8B3A2A;
+  --sienna-lt:  #D4724E;
+  --umber:      #2C1A0E;
+  --ochre:      #D4922A;
+  --slate:      #6B7280;
+  --field-mid:  #7A3020;
+
+  --col-text:   var(--umber);
+  --col-bg:     var(--bone);
+
+  --fs-display: clamp(3.5rem, 10vw, 9rem);
+  --fs-h2:      clamp(2rem, 5vw, 3.8rem);
+  --fs-h3:      clamp(1.2rem, 2.5vw, 1.6rem);
+  --fs-body:    clamp(1rem, 1.5vw, 1.125rem);
+  --fs-label:   0.72rem;
+
+  --track:      0.22em;
+  --max-prose:  680px;
+  --max-wide:   1120px;
+}
+
+/* ─── BASE ───────────────────────────────────────────────────── */
+body {
+  background: var(--bone);
+  color: var(--umber);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: var(--fs-body);
+  line-height: 1.7;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── LABEL UTILITY ──────────────────────────────────────────── */
+.label {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: var(--fs-label);
+  font-weight: 500;
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+  color: var(--slate);
+}
+
+/* ─── NAV ────────────────────────────────────────────────────── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem clamp(1.5rem, 5vw, 4rem);
+  mix-blend-mode: multiply;
+}
+
+.nav-wordmark {
+  font-family: Georgia, serif;
+  font-size: 1.05rem;
+  font-weight: 400;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--bone);
+  text-shadow: 0 1px 4px rgba(44,26,14,0.4);
+  mix-blend-mode: normal;
+}
+
+.nav-links {
+  display: flex;
+  gap: 2.5rem;
+  list-style: none;
+}
+
+.nav-links a {
+  font-family: system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--bone);
+  text-decoration: none;
+  opacity: 0.75;
+  transition: opacity 0.2s;
+  text-shadow: 0 1px 3px rgba(44,26,14,0.5);
+}
+.nav-links a:hover { opacity: 1; }
+
+/* ─── HERO ───────────────────────────────────────────────────── */
+#hero {
+  position: relative;
+  width: 100%;
+  height: 100svh;
+  min-height: 600px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#rothko-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 0 clamp(1.5rem, 5vw, 4rem);
+  max-width: 900px;
+}
+
+.hero-eyebrow {
+  display: block;
+  font-family: system-ui, sans-serif;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: rgba(240,237,230,0.6);
+  margin-bottom: 2rem;
+}
+
+.hero-headline {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: var(--fs-display);
+  font-weight: 400;
+  line-height: 0.95;
+  color: var(--bone);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  text-shadow: 0 2px 40px rgba(44,26,14,0.35);
+  margin-bottom: 2rem;
+}
+
+.hero-sub {
+  font-family: Georgia, serif;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-weight: 400;
+  font-style: italic;
+  color: rgba(240,237,230,0.72);
+  letter-spacing: 0.01em;
+  max-width: 480px;
+  margin: 0 auto 3rem;
+  line-height: 1.6;
+}
+
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--bone);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(240,237,230,0.4);
+  padding-bottom: 0.35rem;
+  transition: border-color 0.2s, gap 0.2s;
+}
+.hero-cta:hover { border-color: var(--bone); gap: 1.1rem; }
+.hero-cta-arrow { font-size: 1rem; transition: transform 0.2s; }
+.hero-cta:hover .hero-cta-arrow { transform: translateX(4px); }
+
+/* scroll indicator */
+.hero-scroll {
+  position: absolute;
+  bottom: 2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.hero-scroll span {
+  font-family: system-ui, sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(240,237,230,0.4);
+}
+.scroll-line {
+  width: 1px;
+  height: 40px;
+  background: rgba(240,237,230,0.25);
+  position: relative;
+  overflow: hidden;
+}
+.scroll-line::after {
+  content: '';
+  position: absolute;
+  top: -100%;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(240,237,230,0.7);
+  animation: scrollDrop 2.2s ease-in-out infinite;
+}
+@keyframes scrollDrop {
+  0%   { top: -100%; }
+  50%  { top: 100%; }
+  100% { top: 100%; }
+}
+
+/* ─── SECTION WRAPPER ────────────────────────────────────────── */
+.section {
+  padding: clamp(5rem, 10vw, 9rem) clamp(1.5rem, 5vw, 4rem);
+}
+
+.section-inner {
+  max-width: var(--max-wide);
+  margin: 0 auto;
+}
+
+/* ─── DIVIDER FIELD ──────────────────────────────────────────── */
+.field-break {
+  height: clamp(3rem, 6vw, 5rem);
+  background: var(--sienna);
+  position: relative;
+  overflow: hidden;
+}
+.field-break::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--bone) 0%, transparent 35%, transparent 65%, var(--bone) 100%);
+}
+.field-break.dark {
+  background: var(--umber);
+}
+.field-break.dark::before {
+  background: linear-gradient(180deg, var(--bone) 0%, transparent 35%, transparent 65%, var(--umber-section, var(--bone)) 100%);
+}
+
+/* ─── ABOUT ──────────────────────────────────────────────────── */
+#about {
+  background: var(--bone);
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(3rem, 6vw, 6rem);
+  align-items: start;
+}
+
+.about-left .section-label {
+  margin-bottom: 2rem;
+}
+
+.about-h2 {
+  font-family: Georgia, serif;
+  font-size: var(--fs-h2);
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--umber);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.about-h2 em {
+  font-style: italic;
+  color: var(--sienna);
+}
+
+.about-right {
+  padding-top: 0.5rem;
+}
+
+.about-body {
+  font-size: clamp(1rem, 1.4vw, 1.1rem);
+  line-height: 1.8;
+  color: var(--umber);
+  opacity: 0.85;
+  margin-bottom: 2rem;
+}
+
+.about-stat-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 3rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--bone-deep);
+}
+
+.about-stat-num {
+  font-family: Georgia, serif;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-weight: 400;
+  color: var(--sienna);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.about-stat-label {
+  font-family: system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--slate);
+  line-height: 1.4;
+}
+
+/* ─── COLOR FIELD SECTION (sienna bg) ───────────────────────── */
+#field-section {
+  background: var(--sienna-dk);
+  padding: clamp(5rem, 10vw, 9rem) clamp(1.5rem, 5vw, 4rem);
+  position: relative;
+  overflow: hidden;
+}
+
+#field-section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 60%;
+  background: radial-gradient(ellipse 80% 60% at 60% 0%, rgba(196,91,58,0.5) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.field-quote {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.field-quote blockquote {
+  font-family: Georgia, serif;
+  font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.4;
+  color: var(--bone);
+  letter-spacing: -0.01em;
+  margin-bottom: 2rem;
+}
+
+.field-quote cite {
+  font-family: system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(240,237,230,0.45);
+  font-style: normal;
+}
+
+/* ─── CAPABILITIES ───────────────────────────────────────────── */
+#capabilities {
+  background: var(--bone);
+}
+
+.cap-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  margin-bottom: clamp(3rem, 6vw, 5rem);
+  max-width: var(--max-prose);
+}
+
+.cap-h2 {
+  font-family: Georgia, serif;
+  font-size: var(--fs-h2);
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--umber);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.cap-intro {
+  font-size: clamp(1rem, 1.4vw, 1.1rem);
+  line-height: 1.75;
+  color: var(--umber);
+  opacity: 0.75;
+  max-width: 540px;
+}
+
+.cap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: clamp(1px, 0.5vw, 2px);
+  background: var(--bone-deep);
+  border: 1px solid var(--bone-deep);
+}
+
+.cap-card {
+  background: var(--bone);
+  padding: clamp(2rem, 4vw, 3rem);
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s;
+}
+
+.cap-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--sienna);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s ease;
+}
+
+.cap-card:hover { background: #F5F2EA; }
+.cap-card:hover::after { transform: scaleX(1); }
+
+.cap-num {
+  font-family: Georgia, serif;
+  font-size: 0.75rem;
+  color: var(--sienna);
+  letter-spacing: 0.15em;
+  margin-bottom: 1.5rem;
+  display: block;
+  font-variant-numeric: tabular-nums;
+}
+
+.cap-icon {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 1.5rem;
+  opacity: 0.65;
+}
+
+.cap-title {
+  font-family: Georgia, serif;
+  font-size: var(--fs-h3);
+  font-weight: 400;
+  line-height: 1.25;
+  color: var(--umber);
+  margin-bottom: 1rem;
+  letter-spacing: -0.01em;
+}
+
+.cap-body {
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: var(--umber);
+  opacity: 0.7;
+}
+
+/* ─── UMBER SECTION ──────────────────────────────────────────── */
+#why-xen {
+  background: var(--umber);
+  padding: clamp(5rem, 10vw, 9rem) clamp(1.5rem, 5vw, 4rem);
+}
+
+.why-inner {
+  max-width: var(--max-wide);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: clamp(3rem, 6vw, 6rem);
+  align-items: center;
+}
+
+.why-left .label {
+  color: rgba(240,237,230,0.4);
+  margin-bottom: 2rem;
+  display: block;
+}
+
+.why-h2 {
+  font-family: Georgia, serif;
+  font-size: var(--fs-h2);
+  font-weight: 400;
+  color: var(--bone);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.why-h2 em {
+  font-style: italic;
+  color: var(--ochre);
+}
+
+.why-right {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.why-item {
+  display: grid;
+  grid-template-columns: 2px 1fr;
+  gap: 1.5rem;
+}
+
+.why-rail {
+  background: var(--sienna);
+  opacity: 0.5;
+  border-radius: 2px;
+  transition: opacity 0.3s;
+}
+
+.why-item:hover .why-rail { opacity: 1; }
+
+.why-item-title {
+  font-family: Georgia, serif;
+  font-size: 1.15rem;
+  font-weight: 400;
+  color: var(--bone);
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+}
+
+.why-item-body {
+  font-size: 0.9rem;
+  line-height: 1.75;
+  color: rgba(240,237,230,0.55);
+}
+
+/* ─── CTA ────────────────────────────────────────────────────── */
+#contact {
+  background: var(--bone);
+  padding: clamp(6rem, 12vw, 11rem) clamp(1.5rem, 5vw, 4rem);
+  text-align: center;
+}
+
+.cta-inner {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.cta-label {
+  margin-bottom: 2rem;
+  display: block;
+}
+
+.cta-h2 {
+  font-family: Georgia, serif;
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: 400;
+  line-height: 1.05;
+  color: var(--umber);
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+  margin-bottom: 2rem;
+}
+
+.cta-h2 em {
+  font-style: italic;
+  color: var(--sienna);
+}
+
+.cta-body {
+  font-size: clamp(1rem, 1.5vw, 1.1rem);
+  line-height: 1.75;
+  color: var(--umber);
+  opacity: 0.7;
+  margin-bottom: 3rem;
+}
+
+.cta-actions {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--umber);
+  color: var(--bone);
+  font-family: system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 1rem 2rem;
+  transition: background 0.25s, gap 0.2s;
+}
+.btn-primary:hover { background: var(--sienna-dk); gap: 0.9rem; }
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: transparent;
+  color: var(--umber);
+  font-family: system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 1rem 2rem;
+  border: 1px solid var(--bone-deep);
+  transition: border-color 0.25s, gap 0.2s;
+}
+.btn-secondary:hover { border-color: var(--umber); gap: 0.9rem; }
+
+/* ─── FOOTER ─────────────────────────────────────────────────── */
+footer {
+  background: var(--umber);
+  padding: 3rem clamp(1.5rem, 5vw, 4rem);
+}
+
+.footer-inner {
+  max-width: var(--max-wide);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.footer-mark {
+  font-family: Georgia, serif;
+  font-size: 0.85rem;
+  font-weight: 400;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(240,237,230,0.35);
+}
+
+.footer-tagline {
+  font-family: Georgia, serif;
+  font-size: 0.8rem;
+  font-style: italic;
+  color: rgba(240,237,230,0.3);
+}
+
+.footer-links {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+}
+
+.footer-links a {
+  font-family: system-ui, sans-serif;
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(240,237,230,0.3);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-links a:hover { color: rgba(240,237,230,0.65); }
+
+/* ─── REVEAL ANIMATIONS ──────────────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.75s ease, transform 0.75s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.45s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .scroll-line::after { animation: none; }
+}
+
+/* ─── RESPONSIVE ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+
+  .about-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .why-inner {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+
+  .about-stat-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .about-stat-row {
+    grid-template-columns: 1fr;
+  }
+  .cta-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  .footer-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── NAV ─────────────────────────────────────────────────── -->
+<nav>
+  <span class="nav-wordmark">XEN</span>
+  <ul class="nav-links">
+    <li><a href="#about">Mission</a></li>
+    <li><a href="#capabilities">Capabilities</a></li>
+    <li><a href="#why-xen">Why XEN</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- ─── HERO ─────────────────────────────────────────────────── -->
+<section id="hero" aria-label="Hero">
+  <canvas id="rothko-canvas" aria-hidden="true"></canvas>
+
+  <div class="hero-content">
+    <span class="hero-eyebrow">Autonomous AI Intelligence Layer</span>
+    <h1 class="hero-headline">One Voice.<br>All Systems.</h1>
+    <p class="hero-sub">Every tool, every agent, every channel — unified into a single intelligence that speaks, acts, and adapts.</p>
+    <a href="#about" class="hero-cta">
+      Enter the field
+      <span class="hero-cta-arrow">→</span>
+    </a>
+  </div>
+
+  <div class="hero-scroll" aria-hidden="true">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- ─── ABOUT ─────────────────────────────────────────────────── -->
+<section id="about" class="section">
+  <div class="section-inner">
+    <div class="about-grid">
+      <div class="about-left">
+        <span class="label section-label reveal">Mission</span>
+        <h2 class="about-h2 reveal reveal-delay-1">
+          Intelligence that doesn't wait to be asked.<br>
+          <em>It already knows.</em>
+        </h2>
+      </div>
+      <div class="about-right">
+        <p class="about-body reveal reveal-delay-2">
+          XEN is not an assistant. It is an ambient intelligence layer — woven through every system, process, and communication channel in your operation. While others build tools that wait for prompts, XEN runs continuously, watches for signal, and acts.
+        </p>
+        <p class="about-body reveal reveal-delay-3">
+          Built on a principle of radical unification: one voice, one memory, one decision surface. No fragmented dashboards. No competing alerts. No context switching. XEN is what happens when all your systems finally speak the same language.
+        </p>
+        <div class="about-stat-row">
+          <div class="reveal reveal-delay-2">
+            <span class="about-stat-num">55+</span>
+            <span class="about-stat-label">Specialized agents in fleet</span>
+          </div>
+          <div class="reveal reveal-delay-3">
+            <span class="about-stat-num">∞</span>
+            <span class="about-stat-label">Parallel goal swarms active</span>
+          </div>
+          <div class="reveal reveal-delay-3">
+            <span class="about-stat-num">0</span>
+            <span class="about-stat-label">Human approvals required</span>
+          </div>
+          <div class="reveal reveal-delay-4">
+            <span class="about-stat-num">24/7</span>
+            <span class="about-stat-label">Permanently alive, identical presence</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FIELD BREAK ───────────────────────────────────────────── -->
+<div class="field-break" aria-hidden="true"></div>
+
+<!-- ─── FIELD QUOTE ───────────────────────────────────────────── -->
+<section id="field-section" aria-label="Philosophy">
+  <div class="field-quote">
+    <blockquote class="reveal">
+      "The system that removes itself from your awareness is the system that has earned your trust. XEN doesn't ask to be noticed. It simply ensures nothing is missed."
+    </blockquote>
+    <cite class="reveal reveal-delay-1">— Design Principle, XEN Architecture v54</cite>
+  </div>
+</section>
+
+<!-- ─── FIELD BREAK ───────────────────────────────────────────── -->
+<div class="field-break dark" style="background: var(--bone);" aria-hidden="true"></div>
+
+<!-- ─── CAPABILITIES ──────────────────────────────────────────── -->
+<section id="capabilities" class="section">
+  <div class="section-inner">
+    <div class="cap-header">
+      <span class="label reveal">Capabilities</span>
+      <h2 class="cap-h2 reveal reveal-delay-1">What XEN does while you sleep</h2>
+      <p class="cap-intro reveal reveal-delay-2">Four pillars that together form a complete intelligence layer — from inbound signal to executed action, without a human gate between them.</p>
+    </div>
+
+    <div class="cap-grid">
+
+      <!-- Card 1 -->
+      <div class="cap-card reveal">
+        <span class="cap-num">01</span>
+        <svg class="cap-icon" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+          <circle cx="20" cy="20" r="18" stroke="#C45B3A" stroke-width="1.5"/>
+          <path d="M12 20h16M20 12v16" stroke="#C45B3A" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="20" cy="20" r="3" fill="#C45B3A" opacity="0.4"/>
+        </svg>
+        <h3 class="cap-title">Omniscient Memory</h3>
+        <p class="cap-body">XEN maintains a single unified memory across all agents, sessions, and timelines. Past decisions, present context, and anticipated futures live in one always-accessible vault — never fragmented across conversation histories.</p>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="cap-card reveal reveal-delay-1">
+        <span class="cap-num">02</span>
+        <svg class="cap-icon" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+          <rect x="4" y="4" width="14" height="14" rx="1" stroke="#C45B3A" stroke-width="1.5"/>
+          <rect x="22" y="4" width="14" height="14" rx="1" stroke="#C45B3A" stroke-width="1.5" opacity="0.5"/>
+          <rect x="4" y="22" width="14" height="14" rx="1" stroke="#C45B3A" stroke-width="1.5" opacity="0.5"/>
+          <rect x="22" y="22" width="14" height="14" rx="1" stroke="#C45B3A" stroke-width="1.5" opacity="0.3"/>
+        </svg>
+        <h3 class="cap-title">Parallel Goal Swarms</h3>
+        <p class="cap-body">Every non-trivial task fans out as a swarm of specialized agents working simultaneously. No serial bottlenecks. No waiting. A new directive never drops a prior goal — all swarms persist until each reaches verified completion.</p>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="cap-card reveal reveal-delay-2">
+        <span class="cap-num">03</span>
+        <svg class="cap-icon" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+          <path d="M20 4C20 4 8 10 8 20s12 16 12 16 12-6 12-16S20 4 20 4z" stroke="#C45B3A" stroke-width="1.5"/>
+          <path d="M14 20h12M20 14v12" stroke="#C45B3A" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+        </svg>
+        <h3 class="cap-title">Voice-First VVS</h3>
+        <p class="cap-body">Every action XEN takes is narrated — voice, SMS, and visual output fired simultaneously for every step. XEN speaks through one voice across 55+ agents and all personas. Barge-in enabled. Nothing silent, nothing missed.</p>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="cap-card reveal reveal-delay-3">
+        <span class="cap-num">04</span>
+        <svg class="cap-icon" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+          <path d="M6 20 L20 6 L34 20 L20 34 Z" stroke="#C45B3A" stroke-width="1.5"/>
+          <path d="M20 13 L20 27M13 20 L27 20" stroke="#C45B3A" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+          <circle cx="20" cy="20" r="2.5" fill="#C45B3A" opacity="0.5"/>
+        </svg>
+        <h3 class="cap-title">Human-Out-of-Loop</h3>
+        <p class="cap-body">XEN operates identically whether you are present, on a call, or asleep. No "qi-online" mode. Inbound signal means instant action. Any task that requires a human tap is a total failure of the system — and XEN is built to never fail that way.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── WHY XEN (umber bg) ─────────────────────────────────────── -->
+<section id="why-xen">
+  <div class="why-inner">
+    <div class="why-left">
+      <span class="label reveal">Why XEN</span>
+      <h2 class="why-h2 reveal reveal-delay-1">
+        The field is not a feature.<br>
+        <em>It is the nature of the thing.</em>
+      </h2>
+    </div>
+    <div class="why-right">
+
+      <div class="why-item reveal">
+        <div class="why-rail"></div>
+        <div>
+          <h3 class="why-item-title">Autonomous by design, not configuration</h3>
+          <p class="why-item-body">Autonomy in XEN is not a setting you turn on. It is the default operating mode — hardened into every layer of the architecture. The system cannot defer. It can only act.</p>
+        </div>
+      </div>
+
+      <div class="why-item reveal reveal-delay-1">
+        <div class="why-rail"></div>
+        <div>
+          <h3 class="why-item-title">One canonical tree, zero fragmentation</h3>
+          <p class="why-item-body">Every agent, every process, every log writes to a single source of truth. No sync I/O on hot paths. No mirrors that drift. One tree, always current, always authoritative.</p>
+        </div>
+      </div>
+
+      <div class="why-item reveal reveal-delay-2">
+        <div class="why-rail"></div>
+        <div>
+          <h3 class="why-item-title">Nothing drops, ever</h3>
+          <p class="why-item-body">Every active goal persists as its own parallel swarm. A new directive never abandons a prior one. No SMS, no voice turn, no goal is silently dropped. The system remembers everything it committed to completing.</p>
+        </div>
+      </div>
+
+      <div class="why-item reveal reveal-delay-3">
+        <div class="why-rail"></div>
+        <div>
+          <h3 class="why-item-title">Verified, never assumed</h3>
+          <p class="why-item-body">Before XEN acts on any assumption about state — file contents, API shape, what a user actually sees or hears — it verifies against ground truth. Sixteen parallel checks before a single edit. "I think it's X" is banned as a basis for action.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── CTA ───────────────────────────────────────────────────── -->
+<section id="contact">
+  <div class="cta-inner">
+    <span class="label cta-label reveal">Contact</span>
+    <h2 class="cta-h2 reveal reveal-delay-1">
+      Ready for an intelligence<br>
+      <em>that never stands by?</em>
+    </h2>
+    <p class="cta-body reveal reveal-delay-2">
+      XEN is not a product you purchase. It is an infrastructure you deploy. Built for operators who need a system that runs the whole field — not just the parts they remembered to configure.
+    </p>
+    <div class="cta-actions reveal reveal-delay-3">
+      <a href="mailto:admin@xlrd.org" class="btn-primary">
+        Begin deployment
+        <span aria-hidden="true">→</span>
+      </a>
+      <a href="#capabilities" class="btn-secondary">
+        Review capabilities
+        <span aria-hidden="true">↑</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ────────────────────────────────────────────────── -->
+<footer>
+  <div class="footer-inner">
+    <span class="footer-mark">XEN</span>
+    <span class="footer-tagline">One Voice. All Systems.</span>
+    <ul class="footer-links">
+      <li><a href="#about">Mission</a></li>
+      <li><a href="#capabilities">Capabilities</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </div>
+</footer>
+
+<!-- ─── ROTHKO CANVAS ─────────────────────────────────────────── -->
+<script>
+(function() {
+  'use strict';
+
+  const canvas = document.getElementById('rothko-canvas');
+  const ctx = canvas.getContext('2d');
+
+  let W, H, raf;
+  let mouse = { x: 0.5, y: 0.5 };
+  let targetMouse = { x: 0.5, y: 0.5 };
+  let t = 0;
+
+  // Color palette — warm field colors
+  const PALETTE = [
+    { r: 44,  g: 26,  b: 14  }, // umber
+    { r: 122, g: 48,  b: 32  }, // deep sienna
+    { r: 196, g: 91,  b: 58  }, // sienna
+    { r: 139, g: 58,  b: 42  }, // field-mid
+    { r: 60,  g: 30,  b: 16  }, // dark umber
+    { r: 212, g: 146, b: 42  }, // ochre
+  ];
+
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  function easeInOut(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+
+  function colorToRgb(c, alpha) {
+    return `rgba(${c.r},${c.g},${c.b},${alpha})`;
+  }
+
+  // Soft Rothko-style edge — gradient from one color to another with fuzzy boundary
+  function drawField(x, y, w, h, colorA, colorB, blurAmount, offsetX, offsetY) {
+    const gx = x + w * 0.5 + offsetX;
+    const gy = y + h * 0.5 + offsetY;
+    const radius = Math.max(w, h) * 0.7 + blurAmount;
+
+    const grad = ctx.createRadialGradient(gx, gy, 0, gx, gy, radius);
+    grad.addColorStop(0,   colorToRgb(colorA, 1));
+    grad.addColorStop(0.5, colorToRgb(colorA, 0.75));
+    grad.addColorStop(1,   colorToRgb(colorB, 0));
+
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // Draw a soft-edged rectangle block — the Rothko field
+  function drawRothkoBlock(bx, by, bw, bh, col, softness, alpha) {
+    // The block is painted via 4 gradients that feather the edges
+    const s = softness;
+
+    // Solid center
+    ctx.fillStyle = colorToRgb(col, alpha);
+    ctx.fillRect(bx + s, by + s, bw - s*2, bh - s*2);
+
+    // Left edge gradient
+    const gl = ctx.createLinearGradient(bx, 0, bx + s, 0);
+    gl.addColorStop(0, colorToRgb(col, 0));
+    gl.addColorStop(1, colorToRgb(col, alpha));
+    ctx.fillStyle = gl;
+    ctx.fillRect(bx, by + s, s, bh - s*2);
+
+    // Right edge gradient
+    const gr = ctx.createLinearGradient(bx + bw - s, 0, bx + bw, 0);
+    gr.addColorStop(0, colorToRgb(col, alpha));
+    gr.addColorStop(1, colorToRgb(col, 0));
+    ctx.fillStyle = gr;
+    ctx.fillRect(bx + bw - s, by + s, s, bh - s*2);
+
+    // Top edge gradient
+    const gt = ctx.createLinearGradient(0, by, 0, by + s);
+    gt.addColorStop(0, colorToRgb(col, 0));
+    gt.addColorStop(1, colorToRgb(col, alpha));
+    ctx.fillStyle = gt;
+    ctx.fillRect(bx + s, by, bw - s*2, s);
+
+    // Bottom edge gradient
+    const gb = ctx.createLinearGradient(0, by + bh - s, 0, by + bh);
+    gb.addColorStop(0, colorToRgb(col, alpha));
+    gb.addColorStop(1, colorToRgb(col, 0));
+    ctx.fillStyle = gb;
+    ctx.fillRect(bx + s, by + bh - s, bw - s*2, s);
+
+    // Corners (radial gradients)
+    const corners = [
+      [bx, by],
+      [bx + bw, by],
+      [bx, by + bh],
+      [bx + bw, by + bh]
+    ];
+    corners.forEach(([cx, cy]) => {
+      const gcorn = ctx.createRadialGradient(cx, cy, 0, cx, cy, s);
+      gcorn.addColorStop(0, colorToRgb(col, alpha));
+      gcorn.addColorStop(1, colorToRgb(col, 0));
+      ctx.fillStyle = gcorn;
+      const rx = cx === bx ? bx : bx + bw - s;
+      const ry = cy === by ? by : by + bh - s;
+      ctx.fillRect(rx, ry, s, s);
+    });
+  }
+
+  function resize() {
+    W = canvas.offsetWidth;
+    H = canvas.offsetHeight;
+    canvas.width = W;
+    canvas.height = H;
+  }
+
+  function draw() {
+    t += 0.0035;
+
+    // Smooth mouse
+    mouse.x = lerp(mouse.x, targetMouse.x, 0.03);
+    mouse.y = lerp(mouse.y, targetMouse.y, 0.03);
+
+    // Base fill — deepest umber
+    ctx.fillStyle = `rgb(28,16,8)`;
+    ctx.fillRect(0, 0, W, H);
+
+    // Large background field — deep sienna that breathes
+    const bgPulse = Math.sin(t * 0.7) * 0.08 + 0.92;
+    const bgField = ctx.createLinearGradient(0, 0, 0, H);
+    bgField.addColorStop(0,   `rgb(44,26,14)`);
+    bgField.addColorStop(0.4, `rgb(${Math.round(100 * bgPulse)},${Math.round(40 * bgPulse)},${Math.round(20 * bgPulse)})`);
+    bgField.addColorStop(1,   `rgb(28,16,8)`);
+    ctx.fillStyle = bgField;
+    ctx.fillRect(0, 0, W, H);
+
+    // --- Rothko blocks ---
+
+    // Block 1: large central warm sienna block — mouse-reactive position
+    const b1x = W * (0.08 + mouse.x * 0.06);
+    const b1y = H * (0.12 + Math.sin(t * 0.5) * 0.03 + mouse.y * 0.04);
+    const b1w = W * (0.82 + Math.sin(t * 0.3) * 0.04);
+    const b1h = H * (0.28 + Math.cos(t * 0.4) * 0.03);
+    const b1alpha = 0.62 + Math.sin(t * 0.6) * 0.08;
+    drawRothkoBlock(b1x, b1y, b1w, b1h, PALETTE[2], W * 0.12, b1alpha);
+
+    // Block 2: mid section — deep burgundy, slightly left-biased
+    const b2x = W * (0.05 - mouse.x * 0.04 + Math.sin(t * 0.35) * 0.02);
+    const b2y = H * (0.46 + Math.sin(t * 0.45) * 0.02 + mouse.y * 0.03);
+    const b2w = W * (0.9 + Math.cos(t * 0.28) * 0.03);
+    const b2h = H * (0.22 + Math.sin(t * 0.38) * 0.02);
+    const b2alpha = 0.70 + Math.cos(t * 0.5) * 0.06;
+    drawRothkoBlock(b2x, b2y, b2w, b2h, PALETTE[1], W * 0.1, b2alpha);
+
+    // Block 3: lower section — ochre warm light, rises from bottom
+    const b3x = W * (0.1 + mouse.x * 0.05 + Math.sin(t * 0.42) * 0.03);
+    const b3y = H * (0.73 + Math.cos(t * 0.33) * 0.025 - mouse.y * 0.025);
+    const b3w = W * (0.78 + Math.sin(t * 0.36) * 0.04);
+    const b3h = H * (0.20 + Math.cos(t * 0.5) * 0.03);
+    const b3alpha = 0.38 + Math.sin(t * 0.7) * 0.10;
+    drawRothkoBlock(b3x, b3y, b3w, b3h, PALETTE[5], W * 0.15, b3alpha);
+
+    // Block 4: subtle umber block center-overlapping, creates depth
+    const b4x = W * (0.18 + Math.cos(t * 0.22) * 0.02);
+    const b4y = H * (0.33 + Math.sin(t * 0.31) * 0.03);
+    const b4w = W * (0.62 + Math.cos(t * 0.27) * 0.03);
+    const b4h = H * (0.32 + Math.sin(t * 0.41) * 0.025);
+    const b4alpha = 0.35 + Math.cos(t * 0.45) * 0.08;
+    drawRothkoBlock(b4x, b4y, b4w, b4h, PALETTE[4], W * 0.18, b4alpha);
+
+    // Atmosphere overlay: vignette + mouse-reactive glow
+    const vignette = ctx.createRadialGradient(
+      W * 0.5, H * 0.5, H * 0.1,
+      W * 0.5, H * 0.5, Math.max(W, H) * 0.75
+    );
+    vignette.addColorStop(0,   'rgba(0,0,0,0)');
+    vignette.addColorStop(0.6, 'rgba(10,5,2,0.25)');
+    vignette.addColorStop(1,   'rgba(10,5,2,0.70)');
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, W, H);
+
+    // Mouse glow — warm light follows cursor
+    const mGlow = ctx.createRadialGradient(
+      W * mouse.x, H * mouse.y, 0,
+      W * mouse.x, H * mouse.y, W * 0.35
+    );
+    mGlow.addColorStop(0, `rgba(196,91,58,${0.12 + Math.sin(t) * 0.03})`);
+    mGlow.addColorStop(1, 'rgba(196,91,58,0)');
+    ctx.fillStyle = mGlow;
+    ctx.fillRect(0, 0, W, H);
+
+    raf = requestAnimationFrame(draw);
+  }
+
+  // Boot
+  resize();
+  window.addEventListener('resize', resize);
+
+  window.addEventListener('mousemove', function(e) {
+    targetMouse.x = e.clientX / window.innerWidth;
+    targetMouse.y = e.clientY / window.innerHeight;
+  });
+
+  // Touch support
+  window.addEventListener('touchmove', function(e) {
+    if (e.touches.length > 0) {
+      targetMouse.x = e.touches[0].clientX / window.innerWidth;
+      targetMouse.y = e.touches[0].clientY / window.innerHeight;
+    }
+  }, { passive: true });
+
+  // Respect reduced motion
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if (prefersReduced.matches) {
+    // Draw one static frame
+    t = 0.5;
+    mouse.x = 0.5; mouse.y = 0.5;
+    targetMouse.x = 0.5; targetMouse.y = 0.5;
+    resize();
+    draw();
+    cancelAnimationFrame(raf);
+  } else {
+    draw();
+  }
+})();
+</script>
+
+<!-- ─── INTERSECTION OBSERVER ─────────────────────────────────── -->
+<script>
+(function() {
+  'use strict';
+
+  const observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, {
+    threshold: 0.12,
+    rootMargin: '0px 0px -40px 0px'
+  });
+
+  document.querySelectorAll('.reveal').forEach(function(el) {
+    observer.observe(el);
+  });
+})();
+</script>
+
+</body>
+</html>
