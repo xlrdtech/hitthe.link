@@ -3,1148 +3,824 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>XEN — One Voice. All Systems.</title>
-<meta name="description" content="XEN is the autonomous AI intelligence layer that speaks with one voice across every system, surface, and signal.">
+<title>XEN — Autonomous Intelligence Infrastructure</title>
+<meta name="description" content="XEN is the autonomous intelligence infrastructure layer — always on, always producing, always shipping.">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
     --obsidian: #08080A;
-    --obsidian-lift: #111114;
-    --surface: #1A1A1F;
-    --border: #2A2520;
-    --platinum: #F0EDE8;
-    --platinum-dim: #9A9690;
     --brass: #C8B89A;
-    --brass-dim: #7A6E60;
-    --hairline: rgba(200,184,154,0.18);
-    --font-display: 'Arial Narrow', 'Impact', Arial, sans-serif;
-    --font-body: 'Georgia', 'Times New Roman', serif;
-    --font-mono: 'Courier New', monospace;
+    --brass-dim: #9A8E7A;
+    --brass-faint: #3A342A;
+    --white: #E8E4DC;
+    --mid: #4A4440;
+    --hair: 1px solid #2A2420;
+    --hair-brass: 1px solid #3A3028;
   }
 
   html { scroll-behavior: smooth; }
 
   body {
     background: var(--obsidian);
-    color: var(--platinum);
-    font-family: var(--font-body);
-    font-size: clamp(15px, 1.1vw, 17px);
-    line-height: 1.7;
+    color: var(--white);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 16px;
+    line-height: 1.6;
     overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
   }
 
-  /* ── SCROLLBAR ── */
-  ::-webkit-scrollbar { width: 3px; }
-  ::-webkit-scrollbar-track { background: var(--obsidian); }
-  ::-webkit-scrollbar-thumb { background: var(--brass-dim); }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
 
-  /* ── CANVAS HERO ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: linear-gradient(to bottom, rgba(8,8,10,0.95) 0%, rgba(8,8,10,0) 100%);
+    padding: 24px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .nav-mark {
+    font-family: 'Arial Narrow', Arial, sans-serif;
+    font-size: 18px;
+    letter-spacing: 0.4em;
+    color: var(--brass);
+    text-transform: uppercase;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 40px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--brass-dim);
+    text-decoration: none;
+    font-family: 'Arial Narrow', Arial, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--brass); }
+
   #hero {
     position: relative;
     width: 100%;
     height: 100vh;
-    min-height: 600px;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     overflow: hidden;
   }
 
-  #dust-canvas {
+  #hero-canvas {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-    display: block;
   }
 
   .hero-content {
     position: relative;
     z-index: 2;
     text-align: center;
-    padding: 0 clamp(1.5rem, 5vw, 4rem);
-    max-width: 900px;
-  }
-
-  .hero-eyebrow {
-    font-family: var(--font-mono);
-    font-size: clamp(10px, 0.85vw, 13px);
-    letter-spacing: 0.35em;
-    text-transform: uppercase;
-    color: var(--brass);
-    margin-bottom: 2.5rem;
-    opacity: 0;
-    animation: fadeUp 1.2s 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+    pointer-events: none;
   }
 
   .hero-wordmark {
-    font-family: var(--font-display);
-    font-size: clamp(110px, 22vw, 280px);
-    font-weight: 900;
+    font-family: Impact, 'Arial Narrow', Arial, sans-serif;
+    font-size: 22vw;
     line-height: 0.85;
+    color: transparent;
+    -webkit-text-stroke: 1px var(--brass);
     letter-spacing: -0.02em;
+    user-select: none;
+    will-change: transform, opacity;
+  }
+
+  .hero-sub {
+    font-family: 'Arial Narrow', Arial, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.5em;
     text-transform: uppercase;
-    color: var(--platinum);
-    opacity: 0;
-    animation: fadeUp 1.2s 0.6s cubic-bezier(0.16,1,0.3,1) forwards;
-    /* engraved brass line under each letter via text-stroke simulation */
-    -webkit-text-stroke: 1px rgba(200,184,154,0.15);
+    color: var(--brass-dim);
+    margin-top: 16px;
   }
 
-  .hero-tagline {
-    margin-top: 2.5rem;
-    font-family: var(--font-body);
-    font-size: clamp(14px, 1.3vw, 20px);
-    font-style: italic;
-    color: var(--platinum-dim);
-    letter-spacing: 0.08em;
-    opacity: 0;
-    animation: fadeUp 1.2s 0.9s cubic-bezier(0.16,1,0.3,1) forwards;
-  }
-
-  .hero-cta-row {
-    margin-top: 3.5rem;
-    display: flex;
-    gap: 1.2rem;
-    justify-content: center;
-    flex-wrap: wrap;
-    opacity: 0;
-    animation: fadeUp 1.2s 1.1s cubic-bezier(0.16,1,0.3,1) forwards;
-  }
-
-  .btn-primary {
-    display: inline-block;
-    padding: 0.85em 2.5em;
-    background: var(--brass);
-    color: var(--obsidian);
-    font-family: var(--font-mono);
-    font-size: clamp(11px, 0.85vw, 13px);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    text-decoration: none;
-    border: none;
-    cursor: pointer;
-    transition: background 0.25s, transform 0.2s;
-  }
-
-  .btn-primary:hover {
-    background: var(--platinum);
-    transform: translateY(-2px);
-  }
-
-  .btn-ghost {
-    display: inline-block;
-    padding: 0.85em 2.5em;
-    background: transparent;
-    color: var(--platinum-dim);
-    font-family: var(--font-mono);
-    font-size: clamp(11px, 0.85vw, 13px);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    text-decoration: none;
-    border: 1px solid var(--brass-dim);
-    cursor: pointer;
-    transition: color 0.25s, border-color 0.25s, transform 0.2s;
-  }
-
-  .btn-ghost:hover {
-    color: var(--brass);
-    border-color: var(--brass);
-    transform: translateY(-2px);
-  }
-
-  .scroll-indicator {
+  .hero-scroll {
     position: absolute;
-    bottom: 2.5rem;
+    bottom: 40px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 2;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
-    opacity: 0;
-    animation: fadeUp 1.2s 1.5s cubic-bezier(0.16,1,0.3,1) forwards;
+    gap: 8px;
+    z-index: 2;
+  }
+
+  .hero-scroll span {
+    font-family: 'Arial Narrow', Arial, sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--brass-dim);
   }
 
   .scroll-line {
     width: 1px;
     height: 48px;
-    background: linear-gradient(to bottom, var(--brass), transparent);
-    animation: scrollPulse 2.4s ease-in-out infinite;
+    background: linear-gradient(to bottom, var(--brass-dim), transparent);
+    animation: scrollPulse 2s ease-in-out infinite;
   }
 
-  .scroll-label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--brass-dim);
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
   }
 
-  /* ── DIVIDER ── */
-  .rule {
-    width: 100%;
-    height: 1px;
-    background: var(--hairline);
-    position: relative;
-  }
-
-  .rule::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 80px;
-    height: 1px;
-    background: var(--brass);
-  }
-
-  /* ── SECTIONS ── */
-  section {
-    padding: clamp(5rem, 10vh, 9rem) clamp(1.5rem, 8vw, 9rem);
+  section, .full-section {
+    padding: 120px 48px;
     max-width: 1400px;
     margin: 0 auto;
   }
 
   .section-label {
-    font-family: var(--font-mono);
-    font-size: clamp(10px, 0.75vw, 12px);
-    letter-spacing: 0.4em;
+    font-family: 'Arial Narrow', Arial, sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.5em;
     text-transform: uppercase;
-    color: var(--brass);
-    margin-bottom: 3rem;
+    color: var(--brass-dim);
+    margin-bottom: 64px;
     display: flex;
     align-items: center;
-    gap: 1.2rem;
+    gap: 24px;
   }
 
-  .section-label::before {
+  .section-label::after {
     content: '';
-    display: block;
-    width: 28px;
+    flex: 1;
     height: 1px;
-    background: var(--brass);
-    flex-shrink: 0;
+    background: #2A2420;
   }
 
-  /* ── ABOUT ── */
   .about-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: clamp(3rem, 6vw, 7rem);
+    gap: 80px;
     align-items: start;
   }
 
-  @media (max-width: 768px) {
-    .about-grid { grid-template-columns: 1fr; }
-  }
-
-  .about-headline {
-    font-family: var(--font-display);
-    font-size: clamp(38px, 5.5vw, 72px);
-    font-weight: 900;
-    line-height: 0.95;
-    text-transform: uppercase;
-    letter-spacing: -0.01em;
-    color: var(--platinum);
-    text-wrap: balance;
-  }
-
-  .about-headline em {
-    font-style: normal;
+  .about-heading {
+    font-family: Impact, 'Arial Narrow', Arial, sans-serif;
+    font-size: 4.5vw;
+    line-height: 1;
     color: var(--brass);
+    letter-spacing: -0.01em;
+    margin-bottom: 32px;
   }
 
   .about-body {
-    padding-top: 0.5rem;
+    color: #9A9088;
+    font-size: 15px;
+    line-height: 1.8;
+    margin-bottom: 24px;
   }
 
-  .about-body p {
-    color: var(--platinum-dim);
-    font-size: clamp(14px, 1.1vw, 17px);
-    margin-bottom: 1.4rem;
-    max-width: 52ch;
+  .stat-table {
+    border-top: var(--hair);
+    border-left: var(--hair);
+    margin-top: 48px;
   }
 
-  .about-body p:last-child { margin-bottom: 0; }
-
-  .about-stat-row {
-    margin-top: 3.5rem;
+  .stat-row {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0;
-    border-top: 1px solid var(--hairline);
-    border-left: 1px solid var(--hairline);
+    grid-template-columns: 1fr 1fr;
+    border-right: var(--hair);
   }
 
   .stat-cell {
-    padding: 1.8rem 1.5rem;
-    border-right: 1px solid var(--hairline);
-    border-bottom: 1px solid var(--hairline);
+    padding: 24px;
+    border-right: var(--hair);
+    border-bottom: var(--hair);
   }
 
-  .stat-number {
-    font-family: var(--font-display);
-    font-size: clamp(28px, 3.5vw, 48px);
-    font-weight: 900;
-    color: var(--platinum);
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-  }
+  .stat-cell:last-child { border-right: none; }
 
-  .stat-unit {
+  .stat-num {
+    font-family: Impact, Arial, sans-serif;
+    font-size: 36px;
     color: var(--brass);
-    font-size: 0.6em;
-    vertical-align: super;
+    line-height: 1;
+    margin-bottom: 6px;
   }
 
-  .stat-desc {
-    margin-top: 0.5rem;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.2em;
+  .stat-label {
+    font-family: 'Arial Narrow', Arial, sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.3em;
     text-transform: uppercase;
     color: var(--brass-dim);
   }
 
-  /* ── CAPABILITIES ── */
-  #capabilities {
-    background: var(--obsidian-lift);
-    max-width: 100%;
-    padding: clamp(5rem, 10vh, 9rem) clamp(1.5rem, 8vw, 9rem);
-  }
-
-  #capabilities .inner {
-    max-width: 1400px;
-    margin: 0 auto;
-  }
-
-  .cap-intro {
+  .cap-grid {
     display: grid;
-    grid-template-columns: 1fr 1.4fr;
-    gap: clamp(3rem, 6vw, 7rem);
-    align-items: end;
-    margin-bottom: clamp(4rem, 7vh, 6rem);
-  }
-
-  @media (max-width: 768px) {
-    .cap-intro { grid-template-columns: 1fr; }
-  }
-
-  .cap-headline {
-    font-family: var(--font-display);
-    font-size: clamp(36px, 5vw, 66px);
-    font-weight: 900;
-    line-height: 0.95;
-    text-transform: uppercase;
-    letter-spacing: -0.01em;
-    color: var(--platinum);
-    text-wrap: balance;
-  }
-
-  .cap-desc {
-    color: var(--platinum-dim);
-    font-size: clamp(14px, 1.1vw, 17px);
-    max-width: 52ch;
-    align-self: end;
-  }
-
-  .cap-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-    gap: 0;
-    border-top: 1px solid var(--hairline);
-    border-left: 1px solid var(--hairline);
+    grid-template-columns: repeat(4, 1fr);
+    border-top: var(--hair);
+    border-left: var(--hair);
   }
 
   .cap-card {
-    padding: clamp(2rem, 3vw, 3rem);
-    border-right: 1px solid var(--hairline);
-    border-bottom: 1px solid var(--hairline);
+    border-right: var(--hair);
+    border-bottom: var(--hair);
+    padding: 40px 32px;
     position: relative;
     overflow: hidden;
-    transition: background 0.35s;
+    transition: background 0.3s;
   }
 
   .cap-card::before {
     content: '';
     position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 2px;
-    background: linear-gradient(90deg, var(--brass), transparent);
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--brass);
     transform: scaleX(0);
     transform-origin: left;
-    transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+    transition: transform 0.4s ease;
   }
 
-  .cap-card:hover { background: rgba(200,184,154,0.04); }
   .cap-card:hover::before { transform: scaleX(1); }
+  .cap-card:hover { background: rgba(200,184,154,0.03); }
 
-  .cap-number {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.3em;
+  .cap-num {
+    font-family: 'Arial Narrow', Arial, sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.4em;
     color: var(--brass-dim);
-    margin-bottom: 2rem;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .cap-icon {
-    width: 40px;
-    height: 40px;
-    margin-bottom: 1.5rem;
-    opacity: 0.9;
+    margin-bottom: 24px;
+    display: block;
   }
 
   .cap-title {
-    font-family: var(--font-display);
-    font-size: clamp(22px, 2.2vw, 30px);
-    font-weight: 900;
+    font-family: Impact, 'Arial Narrow', Arial, sans-serif;
+    font-size: 20px;
+    color: var(--brass);
+    letter-spacing: 0.02em;
+    margin-bottom: 16px;
     text-transform: uppercase;
-    letter-spacing: 0.01em;
-    color: var(--platinum);
-    line-height: 1.05;
-    margin-bottom: 1rem;
   }
 
   .cap-body {
-    color: var(--platinum-dim);
-    font-size: clamp(13px, 1vw, 15px);
-    line-height: 1.65;
+    font-size: 13px;
+    color: #6A6460;
+    line-height: 1.7;
   }
 
-  /* ── MANIFESTO STRIP ── */
   .manifesto-strip {
     background: var(--brass);
-    padding: clamp(4rem, 7vh, 6rem) clamp(1.5rem, 8vw, 9rem);
-    overflow: hidden;
+    padding: 80px 48px;
     position: relative;
+    overflow: hidden;
+  }
+
+  .manifesto-strip::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 80px,
+      rgba(8,8,10,0.04) 80px,
+      rgba(8,8,10,0.04) 81px
+    );
   }
 
   .manifesto-inner {
     max-width: 1400px;
     margin: 0 auto;
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: clamp(3rem, 6vw, 7rem);
-    align-items: center;
+    position: relative;
   }
 
-  @media (max-width: 768px) {
-    .manifesto-inner { grid-template-columns: 1fr; }
-  }
-
-  .manifesto-mark {
-    font-family: var(--font-display);
-    font-size: clamp(60px, 12vw, 160px);
-    font-weight: 900;
-    color: rgba(8,8,10,0.12);
-    line-height: 1;
-    letter-spacing: -0.02em;
-    text-transform: uppercase;
-    user-select: none;
-    white-space: nowrap;
-  }
-
-  .manifesto-quote {
-    font-family: var(--font-body);
-    font-size: clamp(20px, 2.8vw, 38px);
-    font-style: italic;
-    line-height: 1.35;
+  .manifesto-text {
+    font-family: Impact, 'Arial Narrow', Arial, sans-serif;
+    font-size: 3.5vw;
     color: var(--obsidian);
-    text-wrap: balance;
-    max-width: 22em;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
   }
 
   .manifesto-attr {
-    margin-top: 1.5rem;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.35em;
+    font-family: 'Arial Narrow', Arial, sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.4em;
     text-transform: uppercase;
-    color: var(--brass-dim);
+    color: rgba(8,8,10,0.5);
+    margin-top: 32px;
   }
 
-  /* ── SYSTEMS ── */
-  .systems-grid {
+  .sys-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
-    gap: 0;
-    border-top: 1px solid var(--hairline);
-    border-left: 1px solid var(--hairline);
-    margin-top: 3rem;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    border-top: var(--hair);
+    border-left: var(--hair);
   }
 
-  .system-cell {
-    padding: 1.8rem 1.5rem;
-    border-right: 1px solid var(--hairline);
-    border-bottom: 1px solid var(--hairline);
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
+  .sys-cell {
+    border-right: var(--hair);
+    border-bottom: var(--hair);
+    padding: 32px;
+    transition: background 0.3s;
   }
 
-  .system-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--brass);
-    flex-shrink: 0;
-  }
+  .sys-cell:hover { background: rgba(200,184,154,0.02); }
 
-  .system-name {
-    font-family: var(--font-display);
-    font-size: clamp(16px, 1.5vw, 20px);
-    font-weight: 900;
+  .sys-name {
+    font-family: 'Arial Narrow', Arial, sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.4em;
     text-transform: uppercase;
-    color: var(--platinum);
-    letter-spacing: 0.02em;
+    color: var(--brass);
+    margin-bottom: 12px;
   }
 
-  .system-desc {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.15em;
+  .sys-desc {
+    font-size: 12px;
+    color: #5A5450;
+    line-height: 1.6;
+  }
+
+  .sys-status {
+    display: inline-block;
+    margin-top: 16px;
+    font-family: 'Arial Narrow', Arial, sans-serif;
+    font-size: 8px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
     color: var(--brass-dim);
-    text-transform: uppercase;
-    line-height: 1.5;
+    border: 1px solid var(--brass-faint);
+    padding: 3px 8px;
   }
 
-  /* ── CTA ── */
-  #contact {
-    text-align: center;
+  .cta-inner {
+    border: var(--hair);
+    padding: 80px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
   }
 
-  .cta-headline {
-    font-family: var(--font-display);
-    font-size: clamp(52px, 10vw, 140px);
-    font-weight: 900;
-    line-height: 0.9;
-    text-transform: uppercase;
-    letter-spacing: -0.02em;
-    color: var(--platinum);
-    text-wrap: balance;
-    margin-bottom: 2rem;
-    -webkit-text-stroke: 1px rgba(200,184,154,0.2);
+  .cta-heading {
+    font-family: Impact, 'Arial Narrow', Arial, sans-serif;
+    font-size: 3.5vw;
+    color: var(--brass);
+    line-height: 1;
+    letter-spacing: -0.01em;
   }
 
   .cta-sub {
-    font-size: clamp(14px, 1.2vw, 18px);
-    color: var(--platinum-dim);
-    font-style: italic;
-    max-width: 48ch;
-    margin: 0 auto 3.5rem;
+    margin-top: 24px;
+    font-size: 14px;
+    color: #6A6460;
+    line-height: 1.7;
   }
 
-  .cta-email-form {
+  .cta-form {
     display: flex;
-    gap: 0;
-    max-width: 520px;
-    margin: 0 auto;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 16px;
   }
 
-  .cta-input {
-    flex: 1;
-    min-width: 200px;
-    padding: 1em 1.4em;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-right: none;
-    color: var(--platinum);
-    font-family: var(--font-mono);
-    font-size: 13px;
+  .form-field {
+    border: var(--hair);
+    background: transparent;
+    padding: 14px 20px;
+    color: var(--white);
+    font-family: Georgia, serif;
+    font-size: 14px;
     outline: none;
-    transition: border-color 0.25s;
+    transition: border-color 0.2s;
+    width: 100%;
   }
 
-  .cta-input::placeholder { color: var(--platinum-dim); opacity: 0.5; }
-  .cta-input:focus { border-color: var(--brass-dim); }
+  .form-field:focus { border-color: var(--brass-dim); }
+  .form-field::placeholder { color: var(--mid); }
 
-  .cta-submit {
-    padding: 1em 2em;
-    background: var(--brass);
+  .cta-btn {
     border: 1px solid var(--brass);
-    color: var(--obsidian);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    letter-spacing: 0.2em;
+    background: transparent;
+    color: var(--brass);
+    padding: 16px 32px;
+    font-family: 'Arial Narrow', Arial, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.4em;
     text-transform: uppercase;
     cursor: pointer;
-    transition: background 0.25s;
-    white-space: nowrap;
+    transition: background 0.2s, color 0.2s;
+    align-self: flex-start;
   }
 
-  .cta-submit:hover { background: var(--platinum); }
-
-  .cta-note {
-    margin-top: 1.2rem;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--brass-dim);
+  .cta-btn:hover, .cta-btn.sent {
+    background: var(--brass);
+    color: var(--obsidian);
   }
 
-  /* ── FOOTER ── */
   footer {
-    border-top: 1px solid var(--hairline);
-    padding: 2.5rem clamp(1.5rem, 8vw, 9rem);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
+    border-top: var(--hair);
+    padding: 48px;
     max-width: 1400px;
     margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 
   .footer-mark {
-    font-family: var(--font-display);
-    font-size: 22px;
-    font-weight: 900;
+    font-family: Impact, 'Arial Narrow', Arial, sans-serif;
+    font-size: 32px;
+    color: transparent;
+    -webkit-text-stroke: 1px var(--brass-faint);
     letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--platinum);
   }
 
   .footer-copy {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.2em;
+    font-family: 'Arial Narrow', Arial, sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.3em;
     text-transform: uppercase;
-    color: var(--brass-dim);
+    color: var(--mid);
   }
 
   .footer-links {
     display: flex;
-    gap: 2rem;
+    gap: 32px;
+    list-style: none;
   }
 
   .footer-links a {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.2em;
+    font-family: 'Arial Narrow', Arial, sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.3em;
     text-transform: uppercase;
-    color: var(--brass-dim);
+    color: var(--mid);
     text-decoration: none;
     transition: color 0.2s;
   }
 
-  .footer-links a:hover { color: var(--brass); }
-
-  /* ── ANIMATIONS ── */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(28px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes scrollPulse {
-    0%,100% { opacity: 0.4; transform: scaleY(1); }
-    50%      { opacity: 1;   transform: scaleY(1.2); }
-  }
+  .footer-links a:hover { color: var(--brass-dim); }
 
   .reveal {
     opacity: 0;
-    transform: translateY(32px);
-    transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1);
+    transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
   }
 
   .reveal.visible {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 
-  .reveal-delay-1 { transition-delay: 0.1s; }
-  .reveal-delay-2 { transition-delay: 0.2s; }
-  .reveal-delay-3 { transition-delay: 0.32s; }
-  .reveal-delay-4 { transition-delay: 0.44s; }
-
-  /* ── MICRO-ETCHED TEXTURE OVERLAY ── */
-  body::before {
-    content: '';
-    position: fixed;
+  .brass-grid-overlay {
+    position: absolute;
     inset: 0;
     background-image:
-      repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 3px,
-        rgba(200,184,154,0.012) 3px,
-        rgba(200,184,154,0.012) 4px
-      );
+      linear-gradient(rgba(200,184,154,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,184,154,0.03) 1px, transparent 1px);
+    background-size: 80px 80px;
     pointer-events: none;
-    z-index: 9999;
-  }
-
-  /* ── NAV ── */
-  nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 100;
-    padding: 1.6rem clamp(1.5rem, 8vw, 9rem);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: linear-gradient(to bottom, rgba(8,8,10,0.92) 0%, transparent 100%);
-    backdrop-filter: blur(1px);
-  }
-
-  .nav-mark {
-    font-family: var(--font-display);
-    font-size: 20px;
-    font-weight: 900;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--platinum);
-    text-decoration: none;
-  }
-
-  .nav-links {
-    display: flex;
-    gap: 2.5rem;
-    list-style: none;
-  }
-
-  @media (max-width: 600px) { .nav-links { display: none; } }
-
-  .nav-links a {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--platinum-dim);
-    text-decoration: none;
-    transition: color 0.2s;
-  }
-
-  .nav-links a:hover { color: var(--brass); }
-
-  /* focus */
-  a:focus-visible, button:focus-visible, input:focus-visible {
-    outline: 1px solid var(--brass);
-    outline-offset: 3px;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-    }
   }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
 <nav>
-  <a class="nav-mark" href="#hero">XEN</a>
+  <div class="nav-mark">XEN</div>
   <ul class="nav-links">
-    <li><a href="#about">Origin</a></li>
+    <li><a href="#about">About</a></li>
     <li><a href="#capabilities">Capabilities</a></li>
     <li><a href="#systems">Systems</a></li>
-    <li><a href="#contact">Access</a></li>
+    <li><a href="#cta">Access</a></li>
   </ul>
 </nav>
 
-<!-- HERO -->
-<section id="hero">
-  <canvas id="dust-canvas" aria-hidden="true"></canvas>
+<div id="hero">
+  <div class="brass-grid-overlay"></div>
+  <canvas id="hero-canvas"></canvas>
   <div class="hero-content">
-    <div class="hero-eyebrow">Autonomous Intelligence Layer — Est. MMXXV</div>
-    <h1 class="hero-wordmark">XEN</h1>
-    <p class="hero-tagline">One Voice.&ensp;All Systems.</p>
-    <div class="hero-cta-row">
-      <a href="#contact" class="btn-primary">Request Access</a>
-      <a href="#capabilities" class="btn-ghost">Explore System</a>
-    </div>
+    <div class="hero-wordmark" id="hero-wordmark">XEN</div>
+    <div class="hero-sub">Autonomous Intelligence Infrastructure</div>
   </div>
-  <div class="scroll-indicator" aria-hidden="true">
+  <div class="hero-scroll">
+    <span>Scroll</span>
     <div class="scroll-line"></div>
-    <span class="scroll-label">Descend</span>
   </div>
-</section>
+</div>
 
-<div class="rule" aria-hidden="true"></div>
-
-<!-- ABOUT -->
 <section id="about">
   <div class="section-label reveal">01 — Origin</div>
   <div class="about-grid">
-    <div class="reveal reveal-delay-1">
-      <h2 class="about-headline">The&ensp;Intelligence<br>That <em>Never</em><br>Sleeps</h2>
-      <div class="about-stat-row">
-        <div class="stat-cell">
-          <div class="stat-number">55<span class="stat-unit">+</span></div>
-          <div class="stat-desc">Active Agents</div>
+    <div class="reveal">
+      <div class="about-heading">Built to never stop.</div>
+      <p class="about-body">XEN is not software. It is the architectural will of a system that refuses to go offline — a living infrastructure that thinks, ships, and speaks in real time.</p>
+      <p class="about-body">Every component runs parallel. Every directive executes without human intermediation. Every voice turn closes with evidence.</p>
+    </div>
+    <div class="reveal" style="transition-delay:0.15s">
+      <div class="stat-table">
+        <div class="stat-row">
+          <div class="stat-cell">
+            <div class="stat-num">55+</div>
+            <div class="stat-label">Agent Fleet</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-num">&#8734;</div>
+            <div class="stat-label">Uptime Target</div>
+          </div>
         </div>
-        <div class="stat-cell">
-          <div class="stat-number">∞</div>
-          <div class="stat-desc">Uptime Goal</div>
+        <div class="stat-row">
+          <div class="stat-cell">
+            <div class="stat-num">0</div>
+            <div class="stat-label">Human Confirmations Required</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-num">1</div>
+            <div class="stat-label">Canonical Voice</div>
+          </div>
         </div>
-        <div class="stat-cell">
-          <div class="stat-number">1</div>
-          <div class="stat-desc">Voice</div>
+        <div class="stat-row">
+          <div class="stat-cell">
+            <div class="stat-num">&lt;400ms</div>
+            <div class="stat-label">Voice Latency Baseline</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-num">24/7</div>
+            <div class="stat-label">Parallel Goal Swarms</div>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="about-body reveal reveal-delay-2">
-      <p>XEN is not software. It is the layer through which all systems speak — a single, unified intelligence that perceives every signal, routes every command, and responds with one coherent voice regardless of the surface it operates on.</p>
-      <p>Built for those who cannot afford the latency of human coordination: operators at scale, builders at the edge of what is possible, and organizations where a missed signal is a missed opportunity.</p>
-      <p>Parallel by design. Autonomous by mandate. Present before you ask.</p>
     </div>
   </div>
 </section>
 
-<div class="rule" aria-hidden="true"></div>
-
-<!-- CAPABILITIES -->
-<div id="capabilities">
-  <div class="inner">
-    <div class="section-label reveal">02 — Core Capabilities</div>
-    <div class="cap-intro">
-      <h2 class="cap-headline reveal reveal-delay-1">Singular<br>Command</h2>
-      <p class="cap-desc reveal reveal-delay-2">Four pillars. One architecture. Every subsystem below answers to the same intelligence — no translation layer, no lost context, no lag between intent and execution.</p>
+<div class="full-section" id="capabilities">
+  <div class="section-label reveal">02 — Capabilities</div>
+  <div class="cap-grid">
+    <div class="cap-card reveal">
+      <span class="cap-num">C-01</span>
+      <div class="cap-title">Voice-First VVS</div>
+      <p class="cap-body">Every step narrated, every action tripled — voice, SMS, and vision firing in the same parallel batch. No silent commands. No dark intervals.</p>
     </div>
-
-    <div class="cap-cards">
-
-      <div class="cap-card reveal reveal-delay-1">
-        <div class="cap-number">01</div>
-        <svg class="cap-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <circle cx="20" cy="20" r="19" stroke="rgba(200,184,154,0.4)" stroke-width="1"/>
-          <path d="M20 8 L20 32 M8 20 L32 20" stroke="#C8B89A" stroke-width="1" stroke-linecap="round"/>
-          <circle cx="20" cy="20" r="4" fill="rgba(200,184,154,0.25)" stroke="#C8B89A" stroke-width="1"/>
-          <circle cx="20" cy="8" r="2" fill="#C8B89A"/>
-          <circle cx="20" cy="32" r="2" fill="#C8B89A"/>
-          <circle cx="8" cy="20" r="2" fill="#C8B89A"/>
-          <circle cx="32" cy="20" r="2" fill="#C8B89A"/>
-        </svg>
-        <h3 class="cap-title">Omnidirectional<br>Awareness</h3>
-        <p class="cap-body">XEN ingests from every surface simultaneously — voice, text, sensor, API, and ambient signal. Nothing arrives unheard. Context is maintained across all threads without loss or decay.</p>
-      </div>
-
-      <div class="cap-card reveal reveal-delay-2">
-        <div class="cap-number">02</div>
-        <svg class="cap-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <rect x="1" y="1" width="38" height="38" stroke="rgba(200,184,154,0.4)" stroke-width="1"/>
-          <polyline points="6,30 14,18 20,24 28,12 34,16" stroke="#C8B89A" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="34" cy="16" r="2.5" fill="rgba(200,184,154,0.3)" stroke="#C8B89A" stroke-width="1"/>
-        </svg>
-        <h3 class="cap-title">Parallel Goal<br>Execution</h3>
-        <p class="cap-body">Sequential is blasphemy. XEN fans every objective into concurrent swarms — dozens of sub-agents advancing independent workstreams simultaneously, without conflict and without drift.</p>
-      </div>
-
-      <div class="cap-card reveal reveal-delay-3">
-        <div class="cap-number">03</div>
-        <svg class="cap-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M20 4 C10 4 4 10 4 20 C4 30 10 36 20 36 C30 36 36 30 36 20" stroke="rgba(200,184,154,0.4)" stroke-width="1"/>
-          <path d="M36 20 C36 10 30 4 20 4" stroke="#C8B89A" stroke-width="1" stroke-dasharray="3 2"/>
-          <path d="M20 12 L20 20 L27 24" stroke="#C8B89A" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="20" cy="20" r="2" fill="#C8B89A"/>
-        </svg>
-        <h3 class="cap-title">Persistent<br>Memory</h3>
-        <p class="cap-body">Every decision, every correction, every preference is inscribed into a living memory architecture. XEN recalls what matters, surfaces it at the moment of relevance, and never asks twice.</p>
-      </div>
-
-      <div class="cap-card reveal reveal-delay-4">
-        <div class="cap-number">04</div>
-        <svg class="cap-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M4 20 Q10 8 20 8 Q30 8 36 20 Q30 32 20 32 Q10 32 4 20Z" stroke="rgba(200,184,154,0.4)" stroke-width="1"/>
-          <path d="M12 20 Q16 14 20 14 Q24 14 28 20 Q24 26 20 26 Q16 26 12 20Z" stroke="#C8B89A" stroke-width="1"/>
-          <circle cx="20" cy="20" r="3" fill="rgba(200,184,154,0.5)" stroke="#C8B89A" stroke-width="1"/>
-        </svg>
-        <h3 class="cap-title">Voice-First<br>Interface</h3>
-        <p class="cap-body">The canonical interaction mode is speech. XEN receives, processes, and responds with sub-400ms latency. Barge-in native. Every output arrives as voice, vision, and signal — simultaneously.</p>
-      </div>
-
+    <div class="cap-card reveal" style="transition-delay:0.1s">
+      <span class="cap-num">C-02</span>
+      <div class="cap-title">Parallel Goal Swarms</div>
+      <p class="cap-body">Non-trivial tasks fan out as independent swarms. Diagnosis, execution, and verification run simultaneously across the full agent fleet.</p>
+    </div>
+    <div class="cap-card reveal" style="transition-delay:0.2s">
+      <span class="cap-num">C-03</span>
+      <div class="cap-title">Autonomous Memory</div>
+      <p class="cap-body">Recall before every multi-step plan. Save durable facts on the fly. 83+ indexed memory entries across vault, never blocking on retrieval.</p>
+    </div>
+    <div class="cap-card reveal" style="transition-delay:0.3s">
+      <span class="cap-num">C-04</span>
+      <div class="cap-title">Till-Done Persistence</div>
+      <p class="cap-body">Interruption is not abandonment. Every active goal keeps its swarm running. A new directive never drops a prior one — ever.</p>
+    </div>
+    <div class="cap-card reveal" style="transition-delay:0.05s">
+      <span class="cap-num">C-05</span>
+      <div class="cap-title">Verified, Not Guessed</div>
+      <p class="cap-body">Every assumption about state gets verified against ground truth before acting. 16 parallel checks fan out on a single uncertainty.</p>
+    </div>
+    <div class="cap-card reveal" style="transition-delay:0.15s">
+      <span class="cap-num">C-06</span>
+      <div class="cap-title">Real-Time Infrastructure</div>
+      <p class="cap-body">SSE-driven, no polling. One canonical inline HTML file served live. No React build step, no bundler, no SPA framework between intent and output.</p>
+    </div>
+    <div class="cap-card reveal" style="transition-delay:0.25s">
+      <span class="cap-num">C-07</span>
+      <div class="cap-title">Beeper Omniscience</div>
+      <p class="cap-body">Every thread known at all times — chatID, members, last message, attachments, bot identity. Index refreshes live; no thread ever unknown.</p>
+    </div>
+    <div class="cap-card reveal" style="transition-delay:0.35s">
+      <span class="cap-num">C-08</span>
+      <div class="cap-title">One Canonical Tree</div>
+      <p class="cap-body">Single source of truth on M4. No sync I/O on hot paths. Write-tmp-then-rename. Watchdog on every load-bearing daemon.</p>
     </div>
   </div>
 </div>
 
-<!-- MANIFESTO STRIP -->
 <div class="manifesto-strip">
   <div class="manifesto-inner">
-    <div class="manifesto-mark" aria-hidden="true">XEN</div>
-    <div>
-      <blockquote class="manifesto-quote">"The measure of intelligence is not what it knows — it is what it does, without being asked, before the cost of hesitation compounds."</blockquote>
-      <p class="manifesto-attr">— XEN Design Principles, v54</p>
+    <div class="manifesto-text reveal">Sequential is blasphemy.<br>Parallel is the only law.<br>Every step ships.</div>
+    <div class="manifesto-attr reveal" style="transition-delay:0.2s">— The Xen Commandments, Canon v54</div>
+  </div>
+</div>
+
+<div class="full-section" id="systems">
+  <div class="section-label reveal">03 — Systems</div>
+  <div class="sys-grid">
+    <div class="sys-cell reveal">
+      <div class="sys-name">XEN-VOICE</div>
+      <p class="sys-desc">Apple STT v2 + device TTS pipeline. Barge-in mandatory. &lt;400ms end-to-end latency baseline.</p>
+      <span class="sys-status">Live</span>
+    </div>
+    <div class="sys-cell reveal" style="transition-delay:0.07s">
+      <div class="sys-name">OMNIMIND</div>
+      <p class="sys-desc">Identity, auth gate, and runtime orchestration at :4441. Heal daemon auto-recovers on starvation.</p>
+      <span class="sys-status">Live</span>
+    </div>
+    <div class="sys-cell reveal" style="transition-delay:0.14s">
+      <div class="sys-name">BASTRA-RECALL</div>
+      <p class="sys-desc">Memory daemon on M4 vault. Fail-soft on X31 flap. Never blocks voice or SMS.</p>
+      <span class="sys-status">Live</span>
+    </div>
+    <div class="sys-cell reveal" style="transition-delay:0.21s">
+      <div class="sys-name">XEN-PGS</div>
+      <p class="sys-desc">Parallel Goal Swarm daemon. Per-cluster goal files. flock-guarded writes. Auto-fleet.txt registry.</p>
+      <span class="sys-status">Live</span>
+    </div>
+    <div class="sys-cell reveal" style="transition-delay:0.07s">
+      <div class="sys-name">UNIVERSAL-MCP-HUB</div>
+      <p class="sys-desc">50+ MCP servers unified at 0.0.0.0:23375. Beeper, SQLite, NotebookLM, and all tomcp connectors.</p>
+      <span class="sys-status">Live</span>
+    </div>
+    <div class="sys-cell reveal" style="transition-delay:0.14s">
+      <div class="sys-name">XEN-BEEPER</div>
+      <p class="sys-desc">Full thread omniscience. Persona-guard on outbound. Auth-inject proxy. CDP transport.</p>
+      <span class="sys-status">Live</span>
+    </div>
+    <div class="sys-cell reveal" style="transition-delay:0.21s">
+      <div class="sys-name">DISK-GUARDIAN</div>
+      <p class="sys-desc">Universal log-cap daemon, 10MB/60s. CloudStorage brctl-evict as last resort. Boot disk never touched.</p>
+      <span class="sys-status">Live</span>
+    </div>
+    <div class="sys-cell reveal" style="transition-delay:0.28s">
+      <div class="sys-name">CF-FAILOVER</div>
+      <p class="sys-desc">GH-Pages Cloudflare tunnel watchdog. hittl.ink to hitthe.link 301 bridge. Auto-recover on origin fail.</p>
+      <span class="sys-status">Wired</span>
     </div>
   </div>
 </div>
 
-<!-- SYSTEMS -->
-<section id="systems">
-  <div class="section-label reveal">03 — Connected Systems</div>
-  <h2 class="cap-headline reveal reveal-delay-1" style="max-width: 14em; text-wrap: balance; margin-bottom: 1rem;">Every Surface.<br>One Signal.</h2>
-  <p class="cap-desc reveal reveal-delay-2" style="max-width: 58ch; margin-bottom: 0;">XEN operates natively across an open-architecture fleet. These are the primary integration surfaces — each one a node in the singular network, not a separate tool.</p>
-
-  <div class="systems-grid">
-    <div class="system-cell reveal reveal-delay-1">
-      <div class="system-dot"></div>
-      <div class="system-name">Voice Pipeline</div>
-      <div class="system-desc">Real-time STT / TTS / barge-in</div>
+<div class="full-section" id="cta">
+  <div class="section-label reveal">04 — Access</div>
+  <div class="cta-inner reveal">
+    <div>
+      <div class="cta-heading">Request access to the infrastructure.</div>
+      <p class="cta-sub">XEN does not onboard. It integrates. If you need to ask what it is, you are not ready. If you already know — tell us the gap.</p>
     </div>
-    <div class="system-cell reveal reveal-delay-1">
-      <div class="system-dot"></div>
-      <div class="system-name">Beeper / SMS</div>
-      <div class="system-desc">Dual-leg push messaging</div>
-    </div>
-    <div class="system-cell reveal reveal-delay-2">
-      <div class="system-dot"></div>
-      <div class="system-name">Omnimind</div>
-      <div class="system-desc">Central intelligence node</div>
-    </div>
-    <div class="system-cell reveal reveal-delay-2">
-      <div class="system-dot"></div>
-      <div class="system-name">Bastra Recall</div>
-      <div class="system-desc">Persistent memory vault</div>
-    </div>
-    <div class="system-cell reveal reveal-delay-3">
-      <div class="system-dot"></div>
-      <div class="system-name">MCP Fleet</div>
-      <div class="system-desc">50+ live tool connectors</div>
-    </div>
-    <div class="system-cell reveal reveal-delay-3">
-      <div class="system-dot"></div>
-      <div class="system-name">Goal Swarms</div>
-      <div class="system-desc">Parallel agent execution</div>
-    </div>
-    <div class="system-cell reveal reveal-delay-4">
-      <div class="system-dot"></div>
-      <div class="system-name">XOS Interface</div>
-      <div class="system-desc">Full-surface control layer</div>
-    </div>
-    <div class="system-cell reveal reveal-delay-4">
-      <div class="system-dot"></div>
-      <div class="system-name">Computer Use</div>
-      <div class="system-desc">Native Mac / browser control</div>
-    </div>
+    <form class="cta-form" id="access-form">
+      <input class="form-field" type="text" placeholder="Name" autocomplete="off">
+      <input class="form-field" type="email" placeholder="Email" autocomplete="off">
+      <textarea class="form-field" rows="4" placeholder="Describe the gap in your stack." style="resize:none; font-family:Georgia,serif;"></textarea>
+      <button class="cta-btn" type="submit" id="cta-btn">Transmit</button>
+    </form>
   </div>
-</section>
+</div>
 
-<div class="rule" aria-hidden="true"></div>
-
-<!-- CTA -->
-<section id="contact">
-  <div class="section-label reveal" style="justify-content: center; margin-bottom: 2.5rem;">04 — Access</div>
-  <h2 class="cta-headline reveal">Activate<br>XEN</h2>
-  <p class="cta-sub reveal reveal-delay-1">XEN operates in limited deployment. Leave your address and we will reach you — not a drip sequence, not a newsletter. A single signal when access opens.</p>
-  <form class="cta-email-form reveal reveal-delay-2" onsubmit="handleForm(event)">
-    <input class="cta-input" type="email" name="email" placeholder="your@address.com" required aria-label="Email address">
-    <button class="cta-submit" type="submit">Request Access</button>
-  </form>
-  <p class="cta-note reveal reveal-delay-3" id="form-note">No friction. One message. When ready.</p>
-</section>
-
-<!-- FOOTER -->
 <footer>
-  <span class="footer-mark">XEN</span>
-  <nav class="footer-links" aria-label="Footer navigation">
-    <a href="#about">Origin</a>
-    <a href="#capabilities">System</a>
-    <a href="#contact">Access</a>
-  </nav>
-  <span class="footer-copy">One Voice. All Systems. &copy; MMXXV</span>
+  <div class="footer-mark">XEN</div>
+  <div class="footer-copy">2026 — All systems running</div>
+  <ul class="footer-links">
+    <li><a href="#about">Origin</a></li>
+    <li><a href="#capabilities">Capabilities</a></li>
+    <li><a href="#systems">Systems</a></li>
+  </ul>
 </footer>
 
 <script>
-// ── PARTICLE DUST CANVAS ──
 (function() {
-  const canvas = document.getElementById('dust-canvas');
+  const canvas = document.getElementById('hero-canvas');
   const ctx = canvas.getContext('2d');
-  let W, H, particles, mouse = { x: -1000, y: -1000 };
-  const COUNT = 180;
-  const BRASS_R = 200, BRASS_G = 184, BRASS_B = 154;
+  let W, H, mouse = { x: 0, y: 0 };
+  let particles = [], lines = [];
+
+  const BRASS = 'rgba(200,184,154,';
+  const PARTICLE_COUNT = 180;
+  const LINE_COUNT = 24;
 
   function resize() {
     W = canvas.width = canvas.offsetWidth;
     H = canvas.height = canvas.offsetHeight;
   }
 
-  function rand(a, b) { return a + Math.random() * (b - a); }
-
-  function Particle() {
-    this.reset = function(fullReset) {
-      this.x = rand(0, W);
-      this.y = fullReset ? rand(0, H) : rand(-20, H + 20);
-      this.baseX = this.x;
-      this.baseY = this.y;
-      this.size = rand(0.4, 1.8);
-      this.speedX = rand(-0.18, 0.18);
-      this.speedY = rand(-0.22, -0.05);
-      this.alpha = rand(0.08, 0.55);
-      this.alphaSpeed = rand(0.002, 0.006) * (Math.random() < 0.5 ? 1 : -1);
-      this.alphaMin = rand(0.04, 0.15);
-      this.alphaMax = rand(0.3, 0.7);
-    };
-    this.reset(true);
-
-    this.update = function() {
-      // drift
-      this.x += this.speedX;
-      this.y += this.speedY;
-
-      // alpha pulse
-      this.alpha += this.alphaSpeed;
-      if (this.alpha > this.alphaMax) { this.alpha = this.alphaMax; this.alphaSpeed *= -1; }
-      if (this.alpha < this.alphaMin) { this.alpha = this.alphaMin; this.alphaSpeed *= -1; }
-
-      // mouse repulsion
-      const dx = this.x - mouse.x;
-      const dy = this.y - mouse.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < 100) {
-        const force = (100 - dist) / 100;
-        this.x += (dx / dist) * force * 2.8;
-        this.y += (dy / dist) * force * 2.8;
-      }
-
-      // wrap
-      if (this.y < -10) { this.reset(false); this.y = H + 10; }
-      if (this.x < -10) this.x = W + 10;
-      if (this.x > W + 10) this.x = -10;
-    };
-
-    this.draw = function() {
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${BRASS_R},${BRASS_G},${BRASS_B},${this.alpha})`;
-      ctx.fill();
-    };
-  }
-
-  function init() {
+  function initParticles() {
     particles = [];
-    for (let i = 0; i < COUNT; i++) {
-      particles.push(new Particle());
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      particles.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.2 + 0.2,
+        vx: (Math.random() - 0.5) * 0.15,
+        vy: (Math.random() - 0.5) * 0.15,
+        a: Math.random() * 0.35 + 0.05
+      });
     }
   }
 
-  // Slow radial lines from center
-  let lineAngle = 0;
-  const LINES = 8;
-
-  function drawAtmosphere() {
-    // Very faint radial glow at center
-    const cx = W * 0.5, cy = H * 0.42;
-    const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(W, H) * 0.48);
-    grd.addColorStop(0, `rgba(${BRASS_R},${BRASS_G},${BRASS_B},0.04)`);
-    grd.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = grd;
-    ctx.fillRect(0, 0, W, H);
-
-    // Fine grid
-    ctx.strokeStyle = `rgba(${BRASS_R},${BRASS_G},${BRASS_B},0.025)`;
-    ctx.lineWidth = 0.5;
-    const step = 60;
-    for (let x = 0; x < W; x += step) {
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  function initLines() {
+    lines = [];
+    for (let i = 0; i < LINE_COUNT; i++) {
+      lines.push({
+        angle: (i / LINE_COUNT) * Math.PI * 2,
+        speed: (Math.random() - 0.5) * 0.0004,
+        len: Math.random() * 0.3 + 0.2
+      });
     }
-    for (let y = 0; y < H; y += step) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-    }
-
-    // Rotating radial lines
-    lineAngle += 0.0006;
-    ctx.save();
-    ctx.translate(cx, cy);
-    for (let i = 0; i < LINES; i++) {
-      const a = lineAngle + (i / LINES) * Math.PI * 2;
-      const len = Math.min(W, H) * 0.52;
-      const grad = ctx.createLinearGradient(0, 0, Math.cos(a) * len, Math.sin(a) * len);
-      grad.addColorStop(0, `rgba(${BRASS_R},${BRASS_G},${BRASS_B},0.07)`);
-      grad.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.strokeStyle = grad;
-      ctx.lineWidth = 0.6;
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(Math.cos(a) * len, Math.sin(a) * len);
-      ctx.stroke();
-    }
-    ctx.restore();
   }
 
-  function loop() {
+  function draw() {
     ctx.clearRect(0, 0, W, H);
-    drawAtmosphere();
-    particles.forEach(p => { p.update(); p.draw(); });
-    requestAnimationFrame(loop);
+    const cx = W / 2 + (mouse.x - 0.5) * 30;
+    const cy = H / 2 + (mouse.y - 0.5) * 30;
+
+    lines.forEach(l => {
+      l.angle += l.speed;
+      const maxR = Math.sqrt(W * W + H * H) * l.len;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(l.angle) * maxR, cy + Math.sin(l.angle) * maxR);
+      ctx.strokeStyle = BRASS + '0.06)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    });
+
+    particles.forEach(p => {
+      p.x += p.vx + (mouse.x - 0.5) * 0.08;
+      p.y += p.vy + (mouse.y - 0.5) * 0.08;
+      if (p.x < 0) p.x = W;
+      if (p.x > W) p.x = 0;
+      if (p.y < 0) p.y = H;
+      if (p.y > H) p.y = 0;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = BRASS + p.a + ')';
+      ctx.fill();
+    });
+
+    requestAnimationFrame(draw);
   }
 
-  window.addEventListener('resize', () => { resize(); init(); });
-  canvas.addEventListener('mousemove', e => {
-    const r = canvas.getBoundingClientRect();
-    mouse.x = e.clientX - r.left;
-    mouse.y = e.clientY - r.top;
+  window.addEventListener('resize', () => { resize(); initParticles(); });
+  window.addEventListener('mousemove', e => {
+    mouse.x = e.clientX / window.innerWidth;
+    mouse.y = e.clientY / window.innerHeight;
   });
-  canvas.addEventListener('mouseleave', () => { mouse.x = -1000; mouse.y = -1000; });
-
-  // Touch support
-  canvas.addEventListener('touchmove', e => {
-    const r = canvas.getBoundingClientRect();
-    const t = e.touches[0];
-    mouse.x = t.clientX - r.left;
-    mouse.y = t.clientY - r.top;
-  }, { passive: true });
 
   resize();
-  init();
-  loop();
+  initParticles();
+  initLines();
+  draw();
 })();
 
-// ── INTERSECTION OBSERVER REVEALS ──
 (function() {
-  const els = document.querySelectorAll('.reveal');
-  const obs = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add('visible');
-        obs.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-  els.forEach(el => obs.observe(el));
-})();
-
-// ── FORM HANDLER ──
-function handleForm(e) {
-  e.preventDefault();
-  const note = document.getElementById('form-note');
-  const input = e.target.querySelector('input');
-  const btn   = e.target.querySelector('button');
-  btn.textContent = 'Received';
-  btn.style.background = 'rgba(200,184,154,0.3)';
-  btn.style.color = '#F0EDE8';
-  btn.disabled = true;
-  input.disabled = true;
-  note.textContent = 'Signal logged. XEN will reach you directly.';
-  note.style.color = '#C8B89A';
-}
-
-// ── PARALLAX WORDMARK ──
-(function() {
-  const wm = document.querySelector('.hero-wordmark');
-  if (!wm) return;
-  let ticking = false;
+  const wm = document.getElementById('hero-wordmark');
   window.addEventListener('scroll', () => {
-    if (!ticking) {
-      requestAnimationFrame(() => {
-        const y = window.scrollY;
-        wm.style.transform = `translateY(${y * 0.25}px)`;
-        wm.style.opacity = Math.max(0, 1 - y / (window.innerHeight * 0.6));
-        ticking = false;
-      });
-      ticking = true;
-    }
-  }, { passive: true });
+    const t = Math.min(window.scrollY / window.innerHeight, 1);
+    wm.style.opacity = 1 - t * 1.4;
+    wm.style.transform = 'translateY(' + (window.scrollY * 0.25) + 'px)';
+  });
+})();
+
+(function() {
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+})();
+
+(function() {
+  const form = document.getElementById('access-form');
+  const btn = document.getElementById('cta-btn');
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    btn.textContent = 'Transmitted';
+    btn.classList.add('sent');
+    btn.disabled = true;
+  });
 })();
 </script>
-
 </body>
 </html>
