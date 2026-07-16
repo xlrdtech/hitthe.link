@@ -52,6 +52,14 @@
   .score{display:flex;align-items:center;justify-content:space-between;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 15px;margin:14px 0 4px}
   .score b{font-family:var(--mono);font-size:19px;color:var(--green)}
   .score span{font-size:12px;color:var(--dim)}
+  .spec{background:var(--panel);border:1px dashed rgba(255,191,71,.5);border-radius:11px;padding:14px 15px;margin-bottom:10px}
+  .spectag{display:inline-block;font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.1em;padding:2px 8px;border-radius:5px;background:rgba(255,191,71,.12);color:var(--amber);text-transform:uppercase}
+  .spec h3{font-size:15px;font-weight:600;margin:9px 0 3px;letter-spacing:-.01em}
+  .spec .req{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-bottom:8px}
+  .spec .body{font-size:12.5px;line-height:1.55;color:var(--dim)}
+  .spec .canon{font-size:12.5px;line-height:1.55;color:var(--ink);margin-top:8px}
+  .tagrow{margin-top:9px;display:flex;gap:6px;flex-wrap:wrap}
+  .ttag{font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:6px;background:var(--panel2);border:1px solid var(--line);color:var(--accent)}
   .foot{margin-top:26px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--faint);line-height:1.6}
   .foot a{color:var(--accent);text-decoration:none;font-weight:600}
   .host{font-family:var(--mono);font-size:11px;color:var(--dim)}
@@ -73,6 +81,9 @@
   <h2>Comms + Infra State</h2>
   <div class="score"><span>Comms legs</span><b id="score">—</b></div>
   <div class="grid" id="grid"></div>
+
+  <h2>Next Design Goal</h2>
+  <div id="goals"></div>
 
   <div class="foot">
     Bridges host: <span class="host" id="host">—</span><br>
@@ -105,6 +116,18 @@ function render(d){
     el.innerHTML='<div class="cn"><span class="ic '+k+'" style="margin:0"></span>'+esc(n.name)+'</div>'+
       '<div class="cnote">'+esc(n.note)+'</div>';
     g.appendChild(el);
+  });
+  const gg=document.getElementById('goals');gg.innerHTML='';
+  (d.design_goals||[]).forEach(n=>{
+    const el=document.createElement('div');el.className='spec';
+    const tags=(n.tags||[]).map(t=>'<span class="ttag">['+esc(t)+']</span>').join('');
+    el.innerHTML='<span class="spectag">'+(n.spec?'SPEC · NOT YET BUILT':'GOAL')+'</span>'+
+      '<h3>'+esc(n.title)+'</h3>'+
+      '<div class="req">requested '+esc(n.requested||'')+'</div>'+
+      '<div class="body">'+esc(n.goal)+'</div>'+
+      '<div class="canon">Canonical state → '+esc(n.canonical_state)+'</div>'+
+      (tags?'<div class="tagrow">'+tags+'</div>':'')+'';
+    gg.appendChild(el);
   });
 }
 function load(){fetch('voicemap.json?t='+Date.now()).then(r=>r.json()).then(render).catch(()=>{});}
