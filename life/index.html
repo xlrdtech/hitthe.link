@@ -65,6 +65,11 @@
   </div>
 
   <div class="card">
+    <h2>builds / ships <span style="color:var(--dim);font-weight:400;text-transform:none;letter-spacing:0">· /xen/live.json</span></h2>
+    <div class="feed" id="buildsFeed"><div class="fe"><span class="m" style="color:var(--dim)">reading /xen/live.json…</span></div></div>
+  </div>
+
+  <div class="card">
     <h2>live feed <span style="color:var(--dim);font-weight:400;text-transform:none;letter-spacing:0">· omnimind /events</span></h2>
     <div class="feed" id="feed"><div class="fe"><span class="m" style="color:var(--dim)">waiting for events…</span></div></div>
   </div>
@@ -101,6 +106,34 @@
     }catch(err){ setConn(false); setTimeout(function(){connect(url);},4000); }
   }
   connect(SRC);
+})();
+
+/* ══════ builds ledger — fetch /xen/live.json, render by_capability "builds" ══════ */
+(function(){
+  var box=document.getElementById('buildsFeed');
+  async function loadBuilds(){
+    try{
+      var r=await fetch('/xen/live.json?t='+Date.now(),{cache:'no-store'});
+      if(!r.ok) return;
+      var d=await r.json();
+      var caps=d.by_capability||[];
+      var b=null;
+      for(var i=0;i<caps.length;i++){ if(caps[i].tag==='builds'){ b=caps[i]; break; } }
+      box.innerHTML='';
+      var recent=(b&&b.recent)||[];
+      if(!recent.length){ box.innerHTML='<div class="fe"><span class="m" style="color:var(--dim)">no builds yet</span></div>'; return; }
+      recent.forEach(function(e){
+        var el=document.createElement('div'); el.className='fe';
+        var t=(e.ts||'').slice(0,10);
+        el.innerHTML='<span class="t"></span><span class="m"></span>';
+        el.querySelector('.t').textContent=t;
+        el.querySelector('.m').textContent=String(e.text||'').slice(0,240);
+        box.appendChild(el);
+      });
+    }catch(_){ /* silent — degrades gracefully */ }
+  }
+  loadBuilds();
+  setInterval(loadBuilds,15000);
 })();
 </script>
 </body>
