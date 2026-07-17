@@ -1,5 +1,5 @@
 /* desk — minimal offline shell cache. Bump CACHE on each ship to invalidate. */
-const CACHE = 'desk-v1';
+const CACHE = 'desk-v2';
 const SHELL = [
   '/desk/',
   '/desk/index.html',
