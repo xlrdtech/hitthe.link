@@ -2,49 +2,812 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Xenphone OS — iOS 27 · dark</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <title>XOS — Xen Phone OS</title>
+  <meta name="description" content="XOS — the Xen phone-OS surface. Live comms, voice, and bridges on one canonical screen." />
 
-  <!-- qi 2026-05-17 8672: per-subpage favicon canon. Each subdir under
-       hitthe.link binds its own <link rel="icon"> so browsers use page-specific
-       icons in tabs and home-screen adds. Source = Cloudinary brand asset
-       referenced in /site.webmanifest. Replace with /_shared/brand-icon.* if
-       a local copy is uploaded. -->
-  <link rel="icon" type="image/svg+xml" href="icon.svg" />
-  <link rel="shortcut icon" type="image/svg+xml" href="icon.svg" />
-  <link rel="apple-touch-icon" href="icon.svg" />
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#000000" />
+  <!-- Self-contained inline SVG favicon (data URI) — CSP-safe, no external asset -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2307090d'/%3E%3Cpath d='M20 20 L44 44 M44 20 L20 44' stroke='%2338e1c6' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2307090d'/%3E%3Cpath d='M20 20 L44 44 M44 20 L20 44' stroke='%2338e1c6' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <meta name="theme-color" content="#07090d" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Xenphone OS" />
+  <meta name="apple-mobile-web-app-title" content="XOS" />
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&display=swap" rel="stylesheet" />
+  <style>
+    /* ============================================================
+       XOS — Xen Phone OS. One self-contained file. No external deps.
+       Committed single dark world: a phone lock screen is a dark object.
+       Fonts: system-UI (phone vernacular, CSP-safe) + mono for data.
+       ============================================================ */
+    :root{
+      --ground:#07090d;      /* near-black, faint blue-cyan bias */
+      --frame:#0a0d12;
+      --panel:#10151c;
+      --panel-2:#131a23;
+      --hair:#1c2430;
+      --hair-soft:#161d27;
+      --ink:#e8edf4;
+      --ink-mid:#b6c1d0;
+      --muted:#8b98ab;
+      --faint:#5c6879;
+      --accent:#38e1c6;      /* signal cyan — the alive dot */
+      --accent-deep:#159c8a;
+      --accent-glow:rgba(56,225,198,.18);
+      --good:#3ddc84;
+      --down:#ff5b6e;
+      --warn:#ffb84d;
+      --violet:#9d8bff;
+      --sky:#5ac8ff;
+      --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      --mono:"SF Mono",ui-monospace,"Cascadia Mono","Roboto Mono",Menlo,Consolas,monospace;
+      --r-frame:46px;
+      --r-panel:22px;
+      --r-app:15px;
+    }
 
-  <link rel="stylesheet" href="styles.css" />
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+    html,body{height:100%;}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--ink);
+      background:
+        radial-gradient(120% 90% at 50% -10%, #0e1622 0%, #07090d 46%, #05070a 100%);
+      min-height:100dvh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px 16px;
+      overflow-x:hidden;
+      -webkit-font-smoothing:antialiased;
+      text-rendering:optimizeLegibility;
+    }
+
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      background:radial-gradient(40% 30% at 50% 40%, rgba(56,225,198,.06), transparent 70%);
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .stage{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:18px;}
+    .wordmark{
+      display:flex;align-items:center;gap:10px;
+      font-family:var(--mono);
+      font-size:12px;letter-spacing:.34em;text-transform:uppercase;
+      color:var(--muted);
+      user-select:none;
+    }
+    .wordmark .glyph{color:var(--accent);font-weight:700;letter-spacing:0;font-size:15px;text-shadow:0 0 14px var(--accent-glow);}
+    .wordmark .live{display:inline-flex;align-items:center;gap:6px;color:var(--faint);letter-spacing:.2em;}
+    .wordmark .dot{
+      width:7px;height:7px;border-radius:50%;background:var(--accent);
+      box-shadow:0 0 10px var(--accent), 0 0 3px var(--accent);
+      animation:breathe 2.6s ease-in-out infinite;
+    }
+    @keyframes breathe{0%,100%{opacity:.5;transform:scale(.82);}50%{opacity:1;transform:scale(1);}}
+
+    /* ============================ DEVICE FRAME ============================ */
+    .device{
+      position:relative;
+      width:min(400px, 92vw);
+      aspect-ratio:400 / 848;
+      border-radius:var(--r-frame);
+      background:linear-gradient(160deg,#1a2129,#0a0e13 40%,#111721);
+      padding:11px;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,.06) inset,
+        0 0 0 2px #05070a,
+        0 40px 90px -30px rgba(0,0,0,.9),
+        0 0 70px -20px rgba(56,225,198,.10);
+    }
+    .device::before,.device::after{
+      content:"";position:absolute;left:-3px;width:3px;border-radius:3px;
+      background:linear-gradient(180deg,#20272f,#0c1015);
+    }
+    .device::before{top:132px;height:56px;}
+    .device::after{top:200px;height:38px;}
+    .power-btn{position:absolute;right:-3px;top:172px;width:3px;height:74px;border-radius:3px;background:linear-gradient(180deg,#20272f,#0c1015);}
+
+    .screen{
+      position:relative;
+      width:100%;height:100%;
+      border-radius:calc(var(--r-frame) - 11px);
+      overflow:hidden;
+      background:var(--ground);
+      isolation:isolate;
+    }
+
+    #aura{position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:.9;}
+    .screen-wash{
+      position:absolute;inset:0;z-index:1;pointer-events:none;
+      background:
+        radial-gradient(90% 55% at 50% 8%, rgba(56,225,198,.10), transparent 60%),
+        linear-gradient(180deg, rgba(7,9,13,.1) 0%, rgba(7,9,13,.55) 62%, rgba(5,7,10,.9) 100%);
+    }
+
+    /* ---------- status bar ---------- */
+    .statusbar{
+      position:absolute;top:0;left:0;right:0;z-index:30;
+      height:52px;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:0 26px;
+      font-family:var(--mono);
+      font-size:14px;font-weight:600;
+      color:var(--ink);
+      letter-spacing:.02em;
+      pointer-events:none;
+    }
+    .statusbar .clock{font-variant-numeric:tabular-nums;padding-top:4px;}
+    .statusbar .sysicons{display:flex;align-items:center;gap:7px;font-size:13px;padding-top:4px;}
+    .sig{display:flex;align-items:flex-end;gap:2px;height:11px;}
+    .sig i{width:3px;background:var(--ink);border-radius:1px;display:block;}
+    .sig i:nth-child(1){height:4px;}
+    .sig i:nth-child(2){height:6px;}
+    .sig i:nth-child(3){height:8px;}
+    .sig i:nth-child(4){height:11px;}
+    .sig i.off{background:var(--faint);}
+    .batt{display:flex;align-items:center;gap:3px;}
+    .batt .shell{width:23px;height:12px;border:1.4px solid var(--ink);border-radius:3px;padding:1.5px;position:relative;}
+    .batt .shell::after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:4px;background:var(--ink);border-radius:0 1px 1px 0;}
+    .batt .fill{height:100%;width:78%;background:var(--accent);border-radius:1px;}
+    .batt .pct{font-size:12px;color:var(--ink-mid);}
+
+    /* dynamic island */
+    .island{
+      position:absolute;top:12px;left:50%;transform:translateX(-50%);
+      z-index:40;
+      height:30px;min-width:112px;
+      background:#000;border-radius:16px;
+      display:flex;align-items:center;justify-content:center;gap:8px;
+      padding:0 12px;
+      transition:min-width .4s cubic-bezier(.2,.9,.2,1), background .3s;
+      cursor:pointer;
+      box-shadow:0 0 0 1px rgba(255,255,255,.04);
+    }
+    .island .island-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:breathe 2.4s ease-in-out infinite;}
+    .island .island-text{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.08em;white-space:nowrap;opacity:0;max-width:0;overflow:hidden;transition:opacity .35s .1s, max-width .4s;}
+    .island.wide{min-width:210px;background:#050807;}
+    .island.wide .island-text{opacity:1;max-width:160px;}
+
+    /* ============================ SCREENS ============================ */
+    .home{
+      position:absolute;inset:0;z-index:10;
+      display:flex;flex-direction:column;
+      padding:66px 22px 0;
+      transition:opacity .35s ease, transform .4s cubic-bezier(.2,.9,.2,1), filter .4s;
+    }
+    .home.dimmed{opacity:.35;transform:scale(.94);filter:blur(3px);pointer-events:none;}
+
+    .lockhead{text-align:center;margin-top:6px;margin-bottom:14px;user-select:none;}
+    .lockhead .date{font-family:var(--mono);font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);opacity:.85;}
+    .lockhead .bigclock{
+      font-size:70px;font-weight:250;letter-spacing:-.02em;line-height:1;margin-top:8px;
+      font-variant-numeric:tabular-nums;
+      color:var(--ink);
+      text-shadow:0 4px 40px rgba(56,225,198,.14);
+    }
+    .lockhead .status-line{
+      margin-top:12px;
+      display:inline-flex;align-items:center;gap:8px;
+      font-family:var(--mono);font-size:12px;color:var(--ink-mid);
+      background:rgba(16,21,28,.6);
+      border:1px solid var(--hair);
+      backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+      padding:6px 13px;border-radius:999px;
+    }
+    .lockhead .status-line .d{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 8px var(--good);}
+
+    .grid-wrap{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:22px;margin-top:6px;-webkit-overflow-scrolling:touch;}
+    .grid-wrap::-webkit-scrollbar{width:0;}
+    .app-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px 14px;padding-top:8px;}
+    .app{display:flex;flex-direction:column;align-items:center;gap:7px;background:none;border:none;padding:0;cursor:pointer;color:inherit;font-family:inherit;}
+    .app .tile{
+      width:100%;aspect-ratio:1;max-width:60px;
+      border-radius:var(--r-app);
+      display:flex;align-items:center;justify-content:center;
+      font-size:26px;position:relative;
+      background:linear-gradient(155deg, var(--t1,#1a2230), var(--t2,#0f141c));
+      box-shadow:0 1px 0 rgba(255,255,255,.06) inset, 0 8px 18px -10px rgba(0,0,0,.8);
+      transition:transform .18s cubic-bezier(.2,.9,.2,1), box-shadow .18s;
+      border:1px solid rgba(255,255,255,.04);
+    }
+    .app:active .tile{transform:scale(.9);}
+    .app:focus-visible .tile{outline:2px solid var(--accent);outline-offset:3px;}
+    .app .tile .badge{
+      position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 5px;
+      background:var(--down);color:#fff;
+      font-family:var(--mono);font-size:11px;font-weight:700;
+      border-radius:999px;display:flex;align-items:center;justify-content:center;
+      border:2px solid var(--ground);box-shadow:0 0 10px rgba(255,91,110,.5);
+    }
+    .app .tile .status{position:absolute;bottom:5px;right:5px;width:8px;height:8px;border-radius:50%;border:1.5px solid rgba(0,0,0,.4);}
+    .app .label{font-size:11.5px;color:var(--ink-mid);letter-spacing:.01em;text-align:center;line-height:1.1;}
+
+    .dock{
+      margin:6px 0 8px;
+      display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
+      padding:12px 12px;
+      background:rgba(18,24,33,.5);
+      border:1px solid var(--hair-soft);
+      border-radius:26px;
+      backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    }
+    .dock .app .label{display:none;}
+    .dock .app .tile{max-width:58px;}
+
+    .home-indicator{
+      position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:50;
+      width:128px;height:5px;border-radius:3px;background:rgba(232,237,244,.85);cursor:pointer;
+    }
+    .home-indicator:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+
+    /* ============================ APP PANE ============================ */
+    .pane{
+      position:absolute;inset:0;z-index:20;
+      background:linear-gradient(180deg,#0a0e13 0%, #07090d 100%);
+      transform:translateX(100%);
+      transition:transform .4s cubic-bezier(.22,.9,.24,1);
+      display:flex;flex-direction:column;will-change:transform;
+    }
+    .pane.open{transform:translateX(0);}
+    .pane-head{
+      flex:0 0 auto;padding:56px 20px 14px;
+      display:flex;align-items:center;gap:12px;
+      border-bottom:1px solid var(--hair-soft);
+      background:linear-gradient(180deg, rgba(16,21,28,.7), rgba(10,14,19,0));
+    }
+    .pane-head .back{
+      display:inline-flex;align-items:center;gap:4px;
+      background:none;border:none;color:var(--accent);cursor:pointer;
+      font-family:var(--sans);font-size:16px;padding:6px 6px 6px 0;margin:-6px 0;
+    }
+    .pane-head .back:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px;}
+    .pane-head .back .chev{font-size:22px;line-height:1;margin-top:-2px;}
+    .pane-head .titles{margin-left:2px;}
+    .pane-head .titles .eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin:0;}
+    .pane-head .titles h1{margin:2px 0 0;font-size:21px;font-weight:600;letter-spacing:-.01em;}
+    .pane-head .app-emoji{margin-left:auto;font-size:24px;opacity:.85;}
+    .pane-body{flex:1;overflow-y:auto;overflow-x:hidden;padding:16px 18px 34px;-webkit-overflow-scrolling:touch;}
+    .pane-body::-webkit-scrollbar{width:0;}
+
+    .card{background:var(--panel);border:1px solid var(--hair);border-radius:var(--r-panel);padding:16px;margin-bottom:12px;}
+    .card.tight{padding:0;overflow:hidden;}
+    .eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+
+    .row{display:flex;align-items:center;gap:13px;padding:13px 16px;border-bottom:1px solid var(--hair-soft);}
+    .row:last-child{border-bottom:none;}
+    .avatar{width:44px;height:44px;flex:0 0 44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600;color:#07090d;position:relative;}
+    .avatar .net{position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;background:var(--panel);border:2px solid var(--panel);display:flex;align-items:center;justify-content:center;font-size:9px;}
+    .row .meta{flex:1;min-width:0;}
+    .row .meta .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
+    .row .meta .name{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .row .meta .time{font-family:var(--mono);font-size:11px;color:var(--muted);flex:0 0 auto;}
+    .row .meta .preview{font-size:13.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+    .row .unread{width:9px;height:9px;border-radius:50%;background:var(--accent);flex:0 0 auto;box-shadow:0 0 8px var(--accent-glow);}
+
+    .bridge{display:flex;align-items:center;gap:13px;padding:14px 16px;border-bottom:1px solid var(--hair-soft);}
+    .bridge:last-child{border-bottom:none;}
+    .bridge .bico{width:38px;height:38px;flex:0 0 38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;background:var(--panel-2);border:1px solid var(--hair);}
+    .bridge .bmeta{flex:1;}
+    .bridge .bmeta .bn{font-weight:600;font-size:15px;}
+    .bridge .bmeta .bs{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:2px;letter-spacing:.02em;}
+    .pill{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;}
+    .pill .pd{width:7px;height:7px;border-radius:50%;}
+    .pill.up{background:rgba(61,220,132,.12);color:var(--good);}
+    .pill.up .pd{background:var(--good);box-shadow:0 0 8px var(--good);}
+    .pill.down{background:rgba(255,91,110,.12);color:var(--down);}
+    .pill.down .pd{background:var(--down);box-shadow:0 0 8px var(--down);}
+    .pill.warn{background:rgba(255,184,77,.12);color:var(--warn);}
+    .pill.warn .pd{background:var(--warn);}
+
+    .stat-strip{display:flex;gap:10px;margin-bottom:14px;}
+    .stat{flex:1;background:var(--panel);border:1px solid var(--hair);border-radius:16px;padding:13px 12px;text-align:center;}
+    .stat .num{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1;}
+    .stat .num.g{color:var(--good);}
+    .stat .num.r{color:var(--down);}
+    .stat .lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-top:7px;}
+
+    .voice-orb-wrap{display:flex;flex-direction:column;align-items:center;padding:26px 0 14px;}
+    .voice-orb{width:150px;height:150px;border-radius:50%;position:relative;background:radial-gradient(circle at 50% 40%, rgba(56,225,198,.35), rgba(56,225,198,.04) 62%, transparent 70%);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+    .voice-orb .core{width:78px;height:78px;border-radius:50%;background:linear-gradient(160deg,#164e48,#0c221f);border:1px solid rgba(56,225,198,.4);display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 0 30px rgba(56,225,198,.35), 0 0 0 1px rgba(56,225,198,.2) inset;}
+    .voice-orb .ring{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(56,225,198,.35);animation:pulse-ring 2.8s ease-out infinite;}
+    .voice-orb .ring:nth-child(2){animation-delay:1.4s;}
+    @keyframes pulse-ring{0%{transform:scale(.7);opacity:.8;}100%{transform:scale(1.25);opacity:0;}}
+    .voice-caption{text-align:center;margin-top:14px;}
+    .voice-caption .t{font-size:17px;font-weight:600;}
+    .voice-caption .s{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:5px;letter-spacing:.04em;}
+
+    .eq{display:flex;align-items:center;justify-content:center;gap:4px;height:40px;margin-top:20px;}
+    .eq i{width:4px;border-radius:2px;background:var(--accent);opacity:.85;animation:eq 1.1s ease-in-out infinite;}
+    .eq i:nth-child(1){animation-delay:0s;}.eq i:nth-child(2){animation-delay:.12s;}
+    .eq i:nth-child(3){animation-delay:.24s;}.eq i:nth-child(4){animation-delay:.36s;}
+    .eq i:nth-child(5){animation-delay:.48s;}.eq i:nth-child(6){animation-delay:.30s;}
+    .eq i:nth-child(7){animation-delay:.18s;}.eq i:nth-child(8){animation-delay:.06s;}
+    @keyframes eq{0%,100%{height:8px;}50%{height:34px;}}
+
+    .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:250px;margin:8px auto 0;}
+    .key{aspect-ratio:1;border-radius:50%;background:var(--panel-2);border:1px solid var(--hair);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink);cursor:pointer;font-family:inherit;transition:background .12s, transform .1s;}
+    .key:active{background:#1b232e;transform:scale(.94);}
+    .key:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+    .key .kn{font-size:24px;font-weight:400;line-height:1;}
+    .key .kl{font-family:var(--mono);font-size:8px;letter-spacing:.18em;color:var(--muted);margin-top:3px;min-height:9px;}
+    .call-display{text-align:center;font-size:26px;font-weight:300;letter-spacing:.04em;min-height:34px;margin:6px 0 16px;font-variant-numeric:tabular-nums;color:var(--ink);}
+    .call-btn{margin:20px auto 0;width:62px;height:62px;border-radius:50%;background:var(--good);border:none;display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;box-shadow:0 0 24px rgba(61,220,132,.4);}
+    .call-btn:focus-visible{outline:2px solid var(--ink);outline-offset:3px;}
+
+    .setrow{display:flex;align-items:center;gap:13px;padding:14px 16px;border-bottom:1px solid var(--hair-soft);}
+    .setrow:last-child{border-bottom:none;}
+    .setrow .si{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex:0 0 30px;}
+    .setrow .sl{flex:1;font-size:15px;}
+    .setrow .sv{font-family:var(--mono);font-size:12.5px;color:var(--muted);}
+    .toggle{width:44px;height:26px;border-radius:999px;background:var(--accent);position:relative;flex:0 0 44px;cursor:pointer;transition:background .2s;}
+    .toggle::after{content:"";position:absolute;top:2px;left:20px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.4);}
+    .toggle.off{background:var(--hair);}
+    .toggle.off::after{left:2px;}
+    .toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+    .linkout{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--hair);border-radius:16px;padding:15px 16px;margin-bottom:12px;color:var(--ink);text-decoration:none;transition:border-color .18s, background .18s;}
+    .linkout:active{background:var(--panel-2);}
+    .linkout:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+    .linkout .lo-ico{font-size:22px;}
+    .linkout .lo-meta{flex:1;}
+    .linkout .lo-meta .lo-t{font-weight:600;font-size:15px;}
+    .linkout .lo-meta .lo-s{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:3px;}
+    .linkout .lo-arrow{color:var(--accent);font-size:16px;}
+
+    .np{background:linear-gradient(150deg,#1c1830,#0f1220);border:1px solid #2a2440;border-radius:20px;padding:18px;margin-bottom:14px;}
+    .np .cover{width:100%;aspect-ratio:1;border-radius:14px;background:linear-gradient(135deg,#9d8bff,#5ac8ff 60%,#38e1c6);display:flex;align-items:center;justify-content:center;font-size:48px;margin-bottom:14px;box-shadow:0 12px 30px -12px rgba(157,139,255,.6);}
+    .np .tr{font-size:17px;font-weight:600;}
+    .np .ar{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:3px;}
+    .np .bar{height:4px;background:var(--hair);border-radius:2px;margin-top:14px;overflow:hidden;}
+    .np .bar span{display:block;height:100%;width:38%;background:linear-gradient(90deg,var(--violet),var(--accent));border-radius:2px;}
+    .np .times{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:6px;}
+
+    .note{font-size:12px;color:var(--muted);line-height:1.5;padding:2px 2px 0;}
+    .note b{color:var(--ink-mid);font-weight:600;}
+
+    @media (prefers-reduced-motion:reduce){
+      *{animation:none !important;transition:none !important;}
+    }
+    @media (max-height:720px){
+      .lockhead .bigclock{font-size:56px;}
+      body{padding:12px;}
+    }
+  </style>
 </head>
 <body>
-  <div id="root"></div>
+  <div class="stage">
+    <div class="wordmark">
+      <span class="glyph">✕</span><span>XOS</span>
+      <span class="live"><span class="dot"></span>live surface</span>
+    </div>
 
-  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+    <div class="device" role="application" aria-label="XOS phone operating system">
+      <span class="power-btn"></span>
+      <div class="screen">
+        <canvas id="aura" aria-hidden="true"></canvas>
+        <div class="screen-wash"></div>
 
-  <script type="text/babel" src="tweaks-panel.jsx"></script>
-  <script type="text/babel" src="ios-frame.jsx"></script>
-  <script type="text/babel" src="app.jsx"></script>
-  <script type="text/babel" src="xos-browser.jsx"></script>
+        <div class="island" id="island" role="status" aria-live="polite">
+          <span class="island-dot"></span>
+          <span class="island-text" id="islandText">Xen listening</span>
+        </div>
+
+        <div class="statusbar">
+          <span class="clock" id="sbClock">9:41</span>
+          <span class="sysicons">
+            <span class="sig" aria-label="signal"><i></i><i></i><i></i><i class="off"></i></span>
+            <span aria-label="wifi">📶</span>
+            <span class="batt"><span class="pct">78</span><span class="shell"><span class="fill"></span></span></span>
+          </span>
+        </div>
+
+        <!-- ============ HOME ============ -->
+        <div class="home" id="home">
+          <div class="lockhead">
+            <div class="date" id="lockDate">MONDAY · JUL 17</div>
+            <div class="bigclock" id="bigClock">9:41</div>
+            <div class="status-line"><span class="d"></span>Xen online · voice + comms nominal</div>
+          </div>
+
+          <div class="grid-wrap">
+            <div class="app-grid" id="appGrid"></div>
+          </div>
+
+          <div class="dock" id="dock"></div>
+        </div>
+
+        <!-- ============ APP PANE ============ -->
+        <div class="pane" id="pane" aria-hidden="true">
+          <div class="pane-head">
+            <button class="back" id="backBtn" aria-label="Back to home">
+              <span class="chev">‹</span><span>Home</span>
+            </button>
+            <div class="titles">
+              <div class="eyebrow" id="paneEyebrow">XOS</div>
+              <h1 id="paneTitle">App</h1>
+            </div>
+            <div class="app-emoji" id="paneEmoji">✕</div>
+          </div>
+          <div class="pane-body" id="paneBody"></div>
+        </div>
+
+        <div class="home-indicator" id="homeIndicator" role="button" aria-label="Return home" tabindex="0"></div>
+      </div>
+    </div>
+
+    <div class="wordmark" style="font-size:10px;letter-spacing:.28em;opacity:.6;">
+      hitthe.link / xos · one canonical tree
+    </div>
+  </div>
 
   <script>
-    // Register service worker for offline shell + asset cache (qi 2026-05-22 ultrathink xos 100%)
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("service-worker.js", { scope: "/xos/" }).catch(() => {});
-      });
+  (function(){
+    "use strict";
+
+    /* ---------- live clock ---------- */
+    var sbClock=document.getElementById('sbClock');
+    var bigClock=document.getElementById('bigClock');
+    var lockDate=document.getElementById('lockDate');
+    var DAYS=['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+    var MON=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    function tick(){
+      var n=new Date();
+      var h=n.getHours(), m=n.getMinutes();
+      var hh=((h%12)||12);
+      var mm=(m<10?'0':'')+m;
+      var t=hh+':'+mm;
+      sbClock.textContent=t;
+      bigClock.textContent=t;
+      lockDate.textContent=DAYS[n.getDay()]+' · '+MON[n.getMonth()]+' '+n.getDate();
     }
+    tick(); setInterval(tick,1000);
+
+    /* ---------- dynamic island cadence ---------- */
+    var island=document.getElementById('island');
+    var islandText=document.getElementById('islandText');
+    var islandStates=['Xen listening','SMS · dual-leg sent','Voice reply live','Bridges 5/7 green','Xen listening'];
+    var isi=0;
+    function cycleIsland(){
+      island.classList.add('wide');
+      islandText.textContent=islandStates[isi % islandStates.length];
+      isi++;
+      setTimeout(function(){ island.classList.remove('wide'); }, 2600);
+    }
+    setTimeout(cycleIsland, 1200);
+    setInterval(cycleIsland, 6500);
+    island.addEventListener('click', cycleIsland);
+
+    /* ============ AURA — live voice-signal canvas ============ */
+    var canvas=document.getElementById('aura');
+    var ctx=canvas.getContext('2d');
+    var W=0,H=0,DPR=Math.min(window.devicePixelRatio||1,2);
+    function resize(){
+      var r=canvas.getBoundingClientRect();
+      W=r.width; H=r.height;
+      canvas.width=Math.max(1,W*DPR); canvas.height=Math.max(1,H*DPR);
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+    }
+    var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+    var t=0, raf=null;
+    function draw(){
+      if(!W){resize();}
+      ctx.clearRect(0,0,W,H);
+      var cx=W*0.5, cy=H*0.30;
+      for(var k=0;k<3;k++){
+        var rr=(H*0.16)+k*(H*0.12)+Math.sin(t*0.9+k)*6;
+        ctx.beginPath();
+        ctx.arc(cx,cy,rr,0,Math.PI*2);
+        ctx.strokeStyle='rgba(56,225,198,'+(0.05-k*0.012)+')';
+        ctx.lineWidth=1;
+        ctx.stroke();
+      }
+      var baseY=H*0.62;
+      ctx.beginPath();
+      for(var x=0;x<=W;x+=6){
+        var y=baseY
+          + Math.sin(x*0.015 + t)*10
+          + Math.sin(x*0.006 - t*0.7)*16
+          + Math.sin(x*0.03 + t*1.6)*4;
+        if(x===0)ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      var g=ctx.createLinearGradient(0,0,W,0);
+      g.addColorStop(0,'rgba(56,225,198,0)');
+      g.addColorStop(0.5,'rgba(56,225,198,0.16)');
+      g.addColorStop(1,'rgba(90,200,255,0)');
+      ctx.strokeStyle=g; ctx.lineWidth=1.5; ctx.stroke();
+      t += reduce?0:0.02;
+      if(reduce){ return; }
+      raf=requestAnimationFrame(draw);
+    }
+    window.addEventListener('resize',resize);
+    setTimeout(function(){resize();draw();},60);
+    document.addEventListener('visibilitychange',function(){
+      if(document.hidden){ if(raf)cancelAnimationFrame(raf); }
+      else if(!reduce){ raf=requestAnimationFrame(draw); }
+    });
+
+    /* ============ APP REGISTRY ============ */
+    var APPS=[
+      {id:'messages', name:'Messages', emoji:'💬', t1:'#1f8f4e', t2:'#0d3d24', badge:4, render:renderMessages},
+      {id:'voice',    name:'Voice',    emoji:'🎙️', t1:'#155e56', t2:'#0a2622', render:renderVoice},
+      {id:'calls',    name:'Calls',    emoji:'📞', t1:'#2e9e57', t2:'#123f28', render:renderCalls},
+      {id:'bridges',  name:'Bridges',  emoji:'🌉', t1:'#1c3a5e', t2:'#0c1a2c', status:'warn', render:renderBridges},
+      {id:'appliance',name:'Appliance',emoji:'🖥️', t1:'#3a3560', t2:'#181630', render:renderAppliance},
+      {id:'studio',   name:'Studio',   emoji:'🎧', t1:'#6a3b8f', t2:'#2a1740', render:renderStudio},
+      {id:'settings', name:'Settings', emoji:'⚙️', t1:'#2a323d', t2:'#12171e', render:renderSettings},
+      {id:'canon',    name:'Canon',    emoji:'📜', t1:'#8a6a2a', t2:'#3a2c12', render:renderCanon}
+    ];
+    var DOCK=[
+      {emoji:'💬', t1:'#1f8f4e', t2:'#0d3d24', opens:'messages', name:'Messages'},
+      {emoji:'🎙️', t1:'#155e56', t2:'#0a2622', opens:'voice', name:'Voice'},
+      {emoji:'🌉', t1:'#1c3a5e', t2:'#0c1a2c', opens:'bridges', name:'Bridges'},
+      {emoji:'⚙️', t1:'#2a323d', t2:'#12171e', opens:'settings', name:'Settings'}
+    ];
+
+    function tileHTML(a){
+      var badge=a.badge?'<span class="badge">'+a.badge+'</span>':'';
+      var st='';
+      if(a.status==='warn') st='<span class="status" style="background:var(--warn);"></span>';
+      else if(a.status==='up') st='<span class="status" style="background:var(--good);"></span>';
+      return '<span class="tile" style="--t1:'+a.t1+';--t2:'+a.t2+'">'+a.emoji+badge+st+'</span>';
+    }
+
+    var grid=document.getElementById('appGrid');
+    var dock=document.getElementById('dock');
+    APPS.forEach(function(a){
+      var b=document.createElement('button');
+      b.className='app'; b.type='button';
+      b.setAttribute('aria-label',a.name);
+      b.innerHTML=tileHTML(a)+'<span class="label">'+a.name+'</span>';
+      b.addEventListener('click',function(){ openApp(a.id); });
+      grid.appendChild(b);
+    });
+    DOCK.forEach(function(a){
+      var b=document.createElement('button');
+      b.className='app'; b.type='button';
+      b.setAttribute('aria-label',a.name);
+      b.innerHTML=tileHTML(a);
+      b.addEventListener('click',function(){ openApp(a.opens); });
+      dock.appendChild(b);
+    });
+
+    /* ---------- pane open/close ---------- */
+    var home=document.getElementById('home');
+    var pane=document.getElementById('pane');
+    var paneBody=document.getElementById('paneBody');
+    var paneTitle=document.getElementById('paneTitle');
+    var paneEyebrow=document.getElementById('paneEyebrow');
+    var paneEmoji=document.getElementById('paneEmoji');
+    var APPMAP={}; APPS.forEach(function(a){ APPMAP[a.id]=a; });
+
+    function openApp(id){
+      var a=APPMAP[id]; if(!a) return;
+      paneTitle.textContent=a.name;
+      paneEmoji.textContent=a.emoji;
+      paneEyebrow.textContent='XOS · '+a.name.toUpperCase();
+      paneBody.innerHTML = a.render ? a.render() : '<div class="card">Coming online…</div>';
+      paneBody.scrollTop=0;
+      pane.classList.add('open');
+      pane.setAttribute('aria-hidden','false');
+      home.classList.add('dimmed');
+    }
+    function closeApp(){
+      pane.classList.remove('open');
+      pane.setAttribute('aria-hidden','true');
+      home.classList.remove('dimmed');
+    }
+    document.getElementById('backBtn').addEventListener('click',closeApp);
+    var hi=document.getElementById('homeIndicator');
+    hi.addEventListener('click',closeApp);
+    hi.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){e.preventDefault();closeApp();} });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape')closeApp(); });
+
+    /* ============ RENDERERS ============ */
+    function esc(s){return String(s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
+    function avatar(color,initials,net){
+      return '<span class="avatar" style="background:'+color+'">'+initials+(net?'<span class="net">'+net+'</span>':'')+'</span>';
+    }
+    function setRow(ico,label,val,st){
+      var right = st ? '<span class="pill '+(st==='up'?'up':st==='down'?'down':'warn')+'"><span class="pd"></span>'+(st==='up'?'up':st)+'</span>'
+                     : '<span class="sv">'+esc(val)+'</span>';
+      return '<div class="setrow"><span class="si" style="background:var(--panel-2)">'+ico+'</span><span class="sl">'+esc(label)+'</span>'+right+'</div>';
+    }
+    function setToggle(ico,label,on){
+      return '<div class="setrow"><span class="si" style="background:var(--panel-2)">'+ico+'</span><span class="sl">'+esc(label)+'</span>'+
+        '<span class="toggle'+(on?'':' off')+'" role="switch" aria-checked="'+on+'" tabindex="0"></span></div>';
+    }
+
+    function renderMessages(){
+      var msgs=[
+        {c:'#38e1c6',i:'Q',n:'qi',net:'📱',t:'now',p:'restest — reconnect both S26',u:true},
+        {c:'#5ac8ff',i:'X',n:'Xen · voice leg',net:'🎙️',t:'2m',p:'Dual-SMS fired · 8672 + 9009',u:true},
+        {c:'#9d8bff',i:'B',n:'Beeper Inbox',net:'🌉',t:'8m',p:'12 threads · all indexed',u:true},
+        {c:'#3ddc84',i:'A',n:'Anthony',net:'💚',t:'21m',p:'Sounds good, talk tomorrow',u:true},
+        {c:'#ffb84d',i:'H',n:'Hittl.ink feed',net:'🔗',t:'1h',p:'Ship live: /xos build stamped',u:false},
+        {c:'#ff8fb0',i:'L',n:'Lyn',net:'💬',t:'3h',p:'thread registered lowercase',u:false},
+        {c:'#8b98ab',i:'S',n:'Starlight VM',net:'🖥️',t:'5h',p:'host 14% · phantom alert cleared',u:false}
+      ];
+      var rows=msgs.map(function(m){
+        return '<div class="row">'+avatar(m.c,m.i,m.net)+
+          '<div class="meta"><div class="top"><span class="name">'+esc(m.n)+'</span><span class="time">'+m.t+'</span></div>'+
+          '<div class="preview">'+esc(m.p)+'</div></div>'+
+          (m.u?'<span class="unread"></span>':'')+'</div>';
+      }).join('');
+      return ''+
+        '<div class="stat-strip">'+
+          '<div class="stat"><div class="num g">7</div><div class="lbl">threads</div></div>'+
+          '<div class="stat"><div class="num">4</div><div class="lbl">unread</div></div>'+
+          '<div class="stat"><div class="num g">6</div><div class="lbl">networks</div></div>'+
+        '</div>'+
+        '<div class="eyebrow">Unified inbox · all channels</div>'+
+        '<div class="card tight">'+rows+'</div>'+
+        '<div class="note"><b>Omni-inbox.</b> Every channel folds into one thread list — SMS, iMessage, and all bridged networks, indexed live.</div>';
+    }
+
+    function renderVoice(){
+      return ''+
+        '<div class="voice-orb-wrap">'+
+          '<div class="voice-orb"><span class="ring"></span><span class="ring"></span><span class="core">🎙️</span></div>'+
+          '<div class="voice-caption"><div class="t">Xen is listening</div><div class="s">barge-in enabled · one voice</div></div>'+
+          '<div class="eq"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>'+
+        '</div>'+
+        '<div class="eyebrow" style="margin-top:20px">Signal path</div>'+
+        '<div class="card tight">'+
+          setRow('🎧','Input · Apple STT','armed','up')+
+          setRow('🧠','Brain · one pane','','up')+
+          setRow('🔊','Output · say worker','','up')+
+          setRow('📡','Dual-SMS legs','8672 · 9009','')+
+        '</div>'+
+        '<div class="note"><b>Voice-first.</b> Every reply ships as voice plus dual-SMS plus vision, in parallel — short spoken lines, never a bottleneck.</div>';
+    }
+
+    function renderCalls(){
+      var keys=[['1',''],['2','ABC'],['3','DEF'],['4','GHI'],['5','JKL'],['6','MNO'],['7','PQRS'],['8','TUV'],['9','WXYZ'],['✳',''],['0','+'],['#','']];
+      var kp=keys.map(function(k){return '<button class="key" type="button" data-k="'+k[0]+'"><span class="kn">'+k[0]+'</span><span class="kl">'+k[1]+'</span></button>';}).join('');
+      var recents=[
+        {c:'#3ddc84',i:'Q',n:'qi',t:'incoming · 4m',w:'📞'},
+        {c:'#5ac8ff',i:'X',n:'Xen voice line',t:'answered · 1h',w:'🎙️'},
+        {c:'#ffb84d',i:'?',n:'+1 470 369 6463',t:'missed · 3h',w:'📵'}
+      ];
+      var rc=recents.map(function(r){
+        return '<div class="row">'+avatar(r.c,r.i,r.w)+'<div class="meta"><div class="top"><span class="name">'+esc(r.n)+'</span></div><div class="preview">'+esc(r.t)+'</div></div></div>';
+      }).join('');
+      return ''+
+        '<div class="call-display" id="callDisplay"></div>'+
+        '<div class="keypad">'+kp+'</div>'+
+        '<div style="text-align:center"><button class="call-btn" type="button" aria-label="Call">📞</button></div>'+
+        '<div class="eyebrow" style="margin-top:24px">Recents</div>'+
+        '<div class="card tight">'+rc+'</div>';
+    }
+
+    function renderBridges(){
+      var bridges=[
+        {ico:'✈️',n:'Telegram',lat:'42ms · synced',s:'up'},
+        {ico:'🎮',n:'Discord',lat:'31ms · synced',s:'up'},
+        {ico:'💼',n:'Slack',lat:'58ms · synced',s:'up'},
+        {ico:'📘',n:'Meta / Messenger',lat:'relogin required',s:'up'},
+        {ico:'📧',n:'Gmail',lat:'88ms · synced',s:'up'},
+        {ico:'💚',n:'WhatsApp',lat:'QR relink needed',s:'down'},
+        {ico:'💬',n:'Google Messages',lat:'BAD_CRED',s:'down'}
+      ];
+      var up=bridges.filter(function(b){return b.s==='up';}).length;
+      var dn=bridges.length-up;
+      var rows=bridges.map(function(b){
+        var pill=b.s==='up'
+          ? '<span class="pill up"><span class="pd"></span>up</span>'
+          : '<span class="pill down"><span class="pd"></span>down</span>';
+        return '<div class="bridge"><span class="bico">'+b.ico+'</span>'+
+          '<div class="bmeta"><div class="bn">'+esc(b.n)+'</div><div class="bs">'+esc(b.lat)+'</div></div>'+pill+'</div>';
+      }).join('');
+      return ''+
+        '<div class="stat-strip">'+
+          '<div class="stat"><div class="num g">'+up+'</div><div class="lbl">green</div></div>'+
+          '<div class="stat"><div class="num r">'+dn+'</div><div class="lbl">down</div></div>'+
+          '<div class="stat"><div class="num">'+bridges.length+'</div><div class="lbl">legs</div></div>'+
+        '</div>'+
+        '<div class="eyebrow">Matrix bridge fabric</div>'+
+        '<div class="card tight">'+rows+'</div>'+
+        '<div class="note"><b>Synapse live on M4.</b> Down legs need a human relogin (WhatsApp QR, Google Messages creds) — server-side, no data lost. Beside is source of truth.</div>';
+    }
+
+    function renderAppliance(){
+      return ''+
+        '<a class="linkout" href="/xen/appliance/" target="_blank" rel="noopener">'+
+          '<span class="lo-ico">🖥️</span><div class="lo-meta"><div class="lo-t">Open Appliance</div><div class="lo-s">/xen/appliance/ · live console</div></div><span class="lo-arrow">↗</span>'+
+        '</a>'+
+        '<a class="linkout" href="/xen/" target="_blank" rel="noopener">'+
+          '<span class="lo-ico">✕</span><div class="lo-meta"><div class="lo-t">Xen build feed</div><div class="lo-s">/xen/ · manifest → ship, timed</div></div><span class="lo-arrow">↗</span>'+
+        '</a>'+
+        '<div class="eyebrow" style="margin-top:16px">Stack at a glance</div>'+
+        '<div class="card tight">'+
+          setRow('💾','One canonical tree','M4 only','')+
+          setRow('⚡','Voice-OUT :4441','node@20','up')+
+          setRow('🧩','MCP hub :23375','no-auth','up')+
+          setRow('💵','Stack cost','$104 / mo','')+
+        '</div>'+
+        '<div class="note"><b>One brain, many hands.</b> Xen lives only on M4; the mesh is nerves, boxes are limbs — never off the Mac.</div>';
+    }
+
+    function renderStudio(){
+      return ''+
+        '<div class="np">'+
+          '<div class="cover">🎵</div>'+
+          '<div class="tr">Signal / Noise</div>'+
+          '<div class="ar">XLRD999 · generated · Suno</div>'+
+          '<div class="bar"><span></span></div>'+
+          '<div class="times"><span>1:14</span><span>-1:52</span></div>'+
+        '</div>'+
+        '<a class="linkout" href="https://suno.com" target="_blank" rel="noopener">'+
+          '<span class="lo-ico">🎧</span><div class="lo-meta"><div class="lo-t">Open Studio</div><div class="lo-s">Suno · compose + generate</div></div><span class="lo-arrow">↗</span>'+
+        '</a>'+
+        '<div class="eyebrow" style="margin-top:16px">Recent generations</div>'+
+        '<div class="card tight">'+
+          '<div class="row">'+avatar('#9d8bff','▶','🎵')+'<div class="meta"><div class="top"><span class="name">Max Difficulty</span><span class="time">2:31</span></div><div class="preview">lyrical · draft</div></div></div>'+
+          '<div class="row">'+avatar('#5ac8ff','▶','🎵')+'<div class="meta"><div class="top"><span class="name">Triptych XB</span><span class="time">3:04</span></div><div class="preview">three-part · mastered</div></div></div>'+
+        '</div>';
+    }
+
+    function renderSettings(){
+      return ''+
+        '<div class="eyebrow">Xen system</div>'+
+        '<div class="card tight">'+
+          setToggle('🎙️','Voice-first replies',true)+
+          setToggle('📡','Dual-SMS legs',true)+
+          setToggle('🖥️','Vision display mirror',true)+
+          setToggle('🔒','Human-out-of-loop',true)+
+          setToggle('🌙','Quiet hours',false)+
+        '</div>'+
+        '<div class="eyebrow" style="margin-top:16px">Device</div>'+
+        '<div class="card tight">'+
+          setRow('📶','Network','tailnet · mesh','')+
+          setRow('🔋','Battery','78% · charging','')+
+          setRow('💾','Storage','M4 · canonical','')+
+          setRow('🧠','Memory','bastra-recall','')+
+          setRow('ℹ️','XOS version','1.0 · '+new Date().getFullYear(),'')+
+        '</div>'+
+        '<div class="note">A phone-OS surface for the Xen system — public, no login, live by default.</div>';
+    }
+
+    function renderCanon(){
+      var laws=[
+        ['00','Parallel always','sequential is blasphemy'],
+        ['09','Inline-HTML canonical','one self-contained file, live'],
+        ['11','No white dots ever','every reply turns the dot green'],
+        ['15','One canonical reply','voice + dual-SMS + vision'],
+        ['28','Xen is the only voice','even qi speaks through Xen']
+      ];
+      var rows=laws.map(function(l){
+        return '<div class="setrow"><span class="si" style="background:var(--panel-2);font-family:var(--mono);font-size:12px;color:var(--accent)">'+l[0]+'</span>'+
+          '<div style="flex:1"><div style="font-size:15px;font-weight:600">'+esc(l[1])+'</div><div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:2px">'+esc(l[2])+'</div></div></div>';
+      }).join('');
+      return ''+
+        '<div class="eyebrow">The Xen commandments · excerpt</div>'+
+        '<div class="card tight">'+rows+'</div>'+
+        '<div class="note"><b>One canon, no fallbacks.</b> Full spec is authoritative in the hook; this is the mirror.</div>';
+    }
+
+    /* delegate: keypad typing + toggle flips inside pane */
+    paneBody.addEventListener('click',function(e){
+      var key=e.target.closest('.key');
+      if(key){
+        var disp=document.getElementById('callDisplay');
+        if(disp && disp.textContent.length<16){ disp.textContent+=key.getAttribute('data-k'); }
+        return;
+      }
+      var tg=e.target.closest('.toggle');
+      if(tg){ tg.classList.toggle('off'); tg.setAttribute('aria-checked', tg.classList.contains('off')?'false':'true'); }
+    });
+    paneBody.addEventListener('keydown',function(e){
+      var tg=e.target.closest('.toggle');
+      if(tg && (e.key==='Enter'||e.key===' ')){ e.preventDefault(); tg.classList.toggle('off'); tg.setAttribute('aria-checked', tg.classList.contains('off')?'false':'true'); }
+    });
+
+  })();
   </script>
-<script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
 </body>
 </html>
