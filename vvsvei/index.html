@@ -1959,13 +1959,16 @@ function renderEvent(d) {
   // "PM, in:" / "AM, in:" (with optional leading mangled colons) is removed.
   txt = txt.replace(/^[\s:]*\d{1,2}:\d{2}(?::\d{2})?\s*[AP]M\s*,\s*(?:in|typed|omi|aua|sms|bee|spark|mail|note):\s*/i, '').trim();
   if (!txt) return;
-  // qi 2026-06-22 OMNI RESTORE (reverses the 2026-06-21 STEP-LANE split): qi —
-  // "you are violating Omni" + "the OTLP view was directly within the chat... now its
-  // somewhere else where you have to click it" + "still see the events button at top
-  // right not inline". Canon C29 (Akashic): ALL sources — step/OTLP telemetry — flow
-  // INLINE in the ONE conversation stream, never behind a click. Step events now render
-  // as an inline .firehose bubble in the transcript AND still mirror to the Operator·
-  // Firehose rail (#er-list). Dual-render: visible in chat, logged in rail, nothing lost.
+  // qi 2026-07-22 BACKGROUND-LANE ROUTING (supersedes the 2026-06-22 inline dual-
+  // render): qi — "Xen's raw bash/tool command outputs are showing up in my main
+  // message feed like chat bubbles; they belong in a background/step area, only my
+  // actual conversational replies (xen-out/VVS) should be in the main feed." The
+  // per-step tool narration (source XEN-STEP / lane:steps) was dual-rendering as an
+  // inline .firehose-step bubble in the transcript — that IS the court/⏺ noise. Route
+  // it to the Operator·Firehose rail (#er-list) ONLY, no inline bubble. This still
+  // HONORS the 06-22 decree that steps stay VISIBLE + "not behind a click": the rail
+  // toggle is now auto-revealed + auto-opened on the first step (see events-rail init),
+  // so telemetry is one glance away in its own lane, never buried, nothing lost.
   {
     const _stepSrc = (d.source || '').toString().toLowerCase();
     const _stepSender = (d.sender || '').toString().toLowerCase();
@@ -1973,20 +1976,27 @@ function renderEvent(d) {
     if (_stepSrc === 'xen-step' || _stepSender === 'xen-step' || _stepLane === 'steps') {
       const _clean = String(txt).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
       try { appendEventItem('step', _clean.slice(0, 600), d.ts); } catch (_) {}
-      // ALSO render inline in the conversation as a step bubble (Omni — in the chat).
-      try {
-        const _d = document.createElement('div');
-        _d.className = 'firehose step';
-        const _ts = document.createElement('span'); _ts.className = 'bubble-ts';
-        _ts.textContent = (typeof _fmtTs === 'function' ? _fmtTs(d.ts) : '');
-        const _sr = document.createElement('div'); _sr.className = 'src'; _sr.textContent = '◆ step';
-        const _bd = document.createElement('div'); _bd.textContent = _clean.slice(0, 600);
-        _d.appendChild(_ts); _d.appendChild(_sr); _d.appendChild(_bd);
-        if (typeof transcript !== 'undefined' && transcript) {
-          transcript.appendChild(_d); transcript.scrollTop = transcript.scrollHeight;
-        }
-      } catch (_) {}
-      return;
+      try { if (window._erReveal) window._erReveal(); } catch (_) {}
+      return;   // background lane only — NOT the main conversation feed
+    }
+  }
+  // qi 2026-07-22: raw command/tool EGRESS (egress:cmd — Xen's own bash/tool calls,
+  // kind bash|tool with a `summary` and usually no display text) + netwatch conn noise
+  // (egress:netconn) are pure BACKGROUND output. They must NEVER render as a main-feed
+  // bubble. Some frames carry no text (they'd otherwise self-drop at the !txt guard
+  // below), but route explicitly so any future text-bearing egress frame still lands in
+  // the Operator·Firehose rail, never the conversation. Match the event kind by prefix.
+  {
+    const _egEvt = (d.event || d.kind || '').toString().toLowerCase();
+    if (_egEvt.indexOf('egress') === 0 || _egEvt === 'egress:cmd' || _egEvt === 'egress:netconn') {
+      const _dd = (d && d.data && typeof d.data === 'object') ? d.data : d;
+      const _lbl = _egEvt === 'egress:netconn' ? 'net'
+                 : ('cmd·' + ((_dd.tool || _dd.kind || 'cmd').toString().toLowerCase()));
+      const _body = String(_dd.summary || _dd.cmd || _dd.command || txt || _egEvt)
+                      .replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 600);
+      try { appendEventItem(_lbl, _body, (typeof d.ts === 'number' ? d.ts : Date.now())); } catch (_) {}
+      try { if (window._erReveal) window._erReveal(); } catch (_) {}
+      return;   // background lane only — NOT the main conversation feed
     }
   }
   // qi 2026-06-11: [VVSVEI] speak-gate telemetry must NEVER render as a chat
@@ -2272,6 +2282,26 @@ function appendEventItem(srcLabel, body, ts) {
   _eventsList.scrollTop = _eventsList.scrollHeight;
   if (!_eventsRail.classList.contains('open')) _eventsBumpCount();
 }
+// qi 2026-07-22: the Operator·Firehose rail holds the background lane (steps + raw
+// egress:cmd/tool/netconn). Since step/OTLP telemetry moved OUT of the main feed, the
+// rail must be VISIBLE + "not behind a click" (honoring the 06-22 decree). Reveal the
+// toggle button (it ships display:none) the first time any background event arrives,
+// and auto-open the rail ONCE so qi sees the step lane without hunting for it. After
+// that first auto-open, respect whatever open/closed state qi chooses.
+let _erRevealed = false;
+window._erReveal = function _erReveal() {
+  try {
+    if (_eventsToggle && _eventsToggle.style.display === 'none') _eventsToggle.style.display = '';
+    if (!_erRevealed) {
+      _erRevealed = true;
+      if (_eventsRail && !_eventsRail.classList.contains('open')) {
+        _eventsRail.classList.add('open');
+        if (_eventsToggle) _eventsToggle.setAttribute('aria-expanded', 'true');
+        _eventsResetCount();
+      }
+    }
+  } catch (_) {}
+};
 _eventsToggle.addEventListener('click', () => {
   const open = _eventsRail.classList.toggle('open');
   _eventsToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
