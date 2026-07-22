@@ -252,9 +252,25 @@ function linkifyBody(body, onOpenLink) {
    as vvsvei/index.html's _avaDrain. WebAudio decodeAudioData is DISABLED
    there (2026-06-06 note: fails on this TTS's MP3 encoding) — do not use it
    here either. One-shot playback via a plain Audio element, GET ?text=. */
+/* qi 2026-07-21 AUTO BARGE-IN (canon: barge-in mandatory): ONE audio channel,
+   newest wins. Every play() first cuts the currently-playing bubble so a new
+   click (or a rapid double-tap) never overlaps/garbles the prior one — the same
+   single-channel discipline vvsvei/index.html enforces via _avaCurrentSource. */
+let _xosCurAudio = null;
+function _xosStopCurrent() {
+  if (_xosCurAudio) {
+    try { _xosCurAudio.pause(); _xosCurAudio.currentTime = 0; _xosCurAudio.src = ""; } catch (_) {}
+    _xosCurAudio = null;
+  }
+  // If a device speechSynthesis fallback was ever used, cut it too (single channel).
+  try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (_) {}
+}
 function playBubble(text) {
+  _xosStopCurrent();            // barge: stop whatever is speaking BEFORE the new line
   if (!text) return;
   const a = new Audio("https://api.xlrd.org/api/tts?text=" + encodeURIComponent(text.slice(0, 350)));
+  _xosCurAudio = a;             // this is now the sole live channel
+  a.addEventListener("ended", () => { if (_xosCurAudio === a) _xosCurAudio = null; });
   a.play().catch(() => {});
 }
 
