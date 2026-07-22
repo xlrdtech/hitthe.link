@@ -1304,7 +1304,16 @@ function attachBubbleActions(bubbleEl, text) {
   playBtn.onclick = (e) => {
     e.stopPropagation();
     if (!text) return;
-    const a = new Audio(AVA_TTS_URL + '?text=' + encodeURIComponent(text));
+    // qi 2026-07-21 AUTO BARGE-IN (canon: barge-in mandatory): the PLAY button is
+    // now part of the ONE shared audio channel. First cut whatever is currently
+    // speaking (prior PLAY tap OR the live SSE reply) via the canonical _avaBargeIn(),
+    // then play THIS clip through the tracked _avaAudio handle so a later barge — a
+    // new tap or an incoming reply — cancels it too. Newest wins, never overlaps.
+    try { _avaBargeIn(); } catch (_) {}
+    const a = _avaAudio || (_avaAudio = new Audio());
+    _avaGen++;                       // this tap owns the channel now
+    try { a.pause(); a.currentTime = 0; } catch (_) {}
+    a.src = AVA_TTS_URL + '?text=' + encodeURIComponent(text);
     a.play().catch(() => {});
   };
   row.appendChild(playBtn);
