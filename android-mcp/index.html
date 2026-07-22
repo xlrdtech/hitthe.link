@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Android-MCP — Control an Android Phone by Natural Language</title>
+<meta name="description" content="Android-MCP wraps ADB + the Accessibility API as an MCP server, so any agent can tap, type, swipe, and read an Android device's UI tree — no CV model, no scripted automation." />
+<meta property="og:title" content="Android-MCP — an MCP server for real Android devices" />
+<meta property="og:description" content="Tap, type, swipe, press hardware buttons, read the UI hierarchy, run shell commands — all as MCP tools against a real ADB-connected phone." />
+<meta name="theme-color" content="#000000" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&display=swap" rel="stylesheet" />
+<style>
+  :root{--bg:#000;--bg-surface:#060808;--border:rgba(0,220,130,.12);--border-bright:rgba(0,220,130,.25);
+    --accent:#00dc82;--accent-dim:rgba(0,220,130,.5);--accent-faint:rgba(0,220,130,.08);
+    --text:#c8d0c0;--text-bright:#e8f0e0;--text-dim:#6a7666;--text-muted:#3a423a;
+    --f-mono:'JetBrains Mono',ui-monospace,Menlo,monospace;--f-display:'Share Tech Mono',monospace;--f-serif:'Fraunces',serif;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--text);font-family:var(--f-mono);-webkit-font-smoothing:antialiased;overflow-wrap:break-word;word-break:normal;hyphens:none}
+  body{min-height:100vh;line-height:1.55;position:relative}
+  .vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(120% 80% at 50% -10%,rgba(0,220,130,.06),transparent 60%);z-index:0}
+  .wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:clamp(28px,7vw,72px) clamp(20px,5vw,32px)}
+  .eyebrow{font-family:var(--f-display);letter-spacing:.32em;text-transform:uppercase;color:var(--accent);font-size:12px;opacity:.85}
+  h1{font-family:var(--f-serif);font-weight:340;font-size:clamp(38px,8vw,72px);line-height:.98;color:var(--text-bright);margin:16px 0 0;letter-spacing:-.01em}
+  h1 em{font-style:italic;color:var(--accent)}
+  .lede{font-family:var(--f-serif);font-size:clamp(16px,2.6vw,20px);color:var(--text);margin-top:18px;max-width:60ch;font-weight:320}
+  .links{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+  .btn{font-family:var(--f-display);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-bright);border:1px solid var(--border-bright);border-radius:8px;padding:9px 16px;text-decoration:none;background:var(--accent-faint);transition:.15s}
+  .btn:hover{background:var(--accent-dim);color:#000}
+  .btn.ghost{background:transparent}
+  .rule{height:1px;background:linear-gradient(90deg,var(--border-bright),transparent);margin:40px 0}
+  h2{font-family:var(--f-display);font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--text-dim);margin-bottom:16px}
+  .tools{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+  .tool{font-size:11.5px;letter-spacing:.04em;padding:6px 12px;border-radius:8px;border:1px solid var(--border-bright);background:var(--accent-faint);color:var(--text-bright)}
+  .grid2{display:grid;grid-template-columns:1.1fr 1fr;gap:40px}
+  @media (max-width:860px){.grid2{grid-template-columns:1fr}}
+  .card{background:var(--bg-surface);border:1px solid var(--border);border-radius:16px;padding:22px;position:relative;overflow:hidden}
+  .card::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.03));opacity:.6}
+  .card p{font-size:13.5px;color:var(--text);opacity:.92;margin-bottom:10px}
+  .card p:last-child{margin-bottom:0}
+  code, .mono{font-family:var(--f-mono)}
+  pre{background:#040605;border:1px solid var(--border);border-radius:10px;padding:14px;font-size:12px;color:var(--text-dim);overflow-x:auto;margin:10px 0 0}
+  pre .k{color:var(--accent)}
+  .stack{display:flex;flex-direction:column;gap:14px}
+  .tabs{display:flex;gap:6px;margin-bottom:2px}
+  .tab{font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;border-radius:7px 7px 0 0;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-dim);cursor:pointer}
+  .tab.on{color:var(--accent);border-color:var(--border-bright);background:var(--accent-faint)}
+  .tabpane{display:none}
+  .tabpane.on{display:block}
+
+  /* --- demo --- */
+  .demo{display:grid;grid-template-columns:220px 1fr;gap:26px;align-items:start}
+  @media (max-width:600px){.demo{grid-template-columns:1fr;justify-items:center}}
+  .phone{width:210px;height:430px;flex:0 0 auto;background:#0a0d0b;border-radius:30px;border:1px solid var(--border-bright);padding:8px;box-shadow:0 30px 60px -20px rgba(0,220,130,.08)}
+  .screen{position:relative;width:100%;height:100%;border-radius:22px;overflow:hidden;background:#020403;border:1px solid var(--border)}
+  .sbar{height:22px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:9px;color:var(--text-dim)}
+  .home{position:absolute;inset:22px 0 0 0;display:flex;flex-direction:column;align-items:center;padding-top:10px;transition:opacity .25s}
+  .app-icon{width:38px;height:38px;border-radius:10px;background:var(--accent-faint);border:1px solid var(--border-bright);display:grid;place-items:center;font-size:15px;margin-bottom:16px;color:var(--accent);transition:box-shadow .2s}
+  .app-icon.hl{box-shadow:0 0 0 3px var(--accent)}
+  .screen-title{font-size:11px;color:var(--text-bright);letter-spacing:.04em;margin-bottom:14px}
+  .rows{width:100%;padding:0 12px;display:flex;flex-direction:column;gap:8px}
+  .row{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--text);padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,.015)}
+  .row.hl{border-color:var(--border-bright);background:var(--accent-faint)}
+  .sw{width:26px;height:14px;border-radius:8px;background:var(--text-muted);position:relative;transition:background .2s}
+  .sw::after{content:"";position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:#0a0d0b;transition:transform .2s}
+  .sw.on{background:var(--accent)}
+  .sw.on::after{transform:translateX(12px)}
+  .cursor{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--accent);opacity:0;box-shadow:0 0 0 6px var(--accent-faint);transition:left .5s ease,top .5s ease,opacity .2s;pointer-events:none;z-index:5}
+  .cursor.show{opacity:.9}
+  .keyboard-hint{position:absolute;left:12px;right:12px;bottom:10px;font-size:9px;color:var(--text-dim);text-align:center;opacity:0;transition:opacity .2s}
+  .keyboard-hint.show{opacity:1}
+
+  .log{background:#040605;border:1px solid var(--border);border-radius:12px;padding:14px 16px;height:430px;overflow-y:auto;font-size:12px}
+  .log .turn{margin-bottom:12px}
+  .log .who{font-family:var(--f-display);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:3px}
+  .log .who.agent{color:var(--accent)}
+  .log .call{color:var(--text-bright)}
+  .log .call .fn{color:var(--accent)}
+  .log .result{color:var(--text-dim);font-size:11px;margin-top:2px}
+  .demo-controls{margin-top:14px;display:flex;gap:10px;align-items:center}
+  .demo-controls .btn{padding:7px 14px;font-size:11px}
+  .demo-note{font-size:11px;color:var(--text-muted)}
+
+  footer{margin-top:48px;font-size:12px;color:var(--text-muted);letter-spacing:.06em}
+  footer a{color:var(--text-dim)}
+  footer b{color:var(--text-dim);font-weight:500}
+</style>
+</head>
+<body>
+<div class="vig"></div>
+<main class="wrap">
+  <div class="eyebrow">Open&nbsp;Source · MCP Server · CursorTouch</div>
+  <h1>Android-MCP<em>.</em></h1>
+  <p class="lede">A bridge between LLM/VLM agents and a real Android device. No computer-vision model, no pre-programmed scripts — the agent reads the on-screen UI hierarchy through the Accessibility API and drives it over ADB, tool call by tool call.</p>
+  <div class="links">
+    <a class="btn" href="https://github.com/CursorTouch/Android-MCP" target="_blank" rel="noopener">View on GitHub ↗</a>
+    <a class="btn ghost" href="#demo">See it drive a phone ↓</a>
+  </div>
+
+  <div class="rule"></div>
+
+  <h2>Exposed tools</h2>
+  <div class="tools">
+    <span class="tool">tap(x, y)</span>
+    <span class="tool">long_press(x, y)</span>
+    <span class="tool">swipe(x1, y1, x2, y2)</span>
+    <span class="tool">drag(x1, y1, x2, y2)</span>
+    <span class="tool">type_text(text)</span>
+    <span class="tool">press_button(key)</span>
+    <span class="tool">screenshot()</span>
+    <span class="tool">get_ui_hierarchy()</span>
+    <span class="tool">get_notifications()</span>
+    <span class="tool">shell(command)</span>
+  </div>
+  <p class="demo-note">Ten tools cover the whole interaction surface — everything a human thumb (and a `adb shell`) can do to a device.</p>
+
+  <div class="rule"></div>
+
+  <div class="grid2">
+    <div class="card">
+      <p><b style="color:var(--text-bright)">How it connects.</b> The server talks to a device over ADB — USB, WiFi, or auto-detected — and resolves the connection lazily on first tool call, so it starts cleanly even with no device attached yet.</p>
+      <p>Every action reads back through the Accessibility API's UI tree rather than a screenshot + vision model, so the agent gets exact element bounds, text, and clickable state instead of guessing pixel coordinates.</p>
+      <p><b style="color:var(--text-bright)">Requirements.</b> Python 3.13+, the <code>adb</code> tool on PATH, and Android 10+ (device or emulator). Typical loop latency is 2–4s per action — the ceiling is ADB round-trips, not the model.</p>
+    </div>
+
+    <div class="card stack">
+      <p><b style="color:var(--text-bright)">Install</b></p>
+      <div class="tabs">
+        <div class="tab on" data-tab="uvx">uvx</div>
+        <div class="tab" data-tab="uv">uv</div>
+        <div class="tab" data-tab="opencode">opencode</div>
+      </div>
+      <div class="tabpane on" data-pane="uvx">
+        <pre><span class="k">// claude_desktop_config.json</span>
+{
+  "mcpServers": {
+    "android-mcp": {
+      "command": "uvx",
+      "args": ["android-mcp-server"]
+    }
+  }
+}</pre>
+      </div>
+      <div class="tabpane" data-pane="uv">
+        <pre>git clone https://github.com/CursorTouch/Android-MCP
+cd Android-MCP
+uv sync
+uv run android-mcp-server --device auto</pre>
+      </div>
+      <div class="tabpane" data-pane="opencode">
+        <pre><span class="k">// opencode.json</span>
+{
+  "mcp": {
+    "android": {
+      "type": "local",
+      "command": ["uvx", "android-mcp-server"]
+    }
+  }
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+
+  <h2 id="demo">Live simulation — agent driving the tools</h2>
+  <div class="card">
+    <div class="demo">
+      <div class="phone">
+        <div class="screen" id="screen">
+          <div class="sbar"><span>9:41</span><span>ADB · WiFi</span></div>
+          <div class="home" id="view-home">
+            <div class="screen-title">Home</div>
+            <div class="app-icon" id="icon-settings">⚙</div>
+          </div>
+          <div class="home" id="view-settings" style="display:none">
+            <div class="screen-title">Settings</div>
+            <div class="rows">
+              <div class="row" id="row-wifi"><span>Wi-Fi</span><span class="sw" id="sw-wifi"></span></div>
+              <div class="row"><span>Bluetooth</span><span class="sw on"></span></div>
+              <div class="row"><span>Airplane mode</span><span class="sw"></span></div>
+            </div>
+          </div>
+          <div class="home" id="view-search" style="display:none">
+            <div class="screen-title">Search Wi-Fi networks</div>
+            <div class="rows">
+              <div class="row" id="row-input"><span id="input-text">|</span></div>
+            </div>
+          </div>
+          <div class="cursor" id="cursor"></div>
+          <div class="keyboard-hint" id="kbhint">shell: type_text() streaming keystrokes</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="log" id="log"></div>
+        <div class="demo-controls">
+          <button class="btn" id="play">▶ Run demo</button>
+          <span class="demo-note" id="status">"turn Wi-Fi off, then search for a network" — scripted for illustration, not a live ADB session.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer><b>Android-MCP</b> — MIT licensed, by <a href="https://github.com/CursorTouch" target="_blank" rel="noopener">CursorTouch</a> · cataloged on hitthe.link · 2026-07-14</footer>
+</main>
+<script>
+(function(){
+  const tabs = document.querySelectorAll('.tab');
+  tabs.forEach(t => t.addEventListener('click', () => {
+    tabs.forEach(x => x.classList.remove('on'));
+    document.querySelectorAll('.tabpane').forEach(p => p.classList.remove('on'));
+    t.classList.add('on');
+    document.querySelector(`.tabpane[data-pane="${t.dataset.tab}"]`).classList.add('on');
+  }));
+})();
+
+(function(){
+  const log = document.getElementById('log');
+  const cursor = document.getElementById('cursor');
+  const status = document.getElementById('status');
+  const kbhint = document.getElementById('kbhint');
+  const views = {
+    home: document.getElementById('view-home'),
+    settings: document.getElementById('view-settings'),
+    search: document.getElementById('view-search'),
+  };
+  const swWifi = document.getElementById('sw-wifi');
+  const inputText = document.getElementById('input-text');
+
+  function showView(name){
+    Object.values(views).forEach(v => v.style.display = 'none');
+    views[name].style.display = 'flex';
+  }
+  function moveCursor(x, y){
+    cursor.style.left = x + 'px';
+    cursor.style.top = y + 'px';
+    cursor.classList.add('show');
+  }
+  function hideCursor(){ cursor.classList.remove('show'); }
+
+  function addTurn(who, html, result){
+    const turn = document.createElement('div');
+    turn.className = 'turn';
+    turn.innerHTML = `<div class="who ${who === 'agent' ? 'agent' : ''}">${who}</div><div class="call">${html}</div>${result ? `<div class="result">${result}</div>` : ''}`;
+    log.appendChild(turn);
+    log.scrollTop = log.scrollHeight;
+    return turn;
+  }
+
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+
+  async function runDemo(){
+    document.getElementById('play').disabled = true;
+    log.innerHTML = '';
+    showView('home');
+    swWifi.classList.remove('on');
+    inputText.textContent = '|';
+    hideCursor();
+    status.textContent = 'running…';
+
+    addTurn('user', '"Turn Wi-Fi off, then search for a network."');
+    await wait(500);
+
+    addTurn('agent', 'get_ui_hierarchy()', 'home screen: 1 launcher icon "Settings" at (38, 60)');
+    await wait(700);
+
+    addTurn('agent', '<span class="fn">tap</span>(38, 60)');
+    moveCursor(38, 60);
+    await wait(500);
+    showView('settings');
+    document.getElementById('row-wifi').classList.add('hl');
+    await wait(400);
+    document.getElementById('row-wifi').classList.remove('hl');
+    addTurn('', '', 'opened Settings');
+    await wait(600);
+
+    addTurn('agent', '<span class="fn">tap</span>(96, 8) <span style="color:var(--text-dim)">// Wi-Fi toggle</span>');
+    moveCursor(96, 8);
+    await wait(500);
+    swWifi.classList.add('on');
+    addTurn('', '', 'Wi-Fi: on → off toggled');
+    await wait(600);
+
+    addTurn('agent', '<span class="fn">tap</span>(48, 8) <span style="color:var(--text-dim)">// Wi-Fi row</span>');
+    moveCursor(48, 8);
+    await wait(500);
+    showView('search');
+    kbhint.classList.add('show');
+    addTurn('', '', 'opened Wi-Fi search');
+    await wait(500);
+
+    addTurn('agent', '<span class="fn">type_text</span>("home-mesh-5g")');
+    const target = 'home-mesh-5g';
+    for (let i = 1; i <= target.length; i++){
+      inputText.textContent = target.slice(0, i) + '|';
+      await wait(60);
+    }
+    kbhint.classList.remove('show');
+    addTurn('', '', 'typed via Accessibility API — no screenshot/CV pass needed');
+    hideCursor();
+
+    status.textContent = 'done — 4 tool calls, ~2.7s of simulated ADB latency.';
+    document.getElementById('play').disabled = false;
+  }
+
+  document.getElementById('play').addEventListener('click', runDemo);
+})();
+</script>
+</body>
+</html>
