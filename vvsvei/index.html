@@ -2640,22 +2640,32 @@ let _avaPending = [];   // replies that arrived live-but-unarmed; flushed on fir
 // ended, or currentTime frozen between two checks ~5s apart). A clip that is still
 // playing keeps advancing currentTime and is left strictly alone. We also pause()
 // the wedged element before re-draining so two clips never overlap.
+// qi 2026-07-23: the OLD 5s-tick / 12s-grace / 16s-release watchdog was the exact
+// cause of "I see the reply but never HEAR it": _avaPlaying is the mutex that gates
+// _avaDrain(). When a TTS fetch hangs (iOS stalled/suspend — no onended/onerror),
+// the mutex stuck TRUE and voice was STARVED for up to 16s while the display leg
+// (SSE render) still fired. An inject must never wait on a drain. So the mutex now
+// releases FAST (sub-2s) when the <audio> element is genuinely not advancing, and
+// re-fires the drain instantly so PARKED replies speak immediately. Barge-in is
+// UNTOUCHED — this only frees a WEDGED mutex, never cancels healthy playback or the
+// _avaGen interrupt path.
 setInterval(function() {
   try {
     if (!_avaPlaying || !_drainStarted) { _wdLastT = -1; return; }
     var waited = Date.now() - _drainStarted;
-    if (waited < 12000) return;            // give every real clip room to start
+    if (waited < 900) return;              // one tick of grace for a clip to actually start
     var a = _avaAudio;
     var advancing = !!(a && !a.paused && !a.ended && a.currentTime !== _wdLastT && a.readyState >= 2);
     if (a) _wdLastT = a.currentTime;
     if (advancing) return;                 // healthy playback in progress — never touch it
-    if (waited > 16000) {                  // not advancing for >16s — genuinely wedged
-      _avaTelemetry('drain-watchdog force-release (stuck ' + Math.round(waited/1000) + 's, ct=' + (a ? a.currentTime : 'n/a') + ')');
+    // Not advancing across two ~1s ticks -> mutex is WEDGED. Release immediately so
+    // voice is never held hostage by a hung fetch. No 16s stall, no force-release log spam.
+    if (waited > 1800) {
       try { if (a) { a.pause(); a.src = ''; } } catch (_) {}
       _avaPlaying = false; _drainStarted = 0; _wdLastT = -1; _avaStatus = 'idle'; _renderAvaPill(); _avaDrain();
     }
   } catch (_) {}
-}, 5000);
+}, 1000);
 
 // ─── speechSynthesis voice engine — hardened for stability ────────────────
 // qi 2026-06-09: the voice IS the browser's built-in speechSynthesis. Free,
@@ -2847,6 +2857,20 @@ function speakAva(text) {
   const spoken = String(text).replace(/^\s*(Xen|Lyn|Eli)\s*:\s*/i, '');
   _avaQueue.push(spoken.slice(0, 800));
   if (_avaQueue.length > 40) _avaQueue = _avaQueue.slice(-40);   // higher cap (qi nothing-drops); 800-char clips x40 is bounded memory
+  // qi 2026-07-23: an inject must SPEAK IMMEDIATELY, never wait on a drain. If the
+  // mutex is held but the <audio> element is NOT advancing (a wedged/hung fetch —
+  // the "I see it but don't hear it" state), self-heal the stale mutex RIGHT NOW so
+  // this fresh reply fires without a stall. Healthy in-flight playback (advancing
+  // currentTime) is left strictly alone so we never cut a clip qi is hearing. This
+  // does NOT touch barge-in (_avaGen) — that path stays exactly as-is.
+  if (_avaPlaying && _drainStarted) {
+    var _a = _avaAudio;
+    var _live = !!(_a && !_a.paused && !_a.ended && _a.readyState >= 2);
+    if (!_live && (Date.now() - _drainStarted) > 900) {
+      try { if (_a) { _a.pause(); _a.src = ''; } } catch (_) {}
+      _avaPlaying = false; _drainStarted = 0; _wdLastT = -1;
+    }
+  }
   _avaDrain();
 }
 // _speakAvaFallback REMOVED 2026-05-30 — qi canon "no fallbacks; if it needs to
