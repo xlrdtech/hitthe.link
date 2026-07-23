@@ -705,6 +705,12 @@ const stopBtn = document.getElementById('stop-btn');
 
 let recognition = null;
 let listening = false;
+// v16 2026-07-23: DURABLE mic intent — true from the moment qi arms the mic until
+// he explicitly Stops. `listening` gets flipped false by onend/onerror/blur-abort,
+// so it can't tell "qi wants mic on but engine died" from "qi stopped". _veiMicIntent
+// is the source of truth the focus/visibility auto-recover consults to re-arm.
+let _veiMicIntent = false;
+let _reArmInFlight = false;   // guard: prevents visibility+focus double-firing a 2nd recognizer
 let sentCount = 0;
 let interimEl = null;
 let networkErrorCount = 0;
@@ -909,6 +915,7 @@ async function postAudioChunk(blob) {
 // chunks) and POST each to the server, which transcribes + injects as in:.
 // This is canon-aligned: Apple STT is the sole engine, Whisper is NOT used.
 async function startMediaRecorder() {
+  _veiMicIntent = true;   // qi wants the mic ON — auto-recover re-arms on focus return
   try {
     mediaStream = await navigator.mediaDevices.getUserMedia({
       audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
@@ -965,6 +972,7 @@ async function startMediaRecorder() {
 }
 
 function stopMediaRecorder() {
+  _veiMicIntent = false;   // explicit Stop — do NOT auto-re-arm on focus return
   listening = false;
   mediaMode = false;
   if (mediaRecorder && mediaRecorder.state !== 'inactive') {
@@ -982,6 +990,7 @@ function stopMediaRecorder() {
 let useContinuous = true;
 
 function startListening() {
+  _veiMicIntent = true;   // qi wants the mic ON — auto-recover re-arms on focus return
   if (!SR) {
     // No Web Speech (Comet, Android Chromium, Firefox, Brave w/o Google backend).
     // Route to the server-side Apple STT path — works in EVERY browser. 2026-06-11.
@@ -1095,6 +1104,7 @@ function startListening() {
 }
 
 function stopListening() {
+  _veiMicIntent = false;   // explicit Stop — do NOT auto-re-arm on focus return
   if (mediaMode) { stopMediaRecorder(); return; }
   listening = false;
   if (recognition) {
@@ -2321,9 +2331,11 @@ function _eventsUpdateQueueDepth() {
 setInterval(_eventsUpdateQueueDepth, 2000);
 _eventsUpdateQueueDepth();
 
+let _xenSse = null;   // module-level ref so auto-recovery can inspect readyState / force reconnect (v16)
 function subscribeXenReplies() {
   try {
     const src = new EventSource('https://xen.xlrd.org/events');
+    _xenSse = src;
     src.onopen = () => {
       _eventsSseStatus.textContent = 'sse · connected';
       _eventsSseStatus.className = 'ok';
@@ -2351,6 +2363,63 @@ function subscribeXenReplies() {
   } catch (e) {}
 }
 subscribeXenReplies();
+
+// ─── FOCUS/VISIBILITY AUTO-RECOVERY (v16 2026-07-23) ──────────────────────────
+// qi P0: "I had to go back to it in order for it to start outputting again." When
+// the tab loses focus/visibility the browser aborts SpeechRecognition and can
+// force-suspend the AudioContext + drop/stall the SSE stream. On return the page
+// used to sit dead until qi TAPPED it — a required tap = total failure (cmd 4).
+// This re-arms EVERYTHING idempotently on visible/focus, NO tap:
+//   1. mic recognizer — restart if intent was listening but the engine died
+//   2. audio output — resume _avaCtx, restart keepalive, re-kick a wedged drain
+//   3. SSE — force reconnect if the stream is CLOSED/dead
+// All guards are idempotent so we never double-arm (cmd: guard against 2 recognizers).
+function _veiAutoRecover(reason) {
+  // (1) MIC — only if qi's INTENT is to be listening (Start was pressed, not Stop).
+  //     `listening` is the intent+state flag; if it's true but the recognizer is
+  //     really dead the engine won't be firing. We can't read SR liveness directly,
+  //     so we lean on onend/onerror having flipped `listening`; when the browser
+  //     aborts on blur WITHOUT firing onend (iOS/Safari), we re-arm here. Guard:
+  //     _reArmInFlight prevents a burst of visibility+focus events double-starting.
+  try {
+    if (_veiMicIntent && !_reArmInFlight) {
+      if (mediaMode) {
+        // server-STT path: if the loop died (no live stream) restart it
+        if (!mediaStream) { _reArmInFlight = true; setTimeout(() => { _reArmInFlight = false; try { startMediaRecorder(); } catch (_) {} }, 60); }
+      } else {
+        // Web Speech path: bounce the recognizer. Abort any half-dead instance,
+        // then start fresh — startListening() rebuilds recognition idempotently.
+        _reArmInFlight = true;
+        try { if (recognition) recognition.abort(); } catch (_) {}
+        listening = true;   // restore intent→state so onstart paints green again
+        setTimeout(() => { _reArmInFlight = false; try { startListening(); } catch (_) {} }, 120);
+      }
+    }
+  } catch (_) {}
+  // (2) AUDIO OUT — resume the context iOS/Chrome suspended in the background,
+  //     re-assert the silent keepalive, and un-stick a drain that wedged while
+  //     hidden (a TTS fetch that never resolved leaves _avaPlaying stuck true).
+  try {
+    if (_avaCtx && _avaCtx.state === 'suspended') _avaCtx.resume();
+    if (_avaAudioUnlocked) { try { _startAvaKeepAlive(); } catch (_) {} }
+    // If drain claims to be playing but nothing has advanced, release + re-drain.
+    if (_avaPlaying && _drainStarted && (Date.now() - _drainStarted) > 2500) {
+      _avaPlaying = false; _drainStarted = 0; _wdLastT = -1;
+    }
+    if (!_avaPlaying && _avaQueue && _avaQueue.length) { try { _avaDrain(); } catch (_) {} }
+  } catch (_) {}
+  // (3) SSE — a backgrounded stream can be CLOSED (readyState 2) with no auto-retry.
+  //     Force a fresh subscribe so live replies flow again the instant qi returns.
+  try {
+    if (!_xenSse || _xenSse.readyState === 2) { try { if (_xenSse) _xenSse.close(); } catch (_) {} subscribeXenReplies(); }
+  } catch (_) {}
+  // (4) replay any queued dictate POSTs that failed while backgrounded
+  try { drainQueue(); } catch (_) {}
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) _veiAutoRecover('visible'); });
+window.addEventListener('focus', () => _veiAutoRecover('focus'));
+window.addEventListener('pageshow', () => _veiAutoRecover('pageshow'));  // bfcache restore
+
 try { _hud('loaded — tap to arm'); } catch (_) {}
 // Show real-time status in the overlay title as soon as window loads
 // so qi never sits tapping on a blank screen — visible progress always.
