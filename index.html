@@ -1,108 +1,494 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>hitthe.link</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hitthe.link — Command Home</title>
+<meta name="description" content="hitthe.link command home — every live surface qi runs, grouped by category, live-tracked on one obsidian directory.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Spline+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --obsidian:#050507;
+  --coal:#0b0c0e;
+  --slate:#111318;
+  --ng:#39FF14;
+  --ng-hi:#a8ff7a;
+  --ng-deep:#1a7308;
+  --ng-leaf:#5eff30;
+  --ng-glow:rgba(57,255,20,.45);
+  --ng-faint:rgba(57,255,20,.12);
+  --ng-line:rgba(57,255,20,.18);
+  --bone:#f0ede6;
+  --muted:#7a7870;
+  --faint:#3e3c37;
+  --amber:#ffc24a;
+  --ox:#c25b4a;
+  --green:#39FF14;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --body:'Spline Sans',system-ui,sans-serif;
+  --disp:'Fraunces',Georgia,serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--obsidian);
+  color:var(--bone);
+  font-family:var(--body);
+  font-weight:300;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+  background-image:
+    radial-gradient(900px 500px at 50% -6%, rgba(57,255,20,.12), transparent 60%),
+    radial-gradient(600px 400px at 85% 10%, rgba(30,140,10,.08), transparent 55%),
+    radial-gradient(800px 800px at 50% 115%, rgba(57,255,20,.04), transparent 60%);
+}
+body::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.025;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.wrap{max-width:1100px;margin:0 auto;padding:0 22px;position:relative;z-index:1}
+.wrap-narrow{max-width:800px;margin:0 auto;padding:0 22px;position:relative;z-index:1}
 
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.webmanifest" />
-  <meta name="theme-color" content="#0b1020" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="hitthe.link" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+/* ── NAV ── */
+.plate{
+  position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+  padding:14px 22px;backdrop-filter:blur(18px) saturate(140%);
+  background:linear-gradient(180deg,rgba(5,5,7,.94),rgba(5,5,7,.5));
+  border-bottom:1px solid var(--ng-line);
+}
+.plate .mk{font-family:var(--disp);font-weight:600;font-size:1rem;color:var(--bone);display:flex;align-items:center;gap:10px}
+.ember{width:7px;height:7px;border-radius:50%;background:var(--ng);box-shadow:0 0 12px var(--ng),0 0 28px rgba(57,255,20,.6);animation:ember 2.4s ease-in-out infinite}
+@keyframes ember{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.plate nav{display:flex;gap:22px}
+.plate a{color:var(--muted);text-decoration:none;font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;transition:color .2s}
+.plate a:hover,.plate a.active{color:var(--ng-leaf);text-shadow:0 0 10px var(--ng-glow)}
 
-  <link rel="stylesheet" href="css/os.css" />
+/* ── HERO ── */
+.hero{padding:68px 0 36px;text-align:center}
+.eyebrow{font-family:var(--mono);font-size:.65rem;letter-spacing:.5em;text-transform:uppercase;color:var(--ng);opacity:.8;margin-bottom:18px;text-shadow:0 0 12px var(--ng-glow)}
+h1{font-family:var(--disp);font-weight:600;font-size:clamp(2.4rem,5.5vw,4.6rem);line-height:1;letter-spacing:-.01em;margin-bottom:16px}
+h1 i{font-style:italic;font-weight:600;
+  background:linear-gradient(110deg,var(--ng-hi),var(--ng) 48%,var(--ng-leaf));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 18px rgba(57,255,20,.6)) drop-shadow(0 0 4px rgba(57,255,20,.9));
+}
+.ngrule{height:1px;margin:18px auto 0;max-width:360px;
+  background:linear-gradient(90deg,transparent,var(--ng-deep),var(--ng-leaf),var(--ng-deep),transparent);
+  box-shadow:0 0 14px rgba(57,255,20,.35);
+}
+.lede{color:var(--muted);font-size:1rem;line-height:1.6;max-width:520px;margin:14px auto 0;font-weight:300}
+
+/* ── NETWORK HEALTH BAR ── */
+.health{max-width:520px;margin:36px auto 0;padding:22px 26px;border-radius:16px;
+  background:linear-gradient(165deg,#0e0f12,#080909);
+  border:1px solid var(--ng-line);
+  box-shadow:inset 0 1px 0 rgba(57,255,20,.08), 0 0 40px rgba(57,255,20,.06), 0 20px 48px rgba(0,0,0,.6);
+}
+.health .top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+.health .lab{font-family:var(--mono);font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.health .big{font-family:var(--disp);font-weight:600;font-size:2.4rem;line-height:1;
+  background:linear-gradient(180deg,var(--ng-hi),var(--ng) 55%,var(--ng-deep));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 8px rgba(57,255,20,.5));
+}
+.track{height:10px;border-radius:99px;background:rgba(0,0,0,.7);box-shadow:inset 0 1px 3px rgba(0,0,0,.9);overflow:hidden;position:relative}
+.track .fill{height:100%;border-radius:99px;width:0;transition:width 1.1s cubic-bezier(.2,.8,.2,1);
+  background:linear-gradient(90deg,var(--ng-deep),var(--ng),var(--ng-hi));
+  box-shadow:0 0 14px rgba(57,255,20,.7), inset 0 1px 0 rgba(255,255,255,.3);
+}
+.track .fill::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);
+  background-size:200% 100%;animation:shimmer 2.4s linear infinite;opacity:.5;
+}
+@keyframes shimmer{to{background-position:-200% 0}}
+.health .sub{font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-top:10px;letter-spacing:.04em}
+.pulse{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--ng);box-shadow:0 0 8px var(--ng);margin-right:7px;animation:pl 1.6s ease-in-out infinite}
+@keyframes pl{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* ── GAUGES ── */
+.gauges{display:flex;justify-content:center;flex-wrap:wrap;gap:18px;margin:24px 0 8px}
+.gauge{width:160px;padding:18px 14px 16px;border-radius:12px;text-align:center;position:relative;
+  background:linear-gradient(165deg,#0e0f12,#080909);
+  border:1px solid var(--ng-line);
+  box-shadow:inset 0 1px 0 rgba(57,255,20,.07), 0 0 20px rgba(57,255,20,.04), 0 14px 32px rgba(0,0,0,.5);
+}
+.gauge::before{content:"";position:absolute;top:0;left:16px;right:16px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--ng-leaf),transparent);opacity:.5;
+}
+.gauge .v{font-family:var(--disp);font-weight:600;font-size:2.2rem;line-height:1;
+  background:linear-gradient(180deg,var(--ng-hi),var(--ng) 55%,var(--ng-deep));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 6px rgba(57,255,20,.4));
+}
+.gauge .k{font-family:var(--mono);font-size:.56rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:9px}
+
+/* ── QUICK LAUNCH ── */
+.quick{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:26px auto 0;max-width:820px}
+.qbtn{font-family:var(--mono);font-size:.62rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;
+  text-decoration:none;color:var(--bone);padding:9px 15px;border-radius:999px;
+  background:rgba(57,255,20,.06);border:1px solid rgba(57,255,20,.22);transition:.15s;display:inline-flex;align-items:center;gap:7px}
+.qbtn::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--ng-leaf);box-shadow:0 0 7px var(--ng)}
+.qbtn:hover{background:rgba(57,255,20,.14);border-color:var(--ng);color:#fff;box-shadow:0 0 14px rgba(57,255,20,.2);transform:translateY(-2px)}
+
+/* ── SECTION HEADS ── */
+section{padding:52px 0}
+.sechead{text-align:center;margin-bottom:36px}
+.sechead .ix{font-family:var(--mono);font-size:.64rem;letter-spacing:.4em;color:var(--ng);opacity:.75;text-transform:uppercase}
+.sechead h2{font-family:var(--disp);font-weight:500;font-size:1.9rem;margin:10px 0 14px;font-style:italic;color:var(--bone)}
+.sechead .rule{width:100px;height:1px;margin:0 auto;
+  background:linear-gradient(90deg,transparent,var(--ng-leaf),transparent);
+  box-shadow:0 0 10px rgba(57,255,20,.3);
+}
+.sechead .note{font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-top:12px;letter-spacing:.05em}
+
+/* ── FILTER + SEARCH ── */
+.searchbox{width:100%;max-width:420px;margin:0 auto 22px;display:block;background:#080a08;border:1px solid var(--faint);
+  color:var(--bone);font-family:var(--mono);font-size:12px;letter-spacing:.06em;padding:11px 14px;border-radius:8px}
+.searchbox::placeholder{color:var(--faint);letter-spacing:.1em;text-transform:uppercase}
+.searchbox:focus{outline:none;border-color:var(--ng);box-shadow:0 0 0 1px rgba(57,255,20,.2)}
+.filterbar{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:34px}
+.fchip{font-family:var(--mono);font-size:.6rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;
+  cursor:pointer;padding:8px 15px;border-radius:999px;background:transparent;color:var(--muted);
+  border:1px solid var(--faint);transition:.15s}
+.fchip:hover{color:var(--ng-hi);border-color:var(--ng-line)}
+.fchip.active{color:#020d01;background:linear-gradient(180deg,var(--ng-hi),var(--ng) 55%,var(--ng-deep));border-color:transparent;font-weight:700;box-shadow:0 0 16px rgba(57,255,20,.35)}
+
+/* ── SURFACE GRID (goal-card recipe) ── */
+.cat{margin-bottom:44px;scroll-margin-top:80px}
+.cat-h{text-align:center;font-family:var(--mono);font-size:.68rem;letter-spacing:.28em;text-transform:uppercase;color:var(--ng-leaf);margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:14px}
+.cat-h::before,.cat-h::after{content:"";width:44px;height:1px;background:linear-gradient(90deg,transparent,var(--ng-deep))}
+.cat-h::after{transform:scaleX(-1)}
+.cat-h .avg{color:var(--ng);opacity:.65}
+.grid{display:flex;flex-wrap:wrap;justify-content:center;gap:14px}
+.goal{flex:1 1 280px;max-width:380px;position:relative;padding:18px 20px 16px;border-radius:12px;text-decoration:none;color:inherit;display:flex;flex-direction:column;
+  background:linear-gradient(165deg,#0d0e10,#090a0b);
+  border:1px solid var(--ng-line);overflow:hidden;
+  box-shadow:inset 0 1px 0 rgba(57,255,20,.05), 0 8px 24px rgba(0,0,0,.45);
+  transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s,border-color .28s;
+  overflow-wrap:break-word;word-break:normal;hyphens:none;
+}
+.goal:hover{transform:translateY(-4px);border-color:rgba(57,255,20,.38);box-shadow:0 0 28px rgba(57,255,20,.1),0 22px 48px rgba(0,0,0,.6)}
+.goal .gh{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.goal .ct{font-family:var(--disp);font-weight:600;font-size:1rem;line-height:1.2;display:flex;align-items:center;gap:8px}
+.goal .lit{width:6px;height:6px;border-radius:50%;flex:none;background:var(--faint);transition:background .4s,box-shadow .4s;margin-top:5px}
+.goal.up .lit{background:var(--ng);box-shadow:0 0 10px var(--ng),0 0 20px rgba(57,255,20,.4)}
+.goal.warn .lit{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.goal.down .lit{background:var(--ox);box-shadow:0 0 8px var(--ox)}
+.goal .pct{font-family:var(--mono);font-weight:700;font-size:.95rem;color:var(--ng-leaf);flex:none}
+.goal .meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none}
+.pill{font-family:var(--mono);font-size:.52rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;transition:color .3s,border-color .3s,background .3s}
+.pill::before{content:"";width:4px;height:4px;border-radius:50%;background:currentColor;box-shadow:0 0 5px currentColor}
+.pill.p1{color:var(--ox);border-color:rgba(194,91,74,.45);background:rgba(194,91,74,.10)}
+.pill.p2{color:var(--amber);border-color:rgba(255,194,74,.38);background:rgba(255,194,74,.08)}
+.pill.p3{color:var(--ng-leaf);border-color:rgba(57,255,20,.3);background:rgba(57,255,20,.07)}
+.goal .cu{font-family:var(--mono);font-size:.58rem;color:rgba(57,255,20,.35);margin:4px 0 10px;letter-spacing:.02em}
+.goal .blurb{font-family:var(--body);font-weight:300;font-size:.82rem;line-height:1.5;color:var(--muted);margin:0 0 14px;overflow-wrap:break-word;word-break:normal;hyphens:none;flex:1}
+.goal .track{margin-top:auto}
+.goal .gap{font-family:var(--mono);font-size:.59rem;line-height:1.6;letter-spacing:.02em;min-height:1.1em;margin-top:9px}
+.goal .gap.complete{color:var(--ng)}
+.goal .gap .lbl{color:var(--faint)}
+.goal .gap .miss{color:var(--amber)}
+.goal .gap .pend{color:var(--muted);font-style:italic}
+.loading{text-align:center;color:var(--muted);font-family:var(--mono);font-size:.82rem;padding:28px}
+.empty{text-align:center;color:var(--faint);font-family:var(--mono);font-size:.78rem;padding:40px 0;letter-spacing:.08em}
+
+/* ── FOOTER ── */
+footer{padding:56px 0 72px;text-align:center}
+footer .ngrule{max-width:180px;margin:0 auto 20px}
+footer .f1{font-family:var(--disp);font-style:italic;font-weight:500;color:var(--bone);font-size:1rem}
+footer .f2{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;color:var(--faint);margin-top:9px;text-transform:uppercase}
+footer .f2 em{color:var(--ng)}
+
+/* ── MOBILE ── */
+@media(max-width:600px){
+  .plate nav{display:none}
+  h1{font-size:2.2rem}
+  .gauges{gap:10px}
+  .gauge{width:140px;padding:14px 10px 12px}
+  .gauge .v{font-size:1.8rem}
+  .goal{flex:1 1 100%}
+}
+</style>
 </head>
 <body>
-  <main id="os" data-screen-label="OS">
-    <div id="wallpaper" aria-hidden="true">
-      <span class="blob blob-a"></span>
-      <span class="blob blob-b"></span>
-      <span class="blob blob-c"></span>
-      <div class="wp-grain"></div>
-    </div>
 
-    <!-- Global status bar -->
-    <header id="statusbar" aria-hidden="true">
-      <div class="sb-time" id="sb-time">9:41</div>
-      <div class="sb-island" id="sb-island"></div>
-      <div class="sb-right">
-        <span class="sb-signal" title="signal">
-          <i></i><i></i><i></i><i></i>
-        </span>
-        <span class="sb-wifi" id="sb-wifi" title="wi-fi">
-          <svg viewBox="0 0 18 13" width="17" height="13"><path d="M9 12.4 11.1 9.8a2.8 2.8 0 0 0-4.2 0L9 12.4Zm0-5.1a5.6 5.6 0 0 1 4.4 2.1l1.7-2.1a8.4 8.4 0 0 0-12.2 0l1.7 2.1A5.6 5.6 0 0 1 9 7.3Zm0-5.2A11.2 11.2 0 0 0 .3 6.2L2 8.3a8.4 8.4 0 0 1 14 0l1.7-2.1A11.2 11.2 0 0 0 9 2.1Z"/></svg>
-        </span>
-        <span class="sb-batt" title="battery">
-          <span class="sb-batt-shell"><b id="sb-batt-fill" style="width:78%"></b></span>
-          <span class="sb-batt-cap"></span>
-        </span>
-      </div>
-    </header>
+<div class="plate">
+  <div class="mk"><span class="ember"></span>hitthe.link · home</div>
+  <nav>
+    <a href="#clients">Clients</a>
+    <a href="#systems">Systems</a>
+    <a href="#personal">Personal</a>
+    <a href="#tools">Tools</a>
+    <a href="/life/">Life</a>
+  </nav>
+</div>
 
-    <!-- Lock screen -->
-    <section id="lockscreen" data-screen-label="Lock screen" aria-label="Lock screen">
-      <div class="lock-top">
-        <div class="lock-glyph">
-          <svg viewBox="0 0 24 24" width="22" height="22"><path d="M6 10V8a6 6 0 1 1 12 0v2h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h1Zm2 0h8V8a4 4 0 0 0-8 0v2Z"/></svg>
-        </div>
-        <div class="lock-date" id="lock-date">Tuesday, June 3</div>
-        <div class="lock-time" id="lock-time">9:41</div>
-      </div>
+<header class="hero wrap">
+  <div class="eyebrow">— Command Home · hitthe.link —</div>
+  <h1>Hit The <i>Link</i></h1>
+  <div class="ngrule"></div>
+  <p class="lede">Every surface qi runs, on one obsidian directory. Tap any tile to open it live — client sites, systems, tools, personal. Live-tracked or graceful fallback, always showing what's true.</p>
 
-      <div class="lock-notes" id="lock-notes"></div>
+  <div class="health">
+    <div class="top"><span class="lab">Network Health</span><span class="big" id="net-pct">··%</span></div>
+    <div class="track"><div class="fill" id="net-fill"></div></div>
+    <div class="sub"><span class="pulse"></span><span id="net-sub">scanning the estate…</span></div>
+  </div>
 
-      <div class="lock-bottom">
-        <button class="lock-quick" id="lock-flash" aria-label="Flashlight">
-          <svg viewBox="0 0 24 24" width="22" height="22"><path d="M7 2h10l-1.2 5.2a2 2 0 0 1-.5 1L14 9.8V21a2 2 0 0 1-4 0V9.8L8.7 8.2a2 2 0 0 1-.5-1L7 2Z"/></svg>
-        </button>
-        <div class="lock-hint">
-          <span>Swipe up to open</span>
-          <div class="lock-grip"></div>
-        </div>
-        <button class="lock-quick" id="lock-cam" aria-label="Camera">
-          <svg viewBox="0 0 24 24" width="22" height="22"><path d="M9 4l-1.2 1.6H5A2 2 0 0 0 3 7.6V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7.6a2 2 0 0 0-2-2h-2.8L15 4H9Zm3 5.2a4.4 4.4 0 1 1 0 8.8 4.4 4.4 0 0 1 0-8.8Z"/></svg>
-        </button>
-      </div>
-    </section>
+  <div class="gauges">
+    <div class="gauge"><div class="v" id="g-total">—</div><div class="k">Surfaces</div></div>
+    <div class="gauge"><div class="v" id="g-live">—</div><div class="k">Live · 100%</div></div>
+    <div class="gauge"><div class="v" id="g-gap">—</div><div class="k">With Gaps</div></div>
+    <div class="gauge"><div class="v" id="g-cats">—</div><div class="k">Categories</div></div>
+    <div class="gauge"><div class="v" id="g-clients">—</div><div class="k">Client Sites</div></div>
+  </div>
 
-    <!-- Home screen -->
-    <section id="home" data-screen-label="Home screen" aria-label="Home screen" hidden>
-      <div class="home-scroll">
-        <div id="widgets"></div>
-        <div id="grid"></div>
-      </div>
-      <div id="dots"></div>
-      <nav id="dock" aria-label="Dock"></nav>
-    </section>
+  <div class="quick">
+    <a class="qbtn" href="/life/">Life Dashboard</a>
+    <a class="qbtn" href="/xos/">XOS Phone</a>
+    <a class="qbtn" href="/desk/">Universal Inbox</a>
+    <a class="qbtn" href="/status/">Live Status</a>
+    <a class="qbtn" href="/xen-map/">Arch Map</a>
+    <a class="qbtn" href="/requests/">Requests</a>
+  </div>
+</header>
 
-    <!-- App layer -->
-    <div id="app-layer" aria-live="polite"></div>
+<!-- THE ESTATE -->
+<section class="wrap" id="directory">
+  <div class="sechead">
+    <div class="ix">I · The Estate</div>
+    <h2>Every surface, one tap</h2>
+    <div class="rule"></div>
+    <div class="note" id="dir-note">live-scanning every surface · re-checks every 60s</div>
+  </div>
+  <input class="searchbox" id="search" type="text" placeholder="Search surfaces…" autocomplete="off">
+  <div class="filterbar" id="filterbar"></div>
+  <div id="dir-body"><div class="loading">▸ mapping the estate…</div></div>
+  <div class="empty" id="dir-empty" style="display:none">no surfaces match — clear the search</div>
+</section>
 
-    <!-- Control center -->
-    <div id="cc-scrim"></div>
-    <section id="control-center" data-screen-label="Control Center" aria-label="Control Center"></section>
+<footer class="wrap">
+  <div class="ngrule"></div>
+  <div class="f1">hitthe.link — the command home</div>
+  <div class="f2">forged by <em>Xen</em> · East Allen · <span id="ts"></span></div>
+</footer>
 
-    <!-- Home indicator -->
-    <button id="home-indicator" aria-label="Home"></button>
+<script>
+// ── SURFACE REGISTRY (embedded — the canonical home directory) ────────────────
+const SURFACES = [
+  {title:"Home — hitthe.link",url:"/",category:"Systems",blurb:"Root landing page for qi's whole hitthe.link surface network."},
+  {title:"Diamond Cutz Studios",url:"/diamond-cut/",category:"Clients",blurb:"CLIENT (DCZ) — recording-studio site for Diamond Cutz Studios."},
+  {title:"Diamond Cutz Studios (DCZ)",url:"/dcz/",category:"Clients",blurb:"CLIENT (DCZ) — Diamond Cutz recording-studio hub / receptionist config home."},
+  {title:"Stal'lyon → Diamond Cutz",url:"/stal-lyon/",category:"Clients",blurb:"CLIENT (DCZ) — Andre Stallyon artist page feeding into Diamond Cutz Studios."},
+  {title:"First Care Surgical Assistant",url:"/firstcare/",category:"Clients",blurb:"CLIENT (First Care) — First Care Surgical Assistant LLC business site."},
+  {title:"First Care — Receptionist Brief",url:"/firstcare-brief/",category:"Clients",blurb:"CLIENT (First Care) — Beside voice-receptionist brief for First Care."},
+  {title:"L7S Voice-Native Calculator",url:"/l7s/",category:"Clients",blurb:"CLIENT (L7S/Lucky) — L7S 11 voice-native calculator, v08."},
+  {title:"L7S — Links & Docs Index",url:"/l7/",category:"Clients",blurb:"CLIENT (L7S/Lucky) — organized index of all L7S links and docs."},
+  {title:"L7S Hero — Seven Superpowers",url:"/l7s-hero/",category:"Clients",blurb:"CLIENT (L7S/Lucky) — hero page: seven superpowers for the people who run the show."},
+  {title:"L7S Hero Pulse (FOODIES)",url:"/l7s-pulse/",category:"Clients",blurb:"CLIENT (L7S/Lucky) — L7S Hero Pulse one-pager targeted at foodies."},
+  {title:"L7S Operator Hub — B.A.T.M.A.N.",url:"/l7s-operator-hub/",category:"Clients",blurb:"CLIENT (L7S/Lucky) — B.A.T.M.A.N. infrastructure operator hub for L7S."},
+  {title:"L7S — Client Information Sheet",url:"/l7s-client-info/",category:"Clients",blurb:"CLIENT (L7S/Lucky) — L7S Inc. client information intake sheet."},
+  {title:"L7S Offer Ladder",url:"/offers/",category:"Clients",blurb:"CLIENT (L7S/Lucky) — low → mid → high offer ladder for L7S."},
+  {title:"Luckie Goggins — Operator Hub",url:"/luckie/",category:"Clients",blurb:"CLIENT (L7S/Lucky) — Luckie 'Links' Goggins personal operator hub."},
+  {title:"Anthony × Self Exec",url:"/anthony/",category:"Clients",blurb:"CLIENT — Anthony's lead-business overview under Self Exec (Powur ambassador)."},
+  {title:"TrackingTogether",url:"/trackingtogether/",category:"Clients",blurb:"CLIENT — TrackingTogether automation-agency site."},
+  {title:"Padre Sales Ops",url:"/padre/",category:"Clients",blurb:"CLIENT — local-business sites playbook / Padre Sales Ops closer surface."},
+  {title:"WCCI",url:"/wcci/",category:"Clients",blurb:"CLIENT — World Changers Church International site."},
+  {title:"XOS — Xenphone OS",url:"/xos/",category:"Systems",blurb:"Xenphone OS — the iOS-27-styled phone OS shell (most-prized canon)."},
+  {title:"XOS3 — Omni-Inbox",url:"/xos3/",category:"Systems",blurb:"Omni-Inbox surface inside XOS — unified 3-account message view."},
+  {title:"Live Architecture Map",url:"/xen-map/",category:"Systems",blurb:"Xen · Exedus live architecture map of the whole system."},
+  {title:"Arch — JetStream Event Sourcing",url:"/arch-jetstream/",category:"Systems",blurb:"Architecture brief: NATS JetStream as the source of truth (CQRS)."},
+  {title:"M4 Brain Map",url:"/brain-map/",category:"Systems",blurb:"Map of the M4 'brain' — memory stores and daemon topology."},
+  {title:"Xen Awareness Map",url:"/xen-awareness/",category:"Systems",blurb:"Registry of registries — Xen's self-awareness map."},
+  {title:"Xen Real-Time Fabric",url:"/xen-fabric/",category:"Systems",blurb:"The real-time event fabric wiring agents, voice, and comms."},
+  {title:"Scope Universe",url:"/scopes/",category:"Systems",blurb:"Xen Scope Universe — 766 proven scopes."},
+  {title:"Xen Commandments",url:"/commandments/",category:"Systems",blurb:"The Xen Commandments canon — one canon, no fallbacks."},
+  {title:"Manifesto",url:"/manifesto/",category:"Systems",blurb:"Xen manifesto / founding-principles page."},
+  {title:"48-Hour Roadmap",url:"/roadmap/",category:"Systems",blurb:"Xen 48-hour roadmap of near-term milestones."},
+  {title:"The Business Spine",url:"/spine/",category:"Systems",blurb:"Entities, payments, and roadmaps — the business spine."},
+  {title:"The Ledger — Overview",url:"/overview/",category:"Systems",blurb:"hitthe.link · The Ledger — top-level overview of everything."},
+  {title:"Omni-Inbox Architecture",url:"/omni-inbox/",category:"Systems",blurb:"Architecture & plan for the cross-channel Omni-Inbox."},
+  {title:"Self Exec",url:"/selfexec/",category:"Systems",blurb:"qi's own brand — automation consulting & ROI systems (Self Exec)."},
+  {title:"SelfOwn_",url:"/selfown/",category:"Systems",blurb:"SelfOwn_ — the GHL / LeadConnector killer platform."},
+  {title:"East Allen's Growth Interface",url:"/east-allen-growth-interface/",category:"Systems",blurb:"CTO EAST — East Allen's growth interface / command surface."},
+  {title:"G.O.D. SOP Dashboard",url:"/god-sop-dashboard/",category:"Systems",blurb:"CTO EAST — G.O.D. SOP dashboard for East Allen operations."},
+  {title:"XLRD TECH",url:"/xlrd-tech/",category:"Systems",blurb:"XLRD TECH — the College-of-Letterman-Wizardry umbrella brand."},
+  {title:"xlrd.org",url:"/xlrd-org/",category:"Systems",blurb:"xlrd.org — Executive Leverage Research Development landing."},
+  {title:"Universal Mesh",url:"/mesh/",category:"Systems",blurb:"Universal Mesh under Self Exec — connective infra layer."},
+  {title:"LIFE — Command Dashboard",url:"/life/",category:"Personal",blurb:"XEN · LIFE — qi's personal command dashboard."},
+  {title:"Requests — The Map",url:"/requests/",category:"Personal",blurb:"Xen · requests · the map — every ask qi makes, tracked."},
+  {title:"Itinerary",url:"/itinerary/",category:"Personal",blurb:"Pre-sunrise punch list + full 36-section scope itinerary."},
+  {title:"VEINOM · RUACH",url:"/veinom/",category:"Personal",blurb:"VEINOM · RUACH — qi's personal/spiritual surface."},
+  {title:"XEN — Tag It. It's There.",url:"/xen/",category:"Tools",blurb:"XEN tagging entry point — one field to tag any project/person/horizon."},
+  {title:"VVSVEI — Voice Vision SMS",url:"/vvsvei/",category:"Tools",blurb:"VVSVEI — the voice + vision + SMS reply surface for Xen."},
+  {title:"VVSVEI — Live",url:"/vvsvei-live/",category:"Tools",blurb:"Live real-time view of the VVSVEI voice pipeline."},
+  {title:"Xen Voice → VEI",url:"/vvsvei-voice/",category:"Tools",blurb:"Canonical Xen-voice-into-VEI pipeline surface."},
+  {title:"MCP Live-Streaming",url:"/mcp-live/",category:"Tools",blurb:"MCP live-streaming data brief — resource-sub + SSE agent status."},
+  {title:"Status — Xen Live",url:"/status/",category:"Tools",blurb:"Live Xen system status page."},
+  {title:"Voice Status — One Queue",url:"/voice-status/",category:"Tools",blurb:"XEN Voice — one-queue live voice status view."},
+  {title:"Voice Line — Status & Fix Log",url:"/voice-line/",category:"Tools",blurb:"Xen voice-line (470-369-6463) status and fix log."},
+  {title:"Two-Way Voice",url:"/twoway-voice/",category:"Tools",blurb:"Xen two-way voice via iOS Shortcut."},
+  {title:"Godmode Siri",url:"/godmode/",category:"Tools",blurb:"Godmode Siri — Mac-control / god-mode command surface."},
+  {title:"Desk — Universal Inbox",url:"/desk/",category:"Tools",blurb:"desk · XEN's universal inbox across all channels."},
+  {title:"Firehose — Live Event Stream",url:"/firehose/",category:"Tools",blurb:"Omnicom live event stream (firehose) of system activity."},
+  {title:"Omni Vision Wall",url:"/vision/",category:"Tools",blurb:"Xen · Omni Vision Wall — visual dual-display feed."},
+  {title:"Notification Center (RSS)",url:"/rss/",category:"Tools",blurb:"XEN Notification Center / RSS feed surface."},
+  {title:"Session Guardian",url:"/guardian/",category:"Tools",blurb:"XEN Session Guardian — fork-prompt / drift protection."},
+  {title:"Hero Calculators",url:"/calculators/",category:"Tools",blurb:"L7S Hero calculators collection."},
+  {title:"Offer Builder",url:"/offer-builder/",category:"Tools",blurb:"Offer Builder — 7-variable offer framework (XLRD)."},
+  {title:"Client Intake",url:"/intake/",category:"Tools",blurb:"Self Exec client intake — build-your-site flow."},
+  {title:"BE-ME Receptionist",url:"/receptionist/",category:"Tools",blurb:"BE-ME voice-agent receptionist product page (Self Exec)."},
+  {title:"Pricing — Executive Leverage",url:"/pricing/",category:"Tools",blurb:"XLRD executive-leverage engagements & pricing."},
+  {title:"Audit Pack",url:"/audit/",category:"Tools",blurb:"Xen Audit Pack for qi / xlrdtech."},
+  {title:"Debt / P&L Ledger",url:"/debt/",category:"Tools",blurb:"Xen Ledger — debt, P&L, and sentiment tracking."},
+  {title:"Cost Breakdown Dashboard",url:"/costs/",category:"Tools",blurb:"Cost breakdown dashboard for the stack."},
+  {title:"Usage Burn Audit",url:"/usage-burn/",category:"Tools",blurb:"XEN usage-burn audit — what ran while you were away."},
+  {title:"Android Launchers",url:"/launchers/",category:"Tools",blurb:"10 Android launcher live prototypes."},
+  {title:"Grok Projects",url:"/grok/",category:"Tools",blurb:"Grok Projects index on hitthe.link."},
+  {title:"Pattern Decision Tree",url:"/pattern-tree/",category:"Tools",blurb:"Design-pattern decision tree — pick by friction, not by name."}
+];
 
-    <!-- top edge grab zone for control center -->
-    <div id="cc-grab" aria-hidden="true"></div>
-  </main>
+const CAT_ORDER = ["Clients","Systems","Personal","Tools"];
+const CATID = {Clients:'clients',Systems:'systems',Personal:'personal',Tools:'tools'};
 
-  <script src="js/icons.js"></script>
-  <script src="js/apps.js"></script>
-  <script src="js/os.js"></script>
-  <script src="js/sites.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(() => {});
-      });
-    }
-  </script>
+// ── LIVE SCAN ENGINE (same recipe as /life) ──────────────────────────────────
+const CHECKS = [
+  {k:'live',  w:34, label:'shipped & reachable'},
+  {k:'meta',  w:16, label:'title + description'},
+  {k:'social',w:14, label:'social card (og:image)'},
+  {k:'clean', w:14, label:'no placeholders'},
+  {k:'brand', w:10, label:'logo / favicon'},
+  {k:'mobile',w:8,  label:'mobile viewport'},
+  {k:'depth', w:4,  label:'substantial content'},
+];
+function scoreHtml(html){
+  const has={
+    live:true,
+    meta:/<title>[^<]{3,}<\/title>/i.test(html) && /name=["']description["']/i.test(html),
+    social:/property=["']og:image["']/i.test(html) || /name=["']twitter:image["']/i.test(html),
+    clean:!(/\{\{[a-z0-9_]/i.test(html) || /lorem ipsum/i.test(html) || /______/.test(html) || />\s*sample\s*</i.test(html)),
+    brand:/logo|favicon|rel=["']icon|apple-touch-icon/i.test(html),
+    mobile:/name=["']viewport["']/i.test(html),
+    depth:html.length>4000,
+  };
+  let pct=0; const gaps=[];
+  CHECKS.forEach(c=>{ if(has[c.k]) pct+=c.w; else if(c.k!=='live') gaps.push(c.label); });
+  return {pct,gaps};
+}
+async function analyze(url){
+  try{
+    const res=await fetch(url,{cache:'no-store'});
+    if(!res.ok) return {pct:0,gaps:['unreachable ('+res.status+')'],state:'down'};
+    const html=await res.text();
+    const {pct,gaps}=scoreHtml(html);
+    return {pct,gaps,state:pct>=100?'up':(pct>=70?'warn':'down')};
+  }catch(e){ return {pct:0,gaps:['offline / blocked'],state:'down'}; }
+}
+async function pool(items,n,fn){
+  let i=0;
+  const run=async()=>{ while(i<items.length){ const idx=i++; await fn(items[idx],idx); } };
+  await Promise.all(Array.from({length:Math.min(n,items.length)},run));
+}
+function escH(s){ return String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+function renderGap(g){
+  if(g.pct>=100) return '<span class="complete">✓ live · 100%</span>';
+  if(g.gaps&&g.gaps.length){
+    const top=g.gaps.slice(0,3).map(x=>'<span class="miss">'+escH(x)+'</span>').join('<span class="lbl"> · </span>');
+    return '<span class="lbl">gap → </span>'+top;
+  }
+  return '<span class="pend">scanning…</span>';
+}
+function paint(el,g){
+  el.classList.remove('up','warn','down');
+  el.classList.add(g.state||'warn');
+  el.querySelector('.fill').style.width=(g.pct||0)+'%';
+  el.querySelector('.pct').textContent=(g.pct||0)+'%';
+  const pri=g.pct>=100?{c:'p3',t:'LIVE'}:(g.pct>=70?{c:'p2',t:'PARTIAL'}:{c:'p1',t:'CHECK'});
+  const pill=el.querySelector('.pill'); pill.className='pill '+pri.c; pill.textContent=pri.t;
+  el.querySelector('.gap').className='gap'+(g.pct>=100?' complete':'');
+  el.querySelector('.gap').innerHTML=renderGap(g);
+}
+let CARDS=[];
+async function trackAll(){
+  await pool(CARDS,6,async(card)=>{ const r=await analyze(card.url); card.result=r; paint(card.el,r); });
+  const scored=CARDS.filter(c=>c.result);
+  const avg=scored.length?Math.round(scored.reduce((a,c)=>a+c.result.pct,0)/scored.length):0;
+  const live=scored.filter(c=>c.result.pct>=100).length;
+  const gap=scored.filter(c=>c.result.pct<100).length;
+  document.getElementById('net-pct').textContent=avg+'%';
+  document.getElementById('net-fill').style.width=avg+'%';
+  document.getElementById('g-live').textContent=live;
+  document.getElementById('g-gap').textContent=gap;
+  document.getElementById('net-sub').innerHTML='<span class="pulse"></span>'+scored.length+' surfaces scanned · '+live+' at 100% · '+gap+' flagged · live re-scan every 60s';
+}
+
+// ── BUILD DIRECTORY ───────────────────────────────────────────────────────────
+const groups={};
+SURFACES.forEach(s=>{ (groups[s.category||'Other']??=[]).push(s); });
+const cats=Object.keys(groups).sort((a,b)=>{
+  const ia=CAT_ORDER.indexOf(a),ib=CAT_ORDER.indexOf(b);
+  return (ia<0?99:ia)-(ib<0?99:ib);
+});
+document.getElementById('g-total').textContent=SURFACES.length;
+document.getElementById('g-cats').textContent=cats.length;
+document.getElementById('g-clients').textContent=(groups['Clients']||[]).length;
+
+// filter chips
+let activeFilter='All';
+const fb=document.getElementById('filterbar');
+function chip(label){
+  const b=document.createElement('button');
+  b.className='fchip'+(label==='All'?' active':'');
+  b.textContent=(label==='All'?'All · '+SURFACES.length:label+' · '+(groups[label]?groups[label].length:0));
+  b.dataset.cat=label;
+  b.onclick=()=>{ activeFilter=label; [...fb.children].forEach(c=>c.classList.toggle('active',c===b)); applyFilter(); };
+  fb.appendChild(b);
+}
+chip('All'); cats.forEach(chip);
+
+const body=document.getElementById('dir-body'); body.innerHTML='';
+cats.forEach(cat=>{
+  const w=document.createElement('div'); w.className='cat'; w.dataset.cat=cat; w.id=CATID[cat]||('cat-'+cat.toLowerCase());
+  const h=document.createElement('div'); h.className='cat-h';
+  h.innerHTML=escH(cat)+' <span class="avg">· '+groups[cat].length+'</span>'; w.appendChild(h);
+  const g=document.createElement('div'); g.className='grid';
+  groups[cat].forEach(s=>{
+    const a=document.createElement('a'); a.className='goal'; a.href=s.url; a.target='_blank'; a.rel='noopener';
+    a.dataset.search=(s.title+' '+s.blurb+' '+s.url).toLowerCase();
+    a.innerHTML='<div class="gh"><div class="ct"><span class="lit"></span>'+escH(s.title)+'</div><div class="meta"><span class="pill p2">QUEUED</span><span class="pct">··%</span></div></div>'+
+      '<div class="cu">hitthe.link'+escH(s.url)+'</div>'+
+      '<div class="blurb">'+escH(s.blurb)+'</div>'+
+      '<div class="track"><div class="fill"></div></div>'+
+      '<div class="gap"><span class="pend">queued…</span></div>';
+    g.appendChild(a); CARDS.push({url:s.url,el:a,result:null,cat:cat});
+  });
+  w.appendChild(g); body.appendChild(w);
+});
+
+function applyFilter(){
+  const q=(document.getElementById('search').value||'').trim().toLowerCase();
+  let totalVisible=0;
+  [...body.querySelectorAll('.cat')].forEach(catEl=>{
+    const catName=catEl.dataset.cat;
+    let anyVisible=false;
+    [...catEl.querySelectorAll('.goal')].forEach(card=>{
+      const catMatch=(activeFilter==='All'||activeFilter===catName);
+      const searchMatch=(!q||card.dataset.search.includes(q));
+      const show=catMatch&&searchMatch;
+      card.style.display=show?'':'none';
+      if(show){ anyVisible=true; totalVisible++; }
+    });
+    catEl.style.display=anyVisible?'':'none';
+  });
+  document.getElementById('dir-empty').style.display=totalVisible?'none':'block';
+}
+document.getElementById('search').addEventListener('input',applyFilter);
+
+trackAll();
+setInterval(trackAll,60000);
+document.getElementById('ts').textContent=new Date().toISOString().slice(0,10);
+</script>
 </body>
 </html>
