@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XLRD TECH — Invoice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Inter',sans-serif;color:#1a1d24;
+    background:
+      radial-gradient(ellipse 1000px 500px at 50% -5%, rgba(120,140,255,0.10), transparent 60%),
+      linear-gradient(180deg,#f7f8fb 0%,#eef1ف6 100%),#f2f4f9;
+    background-color:#f4f6fb;
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;
+    padding:32px 18px 60px;-webkit-font-smoothing:antialiased;
+  }
+  .sheet{
+    width:100%;max-width:640px;background:#ffffff;
+    border:1px solid #e4e8f0;border-radius:22px;
+    box-shadow:0 20px 60px -20px rgba(40,60,120,0.18),0 2px 8px rgba(40,60,120,0.06);
+    overflow:hidden;
+  }
+  .top{
+    padding:30px 34px 26px;
+    background:linear-gradient(135deg,#0e1420 0%,#1b2740 100%);
+    color:#eef2fb;position:relative;
+  }
+  .top::after{content:"";position:absolute;inset:0;
+    background:radial-gradient(ellipse 600px 200px at 80% 0%, rgba(140,170,255,0.22), transparent 60%);pointer-events:none}
+  .brand{font-family:'Figtree',sans-serif;font-weight:800;font-size:22px;letter-spacing:.02em;position:relative}
+  .brand .mark{color:#8fb0ff}
+  .sub{font-size:13px;color:#9fb0d0;margin-top:3px;position:relative}
+  .inv-meta{display:flex;justify-content:space-between;align-items:flex-end;margin-top:20px;position:relative;flex-wrap:wrap;gap:10px}
+  .inv-meta .lbl{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8595b5}
+  .inv-meta .val{font-family:'Figtree',sans-serif;font-weight:700;font-size:16px;color:#fff;margin-top:2px}
+  .body{padding:28px 34px 8px}
+  .row-head{display:grid;grid-template-columns:1fr auto;gap:12px;padding-bottom:12px;border-bottom:1px solid #e9edf4;
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#8a93a8}
+  .line{display:grid;grid-template-columns:1fr auto;gap:12px;padding:18px 0;border-bottom:1px solid #f0f2f7}
+  .line .desc{font-family:'Figtree',sans-serif;font-weight:700;font-size:16px;color:#1a1d24}
+  .line .note{font-size:13px;color:#69728a;margin-top:5px;line-height:1.5;max-width:44ch}
+  .line .amt{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:16px;color:#1a1d24;white-space:nowrap}
+  .totals{padding:22px 34px 8px}
+  .tline{display:flex;justify-content:space-between;padding:7px 0;font-size:14px;color:#4a5266}
+  .tline.total{border-top:2px solid #1b2740;margin-top:8px;padding-top:14px;
+    font-family:'Figtree',sans-serif;font-weight:800;font-size:20px;color:#0e1420}
+  .tline.total .n{font-family:'JetBrains Mono',monospace}
+  .tline .n{font-family:'JetBrains Mono',monospace}
+  .deposit{
+    margin:20px 34px 4px;padding:18px 20px;border-radius:14px;
+    background:linear-gradient(135deg,#eef3ff,#f6f0ff);border:1px solid #dfe6fb;
+  }
+  .deposit .h{font-family:'Figtree',sans-serif;font-weight:800;font-size:15px;color:#243056;margin-bottom:6px}
+  .deposit .t{font-size:13.5px;color:#4a5470;line-height:1.6}
+  .deposit b{color:#243056;font-family:'JetBrains Mono',monospace}
+  .foot{padding:22px 34px 30px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  .foot .who{font-family:'Figtree',sans-serif;font-weight:700;font-size:14px;color:#1a1d24}
+  .foot .contact{font-size:13px;color:#69728a}
+  .badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.08em;
+    color:#5566aa;background:#eef1fb;border:1px solid #dfe4f4;border-radius:999px;padding:4px 11px;margin-top:4px}
+  @media (max-width:480px){.body,.totals,.foot{padding-left:22px;padding-right:22px}.deposit{margin-left:22px;margin-right:22px}.top{padding:26px 22px 22px}}
+</style></head><body>
+  <div class="sheet">
+    <div class="top">
+      <div class="brand">XLRD <span class="mark">TECH</span></div>
+      <div class="sub">AI Systems · Web · Automation</div>
+      <div class="inv-meta">
+        <div><div class="lbl">Invoice</div><div class="val">Books → PowerPoints</div></div>
+        <div style="text-align:right"><div class="lbl">Rate</div><div class="val">Non-Profit</div></div>
+      </div>
+    </div>
+
+    <div class="body">
+      <div class="row-head"><span>Item</span><span>Amount</span></div>
+      <div class="line">
+        <div>
+          <div class="desc">NotebookLM Knowledge Base</div>
+          <div class="note">All 5 books ingested into a single custom-prompted knowledge base — the engine that produces every deliverable.</div>
+        </div>
+        <div class="amt">$111</div>
+      </div>
+      <div class="line">
+        <div>
+          <div class="desc">20 Branded PowerPoints</div>
+          <div class="note">Visual decks generated from the books, styled to your brand. Deep visual detail across all 20.</div>
+        </div>
+        <div class="amt">$222</div>
+      </div>
+    </div>
+
+    <div class="totals">
+      <div class="tline"><span>Subtotal</span><span class="n">$333</span></div>
+      <div class="tline"><span>Non-profit rate applied</span><span class="n">included</span></div>
+      <div class="tline total"><span>Total Due</span><span class="n">$333</span></div>
+    </div>
+
+    <div class="deposit">
+      <div class="h">To begin</div>
+      <div class="t">Half down — <b>$167</b> — locks your spot and starts the build. Remaining <b>$166</b> due on delivery. Send the deposit and the 5 books and work begins.</div>
+    </div>
+
+    <div class="foot">
+      <div>
+        <div class="who">East Allen · XLRD TECH</div>
+        <div class="contact">east@xlrd.org</div>
+        <span class="badge">$111 / unit · time is the variable</span>
+      </div>
+    </div>
+  </div>
+<script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
+</body></html>
