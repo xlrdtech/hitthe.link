@@ -146,19 +146,22 @@
      round-tripped — landed in my pane and came back. That lane is proven, not assumed.</p>
 </div>
 
-<h2>Services</h2>
-<div class="scroll">
-<table>
-<tr><th>port</th><th>service</th><th>state</th><th>impact</th></tr>
-<tr><td>4441</td><td>omnimind</td><td class="ok">UP</td><td>inject lane — healthy</td></tr>
-<tr><td>23375</td><td>mcp-hub</td><td class="ok">UP</td><td>all tools reachable</td></tr>
-<tr><td>4489</td><td>omni-inbox</td><td class="ok">UP</td><td>messages fine</td></tr>
-<tr><td>4457</td><td>bee-webhook</td><td class="ok">UP</td><td>wearable arriving</td></tr>
-<tr><td>4442</td><td>xen-sms</td><td class="ok">UP</td><td>SMS leg fine</td></tr>
-<tr><td>5080</td><td>openobserve</td><td class="ok">UP</td><td>telemetry fine</td></tr>
-<tr><td>6666</td><td>beeper bridge</td><td class="no">DOWN</td><td>no Beeper on this Mac at all</td></tr>
-<tr><td>27124</td><td>obsidian API</td><td class="no">DOWN</td><td>vault writes still land on disk</td></tr>
-</table>
+<h2>Services — deliberately NOT shown here</h2>
+<div class="card b">
+  <span class="tag b">removed on purpose</span>
+  <h3>This page will not tell you what's up or down</h3>
+  <p>It used to. It listed eight ports as UP or DOWN — frozen at 12:32 PM. So when a service came
+     back, this page kept saying DOWN. <b>A frozen status badge is a lie with a timestamp on it</b>,
+     and qi's rule is exact: <i>"if you say something's up or something's down, it better be live.
+     100%. True, real-time fact."</i></p>
+  <p>A static page on GitHub Pages physically cannot know the state of a service on the Mac. So it
+     no longer pretends to. Live state moved somewhere that re-measures:</p>
+  <p><b>→ <a href="http://100.97.145.50:4493/" style="color:var(--ice)">100.97.145.50:4493</a></b>
+     — SSE, re-probes every 2 seconds with a real TCP connect and a live tmux query. If its stream
+     dies the heartbeat turns red and it says <code>STALE</code> instead of showing old numbers.
+     <code>/state</code> serves the same as raw JSON.</p>
+  <p class="why">What stays on this page is <b>history</b> — what happened today and why. History is
+     safe to freeze; status is not. That's the line.</p>
 </div>
 
 <h2>Blocked on you — one thing</h2>
