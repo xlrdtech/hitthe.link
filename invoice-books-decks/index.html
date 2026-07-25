@@ -5,62 +5,68 @@
 <title>XLRD TECH — Invoice</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Spline+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
+  :root{
+    --obsidian:#050507; --coal:#0b0c0e; --slate:#111318;
+    --ng:#39FF14; --ng-hi:#a8ff7a; --ng-deep:#1a7308; --ng-leaf:#5eff30;
+    --ng-glow:rgba(57,255,20,.45); --ng-faint:rgba(57,255,20,.12); --ng-line:rgba(57,255,20,.18);
+    --bone:#f0ede6; --muted:#7a7870; --faint:#3e3c37; --amber:#ffc24a; --ox:#c25b4a;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+    --body:'Spline Sans',system-ui,sans-serif;
+    --disp:'Fraunces',Georgia,serif;
+  }
   *{box-sizing:border-box;margin:0;padding:0}
   body{
-    font-family:'Inter',sans-serif;color:#1a1d24;
+    font-family:var(--body);color:var(--bone);
     background:
-      radial-gradient(ellipse 1000px 500px at 50% -5%, rgba(120,140,255,0.10), transparent 60%),
-      linear-gradient(180deg,#f7f8fb 0%,#eef1ف6 100%),#f2f4f9;
-    background-color:#f4f6fb;
+      radial-gradient(900px 500px at 50% -6%, var(--ng-faint), transparent 60%),
+      linear-gradient(180deg,var(--obsidian),#070909);
+    background-color:var(--obsidian);
     min-height:100vh;display:flex;flex-direction:column;align-items:center;
-    padding:32px 18px 60px;-webkit-font-smoothing:antialiased;
+    padding:30px 18px 60px;-webkit-font-smoothing:antialiased;
   }
   .sheet{
-    width:100%;max-width:640px;background:#ffffff;
-    border:1px solid #e4e8f0;border-radius:22px;
-    box-shadow:0 20px 60px -20px rgba(40,60,120,0.18),0 2px 8px rgba(40,60,120,0.06);
-    overflow:hidden;
+    width:100%;max-width:640px;
+    background:linear-gradient(165deg,var(--coal),#070909);
+    border:1px solid var(--ng-line);border-radius:20px;overflow:hidden;
+    box-shadow:0 0 0 1px rgba(57,255,20,.06), 0 30px 80px -30px rgba(0,0,0,.9), 0 0 60px -20px var(--ng-glow);
   }
-  .top{
-    padding:30px 34px 26px;
-    background:linear-gradient(135deg,#0e1420 0%,#1b2740 100%);
-    color:#eef2fb;position:relative;
-  }
-  .top::after{content:"";position:absolute;inset:0;
-    background:radial-gradient(ellipse 600px 200px at 80% 0%, rgba(140,170,255,0.22), transparent 60%);pointer-events:none}
-  .brand{font-family:'Figtree',sans-serif;font-weight:800;font-size:22px;letter-spacing:.02em;position:relative}
-  .brand .mark{color:#8fb0ff}
-  .sub{font-size:13px;color:#9fb0d0;margin-top:3px;position:relative}
+  .top{ padding:30px 34px 24px; border-bottom:1px solid var(--ng-line); position:relative; }
+  .top::after{content:"";position:absolute;inset:0;background:radial-gradient(500px 160px at 85% -20%, var(--ng-faint), transparent 65%);pointer-events:none}
+  .brand{font-family:var(--disp);font-weight:700;font-size:26px;letter-spacing:-.01em;color:var(--bone);position:relative}
+  .brand .mark{color:var(--ng);text-shadow:0 0 18px var(--ng-glow)}
+  .sub{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-top:8px;position:relative}
   .inv-meta{display:flex;justify-content:space-between;align-items:flex-end;margin-top:20px;position:relative;flex-wrap:wrap;gap:10px}
-  .inv-meta .lbl{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8595b5}
-  .inv-meta .val{font-family:'Figtree',sans-serif;font-weight:700;font-size:16px;color:#fff;margin-top:2px}
-  .body{padding:28px 34px 8px}
-  .row-head{display:grid;grid-template-columns:1fr auto;gap:12px;padding-bottom:12px;border-bottom:1px solid #e9edf4;
-    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#8a93a8}
-  .line{display:grid;grid-template-columns:1fr auto;gap:12px;padding:18px 0;border-bottom:1px solid #f0f2f7}
-  .line .desc{font-family:'Figtree',sans-serif;font-weight:700;font-size:16px;color:#1a1d24}
-  .line .note{font-size:13px;color:#69728a;margin-top:5px;line-height:1.5;max-width:44ch}
-  .line .amt{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:16px;color:#1a1d24;white-space:nowrap}
-  .totals{padding:22px 34px 8px}
-  .tline{display:flex;justify-content:space-between;padding:7px 0;font-size:14px;color:#4a5266}
-  .tline.total{border-top:2px solid #1b2740;margin-top:8px;padding-top:14px;
-    font-family:'Figtree',sans-serif;font-weight:800;font-size:20px;color:#0e1420}
-  .tline.total .n{font-family:'JetBrains Mono',monospace}
-  .tline .n{font-family:'JetBrains Mono',monospace}
+  .inv-meta .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+  .inv-meta .val{font-family:var(--disp);font-weight:600;font-size:17px;color:var(--bone);margin-top:3px}
+  .inv-meta .val.ng{color:var(--ng)}
+  .body{padding:26px 34px 6px}
+  .row-head{display:grid;grid-template-columns:1fr auto;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--ng-line);
+    font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .line{display:grid;grid-template-columns:1fr auto;gap:12px;padding:18px 0;border-bottom:1px solid rgba(57,255,20,.08)}
+  .line .desc{font-family:var(--disp);font-weight:600;font-size:17px;color:var(--bone)}
+  .line .note{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.55;max-width:46ch}
+  .line .amt{font-family:var(--mono);font-weight:600;font-size:16px;color:var(--ng-hi);white-space:nowrap}
+  .totals{padding:22px 34px 6px}
+  .tline{display:flex;justify-content:space-between;padding:7px 0;font-size:14px;color:var(--muted)}
+  .tline .n{font-family:var(--mono);color:var(--bone)}
+  .tline.total{border-top:1px solid var(--ng-line);margin-top:10px;padding-top:16px;
+    font-family:var(--disp);font-weight:700;font-size:22px;color:var(--bone);align-items:baseline}
+  .tline.total .n{font-family:var(--mono);color:var(--ng);text-shadow:0 0 16px var(--ng-glow);font-size:22px}
   .deposit{
     margin:20px 34px 4px;padding:18px 20px;border-radius:14px;
-    background:linear-gradient(135deg,#eef3ff,#f6f0ff);border:1px solid #dfe6fb;
+    background:linear-gradient(165deg,rgba(57,255,20,.06),rgba(8,9,10,.4));
+    border:1px solid var(--ng-line);
   }
-  .deposit .h{font-family:'Figtree',sans-serif;font-weight:800;font-size:15px;color:#243056;margin-bottom:6px}
-  .deposit .t{font-size:13.5px;color:#4a5470;line-height:1.6}
-  .deposit b{color:#243056;font-family:'JetBrains Mono',monospace}
-  .foot{padding:22px 34px 30px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
-  .foot .who{font-family:'Figtree',sans-serif;font-weight:700;font-size:14px;color:#1a1d24}
-  .foot .contact{font-size:13px;color:#69728a}
-  .badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.08em;
-    color:#5566aa;background:#eef1fb;border:1px solid #dfe4f4;border-radius:999px;padding:4px 11px;margin-top:4px}
+  .deposit .h{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ng);margin-bottom:8px}
+  .deposit .t{font-size:14px;color:var(--bone);line-height:1.65}
+  .deposit b{color:var(--ng-hi);font-family:var(--mono)}
+  .foot{padding:22px 34px 30px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border-top:1px solid rgba(57,255,20,.08)}
+  .foot .who{font-family:var(--disp);font-weight:600;font-size:15px;color:var(--bone)}
+  .foot .contact{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:3px}
+  .badge{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+    color:var(--ng);background:var(--ng-faint);border:1px solid var(--ng-line);border-radius:999px;padding:5px 12px;margin-top:8px}
   @media (max-width:480px){.body,.totals,.foot{padding-left:22px;padding-right:22px}.deposit{margin-left:22px;margin-right:22px}.top{padding:26px 22px 22px}}
 </style></head><body>
   <div class="sheet">
@@ -69,7 +75,7 @@
       <div class="sub">AI Systems · Web · Automation</div>
       <div class="inv-meta">
         <div><div class="lbl">Invoice</div><div class="val">Books → PowerPoints</div></div>
-        <div style="text-align:right"><div class="lbl">Rate</div><div class="val">Non-Profit</div></div>
+        <div style="text-align:right"><div class="lbl">Rate</div><div class="val ng">Non-Profit</div></div>
       </div>
     </div>
 
@@ -78,7 +84,7 @@
       <div class="line">
         <div>
           <div class="desc">NotebookLM Knowledge Base</div>
-          <div class="note">All 5 books ingested into a single custom-prompted knowledge base — the engine that produces every deliverable.</div>
+          <div class="note">All 5 books ingested into one custom-prompted knowledge base — the engine that produces every deliverable.</div>
         </div>
         <div class="amt">$111</div>
       </div>
@@ -106,7 +112,7 @@
       <div>
         <div class="who">East Allen · XLRD TECH</div>
         <div class="contact">east@xlrd.org</div>
-        <span class="badge">$111 / unit · time is the variable</span>
+        <span class="badge">$111 / UNIT · TIME IS THE VARIABLE</span>
       </div>
     </div>
   </div>
