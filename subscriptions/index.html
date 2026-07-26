@@ -282,7 +282,21 @@ const SEED=[
 ];
 
 let subs=load();
-function load(){try{const r=localStorage.getItem(K);if(r){const p=JSON.parse(r);if(Array.isArray(p)&&p.length)return p;}}catch(e){}localStorage.setItem(K,JSON.stringify(SEED));return SEED.map(s=>Object.assign({},s));}
+function load(){
+  try{
+    const r=localStorage.getItem(K);
+    if(r){
+      const p=JSON.parse(r);
+      if(Array.isArray(p)&&p.length){
+        // Migrate off the legacy v1 auto-seed (only iCloud+Setapp placeholders) so real 2026-07 data lands.
+        const legacyOnly=p.every(s=>s&&(s.id==='seed-icloud'||s.id==='seed-setapp'));
+        if(!legacyOnly)return p;        // genuine / user-touched data — keep it
+      }
+    }
+  }catch(e){}
+  localStorage.setItem(K,JSON.stringify(SEED));
+  return SEED.map(s=>Object.assign({},s));
+}
 function save(){try{localStorage.setItem(K,JSON.stringify(subs));}catch(e){}}
 function monthly(s){if(s.amt==null||isNaN(s.amt))return null;return s.cycle==='yearly'?s.amt/12:s.cycle==='weekly'?s.amt*52/12:s.amt;}
 function money(n){return '$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
