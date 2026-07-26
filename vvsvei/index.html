@@ -2768,7 +2768,7 @@ function _ssSpeakClip(clip, genAtStart) {
     u.onend = go; u.onerror = go;                             // never block the queue on one utterance
     const wd = setTimeout(() => { try { ss.cancel(); } catch (_) {} go(); }, part.length * 70 + 4000); // stuck watchdog
     _avaStatus = 'speaking'; _renderAvaPill();
-    try { ss.speak(u); } catch (_) { clearTimeout(wd); go(); }
+    /* CANON 2026-07-25: browser fallback voice ELIMINATED by construction — never call ss.speak; advance queue silently. Ava /api/tts premium path untouched. */ clearTimeout(wd); go();
   };
   try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; } catch (_) {}
   next();
