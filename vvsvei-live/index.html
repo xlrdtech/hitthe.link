@@ -126,18 +126,7 @@ function reflectUI(){
 }
 function showSpeaking(on){ speakingEl.classList.toggle('show', on); }
 
-function speak(text){
-  if(!synth || !voiceEnabled || muted || !text) return;
-  try{
-    const u = new SpeechSynthesisUtterance(text);
-    if(chosenVoice){ u.voice=chosenVoice; u.lang=chosenVoice.lang; }
-    u.rate=1.0; u.pitch=1.0; u.volume=1.0;
-    u.onstart=()=>showSpeaking(true);
-    u.onend=()=>{ if(!synth.speaking&&!synth.pending) showSpeaking(false); };
-    u.onerror=()=>showSpeaking(false);
-    synth.speak(u);
-  }catch{}
-}
+function speak(text){ /* CANON 2026-07-25: browser fallback voice ELIMINATED by construction. ONE voice = desktop premium leg. Display-only. */ try{ if(typeof showSpeaking==='function') showSpeaking(false); }catch(e){} return; }
 
 enableBtn.addEventListener('click', ()=>{
   voiceEnabled = !voiceEnabled;
@@ -145,7 +134,7 @@ enableBtn.addEventListener('click', ()=>{
   if(voiceEnabled && synth){
     pickVoice();
     // prime: a short utterance inside the user gesture unlocks autoplay
-    try{ const p=new SpeechSynthesisUtterance(' '); p.volume=0.01; synth.speak(p); }catch{}
+    /* priming utterance removed — no browser synth ever */
   } else if(synth){ synth.cancel(); showSpeaking(false); }
   reflectUI();
 });
