@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0e">
+<title>XLRD · Subscriptions</title>
+<link rel="manifest" href="./manifest.json">
+<style>
+:root{
+  --ink:#0a0a0e; --ink-2:#15151c; --ink-3:#1d1d27;
+  --oxblood:#5a0a14; --chrome:#c0c8d0; --chrome-hi:#e8eef2;
+  --iri-1:#7b2cbf; --iri-2:#06b6d4; --iri-3:#ec4899;
+  --cyan:#00e0ff; --amber:#ffb300; --text:#fbf9f4; --dim:#8a8a99;
+  --lift:0 1px 2px rgba(0,0,0,.6), 0 8px 24px rgba(0,0,0,.55), 0 0 0 1px rgba(192,200,208,.06) inset;
+  --grad-iri:conic-gradient(from 210deg,var(--iri-1),var(--iri-2),var(--cyan),var(--iri-3),var(--iri-1));
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--ink);color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Inter,system-ui,sans-serif;min-height:100%}
+body{max-width:100%;overflow-x:hidden;
+  background:
+    radial-gradient(120% 80% at 50% -10%, #1a1420 0%, var(--ink) 55%),
+    radial-gradient(60% 40% at 85% 20%, rgba(0,224,255,.10), transparent 60%),
+    radial-gradient(60% 45% at 10% 30%, rgba(123,44,191,.12), transparent 60%),
+    var(--ink);
+  background-attachment:fixed;}
+.wrap{max-width:1120px;margin:0 auto;padding:22px 16px 120px}
+.grain{position:fixed;inset:0;pointer-events:none;opacity:.04;z-index:1;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* top bar */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;z-index:2;margin-bottom:26px}
+.brand{display:flex;align-items:center;gap:12px}
+.sigil{width:34px;height:34px;border-radius:9px;background:var(--grad-iri);position:relative;box-shadow:0 0 24px rgba(0,224,255,.35), var(--lift)}
+.sigil::after{content:"";position:absolute;inset:2px;border-radius:7px;background:linear-gradient(160deg,var(--ink-3),#0c0c12)}
+.sigil::before{content:"";position:absolute;inset:9px;border-radius:50%;background:var(--grad-iri);filter:blur(1px)}
+.brand b{font-weight:800;letter-spacing:.14em;font-size:13px}
+.brand span{display:block;font-size:10px;letter-spacing:.34em;color:var(--dim);margin-top:1px}
+.addbtn{border:0;cursor:pointer;color:#04121a;font-weight:800;letter-spacing:.05em;font-size:13px;padding:11px 18px;border-radius:12px;
+  background:linear-gradient(180deg,var(--chrome-hi),var(--chrome));box-shadow:var(--lift),0 0 0 1px rgba(0,224,255,.25);transition:transform .12s, box-shadow .2s}
+.addbtn:active{transform:translateY(1px)}
+.addbtn:hover{box-shadow:var(--lift),0 0 22px rgba(0,224,255,.4)}
+
+/* hero dashboard */
+.hero{position:relative;z-index:2;perspective:1400px;margin-bottom:30px}
+.dash{position:relative;border-radius:22px;padding:30px 28px;transform:rotateX(2.2deg);
+  background:linear-gradient(165deg,#191921,#0e0e14 70%);box-shadow:var(--lift),0 34px 70px rgba(0,0,0,.6);
+  border:1px solid rgba(192,200,208,.08);overflow:hidden}
+.dash::before{content:"";position:absolute;inset:-2px;border-radius:22px;padding:2px;background:var(--grad-iri);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.5;filter:blur(.3px)}
+.dash::after{content:"";position:absolute;width:280px;height:280px;right:-70px;top:-120px;border-radius:50%;background:var(--grad-iri);filter:blur(90px);opacity:.28}
+.dlabel{font-size:11px;letter-spacing:.32em;color:var(--dim);text-transform:uppercase}
+.big{font-weight:800;letter-spacing:-.02em;font-size:clamp(46px,13vw,80px);line-height:1;margin:6px 0 2px;
+  background:linear-gradient(180deg,#fff,var(--cyan) 60%,var(--iri-1));-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 40px rgba(0,224,255,.15)}
+.per{color:var(--dim);font-size:14px;letter-spacing:.04em}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:22px}
+.stat{background:linear-gradient(180deg,rgba(29,29,39,.8),rgba(12,12,18,.8));border:1px solid rgba(192,200,208,.07);border-radius:13px;padding:13px 14px}
+.stat .v{font-size:22px;font-weight:700;letter-spacing:-.01em}
+.stat .v.amber{color:var(--amber)} .stat .v.cyan{color:var(--cyan)}
+.stat .k{font-size:10px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;margin-top:3px}
+
+/* section head */
+.sh{display:flex;align-items:center;gap:10px;margin:34px 2px 14px;position:relative;z-index:2}
+.sh h2{font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--chrome);font-weight:700}
+.sh .line{flex:1;height:1px;background:linear-gradient(90deg,rgba(192,200,208,.22),transparent)}
+
+/* renewal timeline */
+.rail{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 12px;position:relative;z-index:2;scrollbar-width:none}
+.rail::-webkit-scrollbar{display:none}
+.tick{flex:0 0 auto;min-width:118px;border-radius:14px;padding:14px 14px 12px;background:linear-gradient(170deg,var(--ink-3),#0c0c12);box-shadow:var(--lift);border:1px solid rgba(192,200,208,.07);position:relative}
+.tick.soon{border-color:rgba(255,179,0,.4);box-shadow:var(--lift),0 0 22px rgba(255,179,0,.16)}
+.tick .d{font-size:30px;font-weight:800;letter-spacing:-.02em;color:var(--cyan)}
+.tick.soon .d{color:var(--amber)}
+.tick .du{font-size:10px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase}
+.tick .nm{margin-top:8px;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tick .amt{font-size:12px;color:var(--dim)}
+
+/* cards grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:15px;position:relative;z-index:2;perspective:1400px}
+.card{position:relative;border-radius:17px;padding:18px;background:linear-gradient(160deg,#191922,#0e0e15 72%);
+  box-shadow:var(--lift),0 20px 40px rgba(0,0,0,.5);border:1px solid rgba(192,200,208,.08);transition:transform .18s, box-shadow .25s;transform-style:preserve-3d;cursor:pointer;overflow:hidden}
+.card:hover{transform:translateY(-3px) rotateX(3deg);box-shadow:var(--lift),0 30px 54px rgba(0,0,0,.6)}
+.card .glow{position:absolute;width:150px;height:150px;right:-50px;top:-60px;border-radius:50%;filter:blur(60px);opacity:.35}
+.card .row1{display:flex;align-items:center;gap:12px;position:relative}
+.mono{width:42px;height:42px;border-radius:12px;flex:0 0 auto;display:grid;place-items:center;font-weight:800;font-size:17px;color:#04121a;box-shadow:var(--lift)}
+.card h3{font-size:16px;font-weight:700;letter-spacing:-.01em}
+.card .cat{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:1px}
+.card .cost{margin-top:16px;display:flex;align-items:baseline;gap:6px}
+.card .cost b{font-size:27px;font-weight:800;letter-spacing:-.02em}
+.card .cost span{color:var(--dim);font-size:12px}
+.card .meta{margin-top:12px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--dim)}
+.pill{font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:5px 9px;border-radius:20px;border:1px solid rgba(192,200,208,.14);color:var(--chrome)}
+.pill.soon{border-color:rgba(255,179,0,.5);color:var(--amber);box-shadow:0 0 14px rgba(255,179,0,.18)}
+
+.empty{grid-column:1/-1;text-align:center;padding:50px 20px;color:var(--dim);border:1px dashed rgba(192,200,208,.14);border-radius:16px}
+
+/* modal */
+.scrim{position:fixed;inset:0;background:rgba(4,4,8,.72);backdrop-filter:blur(7px);z-index:40;display:none;align-items:flex-end;justify-content:center}
+.scrim.on{display:flex}
+.sheet{width:100%;max-width:520px;background:linear-gradient(180deg,#16161e,#0d0d13);border:1px solid rgba(192,200,208,.1);border-radius:22px 22px 0 0;box-shadow:0 -30px 80px rgba(0,0,0,.7);padding:22px 20px 30px;position:relative}
+@media(min-width:560px){.scrim{align-items:center}.sheet{border-radius:22px}}
+.sheet h3{font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--chrome);margin-bottom:16px}
+.f{margin-bottom:13px}
+.f label{display:block;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+.f input,.f select{width:100%;background:#0b0b11;border:1px solid rgba(192,200,208,.14);border-radius:11px;color:var(--text);padding:12px 13px;font-size:15px;font-family:inherit}
+.f input:focus,.f select:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,224,255,.16)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.sheet .go{width:100%;margin-top:8px;border:0;cursor:pointer;color:#04121a;font-weight:800;letter-spacing:.05em;padding:14px;border-radius:13px;background:linear-gradient(180deg,var(--chrome-hi),var(--chrome));box-shadow:var(--lift),0 0 20px rgba(0,224,255,.3)}
+.del{width:100%;margin-top:10px;background:transparent;border:1px solid rgba(90,10,20,.7);color:#e8909a;padding:12px;border-radius:12px;cursor:pointer;font-size:13px;letter-spacing:.08em}
+.x{position:absolute;top:16px;right:16px;background:transparent;border:0;color:var(--dim);font-size:22px;cursor:pointer;line-height:1}
+.foot{text-align:center;color:var(--dim);font-size:11px;letter-spacing:.14em;margin-top:40px;position:relative;z-index:2}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><div class="sigil"></div><div><b>SUBSCRIPTIONS</b><span>XLRD · CONTROL</span></div></div>
+    <button class="addbtn" onclick="openSheet()">+ ADD</button>
+  </div>
+
+  <div class="hero"><div class="dash">
+    <div class="dlabel">Total monthly outflow</div>
+    <div class="big" id="mTotal">$0.00</div>
+    <div class="per" id="perLine">across 0 subscriptions</div>
+    <div class="stats">
+      <div class="stat"><div class="v cyan" id="yTotal">$0</div><div class="k">Per year</div></div>
+      <div class="stat"><div class="v" id="count">0</div><div class="k">Active</div></div>
+      <div class="stat"><div class="v amber" id="next">—</div><div class="k">Next renewal</div></div>
+    </div>
+  </div></div>
+
+  <div class="sh"><h2>Renewal Radar</h2><div class="line"></div></div>
+  <div class="rail" id="rail"></div>
+
+  <div class="sh"><h2>The Ledger</h2><div class="line"></div></div>
+  <div class="grid" id="grid"></div>
+
+  <div class="foot">XLRD · built by Xen · your data lives only on this device</div>
+</div>
+
+<div class="scrim" id="scrim">
+  <div class="sheet">
+    <button class="x" onclick="closeSheet()">×</button>
+    <h3 id="sheetTitle">New Subscription</h3>
+    <input type="hidden" id="fId">
+    <div class="f"><label>Name</label><input id="fName" placeholder="iCloud+, Netflix, Setapp…"></div>
+    <div class="frow">
+      <div class="f"><label>Amount</label><input id="fAmt" type="number" step="0.01" placeholder="9.99"></div>
+      <div class="f"><label>Cycle</label><select id="fCycle"><option value="monthly">Monthly</option><option value="yearly">Yearly</option><option value="weekly">Weekly</option></select></div>
+    </div>
+    <div class="frow">
+      <div class="f"><label>Next renewal</label><input id="fDate" type="date"></div>
+      <div class="f"><label>Category</label><select id="fCat">
+        <option>Cloud</option><option>Creative</option><option>Media</option><option>Dev Tools</option><option>AI</option><option>Productivity</option><option>Finance</option><option>Other</option>
+      </select></div>
+    </div>
+    <button class="go" onclick="saveSub()">SAVE</button>
+    <button class="del" id="delBtn" onclick="delSub()" style="display:none">Delete subscription</button>
+  </div>
+</div>
+
+<script>
+const K='xlrd_subs_v1';
+const CATCOL={Cloud:'#06b6d4',Creative:'#ec4899',Media:'#7b2cbf',"Dev Tools":'#00e0ff',AI:'#ffb300',Productivity:'#5ad1a0',Finance:'#c0c8d0',Other:'#8a8a99'};
+const SEED=[{id:'seed-icloud',name:'iCloud+ 2TB',amt:9.99,cycle:'monthly',date:'2026-08-26',cat:'Cloud',src:'apple-receipt'},
+            {id:'seed-setapp',name:'Setapp',amt:9.99,cycle:'monthly',date:'',cat:'Productivity',src:''}];
+let subs=load();
+
+function load(){try{const r=localStorage.getItem(K);if(r)return JSON.parse(r);}catch(e){}localStorage.setItem(K,JSON.stringify(SEED));return SEED.slice();}
+function save(){localStorage.setItem(K,JSON.stringify(subs));}
+function monthly(s){return s.cycle==='yearly'?s.amt/12:s.cycle==='weekly'?s.amt*52/12:s.amt;}
+function daysUntil(d){if(!d)return null;const t=new Date();t.setHours(0,0,0,0);const n=new Date(d+'T00:00:00');let dd=Math.round((n-t)/864e5);if(dd<0){/* roll monthly */while(dd<0)dd+=30;}return dd;}
+function money(n){return '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function money0(n){return '$'+Math.round(n).toLocaleString('en-US');}
+function initials(n){return n.replace(/[^a-zA-Z0-9 ]/g,'').split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'•';}
+
+function render(){
+  const m=subs.reduce((a,s)=>a+monthly(s),0);
+  document.getElementById('mTotal').textContent=money(m);
+  document.getElementById('yTotal').textContent=money0(m*12);
+  document.getElementById('count').textContent=subs.length;
+  document.getElementById('perLine').textContent='across '+subs.length+' subscription'+(subs.length===1?'':'s');
+  // next renewal
+  const dated=subs.filter(s=>s.date).map(s=>({s,d:daysUntil(s.date)})).filter(x=>x.d!=null).sort((a,b)=>a.d-b.d);
+  document.getElementById('next').textContent=dated.length?(dated[0].d+'d'):'—';
+  // rail
+  const rail=document.getElementById('rail');rail.innerHTML='';
+  if(!dated.length){rail.innerHTML='<div class="tick"><div class="du">no dates yet</div><div class="nm">add a renewal date</div></div>';}
+  dated.forEach(({s,d})=>{const soon=d<=7;const el=document.createElement('div');el.className='tick'+(soon?' soon':'');
+    el.innerHTML=`<div class="d">${d}</div><div class="du">days</div><div class="nm">${esc(s.name)}</div><div class="amt">${money(monthly(s))}/mo</div>`;
+    el.onclick=()=>openSheet(s.id);rail.appendChild(el);});
+  // grid
+  const grid=document.getElementById('grid');grid.innerHTML='';
+  if(!subs.length){grid.innerHTML='<div class="empty">No subscriptions yet.<br>Tap <b>+ ADD</b> to start tracking what\'s bleeding you.</div>';return;}
+  subs.slice().sort((a,b)=>monthly(b)-monthly(a)).forEach(s=>{
+    const col=CATCOL[s.cat]||'#8a8a99';const d=daysUntil(s.date);const soon=d!=null&&d<=7;
+    const el=document.createElement('div');el.className='card';el.onclick=()=>openSheet(s.id);
+    el.innerHTML=`<div class="glow" style="background:${col}"></div>
+      <div class="row1"><div class="mono" style="background:linear-gradient(160deg,#e8eef2,${col})">${initials(s.name)}</div>
+      <div><h3>${esc(s.name)}</h3><div class="cat">${esc(s.cat)}</div></div></div>
+      <div class="cost"><b>${money(s.amt)}</b><span>/ ${s.cycle==='monthly'?'mo':s.cycle==='yearly'?'yr':'wk'}</span></div>
+      <div class="meta"><span>${money(monthly(s))}/mo effective</span>${d!=null?`<span class="pill ${soon?'soon':''}">${d}d left</span>`:'<span class="pill">no date</span>'}</div>`;
+    grid.appendChild(el);});
+}
+function esc(t){return(t||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));}
+
+// modal
+const $=id=>document.getElementById(id);
+function openSheet(id){
+  $('scrim').classList.add('on');
+  if(id){const s=subs.find(x=>x.id===id);$('sheetTitle').textContent='Edit';$('fId').value=s.id;$('fName').value=s.name;$('fAmt').value=s.amt;$('fCycle').value=s.cycle;$('fDate').value=s.date||'';$('fCat').value=s.cat;$('delBtn').style.display='block';}
+  else{$('sheetTitle').textContent='New Subscription';$('fId').value='';$('fName').value='';$('fAmt').value='';$('fCycle').value='monthly';$('fDate').value='';$('fCat').value='Cloud';$('delBtn').style.display='none';setTimeout(()=>$('fName').focus(),80);}
+}
+function closeSheet(){$('scrim').classList.remove('on');}
+$('scrim').addEventListener('click',e=>{if(e.target===$('scrim'))closeSheet();});
+function saveSub(){
+  const name=$('fName').value.trim();const amt=parseFloat($('fAmt').value);if(!name||!(amt>=0)){$('fName').focus();return;}
+  const rec={id:$('fId').value||('s'+Date.now()),name,amt,cycle:$('fCycle').value,date:$('fDate').value,cat:$('fCat').value};
+  const i=subs.findIndex(x=>x.id===rec.id);if(i>=0)subs[i]=rec;else subs.push(rec);
+  save();render();closeSheet();
+}
+function delSub(){const id=$('fId').value;subs=subs.filter(x=>x.id!==id);save();render();closeSheet();}
+render();
+if('serviceWorker'in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{});}
+</script>
+</body>
+</html>
