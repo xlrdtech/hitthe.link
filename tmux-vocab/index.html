@@ -64,12 +64,15 @@
   was to identify the target by <b>what's running inside it</b> instead: <i>the pane whose process
   tree contains a live Claude, inside session <code>xen</code></i>.</p>
 
-  <div class="note bad">
-    <b>Proof it's not theoretical.</b> At 3:46:39 PM today, one voice line landed in
-    <code>%0</code> &mdash; the bash pane &mdash; and bash tried to run it:
-    <code>-bash: 3:46:39: command not found</code>. The startup hook hard-locks to <code>%0</code>
-    before autodetect runs, so the first injection of every session goes to the wrong pane before
-    it self-corrects.
+  <div class="note good">
+    <b>What a stray line in bash actually means &mdash; and it's fine.</b> Pane <code>%0</code>
+    shows <code>-bash: 3:46:39: command not found</code> from a 3:46:39 PM voice line. That is
+    <b>expected</b>, not a leak: the injector fans out to primary / secondary / tertiary pane
+    sentinels, so a non-Claude pane will sometimes catch a copy. Bash can't interpret it, says so,
+    and nothing breaks. The Claude pane received the same line correctly.
+    <br><br>
+    Useful to know when reading a pane: <b>a "command not found" in <code>%0</code> is not
+    evidence of misrouting.</b> The real check is whether <code>%1</code> got it.
   </div>
 
   <h2>Address forms, and which to trust</h2>
