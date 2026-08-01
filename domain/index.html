@@ -1,0 +1,72 @@
+<!doctype html><html lang=en><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content=noindex>
+<title>l7sinc.com — get it out of Wix</title><style>
+:root{color-scheme:light}
+body{margin:0;background:#f6f7f9;color:#0a0c10;font:16px/1.6 -apple-system,system-ui,sans-serif}
+.stripe{height:5px;background:linear-gradient(90deg,#1f5cff 0 25%,#fff 25% 50%,#d7263d 50% 75%,#e6ba3c 75% 100%)}
+.w{max-width:800px;margin:0 auto;padding:22px 16px 60px}
+h1{font-size:27px;margin:.2em 0 .3em}h2{font-size:20px;margin:1.5em 0 .4em;border-top:1px solid #e3e6ea;padding-top:.6em}
+.box{background:#fff;border:1px solid #e3e6ea;border-radius:10px;padding:14px;margin:.7em 0}
+pre{background:#fff;border:1px solid #e3e6ea;border-left:4px solid #e6ba3c;border-radius:8px;padding:14px;white-space:pre-wrap;font:14px/1.6 -apple-system,system-ui,sans-serif;user-select:all}
+code{background:#eef0f3;padding:1px 5px;border-radius:4px;font-size:13px}
+.bad{color:#b3122b;font-weight:700}.ok{color:#0f7a3d;font-weight:700}
+b{color:#8a6410}ol{padding-left:1.2em}li{margin:.4em 0}
+.d{font-size:13px;color:#5b6472}
+</style></head><body><div class=stripe></div><div class=w>
+<h1>l7sinc.com — getting it out of Wix</h1>
+<p class=d>Two years of failed transfers. The cause is public record, and ICANN gives them 5 days.</p>
+
+<div class=box>
+<b>The diagnosis (verified twice from whois):</b><br>
+<code>Domain Status: clientTransferProhibited</code><br>
+<code>Domain Status: clientUpdateProhibited</code><br>
+Registrar: <b>Wix.Com Ltd.</b> (IANA 3817) · Registry expiry: <b class=bad>2026-08-31</b>
+<p>That first flag is a <b>registrar lock</b>. While it is set, the registry <b>rejects every transfer at the protocol level</b> — no number of attempts from Spaceship can succeed. The second flag also blocks nameserver/contact edits, which is why the domain cannot be pointed anywhere either.</p>
+</div>
+
+<h2>Do NOT pay the Wix renewal</h2>
+<p>Under ICANN&rsquo;s Transfer Policy, <b>nonpayment for a pending or future registration period is not valid grounds to deny a transfer</b> — only an unpaid <i>previous</i> period is. The failed charge is for the upcoming period, so it cannot block the transfer. An inbound transfer to Spaceship normally <b>adds a registration year</b>, so one action moves it AND renews it. Paying Wix funds the registrar you are leaving and still leaves the transfer undone.</p>
+
+<h2>Step 1 — send this once (no negotiation)</h2>
+<p class=d>From the registrant email of record (xlrdtech@gmail.com). Subject: <b>Formal request under ICANN Transfer Policy — unlock + AuthInfo code for l7sinc.com</b></p>
+<pre>I am the registered name holder for l7sinc.com (Registrar: Wix.com Ltd., IANA ID 3817).
+
+This is a formal request under the ICANN Transfer Policy. Within five (5) calendar days of this request, please:
+
+1. Remove the clientTransferProhibited status currently set on l7sinc.com, and
+2. Provide the AuthInfo (EPP) authorization code for the domain.
+
+The public whois record currently shows both clientTransferProhibited and clientUpdateProhibited, which blocks transfer at the registry level.
+
+For the avoidance of doubt: under the Transfer Policy, nonpayment for a pending or future registration period is not valid grounds to deny a transfer request. The only outstanding amount relates to the upcoming registration period ending 2026-08-31, not a previous one.
+
+If the unlock and AuthInfo code are not provided within five calendar days, I will file a Transfer Policy complaint with ICANN Contractual Compliance.
+
+Registrant email of record: xlrdtech@gmail.com</pre>
+
+<h2>Step 2 — if 5 days pass, file with ICANN (this is the lever)</h2>
+<p>Form: <b>forms.icann.org/en/resources/compliance/complaints/transfer/form</b></p>
+<ol>
+<li><b>Domain:</b> l7sinc.com</li>
+<li><b>Registrar:</b> Wix.com Ltd. (IANA ID 3817)</li>
+<li><b>Type:</b> Transfer — registrar failed to provide AuthInfo code / failed to remove clientTransferProhibited within 5 calendar days of registrant request</li>
+<li><b>Facts:</b> date of the Step 1 request · whois showing both locks · registry expiry 2026-08-31 · no prior-period debt</li>
+<li><b>Attach:</b> the Step 1 email and the whois output</li>
+</ol>
+<p>ICANN compliance contacts the registrar directly. This converts a customer-service loop into a contractual obligation.</p>
+
+<h2>Step 3 — transfer at Spaceship</h2>
+<p>With the lock off and the EPP code in hand, start the inbound transfer. It adds a registration year. Approve the confirmation email promptly — approvals expire.</p>
+
+<h2>Timeline</h2>
+<div class=box>
+<b>Aug 5</b> — send Step 1 (uses the 5-day clock with margin)<br>
+<b>Aug 11</b> — no unlock? file the ICANN complaint<br>
+<b>Aug 20</b> — initiate transfer at Spaceship<br>
+<b class=bad>Aug 31</b> — hard wall, domain expires. Nothing lands here.
+</div>
+<p class=d>Do not let this drift inside ~15 days of expiry, where registrars get squeamish and lapse risk rises.</p>
+
+<h2>Why it was invisible for two years</h2>
+<p>Nothing in the Wix UI says &ldquo;we have locked your domain against transfer.&rdquo; It just quietly fails, so it reads as your mistake. It was never a competence problem — it was a lock plus a 5-day obligation nobody invoked. <b>The record exonerates.</b></p>
+</div></body></html>
