@@ -3,18 +3,31 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
 <title>How It All Works — L7S | Enrollment, Getting Started &amp; the HERO C.A.R.E CALL</title>
 <meta name="description" content="The simple breakdown of how L7S works — discover, book a HERO C.A.R.E CALL, get your R&amp;R™ Audit and AIR Recap, choose your tier, and onboard. Meet the League of 7 Superheroes: Credit Hero HoT 7™, CEO Hero, Loan Hero, Cashflow Hero, Crypto Hero, Coverage Hero and Community Hero. THE BEST by Design, THE HERO by Demand.">
 <style>
   :root{
-    --bg:#0a0c10; --panel:#12161c; --line:#242b34; --ink:#f3f6fa; --muted:#9aa6b2;
+    /* LIGHT IS THE DEFAULT (East 2026-08-01: "L7S websites must default in light mode").
+       color-scheme:light also stops an OS dark preference from restyling native form controls.
+       There is deliberately NO prefers-color-scheme:dark block in this file — light must render
+       for every viewer, including one whose OS is set to dark. */
+    color-scheme:light;
+    --bg:#f6f7f9;        /* near-white ground   */
+    --panel:#ffffff;     /* raised cards        */
+    --sunken:#eef1f5;    /* fields, empty slots */
+    --line:#e3e6eb;      /* hairline borders    */
+    --ink:#0a0c10;       /* BRAND BLACK — now the text + dark bands, no longer the ground */
+    --muted:#4f5866;     /* 7.4:1 on --bg — passes AA for body text */
     /* L7S brand — Red · White · Blue · Black · Gold (Luckie 2026-08-01) */
-    --brand:#1f5cff;     /* blue */
-    --brand-2:#e6ba3c;   /* gold */
+    --brand:#1f5cff;     /* blue — 4.86:1 on --bg, safe for link text */
+    --brand-2:#e6ba3c;   /* GOLD — signature accent: fills, rules, the mark, the flag stripe.
+                            Only 1.7:1 on a light ground, so it is NEVER used for text here. */
+    --gold-ink:#8a6410;  /* darkened gold for gold-COLOURED TEXT — 5.0:1 on --bg, passes AA */
     --accent:#d7263d;    /* red */
     --radius:16px; --maxw:1080px;
     /* Neutral elevation only — NO colored/glowing shadows (design hook flags "dark-glow") */
-    --elev:0 1px 2px rgba(0,0,0,.45); --elev-2:0 4px 14px rgba(0,0,0,.5);
+    --elev:0 1px 2px rgba(10,12,16,.06); --elev-2:0 4px 14px rgba(10,12,16,.10);
     /* Stepped type scale — every step is >=1.25x the one below it
        (design hook flags "flat-type-hierarchy"). 12 -> 16 -> 20 -> 25 -> 32 -> 50 */
     --fs-1:12px;   /* micro: eyebrow, tags, fine print   */
@@ -31,20 +44,21 @@
   .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
   a{color:var(--brand);text-decoration:none} a:hover{text-decoration:underline}
   header{position:sticky;top:0;z-index:10;backdrop-filter:blur(10px);
-    background:rgba(10,12,16,.72);border-bottom:1px solid var(--line);
+    background:rgba(255,255,255,.86);border-bottom:1px solid var(--line);
     border-top:3px solid transparent;
     border-image:linear-gradient(90deg,var(--brand),#fff,var(--accent),var(--brand-2)) 1}
   .nav{display:flex;align-items:center;justify-content:space-between;min-height:64px;gap:16px;
     flex-wrap:wrap;padding-top:10px;padding-bottom:10px}
   .logo{display:flex;align-items:center;gap:12px;font-weight:700;letter-spacing:.2px}
-  .logo .mark{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center}
+  .logo .mark{width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;
+    background:var(--ink);border-radius:9px;flex:none}
   /* PLACEHOLDER gold-lightning mark — inline SVG on purpose so this page makes ZERO external
      requests and renders offline. East: the real L7S mark lives at l7sinc.com/assets/logo.svg —
      do NOT hotlink it; download it, then paste its SVG source in place of the <svg> below. */
   .nav-links{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .nav-links a.txt{color:var(--muted);font-weight:600;font-size:14px;padding:8px 6px}
   .nav-links a.txt:hover{color:var(--ink);text-decoration:none}
-  .nav-links a.txt.active{color:var(--brand-2)}
+  .nav-links a.txt.active{color:var(--gold-ink)}
   .nav-cta{white-space:nowrap}
   /* Phone: keep the sticky header to two compact rows — logo + CTA, then the links.
      Without this the 5 items wrap to 3 rows and eat ~20% of the viewport. */
@@ -57,14 +71,14 @@
   .btn{display:inline-block;padding:12px 20px;border-radius:12px;font-weight:600;cursor:pointer;border:0}
   /* Primary = gold-forward (L7S black+gold); blue lives in the flag stripe + focus rings */
   .btn-primary{background:linear-gradient(135deg,var(--brand-2),#c8971f);color:#141007}
-  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+  .btn-ghost{background:var(--panel);border:1px solid var(--line);color:var(--ink)}
   .btn-primary:hover,.btn-ghost:hover{text-decoration:none;filter:brightness(1.05)}
   .btn-block{display:block;width:100%;text-align:center}
   .hero{padding:80px 0 48px;text-align:center}
-  .eyebrow{color:var(--brand-2);font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-size:var(--fs-1)}
+  .eyebrow{color:var(--gold-ink);font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-size:var(--fs-1)}
   h1{font-size:clamp(32px,6vw,50px);line-height:1.06;margin:14px 0 12px;letter-spacing:-.02em}
   .lede{color:var(--muted);font-size:clamp(20px,2.4vw,25px);line-height:1.45;max-width:680px;margin:0 auto 20px}
-  .motto{color:var(--brand-2);font-weight:700;letter-spacing:.02em;font-size:var(--fs-3);margin:0 0 26px}
+  .motto{color:var(--gold-ink);font-weight:700;letter-spacing:.02em;font-size:var(--fs-3);margin:0 0 26px}
   .cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
   section{padding:56px 0;border-top:1px solid var(--line)}
   h2{font-size:clamp(25px,4vw,32px);line-height:1.15;letter-spacing:-.01em;margin:0 0 8px}
@@ -76,7 +90,7 @@
   .grid{display:grid;gap:20px}
   @media(min-width:760px){.grid.cols-2{grid-template-columns:1fr 1fr}
     .grid.cols-3{grid-template-columns:repeat(3,1fr)}}
-  .lead-in{color:var(--brand-2);font-weight:700}
+  .lead-in{color:var(--gold-ink);font-weight:700}
 
   /* ---- Numbered steps ---- */
   .steps{list-style:none;padding:0;margin:0;display:grid;gap:18px}
@@ -89,16 +103,16 @@
   .step h3{margin:0 0 6px}
   .step p{margin:0;color:var(--muted)}
   .step p + p{margin-top:10px}
-  .step-note{display:block;color:var(--brand-2);font-size:var(--fs-1);font-weight:700;
+  .step-note{display:block;color:var(--gold-ink);font-size:var(--fs-1);font-weight:700;
     letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px}
 
   /* ---- Explainer-video placeholder ---- */
   /* width:100% is load-bearing — without a definite width, aspect-ratio + min-height
      inflates the box wider than the viewport on phones (caused a 5px horizontal overflow). */
-  .video-slot{width:100%;border:2px dashed var(--line);border-radius:var(--radius);background:#0e1216;
+  .video-slot{width:100%;border:2px dashed var(--line);border-radius:var(--radius);background:var(--sunken);
     aspect-ratio:16/9;min-height:200px;display:flex;flex-direction:column;
     align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px}
-  .video-slot .play{width:64px;height:64px;border-radius:50%;border:2px solid var(--brand-2);
+  .video-slot .play{width:64px;height:64px;border-radius:50%;border:2px solid var(--gold-ink);
     display:flex;align-items:center;justify-content:center}
   .video-slot .cap{font-weight:700;font-size:var(--fs-3)}
   .video-slot .fine{margin:0;max-width:420px}
@@ -108,15 +122,17 @@
   @media(min-width:820px){.ladder{grid-template-columns:repeat(3,1fr)}}
   .rung{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
     padding:24px;box-shadow:var(--elev);display:flex;flex-direction:column}
-  .rung.top{border-color:var(--brand-2);box-shadow:var(--elev-2)}
-  .rung-key{font-size:var(--fs-4);font-weight:800;letter-spacing:.06em;color:var(--brand-2);
+  .rung.top{border-color:var(--gold-ink);box-shadow:var(--elev-2)}
+  /* Scoped with the parent class on purpose: bare `.rung-key` (0,1,0) loses to `.rung p`
+     (0,1,1) below, which silently rendered DIY/DWY/DFY muted instead of gold. */
+  .rung .rung-key{font-size:var(--fs-4);font-weight:800;letter-spacing:.06em;color:var(--gold-ink);
     line-height:1.1;margin:0 0 4px}
   .rung-name{font-size:var(--fs-1);font-weight:700;letter-spacing:.16em;text-transform:uppercase;
     color:var(--muted);margin:0 0 14px}
   .rung p{margin:0;color:var(--muted);flex:1}
   .rung .tag{margin-top:16px}
   .tag{display:inline-block;padding:5px 11px;border:1px solid var(--line);border-radius:999px;
-    color:var(--brand-2);font-size:var(--fs-1);font-weight:600;margin:0 6px 8px 0}
+    color:var(--gold-ink);font-size:var(--fs-1);font-weight:600;margin:0 6px 8px 0}
   .pill{display:inline-block;padding:6px 12px;border:1px solid var(--line);border-radius:999px;
     color:var(--muted);font-size:var(--fs-1);margin:4px 6px 0 0}
 
@@ -124,10 +140,10 @@
   /* minmax min stays under the 390px phone content width (390 - 48 padding = 342) so the
      grid never forces a horizontal scrollbar. */
   .sevens{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));margin-top:6px}
-  .seven{border:1px solid var(--line);border-radius:12px;background:#0e1216;padding:18px;
+  .seven{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:18px;
     box-shadow:var(--elev)}
   .seven b{display:block;font-size:var(--fs-1);font-weight:800;letter-spacing:.16em;
-    color:var(--brand-2);line-height:1.1}
+    color:var(--gold-ink);line-height:1.1}
   .seven strong{display:block;color:var(--ink);font-size:var(--fs-3);line-height:1.25;margin:7px 0 6px}
   .seven span{display:block;color:var(--muted);font-size:var(--fs-2);line-height:1.55}
   .seven .tag{margin-top:12px}
@@ -142,16 +158,19 @@
   .checks li strong{color:var(--ink)}
 
   .note{border:1px dashed var(--line);border-radius:12px;padding:14px 16px;color:var(--muted);
-    margin-top:18px;background:#0e1216}
+    margin-top:18px;background:var(--sunken)}
   .note strong{color:var(--ink)}
   .fine{color:var(--muted);font-size:var(--fs-1);margin-top:14px}
-  footer{padding:40px 0;border-top:1px solid var(--line);color:var(--muted);font-size:var(--fs-1)}
+  /* Footer is a deliberate BRAND BLACK band — the one place true gold reads at 10.3:1, so the
+     "primary black with gold lightning" identity still lands on a light-mode page. */
+  footer{padding:40px 0;background:var(--ink);color:#c3ccd6;font-size:var(--fs-1);border-top:0}
+  footer .brand-line{color:#fff;font-weight:700;font-size:var(--fs-2);margin:0 0 8px}
   footer a{color:var(--brand-2)}
 </style>
 </head>
 <body>
 <header><div class="wrap nav">
-  <div class="logo"><span class="mark"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" fill="#e6ba3c"/></svg></span> L7S</div>
+  <div class="logo"><span class="mark"><svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" fill="#e6ba3c"/></svg></span> L7S</div>
   <nav class="nav-links">
     <a class="txt" href="index.html">Who we are</a>
     <a class="txt active" href="how-it-works.html">How it works</a>
@@ -339,7 +358,7 @@
            ============================================================================ -->
       <div class="video-slot">
         <span class="play" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="26" height="26"><path d="M8 5v14l11-7z" fill="#e6ba3c"/></svg>
+          <svg viewBox="0 0 24 24" width="26" height="26"><path d="M8 5v14l11-7z" fill="#8a6410"/></svg>
         </span>
         <span class="cap">Explainer video — dropping soon</span>
         <p class="fine">This slot is reserved for Luckie's "How It All Works" explainer. Until the file
@@ -521,7 +540,8 @@
 </main>
 
 <footer><div class="wrap">
-  © <span id="yr"></span> L7S · THE BEST by Design, THE HERO by Demand ·
+  <p class="brand-line">L7S, Inc.</p>
+  © <span id="yr"></span> L7S, Inc. All rights reserved. · THE BEST by Design, THE HERO by Demand ·
   <a href="index.html">Who we are</a> · <a href="how-it-works.html">How it works</a> ·
   <a href="onboarding.html">Onboarding</a> · <a href="pricing.html">Pricing</a>
   <!-- PLACEHOLDER: contact / socials -->
