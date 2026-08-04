@@ -58,8 +58,8 @@
 <div class="wrap">
   <header>
     <div class="kick">XEN · Scope Universe</div>
-    <h1>766 scopes — the proof</h1>
-    <div class="sub">Every scope XEN tracks, enumerated from the live registry (<code>scope-registry.json</code>, v<span id="ver">·</span>, generated <span id="gen">·</span>). <b>11 curated</b> entities + <b>155 fulfillment</b> artifacts + <b>600 conversational</b> threads. This is the receipts, not a claim. Contact identifiers (names, numbers, room IDs) are redacted; classification metadata is shown in full.</div>
+    <h1><span id="h-tot">·</span> scopes — the proof</h1>
+    <div class="sub">Every scope XEN tracks, enumerated from the live registry (<code>scope-registry.json</code>, v<span id="ver">·</span>, generated <span id="gen">·</span>). <b><span id="p-cur">·</span> curated</b> entities + <b><span id="p-ful">·</span> fulfillment</b> artifacts + <b><span id="p-con">·</span> conversational</b> threads. This is the receipts, not a claim. Contact identifiers (names, numbers, room IDs) are redacted; classification metadata is shown in full.</div>
     <div class="stats">
       <div class="stat"><div class="v" id="s-cur">·</div><div class="k">Curated</div></div>
       <div class="stat"><div class="v" id="s-ful">·</div><div class="k">Fulfillment</div></div>
@@ -69,12 +69,12 @@
   </header>
 
   <section id="dist">
-    <h2>Distribution — visual proof <span class="c">where the 766 live</span></h2>
+    <h2>Distribution — visual proof <span class="c">where the <span id="h-tot2">·</span> live</span></h2>
     <div style="display:flex;flex-wrap:wrap;gap:22px">
-      <div style="flex:1 1 300px"><div class="showing">Fulfillment by category (155)</div><div class="bars" id="bar-cat"></div></div>
-      <div style="flex:1 1 300px"><div class="showing">Conversational by surface (600)</div><div class="bars" id="bar-surf"></div></div>
+      <div style="flex:1 1 300px"><div class="showing">Fulfillment by category (<span id="lbl-ful">·</span>)</div><div class="bars" id="bar-cat"></div></div>
+      <div style="flex:1 1 300px"><div class="showing">Conversational by surface (<span id="lbl-con1">·</span>)</div><div class="bars" id="bar-surf"></div></div>
     </div>
-    <div class="showing">Conversational by type (600)</div><div class="bars" id="bar-type"></div>
+    <div class="showing">Conversational by type (<span id="lbl-con2">·</span>)</div><div class="bars" id="bar-type"></div>
   </section>
 
   <section>
@@ -106,7 +106,7 @@
 
   <footer>
     <div>Source: <code>E:\scope-watch\scope-registry.json</code> → sanitized to <code>/scopes/scopes.json</code> on ship. Counts: <span id="f-counts">·</span>.</div>
-    <div>Generated <span id="f-gen">·</span> · main line <span id="f-main">·</span> · this page IS the backing for the "766 scopes" claim. Real data only.</div>
+    <div>Generated <span id="f-gen">·</span> · main line <span id="f-main">·</span> · this page IS the backing for the "<span id="f-tot">·</span> scopes" claim. Real data only.</div>
   </footer>
 </div>
 
@@ -126,6 +126,20 @@ fetch('/scopes/scopes.json?_='+Date.now()).then(r=>r.json()).then(d=>{
   $('f-main').textContent=m.main_line||'·'; $('f-counts').textContent=JSON.stringify(c);
   $('s-cur').textContent=d.curated.length; $('s-ful').textContent=d.fulfillment.length;
   $('s-con').textContent=d.conversational.length; $('s-tot').textContent=(d.curated.length+d.fulfillment.length+d.conversational.length);
+  /* Headline, prose, bar labels, <title> and the footer claim read the SAME registry the
+     tiles do. They were hand-typed at 766/155 and drifted when the data grew to 854/243;
+     wiring them here means they cannot drift again. */
+  const _cur=d.curated.length, _ful=d.fulfillment.length, _con=d.conversational.length;
+  const _tot=_cur+_ful+_con;
+  const _set=(id,v)=>{const e=$(id); if(e) e.textContent=v;};
+  _set('h-tot',_tot); _set('h-tot2',_tot); _set('f-tot',_tot);
+  _set('p-cur',_cur); _set('p-ful',_ful); _set('p-con',_con);
+  _set('lbl-ful',_ful); _set('lbl-con1',_con); _set('lbl-con2',_con);
+  document.title=`XEN · Scope Universe — ${_tot}, proven`;
+  const _md=document.querySelector('meta[name="description"]');
+  if(_md) _md.setAttribute('content',`The full, enumerated proof of the ${_tot}-scope universe: `+
+    `${_cur} curated, ${_ful} fulfillment, ${_con} conversational. `+
+    `Real registry data, contact identifiers redacted.`);
   $('c-cur').textContent=d.curated.length; $('c-ful').textContent=d.fulfillment.length; $('c-con').textContent=d.conversational.length;
 
   // distributions
