@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Freedom Number — find your baseline, set your price</title>
+<meta name="description" content="Separate the cost to do you from the cost to do business. Find your magic number, your freedom number, and the price floor you should never quote below.">
+<style>
+:root{
+  --bg:#07080a; --bg2:#0c0e12; --card:#101318; --line:#1d222b;
+  --ink:#e9edf4; --dim:#8b95a7; --faint:#5b6475;
+  --gold:#d8b45f; --gold2:#f2dc9a; --cyan:#5fd8d0; --rose:#e07a8b;
+  --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+body{background:
+  radial-gradient(1100px 620px at 50% -180px,rgba(216,180,95,.10),transparent 62%),
+  radial-gradient(760px 460px at 92% 8%,rgba(95,216,208,.06),transparent 60%),
+  var(--bg);
+  overflow-x:hidden}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px;text-align:center}
+header{padding:72px 0 26px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--faint);margin:0 0 20px}
+h1{margin:0;font-size:clamp(38px,8vw,74px);line-height:.98;font-weight:800;letter-spacing:-.03em;
+  background:linear-gradient(174deg,#fff 4%,var(--gold2) 42%,var(--gold) 66%,#8e7538 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{margin:22px auto 0;max-width:620px;font-size:clamp(15px,2.4vw,18px);line-height:1.62;color:var(--dim)}
+.rule{width:60px;height:1px;margin:38px auto;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+
+h2{font-size:clamp(21px,4vw,29px);letter-spacing:-.02em;margin:0 0 12px;font-weight:750}
+h2 .n{font-family:var(--mono);font-size:.52em;color:var(--gold);vertical-align:middle;margin-right:12px;letter-spacing:.16em}
+section{padding:36px 0}
+p{line-height:1.68;color:var(--dim);max-width:640px;margin:0 auto 15px;font-size:15.5px}
+strong{color:var(--ink);font-weight:650}
+em{color:var(--gold2);font-style:normal}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:26px 0;text-align:left}
+@media(max-width:680px){.two{grid-template-columns:1fr}}
+.card{background:linear-gradient(168deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:15px;padding:22px}
+.card h3{margin:0 0 6px;font-size:15px;letter-spacing:.01em}
+.card .tag{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);display:block;margin-bottom:11px}
+.card ul{margin:10px 0 0;padding-left:17px;color:var(--dim);font-size:13.5px;line-height:1.78}
+.card.you{border-color:rgba(95,216,208,.24)}
+.card.you .tag{color:var(--cyan)}
+.card.biz{border-color:rgba(224,122,139,.22)}
+.card.biz .tag{color:var(--rose)}
+
+/* calculator */
+.calc{background:linear-gradient(168deg,#11151b,#0a0c10);border:1px solid var(--line);border-radius:19px;padding:26px 22px;margin:30px 0;text-align:left}
+.calc h3{margin:0 0 4px;font-size:17px;text-align:center}
+.calc .hint{font-size:12.5px;color:var(--faint);text-align:center;margin:0 0 22px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:13px}
+label{display:block;font-size:11px;font-family:var(--mono);letter-spacing:.11em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+input{width:100%;background:#080a0d;border:1px solid var(--line);color:var(--ink);border-radius:9px;
+  padding:11px 12px;font-family:var(--mono);font-size:14.5px;outline:none}
+input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(216,180,95,.11)}
+.calc .sep{height:1px;background:var(--line);margin:24px 0}
+
+.out{display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:12px}
+.stat{background:#0a0d11;border:1px solid var(--line);border-radius:12px;padding:16px 15px}
+.stat .k{font-family:var(--mono);font-size:10px;letter-spacing:.17em;text-transform:uppercase;color:var(--faint);display:block;margin-bottom:8px;line-height:1.5}
+.stat .v{font-family:var(--mono);font-size:24px;font-weight:600;letter-spacing:-.01em;color:var(--ink)}
+.stat .note{font-size:11.5px;color:var(--faint);margin-top:7px;line-height:1.5}
+.stat.hero{grid-column:1/-1;border-color:rgba(216,180,95,.34);background:linear-gradient(150deg,rgba(216,180,95,.09),#0a0d11 65%)}
+.stat.hero .v{font-size:clamp(34px,7vw,50px);
+  background:linear-gradient(172deg,#fff,var(--gold2) 48%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat.mid{border-color:rgba(95,216,208,.26)}
+.stat.mid .v{color:var(--cyan)}
+
+table{width:100%;border-collapse:collapse;margin:22px 0;font-size:13.5px;text-align:left;display:block;overflow-x:auto;white-space:nowrap}
+th,td{padding:10px 13px;border-bottom:1px solid var(--line)}
+th{font-family:var(--mono);font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--faint);font-weight:500}
+td{color:var(--dim)}
+td:first-child{color:var(--ink);font-weight:600}
+code{font-family:var(--mono);font-size:12.5px;color:var(--gold2);background:rgba(216,180,95,.08);padding:2px 6px;border-radius:5px}
+
+.files{display:flex;flex-wrap:wrap;gap:11px;justify-content:center;margin:26px 0}
+.files a{display:inline-flex;align-items:center;gap:9px;background:#0c0f14;border:1px solid var(--line);
+  color:var(--ink);text-decoration:none;padding:12px 18px;border-radius:10px;font-family:var(--mono);font-size:12.5px;transition:.16s}
+.files a:hover{border-color:var(--gold);color:var(--gold2);transform:translateY(-1px)}
+.files a span{color:var(--faint);font-size:11px}
+
+.callout{border-left:2px solid var(--gold);background:rgba(216,180,95,.05);padding:16px 20px;border-radius:0 11px 11px 0;
+  margin:24px auto;max-width:640px;text-align:left}
+.callout p{margin:0;font-size:14.5px;color:var(--dim);max-width:none}
+footer{padding:56px 0 66px;color:var(--faint);font-size:12px;font-family:var(--mono);letter-spacing:.1em}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">Personal + Business Financial Baseline</p>
+  <h1>The Freedom<br>Number</h1>
+  <p class="sub">Two numbers run your whole financial life. The <em>magic number</em> is what it costs to survive. The <em>freedom number</em> is what it costs to be free. Everything else — your pricing, your targets, your goals — is arithmetic once you know both.</p>
+  <div class="rule"></div>
+</header>
+
+<section>
+  <h2><span class="n">01</span>Split the cost in two</h2>
+  <p>Most people fail here before they start. They add every expense into one pile, get a scary number, and learn nothing from it. Your money has two jobs, and they need separate books.</p>
+  <div class="two">
+    <div class="card you">
+      <span class="tag">Bucket one</span>
+      <h3>The cost to do you</h3>
+      <p style="margin:0;font-size:13.5px">What it costs to keep <strong>your life</strong> running if the business went quiet tomorrow.</p>
+      <ul>
+        <li>Housing, utilities, phone</li>
+        <li>Groceries — food, not restaurants</li>
+        <li>Transport: payment, insurance, fuel, repair reserve</li>
+        <li>Health: premium, prescriptions, copay reserve</li>
+        <li>Minimum debt payments only</li>
+      </ul>
+    </div>
+    <div class="card biz">
+      <span class="tag">Bucket two</span>
+      <h3>The cost to do business</h3>
+      <p style="margin:0;font-size:13.5px">What it costs to keep <strong>the machine</strong> running before you pay yourself a dime.</p>
+      <ul>
+        <li>Software, hosting, domains, AI spend</li>
+        <li>Insurance, licenses, registration</li>
+        <li>Equipment replacement reserve</li>
+        <li>Marketing that is actually producing leads</li>
+        <li>Processing fees, bank fees, contractors</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout">
+    <p><strong>The rule that makes this work:</strong> every line gets marked essential or not. Essential means the lights go off without it. Restaurants are not essential. Groceries are. That single column is what separates your magic number from your freedom number — and almost nobody draws it.</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">02</span>Run your numbers</h2>
+  <p>Defaults below are a realistic solo-operator profile. Replace them with yours — every output recalculates as you type.</p>
+
+  <div class="calc">
+    <h3>Inputs</h3>
+    <p class="hint">Monthly figures. Annual costs divided by twelve.</p>
+    <div class="grid">
+      <div><label>Personal — essential</label><input id="pe" type="number" value="4335" step="10"></div>
+      <div><label>Business — essential</label><input id="be" type="number" value="590" step="10"></div>
+      <div><label>Lifestyle — non-essential</label><input id="ls" type="number" value="858" step="10"></div>
+      <div><label>Combined tax rate</label><input id="tx" type="number" value="0.28" step="0.01"></div>
+      <div><label>Savings rate target</label><input id="sv" type="number" value="0.15" step="0.01"></div>
+      <div><label>Profit margin target</label><input id="pm" type="number" value="0.20" step="0.01"></div>
+      <div><label>Billable hours / month</label><input id="bh" type="number" value="80" step="5"></div>
+      <div><label>Average ticket</label><input id="at" type="number" value="1500" step="50"></div>
+      <div><label>Close rate</label><input id="cr" type="number" value="0.30" step="0.05"></div>
+      <div><label>Cash on hand</label><input id="ch" type="number" value="0" step="500"></div>
+    </div>
+
+    <div class="sep"></div>
+
+    <div class="out">
+      <div class="stat mid"><span class="k">Magic number — survival</span><div class="v" id="o_magic">—</div><div class="note">Below this you are going backwards, no matter how busy you look.</div></div>
+      <div class="stat hero"><span class="k">Freedom number — monthly</span><div class="v" id="o_free">—</div><div class="note">Baseline + lifestyle + tax reserve + savings. What the business must clear for the life to work without strain.</div></div>
+      <div class="stat"><span class="k">Tax reserve</span><div class="v" id="o_tax">—</div><div class="note">Grossed up, not multiplied. This is the mistake that ends businesses in April.</div></div>
+      <div class="stat"><span class="k">Savings target</span><div class="v" id="o_sav">—</div><div class="note">Paying yourself forward.</div></div>
+      <div class="stat"><span class="k">Revenue target — monthly</span><div class="v" id="o_rev">—</div><div class="note">Freedom number with profit on top.</div></div>
+      <div class="stat"><span class="k">Revenue target — weekly</span><div class="v" id="o_wk">—</div><div class="note">The number you check on Fridays.</div></div>
+      <div class="stat"><span class="k">Price floor — hourly</span><div class="v" id="o_hr">—</div><div class="note">Never quote below this. It is a loss wearing an invoice.</div></div>
+      <div class="stat"><span class="k">Deals / month needed</span><div class="v" id="o_dl">—</div><div class="note">At your average ticket.</div></div>
+      <div class="stat"><span class="k">Qualified leads / month</span><div class="v" id="o_ld">—</div><div class="note">Your real marketing target, not a vibe.</div></div>
+      <div class="stat"><span class="k">Runway</span><div class="v" id="o_rw">—</div><div class="note">Months of survival on cash alone.</div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">03</span>The formulas</h2>
+  <p>Paste these straight into Google Sheets or Excel against the CSV columns below. Nothing here is proprietary — it is arithmetic most people were simply never shown.</p>
+  <table>
+    <tr><th>Metric</th><th>Formula</th><th>Why it is built that way</th></tr>
+    <tr><td>Cost to do you</td><td><code>SUMIFS(monthly,scope,"personal",essential,"yes")</code></td><td>Essentials only — that is the whole point of the column</td></tr>
+    <tr><td>Cost to do business</td><td><code>SUMIFS(monthly,scope,"business",essential,"yes")</code></td><td>Before owner pay, always</td></tr>
+    <tr><td>Magic number</td><td><code>= you + business</code></td><td>Survival line</td></tr>
+    <tr><td>Lifestyle</td><td><code>SUMIFS(monthly,essential,"no")</code></td><td>Both scopes together</td></tr>
+    <tr><td>Tax reserve</td><td><code>= base * rate / (1 - rate)</code></td><td><strong>Gross-up.</strong> Multiplying by the rate under-reserves every time</td></tr>
+    <tr><td>Savings target</td><td><code>= base * savings_rate</code></td><td>A line item, not leftovers</td></tr>
+    <tr><td>Freedom number</td><td><code>= base + tax + savings</code></td><td>The real target</td></tr>
+    <tr><td>Revenue target</td><td><code>= freedom / (1 - margin)</code></td><td>Profit comes off the top, not the bottom</td></tr>
+    <tr><td>Price floor hourly</td><td><code>= revenue_target / billable_hours</code></td><td>Billable capacity, not hours worked</td></tr>
+    <tr><td>Project floor</td><td><code>= floor_hourly * est_hours * (1 + buffer)</code></td><td>Scope creep is a certainty, price it</td></tr>
+    <tr><td>Deals / month</td><td><code>= revenue_target / avg_ticket</code></td><td></td></tr>
+    <tr><td>Leads / month</td><td><code>= deals / close_rate</code></td><td>Turns revenue into an activity target</td></tr>
+    <tr><td>Runway</td><td><code>= cash / magic_number</code></td><td>Magic, not freedom — survival is what runway measures</td></tr>
+  </table>
+  <div class="callout">
+    <p><strong>The gross-up is the one to understand.</strong> If you need $5,000 to live and tax is 28%, you do not need $6,400 — you need <code>5000 / 0.72 = $6,944</code>. Reserving 28% <em>of the need</em> instead of grossing up leaves you 544 dollars short every single month, and you will not notice until the bill arrives.</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">04</span>The data files</h2>
+  <p>Import to Google Sheets or Excel, keep the column names, and any accounting or bookkeeping system can read them straight in. <strong>Start with the BLANK files</strong> — full category taxonomy, every amount at zero, ready for your real numbers. The EXAMPLE files carry the worked solo-operator profile used by the calculator above, so you can see the shape of a finished sheet.</p>
+  <div class="files">
+    <a href="csv/01-expenses-BLANK.csv" download>01-expenses-BLANK.csv <span>40 categories · $0</span></a>
+    <a href="csv/02-income-BLANK.csv" download>02-income-BLANK.csv <span>5 rows · $0</span></a>
+    <a href="csv/03-config.csv" download>03-config.csv <span>the knobs</span></a>
+    <a href="csv/04-summary.csv" download>04-summary.csv <span>13 metrics</span></a>
+    <a href="csv/01-expenses-EXAMPLE.csv" download>01-expenses-EXAMPLE.csv <span>worked example</span></a>
+    <a href="csv/02-income-EXAMPLE.csv" download>02-income-EXAMPLE.csv <span>worked example</span></a>
+  </div>
+  <p style="font-size:13.5px;color:var(--faint)">Schema: <code>scope</code> personal or business · <code>essential</code> yes or no · <code>cadence</code> monthly, annual, weekly, variable · <code>monthly_equivalent</code> the normalized figure every formula reads.</p>
+</section>
+
+<footer>BUILT BY EAST · XLRD TECH</footer>
+</div>
+
+<script>
+(function(){
+  var ids=["pe","be","ls","tx","sv","pm","bh","at","cr","ch"], el={};
+  ids.forEach(function(i){el[i]=document.getElementById(i)});
+  function money(n){
+    if(!isFinite(n)) return "—";
+    return "$"+n.toLocaleString("en-US",{minimumFractionDigits:0,maximumFractionDigits:0});
+  }
+  function set(id,v){document.getElementById(id).textContent=v}
+  function calc(){
+    var pe=+el.pe.value||0, be=+el.be.value||0, ls=+el.ls.value||0,
+        tx=+el.tx.value||0, sv=+el.sv.value||0, pm=+el.pm.value||0,
+        bh=+el.bh.value||0, at=+el.at.value||0, cr=+el.cr.value||0, ch=+el.ch.value||0;
+
+    var magic = pe + be;
+    var base  = magic + ls;
+    var tax   = tx < 1 ? base * tx/(1-tx) : 0;   // gross-up, not multiply
+    var sav   = base * sv;
+    var free  = base + tax + sav;
+    var rev   = pm < 1 ? free/(1-pm) : free;
+    var wk    = rev/4.333;
+    var hr    = bh>0 ? rev/bh : NaN;
+    var dl    = at>0 ? rev/at : NaN;
+    var ld    = (dl && cr>0) ? dl/cr : NaN;
+    var rw    = magic>0 ? ch/magic : NaN;
+
+    set("o_magic",money(magic));
+    set("o_free", money(free));
+    set("o_tax",  money(tax));
+    set("o_sav",  money(sav));
+    set("o_rev",  money(rev));
+    set("o_wk",   money(wk));
+    set("o_hr",   isFinite(hr)?"$"+hr.toFixed(0)+"/hr":"—");
+    set("o_dl",   isFinite(dl)?dl.toFixed(1):"—");
+    set("o_ld",   isFinite(ld)?Math.ceil(ld):"—");
+    set("o_rw",   isFinite(rw)?rw.toFixed(1)+" mo":"—");
+  }
+  ids.forEach(function(i){el[i].addEventListener("input",calc)});
+  calc();
+})();
+</script>
+<script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
+</body>
+</html>
