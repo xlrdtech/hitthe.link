@@ -1,142 +1,168 @@
 # LIFE NOTE + SUIC · IDE — full context, one fetch
 
-> Raw canonical source for the voice layer. Everything needed to discuss either concept is in this
-> single file. Nothing here is invented; verbatim source lines are marked VERBATIM.
->
-> Live pages: https://hitthe.link/life-note/ · https://hitthe.link/life-note/suic/
-> This file:  https://hitthe.link/life-note/life-note.md
-> Generated:  2026-08-05 · Source of record: `~/.xen/state/auto-fleet.txt` lines 1–10
+> Canonical source for the voice layer. Everything needed to discuss either concept is here.
+> Live: https://hitthe.link/life-note/ · https://hitthe.link/life-note/suic/
+> Raw:  https://hitthe.link/life-note/life-note.md
+> Rebuilt 2026-08-05 from primary sources (see §8). Supersedes the earlier spec-pending version.
 
 ---
 
-## TL;DR FOR THE VOICE LAYER
+## 1. TL;DR
 
-- **Life Note** — a dev-focused, life-affirming note system. "The Death Note spinoff for developers."
-- **SUIC · IDE** — the editor replacement where `.sel` files and the agent fleet are authored. A VS Code substitute.
-- Both are **qi's IP**, dated **2026-05-31**, recorded in the same block.
-- **Both specs are PENDING qi's Lark doc** (Windows-side, unreachable since at least 2026-06-10). Only the names, premises and stack positions exist.
-- **Do not invent mechanics for either.** If asked what a Life Note file *does*, the honest answer is: not recorded.
-- Contrast with **ESP_ (Executive Sacred Peak)**, which IS fully specified — different situation, do not conflate.
+- **Life Note** = the note layer of SUIC IDE. A Note is a `.self` file. **"You don't run programs… you write Notes, and they run you."**
+- **SUIC IDE** = **Sovereign User Interface Cognition** ("so-ik") — a cognitive operating system where written intentions become running processes.
+- **SEL_** = **Self-Execution Lexicon** — the engine and vocabulary inside every `.self`.
+- **G.O.D.S.** = **Generate · Operate · Distribute · System** — the pipeline Notes flow through. 1 CB, 4 Tabs, 36 XenCells.
+- Life Note and SUIC are **one system from two ends** — the Note you write, and the environment that runs it. That is why neither spec was ever found alone.
+- Lineage: **SEHD → SEHD v5 → SEL_ → SUIC IDE.**
 
 ---
 
-## 1. LIFE NOTE
+## 2. LIFE NOTE
 
-### VERBATIM (auto-fleet.txt, PENDING CANON block)
+### The premise (VERBATIM, auto-fleet.txt PENDING CANON block)
 
 ```
 # Life Notes system : "Life Note — the Death Note spinoff for developers" (found in Paste history,
-#   qi logo-prompt). Dev-focused note system, life-affirming counterpart to Death Note. Full spec pending Lark.
+#   qi logo-prompt). Dev-focused note system, life-affirming counterpart to Death Note.
 ```
 
-### The concept
+### The inversion
 
-The inversion of Death Note. Where the original is a book you write a name into to end a life, Life Note
-is written for developers and is life-affirming by design — the note is where something begins rather
-than ends. A developer's notebook is already where things get born; naming it against Death Note makes
-the direction explicit.
+Death Note: write a name, a life ends. Power is subtraction, every use irreversible.
+Life Note: write an intention, and the writing **is** the execution. Nothing subtracted; something starts.
 
-### Provenance
+### What a Note is
 
-| Field | Value |
+A `.self` file — not source you compile, but an intention in a declarative notation that carries its own execution.
+
+**Flow:** save a `.self` → **STAX** notices → **SEL_** interprets → **agents** act → **SPHIX** remembers.
+
+No build tools, no cloud, no manual trigger. "And they run you" is literal: once written, the Note's agents keep acting on schedule and trigger without you.
+
+---
+
+## 3. G.O.D.S. — the pipeline
+
+**G.O.D.S. = Generate · Operate · Distribute · System** — the "God-buckets", core folder hub and operational pipeline. VERBATIM roles:
+
+| Bucket | Role |
 |---|---|
-| Concept dated | qi · 2026-05-31 |
-| Captured from | A **logo prompt** found in qi's Paste history — not from a spec document |
-| Source of record | `~/.xen/state/auto-fleet.txt` lines 1–5 (PENDING CANON block) |
-| Mirror | `AUTO_AGENT_PROTOCOL_LIST.md` — synced 2026-08-05 after 17 days of drift |
-| Vault canon | `canon-proprietary-stack-and-akashic.md` |
-| Also captured in | `062126-2-win.md:1267` |
-| Spec status | **PENDING** — qi's Lark doc |
+| **Generate** | "creating, drafting, ideation, and pulling in raw context" |
+| **Operate** | "execution, management, and refining the generated assets" |
+| **Distribute** | "push the final outputs to their target destinations (e.g., via Spark, Beeper, Beside, or published sites)" |
+| **System** | "the underlying infrastructure and orchestration cells (run by Xen) keeping the entire grid and workflow stable" |
 
-### What is NOT recorded
+**Geometry:** 1 CB, 4 Tabs, each tab a 3×3 grid = **36 parallel execution cells** (commandment 31).
+**XenCells** = the 3×3 panes — "the body tissue, where each individual tab or pane is a cell running specialized sub-agents in parallel."
 
-What a Life Note file is · how it is written · what happens when written · how it relates to `.sel`.
-
----
-
-## 2. SUIC · IDE
-
-### VERBATIM (auto-fleet.txt, PROPRIETARY STACK + PENDING CANON blocks)
-
-```
-# IDE       : SUIC IDE  (where .sel files + the agent fleet are authored)
-# SUIC IDE       : full spec pending — name captured, details in qi's Lark doc.
-```
-
-### The concept
-
-The editor replacement — a VS Code substitute built for a stack VS Code has no concept of. Two facts are
-recorded: it is an IDE, and it is where `.sel` files and the agent fleet get written.
-
-### On the name
-
-Set as two tokens — **SUIC** + **IDE**. Run together the letters spell another word and the wordplay is
-deliberate, but the thing itself is an editor. The wordmark is always set split (`SUIC · IDE`) so it reads
-as one. When speaking it aloud, say "SUIC IDE" as two words.
-
-### Why a replacement rather than a plugin (INFERENCE, not from the record)
-
-1. **A format nothing else parses** — `.sel` is Self Exec native; no existing language server, linter or
-   syntax definition knows it.
-2. **Manifests that aren't manifests** — `automanifests` is explicitly *not* `package.json` or
-   `manifest.json`, so every tool assuming those assumes wrong.
-3. **Agents are the artifact** — the fleet is authored here, not just code. An editor whose unit of work
-   is a file rather than an agent is the wrong shape.
-
-### What is NOT recorded
-
-The editor's architecture · whether it forks an existing base · its UI · its language-server story ·
-how it runs agents.
+### Two rulings
+- G.O.D.S. **replaced** an earlier "Goals, Objectives, Desires" reading. That definition is dead.
+- **"Godsong" is not qi's.** *A G.O.O.D. S.O.N.G.™* belongs to Luckie's L7S scope (her SaaS Stack Sequence Flow, `[A]` = Asana). Only G.O.D.S. is qi.
+- ⚠ The same source also states a **4 CBs × own Space × 9 tabs × 9 sites = 81 per CB** variant. Commandment 31 breaks the tie in favour of 1 CB / 36 cells.
 
 ---
 
-## 3. THE PROPRIETARY STACK (qi 2026-05-31)
+## 4. SEL_ — Self-Execution Lexicon
 
-### VERBATIM
+Purpose: "eliminating manual steps beyond the initial invocation."
 
-```
-# ════ PROPRIETARY STACK (qi 2026-05-31) ════
-# FILE TYPE : .sel files  (Self Exec native proprietary format)
-# MANIFESTS : automanifests  (our manifest format — the auto-manifest, NOT package.json/manifest.json)
-# IDE       : SUIC IDE  (where .sel files + the agent fleet are authored)
-# ════════════════════════════════════════════
-```
+**Two absolutes:** *Fully Autonomous* (self-creation, self-saving, self-execution, no intervention past the initial command) · *Single-Step Execution* (everything including prerequisites inside one invocation).
 
-| Piece | What it is | Spec |
+**Seven requirements:**
+1. **No manual file creation** — no editors, no saving `.sh`/`.self` by hand
+2. **No manual permissions** — no user-run `chmod`/`chown`
+3. **No multi-step execution** — nothing required after invocation
+4. **No manual dependency setup** — installs and config self-managed
+5. **Universal accessibility** — copy a command or voice-trigger via AIOS; **user-agnostic**, no hardcoded identifiers
+6. **Cross-platform resilience** — macOS/Linux/Windows/iOS/Android; Bash/Zsh/PowerShell/CMD; Python/Node/Java; auto-adjusts paths and package managers; extends to **iOS Shortcuts and Android Tasker**
+7. **Error handling** — inline validation and fallback; "Users should not need to debug or intervene in case of errors"
+
+**Sphix partitions:** `9_`, `999_`, `AEA_` activate **only on explicit command** — the persona never shifts unintentionally.
+**Standalone:** SEL_ assumes no integration with other systems unless the invocation requests it.
+
+Requirement 7 is HOTL expressed as a property of the file rather than a promise from the operator.
+
+---
+
+## 5. SUIC · IDE — Sovereign User Interface Cognition
+
+### Formal definition (VERBATIM)
+
+> "SUIC IDE (Sovereign User Interface Cognition, pronounced like 'so-ik') is a unified development and execution environment purpose-built for Self-Executing 'living' programs. It is not just a coding tool; it is essentially a cognitive operating system where the user's written intentions (in special .self files) directly turn into running processes and coordinated actions. The tagline is that in SUIC, 'you don't run programs… you write Notes, and they run you.'"
+
+### The name
+- **Sovereign** — independent of external dependencies; user in full control; offline if needed
+- **Interface** — text, voice, visuals, at a cognitive level ("keyboard, voice, and visual panes")
+- **Cognition** — the environment has awareness of context and intent
+
+### Components
+
+| Part | Role |
+|---|---|
+| SUIC Syntax | Declarative notation; human-readable, high-level (*what*, not how), terse |
+| IDE | Editor, voice, or visual canvas; can run in browser Code-Server under SGOS |
+| `SEL_` | Execution engine and vocabulary in every `.self` |
+| Agents | Scoped sub-programs/personas declared inside a `.self`, running in its container |
+| **STAX** | Notices a saved `.self` and executes immediately |
+| **SPHIX** | "Invisible witness and memory logger" — **"gitless versioning, timeline-native memory, no commits"** |
+| **DRXVX** | Offline-first sync |
+| Partitions `9_`/`7_` | `9_` XLRDTECH execution, `7_` business logic |
+
+### Why a replacement, not a plugin
+
+| Normal IDE assumes | SUIC does |
+|---|---|
+| Write then run | Writing *is* running (STAX on save) |
+| Explicit commits | SPHIX logs continuously; no commits |
+| Unit of work = file | Unit = a Note containing agents |
+| `package.json` | `automanifests` |
+| Keyboard input | Keyboard, voice, visual as equals |
+
+### Worked example (from source)
+A Note declares a `ReportGen` agent scheduled 6 AM and an `Emailer` agent watching a `morning` trigger. Saving the file is the whole deployment — at 6 AM ReportGen runs, fires the trigger, Emailer sends. "All of this happens without further human intervention."
+
+---
+
+## 6. LINEAGE
+
+| Stage | What / why it ended |
+|---|---|
+| **SEHD** | Self-Executing Here Document — code embedded in text that runs itself when handed to a shell |
+| **SEHD v5** | "Total Environment Dominator" — last version; bound to here-doc syntax, which capped it |
+| **SEL_** | The break: a real execution lexicon, not a syntax trick |
+| **SUIC IDE** | Built to host SEL_ — "matured from a clever scripting hack into a full-fledged operating environment" |
+
+---
+
+## 7. THE SURROUNDING STACK
+
+| System | Role |
+|---|---|
+| `ai_` **Amplified Intuition** | Voice layer (earbuds). Spoken instructions become `.self` capsules on the fly, dropped into SUIC for immediate execution |
+| **ESP_** Executive Sacred Peak | "A real-time cognition and decision-making engine designed to identify moments of high significance (termed 'sacred spikes') and execute actions aligned with the user's deepest intentions" — the top-level executive layer. Origin: the desire to avoid NPC-like behaviour |
+| **MAP** Moment Alignment Protocol | Scheduling/alignment inside ESP — the inner compass; routes decisions and logs to a **Sacred Spike Queue** |
+| **MMM** Mirror Mind Matrix | Multi-perspective reflection field. (Named "Mind Mirror Matrix" in the Teleport README — naming variance, same component) |
+| **CMS** Conscious Mirror Stream | Reflective dialogue — an internal conversation to clarify intent before acting |
+| **AIOS** | The wider Artificial Intelligence Operating System vision — browser-based, 3D, voice-first |
+
+Full ESP_ spec (3 layers, breath cadence, Flashpoint Quotient): `dev_/xen/Teleport/Okay. This is what I'm thinking..md` lines 5622–5688.
+
+---
+
+## 8. SOURCES AND THEIR TRUST
+
+| Source | Vintage | Use |
 |---|---|---|
-| `.sel` files | Self Exec native proprietary file format | not in this record |
-| `automanifests` | qi's manifest format — NOT package.json / manifest.json | not in this record |
-| **SUIC IDE** | Where `.sel` files + the agent fleet are authored | **PENDING Lark** |
-| **Life Notes** | Dev-focused, life-affirming note system | **PENDING Lark** |
+| `~/.xen/state/auto-fleet.txt` lines 1–10 | qi 2026-05-31 | Stack positions, Life Note premise — **trusted** |
+| `SEL_ Law` (Lark, East Allen) | mod. 2025-07-07 | SEL_ spec in full — **trusted** |
+| `nblmthread.txt` (29,108 words) | 2026-05-18 | G.O.D.S., XenCells, scope rulings — **trusted, correction log** |
+| `nblm-master-update-2026-06-05.txt` | 2026-06-05 | Canon delta index — supporting |
+| L7X System Architecture audit (127,994 B) | mod. Apr 29 | SUIC + ESP definitions — **definitions only; architecture claims superseded** |
+| `Mirror_Mind_ESP…wav` (36 MB) | Apr 29 | NotebookLM audio overview *about* ESP_ — **derived, not source** |
+
+**Not in any source:** the string "Life Note" appears **zero** times in nblmthread.txt or the L7X audit. Life Note is the name qi applies to a system those documents specify under its mechanism names.
 
 ---
 
-## 4. THE BLOCKER
-
-Both specs live in a **Lark doc, Windows-side**. The fleet mirror's own build note, dated 2026-06-10,
-reads: *"no Lark MCP available; spec not found in Lark."* It has not been reachable in any session since.
-
-**The Lark doc is the only thing that unlocks either spec.** Nothing else.
-
----
-
-## 5. HOW THESE TWO RELATE
-
-Recorded in the same block, on the same day, blocked on the same document. They unblock together — when
-the Lark doc is reachable, both specs land at once. The pages are cross-linked in both directions for
-that reason.
-
----
-
-## 6. DO NOT CONFUSE WITH
-
-- **`hitthe.link/life`** — "XEN · LIFE — Command Dashboard", a live goal-swarm/steer surface reading
-  `xen/live.json`. Unrelated to Life Note despite the name overlap.
-- **ESP_ (Executive Sacred Peak)** — a **fully specified** 3-layer real-time cognition engine
-  (ESP_ / MAP / MMM), full README at `dev_/xen/Teleport/Okay. This is what I'm thinking..md` lines
-  5622–5688. ESP_ is NOT pending. Different situation entirely.
-
----
-
-*Life Note and SUIC · IDE are qi's intellectual property. This file records what exists; it does not
-extend it.*
+*Life Note, SUIC · IDE, SEL_, G.O.D.S. and ESP_ are qi's intellectual property (XLRDTECH / East Allen). This file records what exists; it does not extend it.*
