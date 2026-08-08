@@ -242,16 +242,24 @@
   /*                    I THE SHAPE          II THE VOICE         III THE DOLL */
   "  gShellS = mix(mix(vec3(1.00,0.80,1.28), vec3(1.00,0.86,1.24),a), vec3(1.00,1.02,1.14),b);",
   "  gShellR = mix(mix(1.00,                 1.00,                a), 0.94,               b);",
-  "  gHollow = 0.90;",
+  /* shell thickness is per-face. The Doll's head is smaller but its eye and
+     mouth cuts are larger, so a constant hollow left almost no shell between
+     them and the silhouette collapsed into a RING. Thicker shell for the Doll. */
+  "  gHollow = mix(mix(0.90,                 0.895,               a), 0.855,              b);",
   "  gJawP   = mix(mix(vec3(0.,-0.72,0.06),  vec3(0.,-0.70,0.06), a), vec3(0.,-0.48,0.06), b);",
   "  gJawS   = mix(mix(vec3(1.12,1.50,1.30), vec3(1.06,1.30,1.26),a), vec3(1.28,1.02,1.26),b);",
   "  gJawR   = mix(mix(0.72,                 0.74,                a), 0.60,               b);",
   "  gEyeO   = mix(mix(vec3(0.34,0.16,0.62), vec3(0.31,0.19,0.60),a), vec3(0.33,0.08,0.58),b);",
   "  gEyeS   = mix(mix(vec3(1.00,1.50,1.00), vec3(1.00,1.18,1.00),a), vec3(1.00,1.00,1.00),b);",
-  "  gEyeR   = mix(mix(0.200,                0.235,               a), 0.255,              b);",
-  "  gMouthP = mix(mix(vec3(0.,-0.52,0.52),  vec3(0.,-0.44,0.55), a), vec3(0.,-0.36,0.60), b);",
-  "  gMouthS = mix(mix(vec3(0.42,3.40,1.00), vec3(1.05,0.68,1.00),a), vec3(0.36,2.70,1.00),b);",
-  "  gMouthR = mix(mix(0.115,                0.270,               a), 0.160,              b);",
+  /* Doll features pulled in: on a smaller head, eye+mouth cuts sized for the
+     long Shape face ate the shell and the silhouette read as a ring. */
+  "  gEyeR   = mix(mix(0.200,                0.235,               a), 0.225,              b);",
+  /* A subtractive feature must REACH the surface it cuts or it silently does
+     nothing. The Doll's shell front sits at ~z 0.82; the grin was centred at
+     z 0.60 with r 0.14, spanning only to 0.74 — it never touched the face. */
+  "  gMouthP = mix(mix(vec3(0.,-0.52,0.52),  vec3(0.,-0.44,0.55), a), vec3(0.,-0.34,0.70), b);",
+  "  gMouthS = mix(mix(vec3(0.42,3.40,1.00), vec3(1.05,0.68,1.00),a), vec3(0.34,2.40,1.00),b);",
+  "  gMouthR = mix(mix(0.115,                0.270,               a), 0.155,              b);",
   "  gTint   = mix(mix(vec3(0.913,0.902,0.874),vec3(0.900,0.888,0.870),a),vec3(0.930,0.870,0.820),b);",
   "  gRim    = mix(mix(1.35,                 1.60,                a), 1.20,               b);",
   "}",
