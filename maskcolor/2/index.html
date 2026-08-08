@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en" data-vol="2">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>MASK COLOR — VOLUME TWO</title>
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#050506">
+<meta name="description" content="MASK COLOR — VOLUME TWO.">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bone:#e9e6df; --bone-dim:#b9b4ab;
+    --blood:#c1121f; --blood-hot:#ff2d3d;
+    --void:#050506; --ash:#0c0c0f;
+    --mono:ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  html,body{height:100%;background:var(--void);color:var(--bone);overflow-x:hidden}
+  body{
+    font-family:var(--mono);
+    -webkit-font-smoothing:antialiased;
+    display:flex;flex-direction:column;align-items:center;
+    text-align:center;
+  }
+  #gl{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:0}
+  /* film grain + vignette, both pure CSS so they cost nothing on the GPU budget */
+  #grain{position:fixed;inset:-50%;z-index:2;pointer-events:none;opacity:.055;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+    animation:grain 900ms steps(4,end) infinite}
+  @keyframes grain{
+    0%{transform:translate(0,0)}25%{transform:translate(-3%,2%)}
+    50%{transform:translate(2%,-3%)}75%{transform:translate(-2%,-2%)}100%{transform:translate(0,0)}}
+  #vig{position:fixed;inset:0;z-index:1;pointer-events:none;
+    background:radial-gradient(ellipse at 50% 42%,transparent 28%,rgba(5,5,6,.72) 74%,#050506 100%)}
+
+  .wrap{position:relative;z-index:3;width:100%;max-width:940px;
+        padding:0 20px;display:flex;flex-direction:column;align-items:center}
+
+  /* ── hero ─────────────────────────────────────────── */
+  header{min-height:100svh;display:flex;flex-direction:column;
+         align-items:center;justify-content:center;gap:22px;width:100%}
+  .vol{font-size:11px;letter-spacing:.62em;color:var(--blood);text-indent:.62em;
+       text-transform:uppercase}
+  h1{font-size:clamp(2.6rem,13vw,7.4rem);line-height:.86;letter-spacing:-.03em;
+     font-weight:400;text-transform:uppercase;
+     text-shadow:0 0 60px rgba(233,230,223,.14)}
+  h1 em{font-style:normal;display:block;color:var(--blood);
+        text-shadow:0 0 44px rgba(193,18,31,.5)}
+  .sub{font-size:12px;letter-spacing:.3em;color:var(--bone-dim);text-transform:uppercase;
+       max-width:44ch;line-height:2}
+  .scrollcue{position:absolute;bottom:26px;font-size:10px;letter-spacing:.4em;
+             color:#5a5750;text-transform:uppercase;animation:pulse 2.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.28}50%{opacity:.9}}
+
+  /* ── the three ────────────────────────────────────── */
+  section{width:100%;padding:min(18vh,140px) 0;display:flex;
+          flex-direction:column;align-items:center;gap:34px}
+  .lbl{font-size:10px;letter-spacing:.5em;color:var(--blood);text-transform:uppercase}
+  h2{font-size:clamp(1.5rem,5.4vw,2.7rem);font-weight:400;letter-spacing:-.01em;
+     text-transform:uppercase;line-height:1.1}
+  .three{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+         gap:18px;width:100%}
+  .mask{position:relative;border:1px solid #1a1a1f;background:rgba(12,12,15,.62);
+        backdrop-filter:blur(3px);padding:30px 20px 26px;
+        transition:border-color .45s,transform .45s,background .45s;cursor:default}
+  .mask:hover{border-color:var(--blood);transform:translateY(-5px);
+              background:rgba(20,10,12,.7)}
+  .mask .n{font-size:10px;letter-spacing:.4em;color:#6a665f}
+  .mask .t{margin-top:14px;font-size:1.06rem;letter-spacing:.05em;text-transform:uppercase}
+  .mask .d{margin-top:12px;font-size:11px;line-height:2;color:var(--bone-dim);
+           letter-spacing:.08em}
+  .mask::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;
+               background:var(--blood);transform:scaleX(0);transform-origin:left;
+               transition:transform .5s}
+  .mask:hover::after{transform:scaleX(1)}
+
+  .rule{width:100%;height:1px;background:linear-gradient(90deg,transparent,#22222a,transparent)}
+
+  footer{padding:70px 0 90px;display:flex;flex-direction:column;
+         align-items:center;gap:16px;font-size:10px;letter-spacing:.34em;
+         color:#4e4b45;text-transform:uppercase}
+  footer .mark{color:var(--bone-dim)}
+
+  @media (prefers-reduced-motion:reduce){
+    #grain{animation:none}.scrollcue{animation:none}
+    .mask{transition:none}
+  }
+  @media (max-width:520px){
+    .vol{letter-spacing:.44em;text-indent:.44em}
+    .sub{letter-spacing:.2em}
+  }
+</style>
+</head>
+<body>
+<canvas id="gl" aria-hidden="true"></canvas>
+<div id="vig"></div><div id="grain"></div>
+
+<div class="wrap">
+  <header>
+    <p class="vol">Volume Two</p>
+    <h1>Mask<em>Color</em></h1>
+    <p class="sub">The face you wear is the only one anybody believes.</p>
+    <p class="scrollcue">scroll</p>
+  </header>
+
+  <div class="rule"></div>
+
+  <section>
+    <p class="lbl">Volume Two</p>
+    <h2>Three faces, one room</h2>
+    <div class="three">
+      <article class="mask"><p class="n">I</p><p class="t">The Shape</p>
+        <p class="d">Bone white. No expression to read. It does not hurry, and it does not stop.</p></article>
+      <article class="mask"><p class="n">II</p><p class="t">The Voice</p>
+        <p class="d">A mouth frozen mid-scream. It calls first. It asks what your favorite is.</p></article>
+      <article class="mask"><p class="n">III</p><p class="t">The Doll</p>
+        <p class="d">Painted grin, stitched seams. Small enough to hold. That is the problem.</p></article>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <footer>
+    <p class="mark">Mask Color — Volume Two</p>
+    <p>Move the cursor. It follows.</p>
+  </footer>
+</div>
+
+<script>
+/* ── MASK COLOR VOL.2 — raymarched bone mask in fog ───────────────────────
+   One WebGL1 fragment shader, no libraries, no external assets.
+   MOBILE-GATED FROM THE START: the 2026-08-07 ophanim ANR came from a heavy
+   sync boot on a phone GL driver, so quality knobs key off screen size and
+   the shader compiles exactly ONE program (not eight).                     */
+(function(){
+  "use strict";
+  var cv = document.getElementById("gl");
+  var gl = cv.getContext("webgl", {antialias:false, alpha:false, depth:false,
+                                   powerPreference:"low-power"});
+  if(!gl){ cv.style.display="none"; return; }          /* CSS scene still reads */
+
+  var isPhone = Math.min(innerWidth, innerHeight) < 760;
+  var STEPS   = isPhone ? 40 : 74;                      /* raymarch budget */
+  var MAXDPR  = isPhone ? 1.25 : 1.6;
+
+  var VS = "attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
+
+  var FS = [
+  "precision highp float;",
+  "uniform vec2  uRes;",
+  "uniform float uT;",
+  "uniform vec2  uM;",      /* cursor, -1..1 */
+  "uniform float uReveal;", /* 0..1 scroll reveal */
+  "const int STEPS = "+STEPS+";",
+
+  /* smooth-min for welding the mask parts together */
+  "float sm(float a,float b,float k){float h=clamp(.5+.5*(b-a)/k,0.,1.);",
+  "  return mix(b,a,h)-k*h*(1.-h);}",
+  "float sdSphere(vec3 p,float r){return length(p)-r;}",
+  "float sdBox(vec3 p,vec3 b){vec3 d=abs(p)-b;",
+  "  return length(max(d,0.))+min(max(d.x,max(d.y,d.z)),0.);}",
+  "float sdCapsule(vec3 p,vec3 a,vec3 b,float r){vec3 pa=p-a,ba=b-a;",
+  "  float h=clamp(dot(pa,ba)/dot(ba,ba),0.,1.);return length(pa-ba*h)-r;}",
+
+  /* THE MASK — an archetype, not a likeness: elongated bone shell,
+     hollow eyes, a torn mouth. Deliberately abstract. */
+  "float mask(vec3 p){",
+  "  vec3 q=p;",
+  "  float shell = sdSphere(q*vec3(1.0,0.80,1.28),1.0)/1.0;",   /* long face  */
+  "  float jaw   = sdSphere((q-vec3(0.,-0.72,0.06))*vec3(1.12,1.5,1.3),0.72);",
+  "  float face  = sm(shell,jaw,0.34);",
+  "  float hollow= sdSphere(q*vec3(1.0,0.80,1.28),0.90);",      /* thin it    */
+  "  face = max(face,-hollow);",
+  "  face = max(face,-sdBox(q-vec3(0.,0.,-1.15),vec3(2.,2.,1.)));", /* open back */
+  /* eyes */
+  "  float eL=sdSphere((q-vec3(-0.34, 0.16,0.62))*vec3(1.0,1.5,1.0),0.20);",
+  "  float eR=sdSphere((q-vec3( 0.34, 0.16,0.62))*vec3(1.0,1.5,1.0),0.20);",
+  "  face=max(face,-min(eL,eR));",
+  /* mouth — a torn seam */
+  "  float m=sdCapsule(q,vec3(-0.26,-0.52,0.52),vec3(0.26,-0.52,0.52),0.085);",
+  "  face=max(face,-m);",
+  "  return face;",
+  "}",
+
+  "vec3 nrm(vec3 p){vec2 e=vec2(0.0016,0.);",
+  "  return normalize(vec3(mask(p+e.xyy)-mask(p-e.xyy),",
+  "                        mask(p+e.yxy)-mask(p-e.yxy),",
+  "                        mask(p+e.yyx)-mask(p-e.yyx)));}",
+
+  "void main(){",
+  "  vec2 uv=(gl_FragCoord.xy-.5*uRes)/uRes.y;",
+  "  vec3 ro=vec3(0.,0.,3.5);",
+  "  vec3 rd=normalize(vec3(uv,-1.55));",
+  /* the mask turns toward the cursor — the one thing qi always asks for */
+  "  float ax=uM.x*0.42, ay=-uM.y*0.30;",
+  "  ay += sin(uT*0.42)*0.045;",                 /* slow breathing */
+  "  ax += sin(uT*0.31)*0.05;",
+  "  mat3 Ry=mat3(cos(ax),0.,-sin(ax), 0.,1.,0., sin(ax),0.,cos(ax));",
+  "  mat3 Rx=mat3(1.,0.,0., 0.,cos(ay),-sin(ay), 0.,sin(ay),cos(ay));",
+  "  mat3 R=Ry*Rx;",
+  "  vec3 rot_ro=R*ro, rot_rd=R*rd;",
+  "  float t=0.; float hit=-1.;",
+  "  for(int i=0;i<STEPS;i++){",
+  "    vec3 p=rot_ro+rot_rd*t;",
+  "    float d=mask(p);",
+  "    if(d<0.0016){hit=t;break;}",
+  "    t+=d*0.86; if(t>8.)break;",
+  "  }",
+  "  vec3 col=vec3(0.019,0.019,0.023);",
+  "  if(hit>0.){",
+  "    vec3 p=rot_ro+rot_rd*hit; vec3 n=nrm(p);",
+  "    vec3 key=normalize(vec3(-0.42,0.66,0.86));",   /* cold bone key  */
+  "    vec3 rim=normalize(vec3(0.72,-0.18,0.42));",   /* blood rim      */
+  "    float dif=max(dot(n,key),0.);",
+  "    float rl =pow(max(dot(n,rim),0.),2.4);",
+  "    float fres=pow(1.-max(dot(n,-rot_rd),0.),3.2);",
+  "    vec3 bone=vec3(0.913,0.902,0.874);",
+  "    col  = bone*(0.085+dif*0.80);",
+  "    col += vec3(0.757,0.070,0.121)*rl*1.35;",       /* red from the side */
+  "    col += bone*fres*0.30;",
+  "    col *= 1.0-smoothstep(2.6,6.2,hit)*0.85;",      /* fall into fog     */
+  "  }",
+  /* volumetric-ish red haze low in frame */
+  "  col += vec3(0.44,0.030,0.055)*pow(max(0.,1.-length(uv-vec2(0.,-0.62))),3.0)*0.30;",
+  /* reveal on first paint */
+  "  col *= mix(0.0,1.0,uReveal);",
+  /* ACES-ish + slight lift so blacks stay filmic, not crushed */
+  "  col=(col*(2.51*col+0.03))/(col*(2.43*col+0.59)+0.14);",
+  "  col=pow(max(col,0.),vec3(1./2.22));",
+  "  gl_FragColor=vec4(col,1.);",
+  "}"].join("\n");
+
+  function sh(t,src){var s=gl.createShader(t);gl.shaderSource(s,src);gl.compileShader(s);return s;}
+  var prog=gl.createProgram();
+  gl.attachShader(prog,sh(gl.VERTEX_SHADER,VS));
+  gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,FS));
+  gl.linkProgram(prog);
+  /* status checked ONCE, after link — never per-shader in a loop */
+  if(!gl.getProgramParameter(prog,gl.LINK_STATUS)){ cv.style.display="none"; return; }
+  gl.useProgram(prog);
+
+  var buf=gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  var loc=gl.getAttribLocation(prog,"p");
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+
+  var uRes=gl.getUniformLocation(prog,"uRes"),
+      uT  =gl.getUniformLocation(prog,"uT"),
+      uM  =gl.getUniformLocation(prog,"uM"),
+      uRev=gl.getUniformLocation(prog,"uReveal");
+
+  var mx=0,my=0,tx=0,ty=0,rev=0;
+  addEventListener("mousemove",function(e){
+    tx=(e.clientX/innerWidth)*2-1; ty=-((e.clientY/innerHeight)*2-1);
+  },{passive:true});
+  addEventListener("touchmove",function(e){
+    if(!e.touches.length)return;
+    tx=(e.touches[0].clientX/innerWidth)*2-1;
+    ty=-((e.touches[0].clientY/innerHeight)*2-1);
+  },{passive:true});
+
+  function resize(){
+    var dpr=Math.min(devicePixelRatio||1,MAXDPR);
+    var w=Math.floor(innerWidth*dpr), h=Math.floor(innerHeight*dpr);
+    if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;gl.viewport(0,0,w,h);}
+  }
+  var rt=null;
+  addEventListener("resize",function(){clearTimeout(rt);rt=setTimeout(resize,140);},{passive:true});
+  resize();
+
+  var t0=performance.now();
+  function frame(now){
+    var t=(now-t0)/1000;
+    mx+=(tx-mx)*0.055; my+=(ty-my)*0.055;   /* lazy, heavy follow */
+    rev+=(1-rev)*0.022;
+    gl.uniform2f(uRes,cv.width,cv.height);
+    gl.uniform1f(uT,t);
+    gl.uniform2f(uM,mx,my);
+    gl.uniform1f(uRev,rev);
+    gl.drawArrays(gl.TRIANGLES,0,3);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
