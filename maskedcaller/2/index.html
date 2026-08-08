@@ -274,6 +274,16 @@
   "  gMouthR = mix(mix(0.115,                0.270,               a), 0.155,              b);",
   "  gTint   = mix(mix(vec3(0.913,0.902,0.874),vec3(0.900,0.888,0.870),a),vec3(0.930,0.870,0.820),b);",
   "  gRim    = mix(mix(1.35,                 1.60,                a), 1.20,               b);",
+  /* THE RING FIX. The mask only collapsed into an annulus BETWEEN faces, never
+     at one: mid-morph the eye and mouth cut radii drift toward each other and
+     merge into a single hole, so the thinned shell reads as a ring. Shrink the
+     cuts in proportion to how deep into a transition we are — 0 at a pure
+     face, 1 at the midpoint — so all three target looks are untouched and only
+     the passage between them tightens. */
+  "  float seg = fract(clamp(f,0.,2.));",
+  "  float tr  = 1.0 - abs(seg*2.0 - 1.0);",
+  "  gEyeR   *= 1.0 - tr*0.34;",
+  "  gMouthR *= 1.0 - tr*0.42;",
   "}",
 
   "void main(){",
