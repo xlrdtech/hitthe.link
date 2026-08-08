@@ -56,8 +56,12 @@ body{
 #page{position:relative;z-index:2}
 
 /* ── type scale — 44:1 ─────────────────────────────────────── */
-.d0{font-size:clamp(140px,60vw,300px);font-weight:900;letter-spacing:-.079em;line-height:.74;color:var(--ink)}
-@media(min-width:760px){ .d0{font-size:clamp(330px,48vw,880px)} }
+/* CLAMP MINIMUMS WERE THE BLEED (fixed 2026-08-08). A minimum of 140px/330px
+   with white-space:nowrap forces every word wider than a narrow window can
+   hold, so the vw term never gets to scale it down and the text MUST overflow.
+   The minimum now only guards against illegibly small type; vw does the work. */
+.d0{font-size:clamp(56px,20vw,300px);font-weight:900;letter-spacing:-.079em;line-height:.74;color:var(--ink)}
+@media(min-width:760px){ .d0{font-size:clamp(120px,34vw,880px)} }
 .d1{font-size:clamp(48px,12.8vw,182px);font-weight:900;letter-spacing:-.063em;line-height:.85;color:var(--ink)}
 .d2{font-size:clamp(30px,7.4vw,92px);font-weight:900;letter-spacing:-.055em;line-height:1.02;color:var(--ink)}
 .d3{font-size:clamp(25px,5.2vw,54px);font-weight:800;letter-spacing:-.04em;line-height:1;color:var(--ink)}
@@ -288,7 +292,9 @@ h1.wm{margin-left:-.13em;margin-bottom:.02em;white-space:nowrap}   /* bleeds off
 #s6{padding-top:clamp(22px,3.6vh,54px);padding-bottom:clamp(62px,9.5vh,104px)}
 .fwm{
   width:100%;text-align:center;line-height:.7;white-space:nowrap;
-  font-size:clamp(190px,62vw,1100px);font-weight:900;letter-spacing:-.088em;
+  /* was clamp(190px,62vw,1100px) — a 190px floor on a nowrap line cannot fit a
+     narrow window, so it bled off both edges. vw scales it now. */
+  font-size:clamp(64px,26vw,1100px);font-weight:900;letter-spacing:-.088em;
   color:transparent;-webkit-text-stroke:1.4px rgba(244,244,242,.54);
   margin-bottom:clamp(18px,3vh,40px);
 }
