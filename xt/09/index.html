@@ -1866,6 +1866,13 @@ resize();
 /* ─────────────── pointer ─────────────── */
 var mx=0, my=0, mtx=0, mty=0;
 var ptrX=0, ptrY=0, dotX=0, dotY=0, ringX=0, ringY=0, prevDotX=0, prevDotY=0;
+/* VELOCITY + DEPTH state (2026-08-08). The cursor used a plain exponential lerp
+   locked to z=0: it snapped hardest when furthest from the target, so a
+   cross-screen move read as a TELEPORT, and it never left the z=0 plane while
+   every other element in this scene travels in real Z. A spring carries
+   momentum — force scales with distance, so it accelerates out of rest and
+   decelerates into the target: that IS awareness of the distance to travel. */
+var dotVX=0, dotVY=0, dotZ=0, ringZ=0;
 var dilT=0, dil=0;
 var curRing = document.getElementById("cur-ring"), curDot = document.getElementById("cur-dot");
 
@@ -2054,13 +2061,27 @@ function frame(now){
   /* ── three-body cursor: dot leads, ring trails, dot squashes on velocity ── */
   if (!isTouch){
     prevDotX = dotX; prevDotY = dotY;
-    dotX  += (ptrX - dotX)*0.42;  dotY  += (ptrY - dotY)*0.42;
+    /* critically-damped spring, NOT a lerp. Force is proportional to distance,
+       so a long traverse builds speed and settles instead of snapping. */
+    dotVX = (dotVX + (ptrX - dotX)*0.155) * 0.76;
+    dotVY = (dotVY + (ptrY - dotY)*0.155) * 0.76;
+    dotX += dotVX; dotY += dotVY;
     ringX += (dotX - ringX)*0.13; ringY += (dotY - ringY)*0.13;
+    /* REAL DEPTH: ride forward toward the viewer over anything interactive and
+       rest deep in the room otherwise, so the cursor uses the whole depth of
+       field the scene already has. dilT is already driven by interactive(). */
+    var tz = -110 + dil*230;
+    dotZ  += (tz    - dotZ )*0.11;
+    ringZ += (dotZ  - ringZ)*0.07;
     var vx = dotX - prevDotX, vy = dotY - prevDotY;
     var sp = Math.min(Math.sqrt(vx*vx+vy*vy)/16, 1);
     var rot = Math.atan2(vy,vx)*57.2957795;
-    curDot.style.transform  = "translate3d("+dotX.toFixed(1)+"px,"+dotY.toFixed(1)+"px,0) rotate("+rot.toFixed(1)+"deg) scale("+(1+sp*2.6).toFixed(3)+","+(1-sp*0.62).toFixed(3)+")";
-    curRing.style.transform = "translate3d("+ringX.toFixed(1)+"px,"+ringY.toFixed(1)+"px,0) scale("+(1+dil*0.45).toFixed(3)+")";
+    /* perspective() FIRST, per element. #cur-dot/#cur-ring live OUTSIDE #stage,
+       so they inherit no perspective — translateZ on them would be a silent
+       no-op that renders perfectly flat with no error. 1000px matches #stage so
+       the cursor's depth reads at the same scale as the room it moves through. */
+    curDot.style.transform  = "perspective(1000px) translate3d("+dotX.toFixed(1)+"px,"+dotY.toFixed(1)+"px,"+dotZ.toFixed(1)+"px) rotate("+rot.toFixed(1)+"deg) scale("+(1+sp*2.6).toFixed(3)+","+(1-sp*0.62).toFixed(3)+")";
+    curRing.style.transform = "perspective(1000px) translate3d("+ringX.toFixed(1)+"px,"+ringY.toFixed(1)+"px,"+ringZ.toFixed(1)+"px) scale("+(1+dil*0.45).toFixed(3)+")";
     curRing.style.borderColor = dil > 0.35 ? "rgba(0,255,68,"+(0.25+dil*0.5).toFixed(2)+")" : "rgba(255,255,255,.3)";
   }
 }
