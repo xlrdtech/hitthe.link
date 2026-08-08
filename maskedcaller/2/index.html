@@ -13,6 +13,8 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="MASKED CALLER — VOLUME TWO">
 <meta name="twitter:description" content="Three faces, one room. Chapter Two is almost here.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   :root{
@@ -20,6 +22,15 @@
     --blood:#c1121f; --blood-hot:#ff2d3d;
     --void:#050506; --ash:#0c0c0f;
     --mono:ui-monospace,"SF Mono",Menlo,monospace;
+    /* qi 2026-08-08: "100% failure on all fonts. Especially the title."
+       Cinzel is his canonical display face (stylism-tokens.css:49). A Roman
+       inscriptional serif also carries a horror wordmark far better than the
+       system mono this page shipped with.
+       PALETTE LEFT ALONE ON PURPOSE: bone/blood/void is this brand's own
+       horror identity and qi never said it was wrong — his colour complaint
+       was notifs, lifenote and asset-coverage. --void and --blood already sit
+       near canonical --ink and --oxblood if he ever wants them aligned. */
+    --display:"Cinzel","Instrument Serif",Georgia,serif;
   }
   html,body{height:100%;background:var(--void);color:var(--bone);overflow-x:hidden}
   body{
@@ -49,7 +60,8 @@
        text-transform:uppercase}
   /* the type carries its own scrim. Legibility must NEVER depend on what the
      shader happens to render behind it — the mask moves, the copy cannot. */
-  h1{font-size:clamp(2.6rem,13vw,7.4rem);line-height:.86;letter-spacing:-.03em;
+  h1{font-family:var(--display);
+     font-size:clamp(2.6rem,13vw,7.4rem);line-height:.86;letter-spacing:-.03em;
      font-weight:400;text-transform:uppercase;
      text-shadow:0 0 60px rgba(233,230,223,.14),0 2px 24px rgba(5,5,6,.95),
                  0 0 10px rgba(5,5,6,.85)}
