@@ -178,30 +178,90 @@
             `
         };
 
+        // Header label per contract type. The header must ALWAYS match the
+        // selected type, never the last-generated one -- otherwise switching
+        // type and printing without re-generating ships an OMNI-OPERATIONS
+        // header on a client agreement.
+        const LABELS = {
+            external: "UNIVERSAL CLIENT SERVICE AGREEMENT",
+            internal: "OMNI-OPERATIONS AGREEMENT"
+        };
+
+        const EMPTY_DOC = `
+            <div class="flex flex-col items-center justify-center h-64 text-gray-400">
+                <i class="fas fa-file-contract text-6xl mb-4"></i>
+                <p>Select Contract Type and Click "Generate"</p>
+            </div>`;
+
+        let lastType = null;
+
+        // Persistent across contract-type switches. A snapshot of only the
+        // CURRENTLY rendered form is not enough: external's clientName has no
+        // counterpart in the internal form, so it would be dropped the moment
+        // you switch and be gone when you switch back. Values live here until
+        // their form is on screen again.
+        const fieldMemory = {};
+
+        function newRefId() {
+            // Ref ID is stamped per GENERATE, not per page load. Stamping it
+            // once on load meant every contract produced in one session
+            // carried the same Ref ID across different clients.
+            return 'GEN-' + Math.floor(Math.random() * 1000000);
+        }
+
         // --- INIT ---
         window.onload = function() {
             updateForm();
-            document.getElementById('refId').innerText = 'GEN-' + Math.floor(Math.random() * 1000000);
+            document.getElementById('refId').innerText = newRefId();
         };
 
         function updateForm() {
             const type = document.getElementById('contractType').value;
-            document.getElementById('inputForm').innerHTML = inputs[type];
-            // Set default date
-            if(document.getElementById('effDate')) document.getElementById('effDate').valueAsDate = new Date();
+            const form = document.getElementById('inputForm');
+
+            // Replacing innerHTML destroys every field, so anything already
+            // typed -- client name, address, date, all five service checkboxes
+            // -- silently vanished on a dropdown change. Snapshot first,
+            // restore after, so switching type never eats the operator's work.
+            form.querySelectorAll('input, select').forEach(function (el) {
+                if (!el.id) return;
+                fieldMemory[el.id] = (el.type === 'checkbox') ? el.checked : el.value;
+            });
+
+            form.innerHTML = inputs[type];
+
+            form.querySelectorAll('input, select').forEach(function (el) {
+                if (!el.id || !(el.id in fieldMemory)) return;
+                if (el.type === 'checkbox') { el.checked = fieldMemory[el.id]; }
+                else if (fieldMemory[el.id] !== '') { el.value = fieldMemory[el.id]; }
+            });
+
+            // Default the date only when it wasn't carried over.
+            const d = document.getElementById('effDate');
+            if (d && !d.value) d.valueAsDate = new Date();
+
+            // Keep the printed header honest, and drop any preview belonging
+            // to the other contract type so a stale body can't be printed
+            // under a new header. Inputs above are preserved either way.
+            document.getElementById('docTypeLabel').innerText = LABELS[type];
+            if (lastType !== null && lastType !== type) {
+                document.getElementById('docContent').innerHTML = EMPTY_DOC;
+            }
+            lastType = type;
         }
 
         function generateDoc() {
             const type = document.getElementById('contractType').value;
             const container = document.getElementById('docContent');
             const date = document.getElementById('effDate').value;
-            
+
+            document.getElementById('refId').innerText = newRefId();
+            document.getElementById('docTypeLabel').innerText = LABELS[type];
+
             if (type === 'external') {
                 generateExternal(container, date);
-                document.getElementById('docTypeLabel').innerText = "UNIVERSAL CLIENT SERVICE AGREEMENT";
             } else {
                 generateInternal(container, date);
-                document.getElementById('docTypeLabel').innerText = "OMNI-OPERATIONS AGREEMENT";
             }
         }
 
