@@ -619,6 +619,67 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
 
   const PLATFORMS = ["email", "beside", "slack", "instagram", "facebook", "telegram", "whatsapp", "discord", "linkedin", "signal", "x"];
 
+  // ── READER VOICES (qi decree 2026-08-09: "the new canon is 11-reader").
+  // Roster mirrors /Volumes/M4/sync_/exedus/dev_/xen/data/elevenlabs-voices.md.
+  // Everything is FREE except East, which is qi's cloned identity voice and is
+  // reserved for outbound calls/voicemail — marked so it can never be picked
+  // for narration by accident.
+  const READER_VOICES = [
+    { id: "1cxc5c3E9K6F1wlqOJGV", name: "Emily · Whisper" },
+    { id: "V9fdGZs6AiHI4uyiAiza", name: "Sir Laurence Olivier" },
+    { id: "aMSt68OGf4xUZAnLpTU8", name: "Juniper · Professional" },
+    { id: "Aa6nEBJJMKJwJkCx8VU2", name: "Quentin · Narrator" },
+    { id: "U9jmr7kY6mMqS39kfA01", name: "Alex · Deep" },
+    { id: "WAhoMTNdLdMoq1j3wf3I", name: "Hope · Smooth" },
+    { id: "vBKc2FfBKJfcZNyEt1n6", name: "Finn · Energetic" },
+    { id: "aEO01A4wXwd1O8GPgGlF", name: "Arabella · Raspy" },
+    { id: "FF7KdobWPaiR0vkcALHF", name: "David · Trailer" },
+    { id: "4tRn1lSkEn13EVTuqb0g", name: "Serafina" },
+    { id: "TDTTIZEngvvWARkECefs", name: "Villain · Abrasive" },
+    { id: "37w0uEKh8IHt6c3S0pvB", name: "East · PAID, calls only", paid: true },
+  ];
+
+  const [voiceId, setVoiceId] = React.useState(
+    () => (typeof localStorage !== "undefined" && localStorage.getItem("xen.voice.id")) || READER_VOICES[0].id
+  );
+  const voiceName = (READER_VOICES.find((v) => v.id === voiceId) || READER_VOICES[0]).name;
+
+  // Picking a voice must reach the SPEAK path, not just this tab — the hook
+  // xen-speak-outputs.py reads ~/.xen/runtime/voice.id on every utterance, so
+  // POST /voice-id is what actually swaps the voice. localStorage only keeps
+  // the pill label correct across reloads. Failure is swallowed: a dead route
+  // must never break the composer.
+  const pickVoice = (id) => {
+    setVoiceId(id);
+    try { localStorage.setItem("xen.voice.id", id); } catch (_) {}
+    fetch("/voice-id", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ voice_id: id }),
+    }).catch(() => {});
+  };
+
+  // Pill actions operate on what is actually on screen (`shown`), not the full
+  // event log — what you see is what you copy/export.
+  const feedText = () =>
+    shown.map((e) => `[${e.src}] ${e.sender || e.recipient || ""}: ${e.body || ""}`).join("\n");
+
+  const pillCopy = () => { try { navigator.clipboard.writeText(feedText()); } catch (_) {} };
+  const pillShare = () => {
+    if (navigator.share) navigator.share({ title: "Xen · Omnibox", text: feedText() }).catch(() => {});
+    else pillCopy();
+  };
+  const pillExport = () => {
+    try {
+      const blob = new Blob([JSON.stringify(shown, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "omnibox-feed.json";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch (_) {}
+  };
+
   return (
     <>
       <div className="kicker-bar">
@@ -662,6 +723,40 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
         </div>
 
         <div className="mirror-feed">
+          {/* ── ACTION PILLS — horizontal, swipable, sitting directly ABOVE the
+               voice bar (qi 2026-08-09 20:31: "put the pills above the voice
+               bar ... horizontal swipable with the drop pill to pick eleven
+               reader voice after new"). Order is his: New, then the voice
+               picker, then the rest. Overflow scrolls natively rather than
+               wrapping, so the row never pushes the composer down. ── */}
+          <div className="omni-pills">
+            <button className="opill" onClick={() => setQ("")}>＋ New</button>
+
+            {/* Voice drop pill. Deliberately a NATIVE <select> behind a styled
+                label — same idiom as .mfilter-select-wrap above — so iOS opens
+                its picker wheel. A custom menu would look identical on desktop
+                and feel wrong on the phone, which is where qi actually uses it. */}
+            <div className="opill drop" data-paid={voiceName.includes("PAID") ? "1" : undefined}>
+              <span className="opill-label">{voiceName}</span>
+              <span className="mfilter-select-caret">▾</span>
+              <select
+                className="mfilter-select"
+                value={voiceId}
+                onChange={(e) => pickVoice(e.target.value)}
+                aria-label="Reader voice"
+              >
+                {READER_VOICES.map((v) => (
+                  <option key={v.id} value={v.id}>{v.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <button className="opill" onClick={() => onOpenLink && onOpenLink("threads")}>Threads</button>
+            <button className="opill" onClick={pillCopy}>Copy</button>
+            <button className="opill" onClick={pillExport}>Export</button>
+            <button className="opill" onClick={pillShare}>Share</button>
+          </div>
+
           <div className="mirror-prompt">
             <div className="mirror-prompt-row">
               <span className="sigil">›</span>
