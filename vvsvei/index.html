@@ -2932,8 +2932,25 @@ function _avaDrain() {
     // drop to the bad voice. On <audio> failure, RETRY the SAME clip against the
     // OTHER host (xen-vm) before any device path; only if BOTH network hosts fail
     // do we fall to _avaSpeakDevice and finally _ssSpeakClip (never silent).
-    const _hosts = [AVA_TTS_URL];  // no network fallback (single origin); device speech-synth remains the never-silent guarantee
+    // MEASURED 2026-08-11 00:39 — the retry above was UNREACHABLE. `_hosts` held a
+    // single entry, so `_hostIdx < _hosts.length` was false on the very first
+    // failure and EVERY audio-err jumped straight to device-tts. The code read as
+    // if it protected the voice leg; it never ran once. Fault log showed the cost:
+    // a fault every ~20-40s across MULTIPLE clients (rx counters non-monotonic),
+    // each one speaking in the browser's synthetic voice — which is exactly what
+    // qi hears as "that doesn't sound like me" and as two voices at once.
+    //
+    // A transient /api/tts blip must not become a wrong-voice event. Retry the SAME
+    // origin with a cache-bust before conceding: cheap, and it fixes the actual
+    // failure instead of papering over it with a robot.
+    //
+    // The device path stays as the LAST resort — qi's own "never silent" rule
+    // (2026-06-09) is deliberately not repealed here. This only stops us reaching
+    // for it on the first stumble.
+    const _hosts = [AVA_TTS_URL];
+    const _MAX_RETRY = 2;            // same-origin retries before any device path
     let _hostIdx = 0;
+    let _retries = 0;
     const _fallback = (label) => {
       if (_aErr) return; _aErr = true;
       a.oncanplay = null;
@@ -2948,6 +2965,25 @@ function _avaDrain() {
         a.src = _hosts[_hostIdx] + '?text=' + encodeURIComponent(clip);
         a.oncanplay = _doPlay;
         setTimeout(() => { if (a.oncanplay === _doPlay) _doPlay(); }, 3000);
+        return;
+      }
+      if (_retries < _MAX_RETRY) {
+        // Same origin, fresh request. Cache-bust so a poisoned/partial entry cannot
+        // be re-served as a "hit", and back off so we do not hammer a 5xx.
+        _retries++;
+        _aErr = false;
+        _hostIdx = _hosts.length - 1;
+        _avaStatus = 'retry ' + _retries + '/' + _MAX_RETRY;
+        _avaTelemetry(label + ' -> same-origin retry ' + _retries + '/' + _MAX_RETRY);
+        _renderAvaPill();
+        try { a.pause(); } catch (_) {}
+        setTimeout(() => {
+          if (_genAtStart !== _avaGen) { _avaPlaying = false; _avaStatus = 'you spoke'; _renderAvaPill(); return; }
+          a.onerror = () => _fallback('audio-err fallback');
+          a.src = url + (url.indexOf('?') === -1 ? '?' : '&') + '_r=' + _retries + '_' + _genAtStart;
+          a.oncanplay = _doPlay;
+          setTimeout(() => { if (a.oncanplay === _doPlay) _doPlay(); }, 3000);
+        }, 400 * _retries);
         return;
       }
       // BOTH network hosts failed — device replay, then real speechSynthesis.
