@@ -40,22 +40,27 @@
 
   <h2>1 · The Bodies (2 = 1)</h2>
   <div class="grid">
-    <div class="card"><b>M4 Mac</b> <span class="pill live">primary</span><br><span class="mono">qi@100.97.145.50</span><br><span class="dim">Runs the engine, omnimind, all services, the fleet. Root = <code>/Volumes/qi_</code> (SSD).</span></div>
+    <div class="card"><b>M4 Mac</b> <span class="pill live">primary</span><br><span class="mono">qi@100.97.145.50</span><br><span class="dim">Runs the engine, omnimind, all services, the fleet. Root = <code>/Volumes/M4</code> (SSD) — the ONLY canonical tree. <code>/Volumes/qi_</code> was nuked 2026-07-02 and <code>/Volumes/tech_</code> is deprecated; nothing lives on the boot disk.</span></div>
     <div class="card"><b>nitro (Windows)</b> <span class="pill live">second body</span><br><span class="mono">selfexec@100.80.76.79</span><br><span class="dim">Joins via <code>exedus</code> → shared tmux. Real synced folder (Syncthing) — no rclone mount.</span></div>
-    <div class="card"><b>X31</b> <span class="pill live">brain vault</span><br><span class="mono">/Volumes/X31/sync_/brain_</span><br><span class="dim">The Obsidian/Syncthing memory vault. Tailscale too.</span></div>
+    <div class="card"><b>X31</b> <span class="pill">mirror only</span><br><span class="mono">/Volumes/X31/sync_/brain_</span><br><span class="dim">Obsidian/Syncthing mirror. <b>The live memory vault moved to M4 on 2026-06-13</b> — X31 physically flaps, so no read path may depend on it and no memory call may block voice or SMS.</span></div>
   </div>
 
-  <h2>2 · The qi_ Canon (Omni-Mesh)</h2>
-  <div class="card"><pre>qi_/
+  <h2>2 · The M4 Canon (Omni-Mesh)</h2>
+  <div class="card"><pre>/Volumes/M4/
 ├── sync_/
-│   ├── exedus/      ← the engine: xen/ · syn_ · brain_→X31 · mcp/ · bin/ · repos/ · config/ · logs/
+│   ├── exedus/      ← the engine: xen/ · syn_ · brain_ · mcp/ · bin/ · repos/ · config/ · logs/
 │   │   ├── xen/         omnimind.js, xen.js, the harness  (Agents{Syn,Lyn,Eli} · Identities{X9_,East_,Auto_,Dev_,aea_})
-│   │   ├── syn_/        gap analysis · action items · skills · flows · tools
-│   │   └── brain_  →  X31 vault (personas · profiles · projects · portfolio · library)
+│   │   └── syn_/        gap analysis · action items · skills · flows · tools
+│   ├── brain_/      the LIVE vault (personas · profiles · projects · portfolio · library)
+│   │   └── agents/xen/xen_memories/   MEMORY.md — recall starts here
 │   ├── notes_/      stella_sessions · Threads · uploads · XenBrowser Tabs · Open Tabs
-│   └── inbox_/      (triage)
-└── tlpt_/           teleport mesh → exedus · notes_ · inbox_ · brain_</pre>
-  <span class="dim">Top of <code>qi_</code> = <b>sync_</b> + <b>tlpt_</b> only. Naming law, Soul (sync_) / Spirit (exedus). Source of truth = Raindrop (239 collections / 20,701 bookmarks), mirrored here.</span></div>
+│   └── inbox_/      (triage — desk drops land here)
+└── tlpt_/           teleport mesh → exedus · notes_ · inbox_ · brain_
+
+Shorthand symlinks at the root (added 2026-08-10) point at the same real dirs:
+  _sync → sync_ · _brain → sync_/brain_ · _exedus → sync_/exedus
+  _notes → sync_/notes_ · _inbox → sync_/inbox_</pre>
+  <span class="dim">Top of <code>M4</code> = <b>sync_</b> + <b>tlpt_</b> only. Naming law, Soul (sync_) / Spirit (exedus). <b>One canonical tree:</b> M4 holds every Exedus/Xen file — <code>/Users/qi/exedus</code>, <code>/Volumes/tech_</code> and X31 are mirrors, and daemons refuse to boot from anywhere else. Source of truth for bookmarks = Raindrop (239 collections / 20,701 bookmarks), mirrored here.</span></div>
 
   <h2>3 · The Omniawareness Spine</h2>
   <div class="card"><pre>SENSE                         MULTIPLEX            AGGREGATE              RECORD
