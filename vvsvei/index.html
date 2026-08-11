@@ -537,13 +537,9 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
   <span id="status-lbl">tap start</span>
 </div>
 
-<div class="transcript-toolbar">
-  <button id="tb-newthread" title="Start new thread">＋ New</button>
-  <button id="tb-threads" title="Browse past threads">Threads</button>
-  <button id="tb-copy" title="Copy current thread">Copy</button>
-  <button id="tb-export" title="Export current thread as .txt">Export</button>
-  <button id="tb-share" title="Share current thread">Share</button>
-</div>
+<!-- transcript-toolbar MOVED into .composer, above .composer-bar — qi 2026-08-10 23:21:
+     "all the pills are suppose above the bar from in the interface". Same ids and
+     class, so every existing listener still binds; only the position changed. -->
 
 <!-- Threads picker overlay (toggled by Threads button) -->
 <div id="thread-picker" style="display:none; position:absolute; top:60px; left:20px; right:20px; max-height:50vh; overflow-y:auto; background:rgba(20,40,28,.94); border:1px solid var(--line-strong); border-radius:var(--r-card); backdrop-filter:blur(18px); padding:10px; z-index:10; box-shadow:0 12px 36px rgba(0,0,0,.5);"></div>
@@ -581,6 +577,15 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
        So: a scroll-snapping row directly above .composer-bar. One tap selects. No sheet,
        no overlay, no window.confirm — a confirm() IS a modal. Filled by JS below. -->
   <div id="voice-pills" role="radiogroup" aria-label="Xen reader voice"></div>
+  <!-- ALL pills live above the bar (qi 2026-08-10 23:21). Moved here verbatim from
+       its old spot under the header — same ids + class so every listener still binds. -->
+  <div class="transcript-toolbar">
+    <button id="tb-newthread" title="Start new thread">＋ New</button>
+    <button id="tb-threads" title="Browse past threads">Threads</button>
+    <button id="tb-copy" title="Copy current thread">Copy</button>
+    <button id="tb-export" title="Export current thread as .txt">Export</button>
+    <button id="tb-share" title="Share current thread">Share</button>
+  </div>
   <!-- Single unified pill: paperclip · field (waveform behind, textarea overlay) · send. -->
   <div class="composer-bar">
     <button class="icon-btn" id="tb-attach" title="Send attachment">
@@ -3369,7 +3374,9 @@ window.addEventListener('beforeunload', stopListening);
       return;
     }
     const prev = current;
-    current = v.id; paint();
+    current = v.id;
+    // Collapse back to the single pill: the tap that picks is the tap that closes.
+    if (typeof closeList === 'function') closeList(); else paint();
     // The <audio> element MUST be created inside this tap, not in the .then() —
     // iOS grants playback to an element born of a gesture, and a promise callback
     // is no longer the gesture. Create here, set .src after the POST resolves.
@@ -3395,23 +3402,56 @@ window.addEventListener('beforeunload', stopListening);
       });
   };
 
-  // Build the row once. Short names on the pills so a phone width shows ~4 at a time;
-  // the full name stays in the tooltip.
-  VOICES.forEach((v) => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.setAttribute('role', 'radio');
-    b.dataset.vid = v.id;
-    if (v.paid) b.dataset.paid = '1';
-    b.textContent = v.paid ? 'East · PAID' : (v.readerOnly ? v.name.split(' · ')[0] + ' ⃰' : v.name.split(' · ')[0]);
-    b.title = v.readerOnly
-      ? v.name + ' — LOCKED: ElevenLabs licenses this famous voice to the Reader app only; the TTS API returns voice_access_denied. Nothing on our side can unlock it.'
-      : v.name;
-    if (v.readerOnly) b.dataset.reader = '1';
-    b.onclick = () => pick(v);
-    row.appendChild(b);
-  });
-  paint();
+  // COLLAPSED BY DEFAULT — qi 2026-08-10 23:21: "voice pills to open up to show the
+  // list". ONE pill showing the live voice; tapping it expands the roster INLINE in
+  // this same row, still above the bar. Never a layer over the page (no modals here).
+  let open = false;
+  const trigger = document.createElement('button');
+  trigger.type = 'button';
+  trigger.id = 'voice-trigger';
+
+  const nameOf = (id) => {
+    const v = VOICES.find((x) => x.id === id);
+    return v ? (v.paid ? 'East' : v.name.split(' · ')[0]) : 'Voice';
+  };
+  const paintTrigger = () => {
+    trigger.textContent = (open ? '▾ ' : '▸ ') + nameOf(current);
+    trigger.title = 'Xen reader voice: ' + nameOf(current) + ' — tap to ' + (open ? 'close' : 'open') + ' the list';
+    trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    trigger.style.background = 'rgba(0,255,136,.14)';
+    trigger.style.border = '1px solid var(--accent, #00ff88)';
+    trigger.style.color = 'var(--accent, #00ff88)';
+    trigger.style.fontWeight = '650';
+  };
+
+  const build = () => {
+    row.textContent = '';
+    row.appendChild(trigger);
+    paintTrigger();
+    if (!open) return;
+    VOICES.forEach((v) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('role', 'radio');
+      b.dataset.vid = v.id;
+      if (v.paid) b.dataset.paid = '1';
+      b.textContent = v.paid ? 'East · PAID' : (v.readerOnly ? v.name.split(' · ')[0] + ' ⃰' : v.name.split(' · ')[0]);
+      b.title = v.readerOnly
+        ? v.name + ' — LOCKED: ElevenLabs licenses this famous voice to the Reader app only; the TTS API returns voice_access_denied. Nothing on our side can unlock it.'
+        : v.name;
+      if (v.readerOnly) b.dataset.reader = '1';
+      b.onclick = () => pick(v);
+      row.appendChild(b);
+    });
+    paint();
+  };
+
+  // Picking a voice collapses the list back to the single pill — the tap that chooses
+  // is also the tap that closes, so the row never stays fanned open over the bar.
+  const closeList = () => { if (open) { open = false; build(); } };
+
+  trigger.onclick = () => { open = !open; build(); if (open) reveal(); };
+  build();
 
   // Keep the selected pill in view on load, so qi can SEE which voice is live without
   // sliding to hunt for it.
@@ -3428,4 +3468,4 @@ window.addEventListener('beforeunload', stopListening);
 <script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
 </body>
 </html>
-<!-- cache-bust 1786418400 -->
+<!-- cache-bust 1786418700 -->
