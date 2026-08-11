@@ -576,15 +576,21 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
        horizantally slidable" + "there shall not be any modals on the vvsvei interface".
        So: a scroll-snapping row directly above .composer-bar. One tap selects. No sheet,
        no overlay, no window.confirm — a confirm() IS a modal. Filled by JS below. -->
-  <div id="voice-pills" role="radiogroup" aria-label="Xen reader voice"></div>
-  <!-- ALL pills live above the bar (qi 2026-08-10 23:21). Moved here verbatim from
-       its old spot under the header — same ids + class so every listener still binds. -->
-  <div class="transcript-toolbar">
-    <button id="tb-newthread" title="Start new thread">＋ New</button>
-    <button id="tb-threads" title="Browse past threads">Threads</button>
-    <button id="tb-copy" title="Copy current thread">Copy</button>
-    <button id="tb-export" title="Export current thread as .txt">Export</button>
-    <button id="tb-share" title="Share current thread">Share</button>
+  <!-- ONE ROW (qi 2026-08-10 23:31: "its supposed be in the same row not above it").
+       My first pass stacked two rows above the bar; the voice pill and the thread pills
+       belong on the SAME horizontal row. They stay as two child divs rather than one
+       merged div on purpose: the picker's build() does row.textContent = '' to redraw,
+       which would delete the toolbar buttons if they lived inside #voice-pills.
+       #pill-row owns the scrolling so both groups slide together as one row. -->
+  <div id="pill-row">
+    <div id="voice-pills" role="radiogroup" aria-label="Xen reader voice"></div>
+    <div class="transcript-toolbar">
+      <button id="tb-newthread" title="Start new thread">＋ New</button>
+      <button id="tb-threads" title="Browse past threads">Threads</button>
+      <button id="tb-copy" title="Copy current thread">Copy</button>
+      <button id="tb-export" title="Export current thread as .txt">Export</button>
+      <button id="tb-share" title="Share current thread">Share</button>
+    </div>
   </div>
   <!-- Single unified pill: paperclip · field (waveform behind, textarea overlay) · send. -->
   <div class="composer-bar">
@@ -3316,17 +3322,28 @@ window.addEventListener('beforeunload', stopListening);
   // The row IS the picker — every voice is always on screen, one tap away, no layer
   // on top of anything (qi: no modals on this interface). Slidable because 12 pills
   // never fit a phone width; scroll-snap so a flick lands on a pill, not between two.
-  row.style.cssText = [
-    'display:flex', 'gap:6px', 'overflow-x:auto', 'overflow-y:hidden',
-    'scroll-snap-type:x proximity', '-webkit-overflow-scrolling:touch',
-    'padding:0 4px 6px', 'margin:0 0 2px', 'scrollbar-width:none',
-    'flex:0 0 auto', 'white-space:nowrap',
-  ].join(';');
+  // #pill-row is the single scrolling row; #voice-pills is just a flat group inside it,
+  // so the voice pill and the thread pills read as ONE row and slide together.
+  row.style.cssText = ['display:flex', 'gap:6px', 'flex:0 0 auto', 'white-space:nowrap'].join(';');
+  const pillRow = document.getElementById('pill-row');
+  if (pillRow) {
+    pillRow.style.cssText = [
+      'display:flex', 'align-items:center', 'gap:6px',
+      'overflow-x:auto', 'overflow-y:hidden',
+      'scroll-snap-type:x proximity', '-webkit-overflow-scrolling:touch',
+      'padding:0 4px 6px', 'margin:0 0 2px', 'scrollbar-width:none',
+      'flex:0 0 auto', 'white-space:nowrap',
+    ].join(';');
+  }
   // Hide the scrollbar without killing the scrolling itself.
   if (!document.getElementById('voice-pills-css')) {
     const st = document.createElement('style');
     st.id = 'voice-pills-css';
-    st.textContent = '#voice-pills::-webkit-scrollbar{display:none}' +
+    st.textContent = '#pill-row::-webkit-scrollbar{display:none}' +
+      // The toolbar ships its own `padding:0 4px 8px`; inside the shared row that
+      // bottom padding drops its pills off the voice pill's baseline. Flatten it.
+      '#pill-row .transcript-toolbar{padding:0;gap:6px;flex:0 0 auto}' +
+      '#voice-pills::-webkit-scrollbar{display:none}' +
       '#voice-pills button{scroll-snap-align:center;flex:0 0 auto;border-radius:999px;' +
       'cursor:pointer;white-space:nowrap;font:500 11px/1 -apple-system,system-ui,sans-serif;' +
       'letter-spacing:.2px;padding:6px 11px;transition:background .12s,color .12s,border-color .12s}';
@@ -3468,4 +3485,4 @@ window.addEventListener('beforeunload', stopListening);
 <script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
 </body>
 </html>
-<!-- cache-bust 1786418700 -->
+<!-- cache-bust 1786419250 -->
