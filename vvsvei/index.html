@@ -3353,7 +3353,16 @@ window.addEventListener('beforeunload', stopListening);
     { id: 'FF7KdobWPaiR0vkcALHF', name: 'David · Trailer' },
     { id: '4tRn1lSkEn13EVTuqb0g', name: 'Serafina' },
     { id: 'TDTTIZEngvvWARkECefs', name: 'Villain · Abrasive' },
-    { id: '37w0uEKh8IHt6c3S0pvB', name: 'East · PAID clone, calls only', paid: true },
+    // MEASURED 2026-08-10 23:57: this one synthesizes fine on the plain TTS API
+    // (200, 17,598 B) — it is NOT blocked like Olivier. category=cloned, i.e. built from
+    // qi's real recordings, so it is the one that can actually sound like him. The
+    // calls/voicemail-only rule is his POLICY about where his own voice is used, not a
+    // technical limit, so the label should not imply the API refuses it.
+    // NOT to be confused with "East v2" (sXLkT1BmWg6eVIK18ni7, category=generated) —
+    // that one was synthesized from a text persona description ("urban rap artist,
+    // raspy, charismatic…"), never from his audio, which is exactly why qi said
+    // "when they try to use that one, it dont sound like it". Keep the CLONED id here.
+    { id: '37w0uEKh8IHt6c3S0pvB', name: 'East · his own voice', paid: true },
   ];
   const VOICE_ID_URL = 'https://api.xlrd.org/voice-id';
   const row = document.getElementById('voice-pills');
@@ -3526,4 +3535,4 @@ window.addEventListener('beforeunload', stopListening);
 <script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
 </body>
 </html>
-<!-- cache-bust 1786420280 -->
+<!-- cache-bust 1786420720 -->
