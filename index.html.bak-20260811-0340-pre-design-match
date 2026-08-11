@@ -600,37 +600,30 @@ vec3 env(vec3 rd){
 }
 vec3 irid(float f){ return 0.5 + 0.5*cos(TAU*(vec3(0.00,0.33,0.67) + f*2.35 + 0.20)); }
 
-// CORE — qi design drop 2026-08-11: a LUMINOUS BODY, not an iris.
-// The reference frames show a mottled jade sphere with a white-hot centre and a
-// wide limb glow. No pupil, no fibres, no catchlight. fbm gives the cloud banding.
-float fbm3(vec3 p){
-  float a = 0.5, s = 0.0;
-  for (int i = 0; i < 5; i++){ s += a*vnoise(p); p *= 2.03; a *= 0.5; }
-  return s;
-}
 vec3 irisShade(vec3 n, vec3 rd){
   vec3 F = uEyeDir;
-  float fr = clamp(dot(n, F), 0.0, 1.0);
-  float fc = max(dot(n, -rd), 0.0);
+  vec3 R = normalize(cross(vec3(0.0,1.0,0.0), F));
+  vec3 U = cross(F, R);
+  float fr = dot(n, F);
+  if (fr < 0.02){
+    float fs = pow(1.0 - max(dot(n,-rd),0.0), 4.0);
+    return vec3(0.014,0.022,0.018) + irid(fs)*fs*0.14;
+  }
+  vec2 e = vec2(dot(n,R), dot(n,U));
+  float rr = length(e);
+  float ang = atan(e.y, e.x);
+  float nz = vnoise(vec3(cos(ang), sin(ang), rr*2.2)*4.0);
+  float fib = 0.5 + 0.5*sin(ang*52.0 + nz*12.0 + rr*7.0);
+  float pupil = 0.170 + uDil*0.078 + sin(uTime*1.5)*0.026;
 
-  // Slow-drifting cloud mottling across the surface.
-  vec3 q  = n*2.30 + vec3(0.0, uTime*0.035, uTime*0.018);
-  float cl = fbm3(q);
-  float cl2 = fbm3(q*2.7 + 11.0);
-  float mott = clamp(cl*0.72 + cl2*0.38, 0.0, 1.0);
-
-  // Hot centre falls off to a saturated jade limb.
-  float core = pow(fc, 2.3);
-  vec3 deep = vec3(0.020, 0.300, 0.080);
-  vec3 mid  = vec3(0.130, 0.880, 0.280);
-  vec3 hot  = vec3(0.880, 1.000, 0.900);
-
-  vec3 col = mix(deep, mid, mott);
-  col = mix(col, hot, pow(core, 2.0)*(0.55 + 0.45*mott));
-  col += hot * pow(core, 7.0) * 1.55;                       // white-hot nucleus
-  col += vec3(0.10,1.00,0.34) * pow(1.0-fc, 2.6) * 0.85;    // limb emission
-  col += vec3(0.06,0.95,0.30) * mott * 0.30;
-  col *= 0.80 + 0.55*fr;
+  vec3 col = mix(vec3(0.00,0.42,0.13), vec3(0.06,1.00,0.30), fib*0.8);
+  col *= smoothstep(pupil-0.015, pupil+0.26, rr);
+  col *= 1.0 - 0.60*smoothstep(0.50, 0.70, rr);
+  col  = mix(col, vec3(0.010,0.030,0.020), smoothstep(0.68,0.82,rr));
+  col += vec3(0.0,0.9,0.32) * (1.0-smoothstep(0.0,0.06,abs(rr-pupil))) * 0.55;
+  float spec = pow(max(0.0, dot(n, normalize(F + R*0.42 + U*0.52))), 44.0);
+  col += vec3(0.92,1.00,0.96)*spec*0.80;
+  col *= mix(0.30, 1.0, clamp(fr,0.0,1.0));
   return col;
 }
 
@@ -685,14 +678,11 @@ void main(){
         float bz = vnoise(p*20.0 + vec3(0.0,0.0,0.07));
         n = normalize(n + vec3(bx-b, by-b, bz-b)*1.7);
       }
-      // RINGS — qi design drop: nebular dust filaments, EMISSIVE not chrome.
-      float fres = pow(1.0 - max(dot(n,-rd),0.0), 3.0);
-      float dust = fbm3(p*3.1 + vec3(0.0, uTime*0.05, 0.0));
-      float fil  = pow(clamp(dust,0.0,1.0), 1.9);
-      vec3 c = mix(vec3(0.006,0.075,0.022), vec3(0.090,0.900,0.260), fil);
-      c += vec3(0.60,1.00,0.72) * pow(fil, 4.0) * 0.75;   // bright knots along the arc
-      c += env(reflect(rd,n)) * 0.10 * fres;              // a trace of sheen, not a mirror
-      c *= 0.55 + 0.85*b;
+      float fres = pow(1.0 - max(dot(n,-rd),0.0), 4.0);
+      vec3 c = env(reflect(rd,n)) * (0.34 + 0.95*fres);
+      c += irid(fres + 0.18*b) * fres * 0.34;
+      c += vec3(0.0,0.28,0.09) * pow(max(0.0, dot(n, normalize(vec3(-0.5,0.4,-0.7)))), 2.0) * 0.14;
+      c *= 0.86 + 0.28*b;
       col = c;
     } else if (m < 2.5){
       float fc = max(dot(n,-rd), 0.0);
@@ -707,15 +697,6 @@ void main(){
   }
 
   col += vec3(0.06,1.0,0.34) * glow * 1.30;
-  // CORE BLOOM — qi design drop: a wide halo off the central body.
-  {
-    vec3 toC = -ro;
-    float along = dot(toC, rd);
-    float perp  = length(toC - rd*max(along,0.0));
-    float halo  = exp(-perp*perp*0.070) * step(0.0, along);
-    col += vec3(0.10,1.00,0.36) * halo * 0.62;
-    col += vec3(0.75,1.00,0.85) * exp(-perp*perp*0.85) * step(0.0,along) * 0.40;
-  }
   vec2 vv = gl_FragCoord.xy/uRes;
   col *= 0.34 + 0.66*pow(max(0.0,16.0*vv.x*vv.y*(1.0-vv.x)*(1.0-vv.y)), 0.27);
   col = (col*(2.51*col+0.03))/(col*(2.43*col+0.59)+0.14);
