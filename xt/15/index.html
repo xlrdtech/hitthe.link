@@ -1,0 +1,238 @@
+<!doctype html><html lang=en><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>xt/15 — the igloo standard, first candidate</title>
+<meta name=theme-color content="#9ba0ab">
+<style>
+/* palette MEASURED off _render-proofs/igloo-standard.png, not eyeballed:
+   corners rgb(155,160,171) · centre rgb(175,180,190) · darkest rgb(149,155,166)
+   frame mean rgb(162,167,178) · exactly one pure-white pixel region (the apex bloom) */
+:root{
+  --field-hi:#afb4be;   /* centre of the radial field */
+  --field-lo:#9ba0ab;   /* corners */
+  --field-min:#959ba6;  /* outermost falloff */
+  --line:#ffffff;       /* the render IS the line */
+  --annot:#f2f5f9;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--field-lo);color:var(--annot);
+  font:400 10px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;
+  -webkit-font-smoothing:antialiased;overflow:hidden;
+}
+/* the field: one radial wash, no vignette box, no panels, no cards */
+#field{position:fixed;inset:0;
+  background:
+    radial-gradient(120% 95% at 50% 42%,
+      var(--field-hi) 0%, var(--field-lo) 58%, var(--field-min) 100%);
+}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+/* type is held to the same near-zero contrast band as the linework */
+.mark{position:fixed;letter-spacing:.22em;text-transform:uppercase;
+  font-size:9px;color:#fff;opacity:.34;user-select:none;pointer-events:none}
+#tl{top:22px;left:24px}
+#bl{bottom:22px;left:24px;opacity:.24;letter-spacing:.16em}
+#br{bottom:22px;right:24px;opacity:.24;letter-spacing:.16em}
+@media (max-width:640px){#tl,#bl,#br{font-size:8px}#br{display:none}}
+</style></head><body>
+<div id=field></div>
+<canvas id=c></canvas>
+<div class="mark" id=tl>hitthe.link</div>
+<div class="mark" id=bl>xt/15 · candidate 01 · subtraction and precision</div>
+<div class="mark" id=br>isometric · 1px · one light</div>
+<script>
+(()=>{
+const c=document.getElementById('c'),g=c.getContext('2d');
+let W=0,H=0,DPR=1,S=1,CX=0,CY=0;
+
+/* deterministic PRNG — the scatter field must be reproducible so an A/B
+   render proof isolates one variable instead of comparing two dice rolls */
+const rng=(s=>()=>{s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296})(0x1610000);
+
+/* ---- isometric projection ------------------------------------------------
+   true iso: x and z fall away at 30°, y is vertical. This is the grammar of
+   an architectural plate — the object is measured, never dramatised.        */
+const K=Math.cos(Math.PI/6), J=Math.sin(Math.PI/6);
+let tiltX=0,tiltY=0;                       // pointer parallax, tiny
+function P(x,y,z){
+  const xr=x+tiltX*0.06, zr=z+tiltY*0.06;
+  return [CX+(xr-zr)*K*S, CY+((xr+zr)*J-y)*S];
+}
+const depth=(x,y,z)=>x+z-y*0.5;            // painter ordering + aerial fade
+
+/* ---- hairline plumbing --------------------------------------------------- */
+function poly(pts,a,close){
+  if(a<=0.004)return;
+  g.beginPath();
+  for(let i=0;i<pts.length;i++){const p=P(pts[i][0],pts[i][1],pts[i][2]);i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]);}
+  if(close)g.closePath();
+  g.globalAlpha=a;g.stroke();
+}
+function num(x,y,z,n,a){
+  if(a<=0.01)return;
+  const p=P(x,y,z);g.globalAlpha=a;g.fillText(String(n),p[0]+3,p[1]-3);
+}
+
+/* ---- the subject: a coursed wireframe dome ------------------------------
+   drawn as individual bricks in running bond, each edge subdivided so the
+   curvature is real geometry rather than a squashed circle. The apex is left
+   open — that hole is where the single light sits.                          */
+const COURSES=7, TOP=Math.PI/2*0.80, R=1;
+function dome(){
+  for(let ci=0;ci<COURSES;ci++){
+    const t0=TOP*ci/COURSES, t1=TOP*(ci+1)/COURSES;
+    const seg=Math.max(6,Math.round(14*Math.cos(t0*0.72)));  // fewer bricks near the apex
+    const off=(ci%2)?0.5:0;                                   // running bond
+    for(let s=0;s<seg;s++){
+      const p0=(s+off)/seg*Math.PI*2, p1=(s+1+off)/seg*Math.PI*2;
+      const m=0.055*Math.PI*2/seg, mt=(t1-t0)*0.10;           // mortar gap
+      const a0=p0+m,a1=p1-m,b0=t0+mt,b1=t1-mt;
+      const ring=(t,ph0,ph1)=>{const o=[];for(let k=0;k<=5;k++){const ph=ph0+(ph1-ph0)*k/5;
+        o.push([R*Math.cos(t)*Math.cos(ph),R*Math.sin(t),R*Math.cos(t)*Math.sin(ph)]);}return o;};
+      const lo=ring(b0,a0,a1), hi=ring(b1,a1,a0);
+      const brick=lo.concat(hi);
+      const mid=[R*Math.cos((b0+b1)/2)*Math.cos((a0+a1)/2),R*Math.sin((b0+b1)/2),R*Math.cos((b0+b1)/2)*Math.sin((a0+a1)/2)];
+      const front=(mid[0]+mid[2])>-0.35;                       // back courses read fainter
+      poly(brick,front?0.62:0.16,true);
+    }
+  }
+  /* the apex opening */
+  const tt=TOP,ap=[];for(let k=0;k<=48;k++){const ph=k/48*Math.PI*2;
+    ap.push([R*Math.cos(tt)*Math.cos(ph),R*Math.sin(tt),R*Math.cos(tt)*Math.sin(ph)]);}
+  poly(ap,0.75,true);
+}
+
+/* ---- the tunnel: half-cylinder, arched, coursed to match --------------- */
+const TR=0.32, TL=0.80, TX0=R*0.58;
+function tunnel(){
+  /* a half-cylinder coursed in the SAME bond as the dome. First pass drew bare
+     rings + runners, which read as a stray arc rather than a tube — the entrance
+     has to be built of bricks or the subject looks unfinished next to the dome. */
+  const y0=-0.02, courses=3, seg=5;
+  const pt=(x,ph)=>[x,y0+TR*Math.sin(ph),0.02-TR*Math.cos(ph)];
+  for(let c=0;c<courses;c++){
+    const x0=TX0+TL*c/courses, x1=TX0+TL*(c+1)/courses;
+    const off=(c%2)?0.5:0;
+    const mx=(x1-x0)*0.10, mp=Math.PI/seg*0.10;
+    for(let s=0;s<seg;s++){
+      const p0=(s+off)/seg*Math.PI, p1=(s+1+off)/seg*Math.PI;
+      if(p1>Math.PI+0.001)continue;
+      const a0=p0+mp,a1=p1-mp,b0=x0+mx,b1=x1-mx;
+      const lo=[],hi=[];
+      for(let k=0;k<=4;k++){lo.push(pt(b0,a0+(a1-a0)*k/4));hi.push(pt(b1,a1+(a0-a1)*k/4));}
+      poly(lo.concat(hi),0.50,true);
+    }
+  }
+  /* the mouth ring, the one place the entrance is emphasised */
+  const mouth=[];for(let k=0;k<=22;k++)mouth.push(pt(TX0+TL,Math.PI*k/22));
+  poly(mouth,0.70,false);
+  poly([[TX0,y0,0.02-TR],[TX0+TL,y0,0.02-TR]],0.26,false);
+  poly([[TX0,y0,0.02+TR],[TX0+TL,y0,0.02+TR]],0.26,false);
+}
+
+/* ---- the exploded field ------------------------------------------------
+   dozens of faint planes at the SAME isometric angle, so they read as one
+   measured drawing the subject is suspended inside — never as a backdrop. */
+const CLUSTERS=(()=>{
+  const out=[];
+  /* MEASURED: in the plate the scatter spans ~700px of 1440 and holds DOZENS of
+     small planes. First pass used rad up to 3.4 with sz up to 1.0 — a handful of
+     huge planes, most of them off-frame. Many-and-small is the grammar.        */
+  for(let i=0;i<34;i++){
+    const ang=rng()*Math.PI*2, rad=0.85+rng()*1.85;
+    const cx=Math.cos(ang)*rad, cz=Math.sin(ang)*rad;
+    const cy=(rng()*2-1)*1.35;
+    const sz=0.20+rng()*0.34;
+    const spikes=2+Math.floor(rng()*5), sp=[];
+    for(let k=0;k<spikes;k++)sp.push([cx+(rng()*2-1)*1.15,cy+(rng()*2-1)*0.75,cz+(rng()*2-1)*1.15]);
+    const labels=[];
+    for(let k=0;k<1+Math.floor(rng()*3);k++)labels.push([10+Math.floor(rng()*80),rng(),rng()]);
+    out.push({cx,cy,cz,sz,sp,labels,far:rad>1.9});
+  }
+  /* a handful of far outliers, mostly just a number in the emptiness */
+  for(let i=0;i<11;i++){
+    const ang=rng()*Math.PI*2, rad=2.5+rng()*1.6;
+    out.push({cx:Math.cos(ang)*rad,cy:(rng()*2-1)*1.6,cz:Math.sin(ang)*rad,
+      sz:0,sp:[],labels:[[10+Math.floor(rng()*80),0,0]],far:true});
+  }
+  return out;
+})();
+
+function field(){
+  for(const q of CLUSTERS){
+    const fade=q.far?0.34:1;
+    if(q.sz>0){
+      const s=q.sz;
+      poly([[q.cx-s,q.cy,q.cz-s],[q.cx+s,q.cy,q.cz-s],[q.cx+s,q.cy,q.cz+s],[q.cx-s,q.cy,q.cz+s]],0.30*fade,true);
+      poly([[q.cx-s,q.cy,q.cz-s],[q.cx+s,q.cy,q.cz+s]],0.20*fade,false);
+      poly([[q.cx+s,q.cy,q.cz-s],[q.cx-s,q.cy,q.cz+s]],0.20*fade,false);
+      for(const p of q.sp) poly([[q.cx,q.cy,q.cz],p],0.17*fade,false);
+    }
+    for(const L of q.labels) num(q.cx+(L[1]-0.5)*q.sz*2,q.cy,q.cz+(L[2]-0.5)*q.sz*2,L[0],0.32*fade);
+  }
+}
+
+/* ---- one light. exactly one. ------------------------------------------- */
+let breathe=0;
+function bloom(){
+  const p=P(0,R*Math.sin(TOP)+0.01,0);
+  /* MEASURED FIX: this was `20*S/260` then drawn at `r*260`, which cancelled the
+     divisor and produced a ~4100px radius — one bloom washed the whole field to
+     near-white and destroyed the low-contrast band the whole design depends on.
+     The light is SMALL: ~34px at the reference scale, and it scales with S.      */
+  const r=(34+Math.sin(breathe)*2.4)*(S/165);
+  const gr=g.createRadialGradient(p[0],p[1],0,p[0],p[1],r);
+  gr.addColorStop(0,'rgba(255,255,255,.98)');
+  gr.addColorStop(.18,'rgba(255,255,255,.62)');
+  gr.addColorStop(.5,'rgba(255,255,255,.18)');
+  gr.addColorStop(1,'rgba(255,255,255,0)');
+  g.globalAlpha=1;g.fillStyle=gr;
+  g.beginPath();g.arc(p[0],p[1],r,0,Math.PI*2);g.fill();
+  g.fillStyle='#fff';
+}
+
+function draw(){
+  g.setTransform(DPR,0,0,DPR,0,0);
+  g.clearRect(0,0,W,H);
+  g.lineWidth=1/DPR;                       // a true device hairline, at any DPR
+  g.lineJoin=g.lineCap='round';
+  g.strokeStyle='#fff';
+  g.fillStyle='#fff';
+  g.font=(9.5)+'px ui-monospace,Menlo,monospace';
+  field();
+  tunnel();
+  dome();
+  bloom();
+  g.globalAlpha=1;
+}
+
+function resize(){
+  DPR=Math.min(devicePixelRatio||1,2.5);
+  W=innerWidth;H=innerHeight;
+  c.width=Math.round(W*DPR);c.height=Math.round(H*DPR);
+  /* MEASURED against the plate: the dome is 285px of 1440 (19.8% of width).
+     Candidate 01 rendered it 510px — nearly double, which is why the frame felt
+     crowded and the margins were never empty. width/S measured 2.46, so
+     S = 285/2.46 = 116 at 1440 wide => W*0.081. Restraint is a NUMBER here.   */
+  S=Math.min(W*0.081,H*0.143);
+  CX=W*0.500;CY=H*0.505;
+  draw();
+}
+addEventListener('resize',resize,{passive:true});
+
+addEventListener('pointermove',e=>{
+  tiltX=(e.clientX/innerWidth-0.5)*2;
+  tiltY=(e.clientY/innerHeight-0.5)*2;
+},{passive:true});
+
+/* alive by default, but restraint is the effect — 12fps of near-nothing */
+let last=0;
+(function loop(t){
+  if(t-last>83){last=t;breathe+=0.09;draw();}
+  requestAnimationFrame(loop);
+})(0);
+
+resize();
+})();
+</script>
+</body></html>
