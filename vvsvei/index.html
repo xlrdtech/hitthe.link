@@ -1579,7 +1579,12 @@ document.getElementById('tb-share').addEventListener('click', async () => {
     try { await navigator.share({ title: 'VEI transcript', text }); } catch (_) {}
   } else {
     navigator.clipboard?.writeText(text);
-    alert('Copied to clipboard (share API unavailable)');
+    // qi 2026-08-10: "there shall not be any modals on the vvsvei interface".
+    // alert() is a BLOCKING modal — it also freezes the page, which on a live voice
+    // surface means barge-in and the SSE feed stall until it is dismissed. The
+    // button reports on itself instead.
+    const b = document.getElementById('tb-share');
+    if (b) { const t = b.textContent; b.textContent = 'Copied'; setTimeout(() => { b.textContent = t; }, 1400); }
   }
 });
 
@@ -3423,4 +3428,4 @@ window.addEventListener('beforeunload', stopListening);
 <script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
 </body>
 </html>
-<!-- cache-bust 1786417830 -->
+<!-- cache-bust 1786418400 -->
