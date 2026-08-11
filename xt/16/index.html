@@ -1031,8 +1031,22 @@ let drift;
   }
   const g=new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(p,3));
+  /* An untextured Point is a hard opaque SQUARE. With sizeAttenuation on, any
+     particle that drifts near the lens scales that square up into a grey box
+     over the snow — measured on the served page, invisible in every local
+     still. A soft radial alpha makes a near particle read as haze instead. */
+  const flake = (()=>{
+    const s=64, cv=document.createElement('canvas'); cv.width=cv.height=s;
+    const c=cv.getContext('2d');
+    const rg=c.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);
+    rg.addColorStop(0.0,'rgba(255,255,255,1)');
+    rg.addColorStop(0.5,'rgba(255,255,255,0.35)');
+    rg.addColorStop(1.0,'rgba(255,255,255,0)');
+    c.fillStyle=rg; c.fillRect(0,0,s,s);
+    const t=new THREE.CanvasTexture(cv); t.colorSpace=THREE.SRGBColorSpace; return t;
+  })();
   drift = new THREE.Points(g, new THREE.PointsMaterial({
-    color:0xffffff, size:0.32, sizeAttenuation:true,
+    color:0xffffff, size:0.32, sizeAttenuation:true, map:flake, alphaTest:0.02,
     transparent:true, opacity:0.30, depthWrite:false, fog:true
   }));
   drift.userData.sp = sp;
