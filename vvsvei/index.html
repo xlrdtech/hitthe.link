@@ -3302,19 +3302,29 @@ window.addEventListener('beforeunload', stopListening);
   const pick = (v) => {
     if (v.paid && !window.confirm(v.name + '\n\nThis is the paid East clone (calls/voicemail). Use it as the reader anyway?')) return;
     current = v.id; label();
+    // The <audio> element MUST be created inside this tap, not in the .then() —
+    // iOS grants playback to an element born of a gesture, and a promise callback
+    // is no longer the gesture. Create here, set .src after the POST resolves.
+    let a = null;
+    try { a = new Audio(); a.setAttribute('playsinline', ''); } catch (_) {}
+    try { if (typeof _avaBargeIn === 'function') _avaBargeIn(); } catch (_) {}
+    const sample = 'This is ' + v.name.split(' · ')[0] + '.';
+    // ORDER MATTERS. /api/tts renders whatever voice.id says at request time, so
+    // firing the sample in parallel with the POST is a race the sample can WIN —
+    // qi picks Olivier and hears Emily, which is indistinguishable from a broken
+    // picker. Await the POST, THEN ask for audio. Cache-bust too: /api/tts keys on
+    // voice|rate|text, so identical text could replay the previous voice's clip.
     fetch(VOICE_ID_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ voice_id: v.id }),
-    }).catch(() => {});
-    try { if (typeof _avaBargeIn === 'function') _avaBargeIn(); } catch (_) {}
-    try {
-      // Cache-bust: /api/tts keys on voice|rate|text, and the voice swap is server
-      // side, so identical text could otherwise replay the PREVIOUS voice's clip.
-      const a = new Audio(AVA_TTS_URL + '?text=' + encodeURIComponent('This is ' + v.name.split(' · ')[0] + '.') + '&t=' + Date.now());
-      a.setAttribute('playsinline', '');
-      a.play().catch(() => {});
-    } catch (_) {}
+    })
+      .catch(() => {})            // a failed swap still gets a sample: qi hears the TRUTH
+      .then(() => {
+        if (!a) return;
+        a.src = AVA_TTS_URL + '?text=' + encodeURIComponent(sample) + '&t=' + Date.now();
+        a.play().catch(() => {});
+      });
     close();
   };
 
