@@ -514,11 +514,6 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
   </div>
   <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
     <span id="ava-node" style="font-size:9px;opacity:.4;font-family:monospace;letter-spacing:.3px;pointer-events:none;align-self:flex-end;padding-bottom:3px"></span>
-    <!-- VOICE PICKER (qi 2026-08-10: "the voices were to be added to vvsvei").
-         Label is filled from GET /voice-id on load — the SERVER's voice, never a
-         local guess, so the pill can never disagree with what qi actually hears. -->
-    <button id="voice-pick" type="button" title="Xen reader voice — tap to change"
-      style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:#e8e8ea;font:500 10px/1 -apple-system,system-ui,sans-serif;letter-spacing:.3px;padding:5px 8px;border-radius:999px;cursor:pointer;white-space:nowrap;max-width:104px;overflow:hidden;text-overflow:ellipsis">voice</button>
     <div class="mic-icon" id="ava-icon" title="Xen voice (tap to mute/unmute)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
@@ -581,6 +576,11 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
 <div id="transcript"></div>
 
 <div class="composer">
+  <!-- VOICE PILLS — qi 2026-08-10: "the pills are to float right above the voice bar
+       horizantally slidable" + "there shall not be any modals on the vvsvei interface".
+       So: a scroll-snapping row directly above .composer-bar. One tap selects. No sheet,
+       no overlay, no window.confirm — a confirm() IS a modal. Filled by JS below. -->
+  <div id="voice-pills" role="radiogroup" aria-label="Xen reader voice"></div>
   <!-- Single unified pill: paperclip · field (waveform behind, textarea overlay) · send. -->
   <div class="composer-bar">
     <button class="icon-btn" id="tb-attach" title="Send attachment">
@@ -3263,9 +3263,21 @@ window.addEventListener('beforeunload', stopListening);
 // ~/.xen/runtime/voice.id that every utterance reads. A picker that only decorated
 // the URL would have changed nothing audible.
 (function _veiVoicePicker() {
+  // MEASURED 2026-08-10 against qi's OWN account (39 voices, authenticated):
+  //   Olivier  -> 401 voice_access_denied / famous_voice_not_permitted
+  //               "Famous voices can only be used within the Reader App."
+  //   Emily    -> 200, 32,226 B     East -> 200, 20,524 B
+  // The lock is a per-voice LICENSE flag, not the `category` field (Olivier is
+  // category=professional, not famous). It is not fixable by retrying, by a
+  // different key, or via Composio — Composio calls the same /v1/text-to-speech.
+  // Olivier STAYS in the row because it is Exodus's seat voice and qi's favourite;
+  // it is labelled honestly instead of silently deleted or silently failing.
+  // George + Daniel are the working British narrators in his own account.
   const VOICES = [
     { id: '1cxc5c3E9K6F1wlqOJGV', name: 'Emily · Whisper' },
-    { id: 'V9fdGZs6AiHI4uyiAiza', name: 'Sir Laurence Olivier' },
+    { id: 'JBFqnCBsd6RMkjVDRZzb', name: 'George · Storyteller' },
+    { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel · Broadcaster' },
+    { id: 'V9fdGZs6AiHI4uyiAiza', name: 'Olivier · READER-ONLY', readerOnly: true },
     { id: 'aMSt68OGf4xUZAnLpTU8', name: 'Juniper · Professional' },
     { id: 'Aa6nEBJJMKJwJkCx8VU2', name: 'Quentin · Narrator' },
     { id: 'U9jmr7kY6mMqS39kfA01', name: 'Alex · Deep' },
@@ -3278,15 +3290,43 @@ window.addEventListener('beforeunload', stopListening);
     { id: '37w0uEKh8IHt6c3S0pvB', name: 'East · PAID clone, calls only', paid: true },
   ];
   const VOICE_ID_URL = 'https://api.xlrd.org/voice-id';
-  const btn = document.getElementById('voice-pick');
-  if (!btn) return;
-  let current = null, sheet = null;
+  const row = document.getElementById('voice-pills');
+  if (!row) return;
+  let current = null;
 
-  const label = () => {
-    const v = VOICES.find((x) => x.id === current);
-    btn.textContent = v ? v.name.split(' · ')[0] : 'voice';
-    btn.title = v ? ('Xen reader voice: ' + v.name + ' — tap to change') : 'Xen reader voice — tap to change';
+  // The row IS the picker — every voice is always on screen, one tap away, no layer
+  // on top of anything (qi: no modals on this interface). Slidable because 12 pills
+  // never fit a phone width; scroll-snap so a flick lands on a pill, not between two.
+  row.style.cssText = [
+    'display:flex', 'gap:6px', 'overflow-x:auto', 'overflow-y:hidden',
+    'scroll-snap-type:x proximity', '-webkit-overflow-scrolling:touch',
+    'padding:0 4px 6px', 'margin:0 0 2px', 'scrollbar-width:none',
+    'flex:0 0 auto', 'white-space:nowrap',
+  ].join(';');
+  // Hide the scrollbar without killing the scrolling itself.
+  if (!document.getElementById('voice-pills-css')) {
+    const st = document.createElement('style');
+    st.id = 'voice-pills-css';
+    st.textContent = '#voice-pills::-webkit-scrollbar{display:none}' +
+      '#voice-pills button{scroll-snap-align:center;flex:0 0 auto;border-radius:999px;' +
+      'cursor:pointer;white-space:nowrap;font:500 11px/1 -apple-system,system-ui,sans-serif;' +
+      'letter-spacing:.2px;padding:6px 11px;transition:background .12s,color .12s,border-color .12s}';
+    document.head.appendChild(st);
+  }
+
+  const paint = () => {
+    row.querySelectorAll('button').forEach((b) => {
+      const on = b.dataset.vid === current;
+      b.setAttribute('aria-checked', on ? 'true' : 'false');
+      b.style.background = on ? 'rgba(0,255,136,.18)' : 'rgba(255,255,255,.05)';
+      b.style.border = '1px solid ' + (on ? 'var(--accent, #00ff88)' : 'rgba(255,255,255,.14)');
+      b.style.color = on ? 'var(--accent, #00ff88)'
+        : (b.dataset.paid ? '#f0b57a' : (b.dataset.reader ? '#8b8d94' : '#cfd0d4'));
+      if (b.dataset.reader) b.style.textDecoration = 'none';
+      b.style.fontWeight = on ? '650' : '500';
+    });
   };
+  const label = paint;
 
   // Read the TRUTH from the server, not localStorage. A stale local label is how
   // "I picked a voice" and "I hear a different voice" coexist without a visible bug.
@@ -3299,9 +3339,23 @@ window.addEventListener('beforeunload', stopListening);
   // INSIDE the tap gesture. The sample is not a nicety — playing audio in the
   // gesture is what unlocks <audio> on iOS, so the tap that picks a voice is also
   // the tap that proves voice-out works on this device.
+  // No confirm() for the paid clone either — window.confirm IS a modal. It is marked
+  // amber in the row and labelled "PAID" instead; the warning lives in the pill.
   const pick = (v) => {
-    if (v.paid && !window.confirm(v.name + '\n\nThis is the paid East clone (calls/voicemail). Use it as the reader anyway?')) return;
-    current = v.id; label();
+    // A locked voice must NEVER become the live voice — that would leave qi silent on
+    // every reply until someone noticed. Play the sample so he hears WHICH voice it
+    // is not, but do not POST it as the server voice.
+    if (v.readerOnly) {
+      const b = row.querySelector('button[data-vid="' + v.id + '"]');
+      if (b) {
+        const t = b.textContent;
+        b.textContent = 'READER-APP ONLY';
+        setTimeout(() => { b.textContent = t; }, 2600);
+      }
+      return;
+    }
+    const prev = current;
+    current = v.id; paint();
     // The <audio> element MUST be created inside this tap, not in the .then() —
     // iOS grants playback to an element born of a gesture, and a promise callback
     // is no longer the gesture. Create here, set .src after the POST resolves.
@@ -3325,43 +3379,39 @@ window.addEventListener('beforeunload', stopListening);
         a.src = AVA_TTS_URL + '?text=' + encodeURIComponent(sample) + '&t=' + Date.now();
         a.play().catch(() => {});
       });
-    close();
   };
 
-  const close = () => { if (sheet) { sheet.remove(); sheet = null; } };
+  // Build the row once. Short names on the pills so a phone width shows ~4 at a time;
+  // the full name stays in the tooltip.
+  VOICES.forEach((v) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('role', 'radio');
+    b.dataset.vid = v.id;
+    if (v.paid) b.dataset.paid = '1';
+    b.textContent = v.paid ? 'East · PAID' : (v.readerOnly ? v.name.split(' · ')[0] + ' ⃰' : v.name.split(' · ')[0]);
+    b.title = v.readerOnly
+      ? v.name + ' — LOCKED: ElevenLabs licenses this famous voice to the Reader app only; the TTS API returns voice_access_denied. Nothing on our side can unlock it.'
+      : v.name;
+    if (v.readerOnly) b.dataset.reader = '1';
+    b.onclick = () => pick(v);
+    row.appendChild(b);
+  });
+  paint();
 
-  btn.onclick = () => {
-    if (sheet) { close(); return; }
-    sheet = document.createElement('div');
-    sheet.setAttribute('role', 'dialog');
-    sheet.setAttribute('aria-label', 'Choose Xen reader voice');
-    sheet.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px';
-    const card = document.createElement('div');
-    card.style.cssText = 'background:#101013;border:1px solid rgba(255,255,255,.14);border-radius:16px;max-width:340px;width:100%;max-height:76vh;overflow:auto;padding:8px';
-    const h = document.createElement('div');
-    h.textContent = 'XEN READER VOICE';
-    h.style.cssText = 'font:600 10px/1 -apple-system,system-ui,sans-serif;letter-spacing:1.4px;opacity:.5;color:#e8e8ea;padding:10px 12px 12px;text-align:center';
-    card.appendChild(h);
-    VOICES.forEach((v) => {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.textContent = v.name;
-      const on = v.id === current;
-      b.style.cssText = 'display:block;width:100%;text-align:left;background:' + (on ? 'rgba(255,255,255,.12)' : 'transparent') +
-        ';border:0;border-radius:10px;color:' + (v.paid ? '#f0b57a' : '#e8e8ea') +
-        ';font:' + (on ? '600' : '400') + ' 13px/1.3 -apple-system,system-ui,sans-serif;padding:11px 12px;cursor:pointer';
-      b.onclick = () => pick(v);
-      card.appendChild(b);
-    });
-    sheet.appendChild(card);
-    sheet.onclick = (e) => { if (e.target === sheet) close(); };
-    document.body.appendChild(sheet);
+  // Keep the selected pill in view on load, so qi can SEE which voice is live without
+  // sliding to hunt for it.
+  const reveal = () => {
+    const on = row.querySelector('button[aria-checked="true"]');
+    if (on && on.scrollIntoView) { try { on.scrollIntoView({ inline: 'center', block: 'nearest' }); } catch (_) {} }
   };
-
-  label();
+  fetch(VOICE_ID_URL, { cache: 'no-store' })
+    .then((r) => r.json())
+    .then((j) => { if (j && j.voice_id) { current = j.voice_id; paint(); reveal(); } })
+    .catch(() => {});
 })();
 </script>
 <script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
 </body>
 </html>
-<!-- cache-bust 1786416776 -->
+<!-- cache-bust 1786417700 -->
