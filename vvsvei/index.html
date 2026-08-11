@@ -583,9 +583,15 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
        which would delete the toolbar buttons if they lived inside #voice-pills.
        #pill-row owns the scrolling so both groups slide together as one row. -->
   <div id="pill-row">
-    <div id="voice-pills" role="radiogroup" aria-label="Xen reader voice"></div>
+    <!-- ORDER (qi 2026-08-10 23:33: "make voice the second plil right after + new"):
+         ＋ New · VOICE · Threads · Copy · Export · Share.
+         ＋ New sits in its own .transcript-toolbar wrapper so it keeps the identical
+         pill styling — reusing the class beats hand-rolling CSS for one button. -->
     <div class="transcript-toolbar">
       <button id="tb-newthread" title="Start new thread">＋ New</button>
+    </div>
+    <div id="voice-pills" role="radiogroup" aria-label="Xen reader voice"></div>
+    <div class="transcript-toolbar">
       <button id="tb-threads" title="Browse past threads">Threads</button>
       <button id="tb-copy" title="Copy current thread">Copy</button>
       <button id="tb-export" title="Export current thread as .txt">Export</button>
@@ -3485,4 +3491,4 @@ window.addEventListener('beforeunload', stopListening);
 <script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
 </body>
 </html>
-<!-- cache-bust 1786419250 -->
+<!-- cache-bust 1786419320 -->
