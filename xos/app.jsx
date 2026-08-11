@@ -659,10 +659,15 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
   // POST /voice-id is what actually swaps the voice. localStorage only keeps
   // the pill label correct across reloads. Failure is swallowed: a dead route
   // must never break the composer.
+  //
+  // The host is ABSOLUTE on purpose. This file is served from two places: :4441
+  // (omnimind, which owns /voice-id) and hitthe.link/xos (GitHub Pages, static —
+  // no such route, so a root-relative fetch 404s and the swallow hides it). Same
+  // reason /api/tts is spelled out above.
   const pickVoice = (id) => {
     setVoiceId(id);
     try { localStorage.setItem("xen.voice.id", id); } catch (_) {}
-    fetch("/voice-id", {
+    fetch("https://api.xlrd.org/voice-id", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ voice_id: id }),
