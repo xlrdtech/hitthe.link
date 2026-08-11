@@ -3068,20 +3068,44 @@ function _renderAvaPill() {
 (function avaUnlock() {
   // iOS HARD-REQUIRES one user gesture to unlock audio output; mic auto-start
   // does NOT count, and every reload re-locks it — that's why qi heard nothing
-  // after reload. This makes that single mandatory gesture ONE obvious tap via a
-  // full-screen arming layer; after it, fully hands-free. (qi 2026-05-30)
+  // after reload. (qi 2026-05-30)
+  //
+  // NO MODALS (qi decree, restated 2026-08-11 00:20 "no more modals ... via
+  // vvsvei"). This used to be a full-screen inset:0 / z-index:100000 layer with a
+  // blur backdrop — a modal in everything but name. It is now a PILL that floats
+  // above the voice bar and NEVER covers the page.
+  //
+  // Removing the layer costs ZERO behaviour, and that is the whole point: the
+  // arming gesture is captured by the `unlock` listeners on document.body below,
+  // NOT by this element. The overlay was only ever an instruction to read, so
+  // demoting it to a pill loses nothing. pointer-events:none is load-bearing —
+  // it guarantees the pill can never swallow the very tap it is asking for.
+  //
+  // Element IDs are preserved verbatim so _avaSetLoad / _avaDismissOverlay keep
+  // working untouched; the blast radius of this change is this one function.
   let overlay = null;
   function makeOverlay() {
     if (_avaUnlocked || overlay || !document.body) return;
     overlay = document.createElement('div');
     overlay.id = 'ava-arm';
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(6,20,12,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);cursor:pointer;color:#bff7d8;font:600 19px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;text-align:center;padding:24px';
+    overlay.style.cssText = [
+      'position:fixed', 'left:50%', 'transform:translateX(-50%)', 'bottom:96px',
+      'z-index:60', 'pointer-events:none',            // never intercepts the arming tap
+      'display:flex', 'align-items:center', 'gap:9px',
+      'max-width:calc(100vw - 32px)', 'padding:8px 14px',
+      'border-radius:999px', 'border:1px solid rgba(0,255,136,.28)',
+      'background:rgba(6,20,12,.82)',
+      'backdrop-filter:blur(10px)', '-webkit-backdrop-filter:blur(10px)',
+      'color:#bff7d8', 'white-space:nowrap',
+      'font:600 12px/1 -apple-system,BlinkMacSystemFont,system-ui,sans-serif',
+      'box-shadow:0 4px 18px rgba(0,0,0,.4)',
+    ].join(';');
     var _wasArmed = false; try { _wasArmed = localStorage.getItem('vei-was-armed') === '1'; } catch (_) {}
     overlay.innerHTML =
-      '<div style="font-size:46px">🎙️</div>' +
-      '<div id="ava-arm-title">' + (_wasArmed ? 'Tap to resume' : 'Tap anywhere to start') + '</div>' +
-      '<div id="ava-arm-sub" style="font-size:13px;opacity:.65;max-width:300px">' + (_wasArmed ? 'voice was on — one tap to continue' : 'enables voice + mic — one tap, then live') + '</div>' +
-      '<div id="ava-arm-barwrap" style="display:none;width:220px;height:8px;background:rgba(255,255,255,.12);border-radius:99px;overflow:hidden;margin-top:6px"><div id="ava-arm-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#00ff88,#7CFC9A);transition:width .25s"></div></div>';
+      '<span style="font-size:15px">🎙️</span>' +
+      '<span id="ava-arm-title">' + (_wasArmed ? 'Tap to resume' : 'Tap anywhere to start') + '</span>' +
+      '<span id="ava-arm-sub" style="font-size:11px;opacity:.6;overflow:hidden;text-overflow:ellipsis">' + (_wasArmed ? 'one tap to continue' : 'enables voice + mic') + '</span>' +
+      '<span id="ava-arm-barwrap" style="display:none;width:54px;height:5px;background:rgba(255,255,255,.14);border-radius:99px;overflow:hidden"><span id="ava-arm-bar" style="display:block;height:100%;width:0%;background:linear-gradient(90deg,#00ff88,#7CFC9A);transition:width .25s"></span></span>';
     document.body.appendChild(overlay);
   }
   // Truthful real-time loader (qi 2026-05-30: "real-time percentage loading
