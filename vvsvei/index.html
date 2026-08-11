@@ -1468,7 +1468,12 @@ function _openQuoteReply(bubbleEl, quotedText) {
     try {
       const res = await fetch(API_URL, {
         method: 'POST', headers: HEADERS,
-        body: JSON.stringify({ source: 'xen-vei', ts: Date.now(), text: payloadText })
+        // 'xen-vei-typed', not 'xen-vei' — qi 2026-08-10 23:39 "my text from vvsvei is
+        // supposed to be tagged typed:". The server tags `typed:` only when the source
+        // contains typed/keyboard/text-input; bare 'xen-vei' fell through to `in:`.
+        // The main composer already sent 'typed'; these reply boxes did not, so
+        // keyboard text arrived looking like dictation.
+        body: JSON.stringify({ source: 'xen-vei-typed', ts: Date.now(), text: payloadText })
       });
       if (!res.ok) {
         const err = document.createElement('span'); err.className = 'src';
@@ -2246,7 +2251,12 @@ function attachReplyAction(bubbleEl, route) {
           const payloadText = 're: "' + q + '" — ' + text;
           const res2 = await fetch(API_URL, {
             method: 'POST', headers: HEADERS,
-            body: JSON.stringify({ source: 'xen-vei', ts: Date.now(), text: payloadText })
+            // 'xen-vei-typed', not 'xen-vei' — qi 2026-08-10 23:39 "my text from vvsvei is
+        // supposed to be tagged typed:". The server tags `typed:` only when the source
+        // contains typed/keyboard/text-input; bare 'xen-vei' fell through to `in:`.
+        // The main composer already sent 'typed'; these reply boxes did not, so
+        // keyboard text arrived looking like dictation.
+        body: JSON.stringify({ source: 'xen-vei-typed', ts: Date.now(), text: payloadText })
           });
           if (!res2.ok) throw new Error('inject ' + res2.status);
           box.remove();
@@ -3491,4 +3501,4 @@ window.addEventListener('beforeunload', stopListening);
 <script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
 </body>
 </html>
-<!-- cache-bust 1786419320 -->
+<!-- cache-bust 1786419700 -->
