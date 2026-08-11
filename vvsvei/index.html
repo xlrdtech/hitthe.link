@@ -1306,6 +1306,23 @@ async function toggleMic() {
   // still has a path, but default Web Speech stops the volume flood.
   // qi rejection of interim-revision visible-auto-correct remains valid — that
   // fix needs the real /api/dictate-audio endpoint shipped first.
+  //
+  // 2026-08-10 23:41 — THE BLOCKER NAMED ABOVE IS GONE. /api/dictate-audio was
+  // rebuilt async (in-flight cap 2) and verified end-to-end: synthesized speech
+  // POSTed in came back as an injected transcript. So the audio path is real now.
+  //
+  // qi MEASURED: "it only doesnt work on android ... works on ios, mac, and windows".
+  // That is exactly the Web Speech backend map — iOS/Mac/Windows reach Google's
+  // recognizer, Android Chromium does not. Waiting for Web Speech to ERROR first
+  // costs qi a dead tap and sometimes never fires an error at all (it just returns
+  // no result), which is precisely the silence he reported. So Android goes STRAIGHT
+  // to MediaRecorder; every platform he confirmed working keeps Web Speech untouched.
+  const _isAndroid = /Android/i.test(navigator.userAgent);
+  if (_isAndroid) {
+    appendError('Android: using server transcription (Web Speech has no backend here).');
+    startMediaRecorder();   // line 939 — the REAL fallback; posts to AUDIO_URL
+    return;
+  }
   startListening();
 }
 micIcon.addEventListener('click', toggleMic);
@@ -3501,4 +3518,4 @@ window.addEventListener('beforeunload', stopListening);
 <script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
 </body>
 </html>
-<!-- cache-bust 1786419700 -->
+<!-- cache-bust 1786419820 -->
