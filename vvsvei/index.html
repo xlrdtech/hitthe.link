@@ -629,7 +629,15 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
      "Can you underlay vdo.ninja so it's invisible behind the vei interface?"
      Broadcaster side pushes captured audio to room xen-qi-vei; receiver side
      pulls and plays. Hidden behind the UI but loaded in DOM so it stays active. -->
-<iframe id="vdo-rtc" allow="microphone; autoplay; speaker; camera"
+<!-- camera REMOVED from allow= 2026-08-10 23:49. qi: "it asks for camera because the
+     transport was built with vdo ninja i think" — correct, and the grant was OURS: this
+     iframe listed `camera`, so Chrome reported "using your camera and microphone" on a
+     page that is audio-only. VVSVEI's own code never asks for video (all 4 getUserMedia
+     sites are audio-only, verified), and `&audioonly&webcam=0` are only REQUESTS to
+     vdo.ninja — the permissions-policy here is the actual gate. No camera in allow =
+     the browser refuses video to the frame no matter what the third party asks for.
+     Defend at our boundary, never on a vendor's flag. -->
+<iframe id="vdo-rtc" allow="microphone; autoplay; speaker"
   style="position:fixed; left:-10000px; top:-10000px; width:1px; height:1px; opacity:0; pointer-events:none; border:0;"
   referrerpolicy="no-referrer-when-downgrade"></iframe>
 
@@ -3518,4 +3526,4 @@ window.addEventListener('beforeunload', stopListening);
 <script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
 </body>
 </html>
-<!-- cache-bust 1786419820 -->
+<!-- cache-bust 1786420280 -->
