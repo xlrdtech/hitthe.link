@@ -10,9 +10,17 @@ const SSE_URL  = XEN_BASE + "/events";
 const CALLERS_URL = XEN_BASE + "/api/callers";
 const REPLY_URL = XEN_BASE + "/mirror/reply";
 
+/* qi 2026-08-10 20:09: omnimind /events emits ts in MILLISECONDS — measured off
+   the live stream: {"ts":1786406420900}. Everything downstream had been doing
+   `ts * 1000`, landing every card in the year 58589, where getHours() returns an
+   arbitrary hour — that is why the feed showed 8:49 AM and 12:12 AM next to
+   bodies stamped 8:07 PM. Older producers did emit seconds, so accept both
+   rather than flipping the constant: anything past 1e12 is already ms. */
+const toMs = (t) => (Number(t) > 1e12 ? Number(t) : Number(t) * 1000);
+
 function normalizeLiveEvent(raw, idx) {
   // omnimind /events emits {source, direction, body, sender, recipient, chatID, ts}
-  const ts = raw.ts ? new Date(raw.ts * 1000) : new Date();
+  const ts = raw.ts ? new Date(toMs(raw.ts)) : new Date();
   const secAgo = Math.max(0, Math.floor((Date.now() - ts.getTime()) / 1000));
   return {
     src: (raw.source || raw.src || "xen"),
@@ -281,7 +289,7 @@ function MirrorCard({ ev, fresh, onReply, onOpenLink }) {
      normalizeLiveEvent which already multiplies by 1000). Pass directly to
      Date — previous code added it to Date.now() yielding far-future garbage. */
   const time = ev._absTs ? new Date(ev._absTs)
-             : ev.ts ? new Date(ev.ts * 1000)
+             : ev.ts > 0 ? new Date(toMs(ev.ts))
              : new Date();
   const pad = (n) => String(n).padStart(2, "0");
   let _h = time.getHours();
@@ -537,7 +545,9 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
           if (!raw || raw.event === "connected" || raw.event === "caught-up") return;
           if (!(raw.body || raw.text || raw.message)) return;
           // qi 2026-05-22 ultrathink: drop ancient backfill from SSE replay (>30d old) so live feed isn't 2020 noise
-          if (raw.ts && raw.ts > 0 && raw.ts < (Date.now() / 1000 - 30 * 86400)) return;
+          // Same unit bug as normalizeLiveEvent: this compared ms against seconds,
+          // so raw.ts was always ~1000x the threshold and the guard NEVER fired.
+          if (raw.ts && raw.ts > 0 && toMs(raw.ts) < Date.now() - 30 * 86400 * 1000) return;
           const next = { ...normalizeLiveEvent(raw, counter++), fresh: true, unread: true };
           setEvents((prev) => {
             if (prev.some((p) => p._absTs === next._absTs && p.body === next.body && p.sender === next.sender)) {
@@ -1654,7 +1664,7 @@ function NotificationToast({ notif, onDismiss }) {
         {/* qi 2026-05-25 timestamp canon: show real h:mm AM/PM not hardcoded "now". */}
         <div className="notif-time">{(() => {
           const _t = notif._absTs ? new Date(notif._absTs)
-                   : notif.ts ? new Date(notif.ts * 1000)
+                   : notif.ts > 0 ? new Date(toMs(notif.ts))
                    : new Date();
           let _h = _t.getHours();
           const _m = String(_t.getMinutes()).padStart(2,"0");
@@ -1773,7 +1783,21 @@ function App() {
   const closeAllTabs = () => { setOpenTabs([]); setActiveTabId(null); };
   /* openLink: invoked from MMM thread/link clicks - same flow as openApp but
      tagged so we know it came from a link not the drawer. Still ends up as a tab. */
-  const openLink = (link) => openApp({ ...link, fromLink: true });
+  /* Guard added 2026-08-10. MEASURED: the Threads pill called onOpenLink("threads")
+     — a STRING — and every other caller passes {id,url,name,host}. Spreading a string
+     yields {0:"t",1:"h",...}, so openApp built a tab with no url/name/id, made it
+     active, and goto(1) threw qi into the browser pane. Junk tab + forced pane jump
+     on every tap, silently, because nothing throws.
+     A string in is now a no-op instead of a corrupt tab. This does NOT decide what
+     Threads should open — that is a product call, and inventing one here would be
+     worse than the bug. */
+  const openLink = (link) => {
+    if (!link || typeof link !== "object") {
+      console.warn("[xos] openLink ignored non-object:", link);
+      return;
+    }
+    openApp({ ...link, fromLink: true });
+  };
   const isConnected = t.connection === "connected";
 
   return (
