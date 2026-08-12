@@ -931,45 +931,28 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
         </div>
 
         <div className="mirror-feed">
-          {/* ── ACTION PILLS — horizontal, swipable, sitting directly ABOVE the
-               voice bar (qi 2026-08-09 20:31: "put the pills above the voice
-               bar ... horizontal swipable with the drop pill to pick eleven
-               reader voice after new"). Order is his: New, then the voice
-               picker, then the rest. Overflow scrolls natively rather than
-               wrapping, so the row never pushes the composer down. ── */}
-          <div className="omni-pills">
-            <button className="opill" onClick={() => setQ("")}>＋ New</button>
+          {/* ⛔ THE VOICEBAR PILLS ARE NOT THIS PANE'S (qi 2026-08-12 17:30:
+               "the voicebar pills go where they normally would be placed. they
+               dont go on the omniinbox ui").
 
-            {/* Voice drop pill. Deliberately a NATIVE <select> behind a styled
-                label — same idiom as .mfilter-select-wrap above — so iOS opens
-                its picker wheel. A custom menu would look identical on desktop
-                and feel wrong on the phone, which is where qi actually uses it. */}
-            <div className="opill drop" data-paid={voiceName.includes("PAID") ? "1" : undefined}>
-              <span className="opill-label">{voiceName}</span>
-              <span className="mfilter-select-caret">▾</span>
-              <select
-                className="mfilter-select"
-                value={voiceId}
-                onChange={(e) => pickVoice(e.target.value)}
-                aria-label="Reader voice"
-              >
-                {READER_VOICES.map((v) => (
-                  <option key={v.id} value={v.id}>{v.name}</option>
-                ))}
-              </select>
-            </div>
+               This row was built from his 08-09 "put the pills above the voice
+               bar" line — but it got built HERE, in the omni-inbox, which is not
+               where the voice bar is. VVSVEI already carries the identical set
+               in its own row directly above .composer-bar: tb-newthread (＋New),
+               #voice-pills (the reader-voice picker), then tb-threads, tb-copy,
+               tb-export, tb-share. So this was a duplicate in the wrong pane,
+               and with VVSVEI now mounted as the middle panel the real row is
+               on screen where it belongs.
 
-            {/* The OmniTap injection-source pill that briefly lived here is GONE.
-                It was the right control in the wrong pane: once vei-* traffic is
-                rejected at ingest (see isOmniboxSource), there are no injection
-                sources in this feed to pick between. That picker belongs to
-                VVSVEI, which owns the tap stream. The `platform` pill above is
-                this pane's source control — email + Beeper networks. */}
-            <button className="opill" onClick={() => onOpenLink && onOpenLink("threads")}>Threads</button>
-            <button className="opill" onClick={pillCopy}>Copy</button>
-            <button className="opill" onClick={pillExport}>Export</button>
-            <button className="opill" onClick={pillShare}>Share</button>
-          </div>
+          {/* The voicebar pills are NOT this pane's (qi 2026-08-12 17:30:
+               "the voicebar pills go where they normally would be placed. they
+               dont go on the omniinbox ui"). DELETED, not hidden: VVSVEI already
+               carries the identical row above .composer-bar — tb-newthread,
+               #voice-pills, tb-threads/copy/export/share — and with VVSVEI mounted
+               as the middle panel that row is on screen where it belongs. A hidden
+               duplicate is how two copies start drifting, and the reader-voice
+               picker must have exactly ONE writer (a second writer is what caused
+               the voice-desync bug earlier today). */}
 
           <div className="mirror-prompt">
             <div className="mirror-prompt-row">
