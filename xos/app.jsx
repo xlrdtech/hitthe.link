@@ -1279,8 +1279,25 @@ function VvsveiPane() {
         // Chasing it selector-by-selector is how it came back; any 100dvh anywhere
         // in vvsvei's CSS reintroduces it. So the UNIT is converted, not the rule:
         // inside this panel, 100% of the panel IS full height.
-        const deVh = (css) => css.replace(/\b100(?:d|s|l)?vh\b/gi, "100%");
-        const scopeCss = (css) => deVh(css).replace(
+        // THE PATTERN, not two bugs: a runtime-included document assumes IT OWNS THE
+        // VIEWPORT. Viewport units and fixed positioning are the two ways it says so, and
+        // both have to be translated on the way in. Scoping SELECTORS is not enough --
+        // neither of these is expressed in a selector.
+        //
+        // 100dvh -> 100%   : qi's empty voice dock (measured above).
+        // fixed -> absolute: qi 2026-08-12 19:38 "on xos omniinbox its still black but i
+        //   noticed there may be ui hidden behind the black because i could see it
+        //   scrolling behind the shadows". CAUSE: vvsvei/index.html:69 gives .bg-overlay
+        //   position:fixed inset:0 with a rgba(2,6,10,.72) radial + blur(22px). Fixed
+        //   escapes this panel and lays that glass over the ENTIRE app, so the omni-inbox
+        //   renders underneath it -- alive, scrolling, and invisible. His screenshot shows
+        //   the giveaway: a faint green core, which is that gradient's own rgba(10,31,18,.30).
+        //   As `absolute` it is confined to #xos-vei (position:relative), which is where a
+        //   panel background belongs.
+        const deViewport = (css) => css
+          .replace(/\b100(?:d|s|l)?vh\b/gi, "100%")
+          .replace(/position\s*:\s*fixed/gi, "position:absolute");
+        const scopeCss = (css) => deViewport(css).replace(
           /(^|\})\s*([^@{}][^{}]*)\{/g,
           (m, brace, sel) => brace + " " + sel.split(",").map((s) => {
             s = s.trim();
