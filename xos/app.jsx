@@ -1108,39 +1108,21 @@ function BrowserPane({ openTabs, activeTabId, setActiveTabId, onCloseTab, onClos
   const showChrome = tabCount >= 1;
 
   if (tabCount === 0) {
-    /* ── VVSVEI IS THE CENTER PANEL ─────────────────────────────────────────
-       qi 2026-08-12 16:55: "place vvsvei as the center panel of XOS".
+    /* clean middle pane - no chrome, no URL bar, no tabs. Just the OS pane.
+       qi 2026-07-01: ambient VVS voice-pulse orb as the idle background.
 
-       An <iframe>, not a port. VVSVEI is a ~192KB self-contained page carrying
-       its own SSE connection, voice pipeline, audio graph, voice picker and
-       timeline rail. Reimplementing that in this file would fork the one
-       canonical surface into two copies that immediately drift — and this repo
-       has already paid for that mistake twice today (a stale .deploy copy and
-       three divergent tui-inject.js copies). One source, framed.
+       ⛔ NO IFRAMES — EVER (qi 2026-08-12 17:01, HARD ARCHITECTURAL LAW):
+       "we cant use iframes. thats the the exact frame work that has us
+       literally 1.5 years behind yhe official launch of our for profit
+       flagship _SelfOwn".
 
-       Same origin (both served from hitthe.link), so the frame keeps
-       same-origin access and needs no proxy, no CSP exception, no postMessage
-       bridge. `allow` is still explicit: VVSVEI is voice-first, and a framed
-       document does not get microphone or autoplay by inheritance.
-
-       The orb stays MOUNTED BEHIND the frame rather than being replaced — it is
-       what the pane shows during the frame's first paint, so the center panel is
-       never a black rectangle.
-
-       The browser is NOT retired. Opening any link pushes tabCount above zero
-       and restores the full browser chrome, exactly as before. Switching the
-       idle center panel to VVSVEI is not authority to remove what it replaced. */
-    return (
-      <div className="webview-empty">
-        <div className="voice-pulse-orb" />
-        <iframe
-          className="xos-vvsvei"
-          src="/vvsvei/"
-          title="VVSVEI"
-          allow="microphone; autoplay; clipboard-write"
-        />
-      </div>
-    );
+       I mounted VVSVEI here as an <iframe> at 16:55 and reverted it on this
+       instruction. Recording it so the next pass does not rediscover the idea:
+       framing VVSVEI is the OBVIOUS solution and it is FORBIDDEN. The cost is
+       not stylistic — iframes are what put the flagship 1.5 years behind.
+       VVSVEI must become the center panel IN THIS DOCUMENT (shared DOM, shared
+       styles, one page), never a nested browsing context. */
+    return <div className="webview-empty"><div className="voice-pulse-orb" /></div>;
   }
 
   const parts = activeTab ? urlParts(activeTab.url || "") : { scheme: "", host: "", path: "" };
