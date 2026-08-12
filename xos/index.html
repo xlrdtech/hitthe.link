@@ -38,8 +38,27 @@
 <body>
   <div id="root"></div>
 
-  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <!-- PRODUCTION React (2026-08-12 18:42). qi's XOS was loading the DEVELOPMENT
+       builds on every single load. MEASURED at unpkg:
+         react-dom.development.js  1,080,227 B  →  production.min  131,835 B  (8.2x)
+         react.development.js        109,931 B  →  production.min   10,751 B  (10.2x)
+         total                     1,190,158 B  →              142,586 B
+       = 1.05 MB less per load, plus the dev builds' propType/warning machinery
+       is deliberately slow at runtime. This is why XOS took >60s to reach
+       domcontentloaded in a real browser (measured twice); the SERVER was never
+       the problem — shell TTFB 57ms, app.jsx 30ms, styles.css 35ms.
+
+       ⚠️ integrity= MUST be recomputed when the URL changes, or the browser
+       BLOCKS the script and XOS goes from slow to DEAD. These two sha384 values
+       were computed from the actual fetched files, not copied from anywhere:
+         openssl dgst -sha384 -binary <file> | openssl base64 -A
+
+       STILL OPEN, and qi's call because canon 9 bans a React build/bundler:
+       @babel/standalone below is a ~3MB compiler that transpiles FOUR .jsx files
+       (tweaks-panel, ios-frame, app 105KB, xos-browser) in-browser on the main
+       thread every load — and it grows with every edit I make to app.jsx. -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
   <script type="text/babel" src="tweaks-panel.jsx"></script>
