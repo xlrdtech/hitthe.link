@@ -875,15 +875,24 @@ async function sendFallback() {
   const text = fbText.value.trim();
   if (!text) return;
   fbSend.disabled = true;
-  appendFinal(text, false);
+  // Hold the ref. The ✓ must attach to THIS bubble, not to whatever is last when the
+  // POST resolves. The old code re-found it with '.final:last-child', which returns
+  // NULL the moment anything else lands in between — an .interim, or a .xen-reply
+  // arriving over SSE — because :last-child requires being the parent's final child,
+  // not merely the last .final. So the checkmark silently never attached and the send
+  // looked like it failed. qi 2026-08-12 19:46: "its not showing me that it posted".
+  // The dictation path at ~1360 already holds its ref for exactly this reason.
+  const sentDiv = appendFinal(text, false);
   const posted = await postTranscript(text, 'typed');  // keyboard → typed: tag
-  if (posted) {
-    const lastFinal = transcript.querySelector('.final:last-child');
-    if (lastFinal && !lastFinal.innerHTML.includes('posted')) {
-      lastFinal.innerHTML += ' <span class="posted">✓ posted</span>';
-    }
+  if (posted && sentDiv && !sentDiv.innerHTML.includes('posted')) {
+    sentDiv.innerHTML += ' <span class="posted">✓ posted</span>';
   }
   fbText.value = '';
+  // Clearing .value does NOT undo an inline height. injectToComposer() sets
+  // style.height from scrollHeight on paste/drop, so without this the bar stays
+  // inflated (up to 120px) for the rest of the session after a single paste —
+  // permanently eating transcript space. Confirmed by a Fable 5 review 2026-08-12.
+  fbText.style.height = '';
   fbSend.disabled = false;
   fbText.focus();
 }
@@ -1013,7 +1022,15 @@ function _tlStations() {
     b.firstChild.textContent = label;      // textContent, never innerHTML — labels are derived, but the habit is the guard
     b.setAttribute('aria-label', 'Jump to ' + label);
     b.addEventListener('click', () => {
-      transcript.scrollTop = st.el.offsetTop;   // smooth comes from the CSS
+      // Smooth is asked for PER CALL, not inherited from the CSS. #transcript
+      // deliberately has no scroll-behavior:smooth (see the padding rule) because
+      // every append assigns scrollTop = scrollHeight and smooth turned each of
+      // those into a ~300ms animation, during which the newest message sat under
+      // the composer. A rail jump is the one scroll that SHOULD glide, so it opts
+      // in here. Caught by a Fable 5 review 2026-08-12: the earlier commit removed
+      // the CSS declaration and left this line a bare assignment while claiming in
+      // two comments that a scrollTo() existed — it did not, so the jump teleported.
+      transcript.scrollTo({ top: st.el.offsetTop, behavior: 'smooth' });
     });
     frag.appendChild(b);
   });
@@ -1083,7 +1100,28 @@ function _tlMark() {
       const overlap = Math.max(0, Math.round(t.bottom - c.top));
       if (overlap === last) return;   // never touch style on a no-op
       last = overlap;
+      // Read BEFORE the write: raising padding-bottom grows scrollHeight below all
+      // content, and scrollTop does not follow. If he was pinned to the bottom he
+      // silently stops being pinned, and the newest bubble slides under the taller
+      // bar with scrollable space beneath it that nothing scrolls into.
+      //
+      // MEASURED (Fable 5 review, 2026-08-12, headless reduction of this exact CSS):
+      // composer 51 -> 134px, --composer-h 86 -> 169px, scrollTop stayed 693 while
+      // maxScroll rose to 776 -> the last bubble ended up 67px OCCLUDED. Re-pinning
+      // restored the designed +16px gap, which is what proves this is the whole fix.
+      //
+      // Scroll anchoring cannot save it: the growth is padding BELOW every child, so
+      // there is no anchor element to adjust against.
+      //
+      // The trigger is NOT typing — there is no 'input' listener in this file at all,
+      // so the textarea never auto-grows from keystrokes. It is injectToComposer(),
+      // reached by paste and by text-drop, which the placeholder itself invites
+      // ("Type, dictate, or paste"). Rotation and the on-screen keyboard hit the same
+      // path by changing #transcript's height instead of the composer's.
+      const wasAtBottom =
+        transcript.scrollTop + transcript.clientHeight >= transcript.scrollHeight - 2;
       transcript.style.setProperty('--composer-h', overlap + 'px');
+      if (wasAtBottom) transcript.scrollTop = transcript.scrollHeight;
     }
     if (typeof ResizeObserver !== 'undefined') {
       const ro = new ResizeObserver(publish);
@@ -2241,20 +2279,135 @@ function saveHistory(entry) {
     saveThreads(list);
   }
 }
+// Renders one saved entry into a bubble. Extracted from hydrateHistory so the
+// scroll-back below renders older threads through the EXACT same path — two
+// renderers would drift, and this one owns the rail contract (dataset.t).
+function _veiEntryBubble(e) {
+  const div = document.createElement('div');
+  div.className = e.role === 'xen' ? 'xen-reply' : 'final';
+  div.textContent = e.text;
+  // THE RAIL CONTRACT. _tlHours() does `if (!t) continue` on dataset.t, so a bubble
+  // without it is INVISIBLE to the timeline. Before this line, dataset.t was written
+  // in exactly ONE place in the whole file (appendFinal, live bubbles only) — so
+  // every restored bubble and every Xen reply contributed ZERO stations, and the rail
+  // could only ever show the hour you were currently in. qi 2026-08-12 19:42: "the
+  // timeline is awesome how it is but I wanted it to be able to scroll through the
+  // timeline and every time I come back its only one hour."
+  if (e.ts) div.dataset.t = String(e.ts);
+  attachBubbleActions(div, e.text);
+  return div;
+}
 function hydrateHistory() {
   for (const e of _history) {
     const key = `${e.role}|${(e.text || '').slice(0, 80)}|${e.ts || ''}`;
     if (_renderedKeys.has(key)) continue;
     _renderedKeys.add(key);
-    const div = document.createElement('div');
-    div.className = e.role === 'xen' ? 'xen-reply' : 'final';
-    div.textContent = e.text;
-    transcript.appendChild(div);
-    attachBubbleActions(div, e.text);
+    transcript.appendChild(_veiEntryBubble(e));
   }
   transcript.scrollTop = transcript.scrollHeight;
 }
 hydrateHistory();
+
+// ─── SCROLL BACK THROUGH EVERY THREAD, TO THE BEGINNING OF TIME ─────────
+// qi 2026-08-12 19:43-19:44: "I want to be able to scroll back to the beginning of
+// the time" / "it needs to always be able to scroll back through threads like all
+// the times".
+//
+// WHY IT COULDN'T: freshThreadOnReload() above deliberately opens an EMPTY thread on
+// every reload (2026-05-30, to kill a 2000-bubble rehydrate that was "the struggles
+// to load"). Older days stay in localStorage as separate vei-thread-<id> keys that
+// the scroller never touched, reachable only by explicitly picking one in Threads.
+// So "come back -> only 7 PM" was correct behaviour, and both requirements are real:
+// paint fast AND reach all of history.
+//
+// Both are satisfied by loading LAZILY instead of choosing: the newest thread paints
+// alone, and pulling toward the top prepends the next older thread, on demand,
+// forever. Nothing is re-encoded, nothing is migrated, and the fast first paint that
+// the 05-30 change bought is untouched.
+//
+// The rail needs no changes at all: _tlHours() derives stations from the DOM, so
+// every prepended thread adds its own hours the moment it lands.
+(function _veiScrollback() {
+  try {
+    if (!transcript) return;
+
+    // Oldest-last: newest first so we walk BACKWARD in time as he pulls down.
+    let _older = loadThreads()
+      .filter((t) => t && t.id && t.id !== _activeThreadId)
+      .sort((a, b) => (b.lastTs || b.started || 0) - (a.lastTs || a.started || 0));
+    let _busy = false;
+    let _exhausted = _older.length === 0;
+
+    function _dayLabel(ts) {
+      const d = new Date(ts || Date.now());
+      const today = new Date();
+      const sameDay = d.toDateString() === today.toDateString();
+      const time = d.toLocaleString(undefined, { hour: 'numeric', minute: '2-digit' });
+      return sameDay ? time : d.toLocaleString(undefined, { month: 'short', day: 'numeric' }) + ' · ' + time;
+    }
+
+    // In-flow separator, never an overlay — canon: no modals on this interface.
+    function _marker(text, ts) {
+      const el = document.createElement('div');
+      el.className = 'tl-daybreak';
+      el.textContent = text;
+      el.style.cssText = 'align-self:center;padding:6px 12px;margin:6px 0;' +
+        'font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;' +
+        'color:var(--fg-mute);opacity:.55;border:1px solid var(--line);border-radius:999px;' +
+        'background:rgba(255,255,255,.03);flex:0 0 auto;';
+      // Give the marker the thread's own time so it becomes a rail station too.
+      if (ts) el.dataset.t = String(ts);
+      return el;
+    }
+
+    function _prependOlder() {
+      if (_busy || _exhausted) return;
+      const t = _older.shift();
+      if (!t) { _exhausted = true; _pin(_marker('beginning of time', 0)); return; }
+      _busy = true;
+      try {
+        const entries = loadThreadEntries(t.id);
+        if (!entries.length) { _busy = false; return _prependOlder(); }   // skip empties, keep walking
+
+        // Anchor the scroll BEFORE mutating: prepending grows scrollHeight above the
+        // viewport, which would otherwise yank the reader upward on every load.
+        const beforeH = transcript.scrollHeight;
+        const beforeTop = transcript.scrollTop;
+
+        const frag = document.createDocumentFragment();
+        frag.appendChild(_marker(_dayLabel(t.started || entries[0].ts), t.started || entries[0].ts));
+        for (const e of entries) {
+          const key = `${e.role}|${(e.text || '').slice(0, 80)}|${e.ts || ''}`;
+          if (_renderedKeys.has(key)) continue;
+          _renderedKeys.add(key);
+          frag.appendChild(_veiEntryBubble(e));
+        }
+        transcript.insertBefore(frag, transcript.firstChild);
+
+        transcript.scrollTop = beforeTop + (transcript.scrollHeight - beforeH);
+        if (!_older.length) _exhausted = true;
+        try { _tlSync(); } catch (_) {}   // the rail re-reads the DOM; new hours appear
+      } finally {
+        _busy = false;
+      }
+    }
+
+    function _pin(el) { transcript.insertBefore(el, transcript.firstChild); }
+
+    // Pull-toward-the-top trigger. 80px of lead time so it lands before he hits the
+    // hard stop, which is what makes it feel continuous rather than paged.
+    transcript.addEventListener('scroll', () => {
+      if (transcript.scrollTop < 80) _prependOlder();
+    }, { passive: true });
+
+    // If the newest thread is shorter than the viewport there is nothing to scroll,
+    // so the trigger could never fire and history would look absent. Seed one page.
+    if (transcript.scrollHeight <= transcript.clientHeight + 40) _prependOlder();
+
+    // Reaching the oldest hour on the rail is also a request for what came before it.
+    window._veiLoadOlder = _prependOlder;
+  } catch (_) { /* history is additive — it must never break the live page */ }
+})();
 
 // ─── Thread controls: New / Browse ────────────────────────────────────
 document.getElementById('tb-newthread').addEventListener('click', () => {
@@ -2501,6 +2654,20 @@ function renderEvent(d) {
     return `${_h}:${_m}:${_s} ${_ampm}`;
   };
   const _stamp = _fmtTs(d.ts);
+  // ONE normalized millisecond timestamp for this event, computed once and used for
+  // BOTH the rail contract (dataset.t) and what gets persisted.
+  //
+  // _fmtTs already knew d.ts can arrive in SECONDS (its `raw > 9999999999` test), but
+  // that knowledge lived only inside the label formatter — while saveHistory below was
+  // storing the RAW value. A seconds value stored raw and later read as milliseconds
+  // dates the bubble to January 1970, which would put a phantom station at the far end
+  // of the timeline the moment restored history started feeding the rail. Normalize at
+  // the boundary, once, so no downstream reader has to know.
+  const _tsMs = (() => {
+    const raw = Number(d.ts) || 0;
+    if (!raw) return Date.now();
+    return raw > 9999999999 ? raw : raw * 1000;
+  })();
   // Classify side
   const isXenOut = tag.includes('xen-out') || src.includes('xen-reply') || src.includes('xen-primary') || src.includes('xen-out');
   const isUserDictate = tag.includes('xen-dictate-in') || src.includes('xen-vei') || src.includes('xen-ruach') || src.includes('xen-dictate');
