@@ -1217,6 +1217,120 @@ function OpenedAppPage({ app }) {
   );
 }
 
+/* ══ VVSVEI AS THE CENTER PANEL — RUNTIME INCLUDE, IN-DOCUMENT ══════════════
+   qi 2026-08-12 16:55 "place vvsvei as the center panel of XOS" + 17:01 NO
+   IFRAMES (canon-iframes-banned; iframes cost _SelfOwn 1.5 years) + 17:2x he
+   picked the runtime-include shape and "VVSVEI always" as the default view.
+
+   WHY THIS SHAPE: vvsvei/index.html stays the ONE source of truth. XOS fetches
+   it and mounts its markup + styles + scripts into THIS document — same DOM,
+   same stylesheet, one page, no nested browsing context. Editing
+   vvsvei/index.html updates the phone surface and this panel together, so the
+   two can never drift (this repo already carries a stale .deploy copy and three
+   divergent tui-inject.js copies — that failure mode is not hypothetical).
+
+   THREE THINGS THIS HAS TO HANDLE, and each is a real hazard, not boilerplate:
+
+   1. STYLE SCOPING. vvsvei's CSS is global — it styles `body`, `#transcript`,
+      `.composer`. Injected raw it would restyle the whole OS shell. Every
+      selector is rewritten to sit under #xos-vei, and body/html selectors
+      become #xos-vei itself (the panel IS vvsvei's viewport here).
+
+   2. IFRAMES ARE STRIPPED. vvsvei itself contains two (`bg-iframe` at :580 and
+      `vdo-rtc` at :735). Including them would smuggle iframes into XOS through
+      the back door of a fix that exists BECAUSE iframes are banned. They are
+      removed on inject and reported to the console, so their absence is visible
+      rather than silent. vdo-rtc is a live WebRTC surface, so if calling has to
+      work in this panel that is a real follow-up, not something to paper over.
+
+   3. SCRIPTS MUST RE-EXECUTE. innerHTML never runs <script>. Each one is
+      recreated as a fresh element so it executes in page scope — which is
+      exactly what makes vvsvei's own getElementById('transcript') resolve
+      against the markup we just mounted. */
+function VvsveiPane() {
+  const hostRef = useRef(null);
+  const [state, setState] = useState("loading");   // loading | ready | failed
+  const [err, setErr] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    const host = hostRef.current;
+    if (!host) return;
+
+    (async () => {
+      try {
+        const res = await fetch("/vvsvei/", { cache: "no-store" });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const html = await res.text();
+        if (cancelled) return;
+
+        const doc = new DOMParser().parseFromString(html, "text/html");
+
+        // ── 2. strip nested browsing contexts before anything else touches them
+        const framed = doc.querySelectorAll("iframe, frame, object, embed");
+        if (framed.length) {
+          console.warn("[xos-vei] stripped " + framed.length +
+            " nested browsing context(s) — canon-iframes-banned. If one was vdo-rtc, calling needs a non-iframe path in this panel.");
+          framed.forEach((n) => n.remove());
+        }
+
+        // ── 1. scope + hoist styles
+        const scope = "#xos-vei";
+        const scopeCss = (css) => css.replace(
+          /(^|\})\s*([^@{}][^{}]*)\{/g,
+          (m, brace, sel) => brace + " " + sel.split(",").map((s) => {
+            s = s.trim();
+            if (!s) return s;
+            if (/^(html|body|:root)\b/i.test(s)) return scope + s.replace(/^(html|body|:root)/i, "");
+            return scope + " " + s;
+          }).join(", ") + " {"
+        );
+        const styleEl = document.getElementById("xos-vei-styles") || (() => {
+          const s = document.createElement("style");
+          s.id = "xos-vei-styles";
+          document.head.appendChild(s);
+          return s;
+        })();
+        styleEl.textContent = [...doc.querySelectorAll("style")]
+          .map((s) => scopeCss(s.textContent || "")).join("\n");
+
+        // markup (scripts removed here; re-added executable below)
+        const scripts = [...doc.querySelectorAll("script")];
+        scripts.forEach((s) => s.remove());
+        host.innerHTML = doc.body ? doc.body.innerHTML : "";
+        setState("ready");
+
+        // ── 3. re-execute scripts in document order
+        for (const old of scripts) {
+          if (old.src) continue;               // vvsvei is self-contained; externals are not ours to pull
+          const s = document.createElement("script");
+          if (old.type) s.type = old.type;
+          s.textContent = old.textContent;
+          host.appendChild(s);
+        }
+      } catch (e) {
+        if (cancelled) return;
+        // Fail LOUD in the panel. An empty middle panel is the exact disaster
+        // this component exists to end, so a silent catch here would recreate it.
+        setErr((e && e.message) || String(e));
+        setState("failed");
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, []);
+
+  return (
+    <div className="xos-vei-wrap">
+      <div id="xos-vei" ref={hostRef} />
+      {state === "loading" && <div className="xos-vei-note">loading vvsvei…</div>}
+      {state === "failed" && (
+        <div className="xos-vei-note err">vvsvei failed to mount · {err}</div>
+      )}
+    </div>
+  );
+}
+
 function BrowserPane({ openTabs, activeTabId, setActiveTabId, onCloseTab, onCloseAll, onOpenUrl }) {
   /* qi 2026-05-17 8672 follow-ups:
      - URL field must be editable, type-to-navigate
@@ -2042,7 +2156,23 @@ function App() {
 
           <div className="panes" ref={panesRef}>
             <div className="pane"><OmniboxPane voice={t.voice} onNewEvent={handleNewEvent} onOpenLink={openLink} /></div>
-            <div className="pane"><BrowserPane openTabs={openTabs} activeTabId={activeTabId} setActiveTabId={setActiveTabId} onCloseTab={closeTab} onCloseAll={closeAllTabs} onOpenUrl={(raw) => { const u = /^https?:\/\//i.test(raw) ? raw : ("https://" + raw); try { const host = new URL(u).host; openLink({ id: u, url: u, name: host, host }); } catch (_) { openLink({ id: u, url: u, name: raw, host: raw }); } }} /></div>
+            {/* MIDDLE PANEL = VVSVEI, ALWAYS (qi 2026-08-12, "VVSVEI always").
+                It is mounted permanently rather than as an idle state, so the
+                flagship never opens on an empty orb again — that void is what he
+                called "a disaster", and it was the middle pane's designed empty
+                state since 2026-07-01.
+                The browser rides OVER it only while tabs are open, using the
+                .xos-browser-overlay geometry that already existed for exactly
+                this (absolute, stopping above the glass dock). Closing the last
+                tab reveals VVSVEI again — nothing is destroyed either way. */}
+            <div className="pane pane-vei">
+              <VvsveiPane />
+              {openTabs.length > 0 && (
+                <div className="xos-browser-overlay">
+                  <BrowserPane openTabs={openTabs} activeTabId={activeTabId} setActiveTabId={setActiveTabId} onCloseTab={closeTab} onCloseAll={closeAllTabs} onOpenUrl={(raw) => { const u = /^https?:\/\//i.test(raw) ? raw : ("https://" + raw); try { const host = new URL(u).host; openLink({ id: u, url: u, name: host, host }); } catch (_) { openLink({ id: u, url: u, name: raw, host: raw }); } }} />
+                </div>
+              )}
+            </div>
             <div className="pane"><PhonePane /></div>
           </div>
 
