@@ -7,6 +7,34 @@ const { useState, useEffect, useRef, useMemo } = React;
    =========================================================== */
 const XEN_BASE = "https://xen.xlrd.org";
 const SSE_URL  = XEN_BASE + "/events";
+
+// ── THE MERGED BEEPER + EMAIL INBOX (qi 2026-08-12 17:13: "both the omniinbox
+// and the vvsvei panel have the truly synced and beeper and email synced to
+// inbound and outbound so I no longer need to use the beeper, spark mail, or any
+// other interface again ever").
+//
+// ROOT CAUSE this fixes: this pane was subscribed ONLY to xen.xlrd.org/events —
+// the general Xen event bus, which carries the VVSVEI voice taps, NOT message
+// threads. omni-inbox-server.js has been serving the real merged inbox the whole
+// time on a different host, so the inbox could never show a thread no matter what
+// was filtered. That also explains the `platform` pill matching nothing.
+//
+// omni.xlrd.org fronts 127.0.0.1:4489 via cloudflared (config.yml:84).
+// VERIFIED on the public route, asserting on the BODY not the status:
+//   ok:true · total 292 · cleartext 292 · encrypted 0
+//   byNet {telegram 156, email 50, beeper 27, linkedin 15, instagram 9,
+//          gmessages 7, slack 3} · accounts qi01/qi02/qi03
+// `encrypted:0` is the important number — the Megolm sidecar
+// (BEEPER_MATRIX_RECOVERY_KEY) is decrypting bodies, so the "HONEST LIMIT" noted
+// at omni-inbox-server.js:14 no longer bites.
+//
+// It is a POLL, not SSE: /api/stream is a 10s-polled JSON snapshot. Using
+// EventSource against it would fail silently forever, which is exactly the class
+// of bug that hid this for weeks.
+const OMNI_BASE   = "https://omni.xlrd.org";
+const OMNI_STREAM = OMNI_BASE + "/api/stream";
+const OMNI_REPLY  = OMNI_BASE + "/api/reply";   // outbound: email→SMTP, chat→Matrix
+const OMNI_SSE    = OMNI_BASE + "/sse-stream";  // live push of the interleaved thread
 const CALLERS_URL = XEN_BASE + "/api/callers";
 const REPLY_URL = XEN_BASE + "/mirror/reply";
 
@@ -530,6 +558,95 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
   const onNewEventRef = useRef(onNewEvent);
   onNewEventRef.current = onNewEvent;
 
+  /* ── MERGED BEEPER + EMAIL POLL (the inbox's actual source) ────────────────
+     Additive to the SSE below rather than replacing it: the firehose is a live
+     connection qi is using right now, and the canon on it is "it can never
+     drop". This effect only ADDS the thread traffic that was missing.
+
+     Newest-first, matching what the pane already renders. The server returns the
+     full snapshot each tick, so dedupe is by identity (roomId+ts+text) and the
+     existing `fresh`/`unread` flags are preserved for items we have already seen
+     — otherwise every 10s poll would re-flash all 292 rows as new. */
+  useEffect(() => {
+    let cancelled = false;
+    let timer = null;
+    let idc = 0;
+
+    // Ingest one snapshot, whatever transport delivered it.
+    const absorb = (j) => {
+      try {
+        if (cancelled || !j || !Array.isArray(j.messages)) return;
+        setSseState("live");
+        setEvents((prev) => {
+          const seen = new Map(prev.map((p) => [p._omniKey || p.id, p]));
+          const rows = j.messages.map((m) => {
+            const key = (m.roomId || "") + "|" + (m.ts || 0) + "|" + (m.text || "").slice(0, 40);
+            const old = seen.get(key);
+            if (old) return old;                     // keep read/fresh state
+            return {
+              id: "omni-" + (idc++) + "-" + key,
+              _omniKey: key,
+              _absTs: m.ts || 0,
+              src: m.network || "beeper",
+              sender: m.sender || m.title || "",
+              recipient: "",
+              body: m.text || "",
+              chatID: m.roomId || "",
+              account: m.account || "",
+              ts: m.ts || 0,
+              fresh: false,
+              unread: !!m.unread,
+            };
+          });
+          rows.sort((a, b) => (b._absTs || 0) - (a._absTs || 0));
+          return rows.slice(0, 300);
+        });
+        setCount(j.total || j.messages.length);
+      } catch (_) {
+        // Fail soft: a malformed frame must not empty his inbox or kill the feed.
+      }
+    };
+
+    // PUSH FIRST. The server exposes /sse-stream, a real EventSource push of the
+    // interleaved thread every 20s — so this is live, not polled (canon: live by
+    // default, SSE baked in). The one-shot fetch below is only a COLD START, so
+    // the pane is populated on the first paint instead of waiting up to 20s for
+    // the first push.
+    let es = null;
+    const openSSE = () => {
+      if (cancelled) return;
+      try {
+        es = new EventSource(OMNI_SSE);
+        es.onmessage = (m) => {
+          let j = null;
+          try { j = JSON.parse(m.data); } catch (_) { return; }
+          if (j && j.type === "connected") return;
+          absorb(j);
+        };
+        es.onerror = () => {
+          // Never give up on the firehose (qi 8672: "it can never drop").
+          try { es.close(); } catch (_) {}
+          es = null;
+          if (!cancelled) timer = setTimeout(openSSE, 3000);
+        };
+      } catch (_) {
+        if (!cancelled) timer = setTimeout(openSSE, 3000);
+      }
+    };
+
+    fetch(OMNI_STREAM, { cache: "no-store" })
+      .then((r) => r.json())
+      .then(absorb)
+      .catch(() => {})
+      .finally(openSSE);
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+      if (es) { try { es.close(); } catch (_) {} }
+    };
+  }, []);
+
   /* live SSE feed from xen.xlrd.org/events — canon-no-demos
      qi 2026-05-17 8672: "firehose isn't stay connected. It can never drop."
      Reconnect with exponential backoff capped at 8s. Never give up. */
@@ -631,20 +748,50 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
       return next.map((x) => (x.id === ev.id ? { ...x, unread: false } : x));
     });
     setCount((c) => c + 1);
-    /* POST outbound to /mirror/reply per canon_mmm_mirror_full_spec_2026-05-11 */
+    /* ── OUTBOUND. Threads from the merged inbox reply through omni /api/reply,
+       which routes each item to ITS OWN origin channel: email→SMTP via
+       omni-email.mjs, chat→Matrix via the encrypted sidecar. That is the leg
+       that makes Beeper and Spark unnecessary, so it must never fail quietly.
+
+       The old code posted every reply to xen.xlrd.org/mirror/reply and swallowed
+       the result with `.catch(() => {})` — so a reply that never left the
+       building looked identical to one that sent. Now: omni items go to
+       /api/reply with the {roomId, text} shape it actually expects, the response
+       is CHECKED (it answers 200 ok:true / 502 on failure), and a failure marks
+       the bubble so qi can see it did not send. Non-omni items keep the legacy
+       mirror route. */
+    const isOmni = !!ev._omniKey;
+    const markFailed = (why) => {
+      setEvents((prev) => prev.map((x) =>
+        x.id === reply.id ? { ...x, sendFailed: true, sendError: String(why || "send failed") } : x));
+    };
     try {
-      fetch(REPLY_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          source: ev.src,
-          chatID: ev.chatID || "",
-          recipient: ev.sender,
-          body: text,
-          ts: Date.now() / 1000
+      if (isOmni) {
+        fetch(OMNI_REPLY, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ roomId: ev.chatID || "", text: text }),
         })
-      }).catch(() => {});
-    } catch (e) {}
+          .then(async (r) => {
+            let j = null;
+            try { j = await r.json(); } catch (_) {}
+            if (!r.ok || !j || j.ok !== true) markFailed((j && j.error) || ("HTTP " + r.status));
+          })
+          .catch((e) => markFailed(e && e.message));
+      } else {
+        fetch(REPLY_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            source: ev.src,
+            chatID: ev.chatID || "",
+            recipient: ev.sender,
+            body: text,
+            ts: Date.now() / 1000
+          })
+        }).catch((e) => markFailed(e && e.message));
+      }
+    } catch (e) { markFailed(e && e.message); }
     setTimeout(() => {
       setEvents((prev) => prev.map((x) => x.id === reply.id ? { ...x, fresh: false } : x));
     }, 900);
