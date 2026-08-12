@@ -3969,6 +3969,12 @@ html, body { overscroll-behavior-y: none; }
   flex:1;min-width:0;min-height:0;
   display:flex;flex-direction:column;
   overflow:hidden;
+  /* MEASURED: without position:relative, vvsvei's .composer — which is
+     position:absolute in its own sheet — resolved against .xos-vei-wrap instead
+     of the scope root and landed off-panel, so the panel showed a header and
+     nothing else. #xos-vei IS vvsvei's viewport here, so it must be the
+     containing block for everything vvsvei positions absolutely. */
+  position:relative;
   /* vvsvei paints its own ground; without this the panel shows OS black through
      any gap its layout leaves. */
   background:#000;
