@@ -1298,6 +1298,29 @@ function VvsveiPane() {
         styleEl.textContent = [...doc.querySelectorAll("style")]
           .map((s) => scopeCss(s.textContent || "")).join("\n") + SCOPE_FIX;
 
+        // ── 1b. FONTS ARRIVE VIA <link>, NOT <style> ─────────────────────────
+        // qi 2026-08-12 18:25: "the bubbles aren't the same, this looks like a
+        // knock off, like a cheap imitation of it".
+        // MEASURED: hoisting <style> above was not enough. Standalone vvsvei
+        // pulls Inter + JetBrains Mono from Google, and .bubble-txt computes to
+        // Inter 15px/500. Copying only <style> gave the panel every RULE but not
+        // the FACE, so the bubbles kept their exact layout and lost their
+        // typeface — the precise signature of "cheap imitation".
+        // Font links are @font-face only: they cannot leak layout into XOS, so
+        // they are safe to hoist unscoped. Deduped by href, and restricted to
+        // font hosts so this never accidentally re-loads a page stylesheet
+        // (which WOULD leak global layout).
+        [...doc.querySelectorAll('link[rel="stylesheet"], link[rel=stylesheet]')]
+          .filter((l) => /fonts\.googleapis\.com|fonts\.gstatic\.com/.test(l.href))
+          .forEach((l) => {
+            if (document.querySelector('link[href="' + l.href + '"]')) return;
+            const n = document.createElement("link");
+            n.rel = "stylesheet";
+            n.href = l.href;
+            n.dataset.xosVeiFont = "1";
+            document.head.appendChild(n);
+          });
+
         // markup (scripts removed here; re-added executable below)
         const scripts = [...doc.querySelectorAll("script")];
         scripts.forEach((s) => s.remove());

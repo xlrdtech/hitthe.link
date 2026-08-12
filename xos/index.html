@@ -21,7 +21,17 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&display=swap" rel="stylesheet" />
+  <!-- Inter added 2026-08-12 18:27. qi: "the bubbles aren't the same, this looks
+       like a knock off, like a cheap imitation of it" (VVSVEI inside XOS).
+       MEASURED ROOT CAUSE: VvsveiPane hoists the fetched page's <style> tags but
+       NEVER its <link rel=stylesheet>, and standalone VVSVEI loads Inter from
+       Google. So .bubble-txt (Inter 15px/500) fell back to system inside XOS —
+       identical layout, wrong typeface, which is exactly what "cheap imitation"
+       looks like. Also PRE-EXISTING: styles.css asks for 'Inter' at 1583, 1608,
+       1648, 1764 and 2087 and this file never requested it, so those five have
+       been silently falling back all along. One line fixes both.
+       RULE: hoisting <style> is not enough — a font arrives via <link>. -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="styles.css" />
 </head>
