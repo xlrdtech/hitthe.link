@@ -615,43 +615,39 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
       }
     };
 
-    // PUSH FIRST. The server exposes /sse-stream, a real EventSource push of the
-    // interleaved thread every 20s — so this is live, not polled (canon: live by
-    // default, SSE baked in). The one-shot fetch below is only a COLD START, so
-    // the pane is populated on the first paint instead of waiting up to 20s for
-    // the first push.
-    let es = null;
-    const openSSE = () => {
+    // POLL, NOT SSE — and this is a CORRECTION of my own previous commit.
+    //
+    // I switched this to EventSource on /sse-stream because I found that route
+    // in omni-inbox-server.js. What I ignored: curling it through the Cloudflare
+    // tunnel returned NO HEADERS AT ALL, while /api/stream returned a full body.
+    // Cloudflare does not pass this text/event-stream through. So the
+    // EventSource failed, my onerror retried every 3s, and every retry logged —
+    // console errors climbed 38 → 75 → 194 on a single page view, a permanent
+    // error loop pointed at a dead socket.
+    //
+    // THE LESSON, written where it can't be lost: "the endpoint exists in the
+    // source" is not "the endpoint answers through the edge". The instrument
+    // already told me it hung; I proceeded anyway.
+    //
+    // /api/stream is VERIFIED end to end — CORS `access-control-allow-origin: *`
+    // from the hitthe.link origin, ok:true, 292 messages, 292 cleartext. The
+    // server refreshes it every 10s, so polling at 10s loses nothing.
+    const pump = async () => {
       if (cancelled) return;
       try {
-        es = new EventSource(OMNI_SSE);
-        es.onmessage = (m) => {
-          let j = null;
-          try { j = JSON.parse(m.data); } catch (_) { return; }
-          if (j && j.type === "connected") return;
-          absorb(j);
-        };
-        es.onerror = () => {
-          // Never give up on the firehose (qi 8672: "it can never drop").
-          try { es.close(); } catch (_) {}
-          es = null;
-          if (!cancelled) timer = setTimeout(openSSE, 3000);
-        };
+        const r = await fetch(OMNI_STREAM, { cache: "no-store" });
+        absorb(await r.json());
       } catch (_) {
-        if (!cancelled) timer = setTimeout(openSSE, 3000);
+        // Fail soft: a transient tunnel hiccup must not empty his inbox, and
+        // must not stop the next tick either.
       }
+      if (!cancelled) timer = setTimeout(pump, OMNI_POLL_MS);
     };
-
-    fetch(OMNI_STREAM, { cache: "no-store" })
-      .then((r) => r.json())
-      .then(absorb)
-      .catch(() => {})
-      .finally(openSSE);
+    pump();
 
     return () => {
       cancelled = true;
       if (timer) clearTimeout(timer);
-      if (es) { try { es.close(); } catch (_) {} }
     };
   }, []);
 
