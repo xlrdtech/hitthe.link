@@ -1263,7 +1263,24 @@ function VvsveiPane() {
 
         // ── 1. scope + hoist styles
         const scope = "#xos-vei";
-        const scopeCss = (css) => css.replace(
+        // VIEWPORT HEIGHT UNITS MUST DIE FIRST — the panel is the viewport here.
+        //
+        // MEASURED on live /xos/ 2026-08-12 19:29 at 390x844: #xos-vei was
+        // 26 -> 701 with overflow:hidden, but `#xos-vei .wrap` was 844px tall and
+        // .composer — anchored to THAT box's bottom — rendered at 786 -> 870, i.e.
+        // 85px BELOW the host's visible bottom, clipped out of existence. That is
+        // the empty voice dock: the bar was not hidden, it was off-panel.
+        //
+        // Rewriting html/body/:root to the scope (below) does NOT fix it, because
+        // vvsvei/index.html:88-90 puts `height:100dvh` on `.wrap` — a plain class,
+        // neither html nor body, so the selector rewrite never touches it. The
+        // previous pass diagnosed "vvsvei sizes itself off the VIEWPORT" correctly
+        // and then only pinned #xos-vei itself, leaving the inner box viewport-sized.
+        // Chasing it selector-by-selector is how it came back; any 100dvh anywhere
+        // in vvsvei's CSS reintroduces it. So the UNIT is converted, not the rule:
+        // inside this panel, 100% of the panel IS full height.
+        const deVh = (css) => css.replace(/\b100(?:d|s|l)?vh\b/gi, "100%");
+        const scopeCss = (css) => deVh(css).replace(
           /(^|\})\s*([^@{}][^{}]*)\{/g,
           (m, brace, sel) => brace + " " + sel.split(",").map((s) => {
             s = s.trim();
