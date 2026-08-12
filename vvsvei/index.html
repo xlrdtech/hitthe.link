@@ -124,8 +124,21 @@ header { padding:8px 0 22px; display:flex; align-items:flex-start; justify-conte
 #transcript {
   flex:1; overflow-y:auto;
   display:flex; flex-direction:column; gap:10px;
-  padding:4px 4px 100px;  /* bottom pad clears the waveform footer */
-  scroll-behavior:smooth;
+  /* --composer-h is the measured OVERLAP of the absolutely-positioned .composer
+     over this scroller, published by _veiComposerClearance — search that name;
+     the full rationale lives next to the code that does the work so the two
+     cannot drift apart, which is the exact failure this replaced. 100px is the
+     pre-JS fallback ONLY. The + 16px is the visible gap between the last bubble
+     and the top of the bar. */
+  padding:4px 4px calc(var(--composer-h, 100px) + 16px);
+  /* NO scroll-behavior:smooth here. Every append does scrollTop = scrollHeight,
+     and smooth turns that assignment into a ~300ms ANIMATION — so the newest
+     message is visibly sitting under the composer for the whole animation, and on
+     a fast feed the next message restarts it before it ever clears. That is the
+     "margin under the chat blocking the bottom" symptom: the padding math was
+     right the whole time (measured 2026-08-12: 84px overlap, 100px pad, 16px gap),
+     the SCROLL was late. Appends must land instantly. The timeline rail still
+     animates its jumps — it asks for smooth per-call via scrollTo(). */
 }
 /* Native bar is GONE — the timeline rail on the right IS the scrollbar now. */
 #transcript::-webkit-scrollbar { width:0; height:0; }
@@ -1037,6 +1050,55 @@ function _tlMark() {
     }
     _tlSync();
   } catch (_) { /* a dead rail must not take the page with it */ }
+})();
+
+(function _veiComposerClearance() {
+  // Publishes --composer-h, which #transcript's padding-bottom is built on.
+  //
+  // WHY A MEASUREMENT AND NOT A NUMBER: .composer is position:absolute, so it is
+  // OUT OF FLOW — #transcript cannot see it and scrolls straight underneath. The
+  // padding was a hardcoded 100px. On 2026-08-10 23:21 .transcript-toolbar was
+  // moved INTO .composer, the bar got taller, the 100px was never raised, and the
+  // last message sat under the bar (qi 2026-08-12 18:25: "theres a margin under
+  // the chat blocking the bottom of the face"). Nothing errored. It cannot error:
+  // a constant that must track another element's height drifts silently forever.
+  // .field textarea grows to max-height:120px, so the bar is not even a FIXED
+  // height at runtime — no constant can be right.
+  //
+  // WHAT IS MEASURED: the OVERLAP — how far the composer's top edge rises above
+  // the transcript's bottom edge. Not the composer's own height: it floats
+  // env(safe-area-inset-bottom, 16px) off the bottom, and the two elements have
+  // different parents (.composer in .wrap, #transcript in #tlwrap), so height
+  // alone would be wrong on both counts. The overlap is correct no matter how the
+  // DOM is nested or what the safe-area inset resolves to on the device.
+  // The CSS adds its own + 16px on top of this, which is the visible gap between
+  // the last bubble and the top of the bar.
+  try {
+    const composer = document.querySelector('.composer');
+    if (!composer || !transcript) return;
+    let last = -1;
+    function publish() {
+      const t = transcript.getBoundingClientRect();
+      const c = composer.getBoundingClientRect();
+      const overlap = Math.max(0, Math.round(t.bottom - c.top));
+      if (overlap === last) return;   // never touch style on a no-op
+      last = overlap;
+      transcript.style.setProperty('--composer-h', overlap + 'px');
+    }
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(publish);
+      ro.observe(composer);                  // pills wrap, textarea grows, toolbar moves
+      ro.observe(transcript);                // rotation + on-screen keyboard resize the scroller
+    } else {
+      addEventListener('resize', publish);
+    }
+    publish();
+    // Webfonts land AFTER first paint and change the pill row's height by a few
+    // px, so the first measurement is taken before the bar has its final size.
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(publish).catch(() => {});
+    }
+  } catch (_) { /* clearance is cosmetic — it must never take the page with it */ }
 })();
 
 function appendInterim(text) {
