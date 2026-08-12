@@ -130,6 +130,55 @@ header { padding:8px 0 22px; display:flex; align-items:flex-start; justify-conte
 #transcript::-webkit-scrollbar { width:5px; }
 #transcript::-webkit-scrollbar-thumb { background:var(--line-strong); border-radius:3px; }
 
+/* ─── TIMELINE SCROLL (qi 2026-08-12: "I would like the vvsvei to be a timeline
+   scroll instead of the normal kind") ────────────────────────────────────────
+   A continuous vertical spine down the left with every entry hung off it as a
+   node, and hour markers where the hour turns. Replaces the chat-bubble stack
+   read — same entries, read as a day rather than a conversation.
+
+   ⚠️ THE RAIL IS A BACKGROUND, NOT A ::before. #transcript is
+   `display:flex; flex-direction:column`, so a pseudo-element on it becomes a
+   FLEX ITEM and shoves every entry down. Painting it as a background-image is
+   the only way to draw a full-height line in a flex column without joining the
+   layout.
+   ⚠️ `background-attachment: local` is load-bearing — the default (scroll)
+   pins the rail to the viewport so it stays put while the entries slide past
+   it, which looks broken the moment you scroll. `local` makes it travel with
+   the content. */
+#transcript {
+  padding-left:46px;
+  background-image:linear-gradient(to bottom, var(--line-strong), var(--line-strong));
+  background-size:1px calc(100% - 12px);
+  background-position:22px 6px;
+  background-repeat:no-repeat;
+  background-attachment:local;
+}
+/* Every direct child becomes a node on the spine. Scoped to `>` so bubble
+   internals (action rows, feedback buttons) never sprout their own dots. */
+#transcript > * { position:relative; }
+#transcript > *::before {
+  content:''; position:absolute; left:-28px; top:9px;
+  width:7px; height:7px; border-radius:50%;
+  background:var(--bg); border:1.5px solid var(--line-strong);
+  box-sizing:border-box;
+}
+/* The newest node is the live one — it reads as "you are here" on the day. */
+#transcript > *:last-child::before {
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(0,255,136,.14);
+}
+/* Hour turn. Sits ON the spine rather than beside it, so the eye reads the
+   day as segmented instead of continuous. */
+.tl-hour {
+  font-family:var(--mono); font-size:9px; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--fg-dim); opacity:.5;
+  margin:14px 0 2px; padding-left:2px;
+}
+.tl-hour::before {
+  width:11px !important; height:11px !important; left:-30px !important; top:1px !important;
+  background:var(--bg) !important; border-color:var(--line-strong) !important;
+}
+
 /* Glass bubbles — heavy backdrop-blur + thin gloss highlight + translucent fill.
    qi-spec 2026-05-23: "super hyper realistic glass" */
 /* qi 2026-05-25 timestamp canon — h:mm AM/PM tag on every bubble. */
@@ -541,8 +590,15 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
      "all the pills are suppose above the bar from in the interface". Same ids and
      class, so every existing listener still binds; only the position changed. -->
 
-<!-- Threads picker overlay (toggled by Threads button) -->
-<div id="thread-picker" style="display:none; position:absolute; top:60px; left:20px; right:20px; max-height:50vh; overflow-y:auto; background:rgba(20,40,28,.94); border:1px solid var(--line-strong); border-radius:var(--r-card); backdrop-filter:blur(18px); padding:10px; z-index:10; box-shadow:0 12px 36px rgba(0,0,0,.5);"></div>
+<!-- Threads picker MOVED INTO #pill-row (qi 2026-08-12: "i requested no modals on
+     vvsvei. threads stills opens a modal").
+     It used to live here as an absolutely-positioned overlay — top:60px, z-index:10,
+     backdrop-filter, drop shadow — which is a modal in everything but name: a layer
+     floating on top of the interface that has to be dismissed.
+     The rule was already written twice in this file ("there shall not be any modals on
+     the vvsvei interface") and the voice picker already implements the alternative:
+     a horizontally-slidable pill row where every option is on screen, one tap away,
+     with no layer over anything. Threads now uses that same row. -->
 
 <!-- Events panel toggle — HIDDEN 2026-06-22 (qi: "I still see the events button at the top right corner not in line").
      Step/OTLP events now render INLINE in the conversation transcript (Omni, C29), so the corner toggle
@@ -597,6 +653,12 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
       <button id="tb-export" title="Export current thread as .txt">Export</button>
       <button id="tb-share" title="Share current thread">Share</button>
     </div>
+    <!-- Thread pills land HERE, inline in the same scrolling row (qi 2026-08-12: no
+         modals). Tapping Threads expands them in-row; they slide with everything else
+         instead of covering it. Kept as its own div for the same reason #voice-pills is
+         separate — its build does textContent='' to redraw, which would wipe the toolbar
+         buttons if they shared a container. -->
+    <div id="thread-picker" style="display:none;"></div>
   </div>
   <!-- Single unified pill: paperclip · field (waveform behind, textarea overlay) · send. -->
   <div class="composer-bar">
@@ -812,10 +874,40 @@ function appendFinal(text, postedFlag) {
   div.className = 'final';
   div.innerHTML = '<span class="bubble-ts">' + _nowStamp() + '</span><span class="bubble-txt">' +
                   escapeHtml(text) + '</span>' + (postedFlag ? ' <span class="posted">✓ posted</span>' : '');
+  _tlHourMark();
   transcript.appendChild(div);
   transcript.scrollTop = transcript.scrollHeight;
   if (interimEl) { interimEl.remove(); interimEl = null; }
   return div;
+}
+
+// ─── TIMELINE HOUR MARKER (qi 2026-08-12: "timeline scroll instead of the
+// normal kind") ──────────────────────────────────────────────────────────────
+// Drops one marker into the spine when the hour turns, so scrolling reads as
+// moving through a DAY rather than through a message list.
+//
+// Deliberately dumb and defensive: it is called from inside the append path,
+// and an exception here would take the actual transcript entry down with it —
+// the entry matters, the decoration does not. Hence the try/catch and the
+// early return. A marker that fails to draw is invisible; an append that
+// throws is qi losing his feed.
+let _tlLastHour = null;
+function _tlHourMark() {
+  try {
+    const now = new Date();
+    const h = now.getHours();
+    if (h === _tlLastHour) return;      // same hour, nothing to mark
+    const first = (_tlLastHour === null);
+    _tlLastHour = h;
+    // Skip the very first call: a marker as the opening element would label an
+    // hour that has no entries above it yet, which reads as a stray header.
+    if (first && transcript.children.length === 0) return;
+    const m = document.createElement('div');
+    m.className = 'tl-hour';
+    m.textContent = now.toLocaleTimeString([], { hour: 'numeric', hour12: true })
+                       .replace(/:\d+/, '');
+    transcript.appendChild(m);
+  } catch (_) { /* decoration only — never break the append */ }
 }
 
 function appendInterim(text) {
@@ -1447,12 +1539,53 @@ function attachBubbleActions(bubbleEl, text) {
       bubbleEl.appendChild(fb);
     }
   }
-  if (navigator.share) {
+  // SHARE — rebuilt 2026-08-12 after qi: "the share button on the bubbles aren't
+  // working ... on the inbound bubbles".
+  //
+  // THREE DEFECTS, and the third is the one that made it un-diagnosable:
+  //
+  //  1. EMPTY PAYLOAD ON INBOUND. `text` is the closure arg, and on inbound bubbles it
+  //     can arrive empty. `navigator.share({text:''})` rejects with a TypeError —
+  //     the spec requires at least one non-empty field. Now we fall back to reading the
+  //     bubble's own rendered text, so there is always something to share.
+  //  2. SHARE IS NOT UNIVERSALLY AVAILABLE. `if (navigator.share)` meant the button
+  //     simply never rendered where it is unsupported (desktop Chrome, most non-secure
+  //     contexts) — qi sees a missing button and reads it as broken. The button now
+  //     always renders and falls back to the clipboard.
+  //  3. `.catch(() => {})` SWALLOWED EVERYTHING. Every failure looked exactly like a
+  //     dead button: no error, no feedback, nothing in the log. A silent catch on a
+  //     user-facing action is not error handling, it is hiding the bug. Errors now
+  //     surface — except AbortError, which just means qi closed the share sheet and is
+  //     not a failure at all.
+  {
     const shareBtn = document.createElement('button');
     shareBtn.textContent = 'SHARE';
-    shareBtn.onclick = (e) => {
+    shareBtn.onclick = async (e) => {
       e.stopPropagation();
-      navigator.share({ text }).catch(() => {});
+      // Fall back through: passed text -> the bubble's own text -> give up loudly.
+      let payload = (typeof text === 'string' && text.trim()) ? text : '';
+      if (!payload && bubbleEl) {
+        const t = bubbleEl.querySelector('.bubble-txt');
+        payload = ((t ? t.textContent : bubbleEl.textContent) || '').trim();
+      }
+      if (!payload) { appendError('share: nothing to share (bubble had no text)'); return; }
+      try {
+        if (navigator.share) {
+          await navigator.share({ text: payload });
+          return;
+        }
+        throw new Error('navigator.share unavailable');
+      } catch (err) {
+        // qi closing the sheet is NOT an error — never nag him for choosing not to share.
+        if (err && err.name === 'AbortError') return;
+        try {
+          await navigator.clipboard.writeText(payload);
+          shareBtn.textContent = 'COPIED';
+          setTimeout(() => { shareBtn.textContent = 'SHARE'; }, 1400);
+        } catch (err2) {
+          appendError(`share failed: ${err && err.name ? err.name : err} · clipboard also failed: ${err2 && err2.name ? err2.name : err2}`);
+        }
+      }
     };
     row.appendChild(shareBtn);
   }
@@ -1622,9 +1755,25 @@ document.getElementById('tb-export').addEventListener('click', () => {
 document.getElementById('tb-share').addEventListener('click', async () => {
   const text = collectTranscriptText();
   if (!text) return;
+  // SAME DEFECT AS THE BUBBLE SHARE, FIXED 2026-08-12: the old shape was
+  //   if (navigator.share) { try { await navigator.share(...) } catch (_) {} }
+  //   else { clipboard fallback }
+  // so the fallback only ran when Share was ABSENT — never when it was PRESENT and
+  // REJECTED. A rejection (empty payload, permission, no transient activation) hit the
+  // empty catch and the button did nothing, with no error and no copy. Now a rejection
+  // falls THROUGH to the same clipboard path, and only a genuine AbortError (qi closed
+  // the sheet) exits quietly.
+  let _shared = false;
   if (navigator.share) {
-    try { await navigator.share({ title: 'VEI transcript', text }); } catch (_) {}
-  } else {
+    try {
+      await navigator.share({ title: 'VEI transcript', text });
+      _shared = true;
+    } catch (err) {
+      if (err && err.name === 'AbortError') return;   // qi chose not to share
+      _shared = false;                                 // fall through to clipboard
+    }
+  }
+  if (!_shared) {
     navigator.clipboard?.writeText(text);
     // qi 2026-08-10: "there shall not be any modals on the vvsvei interface".
     // alert() is a BLOCKING modal — it also freezes the page, which on a live voice
@@ -1934,13 +2083,19 @@ document.getElementById('tb-threads').addEventListener('click', () => {
   if (threadPicker.style.display !== 'none') { threadPicker.style.display = 'none'; return; }
   const list = loadThreads().slice().sort((a, b) => (b.lastTs || 0) - (a.lastTs || 0));
   threadPicker.innerHTML = '';
-  const header = document.createElement('div');
-  header.style.cssText = 'font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--fg-mute);text-transform:uppercase;padding:4px 8px 10px;';
-  header.textContent = `${list.length} thread${list.length === 1 ? '' : 's'} · tap to load`;
+  // IN-ROW PILLS, NOT A STACKED LIST (qi 2026-08-12: no modals on vvsvei).
+  // The old markup was full-width block buttons stacked vertically — which only works
+  // inside a floating panel. In a horizontal row each thread has to be a pill that sits
+  // on one line and slides, exactly like the voice pills beside it.
+  threadPicker.style.cssText = 'display:flex; gap:6px; flex:0 0 auto; white-space:nowrap; align-items:center;';
+  const header = document.createElement('span');
+  header.style.cssText = 'font-family:var(--mono);font-size:9px;letter-spacing:.16em;color:var(--fg-mute);text-transform:uppercase;opacity:.6;padding:0 4px;flex:0 0 auto;';
+  header.textContent = `${list.length}`;
   threadPicker.appendChild(header);
   for (const t of list) {
     const row = document.createElement('button');
-    row.style.cssText = 'display:block;width:100%;text-align:left;padding:10px 12px;margin-bottom:4px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:10px;color:var(--fg);font-family:var(--sans);font-size:13.5px;cursor:pointer;';
+    // max-width + ellipsis: a long thread title must not stretch the row off-screen.
+    row.style.cssText = 'flex:0 0 auto;display:inline-flex;align-items:center;max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;padding:7px 12px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:999px;color:var(--fg);font-family:var(--sans);font-size:12.5px;cursor:pointer;';
     if (t.id === _activeThreadId) {
       row.style.borderColor = 'var(--accent)';
       row.style.background = 'rgba(0,255,136,.10)';
@@ -1957,7 +2112,10 @@ document.getElementById('tb-threads').addEventListener('click', () => {
     };
     threadPicker.appendChild(row);
   }
-  threadPicker.style.display = 'block';
+  // 'flex', NOT 'block' — this line runs AFTER the cssText above sets display:flex, so
+  // 'block' here would silently win and flatten the pills back into a vertical stack.
+  // That stack is the shape that only made sense inside the modal we just removed.
+  threadPicker.style.display = 'flex';
 });
 // qi 2026-05-25 08:25 PT — URLs in bubble text were not clickable
 // because we wrote textContent directly. linkifyTo() returns an array of
