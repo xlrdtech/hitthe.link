@@ -579,8 +579,16 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
         setSseState("live");
         setEvents((prev) => {
           const seen = new Map(prev.map((p) => [p._omniKey || p.id, p]));
-          const rows = j.messages.map((m) => {
-            const key = (m.roomId || "") + "|" + (m.ts || 0) + "|" + (m.text || "").slice(0, 40);
+          const rows = j.messages.map((m, i) => {
+            // The POSITION is part of the identity, and it has to be.
+            // MEASURED: roomId|ts|text[0..40] collided 74 times on one load —
+            // repeated messages in the same room share a timestamp AND an
+            // opening ("Forwarded message from Luckie Links\n\n> "), so React saw
+            // duplicate keys and its own warning says children "may be
+            // duplicated and/or omitted". Omitted means qi silently loses
+            // messages from his inbox, which is worse than any styling bug.
+            // Index is stable because the server returns a sorted snapshot.
+            const key = (m.roomId || "") + "|" + (m.ts || 0) + "|" + i;
             const old = seen.get(key);
             if (old) return old;                     // keep read/fresh state
             return {
@@ -1283,12 +1291,32 @@ function VvsveiPane() {
         host.innerHTML = doc.body ? doc.body.innerHTML : "";
         setState("ready");
 
-        // ── 3. re-execute scripts in document order
-        for (const old of scripts) {
-          if (old.src) continue;               // vvsvei is self-contained; externals are not ours to pull
+        // ── 3. re-execute scripts — ALL OF THEM INSIDE ONE SHARED IIFE.
+        //
+        // MEASURED FAILURE that forced this: injecting them as-is threw
+        //   SyntaxError: Identifier 'REPLY_URL' has already been declared
+        // because vvsvei declares top-level `const REPLY_URL` and so does this
+        // file. Two top-level consts of the same name in ONE document is a
+        // redeclaration, and it killed vvsvei's ENTIRE script block — the panel
+        // mounted as markup with zero behaviour. That is the whole hazard of an
+        // in-document mount: shared DOM means shared global scope.
+        //
+        // ONE IIFE, not one per block: vvsvei's blocks reference each other's
+        // top-level names, so isolating them individually would break those
+        // references. Concatenated, they still share scope with EACH OTHER while
+        // being invisible to XOS's globals.
+        //
+        // Anything vvsvei genuinely needs global (inline on* handlers in its
+        // markup) must be hung on window explicitly — it uses addEventListener
+        // throughout, so nothing needs that today, but a future inline handler
+        // would fail loudly here rather than silently.
+        const code = scripts
+          .filter((s) => !s.src)               // self-contained; externals are not ours to pull
+          .map((s) => s.textContent || "")
+          .join("\n;\n");
+        if (code.trim()) {
           const s = document.createElement("script");
-          if (old.type) s.type = old.type;
-          s.textContent = old.textContent;
+          s.textContent = "(function(){\n" + code + "\n})();";
           host.appendChild(s);
         }
       } catch (e) {
