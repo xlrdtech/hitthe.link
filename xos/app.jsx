@@ -1282,8 +1282,25 @@ function VvsveiPane() {
           document.head.appendChild(s);
           return s;
         })();
+        // The override MUST come last so it wins on equal specificity.
+        //
+        // MEASURED: #xos-vei rendered y=27 → bottom=901 inside an 874px
+        // viewport — 27px below the fold, with .composer at 817→901, i.e. off
+        // screen behind the dock. That is the "header and then nothing" panel.
+        //
+        // Cause is this very scoping step: vvsvei sizes itself off the VIEWPORT
+        // (html/body height:100vh), and rewriting those selectors to #xos-vei
+        // turned "fill the viewport" into "be 874px tall" — which ignores the
+        // panel it now lives in. Here the panel, not the viewport, is the
+        // viewport. So height/max-height are pinned to the container and the
+        // 100vh inheritance is severed.
+        const SCOPE_FIX =
+          "\n/* xos mount override — panel is the viewport here */\n" +
+          scope + "{height:100%!important;max-height:100%!important;" +
+          "min-height:0!important;width:100%!important;max-width:100%!important;" +
+          "position:relative!important;overflow:hidden!important;}\n";
         styleEl.textContent = [...doc.querySelectorAll("style")]
-          .map((s) => scopeCss(s.textContent || "")).join("\n");
+          .map((s) => scopeCss(s.textContent || "")).join("\n") + SCOPE_FIX;
 
         // markup (scripts removed here; re-added executable below)
         const scripts = [...doc.querySelectorAll("script")];
