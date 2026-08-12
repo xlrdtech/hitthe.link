@@ -2257,17 +2257,55 @@ function App() {
                 onClick={() => setDrawerOpen(true)}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setDrawerOpen(true); }}
                 onTouchStart={(e) => {
+                  // THE GLASS OWNS THE GESTURE (qi 2026-08-12 18:26: "the swipe
+                  // glass is literally called the swipe glass because it's
+                  // supposed to do the swiping").
+                  //
+                  // The 2026-05-17 fix made the dock pointer-events:none so
+                  // horizontal drags fell through to .panes. That worked, but it
+                  // meant the glass itself never swiped — the only surface that
+                  // did was the banner above the panes, which is the wrong one.
+                  //
+                  // Now the hit layer covers the whole glass, so nothing falls
+                  // through any more and this handler must MOVE THE PANES ITSELF.
+                  // Axis is classified on the first move that clears the slop
+                  // radius, then locked: a gesture that starts horizontal stays a
+                  // pane swipe even if the finger drifts up, which is what makes
+                  // it feel like the surface rather than a toggle.
                   const t0 = e.touches[0];
                   const startX = t0.clientX;
                   const startY = t0.clientY;
-                  const handler = (ev) => {
-                    const t1 = ev.changedTouches[0];
-                    const dx = Math.abs(t1.clientX - startX);
-                    const dy = startY - t1.clientY;
-                    if (dy > 24 && dy > dx) setDrawerOpen(true);
-                    document.removeEventListener("touchend", handler);
+                  const panes = document.querySelector(".panes");
+                  const startScroll = panes ? panes.scrollLeft : 0;
+                  let axis = null;             // null | "x" | "y"
+
+                  const onMove = (ev) => {
+                    const t1 = ev.touches[0];
+                    if (!t1) return;
+                    const dx = t1.clientX - startX;
+                    const dy = t1.clientY - startY;
+                    if (!axis) {
+                      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;  // slop
+                      axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+                    }
+                    if (axis === "x" && panes) {
+                      // Track the finger 1:1. scroll-snap on .panes settles it to
+                      // the nearest pane when the finger lifts.
+                      panes.scrollLeft = startScroll - dx;
+                    }
                   };
-                  document.addEventListener("touchend", handler, { once: true });
+
+                  const onEnd = (ev) => {
+                    document.removeEventListener("touchmove", onMove);
+                    const t1 = ev.changedTouches[0];
+                    const dx = t1 ? Math.abs(t1.clientX - startX) : 0;
+                    const dy = t1 ? startY - t1.clientY : 0;
+                    // Vertical-up still opens the drawer — unchanged behaviour.
+                    if (axis !== "x" && dy > 24 && dy > dx) setDrawerOpen(true);
+                  };
+
+                  document.addEventListener("touchmove", onMove, { passive: true });
+                  document.addEventListener("touchend", onEnd, { once: true });
                 }}
               />
             </div>

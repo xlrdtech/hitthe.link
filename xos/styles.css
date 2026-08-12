@@ -3715,16 +3715,35 @@ html, body { overscroll-behavior-y: none; }
 .os.os-fullscreen .dock.dock-swipe .dock-handle,
 .os.os-fullscreen .dock.dock-swipe .dock-sheen,
 .os.os-fullscreen .dock.dock-swipe .dock-edge-light { pointer-events: none; }
+/* THE GLASS IS THE SWIPE SURFACE (qi 2026-08-12 18:26: "if I swipe from the
+   banner above each of the three panels that lets me swipe but that's the wrong
+   surface — the swipe glass is literally called the swipe glass because it's
+   supposed to do the swiping").
+
+   WAS: clamp(160px,40vw,240px) x 44px pinned to top-center. The glass is
+   full-width and ~84px tall, so MOST OF IT WAS DEAD TO TOUCH, and the strip
+   that did respond handled vertical only (|dy|>|dx| → drawer). Horizontal was
+   deliberately ignored, which is why the only thing that swiped panes was the
+   banner above them.
+
+   NOT a revert of the 2026-05-17 fix. That fix existed because the dock was
+   SWALLOWING horizontal pane swipes, and simply turning pointer-events back on
+   would re-break it. Instead the hit layer now covers the whole glass and the
+   JS handler FORWARDS horizontal drags to the .panes scroller itself — the
+   glass owns the gesture and the panes still move. Vertical-up still opens the
+   drawer, so nothing he already relies on changes. */
 .os.os-fullscreen .dock.dock-swipe .dock-hit {
   position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: clamp(160px, 40vw, 240px);
-  height: 44px;
+  inset: 0;
+  width: auto;
+  height: auto;
+  transform: none;
   pointer-events: auto;
-  cursor: pointer;
+  cursor: grab;
   background: transparent;
+  /* The browser must not claim the gesture before the handler classifies its
+     axis — without this, the OS scroll steals horizontal drags on touch. */
+  touch-action: none;
   -webkit-tap-highlight-color: transparent;
 }
 .os.os-fullscreen .dock.dock-swipe .dock-hit:focus-visible {
