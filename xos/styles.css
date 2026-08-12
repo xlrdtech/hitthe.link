@@ -3942,6 +3942,25 @@ html, body { overscroll-behavior-y: none; }
 /* === XOS Browser surface (LMHJ render) — additive overlay, summoned above voice home === */
 #xos-browser-root{position:fixed;inset:0;pointer-events:none;z-index:60}
 .xos-browser-overlay{position:absolute;left:0;right:0;top:0;bottom:calc(var(--xos-glass,84px) + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;background:#000;border-radius:0 0 24px 24px;overflow:hidden;pointer-events:auto;box-shadow:0 8px 40px rgba(0,0,0,.6)}
+
+/* ── VVSVEI AS THE CENTER PANEL (qi 2026-08-12 16:55) ────────────────────────
+   Fills the middle pane edge to edge. `position:relative` on .webview-empty is
+   declared here rather than assumed: the frame is absolutely positioned, and if
+   the pane is static the frame escapes to the nearest positioned ancestor and
+   covers the whole OS shell including the dock.
+   Transparent background lets the voice-pulse orb behind it show through during
+   the first paint, so the panel never flashes an empty black rectangle. */
+.webview-empty{position:relative}
+.xos-vvsvei{
+  position:absolute;inset:0;width:100%;height:100%;
+  border:0;background:transparent;display:block;
+  /* The glass swipe dock owns the bottom of the screen and floats above this
+     pane, so the frame stops short of it — otherwise VVSVEI's own composer
+     lands underneath the dock and cannot be tapped. Same token (and the same
+     84px fallback) as .xos-browser-overlay above, deliberately. */
+  bottom:calc(var(--xos-glass,84px) + env(safe-area-inset-bottom,0px));
+  height:auto;
+}
 .xos-browser-bar{display:flex;align-items:center;gap:8px;min-height:38px;padding:0 12px;padding-top:env(safe-area-inset-top,0px);background:rgba(10,12,10,.9);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);font:500 12px/1 'JetBrains Mono',monospace;color:#9fb3a4}
 .xos-dot{width:8px;height:8px;border-radius:50%}
 .xos-dot.on{background:#2ecc71;box-shadow:0 0 8px #2ecc71}

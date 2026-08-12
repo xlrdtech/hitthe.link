@@ -127,57 +127,84 @@ header { padding:8px 0 22px; display:flex; align-items:flex-start; justify-conte
   padding:4px 4px 100px;  /* bottom pad clears the waveform footer */
   scroll-behavior:smooth;
 }
-#transcript::-webkit-scrollbar { width:5px; }
-#transcript::-webkit-scrollbar-thumb { background:var(--line-strong); border-radius:3px; }
+/* Native bar is GONE — the timeline rail on the right IS the scrollbar now. */
+#transcript::-webkit-scrollbar { width:0; height:0; }
+#transcript { scrollbar-width:none; }
 
-/* ─── TIMELINE SCROLL (qi 2026-08-12: "I would like the vvsvei to be a timeline
-   scroll instead of the normal kind") ────────────────────────────────────────
-   A continuous vertical spine down the left with every entry hung off it as a
-   node, and hour markers where the hour turns. Replaces the chat-bubble stack
-   read — same entries, read as a day rather than a conversation.
+/* ─── THE TIMELINE IS THE SCROLL BAR ON THE RIGHT ────────────────────────────
+   qi 2026-08-12 16:49: "the timeline was supposed the scoll bar on the right".
 
-   ⚠️ THE RAIL IS A BACKGROUND, NOT A ::before. #transcript is
-   `display:flex; flex-direction:column`, so a pseudo-element on it becomes a
-   FLEX ITEM and shoves every entry down. Painting it as a background-image is
-   the only way to draw a full-height line in a flex column without joining the
-   layout.
-   ⚠️ `background-attachment: local` is load-bearing — the default (scroll)
-   pins the rail to the viewport so it stays put while the entries slide past
-   it, which looks broken the moment you scroll. `local` makes it travel with
-   the content. */
-#transcript {
-  padding-left:46px;
-  background-image:linear-gradient(to bottom, var(--line-strong), var(--line-strong));
-  background-size:1px calc(100% - 12px);
-  background-position:22px 6px;
-  background-repeat:no-repeat;
-  background-attachment:local;
+   CORRECTION OF MY FIRST PASS. I built the timeline as a spine down the LEFT
+   with hour labels interleaved into the feed. Wrong axis and wrong element:
+   the timeline is not decoration beside the entries, it REPLACES the
+   scrollbar. Same information, but it lives where your thumb already goes to
+   move through the day.
+
+   Structure: #tlwrap is a flex ROW holding the scroller plus a fixed rail.
+   #transcript keeps its own `flex:1`, so it simply claims the remaining width
+   instead of the remaining height — the wrapper inherits the vertical claim.
+   `min-height:0` on the wrapper is load-bearing: a flex item's default
+   `min-height:auto` refuses to shrink below content, which kills the child's
+   overflow scrolling outright.
+
+   Ticks are positioned from each entry's REAL offsetTop over scrollHeight, not
+   from wall-clock spacing — a 40-minute silence must not open a 40-minute gap
+   in a bar whose height is fixed. The bar maps document space, and the labels
+   tell you which hour you have reached in it. */
+#tlwrap {
+  flex:1; min-height:0; display:flex; align-items:stretch;
 }
-/* Every direct child becomes a node on the spine. Scoped to `>` so bubble
-   internals (action rows, feedback buttons) never sprout their own dots. */
-#transcript > * { position:relative; }
-#transcript > *::before {
-  content:''; position:absolute; left:-28px; top:9px;
-  width:7px; height:7px; border-radius:50%;
-  background:var(--bg); border:1.5px solid var(--line-strong);
-  box-sizing:border-box;
+/* `position:relative` is what makes #transcript the offsetParent, so each
+   entry's offsetTop is measured against the SCROLLER rather than against some
+   ancestor further up. Without it every tick is off by the scroller's own
+   page offset. */
+#transcript { min-width:0; position:relative; }
+
+/* ── DESIGN LANGUAGE PORTED FROM xt/09's STATION RAIL (qi 2026-08-12 16:52:
+   "compare it the scroll bar design of xt/09"). Its grammar, matched here:
+
+     · TICK LENGTH ENCODES STATE, not colour alone — 14px at rest, 22px hovered,
+       30px active. Read the rail at a glance and the current position is the
+       longest line, no legend needed.
+     · LABELS ARE `color:transparent` BY DEFAULT and only resolve on hover or
+       when active. The rail is quiet until you engage it, so it never competes
+       with the transcript.
+     · The active state alone gets the accent plus a glow.
+     · The originals' easings, kept exactly: colour .45s
+       cubic-bezier(.19,1,.22,1), width .55s cubic-bezier(.47,.38,0,1.1).
+
+   Token mapping — xt/09 → this file (its palette is jade-on-black, ours is the
+   VVSVEI green): --jade → --accent, --w-30 → rgba(255,255,255,.30),
+   --w-58 → rgba(255,255,255,.58). Values are inlined for the two whites
+   because this file has no equivalent token to point at, and inventing one
+   would imply a palette entry that nothing else uses. */
+#tl-rail {
+  flex:0 0 34px; position:relative;
+  display:flex; flex-direction:column; justify-content:center;
+  align-items:flex-end; gap:11px;
+  padding-right:4px;
+  user-select:none; -webkit-tap-highlight-color:transparent;
 }
-/* The newest node is the live one — it reads as "you are here" on the day. */
-#transcript > *:last-child::before {
-  border-color:var(--accent);
-  box-shadow:0 0 0 3px rgba(0,255,136,.14);
+.tl-st {
+  position:relative; display:flex; align-items:center; gap:9px;
+  background:none; border:0; padding:3px 0; cursor:pointer;
+  font-family:var(--mono); font-size:8.5px; letter-spacing:.16em;
+  color:transparent; text-transform:uppercase; white-space:nowrap;
+  transition:color .45s cubic-bezier(.19,1,.22,1);
 }
-/* Hour turn. Sits ON the spine rather than beside it, so the eye reads the
-   day as segmented instead of continuous. */
-.tl-hour {
-  font-family:var(--mono); font-size:9px; letter-spacing:.22em;
-  text-transform:uppercase; color:var(--fg-dim); opacity:.5;
-  margin:14px 0 2px; padding-left:2px;
+.tl-st i {
+  display:block; width:14px; height:1px; background:rgba(255,255,255,.30);
+  transition:width .55s cubic-bezier(.47,.38,0,1.1), background .3s;
 }
-.tl-hour::before {
-  width:11px !important; height:11px !important; left:-30px !important; top:1px !important;
-  background:var(--bg) !important; border-color:var(--line-strong) !important;
-}
+.tl-st:hover { color:rgba(255,255,255,.58); }
+.tl-st:hover i { width:22px; background:rgba(255,255,255,.58); }
+.tl-st.on { color:var(--accent); }
+.tl-st.on i { width:30px; background:var(--accent); box-shadow:0 0 9px rgba(0,255,136,.6); }
+/* The live end of the day. Distinguishable from `.on` because "the newest
+   hour" and "the hour you are looking at" are different facts and are often
+   not the same station. */
+.tl-st.now i { background:var(--accent); }
+#tl-thumb { display:none; }   /* xt/09 has no thumb — the active station IS the position */
 
 /* Glass bubbles — heavy backdrop-blur + thin gloss highlight + translucent fill.
    qi-spec 2026-05-23: "super hyper realistic glass" */
@@ -625,7 +652,13 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
   <div class="er-list" id="er-list"></div>
 </aside>
 
-<div id="transcript"></div>
+<!-- The rail is a SIBLING of the scroller, never a child of it: anything
+     absolutely positioned inside #transcript scrolls away with the content,
+     which is exactly what a scrollbar must not do. -->
+<div id="tlwrap">
+  <div id="transcript"></div>
+  <div id="tl-rail" role="scrollbar" aria-label="Timeline" aria-orientation="vertical"><div id="tl-thumb"></div></div>
+</div>
 
 <div class="composer">
   <!-- VOICE PILLS — qi 2026-08-10: "the pills are to float right above the voice bar
@@ -874,41 +907,137 @@ function appendFinal(text, postedFlag) {
   div.className = 'final';
   div.innerHTML = '<span class="bubble-ts">' + _nowStamp() + '</span><span class="bubble-txt">' +
                   escapeHtml(text) + '</span>' + (postedFlag ? ' <span class="posted">✓ posted</span>' : '');
-  _tlHourMark();
+  div.dataset.t = String(Date.now());   // the rail reads this; nothing else does
   transcript.appendChild(div);
   transcript.scrollTop = transcript.scrollHeight;
   if (interimEl) { interimEl.remove(); interimEl = null; }
+  _tlSync();
   return div;
 }
 
-// ─── TIMELINE HOUR MARKER (qi 2026-08-12: "timeline scroll instead of the
-// normal kind") ──────────────────────────────────────────────────────────────
-// Drops one marker into the spine when the hour turns, so scrolling reads as
-// moving through a DAY rather than through a message list.
+// ─── THE TIMELINE RAIL IS THE SCROLLBAR ──────────────────────────────────────
+// qi 2026-08-12 16:49: "the timeline was supposed the scoll bar on the right".
 //
-// Deliberately dumb and defensive: it is called from inside the append path,
-// and an exception here would take the actual transcript entry down with it —
-// the entry matters, the decoration does not. Hence the try/catch and the
-// early return. A marker that fails to draw is invisible; an append that
-// throws is qi losing his feed.
-let _tlLastHour = null;
-function _tlHourMark() {
-  try {
-    const now = new Date();
-    const h = now.getHours();
-    if (h === _tlLastHour) return;      // same hour, nothing to mark
-    const first = (_tlLastHour === null);
-    _tlLastHour = h;
-    // Skip the very first call: a marker as the opening element would label an
-    // hour that has no entries above it yet, which reads as a stray header.
-    if (first && transcript.children.length === 0) return;
-    const m = document.createElement('div');
-    m.className = 'tl-hour';
-    m.textContent = now.toLocaleTimeString([], { hour: 'numeric', hour12: true })
-                       .replace(/:\d+/, '');
-    transcript.appendChild(m);
-  } catch (_) { /* decoration only — never break the append */ }
+// Replaces the in-feed hour marker this file shipped an hour earlier. That
+// version wrote a <div class="tl-hour"> INTO the transcript, which put time
+// information in the content flow — so the timeline competed with the entries
+// for vertical space and could never show you the whole day at once. A rail
+// can, because it maps the entire scroll height into a fixed strip.
+//
+// Every path stays defensive for the same reason the marker did: this runs
+// from inside the append path, and the ENTRY matters while the decoration does
+// not. An exception here must never cost qi a line of his feed.
+const tlRail  = document.getElementById('tl-rail');
+const tlThumb = document.getElementById('tl-thumb');
+
+let _tlRaf = 0;
+function _tlSync() {
+  // Coalesce: SSE bursts can append many entries in one tick, and each would
+  // otherwise trigger a full re-measure.
+  if (_tlRaf) return;
+  _tlRaf = requestAnimationFrame(() => { _tlRaf = 0; _tlDraw(); });
 }
+
+// STATIONS, following xt/09: the rail is a stack of discrete stations, one per
+// hour, evenly spaced — NOT a proportional map of scroll height. Even spacing is
+// the point of the borrowed design: a 3-minute hour and a 3-hour hour get the
+// same station, because the rail is for navigating named places, not for
+// showing how much text each one holds.
+//
+// Two separate passes on purpose:
+//   _tlStations() rebuilds the buttons, and runs only when the set of hours
+//   actually changes. Rebuilding on scroll would destroy hover state and
+//   restart every CSS transition mid-flight, which is exactly the flicker the
+//   .55s width easing is there to avoid.
+//   _tlMark() only moves the `.on` class, and runs on every scroll.
+let _tlHourKey = '';
+
+function _tlDraw() {
+  try {
+    if (!tlRail || !transcript) return;
+    _tlStations();
+    _tlMark();
+  } catch (_) { /* decoration only — never break the feed */ }
+}
+
+function _tlHours() {
+  // First entry of each hour, in order. That entry is the scroll target for its
+  // station, so the hour lands at the top of the viewport rather than centred
+  // on whichever entry happened to be nearest.
+  const out = [];
+  let last = null;
+  const kids = transcript.children;
+  for (let i = 0; i < kids.length; i++) {
+    const el = kids[i];
+    if (el.classList && el.classList.contains('interim')) continue;
+    const t = Number(el.dataset && el.dataset.t) || 0;
+    if (!t) continue;
+    const h = new Date(t).getHours();
+    if (h === last) continue;
+    last = h;
+    out.push({ h: h, t: t, el: el });
+  }
+  return out;
+}
+
+function _tlStations() {
+  const hours = _tlHours();
+  const key = hours.map((x) => x.h).join(',');
+  if (key === _tlHourKey) return;          // same hours — leave the DOM alone
+  _tlHourKey = key;
+
+  tlRail.querySelectorAll('.tl-st').forEach((n) => n.remove());
+  const frag = document.createDocumentFragment();
+  hours.forEach((st, i) => {
+    const label = new Date(st.t)
+      .toLocaleTimeString([], { hour: 'numeric', hour12: true })
+      .replace(/:\d+/, '').replace(/\s+/g, '');
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tl-st' + (i === hours.length - 1 ? ' now' : '');
+    b.dataset.h = String(st.h);
+    b.innerHTML = '<span></span><i></i>';
+    b.firstChild.textContent = label;      // textContent, never innerHTML — labels are derived, but the habit is the guard
+    b.setAttribute('aria-label', 'Jump to ' + label);
+    b.addEventListener('click', () => {
+      transcript.scrollTop = st.el.offsetTop;   // smooth comes from the CSS
+    });
+    frag.appendChild(b);
+  });
+  tlRail.appendChild(frag);
+}
+
+function _tlMark() {
+  // The active station is the LAST hour whose first entry is at or above the
+  // top of the viewport — i.e. the hour you are currently reading inside, not
+  // the next one coming up.
+  const hours = _tlHours();
+  if (!hours.length) return;
+  const top = transcript.scrollTop;
+  let active = 0;
+  for (let i = 0; i < hours.length; i++) {
+    if (hours[i].el.offsetTop <= top + 4) active = i; else break;
+  }
+  const btns = tlRail.querySelectorAll('.tl-st');
+  for (let i = 0; i < btns.length; i++) btns[i].classList.toggle('on', i === active);
+}
+
+(function _tlWire() {
+  try {
+    if (!tlRail || !transcript) return;
+    // The rail must track scrolling it did NOT cause — wheel, keyboard, and the
+    // auto-scroll-to-bottom that fires on every append.
+    transcript.addEventListener('scroll', _tlSync, { passive: true });
+    // Rotation and the on-screen keyboard change clientHeight with no scroll and
+    // no append, which would otherwise leave the active station stale.
+    if (typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(_tlSync).observe(transcript);
+    } else {
+      addEventListener('resize', _tlSync);
+    }
+    _tlSync();
+  } catch (_) { /* a dead rail must not take the page with it */ }
+})();
 
 function appendInterim(text) {
   if (!interimEl) {

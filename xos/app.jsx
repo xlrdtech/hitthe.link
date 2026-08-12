@@ -1108,9 +1108,39 @@ function BrowserPane({ openTabs, activeTabId, setActiveTabId, onCloseTab, onClos
   const showChrome = tabCount >= 1;
 
   if (tabCount === 0) {
-    /* clean middle pane - no chrome, no URL bar, no tabs. Just the OS pane.
-       qi 2026-07-01: ambient VVS voice-pulse orb as the idle background. */
-    return <div className="webview-empty"><div className="voice-pulse-orb" /></div>;
+    /* ── VVSVEI IS THE CENTER PANEL ─────────────────────────────────────────
+       qi 2026-08-12 16:55: "place vvsvei as the center panel of XOS".
+
+       An <iframe>, not a port. VVSVEI is a ~192KB self-contained page carrying
+       its own SSE connection, voice pipeline, audio graph, voice picker and
+       timeline rail. Reimplementing that in this file would fork the one
+       canonical surface into two copies that immediately drift — and this repo
+       has already paid for that mistake twice today (a stale .deploy copy and
+       three divergent tui-inject.js copies). One source, framed.
+
+       Same origin (both served from hitthe.link), so the frame keeps
+       same-origin access and needs no proxy, no CSP exception, no postMessage
+       bridge. `allow` is still explicit: VVSVEI is voice-first, and a framed
+       document does not get microphone or autoplay by inheritance.
+
+       The orb stays MOUNTED BEHIND the frame rather than being replaced — it is
+       what the pane shows during the frame's first paint, so the center panel is
+       never a black rectangle.
+
+       The browser is NOT retired. Opening any link pushes tabCount above zero
+       and restores the full browser chrome, exactly as before. Switching the
+       idle center panel to VVSVEI is not authority to remove what it replaced. */
+    return (
+      <div className="webview-empty">
+        <div className="voice-pulse-orb" />
+        <iframe
+          className="xos-vvsvei"
+          src="/vvsvei/"
+          title="VVSVEI"
+          allow="microphone; autoplay; clipboard-write"
+        />
+      </div>
+    );
   }
 
   const parts = activeTab ? urlParts(activeTab.url || "") : { scheme: "", host: "", path: "" };
