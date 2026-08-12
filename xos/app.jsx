@@ -502,11 +502,28 @@ function MatrixClientPane() {
   );
 }
 
+// ── WHAT BELONGS IN THE OMNI-INBOX ───────────────────────────────────────────
+// qi 2026-08-12 17:09: "the omniibox is for the email + beeper threads".
+//
+// A DENYLIST, not an allowlist, and that choice matters. An allowlist of known
+// networks would silently swallow a Beeper bridge that reports a src we have not
+// enumerated yet (Beeper bridges 469 rooms across telegram/whatsapp/gmessages/
+// slack/instagram/discord per omni-inbox-server.js) — a new bridge would vanish
+// from the inbox with no error. A denylist fails the other way: an unrecognised
+// source SHOWS UP, which is visible and fixable, instead of going missing.
+//
+// The denied set is the VVSVEI/OmniTap tap classes, measured live on /xos/:
+// vei-telemetry, xen-vei, xen-vei-typed, vvsvei-audio, shortcut.
+const VVSVEI_SRC = /^(vei-|xen-vei|vvsvei|shortcut$|omi:|bee(-ios)?[:-])/i;
+function isOmniboxSource(src) {
+  if (!src) return true;              // unknown source: show it, never hide it
+  return !VVSVEI_SRC.test(String(src));
+}
+
 function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
   const [q, setQ] = useState("");
   const [unread, setUnread] = useState(false);
   const [platform, setPlatform] = useState("all");
-  const [veiSrc, setVeiSrc] = useState("all");
   const [events, setEvents] = useState([]);
   const [count, setCount] = useState(0);
   const [sseState, setSseState] = useState("connecting");
@@ -550,6 +567,27 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
           // so raw.ts was always ~1000x the threshold and the guard NEVER fired.
           if (raw.ts && raw.ts > 0 && toMs(raw.ts) < Date.now() - 30 * 86400 * 1000) return;
           const next = { ...normalizeLiveEvent(raw, counter++), fresh: true, unread: true };
+          // ── THE OMNI-INBOX IS EMAIL + BEEPER THREADS. NOTHING ELSE. ────────
+          // qi 2026-08-12 17:08: "the omniinbox should not be showing what its
+          // showing currently because that what the vvsvei is for" / 17:09:
+          // "the omniibox is for the email + beeper threads".
+          //
+          // The shared SSE carries BOTH classes of traffic: message threads AND
+          // the VVSVEI voice/OmniTap taps (vei-telemetry, xen-vei,
+          // xen-vei-typed, vvsvei-audio, shortcut). This pane was rendering all
+          // of it, so the voice feed was duplicated into the inbox — the
+          // omni-inbox's job is threads you reply to, VVSVEI's job is the tap
+          // stream.
+          //
+          // Rejected AT INGEST rather than filtered at render, deliberately: a
+          // render-time filter still lets them into `events`, where they eat the
+          // 60-item cap and evict real threads. Measured before this fix: 52
+          // cards on screen, 50 of them vei-* — a 96% eviction rate on qi's
+          // actual inbox.
+          //
+          // This is also why the `platform` pill appeared broken: its options
+          // are messaging networks and NONE of them ever matched a vei-* src.
+          if (!isOmniboxSource(next.src)) return;
           setEvents((prev) => {
             if (prev.some((p) => p._absTs === next._absTs && p.body === next.body && p.sender === next.sender)) {
               return prev;
@@ -615,7 +653,6 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
   const shown = useMemo(() => {
     let list = events;
     if (platform !== "all") list = list.filter((e) => e.src === platform);
-    if (veiSrc !== "all") list = list.filter((e) => e.src === veiSrc);
     if (unread) list = list.filter((e) => e.unread);
     if (q) {
       const n = q.toLowerCase();
@@ -627,48 +664,16 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
       );
     }
     return list;
-  }, [events, platform, veiSrc, unread, q]);
+  }, [events, platform, unread, q]);
 
   const PLATFORMS = ["email", "beside", "slack", "instagram", "facebook", "telegram", "whatsapp", "discord", "linkedin", "signal", "x"];
 
-  // ── VVSVEI INJECTION SOURCES (qi 2026-08-12 16:44: "add a pill in the
-  //    horozontal pill set above the voice glass swipe bar add a pill to pick
-  //    the vvsvei injection sources").
-  //
-  //    DERIVED from the live feed, never hardcoded. Measured on the wire this
-  //    session: vei-telemetry, xen-vei, xen-vei-typed, vvsvei-audio, shortcut —
-  //    a frozen copy of that list would go stale the moment a new injector
-  //    lands, and the pill would then hide real traffic.
-  //
-  //    This is NOT a duplicate of the `platform` pill above. That one also
-  //    filters on `e.src`, but its options are messaging platforms
-  //    (email/slack/instagram/…), and NONE of them ever match a vei-* src — so
-  //    it yields zero on this feed. This pill offers the sources that exist.
-  //    BEE FALLBACK (qi 2026-08-12 16:46: "it should check for bee: injections
-  //    if the canonical vvevei injects arent present so that still stands as
-  //    well"). Precedence, not a merge: canonical vei-* wins whenever ANY of it
-  //    is on the wire; only when none is present do the wearable legs stand in.
-  //
-  //    Both wearable legs are included — `bee:` (Android) and `bee-ios:`
-  //    (iPhone/Watch). omnimind.js:4110 records the 07-20 rule that those two
-  //    are PEERS, never a hierarchy, so neither may be dropped in favour of the
-  //    other here. The vei→bee precedence is a different axis and leaves that
-  //    rule intact.
-  //
-  //    The fallback is NEVER silent: `veiFallback` surfaces on the pill label,
-  //    because a picker that quietly swapped which stream it was showing would
-  //    read as "no traffic" when the real story is "canonical injects are down".
-  const CANON_VEI_SRC = /^(xen-vei|vvsvei|vei-)/i;
-  const BEE_VEI_SRC = /^bee(-ios)?[:-]?/i;
-
-  const { veiSources, veiFallback } = useMemo(() => {
-    const all = Array.from(new Set(events.map((e) => e.src).filter(Boolean)));
-    const canon = all.filter((s) => CANON_VEI_SRC.test(s)).sort();
-    if (canon.length) return { veiSources: canon, veiFallback: false };
-    const bee = all.filter((s) => BEE_VEI_SRC.test(s)).sort();
-    if (bee.length) return { veiSources: bee, veiFallback: true };
-    return { veiSources: all.sort(), veiFallback: false };
-  }, [events]);
+  // NOTE: the OmniTap source-derivation + bee: fallback that lived here is
+  // removed with the pill it fed. It was correct logic in the wrong pane — vei-*
+  // traffic no longer reaches this feed at all (isOmniboxSource rejects it at
+  // ingest), so there is nothing here for it to derive from. qi's standing rule
+  // — fall back to bee:/bee-ios: when canonical vei-* injects are absent,
+  // precedence not merge, never silent — belongs in VVSVEI, which owns the taps.
 
   // ── READER VOICES (qi decree 2026-08-09: "the new canon is 11-reader").
   // Roster mirrors /Volumes/M4/sync_/exedus/dev_/xen/data/elevenlabs-voices.md.
@@ -807,37 +812,12 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
               </select>
             </div>
 
-            {/* VVSVEI injection-source drop pill. Same native-<select>-behind-a-
-                label idiom as the voice pill above, for the same reason: on the
-                phone iOS opens its picker wheel. Options come from `veiSources`,
-                derived from the live feed — so a new injector shows up here on
-                its own. `data-src` mirrors .mfilter-select-wrap so an active
-                selection reads as chosen rather than default. */}
-            <div
-              className="opill drop"
-              data-src={veiSrc !== "all" ? veiSrc : undefined}
-              data-fallback={veiFallback ? "bee" : undefined}
-              title={veiFallback
-                ? "canonical vvsvei injects absent — showing bee: wearable taps"
-                : "OmniTap injection sources"}
-            >
-              <span className="opill-label">
-                {veiSrc === "all" ? (veiFallback ? "sources · bee" : "sources") : veiSrc}
-              </span>
-              <span className="mfilter-select-caret">▾</span>
-              <select
-                className="mfilter-select"
-                value={veiSrc}
-                onChange={(e) => setVeiSrc(e.target.value)}
-                aria-label="VVSVEI injection source"
-              >
-                <option value="all">All sources</option>
-                {veiSources.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
-
+            {/* The OmniTap injection-source pill that briefly lived here is GONE.
+                It was the right control in the wrong pane: once vei-* traffic is
+                rejected at ingest (see isOmniboxSource), there are no injection
+                sources in this feed to pick between. That picker belongs to
+                VVSVEI, which owns the tap stream. The `platform` pill above is
+                this pane's source control — email + Beeper networks. */}
             <button className="opill" onClick={() => onOpenLink && onOpenLink("threads")}>Threads</button>
             <button className="opill" onClick={pillCopy}>Copy</button>
             <button className="opill" onClick={pillExport}>Export</button>

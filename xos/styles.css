@@ -1036,8 +1036,20 @@ body {
   flex: 0 0 auto;
   scroll-snap-align: start;
   appearance: none;
-  background: transparent;
-  border: 0.5px solid rgba(255,255,255,.16);
+  /* ── PILLS ARE ALWAYS GLASS (qi 2026-08-12 17:07: "the pills are always to be
+     glass"). They were `background: transparent` — an outlined chip, not glass,
+     so they read as wireframe against the glass dock below them.
+     Built from the SAME XenV40 tokens as every other glass surface in this file
+     (--glass-* at :root, used by the dock at ~751) rather than fresh rgba
+     values, so a palette change moves the pills with everything else.
+     `backdrop-filter` is what makes it glass rather than translucent paint — it
+     samples and blurs the feed scrolling behind the row. */
+  background: var(--glass-surface-mid);
+  background-image: var(--glass-sheen);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+  box-shadow: var(--glass-shadow-soft);
+  border: 0.5px solid var(--glass-border-soft);
   color: var(--text-dim);
   font-family: var(--f-mono);
   font-size: 9.5px;
@@ -3651,28 +3663,17 @@ html, body { overscroll-behavior-y: none; }
   outline-offset: -4px;
 }
 
-/* The white handle bar - lives in the "icon area" spot (top of dock zone),
-   shaped like iOS home-indicator but slightly wider, with realistic glow. */
-.os.os-fullscreen .dock.dock-swipe .dock-handle {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: clamp(120px, 28vw, 180px);
-  height: 5px;
-  border-radius: 999px;
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.95) 0%,
-    rgba(240, 240, 245, 0.85) 50%,
-    rgba(220, 220, 230, 0.7) 100%
-  );
-  box-shadow:
-    0 0 6px rgba(255, 255, 255, 0.5),
-    0 1px 2px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  pointer-events: none;
-}
+/* ⛔ THE WHITE BAR IS GONE (qi 2026-08-12 17:07: "remove that white bar from the
+   swipe glass"). It was an iOS-home-indicator-shaped white gradient
+   (rgba(255,255,255,.95)) centred on the dock — the brightest object on a dark
+   glass surface, which made the dock read as a system chrome bar instead of
+   glass.
+
+   HIDDEN, not deleted from the JSX: `.dock-handle` is `pointer-events:none`
+   decoration, so hiding it costs no behaviour, and keeping the element means the
+   swipe target, the dock-hit region and every JS reference stay exactly as they
+   were. Deleting the node would be a bigger change than he asked for. */
+.os.os-fullscreen .dock.dock-swipe .dock-handle { display: none; }
 
 /* Top-edge refraction highlight - 1px catching light from above */
 .os.os-fullscreen .dock.dock-swipe .dock-sheen {
