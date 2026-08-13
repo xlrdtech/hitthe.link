@@ -3155,13 +3155,15 @@ function pickAvaVoice() {
 // silence). qi 2026-05-30: "your voice in, my voice out, same page, no taps".
 // Ava = en-US-AvaMultilingualNeural ("edge tts Ava neural English").
 const AVA_TTS_URL = 'https://api.xlrd.org/api/tts';  // sole TTS origin, no network fallback (qi 2026-06-09: api.xlrd.org primary; xen.xlrd.org freed for repurpose)
-(function _probeXenNode() {
-  fetch(AVA_TTS_URL + '?text=.', { method: 'HEAD', cache: 'no-store' })
-    .then(function(r) {
-      var n = r.headers.get('x-xen-node');
-      if (n) { _xenNode = n; var el = document.getElementById('ava-node'); if (el) el.textContent = n; }
-    }).catch(function(){});
-})();
+// MEASURED 2026-08-13 01:57: a HEAD probe used to live here against
+// AVA_TTS_URL + '?text=.' purely to read x-xen-node. api.xlrd.org implements
+// GET only — HEAD answered 404 (verified: HEAD -> 404 application/json,
+// GET -> 200 audio/mpeg 13,837 B), so it was the page's ONLY console error on
+// every single load. It was also dead weight: the probe below already reads the
+// same x-xen-node header from xen.xlrd.org/api/node with a GET that returns 200,
+// and it resolved second, so it overwrote whatever this one set. Deleted rather
+// than converted to GET — a GET here would synthesize a real MP3 just to read a
+// header. Do NOT re-add a HEAD probe to /api/tts; the method is not implemented.
 // Probe the TTS server on page load to read X-Xen-Node (M4 vs VM tag).
 // HEAD with ?probe=1 avoids generating audio; retry once on fail.
 (function _probeXenNode() {
