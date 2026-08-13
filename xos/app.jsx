@@ -2347,16 +2347,42 @@ function App() {
   const [paneIdx, setPaneIdx] = useState(t.startPane ?? 1);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
-  /* qi 2026-05-17 8672: apps must persist across reload. localStorage with safe fallback. */
+  /* qi 2026-05-17 8672: apps must persist across reload. localStorage with safe fallback.
+     ── 2026-08-13 02:29, MEASURED ON THE LIVE SITE AFTER A VERIFIED DEPLOY ──
+     `stored` used to WIN OUTRIGHT (`if (parsed.length) return parsed`). The served
+     app.jsx carried all 32 defaults — 124,536 bytes, verified on the edge — and the
+     drawer still rendered exactly TWO icons, because this device had
+     xos.apps.v1 = [grok, v0] persisted from an older build. Confirmed by reading the
+     key directly, not inferred.
+
+     THAT MEANS SHIPPING A NEW DEFAULT WAS INVISIBLE TO EVERY EXISTING USER, qi
+     INCLUDED. The bytes were right and the product was wrong — the byte gate passed
+     and the human-path test (cmd 32) is what caught it.
+
+     Now the stored list and the defaults are MERGED, additively:
+       - every app qi added survives, in his order, untouched — this never removes
+       - defaults missing from his list get appended
+       - matched on BOTH id and normalised url, so an app he added by hand that
+         happens to be a default does not appear twice
+     A future default therefore reaches him on next load instead of being shadowed
+     forever. Deliberately not a "reset to defaults" — that would delete his work. */
   const [apps, setApps] = useState(() => {
+    let stored = null;
     try {
-      const stored = localStorage.getItem("xos.apps.v1");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length) return parsed;
+      const raw = localStorage.getItem("xos.apps.v1");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length) stored = parsed;
       }
     } catch (_) {}
-    return DEFAULT_APPS;
+    if (!stored) return DEFAULT_APPS;
+    const norm = (u) => String(u || "").replace(/\/+$/, "").toLowerCase();
+    const haveId = new Set(stored.map((a) => a && a.id).filter(Boolean));
+    const haveUrl = new Set(stored.map((a) => norm(a && a.url)));
+    const missing = DEFAULT_APPS.filter(
+      (d) => !haveId.has(d.id) && !haveUrl.has(norm(d.url))
+    );
+    return missing.length ? stored.concat(missing) : stored;
   });
   useEffect(() => {
     try { localStorage.setItem("xos.apps.v1", JSON.stringify(apps)); } catch (_) {}
