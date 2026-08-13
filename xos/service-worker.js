@@ -17,7 +17,23 @@
 // only. CACHE-FIRST stays for genuinely immutable assets (icons, manifest), where
 // staleness is harmless and offline speed is the entire point.
 
-const VERSION = "xos-v4-2026-08-12";     // bumped: activate() drops every older cache
+// BUMPED 2026-08-13 04:57. qi's phone showed "LOADING VVSVEI…" on a dead black
+// panel while a CLEAN isolated context on the same commit rendered the panel in
+// full (#xos-vei 179,062 chars, 3 children) and the edge served the correct
+// bytes. Server fine, code fine, deploy fine — his device was the only thing
+// still broken, which points at its own stored copy, not at anything shipped.
+//
+// activate() deletes every cache whose key !== VERSION, so changing this string
+// is what makes a device throw its stale copy away BY ITSELF. That matters more
+// than the cache: qi must never be asked to clear a cache, hard-reload, or tap
+// anything to receive a fix (canon 4 — a required human tap is a total failure).
+// A deploy that only reaches users who know to clear storage has not shipped.
+//
+// RULE: bump this on any change to the SHELL files below. It is cheap, and the
+// alternative is a fix that is verifiably on the edge and invisible on the
+// device — the same shape as the localStorage shadow that made a verified deploy
+// look broken earlier tonight.
+const VERSION = "xos-v5-2026-08-13";     // bumped: activate() drops every older cache
 const SHELL = [
   "/xos/",
   "/xos/index.html",
