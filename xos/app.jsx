@@ -2071,9 +2071,71 @@ function PhonePane() {
 /* ===========================================================
    APP DRAWER  +  NOTIFICATION TOAST
    =========================================================== */
+/* THE WEB APP DRAWER IS THE PRODUCT, NOT A CONVENIENCE (qi 2026-08-13 02:19):
+   "The PWA browser and the browser container all in one app eliminating the App
+   Store is one of the core values of the app that saves companies thousands of
+   dollars per year... But that doesn't exist if my web app drawer isn't there."
+
+   MEASURED 2026-08-13 02:20 on the live surface: this list held exactly TWO
+   entries — Grok Voice and v0.dev — and the drawer rendered exactly two icons.
+   qi's report was "we lost my swipe glass that was there that had all the web
+   apps in there." The glass was never lost; .dock.dock-swipe is present and
+   measured 92px tall. THE REGISTRY WAS THE STUB. Two apps is not a drawer.
+
+   SOURCE OF THIS LIST — no invented entries: every URL below is a property qi
+   owns or a service he already has a connected session for, taken from his own
+   `tomcp-*` MCP server registry, which is the measured record of what he is
+   actually logged into. Nothing here is aspirational or a placeholder.
+
+   iconUrl uses the same Google S2 favicon convention parseAppFromUrl() already
+   established for user-added apps, so defaults and additions render identically
+   instead of defaults falling back to bare glyph letters. */
+const _app = (id, url, name) => ({
+  id, url, name,
+  glyph: name[0].toUpperCase(),
+  iconUrl: "https://www.google.com/s2/favicons?domain=" +
+           encodeURIComponent(new URL(url).hostname) + "&sz=128"
+});
+
 const DEFAULT_APPS = [
-  { id: "grok",  url: "https://grok.com/voice",  glyph: "G", name: "Grok Voice" },
-  { id: "v0",    url: "https://v0.dev",          glyph: "V", name: "v0.dev" }
+  // qi's own properties first — the drawer opens on his own work
+  _app("vvsvei",   "https://hitthe.link/vvsvei/",        "VVSVEI"),
+  _app("xlrd",     "https://xlrd.org",                   "XLRD"),
+  _app("hitthe",   "https://hitthe.link",                "Hitthe.link"),
+  _app("bookmb",   "https://bookmb.com",                 "Book MB"),
+  // comms
+  _app("beeper",   "https://web.beeper.com",             "Beeper"),
+  _app("gmail",    "https://mail.google.com",            "Gmail"),
+  _app("gvoice",   "https://voice.google.com",           "Google Voice"),
+  _app("linkedin", "https://www.linkedin.com",           "LinkedIn"),
+  _app("x",        "https://x.com",                      "X"),
+  _app("facebook", "https://www.facebook.com",           "Facebook"),
+  _app("instagram","https://www.instagram.com",          "Instagram"),
+  // models + research
+  _app("grok",     "https://grok.com/voice",             "Grok Voice"),
+  _app("chatgpt",  "https://chatgpt.com",                "ChatGPT"),
+  _app("claude",   "https://claude.ai",                  "Claude"),
+  _app("gemini",   "https://gemini.google.com",          "Gemini"),
+  _app("perplex",  "https://www.perplexity.ai",          "Perplexity"),
+  _app("notebook", "https://notebooklm.google.com",      "NotebookLM"),
+  // build + ship
+  _app("v0",       "https://v0.dev",                     "v0.dev"),
+  _app("github",   "https://github.com/xlrdtech",        "GitHub"),
+  _app("n8n",      "https://n8n.io",                     "n8n"),
+  // create
+  _app("canva",    "https://www.canva.com",              "Canva"),
+  _app("sora",     "https://sora.com",                   "Sora"),
+  _app("suno",     "https://suno.com",                   "Suno"),
+  _app("pinterest","https://www.pinterest.com",          "Pinterest"),
+  _app("ytstudio", "https://studio.youtube.com",         "YT Studio"),
+  // work surfaces
+  _app("notion",   "https://www.notion.so",              "Notion"),
+  _app("todoist",  "https://app.todoist.com",            "Todoist"),
+  _app("gdocs",    "https://docs.google.com",            "Docs"),
+  _app("gsheets",  "https://sheets.google.com",          "Sheets"),
+  _app("gcal",     "https://calendar.google.com",        "Calendar"),
+  _app("raindrop", "https://app.raindrop.io",            "Raindrop"),
+  _app("sintra",   "https://sintra.ai",                  "Sintra")
 ];
 
 function parseAppFromUrl(raw) {
