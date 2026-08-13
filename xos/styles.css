@@ -237,8 +237,22 @@ body {
 
 .omni-prompt {
   position: relative;
-  border: 0.5px solid var(--border-bright);
-  background: var(--bg-surface);
+  /* ── THE OMNI-INBOX IS GLASS TOO (qi 2026-08-13 02:21: "The Omni inbox, you got
+     other types of CSS besides the glass").
+     MEASURED: this was `background: var(--bg-surface)` — flat opaque paint with a
+     hard border and NO backdrop-filter, i.e. terminal-panel CSS sitting inside a
+     glass app. That mismatch is the incohesion he is pointing at.
+     Same XenV40 --glass-* tokens as the pills at ~1047 and the dock, NOT fresh
+     rgba values, so one palette change still moves every glass surface together.
+     SCOPE: this rule and .key below only. The swipe glass is NOT touched —
+     qi 2026-08-13 02:22, three times: "that cannot be lost, that was a tedious
+     design." Adding glass here, never restyling the dock. */
+  background: var(--glass-surface-mid);
+  background-image: var(--glass-sheen);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+  box-shadow: var(--glass-shadow-soft);
+  border: 0.5px solid var(--glass-border-soft);
   border-radius: 12px;
   padding: 14px 14px 12px;
   font-family: var(--f-mono);
@@ -297,15 +311,22 @@ body {
   color: var(--text-dim);
   margin-top: 10px;
   padding-top: 8px;
-  border-top: 0.5px dashed var(--border);
+  /* was `0.5px dashed` — a dashed rule is a terminal motif, not the glass
+     language. Solid hairline in the glass border token instead. */
+  border-top: 0.5px solid var(--glass-border-soft);
 }
 .omni-prompt-foot .keys { display: flex; gap: 10px; }
 .omni-prompt-foot .key {
   font-family: var(--f-mono);
   padding: 2px 6px;
-  border: 0.5px solid var(--border);
+  /* was a flat rgba(0,220,130,0.04) tint — translucent paint, not glass. These
+     are chips inside a glass panel, so they get the glass tokens at a lighter
+     blur than the panel that hosts them. */
+  border: 0.5px solid var(--glass-border-soft);
   border-radius: 3px;
-  background: rgba(0,220,130,0.04);
+  background: var(--glass-surface-mid);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  backdrop-filter: blur(8px) saturate(140%);
   color: var(--text-dim);
 }
 
