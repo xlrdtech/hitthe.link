@@ -3605,32 +3605,19 @@ html.xos-locked, body.xos-locked { overflow: hidden; }
   .os.os-fullscreen .phone .keypad { max-width: 480px; margin: 0 auto; }
 }
 
-/* Desktop 1280px+ — FULL BLEED. No centred column, no dim gutters.
-   REMOVED 2026-08-13 04:46 on qi's direct rule, stated twice:
-     "when I said everything's gotta look the same on mobile and desktop, that
-      means 100 view height, 100 view width, and everything's gotta remain the
-      same size"
-     "the height of the app is the height of the screen, and the width of the app
-      is the width of the screen, ACROSS THE BOARD."
-
-   WHAT WAS HERE, and it is the defect he saw: a `max-width: 1100px; margin: 0
-   auto` on .panes and .dock, guarded by min-width:1280px, described in its own
-   comment as "center the phone-shaped column, side gutters dim." MEASURED on the
-   live surface at 1600px wide: .panes rendered left=250 width=1100, .dock the
-   same — 250px of dead margin down each side. That is the "app doesn't fill the
-   screen" he called garbage, and it is a direct contradiction of the rule above.
-
-   The rule is deliberately NOT replaced with a different clamp. Full bleed IS the
-   spec: the app is the viewport at every width, so mobile and desktop are the same
-   composition at different scales rather than two different layouts.
-
-   ⚠️ STILL OUTSTANDING, same class, not fixed here: the min-width:768px block
-   above clamps .mirror-feed to 720px and .phone .dial-area/.keypad to 480px with
-   `margin: 0 auto`. Those are the same "centre a narrow column on a wide screen"
-   pattern and they also violate "everything's gotta remain the same size." Left
-   in place only because changing the phone keypad geometry is his phone surface,
-   which he has named as the next priority — it gets fixed there, deliberately,
-   not as a side effect of this one. */
+/* Desktop 1280px+ - center the phone-shaped column, side gutters dim */
+@media (min-width: 1280px) {
+  .os.os-fullscreen .panes {
+    max-width: 1100px;
+    margin: 0 auto;
+    left: 0;
+    right: 0;
+  }
+  .os.os-fullscreen .dock {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+}
 
 /* Landscape phone (height < 500px) - compress vertical, smaller dock */
 @media (orientation: landscape) and (max-height: 500px) {

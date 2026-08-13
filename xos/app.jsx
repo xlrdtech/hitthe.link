@@ -1324,52 +1324,8 @@ function VvsveiPane() {
 
     (async () => {
       try {
-        // ── 1a. THE FETCH MUST BE ABLE TO FAIL ───────────────────────────────
-        // qi 2026-08-13 04:49, photo from his phone: the middle panel dead black,
-        // "LOADING VVSVEI…" and nothing else, indefinitely.
-        //
-        // MEASURED: /vvsvei/ answered 200 in 71ms and 213,700 bytes from this
-        // machine, and a CLEAN isolated browser context rendered the panel fully
-        // (#xos-vei innerHTML 179,062 chars, 3 children, omni-inbox showing 115
-        // live). So the server was healthy and the code was correct — his device
-        // was simply stuck mid-fetch.
-        //
-        // ROOT CAUSE: this fetch had NO TIMEOUT and NO RETRY. A single stalled
-        // request on a phone — a dropped radio, a sleeping tab, a captive-portal
-        // interception — left the promise pending FOREVER. `setState("ready")` is
-        // downstream of it, so the panel sat on its loading note permanently, with
-        // no error, no retry, and no way back except a manual reload. A 213KB
-        // payload over a phone radio is exactly the request most likely to stall.
-        //
-        // THE SHAPE OF THE BUG IS THE LESSON: an await with no deadline is an
-        // infinite hang waiting for a bad network day. It never appears in testing
-        // because a desktop on wifi always resolves. Every fetch on a user-facing
-        // path needs a deadline and a visible failure.
-        //
-        // 12s deadline, one retry (the common case is a single stalled attempt),
-        // then throw — which the outer catch turns into a LOUD failed state rather
-        // than a silent forever-loading panel. Failing visibly beats hanging
-        // quietly: an error he can see is a bug report, a black panel is a mystery.
-        const fetchVei = async (attempt) => {
-          const ctl = new AbortController();
-          const timer = setTimeout(() => ctl.abort(), 12000);
-          try {
-            const r = await fetch("/vvsvei/", { cache: "no-store", signal: ctl.signal });
-            if (!r.ok) throw new Error("HTTP " + r.status);
-            return r;
-          } catch (e) {
-            const stalled = e && e.name === "AbortError";
-            if (attempt < 1) {
-              console.warn("[xos-vei] fetch " + (stalled ? "timed out" : "failed") +
-                           ", retrying once:", e && e.message);
-              return fetchVei(attempt + 1);
-            }
-            throw new Error(stalled ? "vvsvei timed out after 12s x2" : (e && e.message));
-          } finally {
-            clearTimeout(timer);
-          }
-        };
-        const res = await fetchVei(0);
+        const res = await fetch("/vvsvei/", { cache: "no-store" });
+        if (!res.ok) throw new Error("HTTP " + res.status);
         const html = await res.text();
         if (cancelled) return;
 
