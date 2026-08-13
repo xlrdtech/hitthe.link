@@ -99,6 +99,22 @@
             setInterval(() => reg.update().catch(() => {}), 60000);
           })
           .catch(() => {});
+
+        // THE HALF THE ABOVE STILL MISSES (codex review, 2026-08-13 02:43):
+        // "clients.claim() controls fetches; it does not re-execute app.jsx."
+        // So a new worker can take over and the ALREADY-RUNNING page keeps
+        // executing the old code — which is exactly qi's case, an installed PWA
+        // that stays open for hours. Without this, the fix above only helps on a
+        // manual reload, and a manual reload is a tap (canon 4 = total failure).
+        //
+        // controllerchange fires when a new worker assumes control. Reload once,
+        // guarded: the flag is essential or claim -> reload -> claim loops forever.
+        let _xosReloading = false;
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          if (_xosReloading) return;
+          _xosReloading = true;
+          location.reload();
+        });
       });
     }
   </script>
