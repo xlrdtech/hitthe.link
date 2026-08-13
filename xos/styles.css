@@ -4286,3 +4286,28 @@ html, body { overscroll-behavior-y: none; }
 .dock.dock-swipe .dock-vei-host .bg-overlay {
   display: none;
 }
+
+/* ── THE PILL ROW IS ONE ROW (2026-08-13 05:03) ──────────────────────────────
+   qi: "the pill must be 1 row not too [two]."
+
+   MEASURED on the rendered surface: the row wrapped — NEW alone on the first
+   line, THREADS / COPY / EXPORT / SHARE on a second — which is what made the
+   glass read as a tall flat slab instead of a bar. Two rows also doubles the
+   height the swipe glass grows to, and .panes is inset by the dock's MEASURED
+   height, so a wrapping pill row silently eats vertical space from the feed
+   above it. The wrap is not only ugly; it is load-bearing.
+
+   nowrap + horizontal scroll rather than shrinking the pills: pills are tap
+   targets, and shrinking them to fit is how a control becomes unhittable on a
+   phone. Overflow scrolls, the scrollbar is hidden, and every pill keeps its
+   full size. flex-shrink:0 is the half that actually enforces it — without it
+   flex items compress before the container ever overflows. */
+.dock.dock-swipe .dock-vei-host #pill-row {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.dock.dock-swipe .dock-vei-host #pill-row::-webkit-scrollbar { display: none; }
+.dock.dock-swipe .dock-vei-host #pill-row > * { flex: 0 0 auto; }
