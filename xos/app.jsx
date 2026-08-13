@@ -774,7 +774,20 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
           //
           // This is also why the `platform` pill appeared broken: its options
           // are messaging networks and NONE of them ever matched a vei-* src.
-          if (!isOmniboxSource(next.src)) return;
+          /* ── qi's OWN WORDS ARE NEVER NOISE. Added 2026-08-13 19:52 after he
+             said "But its not posting" with his voice ALREADY reaching the seat.
+             The ingest filter above was mine, shipped earlier today to keep the
+             omni-inbox to email + beeper threads. It works — and it also dropped
+             `xen-vei` / `xen-vei-typed`, which is qi HIMSELF speaking and typing.
+             So the pane went quiet on the one source that must never be filtered:
+             the operator. He watched his own words vanish and reported the app as
+             broken, correctly.
+             The distinction the original change actually wanted is qi vs MACHINE,
+             not vei vs thread: `vei-telemetry` and `vvsvei-audio` are speak-gate
+             counters and audio blobs, still correctly dropped below. This exempts
+             only the two rails that carry a human. */
+          const _isQiOwn = /^xen-vei(-typed)?$/i.test(String(next.src || ""));
+          if (!_isQiOwn && !isOmniboxSource(next.src)) return;
           setEvents((prev) => {
             if (prev.some((p) => p._absTs === next._absTs && p.body === next.body && p.sender === next.sender)) {
               return prev;
