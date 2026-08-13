@@ -1499,6 +1499,44 @@ function VvsveiPane() {
         // markup (scripts removed here; re-added executable below)
         const scripts = [...doc.querySelectorAll("script")];
         scripts.forEach((s) => s.remove());
+
+        // ── 2b. STRIP THE OPERATOR CHROME BEFORE IT EVER MOUNTS ──────────────
+        // qi 2026-08-13 04:30: "on the center panel to the right side there's
+        // remnants of an interface that I told you to get rid of"; "I told you no
+        // modals"; "that shit can't exist"; "that shit's fucking everything up."
+        //
+        // MEASURED on the live surface: <aside id="events-rail"> — position:absolute,
+        // z-index 20, 320x485, parked at left:500 on a 500px viewport, i.e. hanging
+        // exactly off the right edge of the centre panel. Contents: "Operator ·
+        // Firehose", an SSE status readout, a queue counter, "⤢ full" and "clear".
+        // That is a developer console, not product.
+        //
+        // WHY DELETING IT NEVER STUCK, and this is the whole lesson: `events-rail`
+        // appears ZERO times in app.jsx and ZERO times in styles.css. It is not XOS
+        // markup at all. It lives in vvsvei/index.html (21 occurrences, measured) and
+        // arrives here because this component hoists that document's <body> wholesale.
+        // Every previous removal edited a file that never contained it. An element you
+        // cannot grep in your own source is arriving from somewhere else — find the
+        // mount, not the markup.
+        //
+        // Stripped from the PARSED DOCUMENT, before innerHTML and before the scripts
+        // re-execute, so the rail is never constructed and its listeners never bind —
+        // rather than hidden with CSS, which would leave a live SSE consumer running
+        // invisibly. Standalone vvsvei keeps its rail; only the XOS mount drops it.
+        //
+        // NOT a blanket "remove asides" — an explicit id list, so adding UI to vvsvei
+        // later cannot silently vanish inside XOS. Anything new that belongs to the
+        // operator and not to qi gets added here deliberately.
+        // MEASURED after the first pass: removing #events-rail alone left three
+        // siblings behind — #er-toggle, #er-pip, #er-count — because they are the
+        // rail's LAUNCHERS and live outside it in the markup. Deleting a panel does
+        // not delete the buttons that open it. Verified by re-querying [id^="er-"]
+        // after the strip; that query is the regression check for this list.
+        const OPERATOR_ONLY = ["#events-rail", "#er-toggle", "#er-pip", "#er-count"];
+        OPERATOR_ONLY.forEach((sel) => {
+          doc.querySelectorAll(sel).forEach((n) => n.remove());
+        });
+
         host.innerHTML = doc.body ? doc.body.innerHTML : "";
         setState("ready");
 
@@ -1594,9 +1632,30 @@ function VvsveiPane() {
             // appearance is touched — .dock-swipe/-sheen/-edge-light are untouched.
             // If the composer is ever wanted in the glass again, it must not cover
             // .dock-hit; re-run the point sample before believing it does not.
-            return;
-            // eslint-disable-next-line no-unreachable
+            // 2026-08-13 04:20 — RE-ENABLED on qi's direct order: "my voice detection
+            // now lives inside of the swipe glass"; "the attach file button and the send
+            // button move down into the swipe glass along with my voice detection sound
+            // wave canonical animation"; "the pills move down right above the swipe
+            // glass". He then answered "Yes" to putting it back.
+            //
+            // The 04:04 disable was right about the SYMPTOM and wrong as a permanent
+            // fix. .dock-vei-host is z-index:2 + pointer-events:auto, so a full-width
+            // composer inside it won .dock-hit's every point and the drawer door went
+            // unreachable — 0 of 125 samples. The door is the product (tapping the glass
+            // IS the app-drawer gesture), so it cannot simply lose. But neither can his
+            // layout. Both have to be true, and they can be.
+            //
+            // FIX: while the composer is docked the dock carries a state class, and a
+            // rule scoped to THAT class alone confines .dock-hit to the handle strip at
+            // the top of the glass. Strip = swipe/tap → drawer. Below it = the composer's
+            // own controls. Both reachable. .dock-hit is an invisible gesture layer, so
+            // nothing about the glass's APPEARANCE changes — .dock-swipe/-handle/-sheen/
+            // -edge-light stay untouched (qi: "that was a tedious design" — read-only).
+            //
+            // Re-run the elementFromPoint sample after any change here. That test is the
+            // only thing standing between a working door and a silently dead one.
             dockHost.appendChild(composer);
+            try { dockHost.closest(".dock-swipe").classList.add("has-vei-composer"); } catch (_) {}
             _xosDockHeight();   // the glass just grew; the panes must follow it exactly
             // The transcript's bottom padding is derived from a measurement that just
             // changed by a lot. Nudge the observer so the feed reclaims the space in this

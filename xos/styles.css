@@ -4160,3 +4160,51 @@ html, body { overscroll-behavior-y: none; }
 /* XOS browser kernel — Tier-1 iframe host + breakout button */
 .xos-browser-frame{width:100%;height:100%;border:0;display:block;background:#000}
 .xos-browser-ext{all:unset;cursor:pointer;font-size:16px;line-height:1;color:#9fb3a4;padding:4px 6px}
+
+/* ── DOCKED-COMPOSER HIT ARBITRATION (2026-08-13 04:20) ──────────────────────
+   qi, live: "my voice detection now lives inside of the swipe glass"; "the attach
+   file button and the send button move down into the swipe glass along with my
+   voice detection sound wave canonical animation"; "the pills move down right
+   above the swipe glass."
+
+   THE CONFLICT THIS RESOLVES, measured, not assumed:
+   .dock-hit deliberately covers the WHOLE glass with pointer-events:auto so the
+   glass owns the pane swipe. .dock-vei-host sits at z-index:2 above it to take
+   its own events back. Both are correct in isolation. Together, a full-width
+   composer inside the host wins every point of the dock: elementFromPoint
+   returned composer-bar at 125 of 125 samples and .dock-hit at ZERO, so the
+   app-drawer door — the product's core gesture — became unreachable. That is why
+   the relocation was switched off at 04:04. Switching it off cost qi his layout;
+   leaving it on cost him the drawer. Neither is acceptable, so the surface is
+   SPLIT instead of contested.
+
+   THE SPLIT: while (and only while) the composer is docked, .dock-hit is confined
+   to the handle strip along the top edge of the glass. Above the split line the
+   glass still swipes and still opens the drawer; below it the composer's own
+   controls take their taps. .dock-hit is an invisible gesture layer — it paints
+   nothing — so the glass's APPEARANCE is byte-for-byte what it was. The canonical
+   design (.dock-swipe / -handle / -sheen / -edge-light) is not touched here, and
+   must not be: qi, four ways in ninety seconds, "that was a tedious design",
+   "that cannot be lost."
+
+   STATE-SCOPED ON PURPOSE: every rule below is gated on .has-vei-composer, which
+   app.jsx adds only after a successful appendChild. An undocked glass keeps its
+   original full-surface hit area with no rule of mine applying to it at all — so
+   this cannot regress the swipe when the composer is absent.
+
+   REGRESSION GATE — re-run this before believing the door works:
+     sample elementFromPoint across the dock rect; .dock-hit must be reachable
+     from the strip, and the composer's controls from below it. A number, not a
+     glance. 0/125 is exactly how this failed silently the first time. */
+.os.os-fullscreen .dock.dock-swipe.has-vei-composer .dock-hit {
+  top: 0;
+  bottom: auto;
+  height: var(--dock-handle-strip, 26px);
+  /* The strip is the handle's own touch zone. 26px is a deliberate floor: below
+     ~24px it stops being a reliable thumb target on a phone, which would trade a
+     silently-dead door for a merely-frustrating one. */
+}
+/* The host must not creep under the strip and re-steal those points. */
+.os.os-fullscreen .dock.dock-swipe.has-vei-composer .dock-vei-host {
+  margin-top: var(--dock-handle-strip, 26px);
+}
