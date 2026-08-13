@@ -17,7 +17,7 @@
 // only. CACHE-FIRST stays for genuinely immutable assets (icons, manifest), where
 // staleness is harmless and offline speed is the entire point.
 
-const VERSION = "xos-v3-2026-08-10";     // bumped: activate() drops every older cache
+const VERSION = "xos-v4-2026-08-12";     // bumped: activate() drops every older cache
 const SHELL = [
   "/xos/",
   "/xos/index.html",
@@ -79,7 +79,22 @@ self.addEventListener("fetch", (ev) => {
   // default answer — otherwise a shipped fix stays invisible for a whole load.
   if (req.mode === "navigate" || isCode(url.pathname)) {
     ev.respondWith(
-      fetch(req)
+      // cache:"reload" IS THE WHOLE POINT OF THIS BRANCH. A bare fetch(req) still
+      // goes through the browser's HTTP cache, and GitHub Pages serves app.jsx with
+      // `cache-control: max-age=600` (MEASURED 2026-08-12: `age: 108` on a live
+      // request). So "network-first" was really "HTTP-cache-first for ten minutes":
+      // this worker believed it had gone to the network and handed back a file up to
+      // 10 minutes old. That is why a verified deploy did not appear on qi's phone,
+      // and why he called it — "live is fake" (2026-08-02:08 PM). He was right: bytes
+      // on the server are not bytes on the device.
+      //
+      // "reload" bypasses the HTTP cache for this request and updates it on the way
+      // through, so a deploy lands on the very next load. The offline fallback below
+      // is untouched — this only changes WHERE the fresh copy comes from, never
+      // whether there is one.
+      //
+      // LIVE means rendered on his device. Nothing else earns the word.
+      fetch(req, { cache: "reload" })
         .then((fresh) => {
           if (fresh && fresh.ok && req.method === "GET") {
             caches.open(VERSION).then((c) => c.put(req, fresh.clone())).catch(() => {});
