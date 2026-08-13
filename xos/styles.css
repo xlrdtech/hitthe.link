@@ -4057,7 +4057,16 @@ html, body { overscroll-behavior-y: none; }
 .pane-vei{position:relative;overflow:hidden}
 .xos-vei-wrap{
   position:absolute;left:0;right:0;top:0;
-  bottom:calc(var(--xos-glass,84px) + env(safe-area-inset-bottom,0px));
+  /* bottom:0 — DO NOT reserve dock space here.
+     It used to stop short by calc(var(--xos-glass,84px) + safe-area) so the composer
+     would not land under the glass. But .panes is ALREADY inset by the dock's measured
+     height (--xos-dock-real), so reserving it again subtracted it TWICE and left an
+     empty strip of pane between the panel and the bar.
+     MEASURED 2026-08-12 22:30 at 390x844: panes ended at 752 (correct, the dock starts
+     there) while #xos-vei ended at 668 — an 84px black band, exactly the double count.
+     That is qi's "black empty dead space is still present" (20:04) in its final form.
+     And the composer no longer needs clearing anyway: it lives IN the glass now. */
+  bottom:0;
   display:flex;overflow:hidden;
 }
 #xos-vei{
