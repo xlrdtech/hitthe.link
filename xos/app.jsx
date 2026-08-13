@@ -1851,9 +1851,22 @@ function BrowserPane({ openTabs, activeTabId, setActiveTabId, onCloseTab, onClos
    =========================================================== */
 function Dialpad({ callers }) {
   const [num, setNum] = useState("");
-  const press = (d) => setNum((n) => (n + d).slice(0, 16));
+  /* ── THE STAR KEY DIALLED A GLYPH, NOT A STAR (found 2026-08-13 02:50, codex
+     review, then verified against the source before touching anything).
+     KEYS[213] is ["✱", ""] — that is U+2731 HEAVY ASTERISK, a DISPLAY character.
+     press() appended it verbatim and `tel` was built as "tel:" + num, so pressing
+     star produced `tel:✱` — not a valid tel: URI, so the call silently does not
+     place. Same class for any future decorative key glyph.
+     FIX: the keypad may keep whatever glyph looks right; what enters state is the
+     real DTMF character. Display stays pretty, the dialled string stays valid. */
+  const KEY_VALUE = { "✱": "*" };
+  const press = (d) => setNum((n) => (n + (KEY_VALUE[d] || d)).slice(0, 16));
   const back = () => setNum((n) => n.slice(0, -1));
-  const tel = num ? "tel:" + num : null;
+  /* Sanitize on the way out too, belt and braces: RFC 3966 allows digits and
+     + * # , ; only. Anything else in a tel: URI is silently dropped by the OS,
+     which looks exactly like "the call button does nothing". */
+  const telDigits = num.replace(/[^0-9*#+,;]/g, "");
+  const tel = telDigits ? "tel:" + telDigits : null;
 
   const match = useMemo(() => {
     if (!num) return null;
