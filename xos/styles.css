@@ -1117,8 +1117,20 @@ body {
 .mfilter {
   flex: 0 0 auto;
   appearance: none;
-  background: transparent;
-  border: 0.5px solid rgba(255,255,255,.16);
+  /* ── WAS `background: transparent` — an outlined wireframe chip sitting in the
+     same row as the glass .opill (~1047). Exactly the mismatch qi named:
+     "the Omni inbox, you got other types of CSS besides the glass."
+     Same XenV40 --glass-* tokens as .opill and .omni-prompt, at a lighter blur
+     because this is a small filter chip, not a panel — the hierarchy is carried
+     by blur depth, which is why the values differ but the tokens do not.
+     The .active rules below are UNTOUCHED: their solid per-source colours
+     (--email/--beside/--slack…) are deliberate state coding, not incohesion. */
+  background: var(--glass-surface-mid);
+  background-image: var(--glass-sheen);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  backdrop-filter: blur(10px) saturate(150%);
+  box-shadow: var(--glass-shadow-soft);
+  border: 0.5px solid var(--glass-border-soft);
   color: var(--text-dim);
   font-family: var(--f-mono);
   font-size: 9.5px;
