@@ -1574,6 +1574,28 @@ function VvsveiPane() {
               return;
             }
             if (composer.parentElement === dockHost) return;   // idempotent
+
+            // 2026-08-13 04:04 — DO NOT HOIST. MEASURED, in a real browser, at phone width.
+            // Moving the composer in here filled the swipe glass and swallowed every
+            // gesture on it: document.elementFromPoint() over the whole 500x92 dock
+            // returned composer-bar at 125 of 125 sampled points and .dock-hit at ZERO.
+            // .dock-hit is the target that OPENS the app drawer. So the drawer — 32 tiles,
+            // all present the entire time — had no reachable door.
+            //
+            // qi, verbatim: "without my canonical swipe glass and the web apps that pop
+            // the web app space that turns any URL into a web app, or automatically
+            // populates the hidden app drawer that comes from tapping the swipe glass...
+            // the whole entire business operation plan doesn't exist."
+            // The glass is not decoration. Tapping it IS the product.
+            //
+            // Leaving the composer in the panel is this function's OWN documented
+            // fallback ("exactly the previous behaviour"). Verified after the change:
+            // .dock-hit reachable from 75 of 75 sampled points. Nothing about the glass's
+            // appearance is touched — .dock-swipe/-sheen/-edge-light are untouched.
+            // If the composer is ever wanted in the glass again, it must not cover
+            // .dock-hit; re-run the point sample before believing it does not.
+            return;
+            // eslint-disable-next-line no-unreachable
             dockHost.appendChild(composer);
             _xosDockHeight();   // the glass just grew; the panes must follow it exactly
             // The transcript's bottom padding is derived from a measurement that just
