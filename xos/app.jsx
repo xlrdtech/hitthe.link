@@ -325,6 +325,10 @@ function _xosStopCurrent() {
    brain") is the shared referee: POST /api/voice/claim takes the channel and
    silences whoever held it. Fire-and-forget — a claim that fails must never
    block playback, because no voice is itself a crash. */
+/* This page's VSQ identity. One constant, used BOTH to claim and to decide
+   whether an inbound claim is my own echo — two literals would drift apart and
+   the page would silence itself the instant it started speaking. */
+const VSQ_SELF = "xos-replay";
 function _vsqClaim(owner) {
   try {
     /* MUST be https and same host family as the rest of the page's calls.
@@ -344,7 +348,7 @@ function _vsqClaim(owner) {
   } catch (_) {}
 }
 function playBubble(text) {
-  _vsqClaim("xos-replay");      // barge the SYSTEM channel (Xen's voice)
+  _vsqClaim(VSQ_SELF);          // barge every OTHER surface (Xen's voice)
   _xosStopCurrent();            // barge THIS page's channel
   if (!text) return;
   const a = new Audio("https://api.xlrd.org/api/tts?text=" + encodeURIComponent(text.slice(0, 350)));
@@ -736,6 +740,14 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
           let raw;
           try { raw = JSON.parse(msg.data); } catch (e) { return; }
           if (!raw || raw.event === "connected" || raw.event === "caught-up") return;
+          // ── VSQ: someone else took the voice channel — go quiet NOW. ───────
+          // This MUST sit above the body/text guard below: a claim carries no
+          // message body, so the guard would drop it and the whole broadcast
+          // leg would be dead code that still looks wired.
+          if (raw.event === "xen:voice-claim") {
+            if (!raw.data || raw.data.owner !== VSQ_SELF) _xosStopCurrent();
+            return;
+          }
           if (!(raw.body || raw.text || raw.message)) return;
           // qi 2026-05-22 ultrathink: drop ancient backfill from SSE replay (>30d old) so live feed isn't 2020 noise
           // Same unit bug as normalizeLiveEvent: this compared ms against seconds,
