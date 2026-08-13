@@ -1204,6 +1204,46 @@ function OpenedAppPage({ app }) {
   );
 }
 
+/* PUBLISH THE DOCK'S MEASURED HEIGHT. --xos-dock-real drives the .panes bottom inset
+   (styles.css), replacing `calc(var(--dock-h) + env(safe-area-inset-bottom))`.
+
+   WHY MEASURE INSTEAD OF SETTING A NUMBER: the swipe glass now holds vvsvei's real
+   composer, so its height depends on the composer's height — which itself changes when
+   the pill row wraps, when a paste grows the textarea, and when the device's safe-area
+   inset applies. Any constant is wrong for some of those states, and when the constant
+   is too small the panes end ABOVE the dock and qi sees a black band between them
+   (2026-08-12 20:04: "black empty dead space is still present"). Measuring cannot drift.
+
+   getBoundingClientRect().height already INCLUDES the safe-area padding-bottom, which is
+   why the CSS consumes this raw with no `+ env(...)` — adding it would double-count.
+
+   No feedback loop: --xos-dock-real changes .panes, and .panes does not affect the dock's
+   height. The equality guard makes it a no-op once settled either way. */
+let _xosDockRO = null;
+function _xosDockHeight() {
+  try {
+    const dock = document.querySelector(".dock.dock-swipe");
+    if (!dock) return;
+    const publish = () => {
+      const h = Math.round(dock.getBoundingClientRect().height);
+      if (!h) return;
+      const prev = document.documentElement.style.getPropertyValue("--xos-dock-real");
+      const next = h + "px";
+      if (prev === next) return;
+      document.documentElement.style.setProperty("--xos-dock-real", next);
+    };
+    publish();
+    // Keep following it: the composer grows on paste, the pill row wraps on rotation,
+    // and the keyboard changes the viewport. A one-shot measurement would go stale the
+    // first time any of those happened — the same trap as a hardcoded constant, just
+    // with an extra step.
+    if (!_xosDockRO && typeof ResizeObserver !== "undefined") {
+      _xosDockRO = new ResizeObserver(publish);
+      _xosDockRO.observe(dock);
+    }
+  } catch (_) { /* layout polish must never take the OS down */ }
+}
+
 /* ══ VVSVEI AS THE CENTER PANEL — RUNTIME INCLUDE, IN-DOCUMENT ══════════════
    qi 2026-08-12 16:55 "place vvsvei as the center panel of XOS" + 17:01 NO
    IFRAMES (canon-iframes-banned; iframes cost _SelfOwn 1.5 years) + 17:2x he
@@ -1297,13 +1337,55 @@ function VvsveiPane() {
         const deViewport = (css) => css
           .replace(/\b100(?:d|s|l)?vh\b/gi, "100%")
           .replace(/position\s*:\s*fixed/gi, "position:absolute");
-        const scopeCss = (css) => deViewport(css).replace(
+        // DUAL SCOPE — the composer physically LEAVES #xos-vei to live in the swipe
+        // glass (qi 2026-08-12 19:49: "get my soundwave in the attachment and send
+        // buttons and place it directly into the swipe bar"), and a stylesheet scoped
+        // only to `#xos-vei …` stops applying the instant a node leaves that subtree.
+        // Moving it under one scope would land it in the glass UNSTYLED — which is the
+        // opposite of his bar: "This would be 0% difference."
+        //
+        // So every rule is emitted TWICE, once under each host. `.dock-vei-host` is the
+        // empty ref'd div inside .dock-swipe that receives the moved node. Same rules,
+        // same specificity, two places it can live — so the composer looks identical
+        // whether it sits in the panel or in the glass.
+        const HOSTS = [scope, ".dock-vei-host"];
+        // STRIP COMMENTS BEFORE SCOPING — non-negotiable, and it fixes a latent bug.
+        //
+        // The rewriter treats everything between `}` and `{` as a selector list and
+        // splits it on ",". A CSS comment sitting above a rule is INSIDE that span, so
+        // any comma inside the comment gets treated as a selector separator and the
+        // comment is torn in half — leaving an unterminated `/*` that swallows the real
+        // declarations. MEASURED 2026-08-12 from the generated sheet:
+        //
+        //   #xos-vei /* Transcript = top-anchored chat bubbles, .dock-vei-host
+        //   /* Transcript = top-anchored chat bubbles, #xos-vei cream-on-green */
+        //   #transcript, .dock-vei-host cream-on-green */ #transcript {
+        //
+        // — from the innocent comment "/* Transcript = top-anchored chat bubbles,
+        // cream-on-green */". The #transcript and .wrap rules were destroyed, so both
+        // sized to content: #transcript measured 3040px inside a 642px host and the
+        // render gate correctly reported the feed INVISIBLE.
+        //
+        // This was LATENT with a single scope — the torn tail still happened to end in
+        // "*/ #transcript", so one usable selector survived. Emitting two hosts prefixes
+        // each fragment separately and both halves become garbage. My change did not
+        // create the bug, it removed the luck that was hiding it.
+        //
+        // Comments carry no behaviour in the mounted copy (the source file keeps them),
+        // so removing them is free and makes the whole class impossible.
+        const stripComments = (css) => css.replace(/\/\*[\s\S]*?\*\//g, "");
+        const scopeCss = (css) => stripComments(deViewport(css)).replace(
           /(^|\})\s*([^@{}][^{}]*)\{/g,
-          (m, brace, sel) => brace + " " + sel.split(",").map((s) => {
+          (m, brace, sel) => brace + " " + sel.split(",").flatMap((s) => {
             s = s.trim();
-            if (!s) return s;
-            if (/^(html|body|:root)\b/i.test(s)) return scope + s.replace(/^(html|body|:root)/i, "");
-            return scope + " " + s;
+            if (!s) return [];
+            // html/body/:root ARE the host (the panel is the viewport here), so they
+            // fold onto each host itself rather than becoming a descendant selector.
+            if (/^(html|body|:root)\b/i.test(s)) {
+              const tail = s.replace(/^(html|body|:root)/i, "");
+              return HOSTS.map((h) => h + tail);
+            }
+            return HOSTS.map((h) => h + " " + s);
           }).join(", ") + " {"
         );
         const styleEl = document.getElementById("xos-vei-styles") || (() => {
@@ -1328,7 +1410,28 @@ function VvsveiPane() {
           "\n/* xos mount override — panel is the viewport here */\n" +
           scope + "{height:100%!important;max-height:100%!important;" +
           "min-height:0!important;width:100%!important;max-width:100%!important;" +
-          "position:relative!important;overflow:hidden!important;}\n";
+          "position:relative!important;overflow:hidden!important;}\n" +
+          // THE INNER WRAP MUST FILL THE HOST, NOT ITS OWN CONTENT.
+          //
+          // MEASURED 2026-08-12 22:2x, 390x844: #xos-vei was 642px with overflow:hidden
+          // while `#xos-vei .wrap` inside it measured 3103px, so #transcript was 3040px
+          // and the render gate correctly called it INVISIBLE (2461px cut off).
+          //
+          // CAUSE: #xos-vei is display:flex, so .wrap is a FLEX ITEM — and it computed
+          // `flex: 0 1 auto` with `min-height: auto`, which means "size to content and
+          // refuse to shrink". Content is a whole day of transcript. Pinning the HOST is
+          // not enough; the first child inside it has to be pinned too, or the host just
+          // clips an enormous child. That is the same lesson as the 100dvh fix one level
+          // deeper: every link in the chain needs a definite height, not just the top one.
+          //
+          // min-height:0 is the load-bearing half — without it a flex item will not
+          // shrink below its content no matter what height you give it, and #transcript's
+          // overflow:auto never engages.
+          scope + " .wrap{position:relative!important;height:100%!important;" +
+          "max-height:100%!important;min-height:0!important;flex:1 1 auto!important;}\n" +
+          // Same for the two links between .wrap and the scroller, for the same reason.
+          scope + " #tlwrap{min-height:0!important;flex:1 1 auto!important;}\n" +
+          scope + " #transcript{min-height:0!important;}\n";
         styleEl.textContent = [...doc.querySelectorAll("style")]
           .map((s) => scopeCss(s.textContent || "")).join("\n") + SCOPE_FIX;
 
@@ -1389,6 +1492,60 @@ function VvsveiPane() {
           s.textContent = "(function(){\n" + code + "\n})();";
           host.appendChild(s);
         }
+
+        // ── 4. MOVE THE COMPOSER INTO THE SWIPE GLASS ────────────────────────
+        // qi 2026-08-12 19:49: "if you could just get my soundwave in the attachment and
+        // send buttons and place it directly into the swipe bar and make sure my
+        // notifications still right at the bottom of the swipe bar like before then its
+        // decent but I need the same chat bubbles that I have from VVSVEI" — and
+        // 19:49:32: "This would be 0% difference."
+        //
+        // It is a MOVE, not a rebuild. That is only possible because this is ONE document
+        // (iframes are banned), and it is the whole reason 0% difference is achievable:
+        // .composer keeps its identity — same node, same ids, same canvas, same textarea.
+        // He asked the fair question, "why couldnt you just move it over its already
+        // built": nothing stopped it. Nobody had done it.
+        //
+        // WHY IT RUNS AFTER THE SCRIPTS: appendChild MOVES a node and event listeners
+        // travel WITH it (they are bound to the node, not to its position), so vvsvei's
+        // own wiring — send, paperclip, mic, the waveform canvas draw loop — stays live
+        // across the move. Running before would leave nothing to move.
+        //
+        // WHY THE CLEARANCE MATH STILL HOLDS: _veiComposerClearance publishes the MEASURED
+        // OVERLAP of .composer over #transcript. Once the composer lives in the glass it
+        // no longer overlaps the scroller at all, so the overlap measures ~0 and the
+        // padding collapses to the bare 16px gap — correct, automatically. A hardcoded
+        // 100px would have left a permanent 116px hole at the bottom of the feed. This is
+        // the payoff for measuring instead of guessing.
+        //
+        // ORDER INSIDE THE GLASS: the host div sits ABOVE DockNotifTicker in the JSX, so
+        // notifications remain at the BOTTOM of the bar — "like before".
+        //
+        // The dock is conditional (t.showDock), and this effect can win the race against
+        // its render, so retry a bounded number of frames and then give up QUIETLY —
+        // leaving the composer in the panel, which is exactly the previous behaviour.
+        // Never throw here: a failed relocation must not cost him the whole panel.
+        (function relocateComposer(attempt) {
+          try {
+            const composer = host.querySelector(".composer");
+            const dockHost = document.querySelector(".dock-vei-host");
+            if (!composer) return;                       // nothing to move
+            if (!dockHost) {
+              if (attempt < 30) requestAnimationFrame(() => relocateComposer(attempt + 1));
+              else console.warn("[xos-vei] no .dock-vei-host after 30 frames — composer stays in the panel");
+              return;
+            }
+            if (composer.parentElement === dockHost) return;   // idempotent
+            dockHost.appendChild(composer);
+            _xosDockHeight();   // the glass just grew; the panes must follow it exactly
+            // The transcript's bottom padding is derived from a measurement that just
+            // changed by a lot. Nudge the observer so the feed reclaims the space in this
+            // frame instead of on the next unrelated resize.
+            try { window.dispatchEvent(new Event("resize")); } catch (_) {}
+          } catch (e) {
+            console.warn("[xos-vei] composer relocation failed, staying in panel:", e && e.message);
+          }
+        })(0);
       } catch (e) {
         if (cancelled) return;
         // Fail LOUD in the panel. An empty middle panel is the exact disaster
@@ -2282,6 +2439,19 @@ function App() {
               <span className="dock-handle" aria-hidden="true" />
               <span className="dock-sheen" aria-hidden="true" />
               <span className="dock-edge-light" aria-hidden="true" />
+              {/* THE SOUNDWAVE + ATTACH + SEND LIVE IN THE GLASS (qi 2026-08-12 19:49:
+                  "get my soundwave in the attachment and send buttons and place it
+                  directly into the swipe bar and make sure my notifications still right
+                  at the bottom of the swipe bar like before").
+                  An EMPTY ref'd host, deliberately: VvsveiPane MOVES vvsvei's real
+                  .composer node in here (one document, no iframe, so it is a move and
+                  not a rebuild — which is why it can be "0% difference"). React only
+                  reconciles children it created, so a foreign child inside an empty host
+                  survives re-renders; appending it as a sibling of DockNotifTicker would
+                  invite React to misplace them.
+                  ORDER MATTERS: this sits ABOVE DockNotifTicker so notifications stay at
+                  the BOTTOM of the glass, "like before". */}
+              <div className="dock-vei-host" />
               <DockNotifTicker notif={notif} />
               <div
                 className="dock-hit"

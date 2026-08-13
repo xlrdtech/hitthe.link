@@ -3393,7 +3393,16 @@ html.xos-locked, body.xos-locked { overflow: hidden; }
   font-size: var(--fs-tiny);
 }
 .os.os-fullscreen .panes {
-  inset: var(--status-h) 0 calc(var(--dock-h) + env(safe-area-inset-bottom, 0px)) 0;
+  /* --xos-dock-real is the dock's MEASURED height, published by _xosDockHeight()
+     in app.jsx. It already includes the safe-area padding, so it is used raw — no
+     `+ env(...)`, which would double-count it.
+     The fallback is the original expression verbatim, so if JS never runs the layout
+     is exactly what it was. THIS is what removes the black dead band (qi 2026-08-12
+     20:04): the panes end where the dock actually begins, whatever the dock now
+     contains — instead of where a constant guessed it would begin. */
+  inset: var(--status-h) 0
+         var(--xos-dock-real, calc(var(--dock-h) + env(safe-area-inset-bottom, 0px)))
+         0;
 }
 .os.os-fullscreen .dock {
   height: calc(var(--dock-h) + env(safe-area-inset-bottom, 0px));
@@ -3674,6 +3683,73 @@ html, body { overscroll-behavior-y: none; }
    swipe target, the dock-hit region and every JS reference stay exactly as they
    were. Deleting the node would be a bigger change than he asked for. */
 .os.os-fullscreen .dock.dock-swipe .dock-handle { display: none; }
+
+/* ═══ THE COMPOSER LIVES IN THE GLASS ═══════════════════════════════════════
+   qi 2026-08-12 19:49: "get my soundwave in the attachment and send buttons and
+   place it directly into the swipe bar and make sure my notifications still right
+   at the bottom of the swipe bar like before" · "This would be 0% difference."
+
+   VvsveiPane MOVES vvsvei's real .composer node into .dock-vei-host (one document,
+   no iframe — a move, not a rebuild). Three things have to be true for that to work:
+
+   1. THE GLASS MUST GROW TO FIT IT. The bar was a fixed
+      calc(var(--dock-h,60px) + safe-area) ≈ 60-78px, and the composer is ~84px
+      (31px pill row + 51px bar). A fixed height would clip it — the exact bug that
+      hid the voice bar off-panel all day. So height becomes auto with the old value
+      as a MINIMUM: empty it looks identical, full it fits.
+
+   2. IT MUST BE TAPPABLE. .dock-hit deliberately covers the whole glass with
+      pointer-events:auto so the glass owns the pane swipe (qi 2026-08-12 18:26:
+      "the swipe glass is literally called the swipe glass because it's supposed to
+      do the swiping"). That layer would swallow every tap on the textarea, the
+      paperclip and send. So the host sits ABOVE it and takes its own events back.
+      The rest of the glass still swipes — only the composer's own box is excluded,
+      which is correct: a drag that starts on the text field should never fling the
+      pane away.
+
+   3. THE PANES MUST FOLLOW ITS REAL HEIGHT. .panes is inset by
+      calc(var(--dock-h) + safe-area) — the SAME variable. A dock that grows while
+      that constant stays put is precisely the "black empty dead space" (qi 20:04).
+      So _xosDockHeight() (app.jsx) measures the dock and publishes --dock-h, and
+      the gap closes by construction instead of by a tuned number. */
+.os.os-fullscreen .dock.dock-swipe {
+  height: auto;
+  min-height: calc(var(--dock-h, 60px) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.os.os-fullscreen .dock.dock-swipe .dock-vei-host {
+  position: relative;
+  z-index: 2;            /* above .dock-hit, which is the gesture layer */
+  pointer-events: auto;  /* take back the events the hit layer claimed */
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+/* The composer was position:absolute, anchored to the bottom of vvsvei's own
+   viewport-sized wrap. In the glass it is simply IN FLOW — the glass is its
+   container now, so it must not float relative to anything else. Its INTERNALS
+   (#pill-row above .composer-bar) are untouched, which is what keeps the pills
+   where qi put them and makes this 0% different. */
+.os.os-fullscreen .dock.dock-swipe .dock-vei-host .composer {
+  position: static;
+  inset: auto;
+  left: auto; right: auto; bottom: auto;
+  padding: 6px 10px 0;
+  width: 100%;
+}
+
+/* Notifications stay at the BOTTOM of the bar, "like before" — the host renders
+   above the ticker in the JSX, and this keeps the ticker hugging the bottom edge
+   in the new column layout. */
+.os.os-fullscreen .dock.dock-swipe .dock-notif-ticker {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+}
 
 /* Top-edge refraction highlight - 1px catching light from above */
 .os.os-fullscreen .dock.dock-swipe .dock-sheen {
