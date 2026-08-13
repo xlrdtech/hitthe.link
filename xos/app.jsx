@@ -829,7 +829,20 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
   const shown = useMemo(() => {
     let list = events;
     if (platform !== "all") list = list.filter((e) => e.src === platform);
-    if (unread) list = list.filter((e) => e.unread);
+    // 2026-08-13 03:35 — FAIL OPEN, and this is a measured bug, not a tidy-up.
+    // The UNREAD chip was found active mid-session while a clean reload shows
+    // ALL active, so something flips it (dictate-inject reaches this pane). And
+    // NOTHING in the omni stream carries an `unread` flag — every row absorbs as
+    // `unread: !!m.unread` === false. So this line filtered 115 rows down to 0 and
+    // the pane rendered "awaiting signals…" underneath a "LIVE · 115" badge.
+    // qi said it was empty every ten minutes for a day; the badge said otherwise
+    // and I believed the badge. An inbox must NEVER show nothing while it holds
+    // something: if this filter would empty a non-empty feed, it is wrong, not the
+    // feed. Show everything instead. Fix the `unread` source and this stays inert.
+    if (unread) {
+      const onlyUnread = list.filter((e) => e.unread);
+      list = onlyUnread.length ? onlyUnread : list;
+    }
     if (q) {
       const n = q.toLowerCase();
       list = list.filter((e) =>
