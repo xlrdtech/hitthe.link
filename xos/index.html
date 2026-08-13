@@ -68,9 +68,37 @@
 
   <script>
     // Register service worker for offline shell + asset cache (qi 2026-05-22 ultrathink xos 100%)
+    //
+    // ── 2026-08-13 02:41 — THIS IS WHY "YOU SAY YOU FIXED IT AND IT'S NOT DONE" ──
+    // MEASURED, live: service-worker.js on the edge was the correct v4 (network-first
+    // for jsx/css, skipWaiting + clients.claim, all present). And the browser was
+    // STILL controlled by v3: caches.keys() returned ["xos-v3-2026-08-10"], with no
+    // v4 cache at all. The v4 worker had never once activated.
+    //
+    // CAUSE: the browser fetches service-worker.js THROUGH ITS HTTP CACHE on a plain
+    // register(). GitHub Pages serves it `cache-control: max-age=600`, so the update
+    // check kept reading a cached copy, concluded "byte-identical, nothing new", and
+    // left v3 in charge — indefinitely. skipWaiting() cannot help a worker that is
+    // never even discovered.
+    //
+    // PROOF IT WAS ONLY THIS: one manual reg.update() flipped caches.keys() to
+    // ["xos-v4-2026-08-12"], v3 was dropped, and on the next load the drawer went
+    // from 2 apps to 32 with the stored list merged and zero duplicates.
+    //
+    // FIX, both halves needed:
+    //   updateViaCache:"none" — never read the WORKER SCRIPT from the HTTP cache
+    //   an explicit update() — register() alone is not a reliable update trigger
+    // Plus a 60s re-check so a deploy reaches a long-open PWA without qi ever
+    // touching anything (canon 4: a tap is total failure; canon 9: live by default).
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
-        navigator.serviceWorker.register("service-worker.js", { scope: "/xos/" }).catch(() => {});
+        navigator.serviceWorker
+          .register("service-worker.js", { scope: "/xos/", updateViaCache: "none" })
+          .then((reg) => {
+            reg.update().catch(() => {});
+            setInterval(() => reg.update().catch(() => {}), 60000);
+          })
+          .catch(() => {});
       });
     }
   </script>
