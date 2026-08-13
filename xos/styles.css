@@ -4221,3 +4221,68 @@ html, body { overscroll-behavior-y: none; }
 .os.os-fullscreen .dock.dock-swipe.has-vei-composer .dock-vei-host {
   margin-top: var(--dock-handle-strip, 26px);
 }
+
+/* ── XOS OWNS THE GLASS CONTENTS (2026-08-13 05:01) ──────────────────────────
+   qi, verbatim:
+     "the only thing to preserve of the VVSVEI design is the bubbles, the pills,
+      and the sound wave, and the small attach and send icons"
+     "the rest can be what XOS is designed to be"
+     "you move the type function into a pill and kill that container and keep
+      only the soundwave"
+     "you can kill the vvsvei background too"
+
+   Everything below is scoped to `.dock-vei-host` / `#xos-vei` ONLY. Standalone
+   vvsvei is untouched and keeps its own design — this is XOS asserting its own
+   look over the parts it borrowed, not an edit to that product.
+
+   WHAT DIES: `.composer-bar` is a full glass slab in vvsvei — gradient, 1px
+   border, pill radius, 16px backdrop-blur, inset highlight and a 24px drop
+   shadow. Inside the swipe glass that is a SECOND piece of glass sitting on
+   qi's glass, which is exactly the flat-slab look he called garbage. The bar
+   keeps its layout job (flex row, gap) and loses every decorative property.
+
+   WHAT BECOMES A PILL: `.field` — the type function. It takes the pill
+   treatment the bar gave up, per his standing rule that pills are always glass.
+   Same glass vocabulary, one level quieter, because it sits ON the swipe glass
+   rather than on a flat background.
+
+   WHAT SURVIVES UNTOUCHED: #waveform-canvas (the canonical soundwave) and the
+   small attach and send icons. Neither is styled here — they are on his
+   preserve list, so the correct action is to write no rule for them at all. */
+
+/* the container: layout only, no skin */
+.dock.dock-swipe .dock-vei-host .composer-bar {
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* the type function, as a pill */
+.dock.dock-swipe .dock-vei-host .field {
+  border-radius: 999px;
+  padding: 0 12px;
+  background: linear-gradient(145deg, rgba(255,255,255,.055), rgba(255,255,255,.018));
+  border: 1px solid rgba(255,255,255,.085);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10);
+  /* No backdrop-filter: this pill sits on .dock-swipe, which is already blurring
+     the app behind it. A second blur over a blur costs a compositor pass per
+     frame on a phone and returns nothing visible. */
+}
+
+/* the vvsvei background: gone. XOS owns what is behind the panel.
+   `.bg-overlay` is vvsvei's own full-bleed gradient — the one that previously
+   escaped this panel and laid itself over the entire app, leaving the omni-inbox
+   alive, scrolling and invisible underneath. Removing it entirely is strictly
+   safer than continuing to contain it. */
+#xos-vei,
+#xos-vei .wrap {
+  background: none;
+}
+#xos-vei .bg-overlay,
+.dock.dock-swipe .dock-vei-host .bg-overlay {
+  display: none;
+}
