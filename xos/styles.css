@@ -4311,3 +4311,34 @@ html, body { overscroll-behavior-y: none; }
 }
 .dock.dock-swipe .dock-vei-host #pill-row::-webkit-scrollbar { display: none; }
 .dock.dock-swipe .dock-vei-host #pill-row > * { flex: 0 0 auto; }
+
+/* ── PILL ROW, THE REAL FIX (2026-08-13 05:10) ───────────────────────────────
+   My first attempt at qi's "the pill must be 1 row not too" set flex-wrap:nowrap
+   on #pill-row and did NOTHING. MEASURED after it shipped: row still 66px, pills
+   in two bands at y=639 and y=672.
+   
+   WHY IT FAILED, and this is the lesson: #pill-row computes `display: block`.
+   flex-wrap only means something on a flex container, so the property applied
+   cleanly, changed nothing, and left a rule that LOOKS like a fix in the file.
+   Always confirm the display type before reaching for a flex property.
+
+   THE ACTUAL STRUCTURE, measured: #pill-row holds TWO separate
+   `.transcript-toolbar` divs — one with "+ New", one with Threads/Copy/Export/
+   Share — plus an empty #voice-pills and a display:none #thread-picker. They are
+   BLOCK children, so they stack. Nothing was wrapping; two rows were being laid
+   out on purpose by the default flow.
+
+   FIX: make #pill-row a real single-line flex row so the toolbars sit side by
+   side, and let it scroll horizontally rather than shrink — pills are tap
+   targets and compressing them is how a control becomes unhittable on a phone.
+   Zero-height children (#voice-pills) are excluded so they cannot add a gap. */
+.dock.dock-swipe .dock-vei-host #pill-row {
+  display: flex !important;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.dock.dock-swipe .dock-vei-host #pill-row > .transcript-toolbar {
+  flex: 0 0 auto;
+}
+.dock.dock-swipe .dock-vei-host #pill-row > #voice-pills:empty { display: none; }
