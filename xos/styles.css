@@ -1173,8 +1173,28 @@ body {
 /* compact prompt at top of feed */
 .mirror-prompt {
   position: relative;
-  border: 0.5px solid var(--border-bright);
-  background: var(--bg-surface);
+  /* ── THIS is the omni-inbox prompt qi actually sees. ──────────────────────
+     I first "fixed" `.omni-prompt` (~238) — MEASURED: grep -c "omni-prompt"
+     app.jsx = 0, grep -c "mirror-prompt" = 3. `.omni-prompt` is DEAD CSS that
+     nothing renders, so that change was invisible. A live DOM dump of the page
+     is what exposed it: the real markup is
+     .mirror > .mirror-filters > .mfilter and .mirror-feed > .mirror-prompt.
+     RULE EARNED: before styling a selector, grep the JSX for it. A rule in the
+     stylesheet is not proof anything wears it.
+     Was `background: var(--bg-surface)` + `--border-bright` — flat opaque paint
+     with a hard border and no backdrop-filter, i.e. terminal CSS inside a glass
+     app, which is exactly what qi named: "the Omni inbox, you got other types of
+     CSS besides the glass."
+     Same --glass-* tokens as .mfilter and .opill. The 2px accent gutter in
+     ::before stays — that is identity, not incohesion.
+     SCOPE: the swipe glass is NOT touched (qi, three times: "that cannot be
+     lost, that was a tedious design"). */
+  background: var(--glass-surface-mid);
+  background-image: var(--glass-sheen);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+  box-shadow: var(--glass-shadow-soft);
+  border: 0.5px solid var(--glass-border-soft);
   border-radius: 12px;
   padding: 11px 12px 10px;
   font-family: var(--f-mono);
