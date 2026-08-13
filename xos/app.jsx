@@ -315,8 +315,37 @@ function _xosStopCurrent() {
   // If a device speechSynthesis fallback was ever used, cut it too (single channel).
   try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (_) {}
 }
+/* qi 2026-08-13 17:35: "two voices can't speak at the same time" — the play
+   button must cut Xen mid-sentence, not stack on top of him.
+   MEASURED FAULT: _xosStopCurrent() only reaches THIS page's channel
+   (_xosCurAudio + speechSynthesis). Xen's voice is the system TTS driven by
+   omnimind on the Mac — a different process, a different output path, invisible
+   to a browser tab. So replay silenced the page and Xen kept talking over it.
+   THE VSQ (qi: "everything goes through the VSQ… that's the one voice one
+   brain") is the shared referee: POST /api/voice/claim takes the channel and
+   silences whoever held it. Fire-and-forget — a claim that fails must never
+   block playback, because no voice is itself a crash. */
+function _vsqClaim(owner) {
+  try {
+    /* MUST be https and same host family as the rest of the page's calls.
+       hitthe.link is served over https, so http://127.0.0.1:4441 is blocked as
+       mixed content — the request never leaves the tab and the claim silently
+       never happens.
+       MEASURED 2026-08-13 17:49: omni.xlrd.org returns "not found" for this —
+       that host fronts the omni-inbox server on :4489, NOT omnimind on :4441.
+       xen.xlrd.org is the omnimind front (it is where this page already POSTs
+       /api/dictate-inject). CORS is open there: preflight 204, ACAO *. */
+    fetch("https://xen.xlrd.org/api/voice/claim", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ owner }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch (_) {}
+}
 function playBubble(text) {
-  _xosStopCurrent();            // barge: stop whatever is speaking BEFORE the new line
+  _vsqClaim("xos-replay");      // barge the SYSTEM channel (Xen's voice)
+  _xosStopCurrent();            // barge THIS page's channel
   if (!text) return;
   const a = new Audio("https://api.xlrd.org/api/tts?text=" + encodeURIComponent(text.slice(0, 350)));
   _xosCurAudio = a;             // this is now the sole live channel
