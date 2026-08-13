@@ -2522,6 +2522,24 @@ function App() {
     if (!isInbound && !isXenOut) return;
     if (notifTimer.current) clearTimeout(notifTimer.current);
     setNotif({ ...ev, closing: false, isXenOut });
+    /* ── AUTO-SPEAK. qi 2026-08-13 19:47: "It s supposed to speak through XOS"
+       + "no voice = the system is crashed. 1000% fail".
+       MEASURED THE SAME MINUTE: playBubble() had exactly ONE caller in this
+       entire file — an onClick on the replay button. So XOS could ONLY speak
+       when qi TAPPED it. Every xen-out arrived, rendered its toast card, and
+       died silent. That is canon 4 (no human in the loop) failing by
+       construction: a voice OS whose voice requires a tap is not a voice OS.
+       The pieces were all healthy and none of them was wired to the next —
+       api.xlrd.org/api/tts returns real audio (measured 200, audio/mpeg,
+       17,181 B), SSE_URL is correctly xen.xlrd.org/events, and xen-out events
+       flow (lanes byEvent xen-out=33). Only this call was missing.
+       Guarded on isXenOut so inbound message cards never speak themselves —
+       playBubble claims the VSQ channel, and a self-narrating inbox would
+       fight Xen for the one voice. */
+    if (isXenOut) {
+      const _spoken = ev.body || ev.text || ev.message || "";
+      if (_spoken) { try { playBubble(_spoken); } catch (_) {} }
+    }
     notifTimer.current = setTimeout(() => {
       setNotif((n) => n ? { ...n, closing: true } : null);
       setTimeout(() => setNotif(null), 300);
