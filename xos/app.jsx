@@ -33,6 +33,20 @@ const SSE_URL  = XEN_BASE + "/events";
 // of bug that hid this for weeks.
 const OMNI_BASE   = "https://omni.xlrd.org";
 const OMNI_STREAM = OMNI_BASE + "/api/stream";
+// 2026-08-13 01:05 — THIS DECLARATION WAS MISSING AND IT KILLED THE WHOLE INBOX.
+// `OMNI_POLL_MS` was referenced at the tail of pump() (the setTimeout that
+// schedules the next tick) but declared NOWHERE in this file. That line sits
+// OUTSIDE pump()'s try/catch, so it threw a ReferenceError that rejected
+// pump()'s promise — unhandled, silent, no console error qi would ever see.
+// Net effect: the first fetch+absorb ran, the inbox painted exactly ONE
+// snapshot at page load, and then never polled again. Every message arriving
+// after load was invisible until a manual reload.
+// That single undefined identifier is qi's "the omniinbox is not working",
+// his "live is fake", and his "a delay between when you did something and
+// when anything changed" — all three, from one missing const.
+// Value is not a guess: the comment above pump() states the server refreshes
+// /api/stream every 10s, "so polling at 10s loses nothing".
+const OMNI_POLL_MS = 10000;
 const OMNI_REPLY  = OMNI_BASE + "/api/reply";   // outbound: email→SMTP, chat→Matrix
 const OMNI_SSE    = OMNI_BASE + "/sse-stream";  // live push of the interleaved thread
 const CALLERS_URL = XEN_BASE + "/api/callers";
@@ -606,8 +620,19 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
               unread: !!m.unread,
             };
           });
-          rows.sort((a, b) => (b._absTs || 0) - (a._absTs || 0));
-          return rows.slice(0, 300);
+          // 2026-08-13 01:06 — WAS `return rows.slice(0,300)`, which DISCARDED
+          // `prev` outright. The comment at the head of this effect promises
+          // "Additive to the SSE below rather than replacing it" — the code
+          // never did that. Every poll tick wiped every SSE-delivered row, so
+          // the live firehose was erased on a 10s heartbeat. The comment
+          // described code that was never written.
+          // Now genuinely additive: keep any prev row the snapshot does not
+          // carry (that is the SSE traffic), union it in, re-sort, then cap.
+          const pollKeys = new Set(rows.map((r) => r._omniKey || r.id));
+          const sseOnly = prev.filter((p) => !pollKeys.has(p._omniKey || p.id));
+          const merged = rows.concat(sseOnly);
+          merged.sort((a, b) => (b._absTs || 0) - (a._absTs || 0));
+          return merged.slice(0, 300);
         });
         setCount(j.total || j.messages.length);
       } catch (_) {
