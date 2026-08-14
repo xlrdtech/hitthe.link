@@ -3833,7 +3833,25 @@ html, body { overscroll-behavior-y: none; }
    above the ticker in the JSX, and this keeps the ticker hugging the bottom edge
    in the new column layout. */
 .os.os-fullscreen .dock.dock-swipe .dock-notif-ticker {
-  position: relative;
+  /* qi 2026-08-13 21:27-21:28: notifications sat at the TOP of the bar instead of the
+     bottom, and ran past the right edge — "it needs to [stop] before it hits the other
+     side ... the same width of where it starts on the left, on the right side."
+
+     ONE CAUSE FOR BOTH. There are two rules for this element. The other one
+     (`.os.os-fullscreen .dock-notif-ticker`, line ~3928) declares position:absolute with
+     left:8% / right:8% / bottom:calc(...). THIS rule is more specific — it carries the
+     extra `.dock.dock-swipe` — so its `position: relative` won.
+
+     On a RELATIVE element those offsets change meaning completely: `left` SHIFTS the box
+     rightward from its flow position and `right` is ignored outright (in LTR, left wins
+     when both are set). So it began 8% in on the left, which read as correct, and
+     overhung the right edge by that same 8%. And `bottom` does nothing in relative flow,
+     so it landed wherever the column flex put it — the top — instead of at the bottom.
+
+     Restoring absolute here lets the sibling rule's left/right/bottom apply as authored:
+     symmetric 8% insets, pinned to the bottom. Scoped strictly to the notification —
+     qi 21:28 "only in the notification". */
+  position: absolute;
   z-index: 1;
   flex: 0 0 auto;
 }
