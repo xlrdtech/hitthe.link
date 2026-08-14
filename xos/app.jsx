@@ -1818,8 +1818,20 @@ function VvsveiPane() {
                     // changes which box model the element participates in, and here that
                     // silently re-laid-out a sibling he never asked me to touch. Centring is
                     // a WIDTH problem; it never needed `display` or `margin` at all.
+                    // qi 2026-08-13 21:18: "you resize my swipe bar it looks taller than
+                    // what it was before." Also me — I was writing style.height from a
+                    // getBoundingClientRect() reading. Even when that number looks right
+                    // it can differ from the height the box had with NO inline height at
+                    // all (fractional rect values round up, and an explicit height opts
+                    // the element out of whatever sizing the CSS was doing), so the host
+                    // grew and the whole glass with it.
+                    //
+                    // I now touch NOTHING vertical: the height is READ to size the backing
+                    // store correctly, and never written back. The element's box stays
+                    // exactly as the stylesheet renders it, so .dock-vei-host, --dock-h,
+                    // the glass height and the notif ticker are all untouched by
+                    // construction rather than by careful arithmetic.
                     wave.style.width = "100%";
-                    wave.style.height = h + "px";
                     const ctx = wave.getContext("2d");
                     if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
                   } catch (_) {}
