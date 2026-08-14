@@ -3829,8 +3829,62 @@ html, body { overscroll-behavior-y: none; }
      produced a new defect. The gap is real and still needs fixing — but from a MEASURED
      screenshot of his handset, not from reasoning about env() values I cannot observe.
      A smaller known complaint beats a larger unknown one. */
-  min-height: calc(var(--dock-h, 60px) + env(safe-area-inset-bottom, 0px));
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* ✅ SETTLED WITH HIS OWN NUMBERS — qi's ?geo=1 readout, handset, 2026-08-13 22:41:
+       viewport 402×812 · safe-area bottom=34px · --xos-dock-real=94px
+       .dock.dock-swipe   718→812  h94        GAP dock→screen bottom = 0px
+       #waveform-canvas   719→756  h37        ← pinned to the TOP of the glass
+       .dock-notif-ticker ABSENT
+     So the glass was ALWAYS at the bottom — every "the bar is too high" reading was
+     wrong, mine included. What he was pointing at is the 56px of EMPTY GLASS below the
+     wave: 812 − 756.
+
+     WHY THE WAVE COULD NOT COME DOWN. This column reserves twice under a 37px wave:
+       padding-bottom: 34px   (the inset)
+     + margin-bottom: 22px    (--dock-notif-h, on .dock-vei-host, for the ticker)
+     = 56px of reservation. 37 + 22 + 34 = 93 ≈ the glass's own 94px height, so the
+     column is EXACTLY FULL and `justify-content: flex-end` has zero slack left to
+     distribute. flex-end was never doing anything — the wave sat at the top because
+     the padding pushed everything up against the ceiling, not because it was aligned
+     there. That is why this looked like "the bar is too high" instead of what it is.
+
+     THE INSET DOES NOT NEED PADDING HERE. min-height above already grows the glass by
+     the inset, so the glass covers the home-indicator band with real glass — which is
+     what he asked for: "bottom of the screen = swipe glass". Padding on top of that is
+     a SECOND reservation for the same 34px, and it buys nothing because nothing in
+     this column is at risk of the indicator: the ticker is absolutely positioned and
+     the wave is decorative.
+
+     Dropping it lets flex-end finally work: the wave falls 34px, its bottom lands 22px
+     above the glass bottom, and the ticker (absolute, bottom:6px) sits in exactly that
+     22px strip — inside the glass, at its bottom, directly under the wave. qi 22:40:
+     "bottom of the swipe glass, not underneath — INSIDE the swipe glass equals the
+     notification."
+
+     Height-neutral by construction: min-height is untouched, so the glass stays 94px
+     on his handset and 60.44px without an inset. Only the contents move down. */
+  /* ⛔ SAFE AREA ZEROED — qi 2026-08-13 22:42, after reading his own ?geo=1 readout:
+     "it says bottom 34 pixels and top zero pixels and that must be the issue" ...
+     "It shouldn't be no fucking safe area at all — set the bottom to zero pixels like
+     it was supposed to be."
+
+     He diagnosed it off the probe himself and he is right: on his handset the inset was
+     the ONLY thing between his design and the bottom of the screen. It grew the glass to
+     94px and reserved 56px under a 37px wave, and every "the bar is too high" complaint
+     traces back to that one number.
+
+     --sab is the single knob. It is the value the whole bar's geometry reads, and it is
+     deliberately a variable rather than a hardcoded 0 for two reasons: one line restores
+     the inset if he ever wants it back, and a test can set it to 34px to reproduce his
+     handset exactly — which is the only reason I could measure this at all, since every
+     browser I can drive reports env(safe-area-inset-bottom) as 0 and therefore cannot
+     show the bug.
+
+     THE TRADE, stated plainly because it is real: with the inset at 0 the bottom of the
+     glass sits under the home-indicator band. That is his explicit instruction, twice,
+     and it is his product. */
+  --sab: 0px;                       /* was env(safe-area-inset-bottom, 0px) */
+  min-height: calc(var(--dock-h, 60px) + var(--sab));
+  padding-bottom: var(--sab);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
