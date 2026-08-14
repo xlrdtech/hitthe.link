@@ -2595,10 +2595,23 @@ function App() {
        Guarded on isXenOut so inbound message cards never speak themselves —
        playBubble claims the VSQ channel, and a self-narrating inbox would
        fight Xen for the one voice. */
-    if (isXenOut) {
-      const _spoken = ev.body || ev.text || ev.message || "";
-      if (_spoken) { try { playBubble(_spoken); } catch (_) {} }
-    }
+    // ⛔ XOS MUST NOT SPEAK. Reverted 2026-08-13 20:22 — qi: "but i just heard voice
+    // overlap again", and it was mine.
+    //
+    // I added playBubble(xen-out) here at 19:47 off a true observation with a WRONG
+    // conclusion: playBubble's only caller was an onClick, so I read XOS as unable to
+    // speak without a tap. But the /vvsvei/ fragment is mounted INTO THIS DOCUMENT,
+    // and it is already the speaker — `isXenOut` at vvsvei:2760, `speak-gate` at 2784,
+    // `speakAva()` at 3648, and `_xenOutSpoken` at 2305 is a speak-dedup Set built for
+    // exactly this event. Its dedup is keyed inside its own module, so a second speaker
+    // living in XOS's scope is invisible to it: one document, one event, two voices.
+    //
+    // qi 2026-06-20 already settled this — "VVSVEI is THE single voice". The rule is not
+    // "something must speak", it is "exactly one thing speaks". A surface that hosts the
+    // speaker does not also become one.
+    //
+    // The toast/card below still renders, which is XOS's actual job here: SHOW the reply.
+    // Speaking it is VVSVEI's.
     notifTimer.current = setTimeout(() => {
       setNotif((n) => n ? { ...n, closing: true } : null);
       setTimeout(() => setNotif(null), 300);
