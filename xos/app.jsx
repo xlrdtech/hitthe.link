@@ -1784,6 +1784,15 @@ function VvsveiPane() {
                   try {
                     const box = dockHost.getBoundingClientRect();
                     const w = Math.max(1, Math.round(box.width));
+                    // HEIGHT-NEUTRAL, DELIBERATELY. qi 2026-08-13 21:17: "you were NOT
+                    // to move the swipe glass notifications."
+                    // The dock is a column flex with the notif ticker BELOW this host,
+                    // and .dock-swipe's min-height is derived from a measurement of its
+                    // own content (--dock-h). So ANY change to this canvas's height
+                    // propagates: taller canvas -> taller dock -> the ticker moves. The
+                    // ask was to centre the wave horizontally; nothing about the ask
+                    // touches vertical layout, so this pins the height to whatever it
+                    // already renders at and only ever changes WIDTH.
                     const h = Math.max(1, Math.round(wave.getBoundingClientRect().height) || 37);
                     const dpr = window.devicePixelRatio || 1;
                     // Backing store in DEVICE pixels — without dpr the line is soft
