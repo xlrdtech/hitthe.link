@@ -3782,8 +3782,27 @@ html, body { overscroll-behavior-y: none; }
       the gap closes by construction instead of by a tuned number. */
 .os.os-fullscreen .dock.dock-swipe {
   height: auto;
-  min-height: calc(var(--dock-h, 60px) + env(safe-area-inset-bottom, 0px));
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* FLUSH TO THE BOTTOM, NO RESERVED STRIP.
+     qi 2026-08-13 21:20: "the space between the bottom of the screen and the swipe
+     [glass] ... It should not be any space", and 21:18 "it looks taller than what it
+     was before".
+
+     MEASURED, both causes:
+     1. --dock-h is NEVER SET. _xosDockHeight() publishes `--xos-dock-real`, a different
+        variable entirely, so this always resolved to the 60px fallback. Confirmed live:
+        getPropertyValue('--dock-h') === "".
+     2. The safe-area inset was counted TWICE — once added into min-height, and again as
+        padding-bottom. With flex-end alignment the padding pushed the content (handle,
+        sheen, wave, notif ticker) up off the bottom edge by the inset, while the box
+        itself still reached 844. So the glass looked both taller AND detached from the
+        bottom — exactly the two things he reported, from one double-count.
+
+     He asked for zero space, so the inset reservation goes. The glass is now exactly its
+     content height and sits flush on the bottom edge. On a viewport with no inset this
+     changes nothing — verified in a real browser at 390x844: gap below dock was already
+     0px there, which is why this only ever showed up on his handset. */
+  min-height: var(--dock-h, 60px);
+  padding-bottom: 0;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;

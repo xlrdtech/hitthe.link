@@ -541,7 +541,14 @@ body.drop-active::after {
 .composer {
   position:absolute;
   left:env(safe-area-inset-left, 16px); right:env(safe-area-inset-right, 16px);
-  bottom:env(safe-area-inset-bottom, 16px);
+  /* FLUSH TO THE BOTTOM. qi 2026-08-13 21:20 "It should not be any space" · 21:23
+     "both of them had the same issue" — portrait AND landscape, which is the tell: an
+     orientation-independent constant, not a layout accident.
+     It was `bottom: env(safe-area-inset-bottom, 16px)`, so the whole composer floated off
+     the bottom edge by the home-indicator inset (~34px on his handset, 16px anywhere
+     without one). That band of dead glass under the pill is the space he is pointing at,
+     and it appears identically in both orientations because the inset does. */
+  bottom:0;
   padding:0;
 }
 .waveform-bar {
