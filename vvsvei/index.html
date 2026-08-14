@@ -1695,8 +1695,48 @@ function clearWave() {
 // Start with a clean canvas. No idle drift.
 clearWave();
 
+// Is the analyser actually ALIVE, or just non-null? These are different questions,
+// and conflating them is what made the wave vanish permanently.
+// qi 2026-08-13 21:11: "the sound wave is not there anymore its gone" — while TALKING,
+// so this is not the silence threshold; the meter was genuinely dead.
+//
+// THREE WAYS IT DIES WHILE `analyser` STAYS TRUTHY:
+//   1. The mic track ENDS — another tab/app takes the device, the OS interrupts for a
+//      call, or the user switches input. track.readyState flips to "ended" and the
+//      AnalyserNode keeps returning a flat 128 forever.
+//   2. The AudioContext is SUSPENDED — browsers suspend it when the page backgrounds,
+//      and nothing here ever resumed it. Coming back to the tab does NOT auto-resume.
+//   3. The rAF loop was cancelled but analyser survived.
+// In all three the object is still there, so `if (analyser) return` short-circuits every
+// recovery attempt. The ONLY escape was toggling the mic off and on by hand — a tap,
+// which is canon 4's definition of total failure.
+function _analyserAlive() {
+  if (!analyser || !analyserStream) return false;
+  const tracks = analyserStream.getAudioTracks ? analyserStream.getAudioTracks() : [];
+  if (!tracks.length) return false;
+  // "live" is the only readyState that means data is still flowing.
+  if (!tracks.some(t => t.readyState === 'live' && t.enabled)) return false;
+  if (audioCtx && audioCtx.state === 'closed') return false;
+  return true;
+}
+
 async function startAnalyser() {
-  if (analyser) return;
+  // Resume-then-recheck: a suspended context is recoverable WITHOUT re-prompting for
+  // the mic, so try that before tearing anything down. Re-acquiring getUserMedia
+  // unnecessarily can re-trigger a permission UI, which is its own tap.
+  if (analyser && audioCtx && audioCtx.state === 'suspended') {
+    try { await audioCtx.resume(); } catch (_) {}
+  }
+  if (_analyserAlive()) {
+    // Alive but not painting => the rAF loop was lost. Restart just the loop.
+    if (!rafId) rafId = requestAnimationFrame(tickListening);
+    return;
+  }
+  // Stale husk: tear it down completely so the rebuild below is clean. Without this
+  // the old context leaks and the new source connects to a dead graph.
+  if (analyser || analyserStream || audioCtx) {
+    try { stopAnalyser(); } catch (_) {}
+  }
   try {
     // echoCancellation is the load-bearing flag (qi 2026-06-09): it subtracts Ava's
     // own TTS playback from the mic signal so her voice does NOT self-trigger the VAD
@@ -1726,6 +1766,32 @@ function stopAnalyser() {
   if (analyserStream) { analyserStream.getTracks().forEach(t => t.stop()); analyserStream = null; }
   clearWave();   // no idle line — canvas stays empty when not listening
 }
+
+// ─── ANALYSER WATCHDOG — the meter comes back BY ITSELF ─────────────────────
+// A detection without an automatic recovery still costs qi a tap, and a tap is total
+// failure (canon 4). _analyserAlive() above only makes the death VISIBLE; this is what
+// makes it TEMPORARY.
+//
+// Runs only while he has the mic on (viz_listening), so it never re-prompts for a
+// device he deliberately turned off. 2s is slow enough to be free and fast enough that
+// a dropped track is back before he finishes the sentence he is already speaking.
+//
+// visibilitychange is the common case, not an edge case: he switches to another app,
+// the browser suspends the AudioContext, he comes back — and before this, the meter was
+// dead for the rest of the session with no error anywhere. Silent, permanent, and
+// indistinguishable from "the feature is broken".
+(function _analyserWatchdog() {
+  try {
+    setInterval(() => {
+      if (!viz_listening) return;          // he turned it off — respect that
+      if (_analyserAlive() && rafId) return;
+      startAnalyser();                     // idempotent: resumes, restarts, or rebuilds
+    }, 2000);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && viz_listening) startAnalyser();
+    });
+  } catch (_) { /* the watchdog must never cost him the page */ }
+})();
 
 // ─── Mic icon = single toggle (start/stop) ─────────────────────────────
 async function toggleMic() {
