@@ -2772,7 +2772,23 @@ function _revealThreadPicker() {
 
 document.getElementById('tb-threads').addEventListener('click', () => {
   if (threadPicker.style.display !== 'none') { threadPicker.style.display = 'none'; return; }
-  const list = loadThreads().slice().sort((a, b) => (b.lastTs || 0) - (a.lastTs || 0));
+  // CAP THE ROW. qi 2026-08-13 21:42: "the threads still didn't show up like how the
+  // voice picker does."
+  //
+  // MEASURED by tapping the real button in a real browser at 390x844:
+  //   thread-picker width = 6140px   overflow past the right edge = 5749px
+  //   visible in viewport = false    children = 34
+  // It was never failing to open — display went none -> flex and the reveal scrolled the
+  // row 0 -> 435px, both correct. It rendered THIRTY-THREE pills across roughly sixteen
+  // screens of horizontal strip. The voice picker reads well because it is compact; an
+  // endless row is not a picker, it is a corridor.
+  //
+  // Most-recent-first is already the sort, so the cap keeps exactly the ones he would
+  // actually reach for and drops the tail he would never scroll to.
+  const THREAD_PILL_CAP = 8;
+  const _all = loadThreads().slice().sort((a, b) => (b.lastTs || 0) - (a.lastTs || 0));
+  const list = _all.slice(0, THREAD_PILL_CAP);
+  const _hidden = _all.length - list.length;
   threadPicker.innerHTML = '';
   // IN-ROW PILLS, NOT A STACKED LIST (qi 2026-08-12: no modals on vvsvei).
   // The old markup was full-width block buttons stacked vertically — which only works
@@ -2781,12 +2797,18 @@ document.getElementById('tb-threads').addEventListener('click', () => {
   threadPicker.style.cssText = 'display:flex; gap:6px; flex:0 0 auto; white-space:nowrap; align-items:center;';
   const header = document.createElement('span');
   header.style.cssText = 'font-family:var(--mono);font-size:9px;letter-spacing:.16em;color:var(--fg-mute);text-transform:uppercase;opacity:.6;padding:0 4px;flex:0 0 auto;';
-  header.textContent = `${list.length}`;
+  // NO SILENT CAP. Showing "8" when 33 exist would read as "that is all of them" — the
+  // truncation has to name itself or it is a quiet lie about his own data.
+  header.textContent = _hidden > 0 ? `${list.length}/${_all.length}` : `${_all.length}`;
+  header.title = _hidden > 0 ? `${_hidden} older threads not shown` : '';
   threadPicker.appendChild(header);
   for (const t of list) {
     const row = document.createElement('button');
     // max-width + ellipsis: a long thread title must not stretch the row off-screen.
-    row.style.cssText = 'flex:0 0 auto;display:inline-flex;align-items:center;max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;padding:7px 12px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:999px;color:var(--fg);font-family:var(--sans);font-size:12.5px;cursor:pointer;';
+    // max-width 30vw, not 46vw: at 46vw only two pills fit a phone screen, so even a
+    // capped row still read as a corridor. 30vw shows three-plus at a glance, which is
+    // what makes the voice picker legible.
+    row.style.cssText = 'flex:0 0 auto;display:inline-flex;align-items:center;max-width:30vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;padding:7px 12px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:999px;color:var(--fg);font-family:var(--sans);font-size:12.5px;cursor:pointer;';
     if (t.id === _activeThreadId) {
       row.style.borderColor = 'var(--accent)';
       row.style.background = 'rgba(0,255,136,.10)';
