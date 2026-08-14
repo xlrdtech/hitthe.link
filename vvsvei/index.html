@@ -2344,6 +2344,46 @@ function threadLabel(t) {
 
 const _renderedKeys = new Set();
 const _xenOutSpoken = new Set(); // Option A speak-dedup · keys mirror _renderedKeys for xen-out events only
+
+// ─── VSQ: ONE VOICE ACROSS SURFACES ──────────────────────────────────────────
+// qi 2026-08-13, repeatedly: "I heard two voices speaking over each other that
+// shouldnt be able to happen" / "but i just heard voice overlap again".
+//
+// MEASURED root cause: the speak gate below was purely LOCAL — `_avaLive` and
+// `_avaAudioUnlocked`, nothing about ownership — so EVERY VVSVEI instance spoke
+// EVERY xen-out. With 9 SSE subscribers that is 9 potential voices, and the
+// speak-gate telemetry showed three independent rx/spoke series proving at least
+// three were doing it.
+//
+// The referee already existed and already worked: POST /api/voice/claim returns
+// {"ok":true,"displaced":"xos-replay"} and the claim WAS observed on /events.
+// VVSVEI simply was not wired to it — `grep -c voice-claim` here returned 0.
+// It neither listened nor emitted. XOS had solved the same problem months ago
+// (app.jsx:747) and this file never got the treatment.
+//
+// ⚠️ TOTAL SILENCE IS WORSE THAN DOUBLE VOICE. Three escape hatches, deliberately:
+//   · `_vsqOwner` starts null  → unclaimed means SPEAK (legacy behaviour)
+//   · 60s lease expiry         → if claims stop arriving the gate reopens
+//   · every arming gesture re-claims → the surface qi just touched wins
+// Never ship the gate without all three.
+const VSQ_SELF = 'vvsvei-' + Math.random().toString(36).slice(2, 8);
+let _vsqOwner = null;
+let _vsqSeenAt = 0;
+const VSQ_LEASE_MS = 60000;
+function _vsqMaySpeak() {
+  if (!_vsqOwner) return true;                              // nobody claimed
+  if (_vsqOwner === VSQ_SELF) return true;                  // I hold it
+  if (Date.now() - _vsqSeenAt > VSQ_LEASE_MS) return true;  // stale claim, reopen
+  return false;
+}
+function _vsqClaim(owner) {
+  try {
+    fetch('https://xen.xlrd.org/api/voice/claim', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ owner: owner }), keepalive: true,
+    }).catch(function () {});
+  } catch (_) {}
+}
 // qi 2026-06-11: shared dedup key — source-agnostic, normalized text + 5s bucket.
 // Used by renderEvent AND appendFinal so a local optimistic bubble suppresses its
 // own SSE echo, and the same utterance from multiple sources collapses to one.
@@ -2678,6 +2718,25 @@ function renderEvent(d) {
   // never renders twice. Conservative: only a leading time-ish prefix ending in
   // "PM, in:" / "AM, in:" (with optional leading mangled colons) is removed.
   txt = txt.replace(/^[\s:]*\d{1,2}:\d{2}(?::\d{2})?\s*[AP]M\s*,\s*(?:in|typed|omi|aua|sms|bee|spark|mail|note):\s*/i, '').trim();
+  // ── VSQ CLAIM HANDLER — MUST SIT ABOVE THE !txt GUARD ──────────────────────
+  // A voice-claim frame carries only {owner, displaced} — no text/body/message/
+  // preview — so the guard on the next line swallowed it SILENTLY, every time.
+  // The claim was arriving on /events the whole while (captured on the wire) and
+  // dying right here, one line short of mattering. XOS documented this exact trap
+  // and placed its handler above its own guard (app.jsx:747 vs :751); this file
+  // has two other pre-guard handlers ('caught-up', '__reload__') proving the
+  // pattern was understood — voice-claim was simply never added to it.
+  if (String(d.event || d.kind || '').toLowerCase() === 'xen:voice-claim') {
+    _vsqOwner = (d.data && d.data.owner) || null;
+    _vsqSeenAt = Date.now();
+    // NOTE — deliberately NOT calling _avaBargeIn() here, departing from the plan:
+    // it clears _avaQueue AND _avaPending, so a foreign claim would DISCARD queued
+    // replies. That trades a double voice for dropped words, which is the worse
+    // failure and violates nothing-drops. Yielding FUTURE speech ends the standing
+    // overlap; at most the current utterance finishes its tail.
+    try { _avaTelemetry('vsq owner=' + (_vsqOwner || 'none') + ' self=' + VSQ_SELF); } catch (_) {}
+    return;
+  }
   if (!txt) return;
   // qi 2026-07-22 BACKGROUND-LANE ROUTING (supersedes the 2026-06-22 inline dual-
   // render): qi — "Xen's raw bash/tool command outputs are showing up in my main
@@ -2823,7 +2882,8 @@ function renderEvent(d) {
     if (!_avaLive) { try { if (window._avaSetLoad) window._avaSetLoad('Loading history…', _hudRx + ' messages', Math.min(99, Math.round(_hudRx / 50))); } catch (_) {} }
     if (_avaLive) {
       try { _avaTelemetry("speak-gate live=T armed="+_avaAudioUnlocked+" ctx="+!!_avaCtx); } catch(_){}
-      if (_avaAudioUnlocked) { speakAva(txt); }
+      if (_avaAudioUnlocked && _vsqMaySpeak()) { speakAva(txt); }
+      else if (_avaAudioUnlocked) { try { _avaTelemetry('speak-gate vsq-yield owner=' + _vsqOwner + ' self=' + VSQ_SELF); } catch (_) {} }
       else { _avaPending.push(txt); if (_avaPending.length > 12) _avaPending = _avaPending.slice(-12); }   // park: iOS unarmed play() would emit a doomed play()+telemetry storm — speak on first tap (H2)
     } else { try { _avaTelemetry("speak-gate live=F armed="+_avaAudioUnlocked+" ctx="+!!_avaCtx); } catch(_){} }   // sentinel-gated: only live replies speak
   } else if (isUserDictate) {
@@ -3345,6 +3405,10 @@ function _unlockAvaAudio() {
   const a = _ensureAvaAudio();
   try { a.src = _AVA_SILENT; const p = a.play(); if (p && p.then) p.then(() => { _avaAudioUnlocked = true; _renderAvaPill(); }).catch(() => {}); } catch (_) {}
   _avaAudioUnlocked = true; _renderAvaPill();
+  // THE SURFACE qi JUST TOUCHED WINS. Arming is a deliberate human act — it is the
+  // election. Claiming here means the escape hatches can never strand him in
+  // silence: whatever he taps becomes the speaker within one round trip.
+  _vsqOwner = VSQ_SELF; _vsqSeenAt = Date.now(); _vsqClaim(VSQ_SELF);
   try { localStorage.setItem('vei-was-armed','1'); } catch (_) {}   // returning-user hint for a cheap 1-tap resume next reload (H2)
   // Flush replies that arrived live-but-unarmed so the first tap speaks them (never dropped).
   try { if (_avaPending.length) { const _p = _avaPending; _avaPending = []; _p.forEach(function(t){ speakAva(t); }); } } catch (_) {}
