@@ -1672,6 +1672,34 @@ function VvsveiPane() {
             // Verify with the ORIGINAL method before believing this is safe (the prior
             // author asked for exactly that): sample elementFromPoint across the dock and
             // confirm .dock-hit still wins every point.
+            // ── KILL THE OPERATOR FIREHOSE GHOST ON THIS SURFACE ─────────────
+            // qi 2026-08-13 20:25: "to the right of the interface theres a whole
+            // light ghost light hidden to the right UI it says operator fire hose"
+            // → "that looks like it was from the old model and I said no models"
+            // ("no MODALS" — his 2026-08-12 rule, already quoted at vvsvei:644:
+            // "i requested no modals on vvsvei") → "on this interface so that has
+            // to be gone".
+            //
+            // WHY IT LEAKS: #events-rail is `position:fixed; right:0; width:320px;
+            // z-index:20`. Fixed positioning resolves against the VIEWPORT, not the
+            // mount host, so the instant vvsvei is mounted into XOS that panel
+            // escapes its panel and floats over the whole phone surface. Style
+            // scoping under #xos-vei cannot contain it — scoping changes which
+            // rules apply, not which box a fixed element positions against. That is
+            // the runtime-include hazard in its purest form.
+            //
+            // HIDDEN, NOT REMOVED, and scoped to THIS surface only: vvsvei's own
+            // scripts query #events-rail, so deleting the node would hand them null
+            // and take the panel's behaviour down with it. The standalone /vvsvei/
+            // page is untouched — qi scoped this to "this interface".
+            try {
+              const ghost = host.querySelector("#events-rail");
+              if (ghost) {
+                ghost.style.display = "none";
+                ghost.classList.remove("open", "fullscreen");
+              }
+            } catch (_) {}
+
             try {
               const wave = host.querySelector("#waveform-canvas") ||
                            host.querySelector("canvas");
