@@ -4014,6 +4014,19 @@ html, body { overscroll-behavior-y: none; }
   bottom: 6px;
   display: flex;
   align-items: center;
+  /* HORIZONTALLY CENTRED — qi 2026-08-13 22:37: "on a full screen view that's way to
+     the left and that's not us, that's not a good look, that needs to be center."
+
+     MEASURED at 402px wide before this: the ticker BOX was already symmetric (left:8%
+     / right:8%, 33→369), but the content inside sat at 33→356 — hard against the left
+     edge with 13px of slack on the right only. Two causes, and both are needed:
+       1. no justify-content, so a flex row packs to flex-start;
+       2. `.text { flex: 1 }` below, which made the text FILL the row — and a child that
+          fills leaves nothing to centre. Centring without fixing the flex does nothing.
+     On a phone the text is long enough to fill the width, so it reads centred by
+     accident; on a wide screen the accident stops holding and it hugs the left. That is
+     why this only ever showed up in his full-screen view. */
+  justify-content: center;
   gap: 6px;
   font-family: var(--f-mono);
   font-size: clamp(9px, 0.9vw + 7px, 12px);
@@ -4042,7 +4055,14 @@ html, body { overscroll-behavior-y: none; }
 .os.os-fullscreen .dock-notif-ticker .text {
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 1;
+  /* THE OTHER HALF OF THE CENTRING. `flex: 1` made this fill the whole row, so the
+     justify-content added above would have had nothing left to distribute — the group
+     would still have started at the left edge. `0 1 auto` sizes it to its content
+     (grow 0) while keeping shrink 1, so long text still collapses and ellipsises
+     exactly as before; min-width:0 is what actually permits a flex item to shrink
+     below its content width, without which the ellipsis never engages. */
+  flex: 0 1 auto;
+  min-width: 0;
 }
 .os.os-fullscreen .dock-notif-ticker .caret {
   color: var(--accent);
