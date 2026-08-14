@@ -323,6 +323,22 @@ body.drop-active::after {
    else in the background feed stays left (.firehose default). */
 .firehose-right { align-self:flex-end; }
 
+/* ⛔ RETIRED 2026-08-13 20:27 — qi: "that looks like it was from the old model and
+   I said no models" (no MODALS, his 08-12 rule) → "on this interface so that has to
+   be gone" → "No its not supposed to be there at all" → "Thats not better there does
+   nothing".
+   It is `position:fixed`, so once vvsvei is mounted into XOS it escaped its panel and
+   floated over the whole phone surface as a ghost on the right.
+   KILLED IN CSS, MARKUP KEPT: 26 JS references reach into #events-rail / .er-list /
+   .er-status / .er-fs. Deleting the node hands every one of them null and takes real
+   behaviour down with a cosmetic change. `display:none` makes it gone everywhere —
+   the standalone page too, which is what he asked for — at zero breakage risk.
+   The rule this encodes: retire a surface by making it unreachable, not by ripping
+   out a node 26 live callers still hold. */
+#events-rail,
+#events-rail.open,
+#events-rail.fullscreen { display:none !important; }
+
 /* ── Events panel (Task #10 · operator state in-pane) ───────────────── */
 #events-rail {
   position:fixed; z-index:20;
