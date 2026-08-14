@@ -3600,22 +3600,37 @@ html.xos-locked, body.xos-locked { overflow: hidden; }
     --pad-md: 22px;
     --gap-md: 16px;
   }
-  .os.os-fullscreen .mirror-feed { max-width: 720px; margin: 0 auto; }
+  /* ⛔ NO CENTRED COLUMN. qi 2026-08-13 20:38: "When the interface is supposed to
+     take the shape of the entire browser" / "I see a big black ball on both sides"
+     / "Negative space on both sides instead of taking the full with other entire
+     phone screen".
+     This 720px cap fires at 768px+, which a PHONE HELD SIDEWAYS also matches — so it
+     letterboxed the handset in landscape, not just the desktop. XOS is an operating
+     surface, not an article: it fills its viewport. */
+  .os.os-fullscreen .mirror-feed { max-width: none; margin: 0; }
   .os.os-fullscreen .phone .dial-area,
   .os.os-fullscreen .phone .keypad { max-width: 480px; margin: 0 auto; }
 }
 
-/* Desktop 1280px+ - center the phone-shaped column, side gutters dim */
+/* ⛔ THE CENTRED PHONE COLUMN IS RETIRED. qi 2026-08-13 20:38-20:39, repeatedly:
+   "the interface is supposed to take the shape of the entire browser" · "big black
+   ball on both sides" · "Negative space on both sides instead of taking the full
+   with other entire phone screen".
+   The old comment here said the quiet part out loud — "center the phone-shaped
+   column, side gutters dim". Those dim gutters ARE the black he is describing. A
+   1100px cap on .panes and .dock letterboxes every screen wider than that, and it
+   also fought the swipe glass: the dock could not span the viewport it belongs to.
+   XOS fills its viewport at every width. Portrait and landscape alike. */
 @media (min-width: 1280px) {
   .os.os-fullscreen .panes {
-    max-width: 1100px;
-    margin: 0 auto;
+    max-width: none;
+    margin: 0;
     left: 0;
     right: 0;
   }
   .os.os-fullscreen .dock {
-    max-width: 1100px;
-    margin: 0 auto;
+    max-width: none;
+    margin: 0;
   }
 }
 
