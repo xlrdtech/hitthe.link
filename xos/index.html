@@ -127,5 +127,89 @@
     }
   </script>
 <script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
+<script>
+/* ── ?geo=1 — READ qi's ACTUAL DEVICE, because I cannot see it ────────────────
+   qi 2026-08-13 22:19-22:20: "Oh my God no no this is very incorrect this is very
+   wrong" · "look look at what it did" · "Did not fix the issue".
+
+   WHY THIS EXISTS. Twice tonight I changed the bottom-bar geometry, measured it
+   clean in a desktop browser, shipped it, and was wrong. The reason is structural,
+   not carelessness: env(safe-area-inset-*) is ZERO on every browser I can drive.
+   A layout bug that only manifests through that inset is UNVERIFIABLE from here —
+   my clean measurement is not evidence, it is the absence of the condition. So the
+   honest fix is to stop guessing and read the numbers off HIS handset.
+
+   OPT-IN ONLY. Nothing renders unless the URL carries ?geo=1, so the normal
+   surface is byte-identical to before — this must never become clutter on the one
+   screen he called "a tedious design". It also paints at the TOP, deliberately
+   away from the bottom band under investigation, so it cannot alter what it is
+   measuring. No network call, no storage, no clipboard: he opens the link, takes
+   one screenshot, and I have ground truth. */
+(function () {
+  try {
+    if (!/[?&]geo=1\b/.test(location.search)) return;
+    var px = function (n) { return Math.round(n) + ''; };
+    var box = function (sel) {
+      var el = document.querySelector(sel);
+      if (!el) return sel + ': ABSENT';
+      var r = el.getBoundingClientRect();
+      return sel + ': ' + px(r.top) + '→' + px(r.bottom) + ' h' + px(r.height) + ' w' + px(r.width);
+    };
+    // env() cannot be read directly — resolve it by letting the engine compute it
+    // onto a probe element's height, which is the only reliable way to see it.
+    var envPx = function (name) {
+      var d = document.createElement('div');
+      d.style.cssText = 'position:absolute;visibility:hidden;height:env(' + name + ',0px)';
+      document.body.appendChild(d);
+      var h = getComputedStyle(d).height;
+      d.remove();
+      return h;
+    };
+    var render = function () {
+      var cs = getComputedStyle(document.documentElement);
+      var vv = window.visualViewport;
+      var dock = document.querySelector('.dock.dock-swipe') || document.querySelector('.dock');
+      var tick = document.querySelector('.dock-notif-ticker');
+      var lines = [
+        'XOS GEO · ' + new Date().toTimeString().slice(0, 8),
+        'viewport ' + innerWidth + '×' + innerHeight + ' dpr' + (devicePixelRatio || 1) +
+          (vv ? ' | visual ' + px(vv.width) + '×' + px(vv.height) + ' off' + px(vv.offsetTop) : ''),
+        'safe-area bottom=' + envPx('safe-area-inset-bottom') + ' top=' + envPx('safe-area-inset-top'),
+        '--dock-h=' + (cs.getPropertyValue('--dock-h').trim() || '(unset)') +
+          ' --xos-dock-real=' + (cs.getPropertyValue('--xos-dock-real').trim() || '(unset)'),
+        box('.panes'),
+        box('.dock.dock-swipe'),
+        box('.dock-notif-ticker'),
+        box('.composer'),
+        box('#waveform-canvas')
+      ];
+      // THE NUMBER THIS WHOLE PROBE EXISTS FOR: how many px of nothing sit between
+      // the lowest painted thing in the bar and the true bottom edge of the screen.
+      if (dock) {
+        var db = dock.getBoundingClientRect();
+        lines.push('GAP dock→screen bottom = ' + px(innerHeight - db.bottom) + 'px');
+        if (tick) lines.push('GAP ticker→screen bottom = ' + px(innerHeight - tick.getBoundingClientRect().bottom) + 'px');
+      }
+      var el = document.getElementById('xos-geo-probe');
+      if (!el) {
+        el = document.createElement('pre');
+        el.id = 'xos-geo-probe';
+        el.style.cssText =
+          'position:fixed;left:0;right:0;top:0;z-index:99999;margin:0;padding:6px 8px;' +
+          'font:600 10px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;' +
+          'color:#0f0;background:rgba(0,0,0,.92);border-bottom:1px solid #0f0;pointer-events:none';
+        document.body.appendChild(el);
+      }
+      el.textContent = lines.join('\n');
+    };
+    // Measure after the React tree has mounted AND after the runtime-include panes
+    // settle; a probe that fires too early reports the shell, not the app.
+    setTimeout(render, 1200);
+    setTimeout(render, 3500);
+    addEventListener('resize', render);
+    if (window.visualViewport) visualViewport.addEventListener('resize', render);
+  } catch (e) { /* a diagnostic must never break the surface it is diagnosing */ }
+})();
+</script>
 </body>
 </html>
