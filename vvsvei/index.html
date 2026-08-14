@@ -2469,8 +2469,43 @@ function getActiveId() {
 function loadThreadEntries(id) {
   try { return JSON.parse(localStorage.getItem('vei-thread-' + id) || '[]'); } catch (_) { return []; }
 }
+// ⚠️ RETURNS A BOOLEAN NOW, AND A FAILED WRITE IS LOUD.
+// qi 2026-08-13 20:25: "So I created a new thread and lost the whole thread wasnt
+// able to copy exported and shared or anything."
+//
+// This is the ONLY writer of thread bodies, and it was
+//   try { localStorage.setItem(...) } catch (_) {}
+// — so on QuotaExceededError it did NOTHING: no retry, no banner, no telemetry,
+// and saveHistory returned normally. The thread looked saved and was not.
+// MEASURED across all 4245 lines: `removeItem` 0 hits, `QuotaExceeded` 0 hits.
+// There is no eviction anywhere, so keys accumulate to the ~5MB origin cap forever.
+// It compounds because saveHistory re-serializes the ENTIRE thread on EVERY turn,
+// and `__reload__` force-reloads every tab on every deploy while
+// freshThreadOnReload mints a NEW thread each load — so thread count grows at
+// DEPLOY rate, not conversation rate (6 deploys in 20 min on 08-13).
+//
+// ⛔ DELIBERATELY NOT ADDING LRU EVICTION. The swarm's own risk note is right:
+// eviction without a server-side store ACK converts a silent-loss bug into an
+// ACTIVE-DELETION bug. Losing his words quietly is bad; deleting them on purpose
+// is worse. Report the failure, keep every byte, let the operator decide.
 function saveThreadEntries(id, entries) {
-  try { localStorage.setItem('vei-thread-' + id, JSON.stringify(entries)); } catch (_) {}
+  try {
+    localStorage.setItem('vei-thread-' + id, JSON.stringify(entries));
+    return true;
+  } catch (e) {
+    // LOUD. A storage failure that only qi's missing data can reveal is the bug.
+    try {
+      const n = (e && e.name) || 'error';
+      console.error('[vei] thread write FAILED (' + n + ') id=' + id +
+                    ' entries=' + (entries || []).length + ' — NOT saved');
+      if (typeof _hud === 'function') _hud('THREAD NOT SAVED (' + n + ')');
+      if (typeof appendError === 'function') {
+        appendError('Thread not saved (' + n + ') — storage full. Export this thread now.');
+      }
+      localStorage.setItem('vei-degraded', String(Date.now()));
+    } catch (_) {}
+    return false;
+  }
 }
 function threadLabel(t) {
   const entries = loadThreadEntries(t.id);
@@ -2585,8 +2620,74 @@ function saveHistory(entry) {
     t.lastTs = entry.ts || Date.now();
     if (!t.name && entry.role === 'you' && entry.text) t.name = entry.text.slice(0, 40);
     saveThreads(list);
+  } else {
+    // ── SELF-HEALING INDEX — this kills the entire orphan class. ─────────────
+    // qi 2026-08-13 20:24: "the threads were missing when I tapped threads it
+    // didnt show the list of threats" → "I created a new thread and lost the
+    // whole thread".
+    //
+    // The bug was this `if (t)` having NO else. Body writes go to
+    // `vei-thread-<id>` unconditionally, but the INDEX (`vei-threads`) only got
+    // updated when a record already existed. So if the index write ever lost the
+    // record — a cross-tab clobber, a failed write, a mid-rotation reload — the
+    // body kept accumulating into a key nothing pointed at. The words were never
+    // deleted; they became UNREACHABLE, which to him is identical to deleted.
+    //
+    // A thread can now never be invisible while it is being written to.
+    list.push({
+      id: _activeThreadId,
+      started: (_history[0] && _history[0].ts) || entry.ts || Date.now(),
+      lastTs: entry.ts || Date.now(),
+      name: (entry.role === 'you' && entry.text) ? entry.text.slice(0, 40) : '',
+      recovered: true,
+    });
+    saveThreads(list);
+    try { console.warn('[vei] index was missing this thread — re-registered ' + _activeThreadId); } catch (_) {}
   }
 }
+
+// ── ORPHAN SWEEP: re-attach thread bodies the index forgot. ─────────────────
+// Layer A of the recovery, running IN the page rather than as a manual console
+// paste — canon 4: anything that needs qi to run a snippet by hand is a failure.
+// Every `vei-thread-*` key whose id is absent from `vei-threads` is a fully
+// intact conversation, invisible only because the index lost its pointer. This
+// puts them back in the list, newest first, tagged so they are identifiable.
+// Read-only with respect to bodies: it NEVER deletes or rewrites a body.
+function _veiRecoverOrphanThreads() {
+  try {
+    const list = loadThreads();
+    const known = new Set(list.map(x => x.id));
+    let found = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || k.indexOf('vei-thread-') !== 0) continue;
+      const id = k.slice('vei-thread-'.length);
+      if (!id || known.has(id)) continue;
+      let entries = [];
+      try { entries = JSON.parse(localStorage.getItem(k) || '[]'); } catch (_) { continue; }
+      if (!Array.isArray(entries) || !entries.length) continue;   // empty shell, not a loss
+      const first = entries[0] || {}, last = entries[entries.length - 1] || {};
+      const qiLine = entries.find(e => e && e.role === 'you' && e.text);
+      list.push({
+        id: id,
+        started: first.ts || Date.now(),
+        lastTs: last.ts || first.ts || Date.now(),
+        name: (qiLine && qiLine.text ? qiLine.text.slice(0, 40) : 'recovered thread'),
+        recovered: true,
+      });
+      known.add(id);
+      found++;
+    }
+    if (found) {
+      list.sort((a, b) => (b.lastTs || 0) - (a.lastTs || 0));
+      saveThreads(list);
+      try { console.warn('[vei] recovered ' + found + ' orphaned thread(s) into the index'); } catch (_) {}
+      if (typeof _hud === 'function') _hud('recovered ' + found + ' lost thread(s)');
+    }
+    return found;
+  } catch (_) { return 0; }
+}
+try { _veiRecoverOrphanThreads(); } catch (_) {}
 // Renders one saved entry into a bubble. Extracted from hydrateHistory so the
 // scroll-back below renders older threads through the EXACT same path — two
 // renderers would drift, and this one owns the rail contract (dataset.t).
@@ -2719,6 +2820,32 @@ hydrateHistory();
 
 // ─── Thread controls: New / Browse ────────────────────────────────────
 document.getElementById('tb-newthread').addEventListener('click', () => {
+  // ── FLUSH BEFORE REPLACE, AND REFUSE TO ROTATE ON A FAILED FLUSH. ──────────
+  // qi 2026-08-13 20:25: "So I created a new thread and lost the whole thread
+  // wasnt able to copy exported and shared or anything."
+  //
+  // THIS WAS THE LOSS PATH, literally: `_activeThreadId = id; _history = [];`
+  // discarded the in-memory thread with NO final write and no check that any
+  // earlier write had landed. saveHistory writes incrementally, so the design
+  // ASSUMED those writes succeeded — and saveThreadEntries used to swallow
+  // QuotaExceededError silently, so that assumption was false exactly when
+  // storage was full, which is exactly when he had a long thread worth keeping.
+  //
+  // Now: flush, verify, and if the flush FAILS keep him on the thread rather
+  // than rotating away from words that were never saved. Local-only — never
+  // awaited on a network ACK, which would make him wait on a drain (canon 40b).
+  if (_history && _history.length) {
+    if (!saveThreadEntries(_activeThreadId, _history)) {
+      try {
+        if (typeof appendError === 'function') {
+          appendError('Cannot start a new thread — this one is not saved yet ' +
+                      '(storage full). Export it first so nothing is lost.');
+        }
+        if (typeof _hud === 'function') _hud('rotate BLOCKED — current thread unsaved');
+      } catch (_) {}
+      return;   // stay put. Losing his words is never the lesser evil.
+    }
+  }
   const id = 't-' + Date.now();
   localStorage.setItem('vei-active', id);
   const list = loadThreads();
