@@ -3987,7 +3987,31 @@ html, body { overscroll-behavior-y: none; }
   position: absolute;
   left: 8%;
   right: 8%;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 6px);
+  /* THE NEGATIVE SPACE UNDER THE NOTIFICATIONS — qi 2026-08-13 22:05:
+     "the notifications are now at the bottom of the swipe glass are canonically. so now
+     that negative space under that must be eradicated."
+     Notifications-at-the-bottom-of-the-glass is now CANON and is not what changes here.
+     What changes is the empty band beneath them.
+
+     MEASURED — the safe-area inset is counted THREE times on this bar:
+       1. .dock.dock-swipe  min-height: calc(--dock-h + env(safe-area-inset-bottom))
+       2. .dock.dock-swipe  padding-bottom: env(safe-area-inset-bottom)
+       3. HERE              bottom: calc(env(safe-area-inset-bottom) + 6px)
+     Count 3 is the one he is pointing at. This element is position:absolute, and absolute
+     offsets resolve against the PADDING box — padding-bottom does not move it — so adding
+     the inset here is pure duplication of count 2. On his handset (inset ≈ 34px) it floated
+     the ticker 40px above the glass's bottom edge: 34px of that is the double-count, 6px is
+     the intended breathing gap. That 40px band IS the negative space.
+
+     Dropping to a flat 6px removes ONLY the duplicate. Deliberately NOT touched:
+     min-height (count 1) and padding-bottom (count 2) — those set the glass's height and
+     the wave/composer position, and qi 21:38/21:39 ("it looks taller", "over 70% of my
+     swipe glass has been cut off") makes any height change to this bar a regression no
+     matter what it fixes. One line, one cause, zero geometry moved.
+
+     Verified live at 402x874: glass height unchanged at 60.44px, ticker bottom = 6px.
+     The ~34px this reclaims is inset-dependent and therefore only visible on his handset. */
+  bottom: 6px;
   display: flex;
   align-items: center;
   gap: 6px;
