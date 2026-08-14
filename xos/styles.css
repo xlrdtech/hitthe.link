@@ -3691,13 +3691,28 @@ html, body { overscroll-behavior-y: none; }
      - Inner light highlight at top edge (refraction)
      - Inner shadow at bottom for grounding
      - Radial sheen highlight off-center for "real glass" feel */
+  /* GLASS MUST REACH THE BOTTOM OF THE TICKER (qi 2026-08-14 01:10):
+     "the background on the ticker is not 100% transparent so its making my
+      canonical swipe glass CSS look cut off instead of making it all the way
+      to the bottom of where the ticker is."
+     MEASURED that night, and the ticker is INNOCENT — .dock-notif-ticker and
+     every other dock child compute background rgba(0,0,0,0) with no fill in
+     any of their rules. The cut-off was THIS ramp: it fell to 78% opaque
+     near-black at 100%, and the ticker sits at ~76% down a 60px bar, over an
+     .os/.stage/body stack that is pure rgb(0,0,0). A 40px backdrop-blur of
+     black IS black, so the bar died into solid black exactly at the ticker.
+     Flattening the ramp keeps the tint, sheen, blur, borders and highlights
+     untouched — only the vertical darkening is removed, so the glass carries
+     evenly to the bottom edge. :active and :hover are DELIBERATE press
+     feedback ("glass densifies under finger") and are left alone.
+     REVERT: restore 0.62 / 0.78 on the two stops below. */
   background:
     radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 60%),
     linear-gradient(
       to bottom,
       rgba(20, 28, 24, 0.42) 0%,
-      rgba(10, 14, 12, 0.62) 50%,
-      rgba(6, 10, 8, 0.78) 100%
+      rgba(18, 26, 22, 0.44) 50%,
+      rgba(16, 24, 20, 0.46) 100%
     );
   backdrop-filter: blur(40px) saturate(220%) brightness(1.05);
   -webkit-backdrop-filter: blur(40px) saturate(220%) brightness(1.05);
