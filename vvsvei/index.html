@@ -228,6 +228,22 @@ header { padding:8px 0 22px; display:flex; align-items:flex-start; justify-conte
    hour" and "the hour you are looking at" are different facts and are often
    not the same station. */
 .tl-st.now i { background:var(--accent); }
+/* DAY BOUNDARIES ON THE RAIL — qi 2026-08-13 20:10: "it should have dates when I
+   start scrolling back through different days and weeks".
+   Every other station label is `color:transparent` at rest by design (the rail is
+   quiet until engaged), but a DATE is a landmark, not a hover affordance: scrolling
+   back through a week is exactly when he cannot afford to hover 20 stations to find
+   out where he is. So this one stays legible at rest, dimmed enough not to compete.
+   Rendered via ::before on the first station of each past day, so it adds no node to
+   the rail and cannot disturb the even station spacing the xt/09 design depends on. */
+.tl-st.tl-newday::before {
+  content: attr(data-day);
+  position:absolute; right:100%; margin-right:10px; top:50%;
+  transform:translateY(-50%);
+  font-family:var(--mono); font-size:7.5px; letter-spacing:.18em;
+  color:rgba(255,255,255,.38); white-space:nowrap; pointer-events:none;
+}
+.tl-st.tl-newday i { background:rgba(255,255,255,.52); }   /* the day tick reads harder */
 #tl-thumb { display:none; }   /* xt/09 has no thumb — the active station IS the position */
 
 /* Glass bubbles — heavy backdrop-blur + thin gloss highlight + translucent fill.
@@ -997,6 +1013,19 @@ function _tlHours() {
   // First entry of each hour, in order. That entry is the scroll target for its
   // station, so the hour lands at the top of the viewport rather than centred
   // on whichever entry happened to be nearest.
+  // ⚠️ ABSOLUTE HOUR, NOT CLOCK HOUR. Fixed 2026-08-13 20:13 from qi's screen
+  // recording. The old line was `const h = new Date(t).getHours()` — 0..23 with
+  // NO DATE — and `if (h === last) continue` only skipped CONSECUTIVE repeats.
+  // So scrolling back across midnight built stations 19, 7, 19, 7 … and, because
+  // the label is formatted `hour:'numeric'` with no date either, the rail read
+  // 7PM, 7AM, 7PM, 7AM. MEASURED in his capture: `7AM` sat ABOVE `7PM` in frame
+  // 002 and BELOW it in frame 013, with a third label ghosting in between.
+  // qi: "when it starts jumping back-and-forth between points and points and
+  // time when [the] loader [runs]" + "it should have dates when I start
+  // scrolling back through different days and weeks" — he named the cause.
+  //
+  // Bucketing on the absolute hour makes the sequence strictly monotonic by
+  // construction: a rail whose order can invert is lying about time.
   const out = [];
   let last = null;
   const kids = transcript.children;
@@ -1005,30 +1034,53 @@ function _tlHours() {
     if (el.classList && el.classList.contains('interim')) continue;
     const t = Number(el.dataset && el.dataset.t) || 0;
     if (!t) continue;
-    const h = new Date(t).getHours();
-    if (h === last) continue;
-    last = h;
-    out.push({ h: h, t: t, el: el });
+    const d = new Date(t);
+    const abs = Math.floor(t / 3600000);          // unique per (day, hour)
+    if (abs === last) continue;
+    last = abs;
+    out.push({ h: d.getHours(), abs: abs, t: t, el: el });
   }
   return out;
 }
 
 function _tlStations() {
   const hours = _tlHours();
-  const key = hours.map((x) => x.h).join(',');
+  // Key on the ABSOLUTE hour. Keying on clock hour made two different days with
+  // the same hour compare equal, so the rail could keep a stale DOM that no
+  // longer matched the loaded window — the other half of the reorder.
+  const key = hours.map((x) => x.abs).join(',');
   if (key === _tlHourKey) return;          // same hours — leave the DOM alone
   _tlHourKey = key;
 
+  const _dayKey = (ms) => new Date(ms).toDateString();
+  const _today = _dayKey(Date.now());
+
   tlRail.querySelectorAll('.tl-st').forEach((n) => n.remove());
   const frag = document.createDocumentFragment();
+  let prevDay = null;
   hours.forEach((st, i) => {
     const label = new Date(st.t)
       .toLocaleTimeString([], { hour: 'numeric', hour12: true })
       .replace(/:\d+/, '').replace(/\s+/g, '');
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'tl-st' + (i === hours.length - 1 ? ' now' : '');
+    // DATES WHEN SCROLLING BACK — qi 2026-08-13 20:10: "it should have dates when
+    // I start scrolling back through different days and weeks". The first station
+    // of each day that is NOT today gets marked, and CSS renders the date above it.
+    // Marked per DAY BOUNDARY, not per station, so a long day stays a clean rail.
+    const day = _dayKey(st.t);
+    const isNewDay = day !== prevDay;
+    prevDay = day;
+    const b_isPast = day !== _today;
+    b.className = 'tl-st' + (i === hours.length - 1 ? ' now' : '') +
+                  (isNewDay && b_isPast ? ' tl-newday' : '');
+    if (isNewDay && b_isPast) {
+      b.dataset.day = new Date(st.t)
+        .toLocaleDateString([], { month: 'short', day: 'numeric' })
+        .toUpperCase();
+    }
     b.dataset.h = String(st.h);
+    b.dataset.abs = String(st.abs);
     b.innerHTML = '<span></span><i></i>';
     b.firstChild.textContent = label;      // textContent, never innerHTML — labels are derived, but the habit is the guard
     b.setAttribute('aria-label', 'Jump to ' + label);
