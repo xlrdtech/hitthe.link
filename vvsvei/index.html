@@ -2739,6 +2739,37 @@ try {
   window.addEventListener('storage', (e) => { if (!e || e.key === 'vei-threads') _renderThreadCount(); });
 } catch (_) {}
 
+// OPENING THREADS MUST REVEAL THEM — no swipe required.
+// qi 2026-08-13 21:31: "threads shall operate and open up the same way that the voice
+// picker does", after 21:29 "when I tapped threads I dont know that any threads are there
+// until I swipe right and thats a UX problem."
+//
+// The pills were never missing: this handler already builds in-row pills exactly like the
+// voice pills. But #thread-picker lives inside #pill-row, which scrolls HORIZONTALLY, and
+// opening it did not move the row — so the pills materialised past the right edge, off
+// screen. From his side that is indistinguishable from "there are no threads."
+//
+// Revealing beats badging: the count I added tells him something EXISTS, but he still had
+// to go find it. Scrolling the row to the picker means the act of opening shows the
+// contents, which is precisely how the voice picker already behaves.
+function _revealThreadPicker() {
+  try {
+    const row = document.getElementById('pill-row');
+    if (!row || !threadPicker) return;
+    // Wait one frame: the pills are appended synchronously above, but their widths are not
+    // laid out until the next frame, so scrolling now would target a zero-width box.
+    requestAnimationFrame(() => {
+      try {
+        if (threadPicker.scrollIntoView) {
+          threadPicker.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+        } else {
+          row.scrollLeft = threadPicker.offsetLeft;   // older WebKit
+        }
+      } catch (_) {}
+    });
+  } catch (_) { /* reveal is polish — it must never break opening the picker */ }
+}
+
 document.getElementById('tb-threads').addEventListener('click', () => {
   if (threadPicker.style.display !== 'none') { threadPicker.style.display = 'none'; return; }
   const list = loadThreads().slice().sort((a, b) => (b.lastTs || 0) - (a.lastTs || 0));
@@ -2776,6 +2807,10 @@ document.getElementById('tb-threads').addEventListener('click', () => {
   // 'block' here would silently win and flatten the pills back into a vertical stack.
   // That stack is the shape that only made sense inside the modal we just removed.
   threadPicker.style.display = 'flex';
+  // Display must be set BEFORE this: scrollIntoView on a display:none element resolves
+  // against a zero-size box and scrolls nowhere.
+  _revealThreadPicker();
+  _renderThreadCount();
 });
 // qi 2026-05-25 08:25 PT — URLs in bubble text were not clickable
 // because we wrote textContent directly. linkifyTo() returns an array of
