@@ -751,7 +751,13 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
     </div>
     <div id="voice-pills" role="radiogroup" aria-label="Xen reader voice"></div>
     <div class="transcript-toolbar">
-      <button id="tb-threads" title="Browse past threads">Threads</button>
+      <!-- The count lives ON the button. qi 2026-08-13 21:29: "when I tapped threads
+           currently I dont know that any threads are there until I swipe right and thats
+           a UX problem." The threads exist in localStorage the whole time; the interface
+           just never said so, so the only way to learn the answer was to perform the
+           gesture and see. A control that hides whether it has contents makes the user
+           do the system's job. `tb-threads-n` is filled by _renderThreadCount(). -->
+      <button id="tb-threads" title="Browse past threads">Threads<span id="tb-threads-n"></span></button>
       <button id="tb-copy" title="Copy current thread">Copy</button>
       <button id="tb-export" title="Export current thread as .txt">Export</button>
       <button id="tb-share" title="Share current thread">Share</button>
@@ -2713,6 +2719,26 @@ document.getElementById('tb-newthread').addEventListener('click', () => {
 });
 
 const threadPicker = document.getElementById('thread-picker');
+// THE BUTTON REPORTS ITS OWN CONTENTS. qi 2026-08-13 21:29: "when I tapped threads
+// currently I dont know that any threads are there until I swipe right and thats a UX
+// problem." Reads the same localStorage array the drawer reads, so the number can never
+// disagree with what opening it would show — one source, not a cached tally.
+// Renders nothing at zero: a "(0)" badge is noise, and absence already means empty.
+function _renderThreadCount() {
+  try {
+    const el = document.getElementById('tb-threads-n');
+    if (!el) return;
+    const n = loadThreads().length;
+    el.textContent = n ? ' (' + n + ')' : '';
+  } catch (_) { /* a count must never cost him the button */ }
+}
+try {
+  _renderThreadCount();
+  // Another tab/device writing threads fires `storage` here; without this the count goes
+  // stale exactly when he has the app open in two places, which is his normal state.
+  window.addEventListener('storage', (e) => { if (!e || e.key === 'vei-threads') _renderThreadCount(); });
+} catch (_) {}
+
 document.getElementById('tb-threads').addEventListener('click', () => {
   if (threadPicker.style.display !== 'none') { threadPicker.style.display = 'none'; return; }
   const list = loadThreads().slice().sort((a, b) => (b.lastTs || 0) - (a.lastTs || 0));
