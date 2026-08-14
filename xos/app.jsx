@@ -1710,12 +1710,22 @@ function VvsveiPane() {
               // repeats is a glitch even when each individual move is right.
               // If the dock already holds a docked meter, the newcomer is a duplicate
               // from a re-mount: drop it rather than restart the shuffle.
+              // REPLACE, NEVER DISCARD. Corrected 2026-08-13 20:37 — qi: "My soundwave
+              // is missing", minutes after I shipped a "sticky" guard that DROPPED the
+              // newcomer. That guard was backwards and I caused this:
+              // on re-mount the mount code does `host.innerHTML = ...`, which wipes the
+              // fragment and kills the draw loop that owns the ALREADY-DOCKED canvas.
+              // That canvas keeps its pixels but stops painting — a dead meter. The
+              // freshly built canvas in the new host is the LIVE one. Dropping it left
+              // him with the corpse and no meter at all.
+              // The newcomer always wins: retire the old node, dock the new one.
               const already = dockHost.querySelector("#waveform-canvas[data-xos-docked]");
               const wave = host.querySelector("#waveform-canvas") ||
                            host.querySelector("canvas");
               if (already && wave && wave !== already) {
-                try { wave.remove(); } catch (_) {}
-              } else if (wave && wave.parentElement !== dockHost) {
+                try { already.remove(); } catch (_) {}
+              }
+              if (wave && wave.parentElement !== dockHost) {
                 wave.dataset.xosDocked = "1";
                 // BOTH, and the host is the one that actually mattered. MEASURED live
                 // just now, sampling 360 points across the dock:

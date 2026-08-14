@@ -2011,7 +2011,21 @@ const _origAppendFinal = appendFinal;
 const _localDictated = new Map(); // normText -> ts
 function _normDict(t){ return String(t||'').toLowerCase().replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim(); }
 appendFinal = function(text, postedFlag) {
-  _origAppendFinal(text, postedFlag);
+  // ⚠️ MUST RETURN THE NODE. Fixed 2026-08-13 20:37 — qi: "the posted indicator is
+  // missing" / "I dont get a indicator that it posted on my chat bubble like Im
+  // supposed to".
+  // This wrapper called _origAppendFinal(...) and THREW AWAY its return value, so it
+  // returned undefined. Both callers do `const finalDiv = appendFinal(text, false)`
+  // and then `if (posted && finalDiv && ...)` before appending the ✓ (voice :1487,
+  // typed :915) — with finalDiv undefined that condition can never be true, so the
+  // badge was unreachable by construction no matter how healthy the post was.
+  // MEASURED the same minute: his lines were arriving in the seat with exact
+  // timestamps while his own screen showed no confirmation at all. A working rail
+  // that cannot say so is indistinguishable from a broken one — that is the whole
+  // lesson of tonight, and here it was one missing `return`.
+  // Fall back to :last-child so a future refactor of the original cannot silently
+  // re-break the badge.
+  const _node = _origAppendFinal(text, postedFlag);
   const lastFinal = transcript.querySelector('.final:last-child');
   if (lastFinal) attachBubbleActions(lastFinal, text);
   const k = _normDict(text);
@@ -2025,6 +2039,10 @@ appendFinal = function(text, postedFlag) {
     _renderedKeys.add(dedupKey(text, now));
     _renderedKeys.add(dedupKey(text, now + 5000));
   } catch (_) {}
+  // THE RETURN THIS WRAPPER NEVER HAD — the whole point of the fix above.
+  // `_node` is what the original built; `lastFinal` is the belt-and-braces fallback
+  // so a future refactor of the original cannot silently re-break the ✓ badge.
+  return _node || lastFinal;
 };
 
 // ─── Top toolbar: copy-all / export / share / attach ─────────────────────
