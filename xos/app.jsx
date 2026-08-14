@@ -1701,9 +1701,22 @@ function VvsveiPane() {
             } catch (_) {}
 
             try {
+              // STICKY, ONE TIME. qi 20:29: "I just saw the sound wave but now its
+              // gone again … moving around and stuff looks like a glitch right now".
+              // The move itself was correct — he watched it reach the spot he asked
+              // for yesterday — but every re-mount of the vvsvei fragment produces a
+              // FRESH canvas in the panel, and this ran again on each one, so the
+              // meter visibly hopped panel→dock over and over. A relocation that
+              // repeats is a glitch even when each individual move is right.
+              // If the dock already holds a docked meter, the newcomer is a duplicate
+              // from a re-mount: drop it rather than restart the shuffle.
+              const already = dockHost.querySelector("#waveform-canvas[data-xos-docked]");
               const wave = host.querySelector("#waveform-canvas") ||
                            host.querySelector("canvas");
-              if (wave && wave.parentElement !== dockHost) {
+              if (already && wave && wave !== already) {
+                try { wave.remove(); } catch (_) {}
+              } else if (wave && wave.parentElement !== dockHost) {
+                wave.dataset.xosDocked = "1";
                 // BOTH, and the host is the one that actually mattered. MEASURED live
                 // just now, sampling 360 points across the dock:
                 //   baseline            .dock-hit 360/360
@@ -1715,6 +1728,26 @@ function VvsveiPane() {
                 // it has no business receiving gestures at all.
                 wave.style.pointerEvents = "none";
                 dockHost.style.pointerEvents = "none";   // gestures pass THROUGH to .dock-hit
+                // ── NO BACKGROUND BEHIND THE METER. qi 20:29, twice, and this is the
+                // one that cost him yesterday: "there should be no background behind it
+                // if you are gonna move it" → "Right now I see a green bar and thats
+                // what infuriated me yesterday".
+                // WHY THE BAR APPEARS: vvsvei's stylesheet is re-emitted under BOTH
+                // hosts (`const HOSTS = [scope, ".dock-vei-host"]`), so the composer's
+                // green field/panel fill follows the canvas into the glass and paints a
+                // slab behind it. The canvas is a METER — it must read as light on the
+                // glass, never as a panel sitting on top of it. The glass is the design;
+                // anything opaque in front of it is a regression, not a container.
+                wave.style.background = "transparent";
+                wave.style.backgroundColor = "transparent";
+                wave.style.border = "0";
+                wave.style.boxShadow = "none";
+                wave.style.borderRadius = "0";
+                dockHost.style.background = "transparent";
+                dockHost.style.backgroundColor = "transparent";
+                dockHost.style.border = "0";
+                dockHost.style.boxShadow = "none";
+                dockHost.style.backdropFilter = "none";
                 dockHost.appendChild(wave);
                 _xosDockHeight();
                 try { window.dispatchEvent(new Event("resize")); } catch (_) {}
