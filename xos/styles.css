@@ -3801,8 +3801,28 @@ html, body { overscroll-behavior-y: none; }
      content height and sits flush on the bottom edge. On a viewport with no inset this
      changes nothing — verified in a real browser at 390x844: gap below dock was already
      0px there, which is why this only ever showed up on his handset. */
-  min-height: var(--dock-h, 60px);
-  padding-bottom: 0;
+  /* ⚠️ REGRESSION I CAUSED AND THE CHAIN THAT CAUSED IT — qi 2026-08-13 21:38:
+     "I dont see my soundwave and my swipe glass is compromised, its been cut."
+
+     Two separate edits removed two height sources in the same window:
+       1. I set .dock-notif-ticker to position:absolute (to restore its symmetric
+          left/right insets). Absolute elements are OUT OF FLOW — it stopped
+          contributing ANY height to this column.
+       2. I set padding-bottom:0 (to kill the safe-area gap he asked me to remove).
+     With --dock-h never actually set by anything, min-height collapsed to a flat 60px
+     while .dock-swipe has overflow:hidden — so the wave and the ticker were clipped.
+     The glass looked cut because it WAS cut.
+
+     THE LESSON: taking an element out of flow silently removes its height from the
+     parent. Combining that with a padding removal in the same change is how two
+     individually-reasonable edits produce one broken layout.
+
+     FIX: reserve the ticker's height explicitly, since it can no longer reserve its own.
+     --dock-notif-h is that reservation; the glass is content height PLUS it, and still
+     sits flush on the bottom edge (no safe-area inset, per his "no space"). */
+  --dock-notif-h: 22px;
+  min-height: calc(var(--dock-h, 60px) + var(--dock-notif-h));
+  padding-bottom: var(--dock-notif-h);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
