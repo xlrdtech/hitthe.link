@@ -1800,12 +1800,26 @@ function VvsveiPane() {
                     wave.width = Math.floor(w * dpr);
                     wave.height = Math.floor(h * dpr);
                     // CSS box in LAYOUT pixels, spanning the glass edge to edge.
+                    // WIDTH ONLY. Nothing here may touch the vertical box.
+                    //
+                    // qi 2026-08-13 21:18: "my notifications need to be moved back to where
+                    // the fuck they were nobody told you to move my fucking swipe bar
+                    // notifications at all." That was ME, and this is the exact line.
+                    //
+                    // I had set display:block and margin:0 auto. MEASURED earlier in this
+                    // same session, the canvas rendered `display: "inline"` — and an inline
+                    // canvas sits on the text baseline, which reserves descender space
+                    // BELOW it inside the line box. Switching to block removes that gap, so
+                    // .dock-vei-host got shorter, --dock-h shrank, .dock-swipe's min-height
+                    // shrank, and .dock-notif-ticker — which sits below the host in the same
+                    // column flex — rode upward.
+                    //
+                    // THE LESSON: `display` is not a cosmetic property. block vs inline
+                    // changes which box model the element participates in, and here that
+                    // silently re-laid-out a sibling he never asked me to touch. Centring is
+                    // a WIDTH problem; it never needed `display` or `margin` at all.
                     wave.style.width = "100%";
                     wave.style.height = h + "px";
-                    wave.style.display = "block";   // inline <canvas> sits on the text
-                                                    // baseline and leaves a descender gap
-                                                    // under it — measured display:inline
-                    wave.style.margin = "0 auto";   // centred even if a max-width lands on it
                     const ctx = wave.getContext("2d");
                     if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
                   } catch (_) {}
