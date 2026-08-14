@@ -99,7 +99,14 @@ body.lit .bg-overlay {
 .wrap {
   display:flex; flex-direction:column;
   width:100%;
-  max-width:760px; margin:0 auto;
+  /* ⛔ NO 760px COLUMN. qi 2026-08-13 20:41: "The center panel VBSVI looks like its
+     been constrained" / "Instead of going all the way from edge to edge all the way
+     to the side" / "Even even the type bar its constrained".
+     `.wrap` holds BOTH the transcript and the composer, so this single cap boxed the
+     centre panel and the type bar together — which is exactly the pair he named.
+     Reading-measure caps belong on prose. This is an operating surface: it goes edge
+     to edge, and the bubbles keep their own 78%/88% max-widths so text still reads. */
+  max-width:none; margin:0;
   padding:env(safe-area-inset-top, 18px) 20px env(safe-area-inset-bottom, 16px);
   position:relative;
 }
