@@ -123,6 +123,63 @@
           _xosReloading = true;
           location.reload();
         });
+
+        // ── THE CLOSED LOOP THIS BREAKS — qi 2026-08-13 22:36 ────────────────
+        // He opened the SAME build with a cache-busting query and said: "That
+        // looks like how it was before and the glass is at the bottom of the
+        // screen." Same bytes, different URL. So the layout was never broken on
+        // those loads — his device was never fetching it.
+        //
+        // WHY THE 02:41 FIX ABOVE COULD NOT SAVE HIM: it lives in index.html,
+        // and index.html is itself served by whichever worker is in control. An
+        // old cache-first worker serves an old index.html, which registers with
+        // the old options, which leaves the old worker in control. The fix for
+        // the stale worker can only arrive THROUGH the stale worker. That is a
+        // closed loop, and no amount of updateViaCache inside it can open it —
+        // which is why "you say you fix something and when you come back its not
+        // done" survived a fix that was, on its own terms, correct.
+        //
+        // THE ESCAPE: ask the NETWORK directly, with cache:"no-store", what the
+        // current worker version is, and compare it to the caches this browser
+        // actually holds. no-store bypasses the HTTP cache AND the worker, so
+        // this one read can never be answered by the thing it is auditing.
+        // A version that is live but absent from caches.keys() means this client
+        // is stale no matter what any other signal claims — so tear the workers
+        // and caches down and reload ONCE. After that it self-heals forever and
+        // he never has to type a query string again (canon 4: a tap is failure).
+        //
+        // Guarded by sessionStorage: a heal that re-detects staleness would loop
+        // forever, and a reload loop is worse than a stale page.
+        (async () => {
+          try {
+            const HEALED = "xos-cache-healed";
+            const res = await fetch("service-worker.js", { cache: "no-store" });
+            if (!res.ok) return;
+            const src = await res.text();
+            const m = src.match(/VERSION\s*=\s*["']([^"']+)["']/);
+            if (!m) return;                       // no stamp to compare — do nothing
+            const live = m[1];
+            const held = await caches.keys();
+            if (held.includes(live)) {            // current: clear the guard and carry on
+              sessionStorage.removeItem(HEALED);
+              return;
+            }
+            if (sessionStorage.getItem(HEALED)) { // healed once already this session
+              console.warn("[xos] still stale after heal — not looping. live:", live, "held:", held);
+              return;
+            }
+            console.warn("[xos] STALE CLIENT — live worker", live, "not in", held, "— healing");
+            sessionStorage.setItem(HEALED, live);
+            const regs = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(regs.map((r) => r.unregister().catch(() => {})));
+            await Promise.all(held.map((k) => caches.delete(k).catch(() => {})));
+            _xosReloading = true;                 // the controllerchange handler must not also fire
+            location.reload();
+          } catch (e) {
+            // A self-heal that breaks the app is worse than a stale app.
+            console.warn("[xos] cache heal skipped:", e && e.message);
+          }
+        })();
       });
     }
   </script>
