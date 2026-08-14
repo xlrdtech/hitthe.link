@@ -1842,6 +1842,33 @@ function VvsveiPane() {
                 // own — so re-fit on resize instead of trusting one pass.
                 try { window.addEventListener("resize", fitWave); } catch (_) {}
 
+                // ── TWO WRITERS FIGHT OVER THIS CANVAS. RE-ASSERT, DON'T RACE. ──
+                // qi 2026-08-13 21:26: "soundwave is uncentered again veering to the left".
+                //
+                // vvsvei's own resizeCanvas() sets wave.width from `waveformEl.clientWidth`,
+                // and waveformEl is #waveform — the ORIGINAL parent, which stayed behind in
+                // the panel and is NARROWER than the dock. It runs on every window resize,
+                // and now also on its own ResizeObserver. So after any reflow the backing
+                // store gets re-stamped at the panel's width while the CSS box is still
+                // 100% of the dock: the drawing maps into a narrower coordinate space and
+                // the trace hugs the left edge.
+                //
+                // Ordering cannot settle this — whichever listener happens to run last wins,
+                // which is exactly why it "came back" rather than staying fixed. So instead
+                // of trying to win the race, WATCH for the clobber and undo it: a
+                // MutationObserver on the width/height ATTRIBUTES fires synchronously after
+                // any writer touches them, including one in code I do not control.
+                //
+                // Guarded against self-triggering: fitWave only writes when the value is
+                // actually wrong, so re-asserting cannot loop.
+                try {
+                  const mo = new MutationObserver(() => {
+                    const want = Math.floor(Math.max(1, Math.round(dockHost.getBoundingClientRect().width)) * (window.devicePixelRatio || 1));
+                    if (wave.width !== want) fitWave();
+                  });
+                  mo.observe(wave, { attributes: true, attributeFilter: ["width", "height"] });
+                } catch (_) {}
+
                 _xosDockHeight();
                 try { window.dispatchEvent(new Event("resize")); } catch (_) {}
               }

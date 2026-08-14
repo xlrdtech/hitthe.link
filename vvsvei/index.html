@@ -906,7 +906,25 @@ let listening = false;
 // is the source of truth the focus/visibility auto-recover consults to re-arm.
 let _veiMicIntent = false;
 let _reArmInFlight = false;   // guard: prevents visibility+focus double-firing a 2nd recognizer
-let sentCount = 0;
+// PERSISTED, not session-scoped. qi 2026-08-13 21:21 screenshot: the header read
+// "0 SENT" with a full evening of his own messages rendered directly beneath it.
+//
+// Nothing was actually failing — postTranscript() does increment on success and his
+// messages were arriving. But this was a bare `let sentCount = 0`, so every page reload
+// (and the service worker reloads on its own when a deploy lands) reset it to zero while
+// the TRANSCRIPT persisted. A counter that resets while the thing it counts survives is
+// worse than no counter: it actively reports "nothing sent" at the exact moment he is
+// checking whether his words got through.
+//
+// This is the same class as the missing posted-mark he asked for — both are delivery
+// confidence, and both were reading empty for reasons unrelated to delivery.
+const SENT_KEY = 'vei.sentCount.v1';
+let sentCount = (() => {
+  try { return parseInt(localStorage.getItem(SENT_KEY) || '0', 10) || 0; } catch (_) { return 0; }
+})();
+function _persistSent() {
+  try { localStorage.setItem(SENT_KEY, String(sentCount)); } catch (_) {}
+}
 let interimEl = null;
 let networkErrorCount = 0;
 let mediaRecorder = null;
@@ -1314,6 +1332,7 @@ async function postTranscript(text, kind) {
     const ok = await tryPostOnce(payload);
     if (!ok) return false;  // 4xx — deterministic reject, do NOT count or queue
     sentCount++;
+    _persistSent();
     countEl.textContent = sentCount + ' sent · xen.xlrd.org';
     return true;
   } catch (e) {
@@ -1331,7 +1350,7 @@ async function drainQueue() {
     try {
       const ok = await tryPostOnce(q[0]);
       if (!ok) { q.shift(); saveQueue(q); continue; }  // 4xx — drop item, don't requeue forever
-      sentCount++; q.shift(); saveQueue(q);
+      sentCount++; _persistSent(); q.shift(); saveQueue(q);
     } catch { break; }
   }
   countEl.textContent = sentCount + ' sent · xen.xlrd.org';
