@@ -3842,6 +3842,27 @@ html, body { overscroll-behavior-y: none; }
   pointer-events: auto;  /* take back the events the hit layer claimed */
   flex: 0 0 auto;
   width: 100%;
+  /* WAVE ON TOP, NOTIFICATIONS UNDERNEATH. qi 2026-08-13 21:52: "the sound wave and the
+     notifications need to be vertically swapped."
+
+     MEASURED live at 390x844 before this change:
+       .dock.dock-swipe   y=785  h=59   bottom=844
+       .dock-vei-host     y=806  h=37          <- occupies the dock's BOTTOM 37px
+       .dock-notif-ticker position:absolute, bottom:calc(safe-area + 6px)
+     They were not mis-ordered, they were STACKED: the host sits at the bottom because the
+     column is justify-content:flex-end, and the ticker is absolutely pinned to that same
+     bottom edge. Two things claiming one strip.
+
+     The dock is 59px and the wave is 37px, so 22px above it is already unused. Reserving
+     that height BELOW the host lifts the wave into space that already exists and leaves
+     the bottom strip to the ticker — so the swap costs ZERO extra bar height. That matters
+     because he told me at 21:38 the bar had grown and at 21:39 that the glass was cut;
+     any fix that changes this bar's height is a regression regardless of what it fixes.
+
+     Kept in sync with the ticker's own reservation via one variable so the two can never
+     drift apart into an overlap again. */
+  --dock-notif-h: 22px;
+  margin-bottom: var(--dock-notif-h);
 }
 
 /* The composer was position:absolute, anchored to the bottom of vvsvei's own
