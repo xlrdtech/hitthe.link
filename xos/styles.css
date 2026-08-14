@@ -3453,9 +3453,40 @@ html.xos-locked, body.xos-locked { overflow: hidden; }
      is exactly what it was. THIS is what removes the black dead band (qi 2026-08-12
      20:04): the panes end where the dock actually begins, whatever the dock now
      contains — instead of where a constant guessed it would begin. */
-  inset: var(--status-h) 0
-         var(--xos-dock-real, calc(var(--dock-h) + env(safe-area-inset-bottom, 0px)))
-         0;
+  /* ⬇ CONTENT NOW RUNS *UNDER* THE GLASS — qi 2026-08-13 22:09: "thats not glass .
+     thats open space."
+
+     He is right, and this is the cause. MEASURED live at 402x874: .panes ended at
+     y=814 and .dock began at y=814 — flush, zero overlap. I hit-tested the centre of
+     the bar and the only things behind it were .os / .stage / #root / body / html, all
+     rgb(0,0,0). The dock carries `backdrop-filter: blur(40px) saturate(2.2)`, and a
+     40px blur of pure black is pure black. So the bar was never rendering as glass; it
+     was a flat dark rectangle with a hairline top border. Nothing was wrong with the
+     glass styling — there was simply nothing behind it to refract.
+
+     Reserving the dock's height here is what guaranteed that. It also means the bottom
+     strip could only ever be dead: no app was permitted to paint into it.
+
+     Bottom inset goes to 0. The panes now extend the full height and scroll beneath the
+     bar, which is what gives the blur something to work on and removes the reserved
+     strip in the same stroke. The dock still floats above at z-index 6 and is still
+     pointer-events:none apart from .dock-hit, so nothing about the swipe gesture or the
+     glass's own styling changes — qi's "tedious design" is untouched.
+
+     SUPERSEDES the 2026-08-12 20:04 fix, which set this inset to the dock's MEASURED
+     height (--xos-dock-real) to close a black band caused by the panes stopping short of
+     the dock. Ending at 0 subsumes that: a gap between the panes and the dock is now
+     impossible by construction rather than by keeping two numbers in agreement.
+     --xos-dock-real is kept alive below as the content inset, so _xosDockHeight() in
+     app.jsx still has a consumer and its measurement is still what protects the content. */
+  inset: var(--status-h) 0 0 0;
+}
+/* The content must not hide UNDER the glass — only pass behind it. Each pane reserves
+   the dock's real measured height as trailing scroll space, so the last item can always
+   be scrolled clear of the bar. This is the inset that used to live on .panes; moving it
+   from the container to the content is the whole change. */
+.os.os-fullscreen .panes > .pane {
+  padding-bottom: var(--xos-dock-real, calc(var(--dock-h) + env(safe-area-inset-bottom, 0px)));
 }
 .os.os-fullscreen .dock {
   height: calc(var(--dock-h) + env(safe-area-inset-bottom, 0px));
