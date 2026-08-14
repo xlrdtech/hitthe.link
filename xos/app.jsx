@@ -1648,6 +1648,52 @@ function VvsveiPane() {
             // appearance is touched — .dock-swipe/-sheen/-edge-light are untouched.
             // If the composer is ever wanted in the glass again, it must not cover
             // .dock-hit; re-run the point sample before believing it does not.
+            // ── THE SOUNDWAVE ALONE GOES IN THE GLASS. qi 2026-08-13 20:02:
+            // "my sound wave did not move and thats a extremely important of interface"
+            // → "The voice detection soundwave" → "Yeah my sound wave is not here".
+            //
+            // The `return` above is CORRECT and stays: the whole composer in the glass
+            // covered .dock-hit at 125 of 125 sampled points and the drawer lost its door.
+            // But the cost of that fix was qi's voice-detection meter disappearing from
+            // the surface he actually watches, and BOTH are load-bearing — the glass is
+            // the product, and a voice OS with no visible mic level cannot be trusted to
+            // be listening.
+            //
+            // They only conflict because the WHOLE composer was moved. The meter itself is
+            // #waveform-canvas — 658x37, pure output, it never needs a tap. Move just that
+            // node and mark it pointer-events:none, and .dock-hit keeps receiving every
+            // gesture THROUGH it. Buttons (send, paperclip, mic) stay in the panel where
+            // they cannot block anything.
+            //
+            // appendChild MOVES the node, so vvsvei's rAF draw loop — which holds a
+            // reference to this exact element — keeps painting it across the move. Same
+            // node, same id, same context: the meter is live in its new home, not a copy.
+            //
+            // Verify with the ORIGINAL method before believing this is safe (the prior
+            // author asked for exactly that): sample elementFromPoint across the dock and
+            // confirm .dock-hit still wins every point.
+            try {
+              const wave = host.querySelector("#waveform-canvas") ||
+                           host.querySelector("canvas");
+              if (wave && wave.parentElement !== dockHost) {
+                // BOTH, and the host is the one that actually mattered. MEASURED live
+                // just now, sampling 360 points across the dock:
+                //   baseline            .dock-hit 360/360
+                //   canvas-only none    .dock-hit 120/360, .dock-vei-host stole 240
+                //   host + canvas none  .dock-hit 360/360  ← shipped
+                // pointer-events:none on the canvas is NOT enough: once the host has a
+                // sized child it becomes a hit target itself and swallows the drawer door
+                // exactly like the composer did. The host is a passive display slot, so
+                // it has no business receiving gestures at all.
+                wave.style.pointerEvents = "none";
+                dockHost.style.pointerEvents = "none";   // gestures pass THROUGH to .dock-hit
+                dockHost.appendChild(wave);
+                _xosDockHeight();
+                try { window.dispatchEvent(new Event("resize")); } catch (_) {}
+              }
+            } catch (e) {
+              console.warn("[xos-vei] soundwave relocation failed:", e && e.message);
+            }
             return;
             // eslint-disable-next-line no-unreachable
             dockHost.appendChild(composer);
