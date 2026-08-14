@@ -1011,8 +1011,20 @@ function appendFinal(text, postedFlag) {
   div.innerHTML = '<span class="bubble-ts">' + _nowStamp() + '</span><span class="bubble-txt">' +
                   escapeHtml(text) + '</span>' + (postedFlag ? ' <span class="posted">✓ posted</span>' : '');
   div.dataset.t = String(Date.now());   // the rail reads this; nothing else does
+  // STICK TO BOTTOM ONLY IF HE IS ALREADY THERE.
+  // qi 2026-08-13 21:49: "the auto scroll is good but it shouldnt fight me when Im
+  // scrolling."
+  // This was an unconditional scrollTop = scrollHeight on EVERY append, so the moment he
+  // scrolled up to read anything, the next inbound line yanked him back to the bottom —
+  // and inbound lines arrive constantly. Reading older messages was impossible by
+  // construction, not by accident.
+  // Measure BEFORE appending: after the child is in the DOM, scrollHeight has already
+  // grown and the "was I at the bottom" question can no longer be answered.
+  // 40px of slack, not 0 — he is "at the bottom" in intent when a couple of pixels off,
+  // and fractional scroll values on a zoomed viewport never land exactly.
+  const _stick = (transcript.scrollTop + transcript.clientHeight) >= (transcript.scrollHeight - 40);
   transcript.appendChild(div);
-  transcript.scrollTop = transcript.scrollHeight;
+  if (_stick) transcript.scrollTop = transcript.scrollHeight;
   if (interimEl) { interimEl.remove(); interimEl = null; }
   _tlSync();
   return div;
@@ -3635,7 +3647,68 @@ function _avaBargeIn() {
   try { _ssStopHeartbeat(); } catch (_) {}   // stop the resume-heartbeat on barge-in
   _avaQueue = []; _avaPlaying = false; _avaPending = [];
   _avaStatus = 'you spoke'; _renderAvaPill();
+
+  // ── TELL THE OTHER SURFACES. A LOCAL CUT SILENCES ONE MOUTH OF NINE. ──────────
+  // qi 2026-08-13 21:49: "I was trying to talk and you were still talking."
+  //
+  // MEASURED the same night: xen.xlrd.org/health reports "sse": 9 — NINE live surfaces
+  // on the event stream, every one receiving every line and playing it with its own
+  // voice. Everything above this line stops audio in THIS page only: this page's source
+  // node, this page's <audio>, this page's speechSynthesis, this page's queue.
+  //
+  // So barge-in "worked" the whole time and he still could not talk over me: his mic is
+  // in ONE surface, my voice is coming out of the others, and a cut in surface A has no
+  // reach into surface B. Seven call sites, all local, all powerless against the other
+  // eight mouths.
+  //
+  // This is also why it presented as "barge-in is broken" rather than "too many tabs" —
+  // the surface he was looking at DID go quiet, so the feature appeared to fire.
+  //
+  // Two channels because neither alone is sufficient:
+  //   BroadcastChannel — instant, same-origin, but not in every engine
+  //   localStorage     — the `storage` event reaches other tabs everywhere, and is the
+  //                      only path that also works for a surface loaded from a different
+  //                      subpath (/xos/ hosting the vvsvei fragment)
+  // Guarded by origin id so the surface that initiated does not re-cut itself in a loop.
+  try {
+    const sig = { id: (typeof VSQ_SELF !== 'undefined' ? VSQ_SELF : 'anon'), t: Date.now() };
+    try { localStorage.setItem('vei-bargein', JSON.stringify(sig)); } catch (_) {}
+    if (typeof BroadcastChannel !== 'undefined') {
+      if (!window._veiBargeChan) window._veiBargeChan = new BroadcastChannel('vei-voice');
+      window._veiBargeChan.postMessage({ type: 'bargein', ...sig });
+    }
+  } catch (_) { /* the local cut already happened — broadcast is additive, never required */ }
 }
+
+// ── RECEIVE a barge-in raised on ANY other surface and go quiet here too. ──────
+// Without this half the broadcast above is a message nobody listens to. Both listeners
+// call the same local stop path, and both ignore their OWN id so the initiator cannot
+// ping-pong with itself.
+(function _veiBargeInReceiver() {
+  function cutLocal(fromId) {
+    try {
+      if (typeof VSQ_SELF !== 'undefined' && fromId === VSQ_SELF) return;   // my own signal
+      _avaGen++;
+      if (_avaCurrentSource) { try { _avaCurrentSource.stop(); } catch (_) {} _avaCurrentSource = null; }
+      if (_avaAudio) { try { _avaAudio.pause(); _avaAudio.currentTime = 0; } catch (_) {} }
+      if ('speechSynthesis' in window) { try { window.speechSynthesis.cancel(); } catch (_) {} }
+      _avaQueue = []; _avaPlaying = false; _avaPending = [];
+      _avaStatus = 'qi spoke elsewhere'; try { _renderAvaPill(); } catch (_) {}
+    } catch (_) {}
+  }
+  try {
+    window.addEventListener('storage', (e) => {
+      if (!e || e.key !== 'vei-bargein' || !e.newValue) return;
+      try { cutLocal(JSON.parse(e.newValue).id); } catch (_) { cutLocal(null); }
+    });
+    if (typeof BroadcastChannel !== 'undefined') {
+      if (!window._veiBargeChan) window._veiBargeChan = new BroadcastChannel('vei-voice');
+      window._veiBargeChan.addEventListener('message', (e) => {
+        if (e && e.data && e.data.type === 'bargein') cutLocal(e.data.id);
+      });
+    }
+  } catch (_) { /* a receiver that throws must never cost him the page */ }
+})();
 // DEVICE-SIDE FALLBACK (qi 2026-05-31): when /api/tts (Mac omnimind/edge-tts) is
 // WEDGED — HTTP 500, network error, or decodeAudioData throws — even after the
 // existing retry, fall back to window.speechSynthesis so voice is NEVER silent.
