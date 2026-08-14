@@ -3820,9 +3820,17 @@ html, body { overscroll-behavior-y: none; }
      FIX: reserve the ticker's height explicitly, since it can no longer reserve its own.
      --dock-notif-h is that reservation; the glass is content height PLUS it, and still
      sits flush on the bottom edge (no safe-area inset, per his "no space"). */
-  --dock-notif-h: 22px;
-  min-height: calc(var(--dock-h, 60px) + var(--dock-notif-h));
-  padding-bottom: var(--dock-notif-h);
+  /* ⏪ REVERTED TO KNOWN-GOOD — qi 2026-08-13 21:39: "over 70% of my swipe glass
+     vertically has been cut off" and "they cut my swipe glass AND kept the negative
+     space." I traded a cosmetic gap for a broken glass; that is strictly worse, so the
+     geometry goes back to the shape that was whole.
+
+     I changed this twice in five minutes without ever seeing his device, and each guess
+     produced a new defect. The gap is real and still needs fixing — but from a MEASURED
+     screenshot of his handset, not from reasoning about env() values I cannot observe.
+     A smaller known complaint beats a larger unknown one. */
+  min-height: calc(var(--dock-h, 60px) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
