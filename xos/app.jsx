@@ -1759,6 +1759,54 @@ function VvsveiPane() {
                 dockHost.style.boxShadow = "none";
                 dockHost.style.backdropFilter = "none";
                 dockHost.appendChild(wave);
+
+                // ── FULL WIDTH + CENTRED IN THE GLASS ──────────────────────
+                // qi 2026-08-13 21:06: "the sound wave is there but its not
+                // properly centered in it Im pretty sure its not full [width]".
+                // MEASURED live at 390px viewport, immediately before this fix:
+                //   .dock.dock-swipe   x=0  w=390
+                //   .dock-vei-host     x=1  w=388
+                //   #waveform-canvas   x=1  w=288   ← 100px of dead glass on the right
+                //
+                // ROOT CAUSE: vvsvei's own resizeCanvas() sizes the canvas from
+                // `waveformEl.clientWidth`, and waveformEl is `#waveform` — the
+                // ORIGINAL parent, which stays behind in the panel. The canvas
+                // moved; its sizing authority did not. So it keeps painting at
+                // the old container's width forever, and dispatching `resize`
+                // re-runs that same function against that same stale box —
+                // which is why the existing resize dispatch never fixed it.
+                //
+                // A moved node does NOT inherit its new parent's layout for an
+                // intrinsically-sized element: <canvas> has width/height
+                // ATTRIBUTES that are its backing-store size, independent of CSS
+                // and of whatever box now contains it. Both must be set.
+                const fitWave = () => {
+                  try {
+                    const box = dockHost.getBoundingClientRect();
+                    const w = Math.max(1, Math.round(box.width));
+                    const h = Math.max(1, Math.round(wave.getBoundingClientRect().height) || 37);
+                    const dpr = window.devicePixelRatio || 1;
+                    // Backing store in DEVICE pixels — without dpr the line is soft
+                    // on his retina display, which reads as a rendering bug.
+                    wave.width = Math.floor(w * dpr);
+                    wave.height = Math.floor(h * dpr);
+                    // CSS box in LAYOUT pixels, spanning the glass edge to edge.
+                    wave.style.width = "100%";
+                    wave.style.height = h + "px";
+                    wave.style.display = "block";   // inline <canvas> sits on the text
+                                                    // baseline and leaves a descender gap
+                                                    // under it — measured display:inline
+                    wave.style.margin = "0 auto";   // centred even if a max-width lands on it
+                    const ctx = wave.getContext("2d");
+                    if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                  } catch (_) {}
+                };
+                fitWave();
+                // The glass changes width on rotation and on the PWA's
+                // safe-area recalc, and the draw loop never re-measures on its
+                // own — so re-fit on resize instead of trusting one pass.
+                try { window.addEventListener("resize", fitWave); } catch (_) {}
+
                 _xosDockHeight();
                 try { window.dispatchEvent(new Event("resize")); } catch (_) {}
               }
