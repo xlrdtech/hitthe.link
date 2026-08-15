@@ -3892,7 +3892,17 @@ function appendEventItem(srcLabel, body, ts) {
 let _erRevealed = false;
 window._erReveal = function _erReveal() {
   try {
-    if (_eventsToggle && _eventsToggle.style.display === 'none') _eventsToggle.style.display = '';
+    // ⛔ REMOVED 2026-08-15 05:24 — qi: "I didn't ask for events, bro" + "this shit not the
+    // canonical design". The deleted line was:
+    //     if (_eventsToggle && _eventsToggle.style.display === 'none') _eventsToggle.style.display = '';
+    // It READ his display:none and then OVERWROTE it — code whose only function was to undo his
+    // own instruction. He had already killed this button on 2026-06-22 ("I still see the events
+    // button at the top right corner not in line"), the markup at L926 still carries that note
+    // AND style="display:none", and the step-lane feature resurrected it anyway by calling
+    // _erReveal() on EVERY tool call. Measured 2026-08-15 05:22 via live DOM read: the pill was
+    // visible with count 0 on his handset while the markup said hidden.
+    // ⚠️ NEVER re-add an un-hide here. If the rail needs to be reachable, it gets a control qi
+    // asked for — a suppressed element is a DECISION, not a bug to route around.
     if (!_erRevealed) {
       _erRevealed = true;
       if (_eventsRail && !_eventsRail.classList.contains('open')) {

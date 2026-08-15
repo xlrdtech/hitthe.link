@@ -477,7 +477,7 @@ body.pointer #cur-ring,body.pointer #cur-dot{opacity:1}
     <span>ALT <b class="num w5" id="r-alt">-5.250</b> &nbsp; DIL <b class="num w4" id="r-dil">0.00</b></span>
   </div>
   <div class="hud-r">
-    <span>NET SCANNER ACTIVE &nbsp; &bull; &nbsp; ENDPOINTS 232</span>
+    <span>NET SCANNER ACTIVE &nbsp; &bull; &nbsp; ENDPOINTS <b class="num" id="r-endpoints">--</b></span>
     <span>PTR <b class="num w6" id="r-px">0.0000000</b> <b class="num w6" id="r-py">0.0000000</b></span>
   </div>
 </div>
@@ -935,6 +935,22 @@ var rName = document.getElementById("r-name"), rStn = document.getElementById("r
 var lastStn = -1;
 // Adjust HUD for dynamically added planes
 document.getElementById('hud-top').querySelector('.hud-l span').innerHTML = `STN <b class="num w4" id="r-stn">00</b>/${String(N).padStart(2,'0')} &nbsp;<b id="r-name">IDENT</b>`;
+
+// ENDPOINTS was the literal string "232" (2026-08-14). The directory had grown well
+// past that, so the front door was quoting an invented number — the one thing the
+// build canon forbids outright. Count the real thing instead: whatever is actually
+// in directoryData at run time, so it can never drift from what the page renders.
+(function(){
+  var el = document.getElementById('r-endpoints');
+  if (!el) return;
+  try {
+    var n = directoryData.reduce(function(a, c){ return a + (c.links ? c.links.length : 0); }, 0);
+    // Only display a real count. If the reduce ever yields nothing, leave the
+    // placeholder visible rather than printing a confident "0" — a wrong number
+    // that looks authoritative is worse than one that visibly has no answer.
+    if (n > 0) el.textContent = String(n);
+  } catch (e) { /* leave "--" so the gap is visible, never fabricated */ }
+})();
 
 
 function frame(now){

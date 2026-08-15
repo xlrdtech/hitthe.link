@@ -49,6 +49,50 @@ const OMNI_STREAM = OMNI_BASE + "/api/stream";
 const OMNI_POLL_MS = 10000;
 const OMNI_REPLY  = OMNI_BASE + "/api/reply";   // outbound: email→SMTP, chat→Matrix
 const OMNI_SSE    = OMNI_BASE + "/sse-stream";  // live push of the interleaved thread
+
+// ── LIVE BY DEFAULT: the WebSocket is the PRIMARY path, the poll is the fallback.
+//    (added 2026-08-15 — Beeper Desktop WebSocket live-sync)
+//
+// WHY A SECOND SOCKET AND NOT app.jsx TALKING TO BEEPER DIRECTLY:
+// Beeper Desktop exposes a real, working events socket at ws://localhost:23373/v1/ws.
+// MEASURED: the upgrade returns 101 with `Authorization: Bearer <token>`, then the
+// server sends `{"type":"ready","version":1,"chatIDs":[]}` unprompted, and
+// `{"type":"subscriptions.set","requestID":"r1","chatIDs":["*"]}` is answered with
+// `{"type":"subscriptions.updated",...,"chatIDs":["*"]}`. Auth is enforced AT THE
+// UPGRADE: a bad token and no token both return 401 with zero frames.
+//
+// This page STILL cannot be the one to open it, for two independent reasons:
+//   1. hitthe.link is served over https. A browser refuses an insecure ws:// from a
+//      secure origin — the connection is blocked before a byte moves. There is no
+//      flag, no fallback, no polyfill for that.
+//   2. It would require shipping a bearer token into a page anyone can View Source
+//      on. Publishing a credential to a public URL is never an option.
+// So the bearer lives ONLY server-side, in omni-inbox-server.js, which already is
+// this pane's origin and already runs on the same box as Beeper Desktop. It holds
+// the Beeper socket and re-broadcasts to this page over its own token-free socket.
+// This page never sees, stores, or transmits the Beeper token.
+//
+// LANDMINE THIS DELIBERATELY AVOIDS — read before "improving" it: /sse-stream was
+// wired here once and Cloudflare did NOT pass its text/event-stream through the
+// tunnel. It returned NO HEADERS AT ALL, EventSource failed, and the 3s retry loop
+// drove console errors 38 → 75 → 194 on ONE page view. WebSockets are a different
+// mechanism (a 101 upgrade cloudflared proxies natively, not a buffered stream), so
+// this is not the same bet — but it is NOT yet proven through the edge either. That
+// is exactly why the poll below is retained as a live fallback instead of deleted:
+// if wss:// never establishes, this pane behaves precisely as it does today.
+const OMNI_WS = (() => {
+  try {
+    const h = (typeof location !== "undefined") ? location.hostname : "";
+    // Served straight off the box (omnimind :4441 or a local test): same-host socket.
+    if (h === "127.0.0.1" || h === "localhost") return "ws://" + h + ":4489/ws";
+  } catch (_) {}
+  // https → wss. Never ws:// from an https page; the browser blocks it outright.
+  return OMNI_BASE.replace(/^http/, "ws") + "/ws";
+})();
+// Force a reconnect if the socket goes quiet. The server pushes a snapshot at least
+// every 20s, so 90s of silence means the socket is a corpse that still reads OPEN —
+// the exact "process is up, service is wedged" failure this stack keeps hitting.
+const OMNI_WS_SILENCE_MS = 90000;
 const CALLERS_URL = XEN_BASE + "/api/callers";
 const REPLY_URL = XEN_BASE + "/mirror/reply";
 
@@ -371,7 +415,32 @@ function MirrorCard({ ev, fresh, onReply, onOpenLink }) {
   const _m = pad(time.getMinutes());
   const _ampm = _h >= 12 ? "PM" : "AM";
   _h = (_h % 12) || 12;
-  const when = `${_h}:${_m} ${_ampm}`;
+  /* qi 2026-08-15 02:05: "it all needs to have the dates in their time stamp to
+     quickly [see] how stale they are". A bare clock time is ambiguous by design —
+     "2:07 PM" reads identically whether it landed four minutes ago or in March,
+     so a stale thread and a live one are indistinguishable at a glance. That is
+     the whole complaint: the inbox interleaves five networks and 1,159 messages,
+     and without a date the sort order is the ONLY staleness cue.
+     Ladder, cheapest-signal-first — the date appears only when it carries
+     information, so today's traffic stays as short as it is now:
+       today        2:07 PM
+       yesterday    Yest 2:07 PM
+       this year    Aug 14, 2:07 PM
+       older        Aug 14 2025
+     Comparison is by LOCAL calendar day, not by elapsed ms: a 6-hour-old message
+     at 11pm crossed into a new day and must read "Yest", which a >24h test gets
+     wrong in exactly the small hours he works in. */
+  const _clock = `${_h}:${_m} ${_ampm}`;
+  const _now = new Date();
+  const _dayKey = (d) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  const _yest = new Date(_now.getFullYear(), _now.getMonth(), _now.getDate() - 1);
+  const _MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const when =
+      _dayKey(time) === _dayKey(_now)  ? _clock
+    : _dayKey(time) === _dayKey(_yest) ? `Yest ${_clock}`
+    : time.getFullYear() === _now.getFullYear()
+        ? `${_MON[time.getMonth()]} ${time.getDate()}, ${_clock}`
+        : `${_MON[time.getMonth()]} ${time.getDate()} ${time.getFullYear()}`;
   const sec = pad(time.getSeconds());
   const isOut = ev.dir === "out";
   /* qi 2026-05-17 8672 follow-up: chatID-keyed thread routing.
@@ -602,6 +671,17 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
   const [events, setEvents] = useState([]);
   const [count, setCount] = useState(0);
   const [sseState, setSseState] = useState("connecting");
+  // Transport health for the INBOX feed specifically, kept separate from sseState
+  // on purpose. sseState is set "live" by absorb() the moment ANY snapshot lands,
+  // including one a 10s poll dragged in — so it cannot answer "am I actually live?".
+  // Conflating them would let a polling pane advertise itself as pushed, which is
+  // the dishonest-status failure this file has been bitten by repeatedly.
+  // Values: connecting · live (ws) · live+beeper · polling (fallback) · unsupported
+  const [omniLive, setOmniLive] = useState("connecting");
+  // Read inside the poll tick to decide whether to fetch. A ref, not state, because
+  // the running pump() closure must see the CURRENT value, not the one captured
+  // when the effect mounted.
+  const wsOpenRef = useRef(false);
   const onNewEventRef = useRef(onNewEvent);
   onNewEventRef.current = onNewEvent;
 
@@ -673,12 +753,15 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
       }
     };
 
-    // POLL, NOT SSE — and this is a CORRECTION of my own previous commit.
+    // ── THE POLL IS NOW THE FALLBACK, NOT THE FEED ───────────────────────────
     //
-    // I switched this to EventSource on /sse-stream because I found that route
-    // in omni-inbox-server.js. What I ignored: curling it through the Cloudflare
-    // tunnel returned NO HEADERS AT ALL, while /api/stream returned a full body.
-    // Cloudflare does not pass this text/event-stream through. So the
+    // Kept, deliberately, and the history below is why it is kept rather than
+    // deleted the moment a socket appeared:
+    //
+    // I once switched this to EventSource on /sse-stream because I found that
+    // route in omni-inbox-server.js. What I ignored: curling it through the
+    // Cloudflare tunnel returned NO HEADERS AT ALL, while /api/stream returned a
+    // full body. Cloudflare does not pass this text/event-stream through. So the
     // EventSource failed, my onerror retried every 3s, and every retry logged —
     // console errors climbed 38 → 75 → 194 on a single page view, a permanent
     // error loop pointed at a dead socket.
@@ -687,25 +770,165 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
     // source" is not "the endpoint answers through the edge". The instrument
     // already told me it hung; I proceeded anyway.
     //
+    // That lesson applies to the WebSocket added below EXACTLY as much as it
+    // applied to the SSE. So this poll stays wired and armed. If wss:// never
+    // establishes through the tunnel, every tick below runs and qi's inbox
+    // behaves identically to how it behaved before this change — no regression is
+    // possible from the socket failing, only an improvement from it working.
+    //
     // /api/stream is VERIFIED end to end — CORS `access-control-allow-origin: *`
-    // from the hitthe.link origin, ok:true, 292 messages, 292 cleartext. The
-    // server refreshes it every 10s, so polling at 10s loses nothing.
+    // from the hitthe.link origin, ok:true, 292 messages, 292 cleartext.
     const pump = async () => {
       if (cancelled) return;
-      try {
-        const r = await fetch(OMNI_STREAM, { cache: "no-store" });
-        absorb(await r.json());
-      } catch (_) {
-        // Fail soft: a transient tunnel hiccup must not empty his inbox, and
-        // must not stop the next tick either.
+      // FALLBACK ONLY: while the socket is open the server pushes a full merged
+      // snapshot on connect, on every new Beeper message, and on every 20s
+      // server-side refresh. Fetching on top of that is pure duplicate load, and
+      // "live by default" means the socket drives the pane, not a timer.
+      if (!wsOpenRef.current) {
+        try {
+          const r = await fetch(OMNI_STREAM, { cache: "no-store" });
+          absorb(await r.json());
+          // Only claim "polling" if the socket has NOT announced itself. During a
+          // cold start both are briefly true — the socket is genuinely live while
+          // the poll covers the gap until the first real snapshot — and in that
+          // window the honest label is the socket's, not the poll's.
+          if (!cancelled) setOmniLive((s) => (s.indexOf("live") === 0 ? s : "polling (fallback)"));
+        } catch (_) {
+          // Fail soft: a transient tunnel hiccup must not empty his inbox, and
+          // must not stop the next tick either.
+        }
       }
+      // The timer keeps running either way. That is what makes the fallback
+      // AUTOMATIC: the instant the socket drops, the very next tick fetches.
       if (!cancelled) timer = setTimeout(pump, OMNI_POLL_MS);
     };
     pump();
 
+    // ── PRIMARY LIVE PATH: the omni-inbox WebSocket ──────────────────────────
+    // Carries the Beeper Desktop events socket, bridged server-side. Frames:
+    //   {type:"hello",  beeper:{socket,...}}  — sent once on connect
+    //   {type:"stream", messages:[…], …}      — a FULL merged snapshot
+    //   {type:"beeper", …}                    — Beeper-leg status changed
+    //
+    // ONE INGEST PATH ON PURPOSE. The server always pushes a full snapshot, never
+    // a lone message, so everything lands through the same absorb() that the poll
+    // uses. absorb() keys rows by (roomId|ts|INDEX) — an index that is only
+    // meaningful within a complete sorted snapshot — so splicing in a single
+    // message would mint a key that collides with a real row and React would
+    // silently drop one of them. Losing a message from an inbox is the worst
+    // possible bug here, so the transport never gets its own ingest path.
+    let ws = null;
+    let wsRetry = 500;
+    let wsRetryTimer = null;
+    let wsSilenceTimer = null;
+    let wsAttempts = 0;
+
+    const clearSilenceWatch = () => {
+      if (wsSilenceTimer) { clearTimeout(wsSilenceTimer); wsSilenceTimer = null; }
+    };
+    // A socket that reads OPEN while delivering nothing is the failure mode this
+    // stack hits constantly (listening port, zero response). Treat silence as death.
+    const armSilenceWatch = () => {
+      clearSilenceWatch();
+      wsSilenceTimer = setTimeout(() => {
+        if (cancelled) return;
+        try { ws && ws.close(); } catch (_) {}   // onclose drives the reconnect
+      }, OMNI_WS_SILENCE_MS);
+    };
+
+    const scheduleWsRetry = () => {
+      if (cancelled) return;
+      if (wsRetryTimer) clearTimeout(wsRetryTimer);
+      wsRetryTimer = setTimeout(wsConnect, wsRetry);
+      wsRetry = Math.min(wsRetry * 2, 8000);   // 500ms → 8s ceiling, never gives up
+    };
+
+    function wsConnect() {
+      if (cancelled) return;
+      if (typeof WebSocket === "undefined") { setOmniLive("unsupported"); return; }
+      wsAttempts += 1;
+      // Honest label: only the first attempt is "connecting". Everything after a
+      // failure is a reconnect and says so — never silently pretend to be live.
+      if (!wsOpenRef.current) setOmniLive(wsAttempts === 1 ? "connecting" : "reconnecting");
+      try {
+        ws = new WebSocket(OMNI_WS);
+      } catch (_) {
+        scheduleWsRetry();
+        return;
+      }
+      ws.onopen = () => {
+        // DELIBERATELY EMPTY. An open socket is NOT a working feed — the measured
+        // canon is that a 101 upgrade alone proves nothing. `live` is claimed only
+        // when the server's hello frame actually arrives, below.
+        if (!cancelled) armSilenceWatch();
+      };
+      ws.onmessage = (evt) => {
+        if (cancelled) return;
+        armSilenceWatch();
+        let f;
+        try { f = JSON.parse(evt.data); } catch (_) { return; }
+        if (!f || !f.type) return;
+        if (f.type === "hello" || f.type === "beeper") {
+          wsRetry = 500;                       // a real frame resets the backoff
+          const b = f.beeper || {};
+          // Two different truths, reported as two different words: the page's own
+          // socket is up ("live"), and the Beeper leg behind it is subscribed
+          // ("live+beeper"). A working page socket in front of a dead Beeper
+          // socket must never render as though Beeper were flowing.
+          setOmniLive(b.socket === "subscribed" ? "live+beeper" : "live");
+          return;
+        }
+        if (f.type === "stream") {
+          wsRetry = 500;
+          absorb(f);
+          // THE POLL IS ONLY SILENCED BY A SNAPSHOT THAT ACTUALLY CARRIED DATA.
+          // MEASURED 2026-08-15: a client that connected before the server's first
+          // refresh finished received {messages:[], total:0, source:"none-yet"}
+          // while /api/stream served 1159 real messages moments later. Suppressing
+          // the poll on THAT frame would have handed qi an empty inbox and called
+          // it live. Connection state and data state are not the same fact, so an
+          // empty feed can never be caused by this transport: the fallback keeps
+          // running until real rows arrive. (The server also builds a snapshot on
+          // demand for cold-start clients — this is the second line of defence,
+          // deliberately kept even though the first one now exists.)
+          if (Array.isArray(f.messages) && f.messages.length > 0) wsOpenRef.current = true;
+          return;
+        }
+      };
+      // ONE drop per socket. onerror and onclose BOTH fire for a single failed
+      // connection (and close() inside the handler re-enters onclose), so without
+      // this latch every failure would schedule two or three reconnects — the
+      // backoff would still double, but two overlapping chains would race and the
+      // "capped at 8s" ceiling would silently become a 4s hammer. `dead` is scoped
+      // to THIS socket, so a later reconnect gets its own fresh latch.
+      const thisWs = ws;
+      let dead = false;
+      const drop = () => {
+        if (cancelled || dead) return;
+        dead = true;
+        wsOpenRef.current = false;             // the next poll tick takes over
+        clearSilenceWatch();
+        setOmniLive("reconnecting");
+        try { thisWs.onclose = null; thisWs.onerror = null; thisWs.close(); } catch (_) {}
+        // Do not wait up to OMNI_POLL_MS to refill: fetch immediately, then let
+        // the existing chain continue. qi never waits on a timer to be shown his
+        // own inbox.
+        if (timer) clearTimeout(timer);
+        pump();
+        scheduleWsRetry();
+      };
+      ws.onerror = drop;
+      ws.onclose = drop;
+    }
+    wsConnect();
+
     return () => {
       cancelled = true;
+      wsOpenRef.current = false;
       if (timer) clearTimeout(timer);
+      if (wsRetryTimer) clearTimeout(wsRetryTimer);
+      if (wsSilenceTimer) clearTimeout(wsSilenceTimer);
+      if (ws) { try { ws.onclose = null; ws.onerror = null; ws.close(); } catch (_) {} }
     };
   }, []);
 
@@ -988,9 +1211,29 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
     <>
       <div className="kicker-bar">
         <div className="kicker">Omnibox · MIRROR</div>
-        <div className="mirror-livepill">
-          <span className="led" />
-          <span>{sseState} · {String(count).padStart(3, "0")}</span>
+        {/* Two pills, two truths. The left one is the xen firehose + card count,
+            unchanged. The right one is the INBOX TRANSPORT, and it exists because
+            a pane that says "live" while it is really polling every 10s is lying
+            to qi about how fast his messages reach him. When the socket is down
+            this reads "polling (fallback)" — the inbox still works, and he can
+            see exactly why it feels slower. No refresh button: the fallback and
+            the reconnect are both automatic. */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div className="mirror-livepill">
+            <span className="led" />
+            <span>{sseState} · {String(count).padStart(3, "0")}</span>
+          </div>
+          <div
+            className="mirror-livepill"
+            title={"inbox transport · " + OMNI_WS}
+            style={omniLive.indexOf("live") === 0 ? undefined : { background: "rgba(255,180,106,0.12)", color: "var(--amber, #ffb46a)" }}
+          >
+            <span
+              className="led"
+              style={omniLive.indexOf("live") === 0 ? undefined : { background: "var(--amber, #ffb46a)", boxShadow: "0 0 6px var(--amber, #ffb46a)" }}
+            />
+            <span>{omniLive}</span>
+          </div>
         </div>
       </div>
 
