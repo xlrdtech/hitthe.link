@@ -184,6 +184,9 @@ header { padding:8px 0 22px; display:flex; align-items:flex-start; justify-conte
    tell you which hour you have reached in it. */
 #tlwrap {
   flex:1; min-height:0; display:flex; align-items:stretch;
+  /* Containing block for the rail, which is now an absolute LAYER rather than a
+     column in this row — see #tl-rail for the measurement and the reason. */
+  position:relative;
 }
 /* `position:relative` is what makes #transcript the offsetParent, so each
    entry's offsetTop is measured against the SCROLLER rather than against some
@@ -209,8 +212,30 @@ header { padding:8px 0 22px; display:flex; align-items:flex-start; justify-conte
    --w-58 → rgba(255,255,255,.58). Values are inlined for the two whites
    because this file has no equivalent token to point at, and inventing one
    would imply a palette entry that nothing else uses. */
+/* ── THE RAIL IS A LAYER, NOT A COLUMN ──────────────────────────────────────
+   qi 2026-08-15 00:03: "the time line can remain exactly where it is but the
+   chat bubble should not have to move to the left because the time line should
+   be a layer above it. so when the times show and the line extends it can
+   extend over bubbles on the right side. thats fine. because currently the chat
+   is asymmetric and we cant tolerate that in my designs."
+
+   MEASURED CAUSE OF THE ASYMMETRY: this was `flex:0 0 34px` inside the #tlwrap
+   flex ROW, so the rail consumed 34px of that row and #transcript (flex:1) got
+   only the remainder. #transcript's own padding is a symmetric `4px 4px` — the
+   bubbles were never off-centre INSIDE it. The whole defect was that its BOX
+   was 34px narrower than the panel and hard against the left edge, so the
+   composition read as shoved left with a dead column on the right.
+
+   Out of flow, #transcript claims the full panel width and the bubbles centre
+   on the real panel. The ticks and the hover labels now extend OVER the
+   right-hand bubbles, which is exactly what he approved.
+
+   pointer-events is SPLIT on purpose: none on the rail, auto on the stations.
+   Without that split this 34px column — now floating above live content — would
+   swallow every tap on the right edge of the bubbles underneath it. */
 #tl-rail {
-  flex:0 0 34px; position:relative;
+  position:absolute; top:0; right:0; bottom:0; width:34px; z-index:5;
+  pointer-events:none;
   display:flex; flex-direction:column; justify-content:center;
   align-items:flex-end; gap:11px;
   padding-right:4px;
@@ -222,6 +247,10 @@ header { padding:8px 0 22px; display:flex; align-items:flex-start; justify-conte
   font-family:var(--mono); font-size:8.5px; letter-spacing:.16em;
   color:transparent; text-transform:uppercase; white-space:nowrap;
   transition:color .45s cubic-bezier(.19,1,.22,1);
+  /* The only interactive part of the layer (see #tl-rail). touch-action:none so
+     a vertical drag on a station scrubs the rail instead of being claimed by the
+     browser as a page scroll — the scrub is wired in _tlScrub. */
+  pointer-events:auto; touch-action:none;
 }
 .tl-st i {
   display:block; width:14px; height:1px; background:rgba(255,255,255,.30);
@@ -1196,6 +1225,90 @@ function _tlMark() {
     }
     _tlSync();
   } catch (_) { /* a dead rail must not take the page with it */ }
+})();
+
+(function _tlScrub() {
+  // ── THE OTHER HALF OF THE LOOP ─────────────────────────────────────────────
+  // qi 2026-08-14 23:59: "the timeline should be the only way to scroll the chat
+  // by the way. the timeline is how to scroll. the scroll moves the timeline and
+  // timeline scrolls. they were not to be separate."
+  // and earlier, 2026-08-13: "I wanted it to be able to scroll THROUGH the
+  // timeline and every time I come back its only one hour."
+  //
+  // WHAT WAS ALREADY HERE was exactly one direction: #transcript scroll ->
+  // _tlSync -> _tlMark lights the active station. Going the other way, a station
+  // CLICK jumped to that hour's offsetTop. But a column of jump buttons is not a
+  // scrollbar — there was no way to move CONTINUOUSLY through the day by dragging
+  // the rail, and that missing half is precisely why the two read as separate
+  // controls instead of one.
+  //
+  // Drag begins on a station, never on the rail: #tl-rail is pointer-events:none
+  // now that it floats above live bubbles, so grabbing bare rail must not be a
+  // requirement. setPointerCapture then hands us every subsequent move, which is
+  // what lets the finger leave the 34px column and keep scrubbing.
+  //
+  // The mapping is pointer-Y over the RAIL's box -> the scroller's full range, so
+  // the rail means document space — the same thing its tick placement already
+  // means (see the #tl-rail header: ticks come from offsetTop over scrollHeight,
+  // not from wall-clock spacing).
+  //
+  // scrollTop is assigned BARE here, never scrollTo({behavior:'smooth'}). A scrub
+  // must track the finger frame-for-frame; smoothing a drag makes the content lag
+  // behind the thumb and feel broken. Smooth stays where it belongs — the click
+  // jump, which opts into it per call.
+  try {
+    if (!tlRail || !transcript) return;
+
+    const SLOP = 4;          // px of travel before a press becomes a drag, not a tap
+    let downY = 0, dragging = false, capturedOn = null;
+
+    const scrubTo = (clientY) => {
+      const r = tlRail.getBoundingClientRect();
+      if (!r.height) return;
+      const range = transcript.scrollHeight - transcript.clientHeight;
+      if (range <= 0) return;
+      let f = (clientY - r.top) / r.height;
+      f = f < 0 ? 0 : f > 1 ? 1 : f;
+      transcript.scrollTop = f * range;   // _tlSync fires off this and relights the station
+    };
+
+    tlRail.addEventListener('pointerdown', (e) => {
+      const st = e.target.closest && e.target.closest('.tl-st');
+      if (!st) return;
+      downY = e.clientY;
+      dragging = false;
+      capturedOn = st;
+      try { st.setPointerCapture(e.pointerId); } catch (_) {}
+    });
+
+    tlRail.addEventListener('pointermove', (e) => {
+      if (!capturedOn) return;
+      if (!dragging && Math.abs(e.clientY - downY) <= SLOP) return;
+      dragging = true;
+      e.preventDefault();
+      scrubTo(e.clientY);
+    });
+
+    const release = (e) => {
+      if (!capturedOn) return;
+      try { capturedOn.releasePointerCapture(e.pointerId); } catch (_) {}
+      capturedOn = null;
+      // `dragging` is deliberately NOT cleared here. The click event fires AFTER
+      // pointerup, and the capture-phase listener below reads this flag to decide
+      // whether that click was the tail of a scrub (swallow it — the finger has
+      // already put us where we want to be) or a genuine tap on a station (let it
+      // through, so the existing smooth hour-jump still works untouched).
+    };
+    tlRail.addEventListener('pointerup', release);
+    tlRail.addEventListener('pointercancel', release);
+
+    tlRail.addEventListener('click', (e) => {
+      if (!dragging) return;
+      dragging = false;
+      e.stopPropagation();
+      e.preventDefault();
+    }, true);
+  } catch (_) { /* same rule as _tlWire: a dead rail must not take the page down */ }
 })();
 
 (function _veiComposerClearance() {
@@ -3674,12 +3787,68 @@ let _avaAudio = null, _avaAudioUnlocked = false, _avaStatus = '';
 // Web Audio API context — once unlocked by a gesture, can play audio at any time
 // without gesture requirement. This is the cross-platform fix for NotAllowedError.
 let _avaCtx = null;
+// ─── VOICE-OUT GAIN (qi 2026-08-14 07:20 "Louder", 07:29 the correction) ──────
+// qi: "the voice cannot depend on ANYTHING that has to do with my local audio.
+// Local audio, that's over with, we're past that."  He is on his PHONE. The Mac's
+// speakers, `afplay`, `say` and the macOS volume slider are all the wrong rail —
+// I reached for them first and they were irrelevant by construction.
+//
+// THE REAL CEILING: HTMLMediaElement.volume is clamped to 1.0 by spec, and so is
+// SpeechSynthesisUtterance.volume. Neither can be made louder than "normal" — so
+// on a phone at max system volume there was literally no knob left. The only way
+// past unity in a browser is a Web Audio GainNode, whose gain is unbounded.
+//
+// SAFETY, and it is the whole design: routing an element through
+// createMediaElementSource REDIRECTS its output into the graph. If the context is
+// suspended or the graph fails, the element goes SILENT rather than quiet. So we
+// only ever attach when the context is genuinely running, wrap every step, and on
+// ANY failure leave the element on its original direct path. Louder is a nice-to-
+// have; audible is the requirement. Never trade the second for the first.
+const AVA_GAIN_DEFAULT = 2.2;          // >1 = genuine amplification, unavailable to .volume
+let _avaGainNode = null, _avaSrcNode = null;
+
+function _avaGainValue() {
+  // localStorage can shadow a shipped default (measured trap), so an EXPLICIT
+  // stored value wins, but a missing/garbage one falls back to the new default
+  // instead of silently pinning whatever was set months ago.
+  try {
+    const v = parseFloat(localStorage.getItem('vei.voiceGain'));
+    if (isFinite(v) && v > 0 && v <= 8) return v;
+  } catch (_) {}
+  return AVA_GAIN_DEFAULT;
+}
+
+function _attachAvaGain() {
+  if (_avaGainNode || !_avaAudio) return;                 // idempotent: createMediaElementSource
+  if (!_avaCtx || _avaCtx.state !== 'running') return;    // is once-per-element, and fatal twice
+  try {
+    _avaSrcNode = _avaCtx.createMediaElementSource(_avaAudio);
+    _avaGainNode = _avaCtx.createGain();
+    _avaGainNode.gain.value = _avaGainValue();
+    _avaSrcNode.connect(_avaGainNode);
+    _avaGainNode.connect(_avaCtx.destination);
+  } catch (_) {
+    // Leave the element on its direct output. Quieter, but never mute.
+    _avaGainNode = null; _avaSrcNode = null;
+  }
+}
+
+// Live control so "louder" never needs a code edit again:  veiGain(3)  in console.
+window.veiGain = function (g) {
+  if (g === undefined) return _avaGainNode ? _avaGainNode.gain.value : 1;
+  const v = Math.max(0.1, Math.min(8, parseFloat(g) || AVA_GAIN_DEFAULT));
+  try { localStorage.setItem('vei.voiceGain', String(v)); } catch (_) {}
+  if (_avaGainNode) _avaGainNode.gain.value = v;
+  return v;
+};
+
 function _ensureAvaAudio() {
   if (_avaAudio) return _avaAudio;
   _avaAudio = new Audio();
   _avaAudio.preload = 'auto';
   _avaAudio.setAttribute('playsinline', '');
   // crossOrigin removed — caused audio-err on Orion iOS (CORS preflight blocks audio element)
+  _attachAvaGain();   // no-op unless the context is already running
   return _avaAudio;
 }
 let _avaKeepAliveNode = null, _avaKeepAliveGain = null;
@@ -3722,6 +3891,17 @@ function _unlockAvaAudio() {
   try {
     _avaCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (_avaCtx.state === 'suspended') _avaCtx.resume();
+    // Wire the >1.0 voice gain the moment the context is genuinely running.
+    // resume() is ASYNC — attaching synchronously here would still observe
+    // 'suspended' on iOS and silently no-op forever, which is exactly how a
+    // "louder" fix ends up doing nothing while every log says it succeeded.
+    try {
+      _attachAvaGain();                                   // if already running
+      if (_avaCtx.state === 'suspended' && _avaCtx.onstatechange === null) {
+        _avaCtx.onstatechange = () => { try { _attachAvaGain(); } catch (_) {} };
+      }
+      setTimeout(() => { try { _attachAvaGain(); } catch (_) {} }, 400);  // belt + braces
+    } catch (_) {}
     // SILENT-AUDIO KEEPALIVE (wf 2026-05-31): iOS suspends the AudioContext when
     // the tab backgrounds, which kills voice-out. A continuously-playing (but
     // inaudible) buffer source makes iOS treat the tab as actively playing media,
