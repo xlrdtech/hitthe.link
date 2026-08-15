@@ -1324,11 +1324,44 @@ body {
   margin-right: 1px;
 }
 .mpill {
+  /* qi 2026-08-14 23:52: "fix the css so the shape and inside text of the
+     pills do not change or wrap". Four independent causes were doing exactly
+     that, all inside this one meta-row:
+       1. no white-space:nowrap — "out · <recipient>" broke onto a second
+          line, so the 99px capsule rendered as a two-line blob.
+       2. flex items default to flex-shrink:1, so in a tight .meta-row the
+          browser squeezed the pill BELOW its own text width — which is what
+          forced the wrap in (1). Shrink is now off; the row wraps instead.
+       3. .mpill.play is a <button> while .mpill.src/.dir are <span>s, so the
+          button carried the UA default border + appearance and two pills in
+          the SAME row came out different sizes. appearance:none plus a
+          transparent 0.5px border gives every pill one identical box.
+       4. padding was vertically asymmetric (3px top / 2px bottom) against an
+          inherited line-height, so a pill holding ▶ or ↗ was taller than one
+          holding plain caps. An explicit line-height makes capsule height
+          glyph-independent.
+     max-width + ellipsis is the deliberate escape hatch: a long recipient
+     truncates INSIDE a pill that keeps its shape rather than reflowing the
+     row. .meta-row keeps flex-wrap:wrap, so pills move to the next line
+     whole instead of deforming. text-indent offsets the trailing letter-space
+     that .18em tracking leaves after the last glyph, which is what made the
+     label sit right-of-centre in the capsule. */
+  display: inline-block;
+  flex: 0 0 auto;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0.5px solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 22ch;
   font-family: var(--f-mono);
   font-size: 8.5px;
+  line-height: 13px;
   letter-spacing: .18em;
+  text-indent: .18em;
   text-transform: uppercase;
-  padding: 3px 7px 2px;
+  padding: 3px 7px;
   border-radius: 99px;
   background: rgba(255,255,255,.06);
   color: var(--text-dim);
@@ -3371,14 +3404,17 @@ html.xos-locked, body.xos-locked { overflow: hidden; }
 
 /* qi 2026-05-17 8672 follow-up: chatID-keyed thread routing affordance */
 .mpill.thread-open {
+  /* qi 2026-08-14 23:52: this rule was the loudest half of "the shape ... of
+     the pills change". It set border-radius:3px — a RECTANGLE sitting beside
+     siblings at 99px — plus font:9px (the shorthand ALSO resetting weight and
+     line-height), padding:1px 6px and letter-spacing:.06em. Three different
+     pill geometries in a single row. Only the accent colours were ever the
+     intent here, so those are all that stay; every metric now inherits the
+     normalized .mpill box above. border-color (not the border shorthand) so
+     the 0.5px width stays identical to its neighbours. */
   color: var(--accent);
   background: var(--accent-faint);
-  border: 1px solid var(--accent-dim);
-  font: 9px var(--f-mono);
-  padding: 1px 6px;
-  border-radius: 3px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  border-color: var(--accent-dim);
   transition: 0.12s;
 }
 .mpill.thread-open:hover { background: var(--accent-dim); color: var(--bg); }
