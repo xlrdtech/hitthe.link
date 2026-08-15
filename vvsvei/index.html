@@ -107,7 +107,12 @@ body.lit .bg-overlay {
      Reading-measure caps belong on prose. This is an operating surface: it goes edge
      to edge, and the bubbles keep their own 78%/88% max-widths so text still reads. */
   max-width:none; margin:0;
-  padding:env(safe-area-inset-top, 18px) 20px env(safe-area-inset-bottom, 16px);
+  /* --wrap-px is now the SINGLE SOURCE of this surface's horizontal inset, because
+     #tl-rail has to cancel exactly this value to sit flush on the panel edge
+     (qi 2026-08-15 02:19). Two hardcoded 20s in two rules is how a "0px" quietly
+     becomes a 4px later; one variable read by both cannot drift. */
+  --wrap-px:20px;
+  padding:env(safe-area-inset-top, 18px) var(--wrap-px) env(safe-area-inset-bottom, 16px);
   position:relative;
 }
 
@@ -233,12 +238,34 @@ header { padding:8px 0 22px; display:flex; align-items:flex-start; justify-conte
    pointer-events is SPLIT on purpose: none on the rail, auto on the stations.
    Without that split this 34px column — now floating above live content — would
    swallow every tap on the right edge of the bubbles underneath it. */
+/* ── FLUSH TO THE PANEL EDGE ─────────────────────────────────────────────────
+   qi 2026-08-15 02:19: "is the time line scroll fix and it works great. [now] you
+   move the that to be 0px from the right edge of the middle [panel]".
+
+   MEASURED CAUSE OF THE GAP, live at 390x844 before this change:
+     .pane-vei / #xos-vei   right edge = 390
+     #tlwrap                right edge = 370   ← the rail's offsetParent
+     #tl-rail               right edge = 370   (right:0 was already honoured)
+     ticks painted to             ~366   (its own padding-right:4px)
+   So `right:0` was never the defect. The rail WAS at zero — against #tlwrap, and
+   #tlwrap is a flex child of .wrap, which carries `padding: … var(--wrap-px) …`.
+   The 20px he sees is that padding, inherited one box up, plus 4px of the rail's
+   own internal inset. Nothing in the rail's own rule could have shown it.
+
+   FIX: cancel exactly the parent inset with a negative offset read from the SAME
+   variable, and drop the internal 4px, so the ticks land on x = panel width. This
+   is deliberately not `right:-24px` — a literal would silently lie the moment
+   --wrap-px changes.
+
+   The rail stays a LAYER (pointer-events:none, .tl-st auto) exactly as the 00:03
+   change left it — the part he said works great is untouched. */
 #tl-rail {
-  position:absolute; top:0; right:0; bottom:0; width:34px; z-index:5;
+  position:absolute; top:0; right:calc(-1 * var(--wrap-px, 20px)); bottom:0;
+  width:34px; z-index:5;
   pointer-events:none;
   display:flex; flex-direction:column; justify-content:center;
   align-items:flex-end; gap:11px;
-  padding-right:4px;
+  padding-right:0;
   user-select:none; -webkit-tap-highlight-color:transparent;
 }
 .tl-st {
@@ -383,56 +410,128 @@ body.drop-active::after {
    Collapse uses -webkit-line-clamp:1 rather than a fixed height: a clamp gives the
    ellipsis for free and cannot mis-measure a proportional font the way a px height
    does. Tap toggles .open. */
-.tui-step {
+/* ── qi 2026-08-15 02:01, VERBATIM ───────────────────────────────────────────
+   "the tui stream chat bubble need to be dark like my swipe glass and the text
+    should stream like the notification ticker does and it the should be collapsible"
+
+   ⚠️ WHY HE ASKED A SECOND TIME, AND WHAT WAS ACTUALLY WRONG. He had already asked
+   for this at 00:17 and `.tui-step` below was built for it — streaming, clamped,
+   tap-to-open, all three. MEASURED on his live feed at 2026-08-15 03:5x, 390x844:
+
+       .tui-step   count = 0        ← never rendered once
+       .firehose   count = 4        ← ALL of them src "xen 9934", Xen's own stream
+                   background rgba(255,255,255,.04)   ← pale, not dark
+                   opacity .7, no clamp, no caret, no tap handler
+
+   appendTuiStep() only fires for source `xen-step` / lane `steps`. Xen's stream
+   reaches him on the FIREHOSE path instead, so every bubble he was looking at when
+   he typed this was the pale one. The obsidian work was real and invisible. That is
+   why the fix is not "build it again" — it is to put the same material, the same
+   typing and the same collapse on the bubbles that are actually in his feed.
+
+   ⚖️ SCOPE, deliberately narrow: only firehose bubbles carrying XEN'S OWN stream get
+   `.tui`. An inbound SMS from a person keeps today's look — he asked for the TUI
+   stream bubble, and silently clamping a human's message to one line would be a
+   regression wearing a fix's clothes.
+
+   ── "DARK LIKE MY SWIPE GLASS" IS A CITATION, NOT A MOOD ─────────────────────
+   These declarations are COPIED OUT OF the canonical swipe glass,
+   `.os.os-fullscreen .dock.dock-swipe` in xos/styles.css:3745-3759 — the radial
+   specular, the three-stop vertical ramp, the blur/saturate/brightness, the two
+   inset hairlines. That rule is SACRED and is not touched by this change; it is
+   only read. The previous obsidian recipe here was invented
+   (`linear-gradient(145deg, rgba(14,20,17,.84), rgba(4,7,6,.60))`, blur(18px)) and
+   therefore could never satisfy "like my swipe glass" no matter how dark it looked.
+
+   TWO ADAPTATIONS, stated plainly because they are real departures:
+     · `border-top` → `border` — the dock is a bar sitting on one edge, a bubble has
+       four sides; a top-only hairline on a rounded box reads as a broken outline.
+     · `0 -8px 24px` → `0 8px 24px` — the dock throws its shadow UP off the bottom of
+       the screen; a bubble sits in a feed and throws it DOWN. Same colour, same blur.
+   Every other value is byte-identical to his glass. */
+.tui-step,
+.firehose.tui {
   position:relative; align-self:flex-start; max-width:88%;
   /* MEASURED 2026-08-15 00:25, and this is why the row is flex rather than inline:
      -webkit-box (the clamp) is BLOCK-level, so with an inline .tui-src label the
      clamped body dropped onto its own second line — collapsed rendered at 66px while
      open rendered at 33px, i.e. "collapsed" was TALLER than expanded. A flex row with
      a non-shrinking label and a min-width:0 body keeps the clamped line beside its
-     label, which is what makes one line actually one line. */
-  display:flex; align-items:baseline; column-gap:0;
+     label, which is what makes one line actually one line.
+     flex-wrap is for .bubble-actions (the REPLY row), which is a BLOCK child: without
+     wrap it would become a third item on the same line and shove the body out. */
+  display:flex; flex-wrap:wrap; align-items:baseline; column-gap:0;
   padding:7px 12px; border-radius:12px;
-  background:linear-gradient(145deg, rgba(14,20,17,.84), rgba(4,7,6,.60));
-  border:1px solid rgba(255,255,255,.10);
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 60%),
+    linear-gradient(
+      to bottom,
+      rgba(20, 28, 24, 0.42) 0%,
+      rgba(18, 26, 22, 0.44) 50%,
+      rgba(16, 24, 20, 0.46) 100%
+    );
+  backdrop-filter:blur(40px) saturate(220%) brightness(1.05);
+  -webkit-backdrop-filter:blur(40px) saturate(220%) brightness(1.05);
+  border:1px solid rgba(255, 255, 255, 0.14);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.13),
-    inset 0 -1px 0 rgba(255,255,255,.03),
-    0 8px 24px rgba(0,0,0,.42),
-    0 0 0 0.5px rgba(0,0,0,.55);
-  backdrop-filter:blur(18px) saturate(1.3);
-  -webkit-backdrop-filter:blur(18px) saturate(1.3);
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 8px 24px rgba(0, 0, 0, 0.45);
+  /* .firehose ships opacity:.7 — a translucent glass behind a 70% veil is mud, and it
+     would also fade the accent label. The glass carries its own transparency. */
+  opacity:1;
   font-family:var(--mono); font-size:11px; line-height:1.5;
   color:rgba(255,255,255,.74);
   cursor:pointer;
   animation:fadeIn .22s cubic-bezier(.32,.72,.2,1);
   transition:max-width .28s cubic-bezier(.32,.72,.2,1);
 }
+/* The REPLY row is a block child of a flex bubble — give it its own full-width line
+   so it can never sit beside the clamped body. */
+.firehose.tui .bubble-actions { flex:0 0 100%; }
 /* Same top-gloss specular as the cream bubbles, cut down for a dark surface. */
-.tui-step::before {
+.tui-step::before,
+.firehose.tui::before {
   content:""; position:absolute; inset:1px 1px auto 1px; height:38%;
   border-radius:12px 12px 30% 30%/12px 12px 60% 60%;
   background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,0));
   pointer-events:none;
 }
-.tui-step .tui-src {
+.tui-step .tui-src,
+.firehose.tui .src {
   flex:0 0 auto;                 /* the label never shrinks — it is the identity of the line */
   color:var(--accent); font-size:9.5px; letter-spacing:.10em;
   text-transform:uppercase; margin-right:7px; opacity:.85;
 }
-.tui-step .tui-body {
+.tui-step .tui-body,
+.firehose.tui .bubble-txt {
   flex:1 1 auto; min-width:0;    /* min-width:0 or the clamp cannot shrink below content */
   white-space:pre-wrap; word-break:break-word;
 }
 /* COLLAPSED is the default state — one line, ellipsis, never a flood. */
-.tui-step:not(.open) .tui-body {
+.tui-step:not(.open) .tui-body,
+.firehose.tui:not(.open) .bubble-txt {
   display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical;
   overflow:hidden;
 }
-.tui-step.open { max-width:96%; }
+.tui-step.open,
+.firehose.tui.open { max-width:96%; }
+/* The affordance, so "collapsible" is DISCOVERABLE and not a secret tap target.
+   A ▸/▾ chevron that rotates on open — no extra node, no layout cost, and it reads
+   as an expander in every UI he uses. Sits on the label so the row still starts with
+   the identity of the line. */
+.tui-step .tui-src::before,
+.firehose.tui .src::before {
+  content:"\25B8";               /* ▸ */
+  display:inline-block; margin-right:5px;
+  transition:transform .18s cubic-bezier(.32,.72,.2,1);
+}
+.tui-step.open .tui-src::before,
+.firehose.tui.open .src::before { transform:rotate(90deg); }
 /* The ticker's caret, same glyph and cadence as .dock-notif-ticker in XOS. It exists
    only while bytes are still arriving, so a settled bubble never blinks at him. */
-.tui-step .tui-caret {
+.tui-step .tui-caret,
+.firehose.tui .tui-caret {
   flex:0 0 auto;                 /* a shrunk caret would render as a sliver, not a cursor */
   display:inline-block; margin-left:1px; color:var(--accent);
   animation:tuiCaret .9s steps(1,end) infinite;
@@ -1344,21 +1443,64 @@ function appendTuiStep(label, text, ts) {
 
   // Collapsed is the default; a tap expands. Toggling a class beats measuring a
   // height — see the .tui-step rule for why the clamp is the collapse mechanism.
-  el.addEventListener('click', () => el.classList.toggle('open'));
+  // Shared with the firehose path so both remember his choice identically.
+  _tuiMakeCollapsible(el);
 
   transcript.appendChild(el);
   if (_stick) transcript.scrollTop = transcript.scrollHeight;
 
+  _tuiType(body, full, caret);
+  return el;
+}
+
+/* ── THE THREE PROPERTIES, SHARED — qi 2026-08-15 02:01 ──────────────────────
+   "dark like my swipe glass … stream like the notification ticker … collapsible"
+
+   Factored out of appendTuiStep so the FIREHOSE path can hand its bubbles the exact
+   same behaviour. Measured reason that matters (see the .tui-step CSS header): every
+   bubble in his live feed is a .firehose from src "xen 9934" — .tui-step rendered
+   ZERO times. One implementation, two entry points, or the two drift and he ends up
+   reporting the same defect a third time. */
+
+/* THE TICKER'S CADENCE, NOT A NEW ONE. XOS's DockNotifTicker (xos/app.jsx ~2575) is
+   setInterval 28ms + text.slice(0, i) + a ▎ caret that is REMOVED on settle. Same
+   numbers here on purpose — an invented speed reads as a different system.
+   The DOM guard is not defensive padding: _pruneBacklogDom() can evict this very node
+   mid-type during a backlog replay, and an interval still writing into a detached
+   span is a leak that survives every later render. */
+function _tuiType(bodyEl, full, caretEl) {
   let i = 0;
   const id = setInterval(() => {
+    if (!bodyEl.isConnected) { clearInterval(id); return; }   // pruned mid-type — stop, don't leak
     i += 1;
-    body.textContent = full.slice(0, i);
+    bodyEl.textContent = full.slice(0, i);
     if (i >= full.length) {
       clearInterval(id);
-      caret.remove();                               // settled: stop claiming live bytes
+      if (caretEl) caretEl.remove();                          // settled: stop claiming live bytes
     }
   }, 28);
-  return el;
+  return id;
+}
+
+/* COLLAPSE, WITH HIS CHOICE REMEMBERED. vvsvei already persists UI state in
+   localStorage (vei.voiceGain, vei-active, vei-was-armed …), so a collapse
+   preference that evaporated on reload would be the odd one out — and canon 4 says
+   making him re-tap something he already decided is the failure.
+   Default is COLLAPSED, matching the 08-14 decree ("collapsed obsidian glass"), but
+   the LAST thing he did wins for every bubble that arrives after it. */
+const TUI_OPEN_KEY = 'vei-tui-open';
+function _tuiOpenPref() {
+  try { return localStorage.getItem(TUI_OPEN_KEY) === '1'; } catch (_) { return false; }
+}
+function _tuiMakeCollapsible(el) {
+  if (_tuiOpenPref()) el.classList.add('open');
+  el.addEventListener('click', (e) => {
+    // The REPLY row and its composer live inside this bubble — a tap on them must
+    // not also fold the thing he is trying to answer.
+    if (e.target.closest('.bubble-actions, .reply-box')) return;
+    const nowOpen = el.classList.toggle('open');
+    try { localStorage.setItem(TUI_OPEN_KEY, nowOpen ? '1' : '0'); } catch (_) {}
+  });
 }
 
 (function _tlScrub() {
@@ -3521,10 +3663,48 @@ function renderEvent(d) {
     // qi 2026-07-02: nitro-tool background output renders on the right, not the
     // default firehose left side — everything else in the feed stays left.
     const _isNitroTool = _rawSrc.includes('nitro-tool') || _rawSrc.includes('nitro_tool');
-    fdiv.className = _isNitroTool ? 'firehose firehose-right' : 'firehose';
+    /* ── THE TUI STREAM BUBBLE — qi 2026-08-15 02:01 ───────────────────────────
+       "the tui stream chat bubble need to be dark like my swipe glass and the text
+        should stream like the notification ticker does and it the should be
+        collapsible"
+
+       MEASURED, live at 390x844 before this change: every .firehose in his feed had
+       src "xen 9934" — Xen's own TUI stream — while .tui-step (built for exactly
+       this on 08-14) rendered ZERO times, because appendTuiStep only fires for
+       source `xen-step`/lane `steps`. So the material, the typing and the collapse
+       have to land HERE, on the path his bubbles actually take.
+
+       THE MATCH IS DELIBERATELY NARROW. `xen` at a word boundary catches "xen 9934"
+       and its siblings; the human lanes (sms:/bee:/omi: via _srcMap, and any named
+       contact) are untouched and keep today's full-height bubble. Clamping a message
+       from a person to one line is not something he asked for, and a fix that
+       silently hides half of Luckie's text would be a regression wearing a fix's
+       clothes. `xen-out`/`xen-reply` never reach this branch — isXenOut claims them
+       upstream — so this cannot swallow a conversational reply. */
+    const _isTuiStream = /^xen\b/.test(_rawSrc);
+    fdiv.className = (_isNitroTool ? 'firehose firehose-right' : 'firehose') + (_isTuiStream ? ' tui' : '');
     const fsrc = document.createElement('span'); fsrc.className = 'src'; fsrc.textContent = labelSrc;
-    const fbody = document.createElement('span'); fbody.className = 'bubble-txt'; fbody.textContent = cleanBody;
-    fdiv.appendChild(fsrc); fdiv.appendChild(fbody);
+    const fbody = document.createElement('span'); fbody.className = 'bubble-txt';
+    if (_isTuiStream) {
+      _tuiMakeCollapsible(fdiv);
+      /* STREAM ONLY WHAT IS ACTUALLY ARRIVING. _avaLive is the same flag the reply
+         path uses to tell a LIVE frame from the SSE backlog replay, and it is the
+         whole reason this is safe: typing a 60-bubble backlog at 28ms/char would
+         hold the feed hostage for minutes and animate history that already happened.
+         Backlog paints instantly; only live bytes type. */
+      if (_avaLive) {
+        const fcaret = document.createElement('span');
+        fcaret.className = 'tui-caret'; fcaret.textContent = '▎';
+        fdiv.appendChild(fsrc); fdiv.appendChild(fbody); fdiv.appendChild(fcaret);
+        _tuiType(fbody, cleanBody, fcaret);
+      } else {
+        fbody.textContent = cleanBody;
+        fdiv.appendChild(fsrc); fdiv.appendChild(fbody);
+      }
+    } else {
+      fbody.textContent = cleanBody;
+      fdiv.appendChild(fsrc); fdiv.appendChild(fbody);
+    }
     // qi 2026-06-21: REPLY-IN-PANE. Inbound messages get a REPLY affordance so qi
     // answers Luckie/etc. right here (resurrects the triple-M omni-comm reply, now
     // on VVSVEI's stable+persistent base). Route back to the originating thread via
