@@ -451,7 +451,13 @@ body.drop-active::after {
    Every other value is byte-identical to his glass. */
 .tui-step,
 .firehose.tui {
-  position:relative; align-self:flex-start; max-width:88%;
+  /* qi 2026-08-15 04:43: "it needs to be on your side, not my side."
+     flex-START is HIS side in this feed — line 340/371 give inbound bubbles
+     flex-start, and .xen-reply (line 369) is flex-end. This rule shipped at
+     flex-start, so Xen's own stream was rendering on qi's side. Worse, .firehose.tui
+     (0,2,0) outranks .firehose-right (0,1,0), so it also OVERRODE the right-align
+     that outbound bubbles already had. Xen's lane is flex-end, always. */
+  position:relative; align-self:flex-end; max-width:88%;
   /* MEASURED 2026-08-15 00:25, and this is why the row is flex rather than inline:
      -webkit-box (the clamp) is BLOCK-level, so with an inline .tui-src label the
      clamped body dropped onto its own second line — collapsed rendered at 66px while
@@ -3681,7 +3687,14 @@ function renderEvent(d) {
        silently hides half of Luckie's text would be a regression wearing a fix's
        clothes. `xen-out`/`xen-reply` never reach this branch — isXenOut claims them
        upstream — so this cannot swallow a conversational reply. */
-    const _isTuiStream = /^xen\b/.test(_rawSrc);
+    /* qi 2026-08-15 04:44, verbatim: "You werent supposed to be changing any of the
+       bubbles, you were adding another bubble type for the terminal." — and he is
+       right. The firehose lane carries his SMS. Tagging it `.tui` restyled bubbles he
+       never asked me to touch, which is why he saw his own messages go dark and land
+       on the wrong side. HARD OFF: the firehose keeps exactly the look it always had.
+       The terminal gets its OWN bubble type (.tui-step), which already exists and is
+       what he asked for; wiring the real TUI stream into it is the open work. */
+    const _isTuiStream = false;
     fdiv.className = (_isNitroTool ? 'firehose firehose-right' : 'firehose') + (_isTuiStream ? ' tui' : '');
     const fsrc = document.createElement('span'); fsrc.className = 'src'; fsrc.textContent = labelSrc;
     const fbody = document.createElement('span'); fbody.className = 'bubble-txt';
