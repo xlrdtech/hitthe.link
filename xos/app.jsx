@@ -351,6 +351,10 @@ function linkifyBody(body, onOpenLink) {
    click (or a rapid double-tap) never overlaps/garbles the prior one — the same
    single-channel discipline vvsvei/index.html enforces via _avaCurrentSource. */
 let _xosCurAudio = null;
+// Last line spoken through THIS page. SSE replays recent events on every reconnect,
+// and repeating a sentence he already heard is worse than dropping one — he cannot
+// un-hear it. Declared beside _xosCurAudio because both are single-channel state.
+let _xosLastSpoken = "";
 function _xosStopCurrent() {
   if (_xosCurAudio) {
     try { _xosCurAudio.pause(); _xosCurAudio.currentTime = 0; _xosCurAudio.src = ""; } catch (_) {}
@@ -969,6 +973,43 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
           // leg would be dead code that still looks wired.
           if (raw.event === "xen:voice-claim") {
             if (!raw.data || raw.data.owner !== VSQ_SELF) _xosStopCurrent();
+            return;
+          }
+          // ── XEN SPEAKS THROUGH THE INTERFACE (qi 2026-08-15 06:45, verbatim:
+          // "now it needs to come through the face" / "come through the interface") ──
+          // Until today omnimind DROPPED source:'xen-speak' at its front door
+          // (omnimind.js ~4490) to kill an echo loop, so this event never existed and
+          // the page could only speak when qi TAPPED a bubble — a human in the loop,
+          // which is itself the failure (cmd 4). The drop is now a broadcast: the
+          // FEED_ONLY guard (feed-only-sources.json, 'XEN-SPEAK') reaches SSE but never
+          // injectTui, so the echo path the drop protected stays closed.
+          //
+          // MUST sit ABOVE the body guard for the same reason voice-claim does: order
+          // here is load-bearing, and a future event shape without .text would silently
+          // become dead code that still looks wired.
+          //
+          // Reuses the ONE audio channel (_vsqClaim + _xosStopCurrent inside playBubble)
+          // so Xen never talks over himself — qi 2026-08-13 17:35 "two voices can't
+          // speak at the same time".
+          if (raw.event === "xen-speak" || raw.source === "xen-speak") {
+            const _sp = raw.text || raw.body || raw.message || "";
+            // Dedup: SSE reconnects replay recent events; speaking a line twice is
+            // worse than dropping a duplicate, because he cannot un-hear it.
+            if (_sp && _sp !== _xosLastSpoken) {
+              _xosLastSpoken = _sp;
+              if (raw.audioUrl) {
+                // Prefer the ALREADY-RENDERED file — re-synthesising holds Voicebox's
+                // single CPU-bound generator, which is what made qi deaf on 2026-08-14.
+                _vsqClaim(VSQ_SELF);
+                _xosStopCurrent();
+                const a = new Audio(raw.audioUrl);
+                _xosCurAudio = a;
+                a.addEventListener("ended", () => { if (_xosCurAudio === a) _xosCurAudio = null; });
+                a.play().catch((e) => console.warn("[xen-speak] autoplay blocked:", e && e.name));
+              } else {
+                playBubble(_sp);
+              }
+            }
             return;
           }
           if (!(raw.body || raw.text || raw.message)) return;
