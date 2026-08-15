@@ -468,13 +468,25 @@ body.drop-active::after {
      wrap it would become a third item on the same line and shove the body out. */
   display:flex; flex-wrap:wrap; align-items:baseline; column-gap:0;
   padding:7px 12px; border-radius:12px;
+  /* qi 2026-08-15 04:43: "It needs to be almost black."
+     WHY COPYING THE GLASS RECIPE WAS NEVER GOING TO WORK — measured in painted
+     pixels, text-free regions, 390x844:
+         this bubble        avg RGB [8, 98, 15]
+         .dock.dock-swipe   avg RGB [8, 11, 10]
+     Byte-identical declarations, green channel 98 vs 11. `backdrop-filter` samples
+     WHAT IS BEHIND IT. The dock sits over [30,43,37] and lands near-black; this
+     bubble sits over the feed's [14,108,46] and the same blur barely touches it.
+     A translucent recipe cannot be "dark" — it can only be as dark as its backdrop.
+     FIX: an OPAQUE near-black base FIRST in the stack, so darkness is a property of
+     the bubble and not of whatever happens to scroll behind it. The specular and the
+     blur stay on top, so it still reads as glass rather than a flat panel. */
   background:
-    radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 60%),
+    radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0) 60%),
     linear-gradient(
       to bottom,
-      rgba(20, 28, 24, 0.42) 0%,
-      rgba(18, 26, 22, 0.44) 50%,
-      rgba(16, 24, 20, 0.46) 100%
+      rgba(7, 10, 9, 0.94) 0%,
+      rgba(5, 8, 7, 0.95) 50%,
+      rgba(3, 6, 5, 0.96) 100%
     );
   backdrop-filter:blur(40px) saturate(220%) brightness(1.05);
   -webkit-backdrop-filter:blur(40px) saturate(220%) brightness(1.05);
