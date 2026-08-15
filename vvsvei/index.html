@@ -385,6 +385,13 @@ body.drop-active::after {
    does. Tap toggles .open. */
 .tui-step {
   position:relative; align-self:flex-start; max-width:88%;
+  /* MEASURED 2026-08-15 00:25, and this is why the row is flex rather than inline:
+     -webkit-box (the clamp) is BLOCK-level, so with an inline .tui-src label the
+     clamped body dropped onto its own second line — collapsed rendered at 66px while
+     open rendered at 33px, i.e. "collapsed" was TALLER than expanded. A flex row with
+     a non-shrinking label and a min-width:0 body keeps the clamped line beside its
+     label, which is what makes one line actually one line. */
+  display:flex; align-items:baseline; column-gap:0;
   padding:7px 12px; border-radius:12px;
   background:linear-gradient(145deg, rgba(14,20,17,.84), rgba(4,7,6,.60));
   border:1px solid rgba(255,255,255,.10);
@@ -409,10 +416,14 @@ body.drop-active::after {
   pointer-events:none;
 }
 .tui-step .tui-src {
+  flex:0 0 auto;                 /* the label never shrinks — it is the identity of the line */
   color:var(--accent); font-size:9.5px; letter-spacing:.10em;
   text-transform:uppercase; margin-right:7px; opacity:.85;
 }
-.tui-step .tui-body { white-space:pre-wrap; word-break:break-word; }
+.tui-step .tui-body {
+  flex:1 1 auto; min-width:0;    /* min-width:0 or the clamp cannot shrink below content */
+  white-space:pre-wrap; word-break:break-word;
+}
 /* COLLAPSED is the default state — one line, ellipsis, never a flood. */
 .tui-step:not(.open) .tui-body {
   display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical;
@@ -422,6 +433,7 @@ body.drop-active::after {
 /* The ticker's caret, same glyph and cadence as .dock-notif-ticker in XOS. It exists
    only while bytes are still arriving, so a settled bubble never blinks at him. */
 .tui-step .tui-caret {
+  flex:0 0 auto;                 /* a shrunk caret would render as a sliver, not a cursor */
   display:inline-block; margin-left:1px; color:var(--accent);
   animation:tuiCaret .9s steps(1,end) infinite;
 }
