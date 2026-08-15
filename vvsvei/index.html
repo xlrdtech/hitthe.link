@@ -359,6 +359,74 @@ body.drop-active::after {
    else in the background feed stays left (.firehose default). */
 .firehose-right { align-self:flex-end; }
 
+/* ── COLLAPSED OBSIDIAN GLASS — THE TUI STREAM BUBBLE ────────────────────────
+   qi 2026-08-14 23:30: "collapsed obsidian glass tui stream chat bubbles"
+   qi 2026-08-14 23:31: "it should write on real time like how the ticker animates"
+   qi 2026-08-15 00:17: "those bubbles needed the obsidian ... in ticker streaming
+   glass style"
+
+   ⚖️ THIS RECONCILES A PRIOR DECREE RATHER THAN BREAKING IT. On 2026-07-22 he said
+   Xen's raw bash/tool output "showing up in my main message feed like chat bubbles"
+   belonged in a background area, and the router still sends xen-step / lane:steps to
+   #er-list and returns before any bubble. That complaint was about VOLUME — full-size
+   conversational bubbles flooding the feed. The word he chose this time is COLLAPSED,
+   and that is the resolution: the step is back in the stream but clamped to ONE line,
+   in mono, in dark glass, expanding only when tapped. The Operator·Firehose rail keeps
+   its copy — nothing is moved, nothing is lost, so the 07-22 routing still holds.
+
+   OBSIDIAN = the same glass recipe as .final/.xen-reply inverted to dark. Identical
+   structure — 145deg fill gradient, 1px hairline, inset top gloss, the ::before
+   specular, blur(18px) saturate(1.3) — with the tint taken from white to near-black
+   so it reads as obsidian rather than as a new material. Matching the STRUCTURE is
+   what keeps it in the same family as the cream bubbles.
+
+   Collapse uses -webkit-line-clamp:1 rather than a fixed height: a clamp gives the
+   ellipsis for free and cannot mis-measure a proportional font the way a px height
+   does. Tap toggles .open. */
+.tui-step {
+  position:relative; align-self:flex-start; max-width:88%;
+  padding:7px 12px; border-radius:12px;
+  background:linear-gradient(145deg, rgba(14,20,17,.84), rgba(4,7,6,.60));
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.13),
+    inset 0 -1px 0 rgba(255,255,255,.03),
+    0 8px 24px rgba(0,0,0,.42),
+    0 0 0 0.5px rgba(0,0,0,.55);
+  backdrop-filter:blur(18px) saturate(1.3);
+  -webkit-backdrop-filter:blur(18px) saturate(1.3);
+  font-family:var(--mono); font-size:11px; line-height:1.5;
+  color:rgba(255,255,255,.74);
+  cursor:pointer;
+  animation:fadeIn .22s cubic-bezier(.32,.72,.2,1);
+  transition:max-width .28s cubic-bezier(.32,.72,.2,1);
+}
+/* Same top-gloss specular as the cream bubbles, cut down for a dark surface. */
+.tui-step::before {
+  content:""; position:absolute; inset:1px 1px auto 1px; height:38%;
+  border-radius:12px 12px 30% 30%/12px 12px 60% 60%;
+  background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,0));
+  pointer-events:none;
+}
+.tui-step .tui-src {
+  color:var(--accent); font-size:9.5px; letter-spacing:.10em;
+  text-transform:uppercase; margin-right:7px; opacity:.85;
+}
+.tui-step .tui-body { white-space:pre-wrap; word-break:break-word; }
+/* COLLAPSED is the default state — one line, ellipsis, never a flood. */
+.tui-step:not(.open) .tui-body {
+  display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.tui-step.open { max-width:96%; }
+/* The ticker's caret, same glyph and cadence as .dock-notif-ticker in XOS. It exists
+   only while bytes are still arriving, so a settled bubble never blinks at him. */
+.tui-step .tui-caret {
+  display:inline-block; margin-left:1px; color:var(--accent);
+  animation:tuiCaret .9s steps(1,end) infinite;
+}
+@keyframes tuiCaret { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+
 /* ⛔ RETIRED 2026-08-13 20:27 — qi: "that looks like it was from the old model and
    I said no models" (no MODALS, his 08-12 rule) → "on this interface so that has to
    be gone" → "No its not supposed to be there at all" → "Thats not better there does
@@ -1226,6 +1294,60 @@ function _tlMark() {
     _tlSync();
   } catch (_) { /* a dead rail must not take the page with it */ }
 })();
+
+/* ── THE TUI STREAM BUBBLE, TYPED LIKE THE TICKER ───────────────────────────
+   qi 2026-08-14 23:31: "it should write on real time like how the ticker animates".
+   The reference is XOS's DockNotifTicker (xos/app.jsx ~2572): setInterval at 28ms,
+   text.slice(0, i), a ▎ caret while typing, then settle. Same cadence and the same
+   glyph here so the two surfaces share one motion language — a second, invented
+   speed would read as a different system.
+
+   WHY THE CARET IS REMOVED ON SETTLE: a blinking caret is a claim that bytes are
+   still arriving. Leaving it up on a finished step is the same class of lie as the
+   frozen soundwave that "still looks alive" (xos-voice-rails §5) — so it comes off
+   the moment the last character lands.
+
+   Stick-scroll matches appendFinal exactly: measure BEFORE the node is in the DOM,
+   because once it is, scrollHeight has already grown and the comparison is against
+   the wrong number. Only stick if he was already at the bottom — never yank the view
+   while he is reading back through the day. */
+function appendTuiStep(label, text, ts) {
+  if (!transcript) return null;
+  const full = String(text == null ? '' : text);
+  if (!full.trim()) return null;
+
+  const _stick = (transcript.scrollTop + transcript.clientHeight) >= (transcript.scrollHeight - 40);
+
+  const el = document.createElement('div');
+  el.className = 'tui-step';
+  const src = document.createElement('span');
+  src.className = 'tui-src';
+  src.textContent = String(label || 'step');       // textContent, never innerHTML — this is tool output
+  const body = document.createElement('span');
+  body.className = 'tui-body';
+  const caret = document.createElement('span');
+  caret.className = 'tui-caret';
+  caret.textContent = '▎';
+  el.appendChild(src); el.appendChild(body); el.appendChild(caret);
+
+  // Collapsed is the default; a tap expands. Toggling a class beats measuring a
+  // height — see the .tui-step rule for why the clamp is the collapse mechanism.
+  el.addEventListener('click', () => el.classList.toggle('open'));
+
+  transcript.appendChild(el);
+  if (_stick) transcript.scrollTop = transcript.scrollHeight;
+
+  let i = 0;
+  const id = setInterval(() => {
+    i += 1;
+    body.textContent = full.slice(0, i);
+    if (i >= full.length) {
+      clearInterval(id);
+      caret.remove();                               // settled: stop claiming live bytes
+    }
+  }, 28);
+  return el;
+}
 
 (function _tlScrub() {
   // ── THE OTHER HALF OF THE LOOP ─────────────────────────────────────────────
@@ -3212,7 +3334,14 @@ function renderEvent(d) {
       const _clean = String(txt).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
       try { appendEventItem('step', _clean.slice(0, 600), d.ts); } catch (_) {}
       try { if (window._erReveal) window._erReveal(); } catch (_) {}
-      return;   // background lane only — NOT the main conversation feed
+      // qi 2026-08-14 23:30 / 2026-08-15 00:17: the TUI stream also renders inline as a
+      // COLLAPSED obsidian-glass bubble. This is ADDITIVE — appendEventItem above still
+      // files the rail's copy first, so the 2026-07-22 background-lane routing is intact
+      // and this cannot lose a step even if the bubble throws. The 07-22 objection was
+      // full-size bubbles flooding the feed; a one-line clamp is the answer to that, not
+      // a reversal of it. See the .tui-step rule for the full reconciliation.
+      try { appendTuiStep('step', _clean.slice(0, 600), d.ts); } catch (_) {}
+      return;   // rail + collapsed inline bubble — never a full conversational bubble
     }
   }
   // qi 2026-07-22: raw command/tool EGRESS (egress:cmd — Xen's own bash/tool calls,
