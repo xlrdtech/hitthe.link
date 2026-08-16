@@ -991,18 +991,26 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
           // Reuses the ONE audio channel (_vsqClaim + _xosStopCurrent inside playBubble)
           // so Xen never talks over himself — qi 2026-08-13 17:35 "two voices can't
           // speak at the same time".
-          if (raw.event === "xen-speak" || raw.source === "xen-speak") {
-            const _sp = raw.text || raw.body || raw.message || "";
+          // 2026-08-16: the live wire frame is {event:"xen:speak", data:{source,text,voice_id,audio_url?}}.
+          // The old check read top-level raw.event==="xen-speak"/raw.source/raw.audioUrl — all three
+          // wrong (colon vs hyphen; fields nested under raw.data; snake_case audio_url) — so EVERY
+          // voice event was discarded and XOS was silent while desktop afplay worked. Read raw.data
+          // (like the voice-claim handler above), match "xen:speak", accept audio_url. Kept the old
+          // top-level shape too so nothing that still emits it regresses.
+          if (raw.event === "xen:speak" || (raw.data && raw.data.source === "xen-speak") || raw.event === "xen-speak" || raw.source === "xen-speak") {
+            const _d = raw.data || raw;
+            const _sp = _d.text || _d.body || _d.message || raw.text || raw.body || raw.message || "";
+            const _au = _d.audio_url || _d.audioUrl || raw.audio_url || raw.audioUrl;
             // Dedup: SSE reconnects replay recent events; speaking a line twice is
             // worse than dropping a duplicate, because he cannot un-hear it.
             if (_sp && _sp !== _xosLastSpoken) {
               _xosLastSpoken = _sp;
-              if (raw.audioUrl) {
+              if (_au) {
                 // Prefer the ALREADY-RENDERED file — re-synthesising holds Voicebox's
                 // single CPU-bound generator, which is what made qi deaf on 2026-08-14.
                 _vsqClaim(VSQ_SELF);
                 _xosStopCurrent();
-                const a = new Audio(raw.audioUrl);
+                const a = new Audio(_au);
                 _xosCurAudio = a;
                 a.addEventListener("ended", () => { if (_xosCurAudio === a) _xosCurAudio = null; });
                 a.play().catch((e) => console.warn("[xen-speak] autoplay blocked:", e && e.name));
