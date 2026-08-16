@@ -54,6 +54,26 @@ for (const name of readdirSync(ROOT)) {
 }
 
 entries.sort((a, b) => (b.updated || '').localeCompare(a.updated || ''));
-const out = { generated: new Date().toISOString(), count: entries.length, sites: entries };
-writeFileSync(join(ROOT, 'sites.json'), JSON.stringify(out, null, 2));
+
+// PUBLISH-RAIL FIX 2026-08-16 — `generated` was a fresh timestamp on EVERY run, so
+// sites.json always differed and sites-index.yml always pushed a second commit.
+// That second push cancels the in-flight GitHub Pages build (legacy build, ~135s),
+// which the Pages API records as `status: errored, duration: 0` with the useless
+// message "Page build failed." Measured: commit b4b50d039 changed sites.json by
+// exactly 1 insertion / 1 deletion — the timestamp alone — and still cost a
+// cancelled build. Under a burst of pushes nothing ever finishes and the site
+// silently freezes on the last completed build.
+// Keep the previous timestamp when the site list is byte-identical, so the
+// workflow's `git status --porcelain sites.json` guard can actually short-circuit.
+const sitesPath = join(ROOT, 'sites.json');
+let generated = new Date().toISOString();
+try {
+  const prev = JSON.parse(readFileSync(sitesPath, 'utf8'));
+  if (prev.generated && JSON.stringify(prev.sites) === JSON.stringify(entries)) {
+    generated = prev.generated;
+  }
+} catch {}
+
+const out = { generated, count: entries.length, sites: entries };
+writeFileSync(sitesPath, JSON.stringify(out, null, 2));
 console.log(`sites.json: ${entries.length} live builds`);
