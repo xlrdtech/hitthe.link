@@ -556,6 +556,107 @@ body.drop-active::after {
 }
 @keyframes tuiCaret { 0%,49%{opacity:1} 50%,100%{opacity:0} }
 
+/* ── #tui-live — THE LIVE CLAUDE CODE TUI STREAM ──────────────────────────────
+   qi 2026-08-17 03:43:43: "osed to bee the live stream of local claude code tui
+   session shown live inside the chat in full!"
+   and 03:14:14: "supposed to be black and collapsed"  ← this describes THIS
+   element, not the menu bar.
+
+   THE ONE RULE: this is ONE PERSISTENT ELEMENT WHOSE CONTENT IS REPLACED on
+   every frame — never one bubble per frame. Appending per frame is the
+   "fragments" sin he has now rejected four separate times; the rejected
+   .firehose.tui/.tui-step path above rendered one clamped bubble per TOOL CALL
+   ("Bash · ok · 125ms") interleaved with his own sentences. Those rules are
+   left untouched and are NOT reused here — this is a NEW element type, exactly
+   as he asked on 2026-08-15 04:44: "You werent supposed to be changing any of
+   the bubbles, you were adding another bubble type for the terminal."
+
+   ⛔ NOTHING BELOW TOUCHES #pill-row, paint(), paintTrigger(), .firehose,
+   .tui-step, .final or .xen-reply. qi 03:40:24 "the menu bar was already
+   perfect" / 03:42:21 "did not tell to chanch the css of the menu".
+
+   ⛔ NO position:fixed AND NO position:sticky, deliberately. The retired
+   #events-rail directly below is the measured proof: it was position:fixed, so
+   once vvsvei mounted into XOS it ESCAPED its panel and floated over the whole
+   phone as a ghost. A live monitor that escapes its container is a worse defect
+   than one that scrolls, so this stays in normal flow and is re-anchored to the
+   live edge by JS only while he is already scrolled to the bottom.
+
+   The near-black base is the SAME recipe he approved for the terminal surface
+   (opaque first, glass on top) — copied by value, not by selector, so the two
+   can never restyle each other. Reason it must be opaque is in the .tui-step
+   header: backdrop-filter samples what is BEHIND it, so a translucent recipe
+   over this feed lands at green-channel 98, not 11. */
+#tui-live {
+  align-self:stretch;                 /* full width: 115 columns need every pixel */
+  max-width:100%;
+  margin:6px 0;
+  border-radius:12px;
+  padding:6px 8px 7px;
+  position:relative;
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0) 60%),
+    linear-gradient(
+      to bottom,
+      rgba(7, 10, 9, 0.94) 0%,
+      rgba(5, 8, 7, 0.95) 50%,
+      rgba(3, 6, 5, 0.96) 100%
+    );
+  backdrop-filter:blur(40px) saturate(220%) brightness(1.05);
+  -webkit-backdrop-filter:blur(40px) saturate(220%) brightness(1.05);
+  border:1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 8px 24px rgba(0, 0, 0, 0.45);
+  opacity:1;
+  font-family:var(--mono);
+  color:rgba(255,255,255,.74);
+  animation:fadeIn .22s cubic-bezier(.32,.72,.2,1);
+}
+/* Header row: identity + the collapse affordance. Its own line, not a flex
+   sibling of the body — a 115-column screen beside an inline label would squash
+   the screen to nothing (that squash is exactly what the .tui-step header
+   documents at 66px-collapsed-vs-33px-open). */
+#tui-live .tui-live-head {
+  display:flex; align-items:center; gap:6px;
+  cursor:pointer; user-select:none;
+  color:var(--accent); font-size:9.5px; letter-spacing:.10em;
+  text-transform:uppercase; opacity:.85;
+  padding-bottom:4px;
+}
+#tui-live .tui-live-head::before {
+  content:"\25B8";                    /* ▸ — same affordance as the terminal bubbles */
+  display:inline-block;
+  transition:transform .18s cubic-bezier(.32,.72,.2,1);
+}
+#tui-live.open .tui-live-head::before { transform:rotate(90deg); }
+/* The dim right-hand meta (pane · size). Never the loud part of the row. */
+#tui-live .tui-live-meta {
+  margin-left:auto; opacity:.55; letter-spacing:.04em; text-transform:none;
+}
+/* A live caret so a settled screen and a streaming one are distinguishable. */
+#tui-live .tui-live-caret {
+  display:inline-block; color:var(--accent);
+  animation:tuiCaret .9s steps(1,end) infinite;
+}
+/* THE SCREEN ITSELF — verbatim, so `white-space:pre` (NOT pre-wrap): wrapping a
+   115-column TUI reflows every box-drawing rule into garbage. It therefore
+   overflows horizontally BY DESIGN, and that overflow scrolls INSIDE this box —
+   `overscroll-behavior-x:contain` stops the swipe from chaining out to the page,
+   so the body never scrolls sideways. */
+#tui-live .tui-live-body {
+  margin:0;
+  font-family:var(--mono); font-size:9.5px; line-height:1.35;
+  white-space:pre;
+  overflow-x:auto; overflow-y:hidden;
+  overscroll-behavior-x:contain;
+  -webkit-overflow-scrolling:touch;
+  color:rgba(255,255,255,.78);
+}
+#tui-live .tui-live-body::-webkit-scrollbar { height:0; }
+#tui-live .tui-live-body { scrollbar-width:none; }
+
 /* ⛔ RETIRED 2026-08-13 20:27 — qi: "that looks like it was from the old model and
    I said no models" (no MODALS, his 08-12 rule) → "on this interface so that has to
    be gone" → "No its not supposed to be there at all" → "Thats not better there does
@@ -1469,6 +1570,137 @@ function appendTuiStep(label, text, ts) {
 
   _tuiType(body, full, caret);
   return el;
+}
+
+/* ══ THE LIVE CLAUDE CODE TUI STREAM ═══════════════════════════════════════════
+   qi 2026-08-17 03:43:43: "osed to bee the live stream of local claude code tui
+   session shown live inside the chat in full!"
+
+   WHY EVERY EARLIER ATTEMPT FAILED, stated so it is not repeated a fifth time:
+   the old bridge read OTLP TELEMETRY (claude_code.tool_decision / tool_result)
+   and summarised it to "Bash · ok · 125ms". Telemetry ABOUT a session can never
+   BE the session. It emitted one clamped bubble per tool call, interleaved with
+   his own sentences — "the fragments", his words, 03:2x: "thats why i have been
+   telling the steps a unneccesary because the verbatim tui stream... the
+   opposite of the fragments." The bubble was never the problem and neither was
+   the CSS. The SOURCE was wrong. xen-tui-live.py captures the tmux pane itself.
+
+   ⭐ THE ONE RULE THAT MATTERS: ONE PERSISTENT ELEMENT, CONTENT REPLACED.
+   Never append per frame. At 1 frame/second an appending renderer would produce
+   3,600 bubbles an hour — the fragment failure raised to a flood.
+
+   HOW "exactly one" IS GUARANTEED, mechanically, not by intention:
+     · the node is looked up by id every frame, never cached in a closure;
+     · it is only CONSTRUCTED when the lookup misses (first frame, or after
+       _pruneBacklogDom evicted it during a backlog replay — a detached node is
+       correctly a miss, since getElementById only sees the live document);
+     · appendChild() on a node that is ALREADY a child MOVES it. That is a DOM
+       relocation, not a copy, so re-anchoring to the live edge cannot ever
+       produce a second one. document.querySelectorAll('#tui-live').length
+       stays 1 across any number of frames.
+
+   NOT SPOKEN, NOT A BUBBLE: renderEvent routes here and returns immediately,
+   above the !txt guard and above every speak path, so a screenful of terminal
+   can never be read aloud and never enters the conversation-bubble renderer. */
+const TUI_LIVE_TAIL_LINES = 6;      // collapsed = the live tail, per 03:14:14
+const TUI_LIVE_IDLE_MS = 10000;     // caret stops claiming "live" after this
+const TUI_LIVE_OPEN_KEY = 'vei-tui-live-open';
+function _tuiLiveOpenPref() {
+  try { return localStorage.getItem(TUI_LIVE_OPEN_KEY) === '1'; } catch (_) { return false; }
+}
+
+/* COLLAPSED shows the TAIL, and it is sliced in JS rather than clamped in CSS
+   on purpose: `overflow:hidden` on a fixed height reveals the TOP of the box,
+   which on a Claude TUI screen is whatever scrolled past minutes ago. The live
+   edge is the BOTTOM. Blank padding rows are dropped first so the collapsed
+   view can never render as an empty black slab. */
+function _tuiLivePaint(el) {
+  const full = String(el._tuiFull || '');
+  const bodyEl = el.querySelector('.tui-live-body');
+  const metaEl = el.querySelector('.tui-live-meta');
+  if (!bodyEl) return;
+  let shown;
+  if (el.classList.contains('open')) {
+    shown = full;                                    // "in full" — the whole screen
+  } else {
+    const lines = full.split('\n').filter((l) => l.trim() !== '');
+    shown = lines.slice(-TUI_LIVE_TAIL_LINES).join('\n');
+  }
+  // textContent, NEVER innerHTML. This is raw terminal output: it carries <, >
+  // and & constantly, and parsing it as markup would both corrupt the screen and
+  // hand arbitrary tool output an injection surface.
+  bodyEl.textContent = shown;
+  if (metaEl) metaEl.textContent = el._tuiMetaText || '';
+}
+
+function renderTuiLive(d) {
+  if (!transcript) return;
+  const full = String(d && d.text != null ? d.text : '');
+  if (!full.trim()) return;
+
+  // Was he already reading the live edge? Decided BEFORE any DOM mutation, or
+  // the measurement is of the layout we just changed.
+  const stick = (transcript.scrollTop + transcript.clientHeight) >= (transcript.scrollHeight - 40);
+
+  let el = document.getElementById('tui-live');
+  const fresh = !el || !el.isConnected;
+
+  if (fresh) {
+    el = document.createElement('div');
+    el.id = 'tui-live';
+    if (_tuiLiveOpenPref()) el.classList.add('open');
+
+    const head = document.createElement('div');
+    head.className = 'tui-live-head';
+    const label = document.createElement('span');
+    label.textContent = 'claude code · live';
+    const caret = document.createElement('span');
+    caret.className = 'tui-live-caret';
+    caret.textContent = '▎';
+    const meta = document.createElement('span');
+    meta.className = 'tui-live-meta';
+    head.appendChild(label); head.appendChild(caret); head.appendChild(meta);
+
+    const body = document.createElement('pre');
+    body.className = 'tui-live-body';
+
+    el.appendChild(head);
+    el.appendChild(body);
+
+    // Tap the HEAD to fold, not the whole element — the body scrolls
+    // horizontally, and a drag across a 115-column screen must not be read as a
+    // tap that collapses the thing he is trying to read.
+    head.addEventListener('click', () => {
+      el.classList.toggle('open');
+      try { localStorage.setItem(TUI_LIVE_OPEN_KEY, el.classList.contains('open') ? '1' : '0'); } catch (_) {}
+      _tuiLivePaint(el);
+    });
+  }
+
+  el._tuiFull = full;
+  const _cols = d.cols || 0, _rows = d.rows || 0;
+  el._tuiMetaText = (d.pane ? String(d.pane) : '') + (_cols ? ` · ${_cols}×${_rows}` : '');
+  _tuiLivePaint(el);
+
+  // A blinking caret on a dead bridge is a lie — cmd 44(c) wants liveness
+  // asserted against an artifact, and the only artifact here is "a frame
+  // arrived". Each frame re-arms it; silence retires it.
+  const caretEl = el.querySelector('.tui-live-caret');
+  if (caretEl) {
+    caretEl.style.visibility = 'visible';
+    clearTimeout(el._tuiIdleTimer);
+    el._tuiIdleTimer = setTimeout(() => { try { caretEl.style.visibility = 'hidden'; } catch (_) {} }, TUI_LIVE_IDLE_MS);
+  }
+
+  if (fresh) {
+    transcript.appendChild(el);
+  } else if (stick && transcript.lastElementChild !== el) {
+    // MOVES the existing node to the live edge. Not a clone — see the header.
+    // Only while he is already at the bottom: yanking it down while he is
+    // reading scrollback would be the interface fighting him.
+    transcript.appendChild(el);
+  }
+  if (stick) transcript.scrollTop = transcript.scrollHeight;
 }
 
 /* ── THE THREE PROPERTIES, SHARED — qi 2026-08-15 02:01 ──────────────────────
@@ -3457,6 +3689,31 @@ function renderEvent(d) {
       } else { location.reload(true); }
     } catch (_) { try { location.reload(true); } catch (__) {} }
     return;
+  }
+  // ── THE LIVE CLAUDE CODE TUI STREAM — routed ABOVE every text path ─────────
+  // qi 2026-08-17 03:43:43: "osed to bee the live stream of local claude code
+  // tui session shown live inside the chat in full!"
+  //
+  // Emitted by bin/xen-tui-live.py as the FULL verbatim tmux pane, once per
+  // change. It is handled HERE, above `let txt`, for three concrete reasons:
+  //   1. the line below .trim()s and then runs a leading-timestamp regex over
+  //      the text — harmless on a sentence, but this payload is a SCREEN and
+  //      must reach the renderer byte-for-byte;
+  //   2. everything downstream of `!txt` is the conversation-bubble path, and a
+  //      terminal screen is not conversation (his 08-16 complaint: "my
+  //      interface displaying the wring thing through black chat bubbles");
+  //   3. every speak path is downstream, so returning here is what guarantees a
+  //      screenful of tool output is never read aloud.
+  // renderTuiLive() maintains exactly ONE #tui-live element and REPLACES its
+  // content — it never appends. See its header for why that is the whole point.
+  {
+    const _tlSrc  = (d.source || '').toString().toLowerCase();
+    const _tlLane = (d.lane || '').toString().toLowerCase();
+    const _tlEvt  = (d.event || d.kind || '').toString().toLowerCase();
+    if (_tlSrc === 'xen-tui-live' || _tlLane === 'tui-live' || _tlEvt === 'xen-tui-live') {
+      try { renderTuiLive(d); } catch (_) {}
+      return;   // one live element, never a bubble, never spoken
+    }
   }
   // qi 2026-06-10: beside SMS omni:new-thread events carry text in `preview`
   // (not `text`/`body`/`message`). Include preview so SMS bubbles render.
