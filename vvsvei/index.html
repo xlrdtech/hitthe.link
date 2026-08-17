@@ -3570,6 +3570,25 @@ function renderEvent(d) {
     try { _hud((_amb.indexOf('omi') >= 0 ? 'omi · ' : 'bee · ') + txt.slice(0, 60)); } catch (_) {}
     return;
   }
+  // qi 2026-08-16: "my interface displaying the wring thing through black chat bubbles".
+  // MEASURED CAUSE: there is no allowlist here — only deny-guards, then an unconditional
+  // catch-all `else` (~:3668) that appends anything surviving as a .firehose bubble (~:3745).
+  // `rss`, `notif`, `mail` and `xen-speak` appeared ZERO times in this whole 5,249-line file,
+  // so every RSS headline, every notification, every mail ping, and Xen's OWN spoken output
+  // fell through into his conversation transcript.
+  //
+  // SCRUB, NEVER DROP: these go to _hud() exactly like bee/omi — still visible in the dim
+  // telemetry lane, just not masquerading as conversation. Nothing is discarded.
+  //
+  // ⚠️ xen-speak is Xen's own voice coming back as an inbound event. Rendering it as a
+  // bubble is a self-echo; it is already spoken and already on the SSE lane.
+  // ⚠️ This is a CONTENT filter only. The bubble styling is qi's own design — measured
+  // readable (cream #F0EAD6 on dark glass) and deliberately NOT touched here.
+  if (_amb === 'rss' || _amb === 'notif' || _amb === 'mail' || _amb === 'xen-speak'
+      || _amb === 'xen-out' || _amb === 'sparkdesktop') {
+    try { _hud(_amb + ' · ' + txt.slice(0, 60)); } catch (_) {}
+    return;
+  }
   const tag = (d.event || d.kind || '').toString().toLowerCase();
   const src = (d.source || d.sender || '').toString().toLowerCase();
   // qi 2026-06-11: SOURCE-AGNOSTIC echo/cross-source dedup. Keep every capture
