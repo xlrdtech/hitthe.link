@@ -489,15 +489,36 @@ const SHOTS = [
     items:[{t:'All scopes',href:'/'}] },
 ];
 
-/* IDENTITY — the one swap point. Same ride, different person (East Allen / CTO East).
-   ?id=cto flips it; nothing else in the file needs to change. */
+/* ═══════════════════════════════════════════════════════════════════════════
+   IDENTITY — THE ONE SWAP POINT, and the reason seven sites cost less than two.
+   qi 2026-08-17 08:54:40: "in order to get it done at half the time, we're just
+   going to take the exact same thing and do it for two different versions of me."
+   Generalised from two to seven: the RIDE (shot geometry, freeze-cut engine,
+   materials, lighting) is identical everywhere. Only accent + copy + links move.
+   Build marker below is rewritten per-site by bin/build-landing-pages.mjs.
+   ═══════════════════════════════════════════════════════════════════════════ */
 const IDENTITIES = {
-  xlrd:{ name:'XENOS',      accent:0x3cff96, kicker:'XLRD · Avatar · Voice · Graph' },
-  cto: { name:'CTO EAST',   accent:0x8ad4ff, kicker:'CTO East · the real me, corporate' },
-  east:{ name:'EAST ALLEN', accent:0xffd48a, kicker:'East Allen · the real me' },
+  xlrd:     { name:'XENOS',              accent:0x3cff96, domain:'hitthe.link/xenos-env',
+              kicker:'XLRD · Avatar · Voice · Graph' },
+  xlrdtech: { name:'XLRD TECH',          accent:0x3cff96, domain:'xlrdtech.com',
+              kicker:'Executive Leverage Research Development' },
+  xlrdorg:  { name:'XLRD.ORG',           accent:0x6effc0, domain:'xlrd.org',
+              kicker:'The dev representation' },
+  exlev:    { name:'EXECUTIVE LEVERAGE', accent:0xc9d8ff, domain:'executiveleverage.com',
+              kicker:'The professional representation' },
+  hittl:    { name:'HITTHE.LINK',        accent:0x3cff96, domain:'hitthe.link',
+              kicker:'Portfolio · fast lane · showcase of consistency' },
+  selfexec: { name:'SELF EXEC',          accent:0xffb865, domain:'selfexec.com',
+              kicker:'Enterprise automation & intelligent systems' },
+  ctoeast:  { name:'CTO EAST',           accent:0x8ad4ff, domain:'ctoeast.com',
+              kicker:'The real me, corporate' },
+  eastallen:{ name:'EAST ALLEN',         accent:0xffd48a, domain:'eastallen.com',
+              kicker:'The real me' },
 };
+/* @@BUILD_ID@@ — the generator replaces this line per site */
 const IDK = new URLSearchParams(location.search).get('id') || 'xlrd';
 const IDENT = IDENTITIES[IDK] || IDENTITIES.xlrd;
+document.title = IDENT.name === 'XENOS' ? 'XENOS' : IDENT.name + ' — XENOS';
 C.accent.setHex(IDENT.accent);
 coreUniforms.accent.value = C.accent;
 fill1.color.setHex(IDENT.accent);

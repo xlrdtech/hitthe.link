@@ -504,7 +504,167 @@ attribute vec2 aP;
 void main(){ gl_Position = vec4(aP, 0.0, 1.0); }
 </script>
 
+<!-- ══════════════════════════════════════════════════════════════════════════
+     XENOS PLASMA CORE — the new avatar.  qi 2026-08-17 08:44: "that version of
+     this, that's the new avatar" · 09:10: "let me know when the hitthe.link
+     homepage is updated with the avatar swap."
+
+     WHAT CHANGED, AND WHAT DELIBERATELY DID NOT:
+     Swapped — the CENTRAL OBJECT. It was a striated marble; it is now the plasma
+     core (fbm-driven, energy-reactive, bright rim over a dark interior).
+     Kept — the COMPOSITION. His own reference calibration (IMG_0106/IMG_0739,
+     preserved verbatim in #fs-orbital below) established that the sphere reads
+     SMALL (~20-25% of frame, never 70%) and the ORBITAL SYSTEM is the subject.
+     That is a standing preference about what he likes, not a fact about one
+     shader, so the nested rings and satellites stay.
+
+     TO REVERT: rename this block's id to anything, and #fs-orbital back to "fs".
+     The compile path is document.getElementById("fs").textContent — one word.
+     The original is NOT deleted. Nothing calibrated to his photos is lost.
+     ══════════════════════════════════════════════════════════════════════════ -->
 <script type="x-shader/x-fragment" id="fs">
+precision highp float;
+uniform vec2  uRes;
+uniform float uTime;
+uniform vec3  uCam;
+uniform vec3  uTgt;
+uniform vec3  uEyeDir;
+uniform vec2  uShift;
+uniform float uDil;
+uniform float uSteps;
+uniform float uQual;
+
+float h11(float p){ p=fract(p*0.1031); p*=p+33.33; p*=p+p; return fract(p); }
+float h31(vec3 p){
+  p = fract(p*0.3183099 + vec3(0.71,0.113,0.419));
+  p *= 17.0;
+  return fract(p.x*p.y*p.z*(p.x+p.y+p.z));
+}
+float vn(vec3 x){
+  vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
+  float a=h31(i),            b=h31(i+vec3(1,0,0));
+  float c=h31(i+vec3(0,1,0)), d=h31(i+vec3(1,1,0));
+  float e=h31(i+vec3(0,0,1)), g=h31(i+vec3(1,0,1));
+  float j=h31(i+vec3(0,1,1)), k=h31(i+vec3(1,1,1));
+  return mix(mix(mix(a,b,f.x),mix(c,d,f.x),f.y),
+             mix(mix(e,g,f.x),mix(j,k,f.x),f.y),f.z);
+}
+float fbm(vec3 p){
+  float s=0.0,a=0.5;
+  for(int i=0;i<5;i++){ s+=a*vn(p); p*=2.03; a*=0.5; }
+  return s;
+}
+
+// One restrained ring of discrete satellites — the composition he calibrated.
+vec3 ringPass(vec3 ro, vec3 rd, vec3 nrm, float Rr, float w, float spd,
+              float nOrb, float seed, float sphT, bool sphHit){
+  float dn = dot(rd, nrm);
+  if(abs(dn) < 0.0005) return vec3(0.0);
+  float tp = -dot(ro, nrm)/dn;
+  if(tp <= 0.0) return vec3(0.0);
+  if(sphHit && tp > sphT) return vec3(0.0);      // ring occluded by the core
+  vec3  hp = ro + rd*tp;
+  float r  = length(hp);
+  float band = exp(-pow((r-Rr)/w, 2.0));
+  vec3  acc = vec3(0.0);
+  for(int i=0;i<10;i++){
+    float fi = float(i);
+    if(fi >= nOrb) break;
+    float ph = h11(seed+fi*7.13)*6.2831853 + uTime*spd*(0.6+h11(seed+fi)*0.7);
+    vec3  op = vec3(cos(ph)*Rr, sin(ph)*Rr, 0.0);
+    // rotate the orbit plane into the ring's own frame
+    vec3 ax = normalize(cross(nrm, vec3(0.0,0.0,1.0)+1e-4));
+    vec3 by = cross(nrm, ax);
+    vec3 wp = ax*op.x + by*op.y;
+    float d  = length(hp - wp);
+    float sz = 0.030 + h11(seed+fi*3.7)*0.055;
+    acc += vec3(0.55,1.0,0.72) * exp(-pow(d/sz, 2.0)) * (0.9 + h11(seed+fi*11.0)*1.5);
+  }
+  return acc + vec3(0.10,0.34,0.20)*band*0.55;
+}
+
+void main(){
+  vec2 p = (gl_FragCoord.xy - 0.5*uRes) / uRes.y;
+  p += uShift * 0.22;
+
+  // d=9 with unit fovScale puts a unit sphere at ~0.11 in p-units => ~22% of
+  // frame height. That is his calibrated size, arrived at by arithmetic so it
+  // cannot drift when the shader is edited later.
+  vec3 ro = vec3(0.0, 0.0, 9.0);
+  vec3 rd = normalize(vec3(p, -1.0));
+
+  // analytic sphere intersection — no march needed for a single body, which
+  // keeps this cheap enough for the 0.58 render scale on a phone.
+  float R = 1.0;
+  float bq = dot(ro, rd);
+  float cq = dot(ro, ro) - R*R;
+  float disc = bq*bq - cq;
+  bool  hit = disc > 0.0;
+  float tS = hit ? (-bq - sqrt(disc)) : 1e9;
+
+  vec3 col = vec3(0.0);
+
+  if(hit && tS > 0.0){
+    vec3 sp = ro + rd*tS;
+    vec3 n  = normalize(sp);
+    vec3 V  = -rd;
+
+    // plasma: two fbm fields at different rates, so it churns instead of sliding
+    float f1 = fbm(n*2.4 + vec3(0.0, uTime*0.20, uTime*0.09));
+    float f2 = fbm(n*5.8 - vec3(uTime*0.16, 0.0, uTime*0.06));
+    float pl = f1 + 0.45*f2;
+
+    // ⚠️ SECOND MEASURED CORRECTION, 09:16. First pass drove brightness off
+    // `fres` alone, so at the centre of the disc fres->0 and the body rendered as
+    // a FLAT GREY BALL — the mirror image of the blowout, and just as dead.
+    // The lesson from both: the dark belongs in the CREVICES (low fbm), never
+    // across the whole interior. So PLASMA drives the value and fresnel only
+    // trims the limb. Verified by screenshot, not by reasoning about the maths.
+    float fres = pow(1.0 - max(dot(n, V), 0.0), 2.5);
+    float energy = clamp(pl*1.15 + fres*0.55 - 0.42, 0.0, 1.0);
+    vec3 deep = vec3(0.030, 0.150, 0.075);      // crevice, not whole body
+    vec3 mid  = vec3(0.18,  0.72,  0.40);
+    vec3 hot  = vec3(0.78,  1.00,  0.86);
+    col = mix(deep, mid, smoothstep(0.0, 0.55, energy));
+    col = mix(col,  hot, smoothstep(0.55, 1.0,  energy));
+
+    // swirled striations — the surface note from his reference, following the
+    // plasma field so they curve with it instead of banding across it
+    float striate = sin(pl*13.0 + n.y*5.5 - uTime*0.6)*0.5 + 0.5;
+    col += vec3(0.34, 0.78, 0.52) * pow(striate, 2.2) * (0.30 + energy*0.75);
+
+    // internal emission so the body is a LIGHT SOURCE, not a lit object
+    col += vec3(0.10, 0.42, 0.24) * pow(clamp(pl-0.30, 0.0, 1.0), 1.6) * 1.5;
+
+    // thin brilliant limb
+    col += vec3(0.60,1.0,0.84) * pow(fres, 4.0) * 1.15;
+  }
+
+  // ── the orbital system: 4 nested rings, tilted, satellites of varied size ──
+  vec3 n1 = normalize(vec3( 0.16, 1.00,  0.10));
+  vec3 n2 = normalize(vec3(-0.34, 1.00,  0.24));
+  vec3 n3 = normalize(vec3( 0.44, 1.00, -0.20));
+  vec3 n4 = normalize(vec3(-0.10, 1.00, -0.42));
+  col += ringPass(ro, rd, n1, 1.85, 0.10, 0.42,  8.0,  3.1, tS, hit);
+  col += ringPass(ro, rd, n2, 2.55, 0.13, 0.31, 10.0, 17.7, tS, hit);
+  col += ringPass(ro, rd, n3, 3.35, 0.16, 0.24,  9.0, 41.3, tS, hit);
+  if(uQual > 0.5)
+    col += ringPass(ro, rd, n4, 4.20, 0.19, 0.18, 10.0, 66.9, tS, hit);
+
+  // faint volumetric haze around the core; NO VIGNETTE — he read one as a shadow
+  float gl = 1.0 / (1.0 + 26.0*max(0.0, length(p)-0.055));
+  col += vec3(0.030, 0.105, 0.062) * gl * (0.85 + 0.15*sin(uTime*0.7));
+
+  col *= 0.92 + 0.08*uDil;
+  col = col / (col + vec3(0.85));            // filmic-ish rolloff, keeps the rim
+  col = pow(col, vec3(0.4545));              // to sRGB
+  gl_FragColor = vec4(col, 1.0);
+}
+</script>
+
+<!-- PRESERVED, NOT DELETED — qi's reference-calibrated orbital marble.
+     Rename this id back to "fs" (and change the block above) to restore it. -->
+<script type="x-shader/x-fragment" id="fs-orbital">
 precision highp float;
 uniform vec2  uRes;
 uniform float uTime;
