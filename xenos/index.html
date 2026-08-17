@@ -71,7 +71,7 @@ import {EffectComposer}  from 'three/addons/postprocessing/EffectComposer.js';
 import {RenderPass}      from 'three/addons/postprocessing/RenderPass.js';
 import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
 
-const scene=new THREE.Scene(); scene.fog=new THREE.FogExp2(0x000200,.0011);
+const scene=new THREE.Scene(); // qi 2026-08-17: scene haze removed — "ugly and unrealistic". Depth comes from bloom + node scale, never atmosphere.
 const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,1,7000); camera.position.z=580;
 const renderer=new THREE.WebGLRenderer({antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth,innerHeight);
