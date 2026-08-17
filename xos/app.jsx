@@ -399,7 +399,12 @@ function playBubble(text) {
   _vsqClaim(VSQ_SELF);          // barge every OTHER surface (Xen's voice)
   _xosStopCurrent();            // barge THIS page's channel
   if (!text) return;
-  const a = new Audio("https://api.xlrd.org/api/tts?text=" + encodeURIComponent(text.slice(0, 350)));
+  // engine=eleven REQUIRED (qi 2026-08-17) — omnimind.js:3491-3497 derives
+  // wantEleven from this param on GET only; with no param it is false and the
+  // handler falls through to the edge-tts Ava block at :3736, ignoring voice.id
+  // entirely. Same defect as vvsvei/index.html; both surfaces had to be fixed or
+  // whichever one qi opened would still speak in Ava.
+  const a = new Audio("https://api.xlrd.org/api/tts?text=" + encodeURIComponent(text.slice(0, 350)) + "&engine=eleven");
   _xosCurAudio = a;             // this is now the sole live channel
   a.addEventListener("ended", () => { if (_xosCurAudio === a) _xosCurAudio = null; });
   a.play().catch(() => {});
