@@ -239,6 +239,7 @@ import { RenderPass }      from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass }      from 'three/addons/postprocessing/OutputPass.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { BokehPass }  from 'three/addons/postprocessing/BokehPass.js';
 import { FilmPass }   from 'three/addons/postprocessing/FilmPass.js';
@@ -690,7 +691,48 @@ const HAZE = [];
   if (outPass) composer.addPass(outPass);
 }
 
-const coreLight = new THREE.PointLight(0x3cff96, 2.6, 3400, 2.0);
+/* ═══ CAPTURED LIGHT, NOT INVENTED LIGHT ══════════════════════════════════════
+   qi 13:10:25 named the goal: "illusionism" — paintings you cannot tell from a real
+   human. That tradition wins on LIGHT being exactly right, never on detail, and a
+   viewer reads light before they read shape. Every light here up to now was a bulb I
+   placed at a position I made up, which is why 13:18:46 was "it still looks like a
+   video game."
+
+   So the world is now lit by a real photographed sky. `satara_night_no_lamps` is a 2K
+   CC0 capture of an actual night sky with no artificial lamps in it — real starfield,
+   real horizon glow, real colour temperature. It is SELF-HOSTED in /env: a runtime
+   dependency on someone else's CDN is a way for his page to go dark with nobody
+   touching it.
+
+   Verified on disk by the #?RADIANCE magic header, not by the download's 200 — an
+   error page is also 200-shaped and would load as a black environment, which looks
+   exactly like "the HDRI didn't help." */
+const _pmrem = new THREE.PMREMGenerator(renderer);
+_pmrem.compileEquirectangularShader();
+new RGBELoader().setPath('/env/').load('satara_night_no_lamps_2k.hdr', hdr => {
+  const envMap = _pmrem.fromEquirectangular(hdr).texture;
+  scene.environment = envMap;                 // LIGHT ONLY
+  /* deliberately NOT scene.background: his own 2500-point dust IS the sky, and painting
+     a photo behind it would bury the field he built. The capture is here to light the
+     rock, nothing else. */
+  hdr.dispose(); _pmrem.dispose();
+  window.__envReady = true;
+}, undefined, err => {
+  /* fail LOUD in the console but never break the scene — a missing sky must degrade to
+     the previous look, not to a black frame */
+  console.warn('[xenos] captured sky failed to load, falling back to invented light', err);
+  window.__envReady = false;
+});
+
+/* ⚠️ I SET TONE MAPPING HERE AND IT WAS ALREADY HIS. Measured 13:26 —
+   xenos-plasma/index.html:182-183 already does ACESFilmicToneMapping at exposure 1.2,
+   and three.js 0.160 already defaults outputColorSpace to SRGB. So my block was
+   redundant, and re-declaring a value he tuned is a silent fight over his own frame.
+   REMOVED. His file owns the camera response. */
+
+/* his core genuinely emits, so it should still throw light on nearby rock — that part
+   was always physically correct. It just stops being the sun. */
+const coreLight = new THREE.PointLight(0x3cff96, 1.7, 3400, 2.0);
 scene.add(coreLight);
 const fill = new THREE.DirectionalLight(0x9fffd0, 0.10); fill.position.set(-1, 0.55, 1); scene.add(fill);
 const rim  = new THREE.DirectionalLight(0x1a4a30, 0.16); rim.position.set(0.4, -0.15, -1); scene.add(rim);
@@ -1248,63 +1290,175 @@ const ROUTE = new THREE.CatmullRomCurve3([
    just has to get out of the way. */
 const spaceMix = y => Math.max(0, Math.min(1, (y - 900) / 3400));
 
-/* Portal rings ON the route, one per destination. Flying through one is what
-   "arriving" means here — there is no cut, only passage. */
+/* ═══ SPACE IS FILMED, NOT MODELLED ═══════════════════════════════════════════════
+   qi 13:18:46 "it still looks like a video game" · 13:10:46 "that's a dead giveaway
+   that it's a fake world" · 12:32:26 "I know we need to go to space."
+
+   Every previous answer to those was better rendering. This one stops rendering. The
+   plate is NASA public-domain footage — "Earth Views from the International Space
+   Station", 7,957,833 bytes, self-hosted at /plates/ — real light through a real lens
+   in orbit. The part of the frame that IS reality cannot be caught out.
+
+   It is a PLATE, not a texture on a globe. The footage was shot looking out a window at
+   Earth, so it appears as the view when altitude climbs. Mapping a photograph onto a
+   sphere would make it a render imitating a photograph, which is the same lie in a new
+   costume. */
+const PLATE = { mesh: null, vid: null, ready: false };
+{
+  const v = document.createElement('video');
+  v.src = '/plates/iss-earth.mp4';
+  v.loop = true;
+  v.muted = true;            /* REQUIRED — an unmuted video's play() promise rejects */
+  v.playsInline = true;      /* REQUIRED on iOS or it takes over the whole screen */
+  v.preload = 'auto';
+  v.crossOrigin = 'anonymous';
+  PLATE.vid = v;
+
+  const tex = new THREE.VideoTexture(v);
+  /* without this the footage renders washed out against his ACES response curve */
+  if ('colorSpace' in tex) tex.colorSpace = THREE.SRGBColorSpace;
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.generateMipmaps = false;
+
+  const m = new THREE.Mesh(
+    new THREE.PlaneGeometry(9000, 5060),      /* 16:9, the aspect it was shot at */
+    new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0,
+                                  depthWrite: false, side: THREE.DoubleSide })
+  );
+  m.visible = false;         /* not drawn until a real frame exists — else first draw is black */
+  m.position.set(0, 5200, -14000);
+  PLATE.mesh = m;
+  WORLD.add(m);
+
+  /* the promise CAN reject (autoplay policy, decode failure, 404). Unhandled, that is a
+     silent black plate that looks exactly like a shader bug — so it is caught and named. */
+  const start = () => {
+    const p = v.play();
+    if (p && p.catch) p.catch(err => {
+      console.warn('[xenos] space plate could not autoplay — world falls back to his dust', err);
+      PLATE.ready = false;
+    });
+  };
+  v.addEventListener('loadeddata', () => { PLATE.ready = true; m.visible = true; start(); });
+  v.addEventListener('error', () => {
+    console.warn('[xenos] space plate failed to load:', v.error && v.error.message);
+    PLATE.ready = false; m.visible = false;
+  });
+  start();
+  window.__plateReady = () => PLATE.ready && !PLATE.vid.paused && PLATE.vid.currentTime > 0;
+}
+
+/* the plate fades in with ALTITUDE, so reaching space is what reveals it — it is a place
+   you travel to, never a backdrop that was always there (qi 12:07 travel, not cuts) */
+function plateTick(sm) {
+  if (!PLATE.mesh || !PLATE.ready) return;
+  const a = Math.max(0, Math.min(1, (sm - 0.22) / 0.55));
+  PLATE.mesh.material.opacity = a * 0.92;
+  PLATE.mesh.visible = a > 0.01;
+  /* it faces the traveller rather than a fixed axis, because a plate seen edge-on is a
+     line — and a photograph must be seen square to read as a photograph */
+  PLATE.mesh.lookAt(camera.position);
+}
+
+/* ═══ THE TRANSITION IS A BORE THROUGH ROCK ════════════════════════════════════
+   qi 13:10:46, looking at the previous version: "those tunnels that you made, tunnels
+   don't exist like that in real life. So that's a dead giveaway that it's a fake world.
+   You got a whole bunch of tunnels. But none of those tunnels exist."
+
+   He is right and the diagnosis is deeper than style. I had already restyled this object
+   ONCE, at 12:14, when he said the concentric rings read as his old logo — and I changed
+   the styling while keeping the CLASS. A glowing ring throat is not a badly-drawn real
+   thing; it is a thing with no referent, and one of those is enough to give away an
+   entire frame no matter how correct everything else is.
+
+   His word was "portal", meaning the TRANSITION. A bore cut through rock — a road
+   tunnel, a mine adit, a lava tube — is a real transition, photographed millions of
+   times, and it does the identical job: you approach a face, there is an opening, you
+   pass through darkness, you come out somewhere else.
+
+   WHAT MAKES IT READ AS ROCK RATHER THAN A CYLINDER:
+   - the bore walls are DISPLACED per-vertex, so no silhouette is a perfect circle
+   - rough non-metal material, so it takes environment light instead of emitting
+   - the face is an irregular annulus of the same rock, so the opening is CUT INTO
+     something rather than floating
+   - the interior gets darker with depth by geometry, not by an additive glow */
 const PORTALS = [];
 {
-  const ringMat = new THREE.MeshBasicMaterial({ color: 0x3cff96, transparent: true,
-                                                opacity: 0.34, side: THREE.DoubleSide,
-                                                blending: THREE.AdditiveBlending, depthWrite: false });
-  const haloMat = new THREE.MeshBasicMaterial({ map: radialTex('rgba(60,255,150,0.30)','rgba(0,0,0,0)'),
-                                                transparent: true, blending: THREE.AdditiveBlending,
-                                                depthWrite: false, side: THREE.DoubleSide });
+  /* deterministic pseudo-noise — a build must be byte-reproducible, so no Math.random
+     anywhere in geometry (a world that is different on every reload cannot be verified
+     against a screenshot). */
+  const nz = (a, b, c) => {
+    const s = Math.sin(a * 12.9898 + b * 78.233 + c * 37.719) * 43758.5453;
+    return (s - Math.floor(s)) * 2 - 1;
+  };
+
+  const rockMat = () => new THREE.MeshStandardMaterial({
+    color: 0x14181a, roughness: 0.96, metalness: 0.02,
+    envMapIntensity: 0.32, side: THREE.DoubleSide, flatShading: true });
+
+  const R_IN = 430, LEN = 2600;
+
   for (let i = 1; i < SHOTS.length; i++) {
     const t = i / (SHOTS.length - 1) * 0.92 + 0.04;
     const p = ROUTE.getPointAt(t);
     const tan = ROUTE.getTangentAt(t);
     const g = new THREE.Group();
     g.position.copy(p);
-    g.lookAt(p.clone().add(tan));            // the aperture FACES down the route
+    g.lookAt(p.clone().add(tan));            // the bore FACES down the route
 
-    /* ⚠️ REBUILT AS A THROAT, not a ring. qi 12:14, looking at the first version:
-       "what throws it off is the resemblance of my old logo with these bubbles and
-        stuff floating around it. So I can't really tell that's like a hole in
-        space-time that we're traveling through."
-       He was exactly right about the cause. Concentric coplanar rings plus a soft
-       halo is the grammar of a LOGO MARK — flat, frontal, symmetrical, centred. A
-       hole in space-time is the opposite grammar: it has DEPTH RECEDING AWAY, its
-       centre is DARKER than its rim, and it occludes what is behind it. So the rings
-       now march away from the viewer with shrinking radius, forming a tunnel you
-       fall into, and a black aperture disc sits at the throat so the middle reads as
-       distance rather than as a gap in the geometry. The halo plane is gone — that
-       was the "bubbles floating around it". */
-    const THROAT = 16;
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(430, 6, 8, 96), ringMat);
-    g.add(ring);                             // mouth of the hole, kept as the handle
-    for (let k = 1; k < THROAT; k++) {
-      const f  = k / THROAT;                 // 0..1 into the tunnel
-      const rr = 430 * (1 - f * 0.93);       // radius collapses toward the throat
-      const m2 = new THREE.MeshBasicMaterial({ color: 0x3cff96, transparent: true,
-                                               opacity: 0.30 * (1 - f) + 0.04,
-                                               blending: THREE.AdditiveBlending,
-                                               depthWrite: false, side: THREE.DoubleSide });
-      const r2 = new THREE.Mesh(new THREE.TorusGeometry(rr, 2.2 + f * 2.0, 6, 64), m2);
-      r2.position.z = -f * 1650;             // RECEDING — this is what makes it a hole
-      r2.rotation.z = f * 1.9;               // twist, so the throat reads as spiralling
-      g.add(r2);
+    /* ── the bore itself: an open tube, walls displaced so it is cut rather than made */
+    const bore = new THREE.CylinderGeometry(R_IN, R_IN * 0.92, LEN, 56, 14, true);
+    const bp = bore.attributes.position;
+    for (let v = 0; v < bp.count; v++) {
+      const x = bp.getX(v), y = bp.getY(v), z = bp.getZ(v);
+      const rad = Math.hypot(x, z) || 1;
+      /* two octaves: broad undulation of the wall, plus chipped detail */
+      const d = nz(x * 0.004, y * 0.004, z * 0.004) * 46
+              + nz(x * 0.021, y * 0.019, z * 0.023) * 15;
+      bp.setX(v, x + (x / rad) * d);
+      bp.setZ(v, z + (z / rad) * d);
+      bp.setY(v, y + nz(x * 0.01, y * 0.03, z * 0.01) * 9);
     }
-    /* the dark at the bottom of the well: occludes the world behind, so the centre
-       is depth instead of a hole punched in the scene (the black-sphere lesson from
-       this morning, applied deliberately this time — opaque, not transmissive). */
-    const iris = new THREE.Mesh(
-      new THREE.CircleGeometry(430 * 0.10, 48),
-      new THREE.MeshBasicMaterial({ color: 0x000200, side: THREE.DoubleSide })
+    bore.computeVertexNormals();
+    const tube = new THREE.Mesh(bore, rockMat());
+    tube.rotation.x = Math.PI / 2;           // lie the tube DOWN the -z travel axis
+    tube.position.z = -LEN / 2;
+    g.add(tube);
+
+    /* ── the face it is cut into: an irregular rock annulus, so the mouth has mass */
+    const face = new THREE.RingGeometry(R_IN, R_IN * 2.9, 64, 3);
+    const fp = face.attributes.position;
+    for (let v = 0; v < fp.count; v++) {
+      const x = fp.getX(v), y = fp.getY(v);
+      const rad = Math.hypot(x, y) || 1;
+      if (rad > R_IN * 1.05) {               // hold the inner lip, break up the outside
+        const d = nz(x * 0.003, y * 0.003, 7) * 190;
+        fp.setX(v, x + (x / rad) * d);
+        fp.setY(v, y + (y / rad) * d);
+      }
+      fp.setZ(v, nz(x * 0.005, y * 0.005, 3) * 70);
+    }
+    face.computeVertexNormals();
+    const mouth = new THREE.Mesh(face, rockMat());
+    g.add(mouth);
+
+    /* ── the dark at depth. Opaque, so it OCCLUDES the world behind the opening —
+          without this the bore reads as a hole punched in the scene, which is the
+          black-sphere lesson from this morning applied deliberately. */
+    const deep = new THREE.Mesh(
+      new THREE.CircleGeometry(R_IN * 0.94, 48),
+      new THREE.MeshBasicMaterial({ color: 0x020403, side: THREE.DoubleSide })
     );
-    iris.position.z = -1680;
-    g.add(iris);
+    deep.position.z = -LEN + 60;
+    g.add(deep);
 
     WORLD.add(g);
-    PORTALS.push({ group: g, t, ring, index: i });
+    /* `ring` is kept as the KEY NAME because applyTone() and the proximity pass both
+       reach for p.ring.material.color. Now it tints the rock, which is physically
+       sensible — different ground, different stone. Renaming it would have been a
+       silent break in two other systems. */
+    PORTALS.push({ group: g, t, ring: mouth, tube, index: i });
   }
 }
 
@@ -1429,41 +1583,280 @@ function signTexture(kind, title, body) {
    them would mean rewriting his working code to satisfy a styling correction. */
 const ORBITERS = [];
 function buildOrbiters() {
+  /* ═══ CAIRNS — qi 13:13:06 ══════════════════════════════════════════════════════
+     "But I don't like those bubbles. Those aren't real either. The bubbles that's
+      floating around me, those aren't real."
+
+     Correct, and it is the same failure as the tunnels: a glowing sphere orbiting a
+     figure has no referent. The replacement was already in his own words two minutes
+     earlier, at 13:12:35 — "we go and we travel to it to touch the stone that emits
+     light ... that's actually real, ancient technology that brings light from stones,
+     that's electromagnetic energy."
+
+     A CAIRN is the exact right object. A stack of stones marking a route is how humans
+     mark paths in the physical world — every mountain trail on earth has them, they are
+     photographed constantly, and their real-world FUNCTION is already "this is the way."
+     So the navigation marker stops being a metaphor.
+
+     And the light is real physics, not magic: quartz is triboluminescent and
+     piezoelectric — struck or pressed, it genuinely emits. So a stone that lights WHERE
+     YOU TOUCH IT is a simulation of something that happens on this planet.
+
+     Dark until touched, on purpose: an unread marker is an object you have not reached
+     yet, never a glowing badge demanding attention.
+
+     The array keeps the name ORBITERS because pickOrbiter(), the pointerdown handler and
+     the telemetry all reference it. Renaming for tidiness would break three systems to
+     satisfy a comment. */
   const defs = [
     { label: 'WHEELS', form: 0, hue: 0x3cff96 },
     { label: 'CORE',   form: 1, hue: 0x8affc4 },
     { label: 'FORM',   form: 2, hue: 0xd8ff3c },
-    { label: 'PULSE',  form: -1, hue: 0xff9f3c },   // -1 = his probe/pulse burst
+    { label: 'PULSE',  form: -1, hue: 0xff9f3c },
   ];
+
+  const nz = (a, b, c) => {
+    const s = Math.sin(a * 12.9898 + b * 78.233 + c * 37.719) * 43758.5453;
+    return (s - Math.floor(s)) * 2 - 1;
+  };
+
   defs.forEach((d, i) => {
     const g = new THREE.Group();
-    const geo = new THREE.IcosahedronGeometry(26, 1);   // faceted, catches the core light
-    const mat = new THREE.MeshStandardMaterial({
-      color: d.hue, emissive: new THREE.Color(d.hue), emissiveIntensity: 0.12,
-      metalness: 0.55, roughness: 0.28 });
-    const body = new THREE.Mesh(geo, mat);
-    g.add(body);
-    /* a name that is PART of the object, not a caption on the glass */
+
+    /* a stack of stones. Each one an irregular boulder, sitting on the one below with
+       real offset and tilt — a cairn is stacked by hand, so nothing is centred. */
+    const stones = [];
+    const N = 4;
+    let y = 0;
+    for (let k = 0; k < N; k++) {
+      const r = 30 - k * 5.2;                      // narrows upward, like a real stack
+      const geo = new THREE.IcosahedronGeometry(r, 1);
+      const gp = geo.attributes.position;
+      for (let v = 0; v < gp.count; v++) {
+        const x = gp.getX(v), yy = gp.getY(v), z = gp.getZ(v);
+        const rad = Math.hypot(x, yy, z) || 1;
+        const dsp = 1 + nz(x + k * 9, yy, z) * 0.30;
+        gp.setX(v, x * dsp); gp.setY(v, yy * dsp * 0.72); gp.setZ(v, z * dsp);
+      }
+      geo.computeVertexNormals();
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0x1a1e1f, roughness: 0.94, metalness: 0.03,
+        emissive: new THREE.Color(d.hue), emissiveIntensity: 0.0,   // DARK until touched
+        envMapIntensity: 0.30, flatShading: true });
+      const s = new THREE.Mesh(geo, mat);
+      y += r * 0.78;
+      s.position.set(nz(k, i, 1) * 5, y, nz(k, i, 2) * 5);
+      s.rotation.set(nz(k, i, 3) * 0.5, nz(k, i, 4) * 3, nz(k, i, 5) * 0.5);
+      y += r * 0.5;
+      g.add(s);
+      stones.push({ mesh: s, mat });
+    }
+
+    /* the name is CARVED, not captioned — a plate leaning against the base, in the
+       world, taking the same light as the rock */
     const c = document.createElement('canvas'); c.width = 256; c.height = 64;
     const cx = c.getContext('2d');
     cx.font = '600 30px "JetBrains Mono", monospace';
-    cx.fillStyle = 'rgba(223,251,233,0.95)';
+    cx.fillStyle = 'rgba(223,251,233,0.88)';
     cx.fillText(d.label, 8, 42);
-    /* ⚠️ WAS A MESH AND RENDERED MIRRORED. Copying camera.quaternion into a child's
-       LOCAL quaternion ignores the parents — and both parents rotate here (the orbit
-       group, and ophanim which his own loop spins on two axes), so the composition
-       flipped the glyphs. A Sprite faces the camera by construction; there is no
-       orientation left to get wrong. Caught by reading the word CORE backwards in a
-       screenshot, not by reasoning about transforms. */
     const tag = new THREE.Sprite(new THREE.SpriteMaterial({
       map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false,
-      opacity: 0.82 }));
-    tag.scale.set(150, 38, 1);
-    tag.position.set(0, 52, 0);
+      opacity: 0.62 }));
+    tag.scale.set(140, 35, 1);
+    tag.position.set(0, y + 30, 0);
     g.add(tag);
-    ophanim.add(g);            // they travel WITH him — companion, not furniture
-    ORBITERS.push({ group: g, body, tag, mat, def: d, phase: i / defs.length * Math.PI * 2 });
+
+    /* ⚠️ PARENTED TO THE WORLD, NOT TO HIM. The bubbles were children of ophanim, which
+       is exactly why they orbited — and an object that flies in formation around a
+       figure is the thing he rejected. A cairn sits on the ground and you TRAVEL to it
+       (qi 12:07: "you have to actually travel to the different parts"). */
+    const t = 0.055 + i * 0.19;
+    const pt = ROUTE.getPointAt(t);
+    const tn = ROUTE.getTangentAt(t);
+    const side = new THREE.Vector3(-tn.z, 0, tn.x).normalize();
+    g.position.copy(pt).addScaledVector(side, 430 + i * 40);
+    g.position.y = 0;                          // ON the deck — cairns do not hover
+    WORLD.add(g);
+
+    ORBITERS.push({ group: g, body: stones[0].mesh, stones, tag, mat: stones[0].mat,
+                    def: d, phase: 0, glow: 0, t });
   });
+}
+
+/* ═══ REACTIONS, NOT CONTROLS — AND THE VOCABULARY IS A REAL HAND ══════════════
+   qi 13:17:57: "the transformations are really like reactions."
+   qi 13:18:27: "You can turn into a giant hand that's doing a thumbs up when you hit
+   like on something ... the only reason I'm hesitant to say emojis is because emojis is
+   a fake, but you can transform..."
+
+   He asked for the emoji VOCABULARY and refused the emoji FORM, which is the 13:10
+   referent law applied to expression — a yellow circle with a thumb is a pictogram OF a
+   hand, and a pictogram gives away the frame exactly like a glowing ring tunnel does.
+   So: an anatomical hand, built out of his light, making the actual gesture.
+
+   ⚠️ NOT part of his morph machine. T0/T1/T2 are MODES; a reaction blooms, holds and
+   dissolves. An event in the mode machine would turn a feeling into a setting.
+
+   The shape function copies the GRAMMAR of his own humanoid(i, n): walk one normalized
+   index through anatomical regions. This is his technique at closer range, not a new
+   system — and his fingerprinted constants are never touched. */
+const GEST = { active: null, t: 0, dur: 2.6, cloud: null, target: null, from: null };
+
+/* deterministic — a build that renders differently every reload cannot be verified
+   against a screenshot, so no Math.random in any shape function here */
+function _gr(i, k) {
+  const s = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453;
+  return s - Math.floor(s);
+}
+
+/* A HAND. Regions in the order his humanoid() uses: mass first, then limbs.
+   palm slab -> four finger columns -> opposed thumb. `pose` bends the fingers, which is
+   what makes it a GESTURE rather than a mannequin part:
+     'up'    fingers curled into the palm, thumb extended straight up  (thumbs up)
+     'open'  fingers extended, thumb out                              (hello / stop)
+     'point' index extended, the rest curled                          (there)  */
+function handShape(i, n, pose) {
+  const u = i / n;
+  const j1 = _gr(i, 1), j2 = _gr(i, 2), j3 = _gr(i, 3);
+  let x, y, z;
+
+  if (u < 0.34) {
+    /* palm: a slab with thickness, not a disc — a flat palm reads as cardboard */
+    x = (j1 - 0.5) * 150;
+    y = -40 + j2 * 150;
+    z = (j3 - 0.5) * 52;
+  } else if (u < 0.82) {
+    /* four fingers. `f` picks the finger, `s` runs base->tip along it. */
+    const q = (u - 0.34) / 0.48;
+    const f = Math.min(3, Math.floor(q * 4));
+    const s = (q * 4) - f;
+    const bx = -56 + f * 37;
+    const len = [96, 112, 104, 84][f];
+    const curl = pose === 'open' ? 0.0 : (pose === 'point' && f === 0 ? 0.0 : 1.0);
+    /* a curled finger folds forward and down over the palm — two joints, so the fold
+       has a knuckle instead of being a single arc */
+    const bend = curl * Math.min(1, s * 1.35);
+    x = bx + (j1 - 0.5) * 24;
+    y = 110 + s * len * (1 - bend * 0.92);
+    z = (j2 - 0.5) * 22 + bend * (s * 86);
+    if (curl > 0.5) y -= bend * 44;
+  } else {
+    /* the thumb: opposed, off the side of the palm. Extended and vertical for 'up',
+       which is the whole read of the gesture. */
+    const s = (u - 0.82) / 0.18;
+    if (pose === 'up') {
+      x = -78 + (j1 - 0.5) * 26;
+      y = 40 + s * 168;                       // straight up, clear of the fist
+      z = (j2 - 0.5) * 24 - s * 14;
+    } else {
+      x = -78 - s * 92 + (j1 - 0.5) * 22;     // out to the side
+      y = 34 + s * 42;
+      z = (j2 - 0.5) * 24;
+    }
+  }
+  /* wrist down-shift so the hand sits where a hand sits relative to his body centre */
+  return [x, y - 120, z];
+}
+
+function buildGestureCloud() {
+  const N = 2600;                              // enough points that a silhouette READS
+  const pos = new Float32Array(N * 3);
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const spr = document.createElement('canvas'); spr.width = spr.height = 32;
+  const sc = spr.getContext('2d');
+  const rg = sc.createRadialGradient(16, 16, 0, 16, 16, 16);
+  rg.addColorStop(0, 'rgba(255,255,255,1)');
+  rg.addColorStop(0.4, 'rgba(150,255,200,0.55)');
+  rg.addColorStop(1, 'rgba(0,0,0,0)');
+  sc.fillStyle = rg; sc.fillRect(0, 0, 32, 32);
+  /* textured points, never bare ones — an untextured THREE.Points near the lens blows
+     into an opaque grey SQUARE over the scene, and that is invisible in a local still */
+  const mat = new THREE.PointsMaterial({
+    size: 9, map: new THREE.CanvasTexture(spr), transparent: true, opacity: 0,
+    depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true,
+    color: 0x9dffc8, alphaTest: 0.01 });
+  const cl = new THREE.Points(geo, mat);
+  cl.visible = false;
+  ophanim.add(cl);                             // it is HIM reforming, so it rides with him
+  GEST.cloud = cl;
+  GEST.target = new Float32Array(N * 3);
+  GEST.from = new Float32Array(N * 3);
+  GEST.n = N;
+}
+
+/* ⭐ the public reaction. Called by real events, never by a button. */
+function react(pose) {
+  if (!GEST.cloud) return;
+  const N = GEST.n;
+  for (let i = 0; i < N; i++) {
+    const h = handShape(i, N, pose);
+    GEST.target[i * 3] = h[0] * 1.35;
+    GEST.target[i * 3 + 1] = h[1] * 1.35;
+    GEST.target[i * 3 + 2] = h[2] * 1.35;
+    /* it ASSEMBLES out of his own cloud radius rather than fading in from nowhere —
+       the gesture is him reforming, so the material has to come from somewhere */
+    const a = _gr(i, 7) * Math.PI * 2, b = Math.acos(2 * _gr(i, 8) - 1), r = 200 + _gr(i, 9) * 90;
+    GEST.from[i * 3]     = Math.sin(b) * Math.cos(a) * r;
+    GEST.from[i * 3 + 1] = Math.cos(b) * r;
+    GEST.from[i * 3 + 2] = Math.sin(b) * Math.sin(a) * r;
+  }
+  GEST.active = pose; GEST.t = 0;
+  GEST.cloud.visible = true;
+  if (typeof S === 'object') S.flare = Math.max(S.flare || 0, 1.6);
+}
+
+function gestureTick(dt) {
+  if (!GEST.active || !GEST.cloud) return;
+  GEST.t += dt;
+  const u = Math.min(1, GEST.t / GEST.dur);
+  /* assemble (0-0.28) -> hold (0.28-0.72) -> dissolve (0.72-1). The hold is what makes
+     it legible; a gesture that is only ever in motion never resolves into a shape. */
+  const k = u < 0.28 ? (u / 0.28)
+          : u < 0.72 ? 1
+          : 1 - (u - 0.72) / 0.28;
+  const ease = k * k * (3 - 2 * k);
+  const p = GEST.cloud.geometry.attributes.position.array;
+  for (let i = 0; i < GEST.n * 3; i++) {
+    p[i] = GEST.from[i] + (GEST.target[i] - GEST.from[i]) * ease;
+  }
+  GEST.cloud.geometry.attributes.position.needsUpdate = true;
+  GEST.cloud.material.opacity = ease * 0.92;
+  if (u >= 1) { GEST.active = null; GEST.cloud.visible = false; }
+}
+
+/* ── WHAT TRIGGERS A REACTION. Real events only. */
+addEventListener('keydown', e => {
+  if (e.key === 'l' || e.key === 'L') react('up');      // approval
+});
+/* touching a stone is an acknowledgement, so it answers with an open hand */
+addEventListener('pointerup', e => {
+  if (pickOrbiter(e.clientX, e.clientY)) react('open');
+}, { passive: true });
+/* exposed so a notification arrival, an SSE event or a console poke can answer in the
+   same language — reaction is an API, not a keybinding */
+window.__xenosReact = react;
+
+/* ── TOUCH MAKES IT LIGHT. qi 13:08:36: "that real touch interaction, that's the
+      craziest thing that can be with a life form through a screen. That's the highest
+      level." Pressure -> light is piezoluminescence; it stays lit briefly after release
+      because phosphorescence decays rather than switching off. An instant-off light is
+      a switch, and a switch is a UI control. */
+function stoneTouch(cx, cy, pressed) {
+  const o = pickOrbiter(cx, cy);
+  for (const q of ORBITERS) q.target = 0;
+  if (o) o.target = pressed ? 1 : 0.34;
+  return o;
+}
+function stoneTick() {
+  for (const o of ORBITERS) {
+    const want = o.target || 0;
+    /* asymmetric: light comes up fast under the finger, falls away slowly */
+    const k = want > o.glow ? 0.22 : 0.035;
+    o.glow += (want - o.glow) * k;
+    for (const s of o.stones) s.mat.emissiveIntensity = o.glow * 1.5;
+    o.tag.material.opacity = 0.42 + o.glow * 0.5;
+  }
 }
 
 /* real 3D picking — the object is the control, so the click has to hit the OBJECT */
@@ -1471,16 +1864,26 @@ const _ray = new THREE.Raycaster(), _ndc = new THREE.Vector2();
 function pickOrbiter(cx, cy) {
   _ndc.set((cx / innerWidth) * 2 - 1, -(cy / innerHeight) * 2 + 1);
   _ray.setFromCamera(_ndc, camera);
-  const hits = _ray.intersectObjects(ORBITERS.map(o => o.body), false);
+  /* every stone in the stack is a target, not just the base — a cairn is one object to
+     the hand, so hitting any of its rocks must count as touching it */
+  const all = [];
+  for (const o of ORBITERS) for (const s of (o.stones || [])) all.push(s.mesh);
+  const hits = _ray.intersectObjects(all, false);
   if (!hits.length) return null;
-  return ORBITERS.find(o => o.body === hits[0].object) || null;
+  return ORBITERS.find(o => (o.stones || []).some(s => s.mesh === hits[0].object)) || null;
 }
 addEventListener('pointerdown', e => {
-  const o = pickOrbiter(e.clientX, e.clientY);
+  const o = stoneTouch(e.clientX, e.clientY, true);
   if (!o) return;
   if (o.def.form === -1) { const b = document.getElementById('probe'); if (b) b.click(); }
   else if (typeof shift === 'function') shift(o.def.form);
 }, { passive: true });
+/* hover/drag across a stone lights it too — the stone answers the hand, not the click */
+addEventListener('pointermove', e => {
+  if (e.pointerType === 'touch' && e.buttons === 0) return;
+  stoneTouch(e.clientX, e.clientY, e.buttons !== 0);
+}, { passive: true });
+addEventListener('pointerup', () => { for (const q of ORBITERS) q.target = 0; }, { passive: true });
 
 const SIGNS = [];
 function buildSigns() {
@@ -1595,6 +1998,8 @@ const _cp = new THREE.Vector3(), _cl = new THREE.Vector3(), _av = new THREE.Vect
 const _lensV = new THREE.Vector3();
 function travelTick() {
   for (const k in HELD) advance(HELD[k] * 0.0038);       // held key = continuous motion
+  stoneTick();                                           // phosphorescence decays here
+  gestureTick(0.016);                                    // reactions bloom and dissolve
 
   /* ⭐ THE SITE VISITS THE HUMAN — qi 12:30, reversing the roles:
      "the human doesn't visit the site, the site visits the human, basically. So it's
@@ -1619,6 +2024,7 @@ function travelTick() {
   /* ── SPACE. The ground world dissolves with altitude, so leaving the deck is real
         rather than decorative, and the fog thins out to vacuum. */
   const sm = spaceMix(_av.y);
+  plateTick(sm);                 // real footage reveals with altitude
   floor.visible = sm < 0.98;
   floor.material.opacity = 1 - sm; floor.material.transparent = sm > 0.01;
   pool.material.opacity  = 0.09 * (1 - sm);
@@ -1730,7 +2136,9 @@ addEventListener('wheel', e => {
   VIEW.tDist = Math.max(180, Math.min(2600, VIEW.tDist + e.deltaY * 0.9));
 }, { passive: true });
 
-buildOrbiters();  // controls become bodies, not a dock
+buildOrbiters();
+
+buildGestureCloud();  // controls become bodies, not a dock
 buildSigns();     // content becomes part of the place, not a layer on top of it
 
 /* open on the sky, then glide down into the world — one continuous move, no cut */
