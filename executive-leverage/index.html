@@ -1579,6 +1579,13 @@ window.__xenos = {
   shots: SHOTS.length,
   progress: () => NAVG.prog,
   portals: PORTALS.length,
+  /* ⚠️ EXPOSED SO A CLAIM ABOUT IT CAN BE FALSIFIED. Module scope hid VIEW from any
+     outside test, so "360 works" was unobservable — which under qi's rule means it was
+     false, however good the code looked. A behaviour with no read-back is a behaviour
+     you are trusting, not verifying. */
+  view: () => ({ yaw: VIEW.yaw, tYaw: VIEW.tYaw, pitch: VIEW.pitch, dist: VIEW.dist,
+                 glanceX: GLANCE.x, glanceY: GLANCE.y,
+                 turns: VIEW.tYaw / (Math.PI * 2) }),
   go,
 };
 
