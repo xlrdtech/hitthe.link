@@ -5128,15 +5128,14 @@ window.addEventListener('beforeunload', stopListening);
       'display:flex', 'align-items:center', 'gap:6px',
       'overflow-x:auto', 'overflow-y:hidden',
       'scroll-snap-type:x proximity', '-webkit-overflow-scrolling:touch',
-      // BLACK, AND OPAQUE. qi 2026-08-17 03:14, with a screenshot: "supposed to be
-      // black and collapsed". This row had NO background at all, so #transcript
-      // scrolled straight through it — his own message text rendered between the
-      // EMILY/GEORGE/BILL pills, which is what the shot shows. A translucent value
-      // would not fix it either: the bubbles behind are bright enough to read
-      // through anything short of opaque. Solid #000, not glass.
-      'background:#000',
-      'border-radius:var(--r-pill, 999px)',
-      'padding:6px 8px', 'margin:0 0 6px', 'scrollbar-width:none',
+      // ⛔ DO NOT ADD A BACKGROUND TO THIS ROW. qi 2026-08-17 03:40:24, immediately
+      // after I did exactly that: "NO!!!!!!" → "the menu bar was already perfect".
+      // I read his 03:14 "supposed to be black and collapsed" as being about THIS bar
+      // and painted it #000 with a pill radius. It was never about the menu bar — his
+      // very next message said "i expect to see this in the collapsed black chat
+      // bubbles", so BLACK + COLLAPSED describes the TUI STEP BUBBLES, not the rail.
+      // Restored byte-for-byte to the values that were here before I touched it.
+      'padding:0 4px 6px', 'margin:0 0 2px', 'scrollbar-width:none',
       'flex:0 0 auto', 'white-space:nowrap',
     ].join(';');
   }
@@ -5155,12 +5154,15 @@ window.addEventListener('beforeunload', stopListening);
     document.head.appendChild(st);
   }
 
+  // ⛔ RESTORED to its pre-2026-08-17 form. qi 03:40:24: "the menu bar was already
+  // perfect". I had changed the selector to button[data-vid] and made this call
+  // paintTrigger(), on the reasoning that the trigger was being repainted grey. That
+  // reasoning may even be right — it is also a change to a bar he told me was finished,
+  // which under cmd 45 makes it a guess dressed as a fix. Appearance goes back exactly
+  // as it was; only the POST-assert in pick() (a correctness fix for "every voice is
+  // still Hani") is kept, because that one is behavior he explicitly reported broken.
   const paint = () => {
-    // The trigger is a button in this row too, but it is NOT a voice option — it has no
-    // data-vid, so the `on` test below always failed for it and repainted it grey,
-    // silently undoing paintTrigger()'s green. Repaint it on its own terms instead.
-    if (typeof paintTrigger === 'function') paintTrigger();
-    row.querySelectorAll('button[data-vid]').forEach((b) => {
+    row.querySelectorAll('button').forEach((b) => {
       const on = b.dataset.vid === current;
       b.setAttribute('aria-checked', on ? 'true' : 'false');
       b.style.background = on ? 'rgba(0,255,136,.18)' : 'rgba(255,255,255,.05)';
