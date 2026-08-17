@@ -154,6 +154,15 @@
               animation: hintfall 1.9s ease-in-out infinite; }
     @keyframes hintfall { 0%,100%{transform:translateY(0);opacity:.15} 50%{transform:translateY(6px);opacity:.55} }
 
+    /* ⚠️ NO NON-DIEGETIC LAYER (qi 12:50-12:52, he named the buttons himself).
+       His dock and telemetry are hidden rather than removed: his own handlers hold
+       references to these nodes, and deleting them would mean rewriting his working
+       code to satisfy a styling correction. Hidden = reversible in one line. */
+    .ui, .ui .controls, .ui .telemetry, .ui .status-panel, .ui .brand,
+    #ring, .crosshair, .lbl { display: none !important; }
+    /* ⚠️ .ui itself, not just its children — the brand wordmark was still pinned
+       to the viewport after the first pass, which is the same mistake one level up. */
+
     @media (max-width: 768px) {
       #panels { left: 18px; right: 18px; width: auto; top: 30%; }
       .p-b { max-width: none; }
@@ -203,9 +212,15 @@
 </div>
 
 
-<div id="panels"></div>
-<nav id="routes"></nav>
-<div id="hint">IT COMES TO YOU · SCROLL TO STEER · DRAG TO TURN 360<b></b></div>
+<!-- ⚠️ NO OVERLAY. qi 12:50:44: "there should not be an overlay over the environment."
+     The panels and rail that used to live here are now GEOMETRY in the scene (see
+     buildSigns). These two nodes remain because the travel code holds references to
+     them, and they are kept strictly invisible and non-interactive — deleting them
+     would mean rewriting his working navigation to fix a styling objection, which is
+     how a small correction turns into a regression. -->
+<div id="panels" style="display:none"></div>
+<nav id="routes" style="display:none"></nav>
+<div id="hint" style="display:none"></div>
 <div id="h-fps" style="position:fixed;left:-9999px;top:-9999px">0</div>
 <script src="https://unpkg.com/gsap@3.13.0/dist/gsap.min.js"></script>
 <script type="importmap">
@@ -643,7 +658,7 @@ const HAZE = [];
      distance and everything else falls away; nothing in CG does that by default.
      Focus is retargeted onto the avatar's true distance every frame (LENS_TICK), so he
      stays sharp while the world softens around him the way a photographed subject does. */
-  window.__bokeh = new BokehPass(scene, camera, { focus: 620, aperture: 0.000058, maxblur: 0.011 });
+  window.__bokeh = new BokehPass(scene, camera, { focus: 620, aperture: 0.000021, maxblur: 0.0035 });
   composer.addPass(window.__bokeh);
 
   /* DISPERSION + FALLOFF — glass splits colour toward the frame edge and dims there.
@@ -670,7 +685,7 @@ const HAZE = [];
 
   /* GRAIN — every real capture carries sensor noise. A perfectly clean frame is the
      most synthetic thing on the screen. Low enough to be felt, not seen. */
-  composer.addPass(new FilmPass(0.22, false));
+  composer.addPass(new FilmPass(0.09, false));
 
   if (outPass) composer.addPass(outPass);
 }
@@ -1362,6 +1377,133 @@ function applyTone(t) {
   coreLight.color.copy(ac);
 }
 
+/* ═══ IN-WORLD SIGNAGE ═══════════════════════════════════════════════════════
+   qi 12:50:44: "There should NOT be an overlay over the environment. That's the big
+   mistake right there."
+   He is right and it is the difference between a place and a webpage. Flat DOM floating
+   in front of a render tells the eye instantly that it is looking at a page with 3D
+   behind it — nothing in a real space has text hovering between you and the world.
+   So the copy becomes GEOMETRY: canvas-textured planes standing in the world beside
+   each portal, which means they are fogged by distance, blurred by the lens, occluded
+   by towers, and they turn as you turn. My own reference notes said this and I ignored
+   it — the class this is measured against renders its UI in WebGL, not DOM.
+   ⚠️ HIS HUD IS LEFT ALONE. The brand, telemetry, eq and buttons are his canonical
+   piece; removing them is his call to make, not mine to assume. */
+function signTexture(kind, title, body) {
+  const c = document.createElement('canvas');
+  c.width = 1024; c.height = 512;
+  const x = c.getContext('2d');
+  x.clearRect(0, 0, 1024, 512);
+  x.font = '600 26px "JetBrains Mono", monospace';
+  x.fillStyle = 'rgba(60,255,150,0.92)';
+  x.fillText(kind.toUpperCase(), 40, 64);
+  x.font = '300 74px Inter, -apple-system, sans-serif';
+  x.fillStyle = 'rgba(232,255,241,0.98)';
+  x.fillText(title, 38, 168);
+  x.font = '300 30px Inter, -apple-system, sans-serif';
+  x.fillStyle = 'rgba(210,240,222,0.72)';
+  const words = String(body).split(' ');
+  let line = '', y = 236;
+  for (const w of words) {
+    if (x.measureText(line + w).width > 940) { x.fillText(line, 40, y); line = w + ' '; y += 42; }
+    else line += w + ' ';
+    if (y > 470) break;
+  }
+  if (line && y <= 470) x.fillText(line, 40, y);
+  const t = new THREE.CanvasTexture(c);
+  t.anisotropy = 4;
+  return t;
+}
+
+/* ═══ CONTROLS AS OBJECTS ═════════════════════════════════════════════════════
+   qi 12:50-12:52: "all the buttons that you're putting on here and the text, you're
+   treating them like [an overlay]" / "everything must be in 3D" / "everything is an
+   environment, it's not a website, you just drop into a world" / "we gotta have hyper
+   realistic ways to show where the links are — THEY GOTTA BE OBJECTS. Everything has to
+   be objects."
+   THE TEST HE ARRIVED AT: could you walk around it? Anything fixed to the viewport
+   proves there is a screen. So his five controls stop being a dock and become bodies
+   orbiting XENOS — the same language his own rings already speak — and a real 3D
+   raycast click drives the same shift() his buttons called. The DOM dock is hidden, not
+   deleted: his file owns those nodes and his handlers still reference them, so removing
+   them would mean rewriting his working code to satisfy a styling correction. */
+const ORBITERS = [];
+function buildOrbiters() {
+  const defs = [
+    { label: 'WHEELS', form: 0, hue: 0x3cff96 },
+    { label: 'CORE',   form: 1, hue: 0x8affc4 },
+    { label: 'FORM',   form: 2, hue: 0xd8ff3c },
+    { label: 'PULSE',  form: -1, hue: 0xff9f3c },   // -1 = his probe/pulse burst
+  ];
+  defs.forEach((d, i) => {
+    const g = new THREE.Group();
+    const geo = new THREE.IcosahedronGeometry(26, 1);   // faceted, catches the core light
+    const mat = new THREE.MeshStandardMaterial({
+      color: d.hue, emissive: new THREE.Color(d.hue), emissiveIntensity: 0.12,
+      metalness: 0.55, roughness: 0.28 });
+    const body = new THREE.Mesh(geo, mat);
+    g.add(body);
+    /* a name that is PART of the object, not a caption on the glass */
+    const c = document.createElement('canvas'); c.width = 256; c.height = 64;
+    const cx = c.getContext('2d');
+    cx.font = '600 30px "JetBrains Mono", monospace';
+    cx.fillStyle = 'rgba(223,251,233,0.95)';
+    cx.fillText(d.label, 8, 42);
+    /* ⚠️ WAS A MESH AND RENDERED MIRRORED. Copying camera.quaternion into a child's
+       LOCAL quaternion ignores the parents — and both parents rotate here (the orbit
+       group, and ophanim which his own loop spins on two axes), so the composition
+       flipped the glyphs. A Sprite faces the camera by construction; there is no
+       orientation left to get wrong. Caught by reading the word CORE backwards in a
+       screenshot, not by reasoning about transforms. */
+    const tag = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false,
+      opacity: 0.82 }));
+    tag.scale.set(150, 38, 1);
+    tag.position.set(0, 52, 0);
+    g.add(tag);
+    ophanim.add(g);            // they travel WITH him — companion, not furniture
+    ORBITERS.push({ group: g, body, tag, mat, def: d, phase: i / defs.length * Math.PI * 2 });
+  });
+}
+
+/* real 3D picking — the object is the control, so the click has to hit the OBJECT */
+const _ray = new THREE.Raycaster(), _ndc = new THREE.Vector2();
+function pickOrbiter(cx, cy) {
+  _ndc.set((cx / innerWidth) * 2 - 1, -(cy / innerHeight) * 2 + 1);
+  _ray.setFromCamera(_ndc, camera);
+  const hits = _ray.intersectObjects(ORBITERS.map(o => o.body), false);
+  if (!hits.length) return null;
+  return ORBITERS.find(o => o.body === hits[0].object) || null;
+}
+addEventListener('pointerdown', e => {
+  const o = pickOrbiter(e.clientX, e.clientY);
+  if (!o) return;
+  if (o.def.form === -1) { const b = document.getElementById('probe'); if (b) b.click(); }
+  else if (typeof shift === 'function') shift(o.def.form);
+}, { passive: true });
+
+const SIGNS = [];
+function buildSigns() {
+  for (const p of PORTALS) {
+    const shot = SHOTS[p.index];
+    if (!shot) continue;
+    const tex = signTexture(shot.key || '', shot.title || '', shot.body || '');
+    const m = new THREE.Mesh(
+      new THREE.PlaneGeometry(880, 440),
+      new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false,
+                                    side: THREE.DoubleSide })
+    );
+    /* stand it just off the route beside its portal, angled to face oncoming travel */
+    const pt = ROUTE.getPointAt(p.t);
+    const tn = ROUTE.getTangentAt(p.t);
+    const side = new THREE.Vector3(-tn.z, 0, tn.x).normalize();
+    m.position.copy(pt).addScaledVector(side, 700).add(new THREE.Vector3(0, 120, 0));
+    m.lookAt(pt.clone().addScaledVector(tn, -600));
+    WORLD.add(m);
+    SIGNS.push({ mesh: m, t: p.t, index: p.index, mat: m.material });
+  }
+}
+
 /* ── PROGRESS ALONG THE ROUTE. `target` is where scroll has asked to be, `prog` is
       where we actually are, and it CHASES the target every frame. That lag is what
       makes it travel rather than jump: there is no code path that sets position
@@ -1516,6 +1658,22 @@ function travelTick() {
     p.ring.material.opacity = 0.10 + near * 0.55;
     p.group.rotation.z += 0.0012 + near * 0.004;
   }
+  /* the controls orbit him. They are objects: they occlude, they catch his light, and
+     they are picked by a raycast rather than by a CSS hit box. */
+  for (const o of ORBITERS) {
+    const a = S.time * 0.32 + o.phase;
+    o.group.position.set(Math.cos(a) * 330, Math.sin(a * 0.7) * 92 + 40, Math.sin(a) * 330);
+    o.body.rotation.y += 0.013; o.body.rotation.x += 0.007;
+    /* Sprite: no facing maths needed, legible from all 360 degrees by construction */
+    const on = Math.round(S.morph) === o.def.form;
+    o.mat.emissiveIntensity += ((on ? 0.42 : 0.10) - o.mat.emissiveIntensity) * 0.08;
+  }
+
+  /* signs brighten as you approach and fade behind you — presence, not a popup */
+  for (const g of SIGNS) {
+    let d = Math.abs(g.t - t); if (d > 0.5) d = 1 - d;
+    g.mat.opacity = Math.max(0, 1 - d / 0.13);
+  }
   updatePanels();
 }
 
@@ -1530,7 +1688,11 @@ function travelTick() {
    while the pair travels the endless route. Move the pointer to glance; drag to swing
    right around him; wheel with shift to push in or pull out. Travel and look are
    independent, which is the whole difference. */
-const VIEW = { yaw: 0, pitch: 0.16, dist: 620, tYaw: 0, tPitch: 0.16, tDist: 620 };
+/* ⚠️ 620 put the camera INSIDE his node cloud — measured by looking at the frame,
+   not by reading the number. His shell is r=230 and the plasma spikes well past it,
+   so the lens was among the points. 1150 is where he reads as a body you are
+   looking AT rather than a fog you are inside. */
+const VIEW = { yaw: 0, pitch: 0.16, dist: 1150, tYaw: 0, tPitch: 0.16, tDist: 1150 };
 const GLANCE = { x: 0, y: 0 };   // additive, never authoritative
 let dragging = false, lastX = 0, lastY = 0;
 
@@ -1567,6 +1729,9 @@ addEventListener('wheel', e => {
   if (!e.shiftKey) return;
   VIEW.tDist = Math.max(180, Math.min(2600, VIEW.tDist + e.deltaY * 0.9));
 }, { passive: true });
+
+buildOrbiters();  // controls become bodies, not a dock
+buildSigns();     // content becomes part of the place, not a layer on top of it
 
 /* open on the sky, then glide down into the world — one continuous move, no cut */
 NAVG.prog = 0; NAVG.target = 0.055;
