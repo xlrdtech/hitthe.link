@@ -5423,6 +5423,12 @@ window.addEventListener('beforeunload', stopListening);
   // it is labelled honestly instead of silently deleted or silently failing.
   // George + Daniel are the working British narrators in his own account.
   const VOICES = [
+    // FREE RAIL, FIRST IN THE ROW (qi 2026-08-17 07:51: "if you keep AVA as an option,
+    // we can still use it whenever we run out of credits" + "it never got added to the
+    // menu"). Ava was ALREADY the automatic fallback whenever ElevenLabs non-200s —
+    // what was missing was the ability to CHOOSE her before that happens.
+    // Costs ZERO ElevenLabs characters. Measured 2026-08-17: 19,361 of 238,222 left.
+    { id: 'edge:ava', name: 'Ava · FREE', free: true },
     { id: '1cxc5c3E9K6F1wlqOJGV', name: 'Emily · Whisper' },
     // qi 2026-08-10: "Sir Laurence reminds me Alan Watts and Napoleon Hill" — that
     // mid-century philosopher-orator register, not merely a British accent. These four
@@ -5638,7 +5644,10 @@ window.addEventListener('beforeunload', stopListening);
         // the swap did not take — say so instead of playing a sample that lies.
         if (j && j.voice_id && j.voice_id !== v.id) throw new Error('server kept ' + nameOf(j.voice_id));
         if (!a) return;
-        a.src = AVA_TTS_URL + '?text=' + encodeURIComponent(sample) + '&engine=eleven&t=' + Date.now();
+        // The sample must render on the SAME engine the pick just selected, or Ava
+        // would preview in an ElevenLabs voice and burn credits to demo the free one.
+        a.src = AVA_TTS_URL + '?text=' + encodeURIComponent(sample)
+              + '&engine=' + (v.free ? 'edge' : 'eleven') + '&t=' + Date.now();
         a.play().catch(() => {});
       })
       .catch((e) => { failPill('✕ ' + (e && e.message ? e.message : 'swap failed')); });
