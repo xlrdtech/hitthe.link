@@ -2676,7 +2676,13 @@ function attachBubbleActions(bubbleEl, text) {
     a.onplaying = () => { playBtn.textContent = '❙❙ PLAYING'; };
     a.onended = reset;
     a.onerror = () => { playBtn.textContent = '⚠ AUDIO'; setTimeout(reset, 2400); };
-    a.src = AVA_TTS_URL + '?text=' + encodeURIComponent(text) + '&t=' + Date.now();
+    // engine=eleven REQUIRED (qi 2026-08-17). omnimind.js:3491-3497 reads the
+    // `engine` param on GET only and sets wantVoicebox/wantEleven from it; with no
+    // param BOTH are false and the handler falls through to the edge-tts Ava block
+    // at :3736. That is why every voice pick sounded identical — "its all coming
+    // through as Edge TTS AVA instead of 11 labs". voice.id was read correctly the
+    // whole time (:3619) and then discarded at the :3624 gate.
+    a.src = AVA_TTS_URL + '?text=' + encodeURIComponent(text) + '&engine=eleven&t=' + Date.now();
     a.play().catch((err) => {
       // NotAllowedError = the element is not unlocked on this device yet; anything
       // else is a real transport/decode fault. Both must be SEEN, never swallowed.
@@ -4786,7 +4792,7 @@ function _avaSpeakDevice(clip, genAtStart) {
       _avaDrain();
     };
     a.onerror = () => { _toSpeech(); };   // primary <audio> failed again -> guaranteed device voice
-    a.src = AVA_TTS_URL + '?text=' + encodeURIComponent(String(clip));
+    a.src = AVA_TTS_URL + '?text=' + encodeURIComponent(String(clip)) + '&engine=eleven';
     const _go = () => {
       a.oncanplay = null;
       if (_done) return;
@@ -4894,7 +4900,10 @@ function _avaDrain() {
   // Fetch the MP3, decode via AudioContext, play through AudioBufferSourceNode.
   // Falls back to <audio> element if Web Audio not available.
   _avaStatus = 'fetching'; _renderAvaPill();
-  const url = AVA_TTS_URL + '?text=' + encodeURIComponent(clip);
+  // THE speaking path — every reply qi hears comes through here, so this is the
+  // one that actually had to carry `engine`. Without it omnimind fell through to
+  // edge-tts Ava on EVERY utterance regardless of the voice picker (see :2679).
+  const url = AVA_TTS_URL + '?text=' + encodeURIComponent(clip) + '&engine=eleven';
   // WEBAUDIO DISABLED 2026-06-06 (qi): decodeAudioData reliably FAILS on the edge-tts
   // MPEG-2 layer-III MP3, so this path always threw "Decoding failed -> device-tts"
   // and only THEN fell through to the good voice — alarming log + wasted latency.
@@ -5629,7 +5638,7 @@ window.addEventListener('beforeunload', stopListening);
         // the swap did not take — say so instead of playing a sample that lies.
         if (j && j.voice_id && j.voice_id !== v.id) throw new Error('server kept ' + nameOf(j.voice_id));
         if (!a) return;
-        a.src = AVA_TTS_URL + '?text=' + encodeURIComponent(sample) + '&t=' + Date.now();
+        a.src = AVA_TTS_URL + '?text=' + encodeURIComponent(sample) + '&engine=eleven&t=' + Date.now();
         a.play().catch(() => {});
       })
       .catch((e) => { failPill('✕ ' + (e && e.message ? e.message : 'swap failed')); });
