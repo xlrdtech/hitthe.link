@@ -3506,14 +3506,31 @@ function renderEvent(d) {
       const _clean = String(txt).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
       try { appendEventItem('step', _clean.slice(0, 600), d.ts); } catch (_) {}
       try { if (window._erReveal) window._erReveal(); } catch (_) {}
-      // qi 2026-08-14 23:30 / 2026-08-15 00:17: the TUI stream also renders inline as a
-      // COLLAPSED obsidian-glass bubble. This is ADDITIVE — appendEventItem above still
-      // files the rail's copy first, so the 2026-07-22 background-lane routing is intact
-      // and this cannot lose a step even if the bubble throws. The 07-22 objection was
-      // full-size bubbles flooding the feed; a one-line clamp is the answer to that, not
-      // a reversal of it. See the .tui-step rule for the full reconciliation.
-      try { appendTuiStep('step', _clean.slice(0, 600), d.ts); } catch (_) {}
-      return;   // rail + collapsed inline bubble — never a full conversational bubble
+      // ── STEPS ARE FRAGMENTS, AND FRAGMENTS DO NOT BELONG IN HIS FEED ──────────
+      // qi 2026-08-17 03:2x: "thats why i have been telling the steps a unneccesary
+      // because the verbatim tui stream... the opposite of the fragments."
+      //
+      // This SUPERSEDES the 2026-08-14 23:30 / 08-15 00:17 line that used to live here
+      // ("collapsed obsidian glass tui stream chat bubbles"), which is why that decree
+      // is quoted rather than deleted. What he asked for then was the TUI STREAM —
+      // verbatim and continuous. What this code actually shipped was one clamped bubble
+      // per tool call: `▸ STEP Bash · ok · 125ms`, `▸ STEP Read · accept`. Those are
+      // FRAGMENTS — the exact opposite of a stream — and they interleave with his own
+      // sentences. His 03:13 screenshots show them stacked three-deep directly above his
+      // message, which is the whole complaint.
+      //
+      // SCRUB, NEVER DROP (cmd 40b / the 08-16 vault entry): appendEventItem() above has
+      // ALREADY filed this step in the Operator·Firehose rail, and _erReveal() auto-opens
+      // that rail on the first step. So every step stays visible, one glance away, in its
+      // own lane — nothing is lost, nothing is behind a click, and the 2026-06-22 decree
+      // that steps stay VISIBLE is still honored. Only the inline COPY in the
+      // conversation is gone.
+      //
+      // If the verbatim stream is wanted back inline, it comes back as ONE continuous
+      // stream element, not N bubbles. appendTuiStep + the .firehose.tui CSS are left in
+      // place for exactly that — this is one call site, not a demolition.
+      return;   // rail ONLY — his conversation feed carries conversation
+      // eslint-disable-next-line no-unreachable
     }
   }
   // qi 2026-07-22: raw command/tool EGRESS (egress:cmd — Xen's own bash/tool calls,
