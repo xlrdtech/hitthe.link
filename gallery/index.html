@@ -522,7 +522,10 @@ const pool = new THREE.Mesh(
 );
 pool.rotation.x = -Math.PI / 2; pool.position.y = FLOOR_Y + 2; WORLD.add(pool);
 
-/* survey rings + spokes — scale reference, so travel is legible as distance */
+/* survey rings + spokes — scale reference, so travel is legible as distance.
+   Named at outer scope: altitude fades these out, and a material you cannot reach is a
+   material you cannot change (third time this lesson has come up today). */
+let rings;
 {
   const seg = 168, v = [];
   for (let r = 460; r <= 6000; r += 380) {
@@ -537,7 +540,7 @@ pool.rotation.x = -Math.PI / 2; pool.position.y = FLOOR_Y + 2; WORLD.add(pool);
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
-  const rings = new THREE.LineSegments(g, new THREE.LineBasicMaterial({
+  rings = new THREE.LineSegments(g, new THREE.LineBasicMaterial({
     color: 0x2fffa0, transparent: true, opacity: 0.070,
     blending: THREE.AdditiveBlending, depthWrite: false }));
   rings.position.y = FLOOR_Y + 3; WORLD.add(rings);
@@ -601,12 +604,13 @@ const MONO_MAT = new THREE.MeshStandardMaterial({ color: 0x030f0b, metalness: 0.
    z=-1900, which is only ~1900 from origin — near enough to sit between the camera
    and his core on half the shots and veil him. Haze belongs in the distance; haze in
    front of the subject is just a scrim. */
+const HAZE = [];
 {
   const hz = radialTex('rgba(18,86,52,0.09)', 'rgba(0,0,0,0)');
   for (const z of [-3800, -6200, -8600]) {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(26000, 6400),
       new THREE.MeshBasicMaterial({ map: hz, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-    m.position.set(0, FLOOR_Y + 1500, z); WORLD.add(m);
+    m.position.set(0, FLOOR_Y + 1500, z); WORLD.add(m); HAZE.push(m);
   }
 }
 
@@ -1144,17 +1148,31 @@ if (typeof world !== 'undefined' && world) TRAVEL.add(world);   // dust travels 
 /* THE ROUTE. One continuous curve: high sky entry, descending into the deck, then
    a long forward run weaving between the monoliths. Waypoints are spaced so each
    portal sits ON the path — you pass through, you do not arrive at. */
+/* qi 12:32:26 — "I know we need to go to space."
+   The route used to hug the deck the whole way, so there was nowhere else to BE. It
+   now climbs out of the world and comes back: deck level, then a long ascent, open
+   space at the top of the loop, then a descent home. Because the curve is closed the
+   cycle repeats forever, so space is a place you keep returning to rather than an
+   ending. ALTITUDE is what the world reads off — see spaceMix() below. */
 const ROUTE = new THREE.CatmullRomCurve3([
-  new THREE.Vector3(    0,  1750,  2600),
-  new THREE.Vector3(  240,   760,  1500),
-  new THREE.Vector3( -300,   240,   420),
-  new THREE.Vector3(  420,    60,  -760),
-  new THREE.Vector3( -560,   140, -1900),
-  new THREE.Vector3(  520,   -60, -3000),
-  new THREE.Vector3( -420,   180, -4150),
-  new THREE.Vector3(  260,    80, -5300),
-  new THREE.Vector3(    0,   420, -6500),
+  new THREE.Vector3(    0,   760,  2600),   // arrival, above the deck
+  new THREE.Vector3(  240,   240,  1500),   // down onto it
+  new THREE.Vector3( -300,   140,   420),
+  new THREE.Vector3(  420,    60,  -760),   // lowest — weaving the monoliths
+  new THREE.Vector3( -560,   420, -1900),   // lifting
+  new THREE.Vector3(  520,  1900, -3000),   // climbing out
+  new THREE.Vector3( -420,  4600, -4150),   // SPACE
+  new THREE.Vector3(  260,  6200, -5300),   // deep space, top of the loop
+  new THREE.Vector3(  900,  3200, -6500),   // falling back
+  new THREE.Vector3(    0,  1500, -5200),   // re-entry, closing to the start
 ], true, 'catmullrom', 0.5);
+
+/* 0 on the deck, 1 in open space. Everything that makes the place a PLACE fades on
+   this: at altitude the floor, the ridges and the towers are simply not there, and
+   what remains is his dust — which is already a star field, 2500 points at r 1200-3200,
+   and now travels with him. Nothing new had to be invented to make space; the world
+   just has to get out of the way. */
+const spaceMix = y => Math.max(0, Math.min(1, (y - 900) / 3400));
 
 /* Portal rings ON the route, one per destination. Flying through one is what
    "arriving" means here — there is no cut, only passage. */
@@ -1389,6 +1407,19 @@ function travelTick() {
   const t = wrap(NAVG.prog);     // endless: t cycles, the traveller never stops
   ROUTE.getPointAt(t, _av);
   applyTone(t);                  // the dimension you are in is a function of where you are
+
+  /* ── SPACE. The ground world dissolves with altitude, so leaving the deck is real
+        rather than decorative, and the fog thins out to vacuum. */
+  const sm = spaceMix(_av.y);
+  floor.visible = sm < 0.98;
+  floor.material.opacity = 1 - sm; floor.material.transparent = sm > 0.01;
+  pool.material.opacity  = 0.09 * (1 - sm);
+  rings.material.opacity = 0.070 * (1 - sm);
+  MONO_MAT.opacity = 1 - sm; MONO_MAT.transparent = sm > 0.01;
+  for (const r of RIDGES) { r.material.opacity = 1 - sm; r.material.transparent = sm > 0.01; }
+  for (const h of HAZE)   h.material.opacity = 1 - sm;
+  scene.fog.density = 0.000105 * (1 - sm * 0.94);   // vacuum does not scatter
+  if (world) world.material.uniforms.t.value = S.time;   // his stars keep breathing
   TRAVEL.position.copy(_av);                              // the avatar rides the route
 
   /* the camera ORBITS him on your yaw/pitch while both travel the route. Smoothed so
