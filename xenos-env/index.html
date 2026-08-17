@@ -174,7 +174,7 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, MOBILE ? 2 : 2.5));
 renderer.setSize(innerWidth, innerHeight);
 renderer.outputColorSpace    = THREE.SRGBColorSpace;
 renderer.toneMapping         = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.74;
+renderer.toneMappingExposure = 0.52;   // was 0.74 (xt/16's value) — measured blowout, see LIGHTS
 
 const scene  = new THREE.Scene();
 scene.background = C.bg;
@@ -213,17 +213,26 @@ pmrem.compileEquirectangularShader();
    3. LIGHTS — seven, same shape as xt/16's rig. Value range must span
       near-black to near-white or nothing else in the frame can land.
    ═════════════════════════════════════════════════════════════════════════ */
-const sun = new THREE.DirectionalLight(C.sun, 3.05);
+/* ⚠️ MEASURED FAILURE, 2026-08-17 09:01 — first pass copied xt/16's light INTENSITIES
+   without copying its scene SCALE, and a 78-intensity PointLight sitting INSIDE a
+   transmissive shell blew the entire frame to white-green mush. Screenshot showed no
+   near-black anywhere and the core invisible inside its own glare. That is the skill's
+   trap 3 exactly: a hot interior erases structure instead of lighting seams.
+   Rule learned: light intensity is not portable between scenes — only the RATIOS are.
+   The core must be the ONLY bright thing, and everything else falls to near-black. */
+const sun = new THREE.DirectionalLight(C.sun, 1.35);
 sun.position.set(-6.5, 11.0, 5.2);
 scene.add(sun);
-scene.add(new THREE.HemisphereLight(C.sky, C.gnd, 0.52));
-scene.add(new THREE.AmbientLight(0xb9c6d6, 0.10));
-const rim = new THREE.DirectionalLight(0xc6d4e4, 0.50);
+scene.add(new THREE.HemisphereLight(C.sky, C.gnd, 0.16));
+scene.add(new THREE.AmbientLight(0x8fa8b8, 0.045));
+const rim = new THREE.DirectionalLight(0xc6d4e4, 0.42);
 rim.position.set(7.0, 3.4, -8.0);
 scene.add(rim);
-const coreLight = new THREE.PointLight(0x9effc9, 78, 30, 2); coreLight.position.set(0,2.3,0);
-const fill1     = new THREE.PointLight(0x3cff96, 32, 22, 2); fill1.position.set(-4.2,1.1,3.0);
-const fill2     = new THREE.PointLight(0xbfe0ff, 26, 12, 2); fill2.position.set(4.6,0.7,-2.4);
+/* core glow: small radius, steep decay — it must pool on the nearest blocks, not
+   flood the shell. distance 9 keeps it from reaching the far wall at all. */
+const coreLight = new THREE.PointLight(0x9effc9, 9.5, 9.0, 2.2); coreLight.position.set(0,2.3,0);
+const fill1     = new THREE.PointLight(0x3cff96, 3.2, 10, 2);   fill1.position.set(-4.2,1.1,3.0);
+const fill2     = new THREE.PointLight(0xbfe0ff, 2.4, 9, 2);    fill2.position.set(4.6,0.7,-2.4);
 scene.add(coreLight, fill1, fill2);
 
 /* ═════════════════════════════════════════════════════════════════════════
@@ -279,17 +288,25 @@ for(const R of RIDGES){
         · a superellipse profile (n≈3) holds radius through the lower half
           then rolls to a flat crown — a sin θ taper gives a beehive cone
    ═════════════════════════════════════════════════════════════════════════ */
-const R_MAX = 6.4, H_MAX = 7.4, COURSES = MOBILE ? 12 : 17;
+/* Sized FROM the framing bar, not by eye. FOV 46° → half-angle 23°, core radius 1.5.
+   Apparent width fraction ≈ 2r / (2·d·tan23°) = 3/(0.85·d). For the 0.45 target that
+   puts the hero camera at d ≈ 7.8–8.2, so the shell MUST be smaller than that or the
+   camera sits inside it — which is precisely what the first screenshot showed. */
+const R_MAX = 4.6, H_MAX = 6.0, COURSES = MOBILE ? 11 : 14;
 function superRadius(t){                       // t: 0 base → 1 crown
   const n = 3.0;
   return R_MAX * Math.pow(Math.max(0, 1 - Math.pow(t, n)), 1/n);
 }
+/* Blocks are DARK glass, not bright glass. Measured: a 0xdff3ea body at transmission
+   0.82 passed the core glow straight through and every block became a light source, so
+   the structure vanished. Dark body + short attenuation distance means light DIES inside
+   the block and only the EDGE catches it — which is what makes a seam read as a seam. */
 const blockMat = new THREE.MeshPhysicalMaterial({
-  color:0xdff3ea, roughness:0.20, metalness:0.0,
-  transmission:0.82, thickness:1.55, ior:1.31,
-  attenuationColor:C.atten, attenuationDistance:4.2,
-  clearcoat:0.55, clearcoatRoughness:0.28, envMapIntensity:0.95,
-  side:THREE.DoubleSide
+  color:0x2c4a3e, roughness:0.26, metalness:0.0,
+  transmission:0.42, thickness:2.6, ior:1.31,
+  attenuationColor:C.atten, attenuationDistance:0.85,
+  clearcoat:0.62, clearcoatRoughness:0.22, envMapIntensity:0.55,
+  side:THREE.FrontSide
 });
 const shell = new THREE.Group();
 let jointCount = 0;
@@ -411,8 +428,8 @@ for(let i=0;i<NP;i++){
 }
 pg.setAttribute('position', new THREE.BufferAttribute(pp,3));
 const points = new THREE.Points(pg, new THREE.PointsMaterial({
-  size:0.075, map:sprite, alphaTest:0.02, transparent:true, depthWrite:false,
-  color:0xa8ffd2, opacity:0.62, sizeAttenuation:true, blending:THREE.AdditiveBlending
+  size:0.055, map:sprite, alphaTest:0.02, transparent:true, depthWrite:false,
+  color:0x8fe6bd, opacity:0.26, sizeAttenuation:true, blending:THREE.AdditiveBlending
 }));
 scene.add(points);
 
@@ -422,8 +439,11 @@ scene.add(points);
    ═════════════════════════════════════════════════════════════════════════ */
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
+/* threshold 0.94 (was 0.86): only the core itself is above it. At 0.86 the lit block
+   faces qualified too, and bloom merged 1086 thin joints into one filled blob — the
+   skill's exact warning that raising glow fills the gaps instead of lighting them. */
 const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight),
-                                  MOBILE?0.62:0.74, 0.72, 0.86);
+                                  MOBILE?0.30:0.36, 0.58, 0.94);
 composer.addPass(bloom);
 
 /* ═════════════════════════════════════════════════════════════════════════
@@ -444,25 +464,27 @@ composer.addPass(bloom);
       only IDENTITY (copy + palette + links) swaps. See IDENTITY below.
    ═════════════════════════════════════════════════════════════════════════ */
 const SHOTS = [
-  { id:'SKY',   cam:[0.0, 20.0, 0.9],  look:[0,2.2,0], freeze:0.00,
+  // SKY is deliberately distant — it is the descent, not a hero frame.
+  { id:'SKY',   cam:[0.0, 17.0, 0.8],  look:[0,2.2,0], freeze:0.00,
     title:'XENOS',        body:'The avatar, the voice and the graph — one surface.',
     items:[{t:'Enter',href:'/xenos-plasma/'}] },
-  { id:'FRONT', cam:[0.0,  2.4, 9.6],  look:[0,2.3,0], freeze:0.55,
+  // every framed shot sits at d≈8 from the core: 0.45 of frame width by arithmetic.
+  { id:'FRONT', cam:[0.0,  2.5, 8.1],  look:[0,2.25,0], freeze:0.55,
     title:'XLRD',         body:'The system: dev face, professional face, one brand.',
     items:[{t:'XLRD tech',href:'/xlrd-tech/'},{t:'XLRD.org',href:'/xlrd-org/'}] },
-  { id:'LEFT',  cam:[-8.2, 1.6, 4.2],  look:[0,2.1,0], freeze:0.55,
+  { id:'LEFT',  cam:[-7.7, 2.0, 2.4],  look:[0,2.25,0], freeze:0.55,
     title:'Executive Leverage', body:'The professional representation of the same system.',
     items:[{t:'Open',href:'/selfexec/'}] },
-  { id:'BEHIND',cam:[0.4,  3.2,-8.8],  look:[0,2.2,0], freeze:0.6,
+  { id:'BEHIND',cam:[0.6,  2.9,-7.8],  look:[0,2.25,0], freeze:0.6,
     title:'XEN',          body:'The voice. One mouth per origin, guaranteed by construction.',
     items:[{t:'XEN',href:'/xen/'},{t:'VVSVEI',href:'/vvsvei/'}] },
-  { id:'RIGHT', cam:[8.6,  1.2, 3.4],  look:[0,2.0,0], freeze:0.55,
+  { id:'RIGHT', cam:[7.9,  1.9, 2.0],  look:[0,2.25,0], freeze:0.55,
     title:'XOS',          body:'The operating surface. Mobile first, always.',
     items:[{t:'XOS',href:'/xos/'}] },
-  { id:'LOW',   cam:[2.2, -0.6, 5.2],  look:[0,2.6,0], freeze:0.5,
+  { id:'LOW',   cam:[3.4, -0.4, 7.2],  look:[0,2.7,0],  freeze:0.5,
     title:'The standard',  body:'Everything here is built to xt/16 or better.',
     items:[{t:'xt/16',href:'/xt/16/'}] },
-  { id:'WIDE',  cam:[0.0,  6.8,16.5],  look:[0,1.6,0], freeze:0.0,
+  { id:'WIDE',  cam:[0.0,  5.6,14.0],  look:[0,1.8,0],  freeze:0.0,
     title:'hitthe.link',  body:'The portfolio and the fast lane — excellence and consistency.',
     items:[{t:'All scopes',href:'/'}] },
 ];
@@ -647,7 +669,8 @@ addEventListener('resize', ()=>{
 /* expose for the CDP verification loop — a scene that cannot be measured
    from outside cannot be gated, and an ungated scene is an opinion. */
 window.__xenos = {scene, camera, renderer, core, coreUniforms, jointCount,
-                  ready:false, routes:ROUTES.map(r=>r.id)};
+                  ready:false, shots:SHOTS.map(s=>s.id), identity:IDK,
+                  shotIndex:()=>shotIdx, timeScale:()=>timeScale};
 
 renderer.compile(scene, camera);
 requestAnimationFrame(()=>{ reveal(); frame(); window.__xenos.ready=true; });
