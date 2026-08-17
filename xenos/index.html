@@ -255,14 +255,31 @@ fetch('./xen-graph.json').then(r=>r.json()).then(g=>{
         if(r>.5) discard; gl_FragColor=vec4(.46,1.,.56, exp(-r*r*8.)*vo);}`}));
     ophanim.add(wisp); }
 
-  /* AURA REMOVED — qi 2026-08-17: "remove the smoke effect... its ugly and unrealistic".
-     It was 1,400 points at radius 250-480 with gl_PointSize 34-130px, pale (.74,.95,.83),
-     additive. Stacked across the whole viewport it read as grey smoke and sat BETWEEN the
-     camera and the core, so nothing could ever clip to white.
-     ⛔ Do not reinstate. His visual language (vault: qi-visual-language-one-blown-source) is
-     near-total black + ONE blown source; form defined by WHERE THE LIGHT STOPS. A diffuse
-     mid-grey shell is the exact opposite and cancels the blowout.
-     The `if(aura)` guards in the animate loop leave it undefined safely. */
+  /* ghastly aura */
+  { const A=1400,ap=new Float32Array(A*3),as=new Float32Array(A),ao=new Float32Array(A);
+    for(let i=0;i<A;i++){ const r=250+Math.pow(Math.random(),.55)*230,th=Math.random()*6.283,pp=Math.acos(2*Math.random()-1);
+      ap[i*3]=r*Math.sin(pp)*Math.cos(th);ap[i*3+1]=r*Math.sin(pp)*Math.sin(th);ap[i*3+2]=r*Math.cos(pp);
+      as[i]=34+Math.random()*96; ao[i]=Math.random()*6.283; }
+    const ag=new THREE.BufferGeometry();
+    ag.setAttribute('position',new THREE.BufferAttribute(ap,3));
+    ag.setAttribute('asize',new THREE.BufferAttribute(as,1));
+    ag.setAttribute('aph',new THREE.BufferAttribute(ao,1));
+    aura=new THREE.Points(ag,new THREE.ShaderMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+      uniforms:{t:{value:0},e:{value:0}},
+      vertexShader:`attribute float asize; attribute float aph; uniform float t; uniform float e; varying float vo;
+        void main(){ vec3 p=position; float r=length(p);
+          vec3 n=p/r;
+          vec3 ax=normalize(vec3(sin(aph*1.7),cos(aph*2.3),sin(aph*.9)));
+          vec3 tang=normalize(cross(n,ax));
+          float sp=t*(.34+.5*e)+aph;
+          p+=tang*sin(sp)*46.+cross(n,tang)*cos(sp*.83)*38.;
+          p*=1.+.04*sin(t*.5+aph)+e*.05;
+          vec4 mv=modelViewMatrix*vec4(p,1.);
+          vo=(.030+.038*e)*(.40+.60*(.5+.5*sin(sp*.7)));
+          gl_PointSize=asize*(340./-mv.z); gl_Position=projectionMatrix*mv; }`,
+      fragmentShader:`varying float vo; void main(){vec2 d=gl_PointCoord-.5; float r=length(d);
+        if(r>.5) discard; gl_FragColor=vec4(.74,.95,.83, exp(-r*r*5.2)*vo);}`}));
+    ophanim.add(aura); }
 
   /* TELEKINESIS — a filament it extends toward what it is reaching for */
   { const rg=new THREE.BufferGeometry();
