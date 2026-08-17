@@ -205,7 +205,7 @@
 
 <div id="panels"></div>
 <nav id="routes"></nav>
-<div id="hint">IT COMES TO YOU · SCROLL TO STEER · DRAG TO LOOK<b></b></div>
+<div id="hint">SCROLL TO TRAVEL<b></b></div>
 <div id="h-fps" style="position:fixed;left:-9999px;top:-9999px">0</div>
 <script src="https://unpkg.com/gsap@3.13.0/dist/gsap.min.js"></script>
 <script type="importmap">
@@ -1369,21 +1369,6 @@ function go(i) {
 const _cp = new THREE.Vector3(), _cl = new THREE.Vector3(), _av = new THREE.Vector3();
 function travelTick() {
   for (const k in HELD) advance(HELD[k] * 0.0038);       // held key = continuous motion
-
-  /* ⭐ THE SITE VISITS THE HUMAN — qi 12:30, reversing the roles:
-     "the human doesn't visit the site, the site visits the human, basically. So it's
-      reversing the roles." / "the users need to be traveling through it themselves."
-     THE TELL THAT I HAD IT BACKWARDS: nothing moved until he scrolled. A world that
-     sits inert until acted upon is a place being VISITED — the exact relationship he
-     is rejecting. So the world now arrives on its own. It drifts toward him
-     continuously, presenting each dimension in turn, and his scroll becomes STEERING
-     rather than the engine: push to hurry it, pull to hold it back, do nothing and it
-     still comes to you.
-     The drift eases off while he is actively steering, so it never fights his hand —
-     it resumes the moment he lets go. That is attendance, not autoplay. */
-  const steering = Math.abs(NAVG.target - NAVG.prog) > 0.004;
-  if (!steering) NAVG.target += 0.00058;                 // it comes to you, unbidden
-
   NAVG.prog += (NAVG.target - NAVG.prog) * 0.045;         // the chase — never a jump
 
   const t = wrap(NAVG.prog);     // endless: t cycles, the traveller never stops
@@ -1391,23 +1376,11 @@ function travelTick() {
   applyTone(t);                  // the dimension you are in is a function of where you are
   TRAVEL.position.copy(_av);                              // the avatar rides the route
 
-  /* the camera ORBITS him on your yaw/pitch while both travel the route. Smoothed so
-     a flick of the pointer glides instead of snapping — you are looking around a place,
-     not cutting to an angle. */
-  VIEW.yaw   += (VIEW.tYaw   - VIEW.yaw)   * 0.075;
-  VIEW.pitch += (VIEW.tPitch - VIEW.pitch) * 0.075;
-  VIEW.dist  += (VIEW.tDist  - VIEW.dist)  * 0.06;
-
-  /* base heading follows the direction of travel, so "forward" still means forward
-     down the route — your yaw is a turn of the head RELATIVE to where you are going */
-  ROUTE.getTangentAt(t, _cl);
-  const head = Math.atan2(_cl.x, _cl.z);
-  const yaw  = head + Math.PI + VIEW.yaw;
-  const cp   = Math.cos(VIEW.pitch), sp = Math.sin(VIEW.pitch);
-  CAM.x = _av.x + Math.sin(yaw) * VIEW.dist * cp;
-  CAM.y = _av.y + VIEW.dist * sp + 90;
-  CAM.z = _av.z + Math.cos(yaw) * VIEW.dist * cp;
-  LOOK.x = _av.x; LOOK.y = _av.y; LOOK.z = _av.z;
+  /* camera trails him and looks at him, so the world streams past the frame */
+  const tb = wrap(t - 0.055);    // trailing camera also wraps — no seam at the loop
+  ROUTE.getPointAt(tb, _cp);
+  CAM.x = _cp.x + LEAN.x * 0.35; CAM.y = _cp.y + 120 + LEAN.y * 0.3; CAM.z = _cp.z + 430;
+  _cl.copy(_av); LOOK.x = _cl.x; LOOK.y = _cl.y; LOOK.z = _cl.z;
 
   /* portals brighten as you approach and pass through them */
   for (const p of PORTALS) {
@@ -1419,43 +1392,10 @@ function travelTick() {
   updatePanels();
 }
 
-/* ⭐ FREE LOOK — this is what makes it a WORLD instead of a ride.
-   qi 12:29: "it's just not enough 3D rotation, like it can't really — it's NOT A
-   WORLD YET" / "you need to be traveling through it yourself, not traveling
-   for[ward]".
-   Exactly right, and the cause was that the camera sat at ONE fixed offset behind the
-   avatar and always looked straight at him. You could move but you could not turn
-   your head, and a place you cannot look around in is a corridor, not a world.
-   So the camera now ORBITS him on a yaw/pitch you control, at a distance you control,
-   while the pair travels the endless route. Move the pointer to glance; drag to swing
-   right around him; wheel with shift to push in or pull out. Travel and look are
-   independent, which is the whole difference. */
-const VIEW = { yaw: 0, pitch: 0.16, dist: 620, tYaw: 0, tPitch: 0.16, tDist: 620 };
-let dragging = false, lastX = 0, lastY = 0;
-
+/* the pointer is the yarn: remember it so the camera leans the way he leans */
 addEventListener('pointermove', e => {
-  if (dragging) {
-    VIEW.tYaw   -= (e.clientX - lastX) * 0.005;
-    VIEW.tPitch -= (e.clientY - lastY) * 0.004;
-    lastX = e.clientX; lastY = e.clientY;
-  } else {
-    /* glance: pointer position gives a gentle look-around without any click */
-    VIEW.tYaw   = (e.clientX / innerWidth  * 2 - 1) * 0.55;
-    VIEW.tPitch = 0.16 - (e.clientY / innerHeight * 2 - 1) * 0.30;
-  }
-  VIEW.tPitch = Math.max(-1.25, Math.min(1.25, VIEW.tPitch));
-  /* his own attractor still follows the pointer — XENOS keeps chasing the mouse */
   LEAN.x = (e.clientX / innerWidth * 2 - 1) * 160;
   LEAN.y = -(e.clientY / innerHeight * 2 - 1) * 90;
-}, { passive: true });
-
-addEventListener('pointerdown', e => { dragging = true; lastX = e.clientX; lastY = e.clientY; }, { passive: true });
-addEventListener('pointerup',   () => { dragging = false; }, { passive: true });
-addEventListener('pointercancel', () => { dragging = false; }, { passive: true });
-/* shift+wheel pushes in and pulls out instead of travelling */
-addEventListener('wheel', e => {
-  if (!e.shiftKey) return;
-  VIEW.tDist = Math.max(180, Math.min(2600, VIEW.tDist + e.deltaY * 0.9));
 }, { passive: true });
 
 /* open on the sky, then glide down into the world — one continuous move, no cut */
