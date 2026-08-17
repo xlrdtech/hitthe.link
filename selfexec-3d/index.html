@@ -578,16 +578,19 @@ const IDENTITIES = {
    Locked identity: no ?id= override, so the page cannot render as another brand.
    Copy set from his own scope map. */
 const IDK = 'selfexec';
+const _ORIG = SHOTS.slice();     // snapshot BEFORE clearing — see the note above
 SHOTS.length = 0;
 SHOTS.push(
-  Object.assign({}, SHOTS[0], {title:'SELF EXEC', body:'Enterprise automation and intelligent systems.', items:[{t:'Systems',href:'/xenos-env/'}]}),
-  Object.assign({}, SHOTS[1], {title:'Same tools', body:'A variation of the fast lane — different colour, different vibe, identical toolset.', items:[{t:'hitthe.link',href:'/hittl/'}]}),
-  Object.assign({}, SHOTS[2], {title:'Automation', body:'Rails that run without a human in the loop, because a tap is a failure.', items:[{t:'Live',href:'/now/'}]}),
-  Object.assign({}, SHOTS[3], {title:'Intelligence', body:'Voice in, action out. The graph underneath both.', items:[{t:'XENOS',href:'/xenos-plasma/'}]}),
-  Object.assign({}, SHOTS[4], {title:'Standard', body:'xt/16 or better, on every surface.', items:[{t:'The bar',href:'/xt/16/'}]}),
-  Object.assign({}, SHOTS[5], {title:'Proof', body:'Measured artifacts, not status claims.', items:[{t:'Board',href:'/now/'}]}),
-  Object.assign({}, SHOTS[6], {title:'Engage', body:'Scoped, deposit-first, shipped live.', items:[{t:'Start',href:'/'}]})
+  Object.assign({}, _ORIG[0], {title:'SELF EXEC', body:'Enterprise automation and intelligent systems.', items:[{t:'Systems',href:'/xenos-env/'}]}),
+  Object.assign({}, _ORIG[1], {title:'Same tools', body:'A variation of the fast lane — different colour, different vibe, identical toolset.', items:[{t:'hitthe.link',href:'/hittl/'}]}),
+  Object.assign({}, _ORIG[2], {title:'Automation', body:'Rails that run without a human in the loop, because a tap is a failure.', items:[{t:'Live',href:'/now/'}]}),
+  Object.assign({}, _ORIG[3], {title:'Intelligence', body:'Voice in, action out. The graph underneath both.', items:[{t:'XENOS',href:'/xenos-plasma/'}]}),
+  Object.assign({}, _ORIG[4], {title:'Standard', body:'xt/16 or better, on every surface.', items:[{t:'The bar',href:'/xt/16/'}]}),
+  Object.assign({}, _ORIG[5], {title:'Proof', body:'Measured artifacts, not status claims.', items:[{t:'Board',href:'/now/'}]}),
+  Object.assign({}, _ORIG[6], {title:'Engage', body:'Scoped, deposit-first, shipped live.', items:[{t:'Start',href:'/'}]})
 );
+/* fail loudly rather than render a dead page: every shot must keep its camera. */
+for(const s of SHOTS){ if(!s.cam || !s.look) throw new Error('shot lost its camera — build bug'); }
 const IDENT = IDENTITIES[IDK] || IDENTITIES.xlrd;
 document.title = IDENT.name === 'XENOS' ? 'XENOS' : IDENT.name + ' — XENOS';
 C.accent.setHex(IDENT.accent);

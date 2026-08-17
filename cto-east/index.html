@@ -578,16 +578,19 @@ const IDENTITIES = {
    Locked identity: no ?id= override, so the page cannot render as another brand.
    AWAITING HIS REFERENCE: qi has a reference for CTO East + East Allen that has not been handed over. Structure is built; the personal direction is HIS to set. Do not invent it. */
 const IDK = 'ctoeast';
+const _ORIG = SHOTS.slice();     // snapshot BEFORE clearing — see the note above
 SHOTS.length = 0;
 SHOTS.push(
-  Object.assign({}, SHOTS[0], {title:'CTO EAST', body:'The real me, corporate.', items:[{t:'The work',href:'/xlrd-tech/'}]}),
-  Object.assign({}, SHOTS[1], {title:'Role', body:'Fractional CTO. The technical judgement, not the headcount.', items:[{t:'Capability',href:'/xenos-env/'}]}),
-  Object.assign({}, SHOTS[2], {title:'Track', body:'Systems that run themselves, built for operators who cannot afford downtime.', items:[{t:'Live',href:'/now/'}]}),
-  Object.assign({}, SHOTS[3], {title:'Method', body:'Verify before claiming. Measure before shipping. Nothing unseen is called done.', items:[{t:'Standard',href:'/xt/16/'}]}),
-  Object.assign({}, SHOTS[4], {title:'Range', body:'Voice, 3D, graph, telephony, automation rails.', items:[{t:'XENOS',href:'/xenos-plasma/'}]}),
-  Object.assign({}, SHOTS[5], {title:'East Allen', body:'The same person, without the title.', items:[{t:'East Allen',href:'/east-allen/'}]}),
-  Object.assign({}, SHOTS[6], {title:'Engage', body:'One conversation.', items:[{t:'Contact',href:'/'}]})
+  Object.assign({}, _ORIG[0], {title:'CTO EAST', body:'The real me, corporate.', items:[{t:'The work',href:'/xlrd-tech/'}]}),
+  Object.assign({}, _ORIG[1], {title:'Role', body:'Fractional CTO. The technical judgement, not the headcount.', items:[{t:'Capability',href:'/xenos-env/'}]}),
+  Object.assign({}, _ORIG[2], {title:'Track', body:'Systems that run themselves, built for operators who cannot afford downtime.', items:[{t:'Live',href:'/now/'}]}),
+  Object.assign({}, _ORIG[3], {title:'Method', body:'Verify before claiming. Measure before shipping. Nothing unseen is called done.', items:[{t:'Standard',href:'/xt/16/'}]}),
+  Object.assign({}, _ORIG[4], {title:'Range', body:'Voice, 3D, graph, telephony, automation rails.', items:[{t:'XENOS',href:'/xenos-plasma/'}]}),
+  Object.assign({}, _ORIG[5], {title:'East Allen', body:'The same person, without the title.', items:[{t:'East Allen',href:'/east-allen/'}]}),
+  Object.assign({}, _ORIG[6], {title:'Engage', body:'One conversation.', items:[{t:'Contact',href:'/'}]})
 );
+/* fail loudly rather than render a dead page: every shot must keep its camera. */
+for(const s of SHOTS){ if(!s.cam || !s.look) throw new Error('shot lost its camera — build bug'); }
 const IDENT = IDENTITIES[IDK] || IDENTITIES.xlrd;
 document.title = IDENT.name === 'XENOS' ? 'XENOS' : IDENT.name + ' — XENOS';
 C.accent.setHex(IDENT.accent);

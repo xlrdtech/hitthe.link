@@ -578,16 +578,19 @@ const IDENTITIES = {
    Locked identity: no ?id= override, so the page cannot render as another brand.
    Copy set from his own scope map. */
 const IDK = 'xlrdorg';
+const _ORIG = SHOTS.slice();     // snapshot BEFORE clearing — see the note above
 SHOTS.length = 0;
 SHOTS.push(
-  Object.assign({}, SHOTS[0], {title:'XLRD.ORG', body:'The dev face. Raw, current, and closer to the metal than the polished one.', items:[{t:'Live status',href:'/now/'}]}),
-  Object.assign({}, SHOTS[1], {title:'Live rails', body:'Instant publish off disk. No build queue, no deploy wait. 191 ms measured.', items:[{t:'NOW',href:'/now/'}]}),
-  Object.assign({}, SHOTS[2], {title:'The environment', body:'Scroll-driven camera cuts. The angles are the navigation.', items:[{t:'XENOS env',href:'/xenos-env/'}]}),
-  Object.assign({}, SHOTS[3], {title:'The avatar', body:'Plasma core. Voice-reactive, shader-driven, one object across every surface.', items:[{t:'Core',href:'/xenos-plasma/'}]}),
-  Object.assign({}, SHOTS[4], {title:'The standard', body:'xt/16. A craft level, never a look.', items:[{t:'xt/16',href:'/xt/16/'}]}),
-  Object.assign({}, SHOTS[5], {title:'Instrumentation', body:'Everything measured. Nothing green unless it was proven green.', items:[{t:'Status',href:'/now/'}]}),
-  Object.assign({}, SHOTS[6], {title:'Executive Leverage', body:'The same system, in a suit.', items:[{t:'Professional face',href:'/executive-leverage/'}]})
+  Object.assign({}, _ORIG[0], {title:'XLRD.ORG', body:'The dev face. Raw, current, and closer to the metal than the polished one.', items:[{t:'Live status',href:'/now/'}]}),
+  Object.assign({}, _ORIG[1], {title:'Live rails', body:'Instant publish off disk. No build queue, no deploy wait. 191 ms measured.', items:[{t:'NOW',href:'/now/'}]}),
+  Object.assign({}, _ORIG[2], {title:'The environment', body:'Scroll-driven camera cuts. The angles are the navigation.', items:[{t:'XENOS env',href:'/xenos-env/'}]}),
+  Object.assign({}, _ORIG[3], {title:'The avatar', body:'Plasma core. Voice-reactive, shader-driven, one object across every surface.', items:[{t:'Core',href:'/xenos-plasma/'}]}),
+  Object.assign({}, _ORIG[4], {title:'The standard', body:'xt/16. A craft level, never a look.', items:[{t:'xt/16',href:'/xt/16/'}]}),
+  Object.assign({}, _ORIG[5], {title:'Instrumentation', body:'Everything measured. Nothing green unless it was proven green.', items:[{t:'Status',href:'/now/'}]}),
+  Object.assign({}, _ORIG[6], {title:'Executive Leverage', body:'The same system, in a suit.', items:[{t:'Professional face',href:'/executive-leverage/'}]})
 );
+/* fail loudly rather than render a dead page: every shot must keep its camera. */
+for(const s of SHOTS){ if(!s.cam || !s.look) throw new Error('shot lost its camera — build bug'); }
 const IDENT = IDENTITIES[IDK] || IDENTITIES.xlrd;
 document.title = IDENT.name === 'XENOS' ? 'XENOS' : IDENT.name + ' — XENOS';
 C.accent.setHex(IDENT.accent);

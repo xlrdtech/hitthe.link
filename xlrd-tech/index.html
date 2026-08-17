@@ -578,16 +578,19 @@ const IDENTITIES = {
    Locked identity: no ?id= override, so the page cannot render as another brand.
    Copy set from his own scope map. */
 const IDK = 'xlrdtech';
+const _ORIG = SHOTS.slice();     // snapshot BEFORE clearing — see the note above
 SHOTS.length = 0;
 SHOTS.push(
-  Object.assign({}, SHOTS[0], {title:'XLRD TECH', body:'Executive Leverage Research Development. The community face of the system.', items:[{t:'What we build',href:'/xenos-env/'}]}),
-  Object.assign({}, SHOTS[1], {title:'Research', body:'We build the thing before we sell the thing. Every claim here has an artifact behind it.', items:[{t:'The standard',href:'/xt/16/'}]}),
-  Object.assign({}, SHOTS[2], {title:'Development', body:'Three-JS environments, voice systems, live rails. Shipped, not proposed.', items:[{t:'XENOS',href:'/xenos-plasma/'},{t:'XOS',href:'/xos/'}]}),
-  Object.assign({}, SHOTS[3], {title:'Leverage', body:'One operator, a system that multiplies him. That is the product.', items:[{t:'XEN',href:'/xen/'}]}),
-  Object.assign({}, SHOTS[4], {title:'Community', body:'The school, the cohort, the people learning to operate this way.', items:[{t:'Enter',href:'/'}]}),
-  Object.assign({}, SHOTS[5], {title:'Proof', body:'Proof-in-the-pudding, or it does not ship. Framework: Luckie L. Goggins.', items:[{t:'Seven questions',href:'/lyn/seven/'}]}),
-  Object.assign({}, SHOTS[6], {title:'Work with XLRD', body:'Deposit-first. We do not do free work, and we do not do maybe.', items:[{t:'Start',href:'/'}]})
+  Object.assign({}, _ORIG[0], {title:'XLRD TECH', body:'Executive Leverage Research Development. The community face of the system.', items:[{t:'What we build',href:'/xenos-env/'}]}),
+  Object.assign({}, _ORIG[1], {title:'Research', body:'We build the thing before we sell the thing. Every claim here has an artifact behind it.', items:[{t:'The standard',href:'/xt/16/'}]}),
+  Object.assign({}, _ORIG[2], {title:'Development', body:'Three-JS environments, voice systems, live rails. Shipped, not proposed.', items:[{t:'XENOS',href:'/xenos-plasma/'},{t:'XOS',href:'/xos/'}]}),
+  Object.assign({}, _ORIG[3], {title:'Leverage', body:'One operator, a system that multiplies him. That is the product.', items:[{t:'XEN',href:'/xen/'}]}),
+  Object.assign({}, _ORIG[4], {title:'Community', body:'The school, the cohort, the people learning to operate this way.', items:[{t:'Enter',href:'/'}]}),
+  Object.assign({}, _ORIG[5], {title:'Proof', body:'Proof-in-the-pudding, or it does not ship. Framework: Luckie L. Goggins.', items:[{t:'Seven questions',href:'/lyn/seven/'}]}),
+  Object.assign({}, _ORIG[6], {title:'Work with XLRD', body:'Deposit-first. We do not do free work, and we do not do maybe.', items:[{t:'Start',href:'/'}]})
 );
+/* fail loudly rather than render a dead page: every shot must keep its camera. */
+for(const s of SHOTS){ if(!s.cam || !s.look) throw new Error('shot lost its camera — build bug'); }
 const IDENT = IDENTITIES[IDK] || IDENTITIES.xlrd;
 document.title = IDENT.name === 'XENOS' ? 'XENOS' : IDENT.name + ' — XENOS';
 C.accent.setHex(IDENT.accent);
