@@ -587,7 +587,7 @@ body.drop-active::after {
    can never restyle each other. Reason it must be opaque is in the .tui-step
    header: backdrop-filter samples what is BEHIND it, so a translucent recipe
    over this feed lands at green-channel 98, not 11. */
-#tui-live {
+.tui-live {
   align-self:stretch;                 /* full width: 115 columns need every pixel */
   max-width:100%;
   margin:6px 0;
@@ -618,34 +618,42 @@ body.drop-active::after {
    sibling of the body — a 115-column screen beside an inline label would squash
    the screen to nothing (that squash is exactly what the .tui-step header
    documents at 66px-collapsed-vs-33px-open). */
-#tui-live .tui-live-head {
+.tui-live .tui-live-head {
   display:flex; align-items:center; gap:6px;
   cursor:pointer; user-select:none;
   color:var(--accent); font-size:9.5px; letter-spacing:.10em;
   text-transform:uppercase; opacity:.85;
   padding-bottom:4px;
 }
-#tui-live .tui-live-head::before {
+.tui-live .tui-live-head::before {
   content:"\25B8";                    /* ▸ — same affordance as the terminal bubbles */
   display:inline-block;
   transition:transform .18s cubic-bezier(.32,.72,.2,1);
 }
-#tui-live.open .tui-live-head::before { transform:rotate(90deg); }
+.tui-live.open .tui-live-head::before { transform:rotate(90deg); }
 /* The dim right-hand meta (pane · size). Never the loud part of the row. */
-#tui-live .tui-live-meta {
+.tui-live .tui-live-meta {
   margin-left:auto; opacity:.55; letter-spacing:.04em; text-transform:none;
 }
 /* A live caret so a settled screen and a streaming one are distinguishable. */
-#tui-live .tui-live-caret {
+.tui-live .tui-live-caret {
   display:inline-block; color:var(--accent);
   animation:tuiCaret .9s steps(1,end) infinite;
 }
+/* SEALED = a finished snapshot. qi 2026-08-17 05:34: "it's supposed to be like
+   snapshots" + 05:33:35 "they should just show up when anything runs instead of
+   MOVING like that". Once a message lands beneath a screen, that screen is
+   history: it stops streaming, stops claiming live, and never relocates. Dimmed
+   one notch so the live one is findable at a glance without reading a label. */
+.tui-live.sealed { opacity:.82; border-color:rgba(255,255,255,0.09); }
+.tui-live.sealed .tui-live-caret { display:none; }
+.tui-live.sealed .tui-live-head { opacity:.6; }
 /* THE SCREEN ITSELF — verbatim, so `white-space:pre` (NOT pre-wrap): wrapping a
    115-column TUI reflows every box-drawing rule into garbage. It therefore
    overflows horizontally BY DESIGN, and that overflow scrolls INSIDE this box —
    `overscroll-behavior-x:contain` stops the swipe from chaining out to the page,
    so the body never scrolls sideways. */
-#tui-live .tui-live-body {
+.tui-live .tui-live-body {
   margin:0;
   font-family:var(--mono); font-size:9.5px; line-height:1.35;
   white-space:pre;
@@ -654,8 +662,8 @@ body.drop-active::after {
   -webkit-overflow-scrolling:touch;
   color:rgba(255,255,255,.78);
 }
-#tui-live .tui-live-body::-webkit-scrollbar { height:0; }
-#tui-live .tui-live-body { scrollbar-width:none; }
+.tui-live .tui-live-body::-webkit-scrollbar { height:0; }
+.tui-live .tui-live-body { scrollbar-width:none; }
 
 /* ⛔ RETIRED 2026-08-13 20:27 — qi: "that looks like it was from the old model and
    I said no models" (no MODALS, his 08-12 rule) → "on this interface so that has to
@@ -1585,26 +1593,61 @@ function appendTuiStep(label, text, ts) {
    opposite of the fragments." The bubble was never the problem and neither was
    the CSS. The SOURCE was wrong. xen-tui-live.py captures the tmux pane itself.
 
-   ⭐ THE ONE RULE THAT MATTERS: ONE PERSISTENT ELEMENT, CONTENT REPLACED.
-   Never append per frame. At 1 frame/second an appending renderer would produce
-   3,600 bubbles an hour — the fragment failure raised to a flood.
+   ⭐ THE RULE — SUPERSEDED 2026-08-17 05:32-05:36 BY qi, SIX TIMES IN FOUR
+   MINUTES. Read this before "restoring" anything below.
 
-   HOW "exactly one" IS GUARANTEED, mechanically, not by intention:
-     · the node is looked up by id every frame, never cached in a closure;
-     · it is only CONSTRUCTED when the lookup misses (first frame, or after
-       _pruneBacklogDom evicted it during a backlog replay — a detached node is
-       correctly a miss, since getElementById only sees the live document);
-     · appendChild() on a node that is ALREADY a child MOVES it. That is a DOM
-       relocation, not a copy, so re-anchoring to the live edge cannot ever
-       produce a second one. document.querySelectorAll('#tui-live').length
-       stays 1 across any number of frames.
+   IT USED TO SAY: "ONE PERSISTENT ELEMENT, CONTENT REPLACED — never append."
+   IT NOW SAYS:    ONE SNAPSHOT PER BURST, APPENDED ONCE, NEVER MOVED.
+
+   His words, verbatim, all inside four minutes:
+     05:32:45  "it should be a part of the chat, like normal"
+     05:32:55  "it should go under it and stay under it"
+     05:33:26  "you gave it a bubble that stays in the same spot"
+     05:33:35  "they should just show up when anything runs instead of MOVING like that"
+     05:34:25  "it's not like I can type in it, so there's no point of it staying at the bottom"
+     05:34:43  "I'm glad it's there, but it's supposed to be like SNAPSHOTS"
+     05:36:17  "the chat interface"   ← scope: THIS file, not XENOS
+
+   WHY THE OLD RULE PRODUCED THE DEFECT. The flood fear was real and is still
+   honoured — but the chosen cure had a side effect nobody measured. Keeping one
+   node and re-anchoring it with appendChild() MOVES that node (appendChild on an
+   existing child is a relocation, never a copy — that property was even written
+   down here as a FEATURE). So every single reply ripped the terminal screen out
+   of its place in the conversation and dragged it to the bottom. From his side
+   that is a block of text that will not stay where it was said, permanently
+   pinned to a spot he cannot type into.
+
+   THE CURE THAT KEEPS BOTH PROPERTIES. Coalesce by BURST, not by frame:
+     · frames keep painting into the CURRENT screen — so 1 frame/second still
+       costs exactly one node, and the 3,600-bubbles-an-hour flood cannot happen;
+     · the moment anything lands beneath it, that screen is SEALED where it
+       stands (id dropped, caret stopped, .sealed applied) and never touched
+       again — "go under it and stay under it";
+     · the next frame misses the lookup and mints a NEW screen at the live edge,
+       naturally below the reply — "show up when anything runs";
+     · TUI_LIVE_SEAL_MS of quiet also ends a burst, so a run an hour from now is
+       its own snapshot instead of an hour smeared into one box.
+   Net cost: a handful of nodes per hour of actual activity, not 3,600.
+
+   HOW "exactly one LIVE screen" IS GUARANTEED, mechanically, not by intention:
+     · _tuiCurrent holds the one accepting frames; sealed screens surrender their
+       id, so no lookup can ever resurrect one he has already scrolled past;
+     · a node pruned by _pruneBacklogDom fails .isConnected and is dropped, which
+       correctly forces a fresh screen;
+     · appendChild appears exactly ONCE in this renderer, guarded by `fresh`.
+       There is no second call site, which is what makes relocation impossible.
 
    NOT SPOKEN, NOT A BUBBLE: renderEvent routes here and returns immediately,
    above the !txt guard and above every speak path, so a screenful of terminal
    can never be read aloud and never enters the conversation-bubble renderer. */
 const TUI_LIVE_TAIL_LINES = 6;      // collapsed = the live tail, per 03:14:14
 const TUI_LIVE_IDLE_MS = 10000;     // caret stops claiming "live" after this
+const TUI_LIVE_SEAL_MS = 15000;     // quiet this long ends the burst → next run is its own snapshot
 const TUI_LIVE_OPEN_KEY = 'vei-tui-live-open';
+/* The ONE screen currently accepting frames. Held as a reference, not looked up
+   by id, because sealed snapshots deliberately give their id up — an id lookup
+   would resurrect a screen qi has already scrolled past. */
+let _tuiCurrent = null;
 function _tuiLiveOpenPref() {
   try { return localStorage.getItem(TUI_LIVE_OPEN_KEY) === '1'; } catch (_) { return false; }
 }
@@ -1633,6 +1676,22 @@ function _tuiLivePaint(el) {
   if (metaEl) metaEl.textContent = el._tuiMetaText || '';
 }
 
+/* SEAL — retire the current snapshot in place. It keeps its position in the
+   transcript forever after this: no further frames paint into it, and NOTHING
+   ever calls appendChild on it again. Losing the id is what makes the next
+   frame's lookup miss and mint a fresh screen underneath. */
+function _tuiSeal(el) {
+  if (!el) return;
+  try {
+    el.id = '';
+    el.classList.add('sealed');
+    clearTimeout(el._tuiIdleTimer);
+    const c = el.querySelector('.tui-live-caret');
+    if (c) c.style.visibility = 'hidden';
+  } catch (_) {}
+  if (_tuiCurrent === el) _tuiCurrent = null;
+}
+
 function renderTuiLive(d) {
   if (!transcript) return;
   const full = String(d && d.text != null ? d.text : '');
@@ -1642,12 +1701,27 @@ function renderTuiLive(d) {
   // the measurement is of the layout we just changed.
   const stick = (transcript.scrollTop + transcript.clientHeight) >= (transcript.scrollHeight - 40);
 
-  let el = document.getElementById('tui-live');
-  const fresh = !el || !el.isConnected;
+  let el = _tuiCurrent;
+  if (el && !el.isConnected) el = _tuiCurrent = null;   // pruned by backlog replay
+
+  // ── THE SEAL TEST — this is the whole fix. ────────────────────────────────
+  // The OLD code asked "am I still the last child?" and, when the answer was
+  // no, MOVED itself back down. That move is the defect qi named six ways.
+  // Same question, opposite action: if something landed underneath me, I am
+  // history — seal me where I stand and start a new screen below.
+  if (el && transcript.lastElementChild !== el) { _tuiSeal(el); el = null; }
+  // A quiet gap also ends a burst, so a run an hour from now is its own
+  // snapshot rather than an hour of output smeared into one box.
+  if (el && el._tuiLastFrame && (Date.now() - el._tuiLastFrame) > TUI_LIVE_SEAL_MS) {
+    _tuiSeal(el); el = null;
+  }
+
+  const fresh = !el;
 
   if (fresh) {
     el = document.createElement('div');
     el.id = 'tui-live';
+    el.classList.add('tui-live');
     if (_tuiLiveOpenPref()) el.classList.add('open');
 
     const head = document.createElement('div');
@@ -1678,6 +1752,8 @@ function renderTuiLive(d) {
   }
 
   el._tuiFull = full;
+  el._tuiLastFrame = Date.now();
+  _tuiCurrent = el;
   const _cols = d.cols || 0, _rows = d.rows || 0;
   el._tuiMetaText = (d.pane ? String(d.pane) : '') + (_cols ? ` · ${_cols}×${_rows}` : '');
   _tuiLivePaint(el);
@@ -1692,14 +1768,17 @@ function renderTuiLive(d) {
     el._tuiIdleTimer = setTimeout(() => { try { caretEl.style.visibility = 'hidden'; } catch (_) {} }, TUI_LIVE_IDLE_MS);
   }
 
-  if (fresh) {
-    transcript.appendChild(el);
-  } else if (stick && transcript.lastElementChild !== el) {
-    // MOVES the existing node to the live edge. Not a clone — see the header.
-    // Only while he is already at the bottom: yanking it down while he is
-    // reading scrollback would be the interface fighting him.
-    transcript.appendChild(el);
-  }
+  // ⛔ APPEND ONCE, ON BIRTH, AND NEVER AGAIN. There is deliberately no second
+  //    appendChild branch here. The removed one re-anchored an existing node to
+  //    the live edge, and because appendChild on a node that is already a child
+  //    MOVES it, every reply tore the screen out of the conversation and dragged
+  //    it to the bottom. qi 2026-08-17 05:32-05:34, six times:
+  //      "it should go under it and stay under it"
+  //      "they should just show up when anything runs instead of MOVING like that"
+  //      "it's not like I can type in it, so there's no point of it staying at the bottom"
+  //      "it's supposed to be like snapshots"
+  //    A snapshot that relocates is not a snapshot. Once placed, it is furniture.
+  if (fresh) transcript.appendChild(el);
   if (stick) transcript.scrollTop = transcript.scrollHeight;
 }
 
