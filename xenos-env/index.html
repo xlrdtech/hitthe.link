@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"/>
+<title>XENOS</title>
+<meta name="theme-color" content="#000200"/>
+<!-- XENOS ENVIRONMENT — the avatar's room.
+     qi 2026-08-17 08:47: "it needs to be placed inside of a three JS GSAP environment that is
+     100% hyper-realistic and immersive at the same level of skill and technique as XT/16 or better"
+     qi 08:46: "just don't make the website just this" — this is a SHELL the page content sits in,
+     never a replacement for the page.
+     Technique lineage: xt/16 (three@0.160, EffectComposer+UnrealBloom, ACES @0.74, FogExp2,
+     MeshPhysicalMaterial ior 1.31 / attenuation 0xa8c8e2 @4.2). xt/16 carried NO gsap; the plasma
+     core does, so camera + reveal are GSAP-driven here.
+     Palette is the plasma core's own: ink #dffbe9, accent #3cff96, ground #000200. -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@100;300;400&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --ink:#dffbe9; --accent:#3cff96; --alert:#ff4a4a;
+    --dim:rgba(223,251,233,.45); --faint:rgba(223,251,233,.12);
+    --glass:rgba(0,4,0,.65); --bg:#000200;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;background:var(--bg);overflow:hidden;touch-action:none;
+    font-family:'Inter',system-ui,sans-serif;color:var(--ink);
+    -webkit-font-smoothing:antialiased;overscroll-behavior:none}
+  canvas#stage{display:block;position:fixed;inset:0;outline:none;z-index:0}
+
+  /* ── content layer. THE PAGE LIVES HERE. The scene is behind it, never instead of it. ── */
+  #content{position:fixed;inset:0;z-index:2;pointer-events:none;
+    display:flex;flex-direction:column;justify-content:flex-end;
+    padding:0 clamp(18px,5vw,44px) calc(env(safe-area-inset-bottom,0px) + clamp(28px,7vh,68px));}
+  #content > *{pointer-events:auto}
+
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-weight:300;font-size:clamp(9px,2.5vw,11px);
+    letter-spacing:.34em;text-transform:uppercase;color:var(--dim);margin-bottom:14px;
+    opacity:0;transform:translateY(8px)}
+  h1{font-weight:300;font-size:clamp(38px,12vw,92px);line-height:.94;letter-spacing:-.03em;
+    margin-bottom:16px}
+  h1 .g{display:inline-block;opacity:0;transform:translateY(26px) rotateX(-40deg);
+    transform-origin:50% 100%}
+  .sub{font-weight:300;font-size:clamp(13px,3.6vw,17px);line-height:1.5;color:var(--dim);
+    max-width:34ch;opacity:0;transform:translateY(10px)}
+
+  /* ── navigation. Environment + navigation, per qi 08:46:51 ── */
+  nav#routes{position:fixed;left:0;right:0;z-index:3;
+    bottom:calc(env(safe-area-inset-bottom,0px) + 0px);
+    display:flex;gap:0;overflow-x:auto;scrollbar-width:none;
+    background:linear-gradient(to top,rgba(0,2,0,.92),rgba(0,2,0,.55) 62%,transparent);
+    padding:22px clamp(14px,4vw,34px) calc(14px + env(safe-area-inset-bottom,0px));
+    -webkit-overflow-scrolling:touch}
+  nav#routes::-webkit-scrollbar{display:none}
+  nav#routes a{flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-weight:300;
+    font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);
+    text-decoration:none;padding:9px 15px;border:1px solid var(--faint);border-radius:999px;
+    margin-right:8px;white-space:nowrap;transition:color .22s,border-color .22s,background .22s;
+    backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
+  nav#routes a:active,nav#routes a.on{color:var(--accent);border-color:rgba(60,255,150,.42);
+    background:rgba(60,255,150,.07)}
+
+  /* ── telemetry garnish. Low contrast on purpose — the skill's note: reproducing only the
+       garnish is the classic failure, so it stays subordinate to the 3D. ── */
+  #hud{position:fixed;top:calc(env(safe-area-inset-top,0px) + 14px);left:clamp(14px,4vw,34px);
+    z-index:3;font-family:'JetBrains Mono',monospace;font-weight:100;font-size:10px;
+    letter-spacing:.16em;color:rgba(223,251,233,.26);line-height:1.85;pointer-events:none;
+    text-transform:uppercase}
+  #hud b{font-weight:300;color:rgba(60,255,150,.5)}
+
+  #boot{position:fixed;inset:0;z-index:9;background:var(--bg);display:grid;place-items:center;
+    transition:opacity .7s ease}
+  #boot.gone{opacity:0;pointer-events:none}
+  #boot .r{width:38px;height:38px;border:1px solid var(--faint);border-radius:50%;position:relative}
+  #boot .r::after{content:'';position:absolute;inset:-1px;border-radius:50%;
+    border:1px solid transparent;border-top-color:var(--accent);animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){#boot .r::after{animation:none}}
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+
+<div id="hud">
+  XENOS · <b id="h-fps">—</b> FPS<br/>
+  CORE <b id="h-energy">0.00</b><br/>
+  <span id="h-route">ROOT</span>
+</div>
+
+<div id="content">
+  <div class="eyebrow" id="eyebrow">XLRD · Avatar · Voice · Graph</div>
+  <h1 id="head"></h1>
+  <p class="sub" id="sub">One surface. The avatar you speak to, the voice that answers, and the
+    graph it reasons over — the same object, on every route.</p>
+</div>
+
+<nav id="routes" aria-label="Scopes"></nav>
+
+<div id="boot"><div class="r"></div></div>
+
+<script type="importmap">
+{"imports":{
+  "three":"https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"
+}}
+</script>
+<script src="https://unpkg.com/gsap@3.13.0/dist/gsap.min.js"></script>
+
+<script type="module">
+import * as THREE from 'three';
+import {EffectComposer}   from 'three/addons/postprocessing/EffectComposer.js';
+import {RenderPass}       from 'three/addons/postprocessing/RenderPass.js';
+import {UnrealBloomPass}  from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+/* ═════════════════════════════════════════════════════════════════════════
+   0. PALETTE + TUNING — every number here was read off xt/16, not guessed.
+   ═════════════════════════════════════════════════════════════════════════ */
+const C = {
+  bg:    new THREE.Color(0x000200),
+  fog:   new THREE.Color(0x02110a),
+  sun:   new THREE.Color(0xdff7e9),
+  sky:   new THREE.Color(0x18402e),
+  gnd:   new THREE.Color(0x02100a),
+  accent:new THREE.Color(0x3cff96),
+  atten: new THREE.Color(0xa8c8e2),   // xt/16's ice attenuation, kept
+};
+const MOBILE = Math.min(innerWidth, innerHeight) < 620;
+
+/* ═════════════════════════════════════════════════════════════════════════
+   1. RENDERER — ACES @ 0.74 and SRGB output, matching xt/16 exactly.
+      DPR is clamped hard: this is mobile-first, and an uncapped DPR on a
+      phone is how a 60fps scene becomes 18fps.
+   ═════════════════════════════════════════════════════════════════════════ */
+const canvas   = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:!MOBILE, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio, MOBILE ? 2 : 2.5));
+renderer.setSize(innerWidth, innerHeight);
+renderer.outputColorSpace    = THREE.SRGBColorSpace;
+renderer.toneMapping         = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.74;
+
+const scene  = new THREE.Scene();
+scene.background = C.bg;
+scene.fog        = new THREE.FogExp2(C.fog.getHex(), MOBILE ? 0.030 : 0.024);
+
+const camera = new THREE.PerspectiveCamera(46, innerWidth/innerHeight, 0.1, 260);
+camera.position.set(0, 2.15, 12.4);
+
+/* ═════════════════════════════════════════════════════════════════════════
+   2. ENVIRONMENT MAP — PMREM off a generated gradient. Transmissive material
+      is only convincing when it has something to refract; without an envMap
+      the glass reads as flat plastic.
+   ═════════════════════════════════════════════════════════════════════════ */
+const pmrem = new THREE.PMREMGenerator(renderer);
+pmrem.compileEquirectangularShader();
+(function buildEnv(){
+  const w=64,h=64,d=new Uint8Array(w*h*4);
+  for(let y=0;y<h;y++){
+    const v=y/(h-1);
+    // horizon-weighted: bright band at the top third, deep green floor
+    const top=Math.pow(1-v,2.1), band=Math.exp(-Math.pow((v-0.30)/0.115,2));
+    const r=(10+215*top+120*band), g=(22+240*top+180*band), b=(16+225*top+140*band);
+    for(let x=0;x<w;x++){
+      const i=(y*w+x)*4;
+      const n=0.93+0.07*Math.sin(x*0.7+y*0.31);
+      d[i]=Math.min(255,r*n); d[i+1]=Math.min(255,g*n); d[i+2]=Math.min(255,b*n); d[i+3]=255;
+    }
+  }
+  const tex=new THREE.DataTexture(d,w,h,THREE.RGBAFormat);
+  tex.colorSpace=THREE.SRGBColorSpace; tex.needsUpdate=true;
+  scene.environment = pmrem.fromEquirectangular(tex).texture;
+  tex.dispose();
+})();
+
+/* ═════════════════════════════════════════════════════════════════════════
+   3. LIGHTS — seven, same shape as xt/16's rig. Value range must span
+      near-black to near-white or nothing else in the frame can land.
+   ═════════════════════════════════════════════════════════════════════════ */
+const sun = new THREE.DirectionalLight(C.sun, 3.05);
+sun.position.set(-6.5, 11.0, 5.2);
+scene.add(sun);
+scene.add(new THREE.HemisphereLight(C.sky, C.gnd, 0.52));
+scene.add(new THREE.AmbientLight(0xb9c6d6, 0.10));
+const rim = new THREE.DirectionalLight(0xc6d4e4, 0.50);
+rim.position.set(7.0, 3.4, -8.0);
+scene.add(rim);
+const coreLight = new THREE.PointLight(0x9effc9, 78, 30, 2); coreLight.position.set(0,2.3,0);
+const fill1     = new THREE.PointLight(0x3cff96, 32, 22, 2); fill1.position.set(-4.2,1.1,3.0);
+const fill2     = new THREE.PointLight(0xbfe0ff, 26, 12, 2); fill2.position.set(4.6,0.7,-2.4);
+scene.add(coreLight, fill1, fill2);
+
+/* ═════════════════════════════════════════════════════════════════════════
+   4. TERRAIN — ridged fbm displacement. Three receding ridge planes, each
+      lower in contrast, haze pooling between them: that layering is what
+      reads as depth in the reference, more than any single material does.
+   ═════════════════════════════════════════════════════════════════════════ */
+function hash(x,y){ const s=Math.sin(x*127.1+y*311.7)*43758.5453; return s-Math.floor(s); }
+function vnoise(x,y){
+  const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi;
+  const u=xf*xf*(3-2*xf), v=yf*yf*(3-2*yf);
+  return (hash(xi,yi)*(1-u)+hash(xi+1,yi)*u)*(1-v)
+       + (hash(xi,yi+1)*(1-u)+hash(xi+1,yi+1)*u)*v;
+}
+function ridged(x,y){
+  let s=0,a=0.5,f=1;
+  for(let o=0;o<5;o++){ s+=a*(1-Math.abs(vnoise(x*f,y*f)*2-1)); f*=2.07; a*=0.5; }
+  return s;
+}
+const groundMat = new THREE.MeshStandardMaterial({
+  color:0x0b2a1c, roughness:0.86, metalness:0.0, envMapIntensity:0.42, flatShading:false
+});
+const RIDGES = [
+  {z:-14, w:150, h:60, seg: MOBILE?110:150, amp:5.2, o:0.9},
+  {z:-42, w:230, h:80, seg: MOBILE?80:110,  amp:9.0, o:0.55},
+  {z:-84, w:340, h:96, seg: MOBILE?54:76,   amp:14.5,o:0.3},
+];
+for(const R of RIDGES){
+  const g = new THREE.PlaneGeometry(R.w, R.h, R.seg, Math.round(R.seg*0.45));
+  const p = g.attributes.position;
+  for(let i=0;i<p.count;i++){
+    const x=p.getX(i), y=p.getY(i);
+    const e = ridged(x*0.045+R.z*0.01, y*0.045) - 0.62;
+    // flatten a bowl at the centre of the near ridge so the avatar has a floor
+    const dist = Math.hypot(x, y);
+    const bowl = R.z>-20 ? Math.min(1, Math.pow(dist/26, 2.0)) : 1;
+    p.setZ(i, e*R.amp*bowl);
+  }
+  g.computeVertexNormals();
+  const m = groundMat.clone(); m.opacity=R.o; m.transparent=R.o<1;
+  const mesh = new THREE.Mesh(g, m);
+  mesh.rotation.x = -Math.PI/2;
+  mesh.position.set(0, -1.9, R.z);
+  scene.add(mesh);
+}
+
+/* ═════════════════════════════════════════════════════════════════════════
+   5. THE STRUCTURE — coursed transmissive blocks ringing the avatar.
+      Three traps from the skill are handled structurally, not by dimming:
+        · block width DERIVED from course pitch, so joints stay thin
+        · heights OVERLAP each course boundary by a random 0–16% + a jog,
+          so courses never line up into machined horizontal grooves
+        · a superellipse profile (n≈3) holds radius through the lower half
+          then rolls to a flat crown — a sin θ taper gives a beehive cone
+   ═════════════════════════════════════════════════════════════════════════ */
+const R_MAX = 6.4, H_MAX = 7.4, COURSES = MOBILE ? 12 : 17;
+function superRadius(t){                       // t: 0 base → 1 crown
+  const n = 3.0;
+  return R_MAX * Math.pow(Math.max(0, 1 - Math.pow(t, n)), 1/n);
+}
+const blockMat = new THREE.MeshPhysicalMaterial({
+  color:0xdff3ea, roughness:0.20, metalness:0.0,
+  transmission:0.82, thickness:1.55, ior:1.31,
+  attenuationColor:C.atten, attenuationDistance:4.2,
+  clearcoat:0.55, clearcoatRoughness:0.28, envMapIntensity:0.95,
+  side:THREE.DoubleSide
+});
+const shell = new THREE.Group();
+let jointCount = 0;
+for(let c=0;c<COURSES;c++){
+  const t0 = c/COURSES, t1 = (c+1)/COURSES;
+  const r  = superRadius((t0+t1)/2);
+  if(r < 0.55) continue;
+  const yMid = t0*H_MAX - 1.85;
+  // real arc distance drives height, so a course never looks stretched
+  const courseH = (t1-t0)*H_MAX;
+  const per = Math.max(6, Math.round((2*Math.PI*r) / (courseH*1.28)));
+  const stagger = (c%2) * (Math.PI/per);
+  for(let i=0;i<per;i++){
+    const a  = stagger + (i/per)*Math.PI*2;
+    const bw = (2*Math.PI*r)/per * 0.955;              // width FROM pitch → thin joint
+    const bh = courseH * (1.0 + Math.random()*0.16);   // overlap the boundary 0–16%
+    const jog = (Math.random()-0.5) * courseH * 0.10;
+    const geo = new THREE.BoxGeometry(bw, bh, 0.62, 1,1,1);
+    const m   = new THREE.Mesh(geo, blockMat);
+    m.position.set(Math.cos(a)*r, yMid + jog, Math.sin(a)*r);
+    m.rotation.y = -a + Math.PI/2;
+    m.rotation.z = (Math.random()-0.5)*0.012;
+    shell.add(m); jointCount++;
+  }
+}
+// doorway: cut an opening toward camera so the avatar is seen THROUGH the shell
+shell.children.forEach(m=>{
+  const a = Math.atan2(m.position.z, m.position.x);
+  if(Math.abs(a - Math.PI/2) < 0.42 && m.position.y < 1.6) m.visible = false;
+});
+scene.add(shell);
+
+/* ═════════════════════════════════════════════════════════════════════════
+   6. THE AVATAR — the plasma core. Shader sphere, fbm-displaced, driven by
+      `energy` so the voice layer can push it later. Uniform names match the
+      plasma core injection (t / energy / morph / flare) so the two stay
+      swappable rather than forked.
+   ═════════════════════════════════════════════════════════════════════════ */
+const coreUniforms = {
+  t:{value:0}, energy:{value:0.22}, morph:{value:0}, flare:{value:0},
+  accent:{value:C.accent}
+};
+const core = new THREE.Mesh(
+  new THREE.IcosahedronGeometry(1.5, MOBILE ? 5 : 7),
+  new THREE.ShaderMaterial({
+    uniforms:coreUniforms, transparent:true,
+    vertexShader:`
+      uniform float t, energy, morph;
+      varying vec3 vN; varying vec3 vP; varying float vD;
+      // iq-style value noise + fbm, cheap enough for a phone
+      vec3 h3(vec3 p){ p=vec3(dot(p,vec3(127.1,311.7,74.7)),dot(p,vec3(269.5,183.3,246.1)),
+                              dot(p,vec3(113.5,271.9,124.6)));
+        return -1.+2.*fract(sin(p)*43758.5453123); }
+      float n3(vec3 p){ vec3 i=floor(p),f=fract(p); vec3 u=f*f*(3.-2.*f);
+        return mix(mix(mix(dot(h3(i+vec3(0,0,0)),f-vec3(0,0,0)),dot(h3(i+vec3(1,0,0)),f-vec3(1,0,0)),u.x),
+                       mix(dot(h3(i+vec3(0,1,0)),f-vec3(0,1,0)),dot(h3(i+vec3(1,1,0)),f-vec3(1,1,0)),u.x),u.y),
+                   mix(mix(dot(h3(i+vec3(0,0,1)),f-vec3(0,0,1)),dot(h3(i+vec3(1,0,1)),f-vec3(1,0,1)),u.x),
+                       mix(dot(h3(i+vec3(0,1,1)),f-vec3(0,1,1)),dot(h3(i+vec3(1,1,1)),f-vec3(1,1,1)),u.x),u.y),u.z); }
+      float fbm(vec3 p){ float s=0.,a=.5; for(int i=0;i<4;i++){ s+=a*n3(p); p*=2.03; a*=.5; } return s; }
+      void main(){
+        vN = normalize(normalMatrix * normal);
+        float d = fbm(normal*2.1 + vec3(0.0, t*0.28, t*0.13));
+        d += 0.42 * fbm(normal*5.3 - vec3(t*0.21, 0.0, 0.0));
+        float amp = 0.13 + energy*0.46 + morph*0.30;
+        vD = d;
+        vec3 pos = position + normal * d * amp;
+        vec4 mv = modelViewMatrix * vec4(pos,1.0);
+        vP = mv.xyz;
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader:`
+      uniform float t, energy, flare; uniform vec3 accent;
+      varying vec3 vN; varying vec3 vP; varying float vD;
+      void main(){
+        vec3 V = normalize(-vP);
+        float fres = pow(1.0 - max(dot(normalize(vN), V), 0.0), 2.6);
+        // interior is DARKER than the rim — a hot interior erases structure
+        vec3 deep = accent * 0.16;
+        vec3 hot  = mix(accent, vec3(0.88,1.0,0.94), 0.55);
+        vec3 col  = mix(deep, hot, clamp(fres*1.25 + vD*0.30 + energy*0.28, 0.0, 1.0));
+        col += accent * flare * 0.75 * fres;
+        float alpha = clamp(0.30 + fres*0.86 + energy*0.14, 0.0, 1.0);
+        gl_FragColor = vec4(col, alpha);
+      }`
+  })
+);
+core.position.set(0, 2.25, 0);
+scene.add(core);
+
+// inner lattice — needles must be DARKER than the field behind them to read
+const latticeMat = new THREE.MeshBasicMaterial({color:0x0a3d26, transparent:true, opacity:0.55});
+const lattice = new THREE.Mesh(new THREE.OctahedronGeometry(1.16, 1), latticeMat);
+lattice.position.copy(core.position);
+scene.add(lattice);
+
+/* ═════════════════════════════════════════════════════════════════════════
+   7. PARTICLES — a generated radial-alpha map is MANDATORY. Untextured
+      THREE.Points are hard opaque squares, and with sizeAttenuation on, one
+      near the lens becomes a grey box over the whole scene. That defect is
+      invisible locally and only shows on the served page.
+   ═════════════════════════════════════════════════════════════════════════ */
+const sprite = (()=>{
+  const s=64, cv=document.createElement('canvas'); cv.width=cv.height=s;
+  const g=cv.getContext('2d').createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);
+  g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(.35,'rgba(255,255,255,.55)');
+  g.addColorStop(1,'rgba(255,255,255,0)');
+  const cx=cv.getContext('2d'); cx.fillStyle=g; cx.fillRect(0,0,s,s);
+  const tx=new THREE.CanvasTexture(cv); tx.colorSpace=THREE.SRGBColorSpace; return tx;
+})();
+const NP = MOBILE ? 1400 : 3200;
+const pg = new THREE.BufferGeometry();
+const pp = new Float32Array(NP*3), pv = new Float32Array(NP);
+for(let i=0;i<NP;i++){
+  const rr = 2.0 + Math.random()*26, aa = Math.random()*Math.PI*2;
+  pp[i*3]   = Math.cos(aa)*rr;
+  pp[i*3+1] = -1.7 + Math.random()*13;
+  pp[i*3+2] = Math.sin(aa)*rr - 6;
+  pv[i]     = 0.25 + Math.random()*0.9;
+}
+pg.setAttribute('position', new THREE.BufferAttribute(pp,3));
+const points = new THREE.Points(pg, new THREE.PointsMaterial({
+  size:0.075, map:sprite, alphaTest:0.02, transparent:true, depthWrite:false,
+  color:0xa8ffd2, opacity:0.62, sizeAttenuation:true, blending:THREE.AdditiveBlending
+}));
+scene.add(points);
+
+/* ═════════════════════════════════════════════════════════════════════════
+   8. POST — bloom kept restrained. Bloom is what turns thin lit joints into
+      one filled blob if pushed, so threshold stays high and strength low.
+   ═════════════════════════════════════════════════════════════════════════ */
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight),
+                                  MOBILE?0.62:0.74, 0.72, 0.86);
+composer.addPass(bloom);
+
+/* ═════════════════════════════════════════════════════════════════════════
+   9. NAVIGATION — the routes the avatar rides on. Scope separation is canon:
+      these are distinct scopes and the avatar is shared chrome, never a merge.
+   ═════════════════════════════════════════════════════════════════════════ */
+const ROUTES = [
+  {id:'ROOT',  label:'XLRD',      href:'/',              cam:[0,2.15,12.4], look:[0,2.2,0]},
+  {id:'XENOS', label:'XENOS',     href:'/xenos-plasma/', cam:[0,2.6,5.6],   look:[0,2.3,0]},
+  {id:'XEN',   label:'XEN',       href:'/xen/',          cam:[-6.2,3.1,9.0],look:[0,2.1,0]},
+  {id:'XOS',   label:'XOS',       href:'/xos/',          cam:[6.4,2.0,8.4], look:[0,2.0,0]},
+  {id:'STD',   label:'xt/16',     href:'/xt/16/',        cam:[0,6.4,14.0],  look:[0,1.4,0]},
+  {id:'VVS',   label:'VVSVEI',    href:'/vvsvei/',       cam:[-3.0,1.2,6.0],look:[0,2.4,0]},
+];
+const nav = document.getElementById('routes');
+const hudRoute = document.getElementById('h-route');
+ROUTES.forEach((R,i)=>{
+  const a=document.createElement('a');
+  a.textContent=R.label; a.href=R.href; a.dataset.i=i;
+  if(i===0) a.classList.add('on');
+  a.addEventListener('pointerenter', ()=>flyTo(i));
+  a.addEventListener('pointerdown',  e=>{ flyTo(i); });   // link still navigates
+  nav.appendChild(a);
+});
+const look = new THREE.Vector3(0,2.2,0);
+function flyTo(i){
+  const R=ROUTES[i]; if(!R) return;
+  nav.querySelectorAll('a').forEach(x=>x.classList.toggle('on', +x.dataset.i===i));
+  hudRoute.textContent = R.id;
+  gsap.to(camera.position,{x:R.cam[0],y:R.cam[1],z:R.cam[2],duration:1.5,ease:'power3.inOut'});
+  gsap.to(look,           {x:R.look[0],y:R.look[1],z:R.look[2],duration:1.5,ease:'power3.inOut'});
+  gsap.to(coreUniforms.flare,{value:1,duration:.22,ease:'power2.out',
+    onComplete:()=>gsap.to(coreUniforms.flare,{value:0,duration:1.0,ease:'power2.inOut'})});
+}
+
+/* pointer parallax — subtle. A big swing reads as a gimmick, not immersion. */
+const ptr={x:0,y:0,tx:0,ty:0};
+addEventListener('pointermove',e=>{
+  ptr.tx=(e.clientX/innerWidth-0.5); ptr.ty=(e.clientY/innerHeight-0.5);
+},{passive:true});
+
+/* ═════════════════════════════════════════════════════════════════════════
+   10. REVEAL — GSAP. xt/16 had none of this; the plasma core does, so the
+       environment inherits its motion language rather than inventing one.
+   ═════════════════════════════════════════════════════════════════════════ */
+const HEAD='XENOS';
+document.getElementById('head').innerHTML =
+  HEAD.split('').map(ch=>`<span class="g">${ch}</span>`).join('');
+
+function reveal(){
+  document.getElementById('boot').classList.add('gone');
+  const tl = gsap.timeline({defaults:{ease:'power3.out'}});
+  tl.to('#eyebrow',{opacity:1,y:0,duration:.7},0.05)
+    .to('h1 .g',{opacity:1,y:0,rotateX:0,duration:1.0,stagger:0.055},0.15)
+    .to('#sub',{opacity:1,y:0,duration:.8},0.55)
+    .fromTo(coreUniforms.energy,{value:0.02},{value:0.22,duration:2.2,ease:'power2.inOut'},0)
+    .fromTo(camera.position,{z:19.5},{z:12.4,duration:2.6,ease:'power3.out'},0)
+    .fromTo(bloom,{strength:0.02},{strength:MOBILE?0.62:0.74,duration:2.0},0.2);
+  gsap.to(coreUniforms.morph,{value:1,duration:9,ease:'sine.inOut',repeat:-1,yoyo:true});
+}
+
+/* ═════════════════════════════════════════════════════════════════════════
+   11. FRAME LOOP + the lit-pixel framing gate.
+       The gate renders the subject WHITE ON BLACK to an offscreen target with
+       everything else hidden, then measures the bounding box of LIT pixels.
+       A projected-AABB gate counts invisible geometry and converges
+       confidently on a wrong number — this measures what the eye sees.
+   ═════════════════════════════════════════════════════════════════════════ */
+const gateRT   = new THREE.WebGLRenderTarget(256, 256);
+const gateMat  = new THREE.MeshBasicMaterial({color:0xffffff});
+window.__xenosFramingGate = function(){
+  const keep=[]; scene.traverse(o=>{ if(o.visible!==undefined) keep.push([o,o.visible]); });
+  scene.traverse(o=>{ if(o.isMesh||o.isPoints) o.visible=false; });
+  core.visible=true;
+  const oldMat=core.material, oldBg=scene.background, oldFog=scene.fog;
+  core.material=gateMat; scene.background=new THREE.Color(0x000000); scene.fog=null;
+  renderer.setRenderTarget(gateRT); renderer.render(scene,camera); renderer.setRenderTarget(null);
+  const buf=new Uint8Array(256*256*4);
+  renderer.readRenderTargetPixels(gateRT,0,0,256,256,buf);
+  let minX=256,maxX=-1,minY=256,maxY=-1,lit=0;
+  for(let y=0;y<256;y++) for(let x=0;x<256;x++){
+    if(buf[(y*256+x)*4] > 40){ lit++; if(x<minX)minX=x; if(x>maxX)maxX=x;
+                               if(y<minY)minY=y; if(y>maxY)maxY=y; }
+  }
+  core.material=oldMat; scene.background=oldBg; scene.fog=oldFog;
+  keep.forEach(([o,v])=>o.visible=v);
+  return {litPixels:lit, widthFraction:maxX<0?0:(maxX-minX+1)/256,
+          heightFraction:maxY<0?0:(maxY-minY+1)/256};
+};
+
+const clock=new THREE.Clock();
+let fr=0, acc=0;
+const fpsEl=document.getElementById('h-fps'), enEl=document.getElementById('h-energy');
+function frame(){
+  const dt=clock.getDelta(), el=clock.elapsedTime;
+  coreUniforms.t.value = el;
+
+  ptr.x += (ptr.tx-ptr.x)*0.045; ptr.y += (ptr.ty-ptr.y)*0.045;
+  camera.position.x += ptr.x*0.30; camera.position.y += -ptr.y*0.18;
+  camera.lookAt(look);
+
+  core.rotation.y    = el*0.055;
+  lattice.rotation.y = -el*0.085;
+  lattice.rotation.x =  el*0.041;
+  shell.rotation.y   = el*0.010;
+  points.rotation.y  = el*0.014;
+  coreLight.intensity = 78 + Math.sin(el*1.7)*9 + coreUniforms.flare.value*40;
+
+  composer.render();
+
+  acc+=dt; fr++;
+  if(acc>=0.5){ fpsEl.textContent=Math.round(fr/acc); fr=0; acc=0;
+                enEl.textContent=coreUniforms.energy.value.toFixed(2); }
+  requestAnimationFrame(frame);
+}
+
+addEventListener('resize', ()=>{
+  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+  composer.setSize(innerWidth,innerHeight);
+  bloom.setSize(innerWidth,innerHeight);
+},{passive:true});
+
+/* expose for the CDP verification loop — a scene that cannot be measured
+   from outside cannot be gated, and an ungated scene is an opinion. */
+window.__xenos = {scene, camera, renderer, core, coreUniforms, jointCount,
+                  ready:false, routes:ROUTES.map(r=>r.id)};
+
+renderer.compile(scene, camera);
+requestAnimationFrame(()=>{ reveal(); frame(); window.__xenos.ready=true; });
+</script>
+</body>
+</html>
