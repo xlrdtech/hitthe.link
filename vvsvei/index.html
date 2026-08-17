@@ -5111,7 +5111,15 @@ window.addEventListener('beforeunload', stopListening);
       'display:flex', 'align-items:center', 'gap:6px',
       'overflow-x:auto', 'overflow-y:hidden',
       'scroll-snap-type:x proximity', '-webkit-overflow-scrolling:touch',
-      'padding:0 4px 6px', 'margin:0 0 2px', 'scrollbar-width:none',
+      // BLACK, AND OPAQUE. qi 2026-08-17 03:14, with a screenshot: "supposed to be
+      // black and collapsed". This row had NO background at all, so #transcript
+      // scrolled straight through it — his own message text rendered between the
+      // EMILY/GEORGE/BILL pills, which is what the shot shows. A translucent value
+      // would not fix it either: the bubbles behind are bright enough to read
+      // through anything short of opaque. Solid #000, not glass.
+      'background:#000',
+      'border-radius:var(--r-pill, 999px)',
+      'padding:6px 8px', 'margin:0 0 6px', 'scrollbar-width:none',
       'flex:0 0 auto', 'white-space:nowrap',
     ].join(';');
   }
@@ -5131,7 +5139,11 @@ window.addEventListener('beforeunload', stopListening);
   }
 
   const paint = () => {
-    row.querySelectorAll('button').forEach((b) => {
+    // The trigger is a button in this row too, but it is NOT a voice option — it has no
+    // data-vid, so the `on` test below always failed for it and repainted it grey,
+    // silently undoing paintTrigger()'s green. Repaint it on its own terms instead.
+    if (typeof paintTrigger === 'function') paintTrigger();
+    row.querySelectorAll('button[data-vid]').forEach((b) => {
       const on = b.dataset.vid === current;
       b.setAttribute('aria-checked', on ? 'true' : 'false');
       b.style.background = on ? 'rgba(0,255,136,.18)' : 'rgba(255,255,255,.05)';
@@ -5186,17 +5198,43 @@ window.addEventListener('beforeunload', stopListening);
     // qi picks Olivier and hears Emily, which is indistinguishable from a broken
     // picker. Await the POST, THEN ask for audio. Cache-bust too: /api/tts keys on
     // voice|rate|text, so identical text could replay the previous voice's clip.
+    // ASSERT ON THE BODY, AND REVERT IF THE SWAP DID NOT LAND.
+    // qi 2026-08-16, about every voice in the list: "I put it on Arabella, but it was
+    // not Arabella … I can put it on Bill, Brian, Daniel, Juniper, Clinton, Alex, its
+    // still Hani." This is why. The old chain was `.catch(() => {}).then(play)` — the
+    // catch sat BEFORE the then, so a rejected or non-2xx swap was swallowed whole and
+    // the sample played anyway. And the sample comes from /api/tts, which renders
+    // whatever the SERVER's voice.id says — so a failed swap produced the OLD voice
+    // while the pill painted the NEW one as selected. The picker reported success it
+    // never had, which is indistinguishable from a picker that does nothing.
+    // `prev` was already captured above and then never used: the revert was intended
+    // and never wired. Wire it. A 200 is not proof either — confirm the returned
+    // voice_id is the one we asked for (cmd: assert on the artifact, not the status).
+    const failPill = (why) => {
+      current = prev;                          // the UI must show what is ACTUALLY live
+      build();
+      const t = trigger.textContent;
+      trigger.textContent = why;
+      trigger.style.background = 'rgba(255,107,90,.16)';
+      trigger.style.border = '1px solid var(--bad, #ff6b5a)';
+      trigger.style.color = 'var(--bad, #ff6b5a)';
+      setTimeout(() => { trigger.textContent = t; paintTrigger(); }, 3200);
+    };
     fetch(VOICE_ID_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ voice_id: v.id }),
     })
-      .catch(() => {})            // a failed swap still gets a sample: qi hears the TRUTH
-      .then(() => {
+      .then((r) => (r.ok ? r.json().catch(() => ({})) : Promise.reject(new Error('HTTP ' + r.status))))
+      .then((j) => {
+        // The server is the authority on what is live. If it echoes a different id,
+        // the swap did not take — say so instead of playing a sample that lies.
+        if (j && j.voice_id && j.voice_id !== v.id) throw new Error('server kept ' + nameOf(j.voice_id));
         if (!a) return;
         a.src = AVA_TTS_URL + '?text=' + encodeURIComponent(sample) + '&t=' + Date.now();
         a.play().catch(() => {});
-      });
+      })
+      .catch((e) => { failPill('✕ ' + (e && e.message ? e.message : 'swap failed')); });
   };
 
   // COLLAPSED BY DEFAULT — qi 2026-08-10 23:21: "voice pills to open up to show the
