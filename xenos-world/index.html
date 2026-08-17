@@ -3,8 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"/>
-  <meta name="robots" content="noindex,nofollow,noarchive,nosnippet"/>
-  <title>XLRD Tech — XENOS</title>
+  <title>XENOS</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@100;300;400&display=swap" rel="stylesheet"/>
   
   <style>
@@ -99,55 +98,6 @@
       .telemetry { display: none; }
       #ring { width: 95vmin; }
     }
-
-    /* ═══ WORLD LAYER — added around XENOS. Nothing here restyles his HUD. ═══ */
-    #panels { position: fixed; left: clamp(20px,4vw,48px); top: 50%; transform: translateY(-50%);
-              width: min(38vw, 420px); z-index: 6; pointer-events: none; }
-    .panel  { position: absolute; left: 0; top: 50%; transform: translateY(-50%) translateX(-14px);
-              opacity: 0; transition: opacity .55s cubic-bezier(.16,1,.3,1), transform .55s cubic-bezier(.16,1,.3,1);
-              pointer-events: none; }
-    .panel.on { opacity: 1; transform: translateY(-50%) translateX(0); pointer-events: auto; }
-    .p-k    { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.28em;
-              color: var(--accent); opacity:.75; margin-bottom:12px; }
-    .p-t    { font-size: clamp(26px,3.4vw,44px); font-weight:300; letter-spacing:-.035em;
-              line-height:1.04; color: var(--ink); margin-bottom:14px; }
-    .p-b    { font-size:14px; line-height:1.62; color: var(--dim); max-width:38ch; }
-    .p-i    { margin-top:22px; display:flex; flex-direction:column; gap:9px; }
-    .p-i a  { pointer-events:auto; font-family:'JetBrains Mono',monospace; font-size:11px;
-              letter-spacing:.10em; text-transform:uppercase; color: var(--dim);
-              text-decoration:none; padding:9px 15px; border:1px solid var(--faint);
-              border-radius:24px; background: var(--glass);
-              backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-              transition: all .3s cubic-bezier(.16,1,.3,1); width:fit-content; }
-    .p-i a:hover { color: var(--ink); border-color: var(--accent); background: rgba(60,255,150,.10); }
-
-    /* right-edge shot rail — the map of the world, and a way to jump in it */
-    #routes { position: fixed; right: clamp(14px,2.4vw,26px); top: 50%; transform: translateY(-50%);
-              z-index: 7; display: flex; flex-direction: column; gap: 14px; align-items: flex-end; }
-    #routes a { pointer-events:auto; display:flex; align-items:center; gap:9px; text-decoration:none;
-                font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.16em;
-                text-transform:uppercase; color: transparent; transition: color .3s; }
-    #routes a i { display:block; width:22px; height:1px; background: var(--faint); transition: all .35s; }
-    #routes a:hover { color: var(--dim); }
-    #routes a.on   { color: var(--accent); }
-    #routes a.on i { background: var(--accent); width:34px; }
-
-    #hint { position: fixed; left: 50%; bottom: clamp(84px,12vh,120px); transform: translateX(-50%);
-            z-index: 6; font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.32em;
-            color: var(--faint); pointer-events:none; transition: opacity .6s; }
-    #hint.gone { opacity: 0; }
-    #hint b { display:block; margin:7px auto 0; width:1px; height:18px;
-              background:linear-gradient(var(--accent),transparent); opacity:.5;
-              animation: hintfall 1.9s ease-in-out infinite; }
-    @keyframes hintfall { 0%,100%{transform:translateY(0);opacity:.15} 50%{transform:translateY(6px);opacity:.55} }
-
-    @media (max-width: 768px) {
-      #panels { left: 18px; right: 18px; width: auto; top: 30%; }
-      .p-b { max-width: none; }
-      #routes { right: 8px; gap: 11px; }
-      #routes a span { display: none; }
-      #hint { bottom: 148px; }
-    }
   </style>
 </head>
 <body>
@@ -158,8 +108,8 @@
 <div class="ui">
   <div class="header">
     <div class="brand">
-      <h1>XLRD<span>//</span>XENOS</h1>
-      <p>Executive Leverage Research &amp; Development</p>
+      <h1>XENOS<span>//</span>AURACLE</h1>
+      <p>Voice-Reactive Spatial Protocol</p>
     </div>
     <div class="telemetry">
       <span>AUDIO:</span> <b id="audio-stat" class="muted">MUTED/BREATHING</b><br>
@@ -189,11 +139,6 @@
   </div>
 </div>
 
-
-<div id="panels"></div>
-<nav id="routes"></nav>
-<div id="hint">SCROLL TO TRAVEL<b></b></div>
-<div id="h-fps" style="position:fixed;left:-9999px;top:-9999px">0</div>
 <script src="https://unpkg.com/gsap@3.13.0/dist/gsap.min.js"></script>
 <script type="importmap">
 {
@@ -464,149 +409,6 @@ let world;
   }));
   scene.add(world); 
 }
-
-/* ═════════════════════════════════════════════════════════════════════════════
-   WORLD — the environment XENOS lives in. Everything above this line is qi's.
-   Nothing below touches his core, his shaders, his points, or his lines.
-   ═════════════════════════════════════════════════════════════════════════════ */
-const WORLD = new THREE.Group();
-scene.add(WORLD);
-/* ⚠️ FOG, corrected after LOOKING at the first build (2026-08-17 11:23).
-   0.00040 seemed reasonable by arithmetic and erased every ridge: MeshBasicMaterial
-   DOES take fog, so the -6600 wall arrived at exp(-2.64) = 7% opacity — present in the
-   bytes, absent on the screen. The lesson is the same one qi keeps paying for: a value
-   that looks correct in the source is not a value that looks correct in the frame. */
-scene.fog = new THREE.FogExp2(0x000200, 0.000105);
-const FLOOR_Y = -560;
-
-function radialTex(inner, outer) {
-  const c = document.createElement('canvas'); c.width = c.height = 256;
-  const x = c.getContext('2d');
-  const g = x.createRadialGradient(128, 128, 0, 128, 128, 128);
-  g.addColorStop(0, inner); g.addColorStop(1, outer);
-  x.fillStyle = g; x.fillRect(0, 0, 256, 256);
-  return new THREE.CanvasTexture(c);
-}
-
-/* floor — dark, wet, faintly reflective. Reads as a lab deck, not a grid toy. */
-const floor = new THREE.Mesh(
-  new THREE.PlaneGeometry(20000, 20000),
-  new THREE.MeshStandardMaterial({ color: 0x00070a, metalness: 0.90, roughness: 0.30, envMapIntensity: 0.28 })
-);
-floor.rotation.x = -Math.PI / 2; floor.position.y = FLOOR_Y; WORLD.add(floor);
-
-/* the pool of light XENOS casts on the deck — this is what anchors him.
-   A floating subject reads as a sketch; a subject with contact reads as present.
-   ⚠️ MEASURED AND CUT DOWN, 11:23: at radius 1900 / alpha 0.50 this additive disc WAS
-   the green wash. From the sky shot the camera looks straight down through it, so it
-   filled the lower half of the frame and swallowed the ridges, the monoliths and his
-   core. Anchoring needs a tight bright contact, not a large soft one — the same error
-   as a hot interior shell erasing structure instead of lighting seams. */
-const pool = new THREE.Mesh(
-  new THREE.CircleGeometry(430, 72),
-  new THREE.MeshBasicMaterial({ map: radialTex('rgba(60,255,150,0.15)', 'rgba(0,0,0,0)'),
-                                transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })
-);
-pool.rotation.x = -Math.PI / 2; pool.position.y = FLOOR_Y + 2; WORLD.add(pool);
-
-/* survey rings + spokes — scale reference, so travel is legible as distance */
-{
-  const seg = 168, v = [];
-  for (let r = 460; r <= 6000; r += 380) {
-    for (let i = 0; i < seg; i++) {
-      const a1 = i / seg * Math.PI * 2, a2 = (i + 1) / seg * Math.PI * 2;
-      v.push(Math.cos(a1) * r, 0, Math.sin(a1) * r, Math.cos(a2) * r, 0, Math.sin(a2) * r);
-    }
-  }
-  for (let k = 0; k < 24; k++) {
-    const a = k / 24 * Math.PI * 2;
-    v.push(Math.cos(a) * 460, 0, Math.sin(a) * 460, Math.cos(a) * 6000, 0, Math.sin(a) * 6000);
-  }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
-  const rings = new THREE.LineSegments(g, new THREE.LineBasicMaterial({
-    color: 0x2fffa0, transparent: true, opacity: 0.070,
-    blending: THREE.AdditiveBlending, depthWrite: false }));
-  rings.position.y = FLOOR_Y + 3; WORLD.add(rings);
-}
-
-/* receding ridge silhouettes — aerial perspective: nearest darkest, farthest palest.
-   Flat MeshBasicMaterial on purpose, so they stay silhouettes and never catch light. */
-function ridge(z, w, h, color, seed) {
-  const g = new THREE.PlaneGeometry(w, h, 240, 1);
-  const p = g.attributes.position;
-  for (let i = 0; i < p.count; i++) {
-    const x = p.getX(i), y = p.getY(i);
-    if (y > 0) {
-      let n = 0, amp = 1, f = 0.00052;
-      for (let o = 0; o < 4; o++) {
-        n += Math.sin(x * f + seed * (o + 1) * 1.7) * amp + Math.cos(x * f * 1.7 + seed * (o + 3)) * amp * 0.6;
-        amp *= 0.5; f *= 2.1;
-      }
-      p.setY(i, y + n * h * 0.11);
-    }
-  }
-  const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide }));
-  m.position.set(0, FLOOR_Y + h / 2, z);
-  return m;
-}
-[[-2700, 16000, 1500, 0x03130c, 1.3], [-4400, 22000, 2500, 0x072016, 2.7],
- [-6600, 30000, 3800, 0x0b2c1e, 4.1], [-9200, 40000, 5400, 0x103826, 5.5]]
-  .forEach(a => WORLD.add(ridge(a[0], a[1], a[2], a[3], a[4])));
-
-/* monoliths — the parallax. These are what makes camera travel FELT rather than
-   merely computed; without near geometry, a dolly through empty space is static. */
-{
-  const mat  = new THREE.MeshStandardMaterial({ color: 0x030f0b, metalness: 0.82, roughness: 0.40, envMapIntensity: 0.34 });
-  /* ⚠️ 0.26 -> 0.11 and narrowed, measured 11:26. An additive strip in front of a dark
-     tower is brighter than the tower is visible, so each seam read as a free-floating
-     neon rod with nothing behind it. The seam is supposed to describe an edge, not
-     replace the object — the same trap as pale emissive shards vanishing against a
-     blown seam, inverted. */
-  const seam = new THREE.MeshBasicMaterial({ color: 0x3cff96, transparent: true, opacity: 0.11,
-                                             blending: THREE.AdditiveBlending, depthWrite: false });
-  const P = [[-1500,-900,220,1500], [1700,-1250,260,2100], [-2400,420,300,1250], [2600,900,240,1750],
-             [-950,-2600,340,2600], [1250,-3100,300,2200], [-3200,-1600,280,1900], [3300,-2050,320,2400],
-             [-2050,1850,200,900],  [2250,2100,220,1100],  [-4250,-420,360,3000], [4400,-720,340,2800],
-             [-620,-4400,420,3400], [950,-5200,400,3200],  [-5400,-2400,380,3600], [5600,-2900,360,3300]];
-  for (const a of P) {
-    const x = a[0], z = a[1], w = a[2], h = a[3];
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, w * 0.82), mat);
-    m.position.set(x, FLOOR_Y + h / 2, z); WORLD.add(m);
-    const s = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.09, h * 0.84), seam);
-    s.position.set(x - w * 0.30, FLOOR_Y + h / 2, z + w * 0.42); WORLD.add(s);
-  }
-}
-
-/* haze pooling between the ridges.
-   ⚠️ Pushed BEHIND the subject and dimmed 0.26 -> 0.09. The nearest sheet was at
-   z=-1900, which is only ~1900 from origin — near enough to sit between the camera
-   and his core on half the shots and veil him. Haze belongs in the distance; haze in
-   front of the subject is just a scrim. */
-{
-  const hz = radialTex('rgba(18,86,52,0.09)', 'rgba(0,0,0,0)');
-  for (const z of [-3800, -6200, -8600]) {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(26000, 6400),
-      new THREE.MeshBasicMaterial({ map: hz, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-    m.position.set(0, FLOOR_Y + 1500, z); WORLD.add(m);
-  }
-}
-
-/* ⭐ THE WORLD'S ONLY REAL LIGHT IS XENOS HIMSELF.
-   A point light at his origin, driven by the same energy that drives his plasma, so
-   the deck, the monoliths and the haze all breathe with his voice. This is why he is
-   "a living avatar" in a room rather than a sprite pasted over a backdrop.
-
-   ⚠️ RANGE 12000 -> 3400 and decay 1.5 -> 2.0, measured 11:23. A near-infinite-range
-   light with slow decay lit the whole 20,000-unit floor evenly, which is the opposite
-   of what a single source does — it flattened the deck into one pale value. Physical
-   inverse-square falloff is what produces the near-black-to-bright range the reference
-   class depends on; a light that reaches everything reveals nothing. */
-const coreLight = new THREE.PointLight(0x3cff96, 2.6, 3400, 2.0);
-scene.add(coreLight);
-const fill = new THREE.DirectionalLight(0x9fffd0, 0.10); fill.position.set(-1, 0.55, 1); scene.add(fill);
-const rim  = new THREE.DirectionalLight(0x1a4a30, 0.16); rim.position.set(0.4, -0.15, -1); scene.add(rim);
-
 
 let pts, lines, base, T0, T1, T2, N=0, labels=[], bandOf=null;
 const SHELL = 230;
@@ -924,8 +726,8 @@ const foc = new THREE.Vector3();
 
 function frame() {
   requestAnimationFrame(frame); 
-  S.time += 0.016 * TF.v;      /* TF.v == 0 freezes his plasma mid-arc for the cut */
-  S.drift += 0.0041 * TF.v;
+  S.time += 0.016;
+  S.drift += 0.0041;
 
   // Audio Analysis
   readVoice();
@@ -945,15 +747,9 @@ function frame() {
   ophanim.position.y += ((S.fy * 38) - ophanim.position.y) * 0.08;
   ophanim.scale.setScalar(S.scale);
 
-  /* shots own the camera; his fx/fy survive as hand-parallax on top of the move */
-  camera.position.x += ((CAM.x + S.fx * 70) - camera.position.x) * 0.055;
-  camera.position.y += ((CAM.y + S.fy * 54) - camera.position.y) * 0.055;
-  camera.position.z += (CAM.z - camera.position.z) * 0.055;
-  camera.lookAt(LOOK.x, LOOK.y, LOOK.z);
-
-  /* the world's light is him — deck, monoliths and haze all breathe with his energy */
-  coreLight.intensity = 1.7 + Math.min(S.energy, 1.4) * 2.5 + S.flare * 1.8;
-  coreLight.position.copy(ophanim.position);
+  camera.position.x += ((S.fx * 70) - camera.position.x) * 0.05;
+  camera.position.y += ((S.fy * 54) - camera.position.y) * 0.05;
+  camera.lookAt(0,0,0);
 
   // Telekinesis Focus Point
   foc.set(S.fx * 300, S.fy * 240, 120);
@@ -1072,136 +868,7 @@ function frame() {
   composer.render();
 }
 
-
-/* ═════════════════════════════════════════════════════════════════════════════
-   NAVIGATION — scroll cuts the camera; each shot travels while you sit in it.
-   ═════════════════════════════════════════════════════════════════════════════ */
-const SHOTS = [
-  {key:"SKY",form:1,cam:[0,2600,1900],camEnd:[0,520,1150],look:[0,0,0],title:"XLRD Tech",body:"The engineering arm. Real-time systems, voice interfaces and autonomous operations — built, measured, and shipped in public.",items:[["Enter the world","#1"]]},
-  {key:"WIDE",form:1,cam:[-1750,260,1850],camEnd:[-820,180,1280],look:[0,40,0],title:"Built in the open",body:"Every surface here runs live off the working tree. No staging environment, no screenshots standing in for the thing itself.",items:[["See what is live","https://hitthe.link/now/"]]},
-  {key:"LOW",form:1,cam:[420,-430,760],camEnd:[-360,-300,900],look:[0,190,0],lookEnd:[0,260,0],title:"Voice as the interface",body:"Speech in, speech out, with the visual layer as confirmation rather than the primary channel. The avatar you are looking at is the same runtime.",items:[]},
-  {key:"CORE",form:1,cam:[540,90,460],camEnd:[-540,130,470],look:[0,0,0],title:"XENOS",body:"A knowledge lab as a living avatar — the graph, the voice agent and the face are one object, not three integrations.",items:[["Open XENOS","/xenos-plasma/"]]},
-  {key:"FORM",form:2,cam:[-700,120,620],camEnd:[700,60,640],look:[0,20,0],title:"It takes a form",body:"Ophanim, core, or figure. The same 500 nodes and their edges, redistributed — the structure is constant, only the arrangement changes.",items:[]},
-  {key:"DECK",form:0,cam:[-2400,-480,-1450],camEnd:[-1100,-470,620],look:[0,60,0],title:"Operations",body:"Autonomous agents, scheduled watchers, and a status board that refuses to report a pass it cannot prove.",items:[["Status board","https://hitthe.link/now/"]]},
-  {key:"FIELD",form:1,cam:[2900,340,-2600],camEnd:[900,250,1500],look:[0,0,0],title:"Research and development",body:"The R and the D in XLRD are literal. Techniques get built here first, then they show up in client work.",items:[["XLRD.org","https://xlrd.org"],["hitthe.link","https://hitthe.link"]]},
-  {key:"HORIZON",form:1,cam:[0,1450,-3400],camEnd:[0,700,2400],look:[0,0,0],title:"Work with the engineering arm",body:"Deposit-first, scoped, and shipped. If it is not live in public, it does not count as delivered.",items:[["XLRD.org","https://xlrd.org"],["hitthe.link","https://hitthe.link"]]}
-];
-
-const CAM  = { x: 0, y: 1500, z: 1400 };
-const LOOK = { x: 0, y: 0, z: 0 };
-const TF   = { v: 1 };                 // time-flow: 0 == frozen, 1 == running
-let shotIdx = -1;
-
-const panelWrap = document.getElementById('panels');
-const routeWrap = document.getElementById('routes');
-const hintEl    = document.getElementById('hint');
-
-SHOTS.forEach((s, i) => {
-  const p = document.createElement('div');
-  p.className = 'panel';
-  const items = (s.items || []).map(it =>
-    '<a href="' + it[1] + '">' + it[0] + '</a>').join('');
-  p.innerHTML = '<div class="p-k">' + String(i + 1).padStart(2, '0') + ' / ' +
-                String(SHOTS.length).padStart(2, '0') + ' &nbsp;·&nbsp; ' + s.key + '</div>' +
-                '<div class="p-t">' + s.title + '</div>' +
-                '<div class="p-b">' + s.body + '</div>' +
-                (items ? '<div class="p-i">' + items + '</div>' : '');
-  panelWrap.appendChild(p);
-
-  const a = document.createElement('a');
-  a.href = '#' + i; a.innerHTML = '<span>' + s.key + '</span><i></i>';
-  a.addEventListener('click', ev => { ev.preventDefault(); go(i); });
-  routeWrap.appendChild(a);
-});
-const panelEls = [].slice.call(panelWrap.children);
-const routeEls = [].slice.call(routeWrap.children);
-
-function applyShot(i, instant) {
-  const s = SHOTS[i];
-  if (!s || !s.cam || !s.look) throw new Error('shot ' + i + ' has no camera — build bug');
-  shotIdx = i;
-
-  gsap.killTweensOf(CAM); gsap.killTweensOf(LOOK); gsap.killTweensOf(TF);
-
-  /* THE CUT: position is set, never interpolated. A tween between two angles is a
-     swoop; qi asked for a cut. The freeze is what makes the cut read as deliberate. */
-  CAM.x = s.cam[0];  CAM.y = s.cam[1];  CAM.z = s.cam[2];
-  LOOK.x = s.look[0]; LOOK.y = s.look[1]; LOOK.z = s.look[2];
-  camera.position.set(CAM.x, CAM.y, CAM.z);
-  camera.lookAt(LOOK.x, LOOK.y, LOOK.z);
-
-  /* THE TRAVEL: the whole dwell is a slow move, so no shot is ever a still frame. */
-  const end = s.camEnd || s.cam;
-  gsap.to(CAM, { x: end[0], y: end[1], z: end[2], duration: 16, ease: 'none' });
-  if (s.lookEnd) gsap.to(LOOK, { x: s.lookEnd[0], y: s.lookEnd[1], z: s.lookEnd[2], duration: 16, ease: 'none' });
-
-  /* THE FREEZE: his plasma, his orbit, his dust all stop, then resume. */
-  if (instant) { TF.v = 1; }
-  else { TF.v = 0; gsap.to(TF, { v: 1, duration: 1.1, delay: 0.34, ease: 'power2.out' }); }
-
-  panelEls.forEach((el, k) => el.classList.toggle('on', k === i));
-  routeEls.forEach((el, k) => el.classList.toggle('on', k === i));
-  if (i > 0) hintEl.classList.add('gone');
-  if (s.form != null && typeof shift === 'function' && Math.round(S.morph) !== s.form) shift(s.form);
-}
-
-function go(i) {
-  const n = Math.max(0, Math.min(SHOTS.length - 1, i));
-  if (n !== shotIdx) applyShot(n, false);
-}
-
-/* scroll / wheel / swipe / keys all drive the same discrete index.
-   Deliberately NOT document scroll: his CSS sets overflow:hidden and
-   touch-action:none for the drag interaction, and fighting that would break the
-   avatar's own handling. Accumulated delta gives the same feel without touching it. */
-let acc = 0, locked = false;
-function nudge(d) {
-  if (locked) return;
-  acc += d;
-  if (Math.abs(acc) < 120) return;
-  const dir = acc > 0 ? 1 : -1; acc = 0;
-  locked = true; setTimeout(() => { locked = false; }, 520);
-  go(shotIdx + dir);
-}
-window.addEventListener('wheel', e => nudge(e.deltaY), { passive: true });
-let ty = null;
-window.addEventListener('touchstart', e => { ty = e.touches[0].clientY; }, { passive: true });
-window.addEventListener('touchmove',  e => {
-  if (ty == null) return;
-  const y = e.touches[0].clientY; nudge((ty - y) * 2.4); ty = y;
-}, { passive: true });
-window.addEventListener('keydown', e => {
-  const K = { ArrowDown: 1, PageDown: 1, ' ': 1, ArrowRight: 1, ArrowUp: -1, PageUp: -1, ArrowLeft: -1 };
-  if (K[e.key]) { e.preventDefault(); acc = 0; locked = false; go(shotIdx + K[e.key]); }
-});
-
-applyShot(0, true);
-/* the sky-view descent qi asked for, run once on load as the establishing move */
-gsap.to(CAM, { x: SHOTS[0].camEnd[0], y: SHOTS[0].camEnd[1], z: SHOTS[0].camEnd[2],
-               duration: 5.2, ease: 'power2.inOut' });
-
-window.__xenos = {
-  ready: false,
-  identity: "xlrd-tech",
-  jointCount: N,
-  shotIndex: () => shotIdx,
-  shots: SHOTS.length,
-  go,
-};
-
 frame();
-
-/* fps readout — the probe needs a number only a running rAF loop can produce */
-{
-  const el = document.getElementById('h-fps');
-  let f = 0, t0 = performance.now();
-  (function tick() {
-    requestAnimationFrame(tick); f++;
-    const now = performance.now();
-    if (now - t0 >= 1000) { el.textContent = String(Math.round(f * 1000 / (now - t0))); f = 0; t0 = now; }
-  })();
-}
-window.__xenos.ready = true;
 
 window.addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
