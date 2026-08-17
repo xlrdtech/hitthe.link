@@ -321,11 +321,21 @@ const RINGS = [
    physically-grounded refraction is craft, not costume. Dark body + short attenuation
    so light dies inside and only the rim catches it: that is what makes a small object
    read as bright against near-black without blowing out (measured this morning). */
-const satMat = new THREE.MeshPhysicalMaterial({
-  color:0x2c4a3e, roughness:0.18, metalness:0.0,
-  transmission:0.55, thickness:1.4, ior:1.31,
-  attenuationColor:C.atten, attenuationDistance:1.1,
-  clearcoat:0.70, clearcoatRoughness:0.16, envMapIntensity:0.85
+/* ⚠️ FOUND BY HANDS + EYES, 10:11 — not by any measurement I had.
+   Driving the page with a real PageDown and LOOKING at the result showed a BLACK SPHERE
+   punched into the core's lower right. Cause: three.js `transmission` samples the
+   BACKDROP via a transmission render target, and that target does not contain the
+   emissive core. So any transmissive satellite passing IN FRONT of the core sampled
+   blackness and rendered as a hole — exactly the artifact I deleted the lattice for.
+   Every automated check passed while this was on screen: ready=true, 72fps, 0 console
+   errors, 37 sats, correct panel. NOTHING but an eye on a real interaction catches it.
+   FIX: drop transmission entirely. Emissive + lit standard material reads as glowing
+   glass against near-black WITHOUT needing to sample anything behind it, so it can
+   never punch a hole. Physical realism was costing more than it bought here. */
+const satMat = new THREE.MeshStandardMaterial({
+  color:0x1d3a2e, roughness:0.22, metalness:0.10,
+  emissive:new THREE.Color(0x2f8f63), emissiveIntensity:0.55,
+  envMapIntensity:1.15
 });
 const hotMat = new THREE.MeshBasicMaterial({color:0xbfffe0});   // the bright few
 
