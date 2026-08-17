@@ -1167,16 +1167,45 @@ const PORTALS = [];
     const tan = ROUTE.getTangentAt(t);
     const g = new THREE.Group();
     g.position.copy(p);
-    g.lookAt(p.clone().add(tan));            // the ring FACES down the route
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(430, 7, 8, 96), ringMat);
-    g.add(ring);
-    const halo = new THREE.Mesh(new THREE.PlaneGeometry(1500, 1500), haloMat);
-    g.add(halo);
-    for (let k = 0; k < 3; k++) {            // concentric inner rings for depth
-      const r2 = new THREE.Mesh(new THREE.TorusGeometry(430 - (k + 1) * 78, 2.4, 6, 72), ringMat);
-      r2.position.z = -(k + 1) * 55;
+    g.lookAt(p.clone().add(tan));            // the aperture FACES down the route
+
+    /* ⚠️ REBUILT AS A THROAT, not a ring. qi 12:14, looking at the first version:
+       "what throws it off is the resemblance of my old logo with these bubbles and
+        stuff floating around it. So I can't really tell that's like a hole in
+        space-time that we're traveling through."
+       He was exactly right about the cause. Concentric coplanar rings plus a soft
+       halo is the grammar of a LOGO MARK — flat, frontal, symmetrical, centred. A
+       hole in space-time is the opposite grammar: it has DEPTH RECEDING AWAY, its
+       centre is DARKER than its rim, and it occludes what is behind it. So the rings
+       now march away from the viewer with shrinking radius, forming a tunnel you
+       fall into, and a black aperture disc sits at the throat so the middle reads as
+       distance rather than as a gap in the geometry. The halo plane is gone — that
+       was the "bubbles floating around it". */
+    const THROAT = 16;
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(430, 6, 8, 96), ringMat);
+    g.add(ring);                             // mouth of the hole, kept as the handle
+    for (let k = 1; k < THROAT; k++) {
+      const f  = k / THROAT;                 // 0..1 into the tunnel
+      const rr = 430 * (1 - f * 0.93);       // radius collapses toward the throat
+      const m2 = new THREE.MeshBasicMaterial({ color: 0x3cff96, transparent: true,
+                                               opacity: 0.30 * (1 - f) + 0.04,
+                                               blending: THREE.AdditiveBlending,
+                                               depthWrite: false, side: THREE.DoubleSide });
+      const r2 = new THREE.Mesh(new THREE.TorusGeometry(rr, 2.2 + f * 2.0, 6, 64), m2);
+      r2.position.z = -f * 1650;             // RECEDING — this is what makes it a hole
+      r2.rotation.z = f * 1.9;               // twist, so the throat reads as spiralling
       g.add(r2);
     }
+    /* the dark at the bottom of the well: occludes the world behind, so the centre
+       is depth instead of a hole punched in the scene (the black-sphere lesson from
+       this morning, applied deliberately this time — opaque, not transmissive). */
+    const iris = new THREE.Mesh(
+      new THREE.CircleGeometry(430 * 0.10, 48),
+      new THREE.MeshBasicMaterial({ color: 0x000200, side: THREE.DoubleSide })
+    );
+    iris.position.z = -1680;
+    g.add(iris);
+
     WORLD.add(g);
     PORTALS.push({ group: g, t, ring, index: i });
   }
