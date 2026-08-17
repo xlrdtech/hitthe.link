@@ -22,9 +22,12 @@
     --glass:rgba(0,4,0,.65); --bg:#000200;
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  html,body{height:100%;background:var(--bg);overflow:hidden;touch-action:none;
-    font-family:'Inter',system-ui,sans-serif;color:var(--ink);
-    -webkit-font-smoothing:antialiased;overscroll-behavior:none}
+  /* scroll is the INPUT device — qi 08:53: "it does that on scroll". So the document must
+     actually scroll; a fixed overflow:hidden body has no scroll to read. */
+  html{scroll-behavior:auto}
+  body{background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
+  #scroll{height:700vh;pointer-events:none}          /* the runway the shots live on */
   canvas#stage{display:block;position:fixed;inset:0;outline:none;z-index:0}
 
   /* ── content layer. THE PAGE LIVES HERE. The scene is behind it, never instead of it. ── */
@@ -42,6 +45,37 @@
     transform-origin:50% 100%}
   .sub{font-weight:300;font-size:clamp(13px,3.6vw,17px);line-height:1.5;color:var(--dim);
     max-width:34ch;opacity:0;transform:translateY(10px)}
+
+  /* ── per-shot content. THIS is what makes the cinematic ride a website:
+       qi 08:54:30 — "the user navigating the site can actually CLICK ON and get to
+       the information or the items going through this cinematic experience." ── */
+  #panels{position:fixed;z-index:4;left:clamp(18px,5vw,44px);
+    bottom:calc(env(safe-area-inset-bottom,0px) + clamp(96px,15vh,150px));
+    max-width:min(38ch,86vw);pointer-events:none}
+  .panel{position:absolute;bottom:0;left:0;width:100%;
+    opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s ease;
+    pointer-events:none}
+  .panel.on{opacity:1;transform:none;pointer-events:auto;position:relative}
+  .p-t{font-weight:300;font-size:clamp(28px,8vw,54px);line-height:1.0;letter-spacing:-.025em;
+    margin-bottom:10px}
+  .p-b{font-weight:300;font-size:clamp(13px,3.5vw,16px);line-height:1.5;color:var(--dim);
+    margin-bottom:16px}
+  .p-i{display:flex;flex-wrap:wrap;gap:8px}
+  .p-i a{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--ink);text-decoration:none;
+    padding:10px 16px;border:1px solid rgba(223,251,233,.22);border-radius:2px;
+    background:rgba(0,4,0,.5);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    transition:border-color .2s,background .2s,color .2s}
+  .p-i a:hover,.p-i a:active{color:var(--accent);border-color:var(--accent);
+    background:rgba(60,255,150,.08)}
+
+  /* scroll affordance — without it nobody discovers that scroll drives the cuts */
+  #hint{position:fixed;z-index:4;right:clamp(14px,4vw,30px);
+    bottom:calc(env(safe-area-inset-bottom,0px) + clamp(96px,15vh,150px));
+    font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.28em;
+    text-transform:uppercase;color:rgba(223,251,233,.3);writing-mode:vertical-rl;
+    pointer-events:none;transition:opacity .5s}
+  #hint.hide{opacity:0}
 
   /* ── navigation. Environment + navigation, per qi 08:46:51 ── */
   nav#routes{position:fixed;left:0;right:0;z-index:3;
@@ -88,14 +122,18 @@
 
 <div id="content">
   <div class="eyebrow" id="eyebrow">XLRD · Avatar · Voice · Graph</div>
-  <h1 id="head"></h1>
-  <p class="sub" id="sub">One surface. The avatar you speak to, the voice that answers, and the
-    graph it reasons over — the same object, on every route.</p>
 </div>
 
-<nav id="routes" aria-label="Scopes"></nav>
+<!-- one panel per camera angle, built from SHOTS -->
+<div id="panels"></div>
+<div id="hint">scroll to cut</div>
+
+<nav id="routes" aria-label="Shots"></nav>
 
 <div id="boot"><div class="r"></div></div>
+
+<!-- the scroll runway. Scroll is the input device for the angle cuts. -->
+<div id="scroll"></div>
 
 <script type="importmap">
 {"imports":{
@@ -389,37 +427,123 @@ const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight),
 composer.addPass(bloom);
 
 /* ═════════════════════════════════════════════════════════════════════════
-   9. NAVIGATION — the routes the avatar rides on. Scope separation is canon:
-      these are distinct scopes and the avatar is shared chrome, never a merge.
+   9. SHOTS — THE CUTS ARE THE NAVIGATION.
+      qi 2026-08-17 08:53–08:54, and every clause here is load-bearing:
+        · "it does that ON SCROLL"                    → scroll is the input
+        · "camera angle changes as TIME FREEZES"      → freeze, THEN cut. Not an orbit.
+        · "switches angles from DIFFERENT SIDES of me"→ discrete viewpoints
+        · "I always like the SKY VIEW, they zoom down onto me" → that's shot 0
+        · "these switches, the angles, IS NAVIGATING the user interface... the user
+           can actually CLICK ON and get to the information or the items"
+          → every shot carries real, clickable content. This is what keeps it a
+            website and not a showreel: "just don't make the website just this."
+
+      SHOT TEMPLATE — one array, retargeted per identity. qi 08:54:40: "in order to
+      get it done at half the time, we're just going to take the exact same thing and
+      do it for two different versions of me." So the geometry of the ride is shared;
+      only IDENTITY (copy + palette + links) swaps. See IDENTITY below.
    ═════════════════════════════════════════════════════════════════════════ */
-const ROUTES = [
-  {id:'ROOT',  label:'XLRD',      href:'/',              cam:[0,2.15,12.4], look:[0,2.2,0]},
-  {id:'XENOS', label:'XENOS',     href:'/xenos-plasma/', cam:[0,2.6,5.6],   look:[0,2.3,0]},
-  {id:'XEN',   label:'XEN',       href:'/xen/',          cam:[-6.2,3.1,9.0],look:[0,2.1,0]},
-  {id:'XOS',   label:'XOS',       href:'/xos/',          cam:[6.4,2.0,8.4], look:[0,2.0,0]},
-  {id:'STD',   label:'xt/16',     href:'/xt/16/',        cam:[0,6.4,14.0],  look:[0,1.4,0]},
-  {id:'VVS',   label:'VVSVEI',    href:'/vvsvei/',       cam:[-3.0,1.2,6.0],look:[0,2.4,0]},
+const SHOTS = [
+  { id:'SKY',   cam:[0.0, 20.0, 0.9],  look:[0,2.2,0], freeze:0.00,
+    title:'XENOS',        body:'The avatar, the voice and the graph — one surface.',
+    items:[{t:'Enter',href:'/xenos-plasma/'}] },
+  { id:'FRONT', cam:[0.0,  2.4, 9.6],  look:[0,2.3,0], freeze:0.55,
+    title:'XLRD',         body:'The system: dev face, professional face, one brand.',
+    items:[{t:'XLRD tech',href:'/xlrd-tech/'},{t:'XLRD.org',href:'/xlrd-org/'}] },
+  { id:'LEFT',  cam:[-8.2, 1.6, 4.2],  look:[0,2.1,0], freeze:0.55,
+    title:'Executive Leverage', body:'The professional representation of the same system.',
+    items:[{t:'Open',href:'/selfexec/'}] },
+  { id:'BEHIND',cam:[0.4,  3.2,-8.8],  look:[0,2.2,0], freeze:0.6,
+    title:'XEN',          body:'The voice. One mouth per origin, guaranteed by construction.',
+    items:[{t:'XEN',href:'/xen/'},{t:'VVSVEI',href:'/vvsvei/'}] },
+  { id:'RIGHT', cam:[8.6,  1.2, 3.4],  look:[0,2.0,0], freeze:0.55,
+    title:'XOS',          body:'The operating surface. Mobile first, always.',
+    items:[{t:'XOS',href:'/xos/'}] },
+  { id:'LOW',   cam:[2.2, -0.6, 5.2],  look:[0,2.6,0], freeze:0.5,
+    title:'The standard',  body:'Everything here is built to xt/16 or better.',
+    items:[{t:'xt/16',href:'/xt/16/'}] },
+  { id:'WIDE',  cam:[0.0,  6.8,16.5],  look:[0,1.6,0], freeze:0.0,
+    title:'hitthe.link',  body:'The portfolio and the fast lane — excellence and consistency.',
+    items:[{t:'All scopes',href:'/'}] },
 ];
+
+/* IDENTITY — the one swap point. Same ride, different person (East Allen / CTO East).
+   ?id=cto flips it; nothing else in the file needs to change. */
+const IDENTITIES = {
+  xlrd:{ name:'XENOS',      accent:0x3cff96, kicker:'XLRD · Avatar · Voice · Graph' },
+  cto: { name:'CTO EAST',   accent:0x8ad4ff, kicker:'CTO East · the real me, corporate' },
+  east:{ name:'EAST ALLEN', accent:0xffd48a, kicker:'East Allen · the real me' },
+};
+const IDK = new URLSearchParams(location.search).get('id') || 'xlrd';
+const IDENT = IDENTITIES[IDK] || IDENTITIES.xlrd;
+C.accent.setHex(IDENT.accent);
+coreUniforms.accent.value = C.accent;
+fill1.color.setHex(IDENT.accent);
+document.documentElement.style.setProperty('--accent', '#'+IDENT.accent.toString(16).padStart(6,'0'));
+document.getElementById('eyebrow').textContent = IDENT.kicker;
+
+/* build the per-shot content panels — the clickable layer at each angle */
+const panelWrap = document.getElementById('panels');
+SHOTS.forEach((S,i)=>{
+  const p = document.createElement('div');
+  p.className='panel'; p.dataset.i=i;
+  p.innerHTML = `<div class="p-t">${S.title}</div><p class="p-b">${S.body}</p>`+
+    `<div class="p-i">${S.items.map(x=>`<a href="${x.href}">${x.t}</a>`).join('')}</div>`;
+  panelWrap.appendChild(p);
+});
+const panels = [...panelWrap.children];
+
+/* nav pills mirror the shots — tapping one scrolls to that shot, so the pill row and
+   the camera can never disagree about where you are. */
 const nav = document.getElementById('routes');
 const hudRoute = document.getElementById('h-route');
-ROUTES.forEach((R,i)=>{
+SHOTS.forEach((S,i)=>{
   const a=document.createElement('a');
-  a.textContent=R.label; a.href=R.href; a.dataset.i=i;
+  a.textContent=S.id; a.href='#'; a.dataset.i=i;
   if(i===0) a.classList.add('on');
-  a.addEventListener('pointerenter', ()=>flyTo(i));
-  a.addEventListener('pointerdown',  e=>{ flyTo(i); });   // link still navigates
+  a.addEventListener('click',e=>{ e.preventDefault(); scrollToShot(i); });
   nav.appendChild(a);
 });
-const look = new THREE.Vector3(0,2.2,0);
-function flyTo(i){
-  const R=ROUTES[i]; if(!R) return;
-  nav.querySelectorAll('a').forEach(x=>x.classList.toggle('on', +x.dataset.i===i));
-  hudRoute.textContent = R.id;
-  gsap.to(camera.position,{x:R.cam[0],y:R.cam[1],z:R.cam[2],duration:1.5,ease:'power3.inOut'});
-  gsap.to(look,           {x:R.look[0],y:R.look[1],z:R.look[2],duration:1.5,ease:'power3.inOut'});
-  gsap.to(coreUniforms.flare,{value:1,duration:.22,ease:'power2.out',
-    onComplete:()=>gsap.to(coreUniforms.flare,{value:0,duration:1.0,ease:'power2.inOut'})});
+function scrollToShot(i){
+  const max = document.body.scrollHeight - innerHeight;
+  scrollTo({top: (i/(SHOTS.length-1))*max, behavior:'smooth'});
 }
+
+/* ── the freeze-cut engine ─────────────────────────────────────────────────
+   Scroll position picks a shot INDEX, not a lerped position between shots.
+   Crossing a boundary: stop scene time (freeze), snap the camera to the new
+   angle, flare the core, swap the panel. A continuous interpolation would
+   produce a smooth orbit — the exact thing he said it is NOT.               */
+const look = new THREE.Vector3(0,2.2,0);
+let shotIdx = -1, frozen = 0, timeScale = 1;
+function applyShot(i, instant){
+  const S = SHOTS[i]; if(!S) return;
+  shotIdx = i;
+  hudRoute.textContent = S.id;
+  nav.querySelectorAll('a').forEach(x=>x.classList.toggle('on', +x.dataset.i===i));
+  panels.forEach((p,k)=>p.classList.toggle('on', k===i));
+
+  // FREEZE: scene time scales to ~0 for the duration of the cut, then resumes.
+  if(!instant && S.freeze>0){
+    frozen = S.freeze;
+    gsap.fromTo({v:1},{v:1},{duration:0});          // no-op anchor, keeps tl semantics
+    timeScale = 0.02;
+    gsap.delayedCall(S.freeze, ()=>{ gsap.to({}, {duration:0}); timeScale = 1; });
+  }
+  const d = instant ? 0 : 0.42;                      // a CUT, not a glide
+  gsap.killTweensOf(camera.position); gsap.killTweensOf(look);
+  gsap.to(camera.position,{x:S.cam[0],y:S.cam[1],z:S.cam[2],duration:d,ease:'power4.inOut'});
+  gsap.to(look,           {x:S.look[0],y:S.look[1],z:S.look[2],duration:d,ease:'power4.inOut'});
+  gsap.to(coreUniforms.flare,{value:1,duration:.10,ease:'power2.out',
+    onComplete:()=>gsap.to(coreUniforms.flare,{value:0,duration:.7,ease:'power2.inOut'})});
+}
+function onScroll(){
+  const max = Math.max(1, document.body.scrollHeight - innerHeight);
+  const p   = Math.min(1, Math.max(0, scrollY / max));
+  const i   = Math.min(SHOTS.length-1, Math.round(p*(SHOTS.length-1)));
+  if(i !== shotIdx) applyShot(i, false);
+}
+addEventListener('scroll', onScroll, {passive:true});
 
 /* pointer parallax — subtle. A big swing reads as a gimmick, not immersion. */
 const ptr={x:0,y:0,tx:0,ty:0};
@@ -431,20 +555,27 @@ addEventListener('pointermove',e=>{
    10. REVEAL — GSAP. xt/16 had none of this; the plasma core does, so the
        environment inherits its motion language rather than inventing one.
    ═════════════════════════════════════════════════════════════════════════ */
-const HEAD='XENOS';
-document.getElementById('head').innerHTML =
-  HEAD.split('').map(ch=>`<span class="g">${ch}</span>`).join('');
-
+/* THE OPENING SHOT IS THE SKY VIEW ZOOMING DOWN.
+   qi 08:54: "I always like the sky view — they zoom down onto me." So the page opens
+   overhead and descends onto the core, landing on shot 0, before scroll takes over. */
 function reveal(){
   document.getElementById('boot').classList.add('gone');
+  applyShot(0, true);                       // seed panel + pill state, no cut flare
+  camera.position.set(0, 34.0, 0.6);        // high overhead
+  look.set(0, 2.2, 0);
+
   const tl = gsap.timeline({defaults:{ease:'power3.out'}});
-  tl.to('#eyebrow',{opacity:1,y:0,duration:.7},0.05)
-    .to('h1 .g',{opacity:1,y:0,rotateX:0,duration:1.0,stagger:0.055},0.15)
-    .to('#sub',{opacity:1,y:0,duration:.8},0.55)
-    .fromTo(coreUniforms.energy,{value:0.02},{value:0.22,duration:2.2,ease:'power2.inOut'},0)
-    .fromTo(camera.position,{z:19.5},{z:12.4,duration:2.6,ease:'power3.out'},0)
-    .fromTo(bloom,{strength:0.02},{strength:MOBILE?0.62:0.74,duration:2.0},0.2);
+  tl.to('#eyebrow',{opacity:1,y:0,duration:.7},0.35)
+    .to(camera.position,{x:SHOTS[0].cam[0],y:SHOTS[0].cam[1],z:SHOTS[0].cam[2],
+                         duration:2.8,ease:'power2.inOut'},0)
+    .fromTo(coreUniforms.energy,{value:0.02},{value:0.22,duration:2.4,ease:'power2.inOut'},0)
+    .fromTo(bloom,{strength:0.02},{strength:MOBILE?0.62:0.74,duration:2.2},0.2)
+    .call(()=>onScroll(), null, 2.8);       // hand control to scroll once we have landed
   gsap.to(coreUniforms.morph,{value:1,duration:9,ease:'sine.inOut',repeat:-1,yoyo:true});
+
+  // hide the scroll hint the moment he actually scrolls
+  addEventListener('scroll', ()=>document.getElementById('hint').classList.add('hide'),
+                   {passive:true, once:true});
 }
 
 /* ═════════════════════════════════════════════════════════════════════════
@@ -479,20 +610,24 @@ window.__xenosFramingGate = function(){
 const clock=new THREE.Clock();
 let fr=0, acc=0;
 const fpsEl=document.getElementById('h-fps'), enEl=document.getElementById('h-energy');
+/* sceneTime is the FROZEN clock. Real time keeps running for the camera cut, but
+   scene motion stops while the angle changes — that is the "time freezes" beat. */
+let sceneTime = 0;
 function frame(){
   const dt=clock.getDelta(), el=clock.elapsedTime;
-  coreUniforms.t.value = el;
+  sceneTime += dt * timeScale;
+  coreUniforms.t.value = sceneTime;
 
   ptr.x += (ptr.tx-ptr.x)*0.045; ptr.y += (ptr.ty-ptr.y)*0.045;
   camera.position.x += ptr.x*0.30; camera.position.y += -ptr.y*0.18;
   camera.lookAt(look);
 
-  core.rotation.y    = el*0.055;
-  lattice.rotation.y = -el*0.085;
-  lattice.rotation.x =  el*0.041;
-  shell.rotation.y   = el*0.010;
-  points.rotation.y  = el*0.014;
-  coreLight.intensity = 78 + Math.sin(el*1.7)*9 + coreUniforms.flare.value*40;
+  core.rotation.y    = sceneTime*0.055;
+  lattice.rotation.y = -sceneTime*0.085;
+  lattice.rotation.x =  sceneTime*0.041;
+  shell.rotation.y   = sceneTime*0.010;
+  points.rotation.y  = sceneTime*0.014;
+  coreLight.intensity = 78 + Math.sin(sceneTime*1.7)*9 + coreUniforms.flare.value*40;
 
   composer.render();
 
