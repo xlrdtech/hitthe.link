@@ -73,6 +73,9 @@ import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
 
 const scene=new THREE.Scene(); // qi 2026-08-17: scene haze removed — "ugly and unrealistic". Depth comes from bloom + node scale, never atmosphere.
 const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,1,7000); camera.position.z=580;
+let _cd=580;   // eased orbit RADIUS. Separate from camera.position.z because once the camera can
+               // orbit, z is only one component of the distance — easing z directly would make
+               // the radius shrink as you swing round to the side.
 const renderer=new THREE.WebGLRenderer({antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth,innerHeight);
 document.body.appendChild(renderer.domElement);
@@ -352,11 +355,68 @@ addEventListener('touchmove',e=>{const t=e.touches[0]; if(!t)return;
   gsap.to(S,{fx:(t.clientX/innerWidth*2-1),fy:-(t.clientY/innerHeight*2-1),duration:.4,ease:'power3.out',overwrite:'auto'});
   gsap.to(cur,{left:t.clientX,top:t.clientY,duration:.15}); stir('TOUCH');},{passive:true});
 
+// qi 2026-08-17 04:28, testing on his phone: "when its touched, that bounce effect is too
+// aggressive." It was scale .80 -> 1.14 on elastic.out(1,.42) — a 34% swing with a springy
+// overshoot, which on a small screen reads as the whole world lurching. Halved and de-sprung:
+// .92 -> 1.045 on a soft back-ease. Still clearly acknowledges the touch, no lurch.
 addEventListener('pointerdown',()=>{ stir('STRUCK');
-  gsap.timeline().to(S,{scale:.80,duration:.10,ease:'power4.in'})
-    .to(S,{scale:1.14,duration:.42,ease:'elastic.out(1,.42)'})
-    .to(S,{scale:1,duration:.7,ease:'power2.out'});
-  gsap.fromTo(S,{flare:1.4},{flare:0,duration:1.1,ease:'power2.out'}); });
+  gsap.timeline().to(S,{scale:.92,duration:.10,ease:'power3.in'})
+    .to(S,{scale:1.045,duration:.34,ease:'back.out(1.6)'})
+    .to(S,{scale:1,duration:.6,ease:'power2.out'});
+  gsap.fromTo(S,{flare:1.0},{flare:0,duration:1.0,ease:'power2.out'}); });
+
+// ── ORBIT + PINCH ────────────────────────────────────────────────────────────────
+// qi 2026-08-17 04:28-04:29, on mobile, verbatim: "Im trying to travel through the world" ·
+// "Its not really changing sides for me or anything" · "its not letting me zoom out" ·
+// "You can zoom in" · "Theres nothing doing the zoom out."
+//
+// He was right on every count, and the cause is one thing: THERE WAS NO ORBIT CONTROL.
+// The camera was only ever `x += (fx*70 - x)*.05` / `y += (fy*54 - y)*.05` at a fixed z — a
+// ±70/±54 unit SWAY around one viewpoint. It can lean, it can never go AROUND. That is exactly
+// "not changing sides".
+// And zoom lived solely on a `wheel` listener. **A phone never fires `wheel`.** So there was
+// literally nothing bound to zoom on touch — what read as "you can zoom in" was Safari scaling
+// the PAGE, and page zoom bottoms out at 1.0, which is why out did nothing.
+//
+// Fixed with true spherical orbit + a two-finger pinch. The pointer-tracking lean (S.fx/S.fy)
+// is DELIBERATELY KEPT — qi liked that ("Following my mouse") — it just no longer owns the
+// camera. Lean is now a small offset ON TOP of the orbit.
+S.az = 0; S.el = 0;                       // azimuth / elevation, radians
+const EL_MAX = 1.35;                      // ~77deg: stop just short of the poles (gimbal flip)
+let drag=null, pinch=null;
+const _dist=(a,b)=>Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+
+addEventListener('touchstart',e=>{
+  if(e.touches.length===2){ drag=null; pinch={d:_dist(e.touches[0],e.touches[1]), z:S.camZ}; }
+  else if(e.touches.length===1){ pinch=null; const t=e.touches[0];
+    drag={x:t.clientX,y:t.clientY,az:S.az,el:S.el}; }
+},{passive:true});
+
+addEventListener('touchmove',e=>{
+  if(pinch && e.touches.length===2){
+    const d=_dist(e.touches[0],e.touches[1]);
+    if(pinch.d>0){ stir('TRAVELLING');
+      // spread fingers -> d grows -> ratio >1 -> camZ shrinks -> move IN. Pinch -> move OUT.
+      gsap.to(S,{camZ:gsap.utils.clamp(260,2400,pinch.z*(pinch.d/d)),
+                 duration:.18,ease:'power2.out',overwrite:'auto'}); }
+    return;
+  }
+  if(drag && e.touches.length===1){ const t=e.touches[0];
+    stir('TRAVELLING');
+    S.az = drag.az + (t.clientX-drag.x)*0.0075;
+    S.el = gsap.utils.clamp(-EL_MAX, EL_MAX, drag.el - (t.clientY-drag.y)*0.0060);
+  }
+},{passive:true});
+
+addEventListener('touchend',e=>{ if(e.touches.length===0){ drag=null; pinch=null; } },{passive:true});
+
+// Desktop: drag with the button held orbits too, so the two paths behave the same.
+let mdown=null;
+addEventListener('mousedown',e=>{ mdown={x:e.clientX,y:e.clientY,az:S.az,el:S.el}; });
+addEventListener('mousemove',e=>{ if(!mdown)return; stir('TRAVELLING');
+  S.az = mdown.az + (e.clientX-mdown.x)*0.0075;
+  S.el = gsap.utils.clamp(-EL_MAX, EL_MAX, mdown.el - (e.clientY-mdown.y)*0.0060); });
+addEventListener('mouseup',()=>{ mdown=null; });
 
 addEventListener('wheel',e=>{ stir('TRAVELLING');
   gsap.to(S,{camZ:gsap.utils.clamp(300,1600,S.camZ+e.deltaY*.55),duration:.85,ease:'power3.out',overwrite:'auto'});
@@ -511,9 +571,16 @@ function frame(){
   ophanim.position.y += ((S.fy*38)-ophanim.position.y)*.08;
   ophanim.scale.setScalar(S.scale);
 
-  camera.position.x += ((S.fx*70)-camera.position.x)*.05;
-  camera.position.y += ((S.fy*54)-camera.position.y)*.05;
-  camera.position.z += (S.camZ-camera.position.z)*.08;
+  // TRUE SPHERICAL ORBIT (qi 2026-08-17 04:28: "Its not really changing sides for me").
+  // Was a ±70/±54 sway at fixed z — a lean, never a circumnavigation. Now az/el place the
+  // camera anywhere on the sphere, and the pointer lean he liked survives as a SMALL offset
+  // added on top rather than as the camera's only motion.
+  _cd += (S.camZ - _cd) * .08;                       // eased radius, keeps the old damping feel
+  const _ce = Math.cos(S.el), _tx = Math.sin(S.az)*_ce*_cd,
+        _ty = Math.sin(S.el)*_cd, _tz = Math.cos(S.az)*_ce*_cd;
+  camera.position.x += ((_tx + S.fx*26) - camera.position.x)*.10;
+  camera.position.y += ((_ty + S.fy*20) - camera.position.y)*.10;
+  camera.position.z += ( _tz            - camera.position.z)*.10;
   camera.lookAt(0,0,0);
 
   foc.set(S.fx*300,S.fy*240,120);
