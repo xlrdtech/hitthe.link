@@ -5704,6 +5704,33 @@ window.addEventListener('beforeunload', stopListening);
   trigger.onclick = () => { open = !open; build(); if (open) reveal(); };
   build();
 
+  // ─── THE PILL MUST NEVER LIE ABOUT WHAT IS LIVE (qi 2026-08-17) ───────────────
+  // "if you make a voice switch, the interface HAS to show that switch. It can't be
+  // where if it's a different voice, it doesn't show in the interface. It has to be
+  // in sync."
+  //
+  // The two fetches above only run on LOAD and after HIS OWN tap. So a voice changed
+  // server-side — by Xen, by a script, by another device — left the pill painting a
+  // voice that was no longer speaking. Same silent-divergence class as the picker
+  // that reported a swap it never made: the UI was confident and wrong.
+  //
+  // Poll the server (the authority) and repaint on CHANGE only. 10s is far below the
+  // rate he notices and the response is a few bytes. Repaint is skipped while the
+  // list is open so it can never yank the row out from under a tap in progress.
+  setInterval(() => {
+    if (open) return;
+    fetch(VOICE_ID_URL, { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((j) => {
+        if (j && j.voice_id && j.voice_id !== current) {
+          current = j.voice_id;
+          build();
+          console.log('[voice] server-side change -> pill now ' + nameOf(current));
+        }
+      })
+      .catch(() => {});      // a failed poll must never disturb the live surface
+  }, 10000);
+
   // Keep the selected pill in view on load, so qi can SEE which voice is live without
   // sliding to hunt for it.
   const reveal = () => {
