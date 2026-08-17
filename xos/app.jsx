@@ -1218,7 +1218,17 @@ function OmniboxPane({ voice, onNewEvent, onOpenLink }) {
   const [voiceId, setVoiceId] = React.useState(
     () => (typeof localStorage !== "undefined" && localStorage.getItem("xen.voice.id")) || READER_VOICES[0].id
   );
-  const voiceName = (READER_VOICES.find((v) => v.id === voiceId) || READER_VOICES[0]).name;
+  // ⚠️ THIS LINE USED TO LIE. It was:
+  //     (READER_VOICES.find(v => v.id === voiceId) || READER_VOICES[0]).name
+  // so ANY voice not in the twelve above rendered as "Emily · Whisper" — silently.
+  // MEASURED 2026-08-17 11:39: ~/.xen/runtime/voice.id held JBFqnCBsd6RMkjVDRZzb,
+  // which is in NO entry of this list, so the pill claimed Emily while the speak path
+  // used something else entirely. That is the whole "every voice is still Emily"
+  // complaint — the DISPLAY was wrong, not the engine.
+  // A fallback that substitutes a plausible value for an unknown one is worse than an
+  // error: it is unfalsifiable from the operator's side. Show the truth instead.
+  const knownVoice = READER_VOICES.find((v) => v.id === voiceId);
+  const voiceName = knownVoice ? knownVoice.name : "Unlisted · " + String(voiceId).slice(0, 8);
 
   // Picking a voice must reach the SPEAK path, not just this tab — the hook
   // xen-speak-outputs.py reads ~/.xen/runtime/voice.id on every utterance, so
