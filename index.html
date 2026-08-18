@@ -243,10 +243,17 @@ body{
 #brand > *{pointer-events:auto}
 .logo{display:flex;align-items:center;gap:11px;text-decoration:none}
 .logo svg{display:block}
-.logo .ring1{animation:spin 26s linear infinite;transform-origin:24px 24px}
-.logo .ring2{animation:spin 17s linear infinite reverse;transform-origin:24px 24px}
-.logo .ring3{animation:spin 38s linear infinite;transform-origin:24px 24px}
+/* XENOS ORB mark — the orb is the HOME state, so the mark breathes rather
+   than spins. Bands drift like ORB_BAND on /xenos/; one orbital arc rotates. */
+.logo .xo-orbit{animation:spin 34s linear infinite;transform-origin:24px 24px}
+.logo .xo-body{animation:xo-breathe 5.2s ease-in-out infinite;transform-origin:24px 24px}
+.logo .xo-b1{animation:xo-band 7.4s ease-in-out infinite}
+.logo .xo-b2{animation:xo-band 5.9s ease-in-out infinite reverse}
+.logo .xo-b3{animation:xo-band 8.8s ease-in-out infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes xo-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+@keyframes xo-band{0%,100%{transform:translateY(0)}50%{transform:translateY(1.5px)}}
+.logo:hover .xo-body{animation-duration:2.1s}
 .logo b{
   font-size:15px;font-weight:800;letter-spacing:-.03em;line-height:1;
   display:block;
@@ -401,8 +408,42 @@ body.pointer #cur-ring,body.pointer #cur-dot{opacity:1}
   .chips .hide-xs{display:none}
 }
 @media (prefers-reduced-motion:reduce){
-  .logo .ring1,.logo .ring2,.logo .ring3,.dot,#boot div s{animation:none}
+  .logo .xo-orbit,.logo .xo-body,.logo .xo-b1,.logo .xo-b2,.logo .xo-b3,.dot,#boot div s{animation:none}
 }
+
+/* ── SEARCH PALETTE ─────────────────────────────────────────────────────────
+   qi 2026-08-18 19:17: "while also adding the search bar". Indexes the live
+   DOM (#depth a[href]) rather than a second copy of the registry, so it cannot
+   go stale against the estate it is searching. */
+#chip-search{border:0;cursor:pointer;font:inherit;font-family:var(--mono);
+  font-size:9px;letter-spacing:.18em;text-transform:uppercase}
+#chip-search kbd{font-family:var(--mono);font-size:8px;opacity:.55;
+  border:1px solid currentColor;border-radius:3px;padding:0 3px;margin-left:5px}
+#pal{position:fixed;inset:0;z-index:60;display:none;
+  background:rgba(3,6,4,.82);backdrop-filter:blur(9px) saturate(120%)}
+#pal.on{display:block}
+#pal-box{position:absolute;left:50%;top:11vh;transform:translateX(-50%);
+  width:min(640px,92vw);max-height:74vh;display:flex;flex-direction:column;
+  background:rgba(9,13,10,.96);border:1px solid rgba(0,255,68,.30);border-radius:12px;
+  box-shadow:0 0 0 1px rgba(0,0,0,.6),0 30px 90px rgba(0,0,0,.8),0 0 60px rgba(0,255,68,.10);
+  overflow:hidden}
+#pal-q{width:100%;background:transparent;border:0;outline:none;color:#eaffe4;
+  font-family:var(--mono);font-size:14px;letter-spacing:.04em;padding:17px 18px;
+  border-bottom:1px solid rgba(0,255,68,.18)}
+#pal-q::placeholder{color:rgba(239,239,239,.30);letter-spacing:.14em;text-transform:uppercase}
+#pal-r{overflow-y:auto;padding:6px 0}
+#pal-r a{display:flex;align-items:baseline;gap:12px;text-decoration:none;
+  padding:9px 18px;color:rgba(239,239,239,.80);font-family:var(--mono);font-size:12px}
+#pal-r a .pc{font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(0,255,68,.55);margin-left:auto;white-space:nowrap}
+#pal-r a.sel,#pal-r a:hover{background:rgba(0,255,68,.11);color:#eaffe4}
+#pal-r a.sel .pc,#pal-r a:hover .pc{color:#8dff6a}
+#pal-none{padding:22px 18px;color:rgba(239,239,239,.34);font-family:var(--mono);font-size:11px;
+  letter-spacing:.1em;text-transform:uppercase}
+#pal-foot{padding:9px 18px;border-top:1px solid rgba(0,255,68,.14);
+  font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(239,239,239,.30);display:flex;gap:16px}
+@media(max-width:600px){#pal-box{top:6vh;width:94vw}#chip-search kbd{display:none}}
 </style>
 </head>
 <body>
@@ -440,12 +481,43 @@ body.pointer #cur-ring,body.pointer #cur-dot{opacity:1}
 
 <header id="brand">
   <a class="logo" href="#" aria-label="hitthe.link">
-    <svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true">
-      <circle class="ring3" cx="24" cy="24" r="20" fill="none" stroke="#00ff44" stroke-opacity=".42" stroke-width="1.6" stroke-dasharray="1 3.1" stroke-linecap="round"/>
-      <circle class="ring2" cx="24" cy="24" r="14.5" fill="none" stroke="#00ff44" stroke-opacity=".62" stroke-width="1.8" stroke-dasharray="1 3.4" stroke-linecap="round"/>
-      <circle class="ring1" cx="24" cy="24" r="9" fill="none" stroke="#00ff44" stroke-opacity=".85" stroke-width="1.7" stroke-dasharray="1 3.6" stroke-linecap="round"/>
-      <circle cx="24" cy="24" r="4.1" fill="#0b140e" stroke="#00ff44" stroke-opacity=".55" stroke-width="1"/>
-      <circle cx="24" cy="24" r="1.7" fill="#00ff44"/>
+    <svg class="xorb" width="48" height="48" viewBox="0 0 48 48" aria-hidden="true">
+      <defs>
+        <radialGradient id="xo-core" cx="38%" cy="34%" r="72%">
+          <stop offset="0%"   stop-color="#eaffe4"/>
+          <stop offset="26%"  stop-color="#8dff6a"/>
+          <stop offset="58%"  stop-color="#22c40f"/>
+          <stop offset="100%" stop-color="#05270a"/>
+        </radialGradient>
+        <radialGradient id="xo-halo" cx="50%" cy="50%" r="50%">
+          <stop offset="55%"  stop-color="#00ff44" stop-opacity="0"/>
+          <stop offset="82%"  stop-color="#00ff44" stop-opacity=".30"/>
+          <stop offset="100%" stop-color="#00ff44" stop-opacity="0"/>
+        </radialGradient>
+        <clipPath id="xo-clip"><circle cx="24" cy="24" r="13.6"/></clipPath>
+      </defs>
+
+      <!-- outer plasma halo -->
+      <circle cx="24" cy="24" r="22" fill="url(#xo-halo)"/>
+
+      <!-- the sphere -->
+      <circle class="xo-body" cx="24" cy="24" r="13.6" fill="url(#xo-core)"/>
+
+      <!-- ORB_BAND: the spectrum as latitude rings, the /xenos/ signature.
+           Clipped to the sphere so they read as ON the body, not around it. -->
+      <g clip-path="url(#xo-clip)" fill="none" stroke="#d8ffcb" stroke-linecap="round">
+        <ellipse class="xo-b1" cx="24" cy="18.2" rx="13.2" ry="3.5" stroke-opacity=".55" stroke-width="1"/>
+        <ellipse class="xo-b2" cx="24" cy="24.0" rx="13.6" ry="4.6" stroke-opacity=".78" stroke-width="1.15"/>
+        <ellipse class="xo-b3" cx="24" cy="29.8" rx="13.2" ry="3.5" stroke-opacity=".45" stroke-width="1"/>
+      </g>
+
+      <!-- limb: the hard edge that makes it a body and not a glow -->
+      <circle cx="24" cy="24" r="13.6" fill="none" stroke="#b6ff9c" stroke-opacity=".72" stroke-width="1.1"/>
+
+      <!-- one orbital arc — the shapeshift that "comes out of the orb" -->
+      <ellipse class="xo-orbit" cx="24" cy="24" rx="21" ry="7.6"
+               fill="none" stroke="#00ff44" stroke-opacity=".5" stroke-width="1.2"
+               stroke-dasharray="1 3.4" stroke-linecap="round" transform="rotate(-22 24 24)"/>
     </svg>
     <span style="display:block">
       <b class="steel">HITTHE.LINK</b>
@@ -455,6 +527,7 @@ body.pointer #cur-ring,body.pointer #cur-dot{opacity:1}
   <nav class="chips">
     <a class="chip hide-xs" href="https://hitthe.link/xen" target="_blank" rel="noopener">/xen</a>
     <a class="chip hide-s" href="https://hitthe.link/xos" target="_blank">/xos</a>
+    <button class="chip" id="chip-search" aria-label="Search surfaces">&#9906;&nbsp;Search <kbd>/</kbd></button>
     <a class="chip" href="#s0" id="chip-give"><span class="dot"></span>Live Sweep</a>
   </nav>
 </header>
@@ -495,6 +568,16 @@ body.pointer #cur-ring,body.pointer #cur-dot{opacity:1}
 <div id="cur-dot"></div>
 
 <div id="track"></div>
+
+
+<!-- ══ SEARCH PALETTE ══ -->
+<div id="pal" role="dialog" aria-modal="true" aria-label="Search surfaces">
+  <div id="pal-box">
+    <input id="pal-q" type="text" placeholder="Search every surface…" autocomplete="off" spellcheck="false">
+    <div id="pal-r"></div>
+    <div id="pal-foot"><span>&uarr;&darr; move</span><span>&crarr; open</span><span>esc close</span><span id="pal-n"></span></div>
+  </div>
+</div>
 
 <div id="boot"><p>Initializing Estate Engine</p><div><s></s></div></div>
 
@@ -1285,6 +1368,99 @@ setTimeout(function(){ boot.classList.add("gone"); setTimeout(function(){ boot.s
       }
   }
   setTimeout(runScanner, 3500); // Trigger after the 3D Engine boots.
+})();
+</script>
+
+<script>
+/* ── SEARCH PALETTE ────────────────────────────────────────────────────────
+   Built 2026-08-18 on qi's "add the search bar".
+   It indexes the anchors the page ITSELF injected into #depth, so the index is
+   the estate — never a second registry that can drift out of sync. */
+(function(){
+  var pal  = document.getElementById('pal');
+  var q    = document.getElementById('pal-q');
+  var out  = document.getElementById('pal-r');
+  var nEl  = document.getElementById('pal-n');
+  var chip = document.getElementById('chip-search');
+  if(!pal||!q||!out) return;
+
+  var IDX = [], sel = 0, cur = [];
+
+  /* Read the real DOM. Runs after injection; re-runs on open so late planes
+     are included rather than silently missing. */
+  function reindex(){
+    var seen = Object.create(null), list = [];
+    var nodes = document.querySelectorAll('#depth a[href]');
+    for(var i=0;i<nodes.length;i++){
+      var a = nodes[i];
+      var href = a.getAttribute('href')||'';
+      if(!href || href.charAt(0)==='#') continue;
+      if(seen[href]) continue;
+      seen[href] = 1;
+      var plane = a.closest ? a.closest('.plane') : null;
+      var cat = (plane && plane.dataset && plane.dataset.name) ? plane.dataset.name : '';
+      var label = (a.textContent||'').trim() || href;
+      list.push({href:href, label:label, cat:cat, hay:(label+' '+href+' '+cat).toLowerCase()});
+    }
+    IDX = list;
+  }
+
+  function render(){
+    var s = q.value.trim().toLowerCase();
+    var terms = s ? s.split(/\s+/) : [];
+    cur = IDX.filter(function(it){
+      for(var i=0;i<terms.length;i++){ if(it.hay.indexOf(terms[i])===-1) return false; }
+      return true;
+    });
+    /* shortest label first: an exact-ish match outranks a long incidental one */
+    if(terms.length) cur.sort(function(a,b){ return a.href.length-b.href.length; });
+    cur = cur.slice(0,60);
+    if(sel >= cur.length) sel = 0;
+    nEl.textContent = cur.length + (cur.length===1?' hit':' hits');
+    if(!cur.length){ out.innerHTML = '<div id="pal-none">no surface matches</div>'; return; }
+    var h = '';
+    for(var i=0;i<cur.length;i++){
+      h += '<a href="'+cur[i].href+'" class="'+(i===sel?'sel':'')+'" data-i="'+i+'">'
+         + '<span>'+cur[i].label.replace(/</g,'&lt;')+'</span>'
+         + (cur[i].cat?'<span class="pc">'+cur[i].cat+'</span>':'')+'</a>';
+    }
+    out.innerHTML = h;
+  }
+
+  function scrollSel(){
+    var el = out.querySelector('a.sel');
+    if(el && el.scrollIntoView) el.scrollIntoView({block:'nearest'});
+  }
+  function open(){ reindex(); pal.classList.add('on'); q.value=''; sel=0; render(); q.focus(); }
+  function close(){ pal.classList.remove('on'); }
+
+  if(chip) chip.addEventListener('click', function(e){ e.preventDefault(); open(); });
+  pal.addEventListener('mousedown', function(e){ if(e.target===pal) close(); });
+  q.addEventListener('input', function(){ sel=0; render(); });
+
+  document.addEventListener('keydown', function(e){
+    var open_ = pal.classList.contains('on');
+    var t = e.target, tag = t && t.tagName;
+    var typing = (tag==='INPUT'||tag==='TEXTAREA'||(t&&t.isContentEditable));
+
+    if(!open_ && !typing && (e.key==='/' || ((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='k'))){
+      e.preventDefault(); open(); return;
+    }
+    if(!open_) return;
+    if(e.key==='Escape'){ e.preventDefault(); close(); return; }
+    if(e.key==='ArrowDown'){ e.preventDefault(); if(cur.length){ sel=(sel+1)%cur.length; render(); scrollSel(); } return; }
+    if(e.key==='ArrowUp'){   e.preventDefault(); if(cur.length){ sel=(sel-1+cur.length)%cur.length; render(); scrollSel(); } return; }
+    if(e.key==='Enter'){
+      e.preventDefault();
+      if(cur[sel]) window.location.href = cur[sel].href;
+      return;
+    }
+  });
+
+  out.addEventListener('mousemove', function(e){
+    var a = e.target.closest && e.target.closest('a[data-i]');
+    if(a){ var i = +a.dataset.i; if(i!==sel){ sel=i; render(); } }
+  });
 })();
 </script>
 </body>
