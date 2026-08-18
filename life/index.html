@@ -556,12 +556,26 @@ const SEED = [
   {id:'phound',p:'P3',s:'mac',t:'Phound — TCR submit + domain swap + API/programmatic efficiencies'},
   {id:'egbbatch',p:'P3',s:'rev',t:'Run fresh EGBOps batch (EGBO local + XGBO remote) + Closer outreach'},
 ];
-const KEY = 'xen-life-steer-v1';
+const KEY = 'xen-life-steer-v2';  // v2: SEED replaced by served steer.json (2026-08-18)
 let T = load();
 function load() { try { const s=JSON.parse(localStorage.getItem(KEY)); if(s&&s.length) return s; } catch(e){} return JSON.parse(JSON.stringify(SEED)); }
 function save() { localStorage.setItem(KEY, JSON.stringify(T)); }
 function escH(s) { return s.replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
 const listEl = document.getElementById('steer-list');
+// ── REAL SOURCE (2026-08-18): steer.json is generated from ~/.xen/state/goals +
+// qi's whiteboard photo. The old hardcoded SEED was July-era and listed /Volumes/qi_,
+// a volume nuked 2026-07-02. localStorage still wins once he edits, so his changes
+// are never clobbered — this only fills a browser that has no v2 state yet.
+(async () => {
+  try {
+    if (localStorage.getItem(KEY)) return;            // he already has state: leave it
+    const r = await fetch('steer.json?_=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return;                                // fail soft, SEED stays
+    const d = await r.json();
+    if (!d || !Array.isArray(d.tasks) || !d.tasks.length) return;
+    T = d.tasks; save(); render();
+  } catch (e) { /* fail soft: never blank his list */ }
+})();
 function render() {
   listEl.innerHTML='';
   T.forEach(task => {
@@ -612,7 +626,7 @@ document.getElementById('send').onclick = () => {
   out.style.display='block'; o.textContent=txt; out.scrollIntoView({behavior:'smooth'});
   navigator.clipboard?.writeText(txt);
   try {
-    fetch('https://tui.xlrd.org/tui?q='+encodeURIComponent('[LIFE STEER] auto-inject — execute as PGS, all parallel:\n'+txt),{mode:'no-cors'});
+    fetch('https://tui.xlrd.org/tui?q='+encodeURIComponent('[LIFE STEER] auto-inject — execute as PGS, all parallel:\n'+txt),{mode:'cors'});
     o.textContent='⚡ auto-injected into Xen (tui.xlrd.org) — also copied as backup\n\n'+txt;
   } catch(e) { o.textContent='(inject unreachable — copied to clipboard)\n\n'+txt; }
 };
@@ -656,7 +670,7 @@ function renderSugg() {
 function firesugg(btn) {
   const s=btn.dataset.s;
   T.unshift({id:'s'+Date.now(),p:'P0',s:'qi',t:s}); save(); render();
-  try{ fetch('https://tui.xlrd.org/tui?q='+encodeURIComponent(s),{mode:'no-cors'}); }catch(e){}
+  try{ fetch('https://tui.xlrd.org/tui?q='+encodeURIComponent(s),{mode:'cors'}); }catch(e){}
   btn.style.opacity='.4';
 }
 loadSuggestions();
