@@ -8,9 +8,14 @@
 <meta name="theme-color" content="#0a0e1c">
 <meta property="og:title" content="Diamond Cutz Studios">
 <meta property="og:description" content="Recording · Mixing · Mastering. Now booking sessions.">
-<meta property="og:image" content="https://hitthe.link/dcz/assets/logo-final.png">
+<meta property="og:image" content="https://hitthe.link/dcz/assets/og-diamondcutz.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://hitthe.link/dcz/">
 <meta property="og:type" content="website">
-<link rel="icon" href="/dcz/assets/logo-final.png?v=2">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" sizes="32x32" href="/dcz/assets/favicon-32.png?v=3">
+<link rel="apple-touch-icon" href="/dcz/assets/favicon-180.png?v=3">
 <script type="application/ld+json">
 {
   "@context":"https://schema.org",
@@ -106,12 +111,12 @@
      One vertical stack: medallion → wordmark → tagline → sub → CTAs.
      Mobile-first: every size in clamp() so it fits a 390px iPhone above the fold and
      scales up cleanly. Obsidian/navy stage, rose-gold gradient wordmark, glass CTAs. */
-  header.intro{position:relative;text-align:center;
+  header.intro{position:relative;text-align:center;overflow:clip;
     padding:clamp(10px,2.4vw,22px) 20px clamp(40px,7vw,72px);
     display:flex;flex-direction:column;align-items:center}
   /* a soft rose-gold halo behind the whole hero so the medallion + wordmark read as one stage */
   header.intro::before{content:"";position:absolute;left:50%;top:-2%;transform:translateX(-50%);
-    width:min(120vw,860px);height:min(78vh,640px);z-index:-1;pointer-events:none;
+    width:min(120%,860px);height:min(78vh,640px);z-index:-1;pointer-events:none;
     background:radial-gradient(ellipse 60% 52% at 50% 38%, rgba(215,160,138,.16), transparent 66%),
       radial-gradient(ellipse 58% 60% at 50% 30%, rgba(19,37,78,.42), transparent 72%);
     filter:blur(2px)}
@@ -423,7 +428,7 @@
   /* Solid pure-black backdrop behind the loader video the entire time it plays. */
   #siteLoader{position:fixed;inset:0;z-index:9999;background:#000;
     display:flex;align-items:center;justify-content:center;opacity:1}
-  #siteLoader video{width:100vw;height:auto;max-height:100vh;object-fit:contain;background:#000}
+  #siteLoader video{width:100%;height:auto;max-height:100vh;object-fit:contain;background:#000}
   /* CINEMATIC GLITCH exit: RGB channel-split shimmer builds into two controlled
      displacement kicks, then dissolves smoothly with scale + fade. Smooth easing,
      not hard steps -> reads as an intentional digital dissolve, not chaos. */
@@ -455,6 +460,10 @@
   var loader=document.getElementById('siteLoader'), body=document.body;
   var vid=loader && loader.querySelector('video');
   var done=false, started=false;
+  // Loader plays at double speed. Browsers reset playbackRate when a source
+  // loads, so re-assert it rather than setting it once.
+  var RATE=2;
+  function setRate(){ try{ if(vid.playbackRate!==RATE) vid.playbackRate=RATE; }catch(e){} }
   function finish(){
     if(done) return; done=true;
     body.classList.remove('preload-active');
@@ -463,16 +472,19 @@
     setTimeout(function(){ if(loader.parentNode) loader.remove(); }, 1000);
   }
   if(!loader || !vid){ finish(); return; }
-  vid.addEventListener('playing', function(){ started=true; });
+  vid.addEventListener('loadedmetadata', setRate);
+  vid.addEventListener('playing', function(){ started=true; setRate(); });
   vid.addEventListener('ended', finish);
   vid.addEventListener('error', finish);
   // Kick playback (autoplay attr alone can be ignored). If it never starts within
   // 2.5s, the video is blocked/undecodable -> reveal the site rather than sit blank.
+  setRate();
   var p=vid.play();
   if(p && p.catch) p.catch(finish);
   setTimeout(function(){ if(!started) finish(); }, 2500);
-  // Absolute cap: even a playing clip can't hold the site hostage past 12s.
-  setTimeout(finish, 12000);
+  // Absolute cap: even a playing clip can't hold the site hostage. Scales with
+  // RATE so a stall can't cost the old full-speed wait.
+  setTimeout(finish, 12000/RATE);
 })();
 </script>
 
@@ -686,7 +698,7 @@
 
     <div class="shows-track" id="showsTrack" tabindex="0" aria-label="Upcoming shows, use left and right arrow keys to change show">
 
-      <article class="show is-active" aria-roledescription="slide" aria-label="Show 1 of 2: Country Black Trail Ride, July 10 2026">
+      <article class="show is-active" aria-roledescription="slide" aria-label="Show 1 of 6: Country Black Trail Ride, July 10 2026">
         <div class="poster">
           <a class="flyer" href="/dcz/assets/show-trailride-jul10.jpg" target="_blank" rel="noopener" aria-label="Open flyer in full size: Country Black Trail Ride, July 10 2026">
             <span class="flyer-bg" style="background-image:url('/dcz/assets/show-trailride-jul10.jpg')" aria-hidden="true"></span>
@@ -711,7 +723,7 @@
         </div>
       </article>
 
-      <article class="show" aria-roledescription="slide" aria-label="Show 2 of 2: 1st Annual TN to AL Trail Ride, August 29 2026">
+      <article class="show" aria-roledescription="slide" aria-label="Show 2 of 6: 1st Annual TN to AL Trail Ride, August 29 2026">
         <div class="poster">
           <a class="flyer" href="/dcz/assets/show-tnal-trailride-aug29.jpg" target="_blank" rel="noopener" aria-label="Open flyer in full size: 1st Annual TN to AL Trail Ride, August 29 2026">
             <span class="flyer-bg" style="background-image:url('/dcz/assets/show-tnal-trailride-aug29.jpg')" aria-hidden="true"></span>
@@ -728,6 +740,108 @@
               <div><span class="ic" aria-hidden="true">🕛</span><span data-ed="show2-time">Gates: Vendors 12PM · Public 2PM · 🎟️ $25 at the gate · advance on Eventbrite · $100 vendors</span></div>
               <div><span class="ic" aria-hidden="true">🐎</span><span data-ed="show2-note">Mechanical bull · tents &amp; coolers welcome · best-dressed trophies (1st/2nd/3rd)</span></div>
               <div><span class="ic" aria-hidden="true">ℹ️</span><span data-ed="show2-info">More info: <span class="nb">Krystal 901.213.6790</span> · <span class="nb">Danielle 731.267.0906</span></span></div>
+            </div>
+            <div class="btns">
+              <button class="btn primary" data-book>Book Stal'lyon</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="show" aria-roledescription="slide" aria-label="Show 3 of 6: Big 3 ATL 4th of July Trail Ride &amp; Field Day, July 3-4 2026">
+        <div class="poster">
+          <a class="flyer" href="/dcz/assets/show-big3atl-jul3-4.jpg" target="_blank" rel="noopener" aria-label="Open flyer in full size: Big 3 ATL 4th of July Trail Ride &amp; Field Day, July 3-4 2026">
+            <span class="flyer-bg" style="background-image:url('/dcz/assets/show-big3atl-jul3-4.jpg')" aria-hidden="true"></span>
+            <span class="date-chip" aria-hidden="true"><span class="d-mo" data-ed="show3-date">Jul 3-4</span><span class="d-yr" data-ed="show3-year">2026</span></span>
+            <img class="zoomable" src="/dcz/assets/show-big3atl-jul3-4.jpg" alt="Big 3 ATL 4th of July Trail Ride &amp; Field Day featuring Stal'lyon, July 3-4 2026, 325 High Falls Park Rd, Barnesville GA" width="1284" height="1738" loading="lazy" decoding="async">
+            <span class="flyer-cue" aria-hidden="true">&#10138; View flyer</span>
+          </a>
+          <div class="caption">
+            <div class="eyebrow" aria-hidden="true">Live Performance</div>
+            <h3><span data-ed="show3-title">Big 3 ATL 4th of July</span> <span class="sub" data-ed="show3-sub">Trail Ride &amp; Field Day · presented by Big 3 Events LLC</span></h3>
+            <div class="det">
+              <div><span class="ic" aria-hidden="true">🎤</span><span data-ed="show3-act">Live performance by Stal'lyon · sounds by DJ Soufside &amp; DJ D-Walk</span></div>
+              <div><span class="ic" aria-hidden="true">📍</span><span data-ed="show3-venue">325 High Falls Park Rd · Barnesville, GA</span></div>
+              <div><span class="ic" aria-hidden="true">🕚</span><span data-ed="show3-time">Fri Jul 3: Gates 12PM · Meet &amp; Greet 6PM · Field Party 7PM &nbsp;|&nbsp; Sat Jul 4: Trail Ride 12PM · Field Day Games 3PM · Field Party 6PM</span></div>
+              <div><span class="ic" aria-hidden="true">🐎</span><span data-ed="show3-note">Horses, SXS, golf carts &amp; 4-wheelers welcome · no dirtbikes · $25 Fri · $30 Sat · $40 weekend · free under 10</span></div>
+              <div><span class="ic" aria-hidden="true">ℹ️</span><span data-ed="show3-info">Vendors: (470) 243-4117 · big3eventsllc@gmail.com · Tickets: big3summerbash.eventbrite.com</span></div>
+            </div>
+            <div class="btns">
+              <button class="btn primary" data-book>Book Stal'lyon</button>
+              <a class="btn ghost" href="https://big3summerbash.eventbrite.com" target="_blank" rel="noopener">Get Tickets</a>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="show" aria-roledescription="slide" aria-label="Show 4 of 6: Dukes &amp; Boots Concert, August 23 2026">
+        <div class="poster">
+          <a class="flyer" href="/dcz/assets/show-dukes-boots-aug23.jpg" target="_blank" rel="noopener" aria-label="Open flyer in full size: Dukes &amp; Boots Concert, August 23 2026">
+            <span class="flyer-bg" style="background-image:url('/dcz/assets/show-dukes-boots-aug23.jpg')" aria-hidden="true"></span>
+            <span class="date-chip" aria-hidden="true"><span class="d-mo" data-ed="show4-date">Aug 23</span><span class="d-yr" data-ed="show4-year">2026</span></span>
+            <img class="zoomable" src="/dcz/assets/show-dukes-boots-aug23.jpg" alt="Dukes &amp; Boots Concert featuring Stal'lyon, August 23 2026, Boosie Estates, Palmetto GA" width="1145" height="1373" loading="lazy" decoding="async">
+            <span class="flyer-cue" aria-hidden="true">&#10138; View flyer</span>
+          </a>
+          <div class="caption">
+            <div class="eyebrow" aria-hidden="true">Live Performance</div>
+            <h3><span data-ed="show4-title">Dukes &amp; Boots Concert</span> <span class="sub" data-ed="show4-sub">Boosie Badazz presents · Rhythm Ryderz</span></h3>
+            <div class="det">
+              <div><span class="ic" aria-hidden="true">🎤</span><span data-ed="show4-act">Stal'lyon with the Rhythm Ryderz · ChocLit, Beretta, Cynnamon, Dulcet, Self Made, Hurricane Tinka &amp; Q'yett Stormm · hosted by Tay Cheesy &amp; Lent Lawson</span></div>
+              <div><span class="ic" aria-hidden="true">📍</span><span data-ed="show4-venue">Boosie Estates · 9256 Wilkerson Mill Rd · Palmetto, GA</span></div>
+              <div><span class="ic" aria-hidden="true">🕛</span><span data-ed="show4-time">Start time not printed on the flyer · check Eventbrite</span></div>
+              <div><span class="ic" aria-hidden="true">🐎</span><span data-ed="show4-note">Sunday · no coolers allowed</span></div>
+              <div><span class="ic" aria-hidden="true">ℹ️</span><span data-ed="show4-info">Tables, tents &amp; vendors: @RoadRunnerMgmt · <span class="nb">470-557-0904</span></span></div>
+            </div>
+            <div class="btns">
+              <button class="btn primary" data-book>Book Stal'lyon</button>
+              <a class="btn ghost" href="https://www.eventbrite.com/e/boosie-dukes-boots-concert-tickets-1992966319912" target="_blank" rel="noopener">Get Tickets</a>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="show" aria-roledescription="slide" aria-label="Show 5 of 6: Maxim Trail Ride Field Party, October 17 2026">
+        <div class="poster">
+          <a class="flyer" href="/dcz/assets/show-maxim-trailride-oct17.jpg" target="_blank" rel="noopener" aria-label="Open flyer in full size: Maxim Trail Ride Field Party, October 17 2026">
+            <span class="flyer-bg" style="background-image:url('/dcz/assets/show-maxim-trailride-oct17.jpg')" aria-hidden="true"></span>
+            <span class="date-chip" aria-hidden="true"><span class="d-mo" data-ed="show5-date">Oct 17</span><span class="d-yr" data-ed="show5-year">2026</span></span>
+            <img class="zoomable" src="/dcz/assets/show-maxim-trailride-oct17.jpg" alt="Maxim Trail Ride Field Party featuring Stal'lyon, October 17 2026, 1912 Maxim Road, Lincolnton GA" width="1023" height="1537" loading="lazy" decoding="async">
+            <span class="flyer-cue" aria-hidden="true">&#10138; View flyer</span>
+          </a>
+          <div class="caption">
+            <div class="eyebrow" aria-hidden="true">Live Performance</div>
+            <h3><span data-ed="show5-title">Maxim Trail Ride</span> <span class="sub" data-ed="show5-sub">Field Party · presented by The Barksdales</span></h3>
+            <div class="det">
+              <div><span class="ic" aria-hidden="true">🎤</span><span data-ed="show5-act">Live performance by Stal'lyon · with Myia B · guest performance Jarvis Wingfield · special guest Jasmine Brown · DJ Biggums</span></div>
+              <div><span class="ic" aria-hidden="true">📍</span><span data-ed="show5-venue">1912 Maxim Road · Lincolnton, GA 30817</span></div>
+              <div><span class="ic" aria-hidden="true">🕛</span><span data-ed="show5-time">Gates 12PM · Field Party 4PM–11PM · 🎟️ $25 early bird · $30 at the gate · $40 RV parking without hookups · $150 vendors</span></div>
+              <div><span class="ic" aria-hidden="true">🐎</span><span data-ed="show5-note">Coolers, tents, ATVs, 4-wheelers &amp; horses welcome · no guns or grills · security enforced</span></div>
+              <div><span class="ic" aria-hidden="true">ℹ️</span><span data-ed="show5-info">Early bird tickets, vendors &amp; group rates: Dee <span class="nb">706-914-9035</span> · Erica <span class="nb">501-912-8519</span></span></div>
+            </div>
+            <div class="btns">
+              <button class="btn primary" data-book>Book Stal'lyon</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="show" aria-roledescription="slide" aria-label="Show 6 of 6: No Sleep Weekend Trail Ride, September 4-5 2026">
+        <div class="poster">
+          <a class="flyer" href="/dcz/assets/show-no-sleep-weekend-sep4.jpg" target="_blank" rel="noopener" aria-label="Open flyer in full size: No Sleep Weekend Trail Ride, September 4-5 2026">
+            <span class="flyer-bg" style="background-image:url('/dcz/assets/show-no-sleep-weekend-sep4.jpg')" aria-hidden="true"></span>
+            <span class="date-chip" aria-hidden="true"><span class="d-mo" data-ed="show6-date">Sep 4-5</span><span class="d-yr" data-ed="show6-year">2026</span></span>
+            <img class="zoomable" src="/dcz/assets/show-no-sleep-weekend-sep4.jpg" alt="No Sleep Weekend Trail Ride featuring Stal'lyon, September 4-5 2026, Platinum Ranch, Fitzgerald GA" width="1284" height="1754" loading="lazy" decoding="async">
+            <span class="flyer-cue" aria-hidden="true">&#10138; View flyer</span>
+          </a>
+          <div class="caption">
+            <div class="eyebrow" aria-hidden="true">Live Performance</div>
+            <h3><span data-ed="show6-title">No Sleep Weekend Trail Ride</span> <span class="sub" data-ed="show6-sub">Southeastern Platinum Riderz present · Platinum Ranch</span></h3>
+            <div class="det">
+              <div><span class="ic" aria-hidden="true">🎤</span><span data-ed="show6-act">Stal'lyon performing <em>"Stal'lyon Shuffle"</em> · with Mr. Campbell, Lynn Tate, Japvonn &amp; Ayden McKenzie · DJ Tremayne &amp; DJ D Walk</span></div>
+              <div><span class="ic" aria-hidden="true">📍</span><span data-ed="show6-venue">Platinum Ranch · 366 Osierfield Dr · Fitzgerald, GA</span></div>
+              <div><span class="ic" aria-hidden="true">🕛</span><span data-ed="show6-time">Fri Sep 4: Gates 9AM · Free fish fry 6PM · After party 7PM &nbsp;|&nbsp; Sat Sep 5: Trail ride 10AM · Buggy ride 11AM · Arena games 4PM · Night ride 6PM · Concert 7PM</span></div>
+              <div><span class="ic" aria-hidden="true">🐎</span><span data-ed="show6-note">Horse riders free · $20 Fri · $30 Sat · $40 weekend · no 4-wheelers or dirt bikes · security enforced</span></div>
+              <div><span class="ic" aria-hidden="true">ℹ️</span><span data-ed="show6-info">Vendors &amp; hookups: <span class="nb">904-553-7905</span> · Info: <span class="nb">904-673-2819</span> · <span class="nb">229-425-9129</span></span></div>
             </div>
             <div class="btns">
               <button class="btn primary" data-book>Book Stal'lyon</button>
@@ -1112,6 +1226,68 @@
   var root = document.getElementById('showsGallery'); if(!root) return;
   var track = document.getElementById('showsTrack'); if(!track) return;
   var slides = [].slice.call(track.querySelectorAll('.show')); if(!slides.length) return;
+
+  // ── DATE-AWARE ORDER (LaTina 2026-07-29: "I wonder why it does[n't] line up
+  // according to dates"). The heading promises "Upcoming Shows", but the carousel
+  // opened on Jul 10 — 19 days past — because slide order was DOM order.
+  // HARD CONSTRAINT: content.json overlays these slides POSITIONALLY (c.shows[i] ->
+  // showN), so the DOM order must NOT change or a paying client's show data gets
+  // reassigned. .shows-track is flex, so we reorder VISUALLY via CSS `order` and
+  // leave the DOM — and therefore the index mapping — byte-identical.
+  function orderByDate(){
+    var MON = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+    var today = new Date(); today.setHours(0,0,0,0);
+    var meta = slides.map(function(s, i){
+      var mo = s.querySelector('[data-ed$="-date"]'), yr = s.querySelector('[data-ed$="-year"]');
+      var txt = mo ? (mo.textContent || '').trim() : '';
+      var year = yr ? parseInt(yr.textContent, 10) : NaN;
+      var m = txt.match(/^([A-Z][a-z]{2})\s+(\d{1,2})(?:\s*[-–]\s*(\d{1,2}))?/);
+      if(!m || !(m[1] in MON) || !year) return { s:s, i:i, start:null, end:null };
+      return {
+        s:s, i:i,
+        start: new Date(year, MON[m[1]], parseInt(m[2],10)),
+        // multi-day events are not over until their LAST day
+        end:   new Date(year, MON[m[1]], parseInt(m[3] || m[2],10))
+      };
+    });
+    var future = meta.filter(function(x){ return !x.end || x.end >= today; });
+    // if every show has passed, keep them all — an empty section is worse than a stale one
+    var keep = future.length ? future : meta;
+    keep.sort(function(a,b){ return (a.start ? a.start.getTime() : 0) - (b.start ? b.start.getTime() : 0); });
+    meta.forEach(function(x){
+      var rank = keep.indexOf(x);
+      if(rank === -1){ x.s.hidden = true; x.s.style.display = 'none'; return; }
+      x.s.hidden = false;
+      x.s.style.order = rank;
+      // Rebuild the whole announced label from the SAME nodes /edit/ writes (title/date/year),
+      // not from the hardcoded attribute. Scraping the attribute preserved whatever name was
+      // baked into the HTML, so renaming a show in content.json left screen readers announcing
+      // the OLD name forever while every sighted visitor saw the new one.
+      var t  = x.s.querySelector('[data-ed$="-title"]');
+      var mo = x.s.querySelector('[data-ed$="-date"]');
+      var yr = x.s.querySelector('[data-ed$="-year"]');
+      var pos = 'Show ' + (rank+1) + ' of ' + keep.length;
+      var name = t ? (t.textContent || '').trim() : '';
+      var when = [mo && (mo.textContent||'').trim(), yr && (yr.textContent||'').trim()]
+                   .filter(Boolean).join(' ');
+      if (name || when) {
+        x.s.setAttribute('aria-label', pos + ': ' + [name, when].filter(Boolean).join(', '));
+      } else {
+        // no readable title/date — keep the position honest, leave the rest as authored
+        var lab = x.s.getAttribute('aria-label') || '';
+        x.s.setAttribute('aria-label', pos + lab.replace(/^Show\s+\d+\s+of\s+\d+/, ''));
+      }
+    });
+    slides = keep.map(function(x){ return x.s; });
+  }
+  orderByDate();
+  // KNOWN LIMIT, deliberate: content.json is fetched async and lands AFTER this init, so
+  // if the client edits a DATE at /edit/ the new order applies on next load, not instantly.
+  // A re-sort on mutation was tried and dropped — `n` and the dots array are captured at
+  // init, so changing the visible count mid-flight can desync the carousel. A one-load-stale
+  // ORDER is a far smaller defect on a paying client's page than a broken carousel.
+  // Dates today come from the HTML and content.json's values match it, so this is inert.
+
   var prevBtn = root.querySelector('.gal-prev'), nextBtn = root.querySelector('.gal-next');
   var dotsWrap = root.querySelector('.gal-dots'), bar = root.querySelector('.gal-progress > i');
   var live = root.querySelector('.gal-live');
