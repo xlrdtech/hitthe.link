@@ -3553,7 +3553,15 @@ function App() {
                 tab reveals VVSVEI again — nothing is destroyed either way. */}
             <div className="pane pane-vei">
               <VvsveiPane />
-              <ShipInChat />
+              {/* ShipInChat REMOVED from the chat centre — qi 2026-08-19 09:28,
+                  with a screenshot: the cards rendered as tall empty black boxes
+                  ("TIMELINE loading…", "XENOS // hitthe.link" + TALLER/OPEN FULL)
+                  and swallowed the voice-chat column. His words: "i dont like that
+                  feature remove it from xos well try again with compacitor."
+                  The component + SHIPS_FEED stay defined and dormant on purpose, so
+                  the Capacitor retry is re-adding this one line — NOT a rebuild.
+                  ⛔ Do NOT re-enable it here as a web card; the retry is the native
+                  WebView shell (see capacitor-is-the-xos-shell-not-iframe). */}
               {openTabs.length > 0 && (
                 <div className="xos-browser-overlay">
                   <BrowserPane openTabs={openTabs} activeTabId={activeTabId} setActiveTabId={setActiveTabId} onCloseTab={closeTab} onCloseAll={closeAllTabs} onOpenUrl={(raw) => { const u = /^https?:\/\//i.test(raw) ? raw : ("https://" + raw); try { const host = new URL(u).host; openLink({ id: u, url: u, name: host, host }); } catch (_) { openLink({ id: u, url: u, name: raw, host: raw }); } }} />
