@@ -483,7 +483,7 @@ body.pointer #cur-ring,body.pointer #cur-dot{opacity:1}
           <p class="cap">LIVE SCANNED / OMNIPRESENT</p>
           <h1 class="mark"><span class="steel">HIT</span>THE.<br>LINK</h1>
           <div class="hr" style="max-width:340px"></div>
-          <p class="cap">COMMAND&nbsp;HOME&nbsp;·&nbsp;FORGED&nbsp;BY&nbsp;XEN&nbsp;·&nbsp;EAST&nbsp;ALLEN</p>
+          <p class="cap">COMMAND&nbsp;HOME <span aria-hidden="true">·</span> FORGED&nbsp;BY&nbsp;XEN <span aria-hidden="true">·</span> EAST&nbsp;ALLEN</p>
         </div>
       </div>
     </section>
@@ -928,7 +928,7 @@ void main(){
 <!-- ══ ESTATE INJECTION ENGINE ══ -->
 <script>
 const directoryData = [
-    { category: "Xen Ecosystem", links: ["/xen", "/xen-01", "/xen-02", "/xen-03", "/xen-04", "/xen-05", "/xen-06", "/xen-07", "/xen-08", "/xen-09", "/xen-10", "/xen-11", "/xen-12", "/xen-13", "/xen-14", "/xen-15", "/xen-16", "/xen-17", "/xen-18", "/xen-19", "/xen-20", "/xen-21", "/xen-22", "/xen-23", "/xen-24", "/xen-25", "/xen-architecture", "/xen-awareness", "/xen-fabric", "/xen-map", "/xen-prd", "/xen-source-of-truth", "/xen-system-decision", "/xen-worklog", "/xenmemory/win", "/xos", "/xos3", "/xql", "/xt", "/xvm", "/clipboard-to-xen"] },
+    { category: "Xen Ecosystem", links: ["/xen", "/xen-01", "/xen-02", "/xen-03", "/xen-04", "/xen-05", "/xen-06", "/xen-07", "/xen-08", "/xen-09", "/xen-10", "/xen-11", "/xen-12", "/xen-13", "/xen-14", "/xen-15", "/xen-16", "/xen-17", "/xen-18", "/xen-19", "/xen-20", "/xen-21", "/xen-22", "/xen-23", "/xen-24", "/xen-25", "/xen-architecture", "/xen-awareness", "/xen-fabric", "/xen-map", "/xen-prd", "/xen-source-of-truth", "/xen-system-decision", "/xen-worklog", "/xenmemory/win", "/xenos", "/xenos-env", "/xenos-plasma", "/xenos-v3", "/xos", "/xos3", "/xql", "/xt", "/xvm", "/clipboard-to-xen"] },
     { category: "Veinom / VVS", links: ["/vei", "/veinom", "/veinom-inject", "/venom", "/agy/veinom", "/agyveinom", "/claude/veinom", "/grokveinom", "/VVS", "/vvsvei", "/vvsvei-live", "/vvsvei-voice"] },
     { category: "AI & Agents", links: ["/agents", "/auto-agent", "/coding-agents", "/subagent", "/claude-mem", "/claude-web-api", "/claudeos", "/extendlm", "/grok", "/nblm", "/nblmaudit", "/vectorgen"] },
     { category: "L7S & Ops", links: ["/l7", "/l7s", "/l7s-client-info", "/l7s-gap", "/l7s-hero", "/l7s-operator-hub", "/l7s-pulse", "/l7s-site", "/l7shero", "/hero/check/bse", "/check-hero"] },
@@ -1391,9 +1391,21 @@ setTimeout(function(){ boot.classList.add("gone"); setTimeout(function(){ boot.s
 
 <script>
 /* ── SEARCH PALETTE ────────────────────────────────────────────────────────
-   Built 2026-08-18 on qi's "add the search bar".
-   It indexes the anchors the page ITSELF injected into #depth, so the index is
-   the estate — never a second registry that can drift out of sync. */
+   Built 2026-08-18 on qi's "add the search bar"; REBUILT 2026-08-19 after he
+   tested it by hand, typed "Xenos", and got "no surface matches".
+
+   TWO THINGS WERE WRONG, both measured on the live page before this rewrite:
+   1. /xenos was NOT IN THE ESTATE INDEX AT ALL — only /xos and /xos3 were
+      listed, so the palette was answering correctly about a directory that
+      had a hole in it. Fixed in directoryData, not here.
+   2. Matching was strict substring across one flat haystack, so a near-miss
+      spelling returned nothing rather than the obvious neighbour. Now every
+      term is scored: exact path, path prefix, path substring, label/category,
+      then a subsequence fallback — so "xenos", "xos" and "XOS" all land on
+      the right surfaces instead of one of them going dark.
+
+   It still indexes the anchors the page ITSELF injected into #depth, so the
+   index is the estate — never a second registry that can drift out of sync. */
 (function(){
   var pal  = document.getElementById('pal');
   var q    = document.getElementById('pal-q');
@@ -1401,6 +1413,18 @@ setTimeout(function(){ boot.classList.add("gone"); setTimeout(function(){ boot.s
   var nEl  = document.getElementById('pal-n');
   var chip = document.getElementById('chip-search');
   if(!pal||!q||!out) return;
+
+  /* Human words the PATHS do not carry. Deliberately tiny and factual: it only
+     cross-links the two spellings of the same surface family, so typing either
+     one finds both. Not a place for invented descriptions. */
+  var ALIAS = {
+    '/xenos':        'xos spatial os avatar orb',
+    '/xenos-env':    'xos spatial os environment',
+    '/xenos-plasma': 'xos spatial os plasma avatar',
+    '/xenos-v3':     'xos3 spatial os v3',
+    '/xos':          'xenos phone os',
+    '/xos3':         'xenos v3 phone os'
+  };
 
   var IDX = [], sel = 0, cur = [];
 
@@ -1418,41 +1442,112 @@ setTimeout(function(){ boot.classList.add("gone"); setTimeout(function(){ boot.s
       var plane = a.closest ? a.closest('.plane') : null;
       var cat = (plane && plane.dataset && plane.dataset.name) ? plane.dataset.name : '';
       var label = (a.textContent||'').trim() || href;
-      list.push({href:href, label:label, cat:cat, hay:(label+' '+href+' '+cat).toLowerCase()});
+      /* the path is what a human types; keep it separate from the rest so the
+         ranking can tell "the path IS this" from "this word appears somewhere" */
+      var path = (a.getAttribute('data-url') || label || href).toLowerCase();
+      if(path.charAt(0) !== '/') path = '/' + path.replace(/^https?:\/\/[^\/]+\//,'');
+      list.push({
+        href:  href,
+        label: label,
+        cat:   cat,
+        path:  path,
+        hay:   (label+' '+href+' '+cat+' '+(ALIAS[path]||'')).toLowerCase()
+      });
     }
     IDX = list;
+  }
+
+  /* subsequence, not substring: "xos" is inside "/xenos" as x..o.s. Gated to
+     3+ chars so a one-letter query cannot fuzz its way into all 350 rows. */
+  function subseq(t, h){
+    if(t.length < 3) return false;
+    var i = 0;
+    for(var j=0;j<h.length && i<t.length;j++){ if(h.charAt(j)===t.charAt(i)) i++; }
+    return i === t.length;
+  }
+
+  /* Lower is better. -1 means this term does not match at all, so the row is out. */
+  function rank(it, t){
+    var p = it.path;
+    if(p === '/'+t)            return 0;   // exact surface
+    if(p.indexOf('/'+t) === 0) return 1;   // path starts with it
+    if(p.indexOf(t) !== -1)    return 2;   // path contains it
+    if(it.hay.indexOf(t) !== -1) return 3; // label, category or alias
+    if(subseq(t, p))           return 4;   // fuzzy on the path
+    return -1;
   }
 
   function render(){
     var s = q.value.trim().toLowerCase();
     var terms = s ? s.split(/\s+/) : [];
-    cur = IDX.filter(function(it){
-      for(var i=0;i<terms.length;i++){ if(it.hay.indexOf(terms[i])===-1) return false; }
-      return true;
+    var scored = [];
+    for(var i=0;i<IDX.length;i++){
+      var it = IDX[i], worst = 0, ok = true;
+      for(var k=0;k<terms.length;k++){
+        var r = rank(it, terms[k]);
+        if(r < 0){ ok = false; break; }
+        if(r > worst) worst = r;
+      }
+      if(ok) scored.push([worst, it]);
+    }
+    /* best match class first, then the shortest path — an exact-ish surface
+       outranks a long incidental one carrying the same letters */
+    scored.sort(function(a,b){
+      if(a[0] !== b[0]) return a[0] - b[0];
+      if(a[1].path.length !== b[1].path.length) return a[1].path.length - b[1].path.length;
+      return a[1].path < b[1].path ? -1 : 1;
     });
-    /* shortest label first: an exact-ish match outranks a long incidental one */
-    if(terms.length) cur.sort(function(a,b){ return a.href.length-b.href.length; });
-    cur = cur.slice(0,60);
+    var total = scored.length;
+    cur = [];
+    for(var j=0;j<scored.length && j<60;j++) cur.push(scored[j][1]);
     if(sel >= cur.length) sel = 0;
-    nEl.textContent = cur.length + (cur.length===1?' hit':' hits');
+    nEl.textContent = total + (total===1?' hit':' hits');
     if(!cur.length){ out.innerHTML = '<div id="pal-none">no surface matches</div>'; return; }
     var h = '';
-    for(var i=0;i<cur.length;i++){
-      h += '<a href="'+cur[i].href+'" class="'+(i===sel?'sel':'')+'" data-i="'+i+'">'
-         + '<span>'+cur[i].label.replace(/</g,'&lt;')+'</span>'
-         + (cur[i].cat?'<span class="pc">'+cur[i].cat+'</span>':'')+'</a>';
+    for(var m=0;m<cur.length;m++){
+      h += '<a href="'+cur[m].href+'" class="'+(m===sel?'sel':'')+'" data-i="'+m+'">'
+         + '<span>'+cur[m].label.replace(/</g,'&lt;')+'</span>'
+         + (cur[m].cat?'<span class="pc">'+cur[m].cat+'</span>':'')+'</a>';
     }
     out.innerHTML = h;
   }
 
+  /* Move the highlight WITHOUT rebuilding the list. Re-rendering on hover
+     replaced the <a> between mousedown and mouseup, which silently ate the
+     click on a result — the row you pressed no longer existed to release on. */
+  function mark(){
+    var as = out.querySelectorAll('a');
+    for(var i=0;i<as.length;i++) as[i].className = (i===sel ? 'sel' : '');
+  }
   function scrollSel(){
     var el = out.querySelector('a.sel');
     if(el && el.scrollIntoView) el.scrollIntoView({block:'nearest'});
   }
-  function open(){ reindex(); pal.classList.add('on'); q.value=''; sel=0; render(); q.focus(); }
+
+  /* .on goes on FIRST: if reindex ever throws, the palette still opens and the
+     operator sees an empty list, instead of a pill that does nothing at all. */
+  function open(){
+    pal.classList.add('on');
+    try { reindex(); } catch(err) { IDX = IDX || []; }
+    q.value=''; sel=0; render();
+    try { q.focus({preventScroll:true}); } catch(e) { q.focus(); }
+  }
   function close(){ pal.classList.remove('on'); }
 
-  if(chip) chip.addEventListener('click', function(e){ e.preventDefault(); open(); });
+  if(chip){
+    /* touchend AND click: on a handset the tap must open it even if the
+       synthetic click is swallowed. The guard stops the pair double-firing. */
+    var lastTrip = 0;
+    var trip = function(e){
+      var now = Date.now();
+      if(now - lastTrip < 400) return;
+      lastTrip = now;
+      e.preventDefault(); e.stopPropagation();
+      open();
+    };
+    chip.addEventListener('click', trip, false);
+    chip.addEventListener('touchend', trip, false);
+  }
   pal.addEventListener('mousedown', function(e){ if(e.target===pal) close(); });
   q.addEventListener('input', function(){ sel=0; render(); });
 
@@ -1466,8 +1561,8 @@ setTimeout(function(){ boot.classList.add("gone"); setTimeout(function(){ boot.s
     }
     if(!open_) return;
     if(e.key==='Escape'){ e.preventDefault(); close(); return; }
-    if(e.key==='ArrowDown'){ e.preventDefault(); if(cur.length){ sel=(sel+1)%cur.length; render(); scrollSel(); } return; }
-    if(e.key==='ArrowUp'){   e.preventDefault(); if(cur.length){ sel=(sel-1+cur.length)%cur.length; render(); scrollSel(); } return; }
+    if(e.key==='ArrowDown'){ e.preventDefault(); if(cur.length){ sel=(sel+1)%cur.length; mark(); scrollSel(); } return; }
+    if(e.key==='ArrowUp'){   e.preventDefault(); if(cur.length){ sel=(sel-1+cur.length)%cur.length; mark(); scrollSel(); } return; }
     if(e.key==='Enter'){
       e.preventDefault();
       if(cur[sel]) window.location.href = cur[sel].href;
@@ -1477,7 +1572,7 @@ setTimeout(function(){ boot.classList.add("gone"); setTimeout(function(){ boot.s
 
   out.addEventListener('mousemove', function(e){
     var a = e.target.closest && e.target.closest('a[data-i]');
-    if(a){ var i = +a.dataset.i; if(i!==sel){ sel=i; render(); } }
+    if(a){ var i = +a.dataset.i; if(i!==sel){ sel=i; mark(); } }
   });
 })();
 </script>
