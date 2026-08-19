@@ -340,6 +340,35 @@ main{position:relative;z-index:10;width:100%;max-width:840px;margin:0 auto;paddi
   border:1px solid transparent;color:rgba(255,255,255,.4);transition:all .18s}
 .mnav button.on{background:rgba(255,255,255,.08);border-color:rgba(0,255,127,.2);color:#fff}
 
+/* ---------------- wired affordances ----------------
+   Nothing on this page is allowed to look tappable and do nothing.
+   These rules only add cursor / hit-area / active-state. No pill is restyled. */
+.pill,.tag,.etag,.railtag,.metric,.slash,.mpill,.epill,.official,.avatar,.livewrap,
+.openrow,.expander,.rainbtn,.kbtn{cursor:pointer}
+.pill:hover,.tag:hover,.etag:hover,.railtag:hover,.metric:hover{border-color:rgba(0,255,127,.45)}
+.tag.on,.etag.on{background:rgba(0,255,127,.14);border-color:rgba(0,255,127,.4);color:#CFFFE2}
+.openrow:hover{border-color:rgba(255,255,255,.14);background:rgba(18,23,20,.8)}
+.chip .x{margin-left:2px;opacity:.5;font-size:12px;line-height:1}
+/* 44px thumb targets — hit area only, the visible pill keeps its exact size */
+#chips .chip,.navbtn,.echips .etag,.echips .metric,.mbtn,.tool,.expander,.rainbtn,.kbtn{position:relative}
+#chips .chip::after,.navbtn::after,.echips .etag::after,.echips .metric::after,
+.mbtn::after,.tool::after,.expander::after,.rainbtn::after,.kbtn::after{
+  content:"";position:absolute;left:0;right:0;top:50%;height:44px;transform:translateY(-50%)}
+.mnav button{height:44px}
+.ctags .tag{padding:4px 8px}
+/* the "showing N of M" line, now a real expander */
+.expander{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:rgba(0,255,127,.75);
+  border:1px solid rgba(0,255,127,.22);background:rgba(0,255,127,.06);border-radius:999px;
+  padding:6px 12px;letter-spacing:-.01em;transition:all .18s}
+.expander:hover{background:rgba(0,255,127,.12);border-color:rgba(0,255,127,.4)}
+.expander .cv{font-family:var(--mono);font-size:10px;opacity:.7}
+.feednote{font-size:13px;color:rgba(255,255,255,.28);font-style:italic}
+.legend{display:flex;gap:6px;flex-wrap:wrap;padding:4px}
+.legend span{font-size:11px;padding:2px 8px;border-radius:6px;background:rgba(255,255,255,.03);
+  color:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.05)}
+.legend span b{font-weight:600;color:rgba(255,255,255,.45);font-variant-numeric:tabular-nums}
+.tool.act{background:rgba(0,255,127,.2);color:var(--jade)}
+
 .hide{display:none !important}
 .sm{display:none}
 
@@ -412,7 +441,7 @@ main{position:relative;z-index:10;width:100%;max-width:840px;margin:0 auto;paddi
       <div style="display:flex;align-items:center;gap:12px;min-width:0">
         <div class="orb"><i></i></div>
         <div style="min-width:0">
-          <div class="k">ZEN GARDEN THEME</div>
+          <div class="k">XEN GARDEN THEME</div>
           <div class="v" id="statusline">reading the record&hellip;</div>
         </div>
       </div>
@@ -465,8 +494,8 @@ main{position:relative;z-index:10;width:100%;max-width:840px;margin:0 auto;paddi
 
   <section class="meta">
     <div class="a">
-      <span>APP.MYLIFENOTE.AI</span><span class="sep"></span>
-      <span class="on">ZEN GARDEN &middot; DARK &middot; MATRIX RAIN: ON &middot; 1-COL</span>
+      <span>HITTHE.LINK/LIFENOTE</span><span class="sep"></span>
+      <span class="on">XEN GARDEN &middot; DARK &middot; MATRIX RAIN: ON &middot; 1-COL</span>
     </div>
     <div class="b">
       <a href="/btl/">/btl/</a><span>&middot;</span><a href="/lifenote/spec/">/lifenote/spec/</a>
