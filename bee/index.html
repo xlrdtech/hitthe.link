@@ -234,7 +234,7 @@
     byId("factc").textContent = "— " + fx.length;
     byId("facts").innerHTML = fx.length
       ? fx.map(function(f){
-          return '<div class="row"><p class="said">' + esc(f.text || f.content || "") + '</p></div>';
+          return '<div class="row">' + body(f, "said") + '</div>';
         }).join("")
       : '<div class="empty">No facts. Bee stores these behind its API, which is '
         + 'unreachable from here, so there is nothing real to show — and nothing invented.</div>';
@@ -243,7 +243,7 @@
     byId("todoc").textContent = "— " + td.length;
     byId("todos").innerHTML = td.length
       ? td.map(function(x){
-          return '<div class="row"><p class="said">' + esc(x.text || x.title || "") + '</p></div>';
+          return '<div class="row">' + body(x, "said") + '</div>';
         }).join("")
       : '<div class="empty">No todos. Same reason — the Bee API holds them.</div>';
 
