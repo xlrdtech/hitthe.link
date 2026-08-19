@@ -185,7 +185,7 @@
       return '<div class="row">' +
         '<div class="top"><span class="chip omi">omi</span>' +
         '<span class="when">' + esc(day(r.ts)) + " " + esc(clock(r.ts)) + '</span>' +
-        '<span class="when">' + esc(r.fragments) + ' fragments</span>' +
+        '<span class="when">' + esc(r.fragments) + (r.fragments === 1 ? ' fragment' : ' fragments') + '</span>' +
         (r.merges ? '<span class="mg">' + esc(r.merges) + ' repaired</span>' : '') +
         '</div>' +
         body(r.assembled, "said") +
@@ -204,7 +204,7 @@
           '<span class="when">' + esc(day(c.start)) + " " + esc(clock(c.start)) +
             " &rarr; " + esc(clock(c.end)) + '</span>' +
           '<span class="chip">' + esc(c.minutes) + ' min</span>' +
-          '<span class="chip">' + esc(c.lines_total) + ' lines</span>' +
+          '<span class="chip">' + esc(c.lines_total) + (c.lines_total === 1 ? ' line' : ' lines') + '</span>' +
           '<span class="chip' + (c.shown ? ' bee' : '') + '">' + esc(c.shown) + ' published</span>' +
         '</div>' +
         '<div class="tline">' + (c.transcript || []).map(function(l){
