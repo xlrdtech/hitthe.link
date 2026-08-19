@@ -1643,6 +1643,333 @@ function _xosDockHeight() {
   } catch (_) { /* layout polish must never take the OS down */ }
 }
 
+/* ══ A SHIP OPENS INSIDE THE CHAT — SHADOW DOM, NEVER AN IFRAME ═════════════
+   qi 2026-08-18 23:30: "the next upgrade for the XOS voice chat, the center
+   panel — for you to be able to open up, like when you auto ship or auto open,
+   you should be able to auto-open it right in the chat. Open the page up right
+   in the chat."
+
+   BEFORE: autoship leg 3 (`xen-ship-open`) called macOS `open`, which throws a
+   NEW BROWSER WINDOW at him. Leaving the chat to look at a ship is the thing he
+   asked to stop doing.
+
+   ⛔ NO IFRAME. NOT AS A FALLBACK. (canon-iframes-banned — qi 2026-08-12 17:01,
+   "we cant use iframes"; an iframe cost the flagship _SelfOwn ~1.5 years.) The
+   isolation an iframe would have given is bought here with a SHADOW ROOT, which
+   is strictly better for this job: the shipped page's CSS cannot escape into
+   XOS and XOS's CSS cannot bleed into it, while staying ONE document — so the
+   voice chat keeps its scroll position, its focus, and its live state around
+   the card. If a page genuinely cannot render this way the card degrades to a
+   titled link and SAYS the reason on its face. It never reaches for a frame.
+
+   THREE HAZARDS, each measured against this repo rather than assumed:
+
+   1. THE TRANSCRIPT WIPES ITSELF. vvsvei/index.html does `transcript.innerHTML
+      = ''` at TWO places (:3581 and :3685). A card appended once is therefore
+      NOT safely appended — a history reload silently eats it, which from qi's
+      side is indistinguishable from a ship that never landed. A MutationObserver
+      re-attaches every live card whenever the stream is rebuilt.
+
+   2. VIEWPORT UNITS AND `position:fixed` ESCAPE A SHADOW ROOT. Shadow DOM scopes
+      SELECTORS, not the viewport — `100vh` still means the whole screen and a
+      fixed banner still pins to the window, straight over the chat. This is the
+      same lesson VvsveiPane paid for above at :1740. Inline <style> text gets
+      the units rewritten; for stylesheets arriving by <link> (which cannot be
+      rewritten) the card body carries `contain:layout paint style`, which makes
+      the host itself the containing block for fixed descendants. Belt and braces,
+      because a page whose banner covers his chat is worse than no preview.
+
+   3. SCRIPTS DO NOT RUN, ON PURPOSE. Unlike VvsveiPane — which deliberately
+      re-executes vvsvei's scripts because vvsvei IS the panel — an arbitrary
+      shipped page is a DOCUMENT here, not an app. Its scripts would share
+      globals with the OS shell (that is exactly the `REPLY_URL` redeclaration
+      that once killed the whole panel). They are stripped. A page that needs to
+      be INTERACTED with is opened full via the existing named-window path.
+
+   WHY THE FEED IS A STATIC FILE AND NOT A SOCKET: the card must never appear
+   before the page it shows is actually live. `_shared/ships.json` is written by
+   the `xen-ship-inchat` leg only AFTER `xen-ship-open`'s poll-live gate passes,
+   and it rides the same GitHub Pages deploy as the page itself — so "the card
+   exists" and "the page serves" become the same event. A socket would have
+   raced its own payload and shown him a card for a 404 (measured 2026-07-25,
+   dcz-call: he opened a Pages 404 on his phone during a live client call).
+   Same origin, so no tunnel to flap and no CORS to negotiate.  */
+const SHIPS_FEED      = "/_shared/ships.json";
+const SHIPS_FALLBACK  = "/sites.json";
+const SHIPS_POLL_MS   = 15000;
+const SHIPS_SEED_MAX  = 3;    // how many prior ships to show on a cold load
+const SHIPS_CARD_H    = 300;  // px of page visible before "taller"
+
+/* Card chrome lives here, not in styles.css, DELIBERATELY: a feature split
+   across two files can half-land, and styles.css is 141KB of surface qi has
+   already tuned. One block, one file, atomically present or absent. */
+function _xosShipStyles() {
+  if (document.getElementById("xos-ship-styles")) return;
+  const s = document.createElement("style");
+  s.id = "xos-ship-styles";
+  s.textContent = [
+    ".xos-ship{margin:10px 0;border-radius:14px;overflow:hidden;",
+    "background:rgba(12,16,20,.86);border:1px solid rgba(255,255,255,.10);",
+    "box-shadow:0 6px 22px rgba(0,0,0,.42);max-width:100%;}",
+    ".xos-ship-head{display:flex;align-items:center;gap:8px;padding:9px 11px;",
+    "background:rgba(255,255,255,.045);border-bottom:1px solid rgba(255,255,255,.07);}",
+    ".xos-ship-dot{width:7px;height:7px;border-radius:50%;background:#38e08b;",
+    "box-shadow:0 0 8px #38e08b;flex:0 0 auto;}",
+    ".xos-ship-title{font:600 12.5px/1.3 Inter,system-ui,sans-serif;color:#eef4f2;",
+    "flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}",
+    ".xos-ship-time{font:500 10px/1 ui-monospace,Menlo,monospace;color:#8fa39b;flex:0 0 auto;}",
+    ".xos-ship-url{padding:5px 11px 0;font:500 10.5px/1.3 ui-monospace,Menlo,monospace;",
+    "color:#6fd3a4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}",
+    /* THE PREVIEW WINDOW. overflow:auto so a long page is readable in place;
+       overscroll-behavior:contain so reaching its end does NOT hand the scroll
+       up to the transcript and yank him out of the card mid-read.
+       contain: see hazard 2 — this is what stops a fixed banner escaping. */
+    ".xos-ship-body{position:relative;margin:8px 11px 0;border-radius:9px;",
+    "background:#0b0f12;height:" + SHIPS_CARD_H + "px;overflow:auto;",
+    "overscroll-behavior:contain;-webkit-overflow-scrolling:touch;",
+    "contain:layout paint style;border:1px solid rgba(255,255,255,.06);}",
+    ".xos-ship.tall .xos-ship-body{height:" + (SHIPS_CARD_H * 2) + "px;}",
+    ".xos-ship-note{padding:14px;font:500 11.5px/1.5 Inter,system-ui,sans-serif;color:#c2cdc8;}",
+    ".xos-ship-actions{display:flex;gap:7px;padding:9px 11px;}",
+    ".xos-ship-actions button{flex:1 1 auto;padding:7px 9px;border-radius:8px;cursor:pointer;",
+    "font:600 11px/1 Inter,system-ui,sans-serif;color:#dbe7e2;",
+    "background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);}",
+    ".xos-ship-actions button:active{background:rgba(255,255,255,.13);}"
+  ].join("");
+  document.head.appendChild(s);
+}
+
+/* Render a live page into a shadow root. Same-origin only in practice (every
+   ship is a hitthe.link subpage), and a cross-origin fetch simply lands in the
+   catch and degrades to a link — it must never be papered over with a frame. */
+async function _xosShipRender(bodyEl, url) {
+  const note = (msg) => {
+    const d = document.createElement("div");
+    d.className = "xos-ship-note";
+    d.textContent = msg;
+    bodyEl.appendChild(d);
+  };
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) { note("Could not render inline — HTTP " + res.status + ". Open full below."); return; }
+    const html = await res.text();
+    const doc  = new DOMParser().parseFromString(html, "text/html");
+
+    /* canon-iframes-banned: a shipped page may itself contain frames. Rendering
+       them here would smuggle an iframe into XOS through the back door of a
+       feature that exists BECAUSE iframes are banned. Removed, and COUNTED, so
+       their absence is visible in the console rather than silent. */
+    const framed = doc.querySelectorAll("iframe, frame, object, embed");
+    if (framed.length) {
+      console.warn("[xos-ship] stripped " + framed.length + " nested browsing context(s) from " + url + " — canon-iframes-banned");
+      framed.forEach((n) => n.remove());
+    }
+    doc.querySelectorAll("script, noscript").forEach((n) => n.remove());
+
+    /* Relative URLs resolve against the HOST document (/xos/), not the page we
+       fetched, so every un-rewritten src/href would 404 or point at the wrong
+       asset. Absolutise against the ship's own origin. */
+    const base = new URL(url, location.href);
+    doc.querySelectorAll("[src]").forEach((n) => {
+      const v = n.getAttribute("src");
+      if (v && !/^(https?:|data:|blob:|#)/i.test(v)) { try { n.setAttribute("src", new URL(v, base).href); } catch (_) {} }
+    });
+    doc.querySelectorAll("[href]").forEach((n) => {
+      const v = n.getAttribute("href");
+      if (v && !/^(https?:|data:|blob:|mailto:|tel:|#)/i.test(v)) { try { n.setAttribute("href", new URL(v, base).href); } catch (_) {} }
+    });
+    /* Links inside a preview must never navigate the OS away from the chat. */
+    doc.querySelectorAll("a[href]").forEach((a) => { a.setAttribute("target", "_blank"); a.setAttribute("rel", "noopener"); });
+
+    const root = bodyEl.shadowRoot || bodyEl.attachShadow({ mode: "open" });
+    root.innerHTML = "";
+
+    /* Hazard 2: rewrite the units that ignore a shadow boundary. Identical in
+       spirit to VvsveiPane's deViewport at :1740 — inside a card, 100% of the
+       card IS full height. */
+    const deViewport = (css) => css
+      .replace(/\b100(?:d|s|l)?vh\b/gi, "100%")
+      .replace(/position\s*:\s*fixed/gi, "position:absolute");
+
+    const reset = document.createElement("style");
+    reset.textContent =
+      ":host{display:block;}" +
+      ":host,*{box-sizing:border-box;}" +
+      "html,body{margin:0!important;padding:0!important;height:auto!important;" +
+      "min-height:0!important;max-height:none!important;overflow:visible!important;" +
+      "width:100%!important;background:transparent!important;}" +
+      "img,video,svg,canvas,table{max-width:100%!important;height:auto;}";
+    root.appendChild(reset);
+
+    /* A <link rel=stylesheet> inside a shadow root applies ONLY inside it, so
+       external sheets can be carried across as-is — which is what keeps a page
+       looking like itself rather than like unstyled markup. (VvsveiPane learned
+       the same thing the hard way at :1848: hoisting <style> without <link>
+       gives you every rule and none of the fonts — qi called that result "a
+       cheap imitation".) */
+    doc.querySelectorAll('link[rel="stylesheet"], link[rel=stylesheet]').forEach((l) => {
+      const n = document.createElement("link");
+      n.rel = "stylesheet"; n.href = l.href;
+      root.appendChild(n);
+    });
+    doc.querySelectorAll("style").forEach((st) => {
+      const n = document.createElement("style");
+      n.textContent = deViewport(st.textContent || "");
+      root.appendChild(n);
+    });
+
+    const holder = document.createElement("div");
+    holder.innerHTML = doc.body ? doc.body.innerHTML : "";
+    root.appendChild(holder);
+  } catch (e) {
+    /* cmd 45: say what actually happened. Never silently show an empty box. */
+    note("Could not render inline (" + (e && e.message ? e.message : "fetch failed") + "). Open full below.");
+  }
+}
+
+function _xosShipCard(ship) {
+  _xosShipStyles();
+  const card = document.createElement("div");
+  card.className = "xos-ship";
+  card.dataset.shipUrl = ship.url;
+
+  const head = document.createElement("div");
+  head.className = "xos-ship-head";
+  const dot = document.createElement("span"); dot.className = "xos-ship-dot";
+  const ttl = document.createElement("span"); ttl.className = "xos-ship-title";
+  ttl.textContent = ship.title || ship.slug || ship.url;
+  const tm  = document.createElement("span"); tm.className = "xos-ship-time";
+  tm.textContent = (() => { try { return new Date(ship.ts).toTimeString().slice(0, 5); } catch (_) { return ""; } })();
+  head.appendChild(dot); head.appendChild(ttl); head.appendChild(tm);
+
+  const urlEl = document.createElement("div");
+  urlEl.className = "xos-ship-url";
+  urlEl.textContent = ship.url.replace(/^https?:\/\//, "");
+
+  const body = document.createElement("div");
+  body.className = "xos-ship-body";
+
+  const acts = document.createElement("div");
+  acts.className = "xos-ship-actions";
+  const taller = document.createElement("button");
+  taller.type = "button"; taller.textContent = "Taller";
+  taller.addEventListener("click", () => card.classList.toggle("tall"));
+  const full = document.createElement("button");
+  full.type = "button"; full.textContent = "Open full";
+  /* canon-iframes-banned: external pages open in a NAMED window so repeat taps
+     reuse one tab — the same pattern already used at :1418 and :3112. */
+  full.addEventListener("click", () => { try { window.open(ship.url, "xos-ship-full"); } catch (_) {} });
+  acts.appendChild(taller); acts.appendChild(full);
+
+  card.appendChild(head); card.appendChild(urlEl); card.appendChild(body); card.appendChild(acts);
+  _xosShipRender(body, ship.url);
+  return card;
+}
+
+function ShipInChat() {
+  useEffect(() => {
+    let stopped = false;
+    const seen  = new Set();
+    const cards = [];          // live nodes, for the re-attach guard (hazard 1)
+
+    const stream = () =>
+      document.querySelector("#xos-vei #transcript") ||
+      document.querySelector("#xos-vei .wrap") ||
+      document.querySelector("#xos-vei");
+
+    const place = (card) => {
+      const s = stream();
+      if (!s) return false;
+      s.appendChild(card);
+      /* Land it in view the way a new message would, without stealing focus. */
+      try { s.scrollTop = s.scrollHeight; } catch (_) {}
+      return true;
+    };
+
+    const add = (ship) => {
+      if (!ship || !ship.url || seen.has(ship.url)) return;
+      seen.add(ship.url);
+      const card = _xosShipCard(ship);
+      cards.push(card);
+      if (!place(card)) {
+        /* The panel mounts asynchronously (VvsveiPane fetches /vvsvei/ first).
+           Retry on frames rather than dropping the ship — cmd 27b, nothing drops. */
+        let n = 0;
+        const t = setInterval(() => { if (stopped || place(card) || ++n > 60) clearInterval(t); }, 500);
+      }
+    };
+
+    const norm = (r) => ({
+      url:   /^https?:/i.test(r.url || "") ? r.url : ("https://hitthe.link" + (r.url || "")),
+      title: r.title || r.slug || "",
+      slug:  r.slug || "",
+      ts:    r.ts || r.updated || r.generated || new Date().toISOString()
+    });
+
+    let first = true;
+    const poll = async () => {
+      if (stopped) return;
+      let list = null;
+      try {
+        const r = await fetch(SHIPS_FEED + "?t=" + Date.now(), { cache: "no-store" });
+        if (r.ok) {
+          const j = await r.json();
+          if (j && Array.isArray(j.ships)) list = j.ships;
+        }
+      } catch (_) { /* fall through to the fallback */ }
+
+      /* FALLBACK IS NOT DECORATION. `_shared/ships.json` is written by a leg that
+         can fail; `sites.json` is regenerated by CI on EVERY push and can't. If
+         the new leg ever goes dark, the chat still shows what actually shipped,
+         so a broken leg degrades to "slightly less precise" instead of to
+         silence — which is the failure shape that hid 22 blind pushes. */
+      if (!list && first) {
+        try {
+          const r2 = await fetch(SHIPS_FALLBACK + "?t=" + Date.now(), { cache: "no-store" });
+          if (r2.ok) {
+            const j2 = await r2.json();
+            if (j2 && Array.isArray(j2.sites)) list = j2.sites.slice(0, SHIPS_SEED_MAX);
+          }
+        } catch (_) {}
+      }
+      if (list) {
+        const take = first ? list.slice(0, SHIPS_SEED_MAX) : list;
+        /* Oldest first so the newest ship ends up nearest the composer, which is
+           where a chat puts the newest message. */
+        take.map(norm).reverse().forEach(add);
+        first = false;
+      }
+      if (!stopped) setTimeout(poll, SHIPS_POLL_MS);
+    };
+    poll();
+
+    /* HAZARD 1, THE RE-ATTACH GUARD. vvsvei clears #transcript at :3581 and
+       :3685; without this a history reload deletes his ship cards and nothing
+       reports it. Re-append anything detached, on the next frame after the wipe. */
+    let mo = null;
+    const watch = setInterval(() => {
+      const s = stream();
+      if (!s || mo) return;
+      mo = new MutationObserver(() => {
+        cards.forEach((c) => { if (!c.isConnected) { try { s.appendChild(c); } catch (_) {} } });
+      });
+      mo.observe(s, { childList: true });
+      clearInterval(watch);
+    }, 500);
+
+    return () => {
+      stopped = true;
+      clearInterval(watch);
+      if (mo) mo.disconnect();
+      cards.forEach((c) => { try { c.remove(); } catch (_) {} });
+    };
+  }, []);
+
+  /* Renders nothing of its own: the cards live in vvsvei's real message stream,
+     which is what "right in the chat" means. */
+  return null;
+}
+
 /* ══ VVSVEI AS THE CENTER PANEL — RUNTIME INCLUDE, IN-DOCUMENT ══════════════
    qi 2026-08-12 16:55 "place vvsvei as the center panel of XOS" + 17:01 NO
    IFRAMES (canon-iframes-banned; iframes cost _SelfOwn 1.5 years) + 17:2x he
@@ -3185,6 +3512,7 @@ function App() {
                 tab reveals VVSVEI again — nothing is destroyed either way. */}
             <div className="pane pane-vei">
               <VvsveiPane />
+              <ShipInChat />
               {openTabs.length > 0 && (
                 <div className="xos-browser-overlay">
                   <BrowserPane openTabs={openTabs} activeTabId={activeTabId} setActiveTabId={setActiveTabId} onCloseTab={closeTab} onCloseAll={closeAllTabs} onOpenUrl={(raw) => { const u = /^https?:\/\//i.test(raw) ? raw : ("https://" + raw); try { const host = new URL(u).host; openLink({ id: u, url: u, name: host, host }); } catch (_) { openLink({ id: u, url: u, name: raw, host: raw }); } }} />
