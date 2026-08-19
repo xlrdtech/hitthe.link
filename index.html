@@ -1,2870 +1,722 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>hitthe.link — 3D Command Home</title>
-<meta name="description" content="hitthe.link command home — every live surface qi runs, fully populated and live-tracked in a 3D depth-scroll volume.">
-<meta name="theme-color" content="#000000">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;800;900&display=swap" rel="stylesheet">
-<style>
-/* ─────────────────────────────────────────────────────────────
-   HITTHE.LINK · DEPTH-SCROLL COMMAND HOME
-   ───────────────────────────────────────────────────────────── */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>XENOS // Command Home</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@100;300;400&display=swap" rel="stylesheet"/>
 
-:root{
-  --jade:#00ff44;
-  --jade-d:#07C42C;
-  --ink:#000;
-  --w-06:rgba(255,255,255,.06);
-  --w-10:rgba(255,255,255,.10);
-  --w-16:rgba(255,255,255,.16);
-  --w-30:rgba(255,255,255,.30);
-  --w-42:rgba(255,255,255,.42);
-  --w-58:rgba(255,255,255,.58);
-  --w-72:rgba(255,255,255,.72);
-  --steel:#c4c4c4;
+  <style>
+    :root {
+      --ink: #dffbe9;
+      --accent: #3cff96;
+      --alert: #ff4a4a;
+      --dim: rgba(223, 251, 233, 0.45);
+      --faint: rgba(223, 251, 233, 0.12);
+      --glass: rgba(0, 4, 0, 0.65);
+      --bg: #000200;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      min-height: 100%;
+      background: var(--bg);
+      overflow-x: hidden;
+      overflow-y: auto;
+      touch-action: pan-y; /* Allow vertical scroll on mobile */
+      font-family: 'Inter', sans-serif;
+      cursor: crosshair;
+    }
+    body::-webkit-scrollbar { display: none; }
 
-  --g-brand:34px;
-  --g-hud:16px;
+    canvas { display: block; position: fixed; inset: 0; outline: none; z-index: 0; }
 
-  --gx:5.4vw;
-  --gyt:16vh;
-  --gyb:15vh;
+    #ring {
+      position: fixed; left: 50%; top: 50%; transform: translate(-50%,-50%);
+      width: min(85vmin, 800px); aspect-ratio: 1; border-radius: 50%;
+      border: 1px solid var(--faint);
+      box-shadow: 0 0 140px rgba(94, 255, 168, 0.03) inset; pointer-events: none; z-index: 2;
+      transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #ring.active { transform: translate(-50%,-50%) scale(0.95); border-color: var(--dim); box-shadow: 0 0 160px rgba(94, 255, 168, 0.08) inset; }
 
-  --bar:30px;
-  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
-}
+    .crosshair { position: fixed; left: 50%; top: 50%; width: 2px; height: 2px; background: var(--accent); transform: translate(-50%, -50%); border-radius: 50%; opacity: 0.5; z-index: 2; pointer-events: none; }
+    .crosshair::before, .crosshair::after { content: ''; position: absolute; background: var(--faint); }
+    .crosshair::before { width: 40px; height: 1px; left: -19px; top: 0; }
+    .crosshair::after { width: 1px; height: 40px; left: 0; top: -19px; }
 
-html{background:#000;scroll-behavior:auto;-webkit-text-size-adjust:100%;scrollbar-width:none}
-html::-webkit-scrollbar,body::-webkit-scrollbar{width:0;height:0;display:none}
-body{
-  background:#000;color:#fff;
-  font-family:"Figtree",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  font-weight:400;
-  overflow-x:hidden;
-  overscroll-behavior-y:none;
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
-}
-::selection{background:var(--jade);color:#000}
+    .card-3d {
+      width: 480px;
+      background: rgba(0, 4, 0, 0.65);
+      border: 1px solid rgba(94, 255, 168, 0.15);
+      border-radius: 12px;
+      padding: 32px;
+      color: var(--ink);
+      font-family: 'JetBrains Mono', monospace;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.9), 0 0 0 1px rgba(94, 255, 168, 0.05) inset;
+      will-change: transform, opacity, filter;
+    }
+    .card-3d.ident-card {
+      width: 700px;
+      text-align: center;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .ident-card .mark {
+      font-size: 110px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      letter-spacing: -0.05em;
+      color: var(--ink);
+      line-height: 0.9;
+      margin: 20px 0;
+      text-shadow: 0 0 40px rgba(94, 255, 168, 0.15);
+    }
+    .ident-card .cap { font-size: 12px; letter-spacing: 0.25em; color: var(--accent); }
 
-#track{width:1px;pointer-events:none} /* Height set dynamically via JS */
+    .card-3d h2 {
+      font-size: 22px;
+      color: var(--accent);
+      margin-bottom: 24px;
+      font-weight: 300;
+      border-bottom: 1px solid var(--faint);
+      padding-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    .card-link {
+      display: block;
+      position: relative;
+      padding: 10px 12px 10px 24px;
+      background: rgba(94, 255, 168, 0.03);
+      border: 1px solid rgba(94, 255, 168, 0.1);
+      border-radius: 6px;
+      color: var(--dim);
+      text-decoration: none;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card-link::before {
+      content: ''; position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+      width: 4px; height: 4px; border-radius: 50%; background: var(--dim);
+      transition: all 0.3s ease;
+    }
+    .card-link:hover { background: rgba(94, 255, 168, 0.15); color: var(--ink); border-color: var(--accent); box-shadow: 0 0 15px rgba(94, 255, 168, 0.15); }
+    .card-link:hover::before { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+    .card-link.up { color: var(--ink); border-color: rgba(94, 255, 168, 0.3); }
+    .card-link.up::before { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+    .card-link.down { color: var(--faint); opacity: 0.6; }
+    .card-link.down::before { background: var(--alert); box-shadow: 0 0 8px var(--alert); }
 
-#gl{
-  position:fixed;inset:0;width:100%;height:100%;
-  display:block;z-index:0;
-  background:#000;
-}
-#glfallback{
-  position:fixed;inset:0;z-index:0;display:none;
-  background:
-    radial-gradient(46% 40% at 62% 42%, rgba(0,255,68,.13), transparent 62%),
-    radial-gradient(70% 60% at 20% 80%, rgba(10,40,24,.6), transparent 70%),
-    #000;
-}
-
-#stage{
-  position:fixed;inset:0;z-index:2;
-  perspective:1000px;
-  perspective-origin:50% 50%;
-  pointer-events:none;
-  overflow:hidden;
-}
-#depth{
-  position:absolute;inset:0;
-  transform-style:preserve-3d;
-  will-change:transform;
-}
-
-.plane{
-  position:absolute;inset:0;
-  transform-style:preserve-3d;
-  will-change:transform;
-  backface-visibility:hidden;
-  visibility:hidden;
-  pointer-events:none;
-}
-.plane-in{
-  position:absolute;inset:0;
-  opacity:0;
-  will-change:opacity,filter;
-}
-.plane a,.plane button{pointer-events:none}
-.plane.live a,.plane.live button{pointer-events:auto}
-
-.scrim{
-  position:absolute;inset:-20%;
-  background:radial-gradient(58% 54% at var(--sx) var(--sy),
-    rgba(0,0,0,.92) 0%, rgba(0,0,0,.75) 38%, rgba(0,0,0,.22) 64%, transparent 80%);
-  pointer-events:none;
-}
-
-.blk{position:absolute;max-width:min(620px,54vw)}
-.blk.wide{max-width:min(900px, 80vw);} /* Widen for links */
-.a-bl .blk{left:var(--gx);bottom:var(--gyb)}
-.a-tl .blk{left:var(--gx);top:var(--gyt)}
-.a-tr .blk{right:var(--gx);top:var(--gyt);text-align:right}
-.a-br .blk{right:var(--gx);bottom:var(--gyb);text-align:right}
-.a-ml .blk{left:var(--gx);top:50%;transform:translateY(-50%)}
-.a-mr .blk{right:var(--gx);top:50%;transform:translateY(-50%);text-align:right}
-
-.mark{
-  font-size:clamp(74px,17.4vw,224px);
-  font-weight:800;letter-spacing:-.058em;line-height:.82;
-  text-shadow:0 2px 60px rgba(0,0,0,.85);
-}
-.disp{
-  font-size:clamp(34px,7.1vw,84px);
-  font-weight:600;letter-spacing:-.038em;line-height:1.02;
-  text-shadow:0 2px 40px rgba(0,0,0,.9);
-}
-.disp-s{
-  font-size:clamp(28px,5.4vw,58px);
-  font-weight:600;letter-spacing:-.032em;line-height:1.06;
-  text-shadow:0 2px 40px rgba(0,0,0,.9);
-}
-.lede{
-  font-size:clamp(15px,1.15vw,18px);line-height:1.68;
-  color:var(--w-58);font-weight:400;max-width:38ch;
-  text-shadow:0 1px 22px rgba(0,0,0,.95);
-}
-.a-tr .lede,.a-br .lede,.a-mr .lede{margin-left:auto}
-.cap{
-  font-family:var(--mono);
-  font-size:10px;letter-spacing:.26em;text-transform:uppercase;
-  color:var(--w-42);line-height:1.9;
-  text-shadow:0 1px 16px rgba(0,0,0,.95);
-}
-.cap.on{color:var(--jade);text-shadow:0 0 18px rgba(0,255,68,.45)}
-
-.steel{
-  background:linear-gradient(180deg,#fff 0%,#E4E4E7 44%,#6c6c74 50%,#E4E4E7 56%,#fff 100%);
-  -webkit-background-clip:text;background-clip:text;
-  -webkit-text-fill-color:transparent;color:transparent;
-}
-.jade{
-  background:linear-gradient(180deg,#ecfff2 0%,#00ff44 40%,#07C42C 52%,#00ff44 62%,#d6ffe4 100%);
-  -webkit-background-clip:text;background-clip:text;
-  -webkit-text-fill-color:transparent;color:transparent;
-}
-
-.idx{
-  position:absolute;
-  font-size:clamp(120px,20vw,290px);
-  font-weight:900;letter-spacing:-.07em;line-height:.7;
-  color:transparent;
-  -webkit-text-stroke:1px rgba(255,255,255,.09);
-  pointer-events:none;user-select:none;
-}
-.a-bl .idx{left:calc(var(--gx) - .055em);bottom:46vh}
-.a-tr .idx{right:calc(var(--gx) - .055em);top:7vh}
-.a-br .idx{right:calc(var(--gx) - .055em);bottom:46vh}
-.a-ml .idx{left:calc(var(--gx) - .055em);top:-10vh}
-.a-mr .idx{right:calc(var(--gx) - .055em);top:-10vh}
-.a-tl .idx{left:calc(var(--gx) - .055em);top:7vh}
-
-.hr{height:1px;background:var(--w-16);position:relative;margin:26px 0 22px}
-.hr::before{content:"";position:absolute;left:0;top:-1px;width:3px;height:3px;background:var(--steel)}
-.hr::after{content:"";position:absolute;left:22%;top:-4px;width:1px;height:9px;background:var(--w-30)}
-
-/* ── LINK GRID (Command Home specific) ── */
-.link-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 8px;
-  margin-top: 24px;
-  max-height: 45vh;
-  overflow-y: auto;
-  padding-right: 12px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--jade) transparent;
-  pointer-events: auto; /* Required to scroll inside plane */
-}
-.link-grid::-webkit-scrollbar { width: 4px; }
-.link-grid::-webkit-scrollbar-track { background: transparent; }
-.link-grid::-webkit-scrollbar-thumb { background: var(--w-30); border-radius: 4px; }
-.link-item {
-  font-family: var(--mono); font-size: 10px; letter-spacing: 0.05em;
-  color: var(--w-58); background: rgba(255,255,255,0.03);
-  border: 1px solid var(--w-10); padding: 9px 10px 9px 24px;
-  text-decoration: none; position: relative;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  transition: all 0.3s cubic-bezier(.19,1,.22,1);
-}
-.link-item::before {
-  content: ""; position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
-  width: 4px; height: 4px; border-radius: 50%; background: var(--w-30);
-  transition: all 0.3s ease;
-}
-.link-item:hover { color: #fff; border-color: var(--jade); background: rgba(0,255,68,0.1); }
-.link-item:hover::before { background: var(--jade); box-shadow: 0 0 8px var(--jade); }
-.link-item.up { color: var(--w-72); border-color: rgba(0,255,68,0.25); }
-.link-item.up::before { background: var(--jade); box-shadow: 0 0 8px var(--jade); }
-.link-item.down { color: var(--w-42); opacity: 0.7;}
-.link-item.down::before { background: #ff4444; box-shadow: 0 0 8px #ff4444; }
-
-/* ── DEPTH FURNITURE ── */
-.rail .rf{position:absolute;inset:var(--ins);}
-.rl{position:absolute;background:rgba(196,196,196,.30)}
-.rl.t{top:0;left:0;right:0;height:1px}
-.rl.b{bottom:0;left:0;right:0;height:1px}
-.rl.l{left:0;top:0;bottom:0;width:1px}
-.rl.r{right:0;top:0;bottom:0;width:1px}
-.cn{position:absolute;width:11px;height:11px;border:1px solid rgba(0,255,68,.55)}
-.cn.tl{top:-1px;left:-1px;border-right:0;border-bottom:0}
-.cn.tr{top:-1px;right:-1px;border-left:0;border-bottom:0}
-.cn.bl{bottom:-1px;left:-1px;border-right:0;border-top:0}
-.cn.br{bottom:-1px;right:-1px;border-left:0;border-top:0}
-.rtk{position:absolute;top:-1px;width:1px;background:rgba(196,196,196,.34)}
-.rlab{
-  position:absolute;font-family:var(--mono);font-size:9px;letter-spacing:.14em;
-  color:rgba(196,196,196,.34);font-weight:400;
-}
-.mote{
-  position:absolute;top:50%;left:50%;width:2px;height:2px;border-radius:50%;
-  background:rgba(255,255,255,.7);
-}
-
-/* ── LAYER 2 · FIXED CHROME ── */
-.bar{position:fixed;left:0;right:0;height:var(--bar);background:#000;z-index:7;pointer-events:none}
-.bar.top{top:0;box-shadow:0 1px 0 rgba(196,196,196,.13)}
-.bar.bot{bottom:0;box-shadow:0 -1px 0 rgba(196,196,196,.13)}
-
-#brand{
-  position:fixed;top:var(--bar);left:0;right:0;z-index:8;
-  padding:18px var(--g-brand);
-  display:flex;align-items:flex-start;justify-content:space-between;
-  pointer-events:none;
-}
-#brand > *{pointer-events:auto}
-.logo{display:flex;align-items:center;gap:11px;text-decoration:none}
-.logo svg{display:block}
-/* XENOS ORB mark — the orb is the HOME state, so the mark breathes rather
-   than spins. Bands drift like ORB_BAND on /xenos/; one orbital arc rotates. */
-.logo .xo-orbit{animation:spin 34s linear infinite;transform-origin:24px 24px}
-.logo .xo-body{animation:xo-breathe 5.2s ease-in-out infinite;transform-origin:24px 24px}
-.logo .xo-b1{animation:xo-band 7.4s ease-in-out infinite}
-.logo .xo-b2{animation:xo-band 5.9s ease-in-out infinite reverse}
-.logo .xo-b3{animation:xo-band 8.8s ease-in-out infinite}
-@keyframes spin{from{transform:rotate(-22deg)}to{transform:rotate(338deg)}}
-@keyframes xo-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
-@keyframes xo-band{0%,100%{transform:translateY(0)}50%{transform:translateY(1.5px)}}
-.logo:hover .xo-body{animation-duration:2.1s}
-.logo b{
-  font-size:15px;font-weight:800;letter-spacing:-.03em;line-height:1;
-  display:block;
-}
-.logo span{
-  display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;
-  color:var(--w-30);text-transform:uppercase;margin-top:4px;white-space:nowrap;
-}
-.chips{display:flex;gap:8px;align-items:center}
-.chip{
-  position:relative;overflow:hidden;
-  font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;
-  color:var(--w-58);background:rgba(239,239,239,.07);
-  padding:7px 11px;text-decoration:none;white-space:nowrap;
-  transition:color .3s;
-}
-.chip::after{
-  content:"";position:absolute;inset:0;background:rgba(0,255,68,.16);
-  transform:scaleX(0);transform-origin:bottom right;
-  transition:transform .5s cubic-bezier(.19,1,.22,1);
-}
-.chip:hover{color:#fff}
-.chip:hover::after{transform:scaleX(1);transform-origin:bottom left}
-.dot{
-  width:5px;height:5px;border-radius:50%;background:var(--jade);
-  display:inline-block;margin-right:7px;vertical-align:middle;
-  box-shadow:0 0 0 0 rgba(0,255,68,.55);animation:pulse 2.6s infinite;
-}
-@keyframes pulse{
-  0%{box-shadow:0 0 0 0 rgba(0,255,68,.5)}
-  70%{box-shadow:0 0 0 7px rgba(0,255,68,0)}
-  100%{box-shadow:0 0 0 0 rgba(0,255,68,0)}
-}
-
-#hud-top,#hud-bot{
-  position:fixed;left:var(--g-hud);right:var(--g-hud);z-index:6;
-  display:flex;justify-content:space-between;align-items:flex-end;
-  pointer-events:none;font-family:var(--mono);
-  font-size:9px;letter-spacing:.13em;color:var(--w-42);text-transform:uppercase;
-}
-#hud-top{top:calc(var(--bar) + 74px)}
-#hud-bot{bottom:calc(var(--bar) + 16px);align-items:flex-end}
-.hud-l,.hud-r{display:flex;flex-direction:column;gap:5px}
-.hud-r{text-align:right;align-items:flex-end}
-.num{
-  display:inline-block;overflow:hidden;white-space:nowrap;vertical-align:bottom;
-  color:var(--w-72);
-}
-.num.w4{width:38px}
-.num.w5{width:46px}
-.num.w6{width:54px}
-.grid-line{
-  position:fixed;left:var(--g-hud);right:var(--g-hud);height:1px;
-  background:rgba(196,196,196,.09);z-index:5;pointer-events:none;
-}
-#gl-a{top:calc(var(--bar) + 58px)}
-#gl-b{bottom:calc(var(--bar) + 116px)}
-
-#footline{
-  position:fixed;bottom:calc(var(--bar) + 84px);left:22%;width:46%;height:1px;
-  background:rgba(196,196,196,.22);z-index:6;pointer-events:none;
-}
-#footline i{position:absolute;background:var(--steel);opacity:.55}
-#footline .sq1{left:0;top:-1px;width:3px;height:3px}
-#footline .sq2{right:0;top:-1px;width:3px;height:3px}
-#footline .tka{left:22%;top:-9px;width:1px;height:10px}
-#footline .tkb{right:6%;top:-7px;width:1px;height:8px}
-#footline .tkc{left:61%;top:-4px;width:1px;height:5px}
-#footline .fill{
-  left:0;top:0;height:1px;background:var(--jade);opacity:.85;width:0;
-}
-
-#rail{
-  position:fixed;right:var(--g-hud);top:50%;transform:translateY(-50%);
-  z-index:9;display:flex;flex-direction:column;gap:11px;align-items:flex-end;
-}
-#rail button{
-  position:relative;display:flex;align-items:center;gap:9px;
-  background:none;border:0;padding:3px 0;cursor:pointer;
-  font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;
-  color:transparent;text-transform:uppercase;white-space:nowrap;
-  transition:color .45s cubic-bezier(.19,1,.22,1);
-}
-#rail button i{
-  display:block;width:14px;height:1px;background:var(--w-30);
-  transition:width .55s cubic-bezier(.47,.38,0,1.1),background .3s;
-}
-#rail button:hover{color:var(--w-58)}
-#rail button:hover i{width:22px;background:var(--w-58)}
-#rail button.on{color:var(--jade)}
-#rail button.on i{width:30px;background:var(--jade);box-shadow:0 0 9px rgba(0,255,68,.6)}
-
-#cue{
-  position:fixed;left:50%;bottom:calc(var(--bar) + 96px);transform:translateX(-50%);
-  z-index:8;font-family:var(--mono);font-size:8.5px;letter-spacing:.3em;
-  color:var(--w-30);text-transform:uppercase;pointer-events:none;
-  transition:opacity .6s;
-}
-#cue s{display:block;width:1px;height:18px;margin:7px auto 0;background:linear-gradient(180deg,var(--w-30),transparent);text-decoration:none}
-
-#cur-ring,#cur-dot{
-  position:fixed;top:0;left:0;z-index:20;pointer-events:none;
-  border-radius:50%;opacity:0;transition:opacity .4s;
-}
-#cur-ring{width:34px;height:34px;margin:-17px 0 0 -17px;border:1px solid rgba(255,255,255,.3)}
-#cur-dot{width:5px;height:5px;margin:-2.5px 0 0 -2.5px;background:var(--jade);box-shadow:0 0 10px rgba(0,255,68,.8)}
-body.pointer #cur-ring,body.pointer #cur-dot{opacity:1}
-
-#boot{
-  position:fixed;inset:0;z-index:99;background:#000;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
-  transition:opacity .9s cubic-bezier(.19,1,.22,1);
-}
-#boot.gone{opacity:0;pointer-events:none}
-#boot p{font-family:var(--mono);font-size:9px;letter-spacing:.34em;color:var(--w-42);text-transform:uppercase}
-#boot div{width:120px;height:1px;background:var(--w-10);overflow:hidden}
-#boot div s{display:block;height:1px;background:var(--jade);width:22%;text-decoration:none;animation:sweep 1.2s cubic-bezier(.45,0,.55,1) infinite}
-@keyframes sweep{0%{transform:translateX(-120%)}100%{transform:translateX(560%)}}
-
-@media (max-width:860px){
-  :root{
-    --g-brand:16px;--g-hud:11px;
-    --gx:7vw;--gyt:15vh;--gyb:13vh;
-    --bar:18px;
-  }
-  .blk{max-width:86vw}
-  .lede{max-width:34ch;font-size:14.5px}
-  .idx{font-size:26vw}
-  .a-bl .idx,.a-br .idx{bottom:54vh}
-  .a-tr .idx{top:6vh}
-  #hud-top{top:calc(var(--bar) + 74px);font-size:8px;letter-spacing:.09em}
-  #hud-bot{bottom:calc(var(--bar) + 12px);font-size:8px;letter-spacing:.09em}
-  #gl-a{top:calc(var(--bar) + 62px)}
-  #gl-b{bottom:calc(var(--bar) + 96px)}
-  #footline{bottom:calc(var(--bar) + 74px);left:26%;width:48%}
-  .logo svg{width:36px;height:36px}
-  .logo b{font-size:13px}
-  .rlab{font-size:8px;opacity:.6}
-  #rail{gap:9px}
-  #rail button{font-size:0;letter-spacing:0}
-  #rail button i{width:11px}
-  #rail button.on i{width:22px}
-  .logo span{display:none}
-  .chip{font-size:8px;padding:6px 8px;letter-spacing:.14em}
-  .chips .hide-s{display:none}
-  #cue{display:none}
-  .num.w6{width:48px}
-  .link-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
-}
-@media (max-width:400px){
-  .mark{font-size:19vw}
-  .chips .hide-xs{display:none}
-}
-@media (prefers-reduced-motion:reduce){
-  .logo .xo-orbit,.logo .xo-body,.logo .xo-b1,.logo .xo-b2,.logo .xo-b3,.dot,#boot div s{animation:none}
-}
-
-/* ── SEARCH PALETTE ─────────────────────────────────────────────────────────
-   qi 2026-08-18 19:17: "while also adding the search bar". Indexes the live
-   DOM (#depth a[href]) rather than a second copy of the registry, so it cannot
-   go stale against the estate it is searching. */
-#chip-search{border:0;cursor:pointer;font:inherit;font-family:var(--mono);
-  font-size:9px;letter-spacing:.18em;text-transform:uppercase}
-#chip-search kbd{font-family:var(--mono);font-size:8px;opacity:.55;
-  border:1px solid currentColor;border-radius:3px;padding:0 3px;margin-left:5px}
-#pal{position:fixed;inset:0;z-index:60;display:none;
-  background:rgba(3,6,4,.82);backdrop-filter:blur(9px) saturate(120%)}
-#pal.on{display:block}
-#pal-box{position:absolute;left:50%;top:11vh;transform:translateX(-50%);
-  width:min(640px,92vw);max-height:74vh;display:flex;flex-direction:column;
-  background:rgba(9,13,10,.96);border:1px solid rgba(0,255,68,.30);border-radius:12px;
-  box-shadow:0 0 0 1px rgba(0,0,0,.6),0 30px 90px rgba(0,0,0,.8),0 0 60px rgba(0,255,68,.10);
-  overflow:hidden}
-#pal-q{width:100%;background:transparent;border:0;outline:none;color:#eaffe4;
-  font-family:var(--mono);font-size:14px;letter-spacing:.04em;padding:17px 18px;
-  border-bottom:1px solid rgba(0,255,68,.18)}
-#pal-q::placeholder{color:rgba(239,239,239,.30);letter-spacing:.14em;text-transform:uppercase}
-#pal-r{overflow-y:auto;padding:6px 0}
-#pal-r a{display:flex;align-items:baseline;gap:12px;text-decoration:none;
-  padding:9px 18px;color:rgba(239,239,239,.80);font-family:var(--mono);font-size:12px}
-#pal-r a .pc{font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;
-  color:rgba(0,255,68,.55);margin-left:auto;white-space:nowrap}
-#pal-r a.sel,#pal-r a:hover{background:rgba(0,255,68,.11);color:#eaffe4}
-#pal-r a.sel .pc,#pal-r a:hover .pc{color:#8dff6a}
-#pal-none{padding:22px 18px;color:rgba(239,239,239,.34);font-family:var(--mono);font-size:11px;
-  letter-spacing:.1em;text-transform:uppercase}
-#pal-foot{padding:9px 18px;border-top:1px solid rgba(0,255,68,.14);
-  font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;
-  color:rgba(239,239,239,.30);display:flex;gap:16px}
-@media(max-width:600px){#pal-box{top:6vh;width:94vw}#chip-search kbd{display:none}}
-
-/* XENOS-ROOT-PORT: the raymarched plasma canvas keeps running because the
-   HUD readouts derive from it, but the XENOS scene is what is seen. */
-#gl{opacity:0!important;pointer-events:none}
-#xenos-gl{position:fixed;inset:0;z-index:0;display:block}
-</style>
-<script type="importmap">
-{"imports":{"three":"https://unpkg.com/three@0.176.0/build/three.module.js",
-"three/addons/":"https://unpkg.com/three@0.176.0/examples/jsm/"}}
-</script>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
-     AVATAR SWITCH — pick the central object without a deploy.
-       ?avatar=<name>   previews instantly, beats everything, writes nothing
-       /avatar.json     {"active":"<name>"} sets the default — the ONE word edit
-       neither present  -> #fs, byte-for-byte the behaviour that shipped before
-     Names map to fragment-shader blocks in THIS file. One WebGL context the
-     whole time: the swap recompiles the fragment stage, it never opens a
-     second canvas. Gallery of all of them: /avatars/
-     ══════════════════════════════════════════════════════════════════════════ -->
-<script>
-(function(){
-  var REG = {
-    "plasma"  : "fs",          /* XENOS PLASMA CORE — qi 2026-08-17, shipping now */
-    "orbital" : "fs-orbital",  /* the reference-calibrated striated marble */
-    "xt07"    : "fs-xt07",
-    "xt11"    : "fs-xt11",
-    "xt12"    : "fs-xt12"
-  };
-  window.XEN_AVATARS = REG;
-  var q = null;
-  try { q = new URLSearchParams(location.search).get("avatar"); } catch(e){}
-  var pinned = !!(q && REG[q]);
-  window.XEN_AVATAR_PINNED = pinned;
-  var cached = null;
-  try { cached = localStorage.getItem("xen.avatar"); } catch(e){}
-  var pick = pinned ? q : (cached && REG[cached] ? cached : "plasma");
-  window.XEN_AVATAR_NAME = pick;
-  window.XEN_AVATAR_ID   = REG[pick] || "fs";
-})();
-</script>
+    @media (max-width: 768px) {
+      #ring { width: 95vmin; }
+      .card-3d { width: 340px; padding: 24px; }
+      .ident-card .mark { font-size: 64px; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- ══ LAYER 0 · THE RENDER ══ -->
-<div id="glfallback"></div>
-<canvas id="gl"></canvas>
-<!-- XENOS-ROOT-PORT: hidden stubs so the ported scene's DOM lookups resolve.
-     The scene is the object from /xenos/; these carry no UI on this page. -->
-<div id="xenos-stubs" aria-hidden="true" style="display:none">
-  <div id="nn"></div><div id="ee"></div><div id="ww"></div>
-  <div id="cur"></div><div id="mood"></div><div id="form"></div>
-  <div id="probe"></div><div id="mic"></div>
-  <div class="ui"><button data-f="0"></button><button data-f="1"></button><button data-f="2"></button></div>
-</div>
+<div id="scroll-track" style="position: absolute; top: 0; left: 0; width: 1px; pointer-events: none; z-index: -1;"></div>
 
+<div id="ring"></div><div class="crosshair"></div>
 
-<!-- ══ LAYER 1 · THE VOLUME ══ -->
-<div id="stage">
-  <div id="depth">
+<script src="https://unpkg.com/gsap@3.13.0/dist/gsap.min.js"></script>
 
-    <!-- 00 · IDENT -->
-    <section class="plane a-bl" data-name="HOME" data-sx="0.28" data-sy="0.10">
-      <div class="plane-in">
-        <i class="scrim" style="--sx:24%;--sy:74%"></i>
-        <div class="blk">
-          <p class="cap"><span class="dot"></span>ESTATE DIRECTORY</p>
-          <p class="cap">LIVE SCANNED / OMNIPRESENT</p>
-          <h1 class="mark"><span class="steel">HIT</span>THE.<br>LINK</h1>
-          <div class="hr" style="max-width:340px"></div>
-          <p class="cap">COMMAND&nbsp;HOME <span aria-hidden="true">·</span> FORGED&nbsp;BY&nbsp;XEN <span aria-hidden="true">·</span> EAST&nbsp;ALLEN</p>
-        </div>
-      </div>
-    </section>
-    
-    <!-- JS WILL INJECT CATEGORY PLANES HERE -->
-
-  </div>
-</div>
-
-<!-- ══ LAYER 2 · FIXED CHROME ══ -->
-<div class="bar top"></div>
-<div class="bar bot"></div>
-
-<header id="brand">
-  <a class="logo" href="#" aria-label="hitthe.link">
-    <svg class="xorb" width="48" height="48" viewBox="0 0 48 48" aria-hidden="true">
-      <defs>
-        <radialGradient id="xo-core" cx="38%" cy="34%" r="72%">
-          <stop offset="0%"   stop-color="#eaffe4"/>
-          <stop offset="26%"  stop-color="#8dff6a"/>
-          <stop offset="58%"  stop-color="#07C42C"/>
-          <stop offset="100%" stop-color="#05270a"/>
-        </radialGradient>
-        <radialGradient id="xo-halo" cx="50%" cy="50%" r="50%">
-          <stop offset="55%"  stop-color="#00ff44" stop-opacity="0"/>
-          <stop offset="82%"  stop-color="#00ff44" stop-opacity=".30"/>
-          <stop offset="100%" stop-color="#00ff44" stop-opacity="0"/>
-        </radialGradient>
-        <clipPath id="xo-clip"><circle cx="24" cy="24" r="13.6"/></clipPath>
-      </defs>
-
-      <!-- outer plasma halo -->
-      <circle cx="24" cy="24" r="22" fill="url(#xo-halo)"/>
-
-      <!-- the sphere -->
-      <circle class="xo-body" cx="24" cy="24" r="13.6" fill="url(#xo-core)"/>
-
-      <!-- ORB_BAND: the spectrum as latitude rings, the /xenos/ signature.
-           Clipped to the sphere so they read as ON the body, not around it. -->
-      <g clip-path="url(#xo-clip)" fill="none" stroke="#d8ffcb" stroke-linecap="round">
-        <ellipse class="xo-b1" cx="24" cy="18.2" rx="13.2" ry="3.5" stroke-opacity=".55" stroke-width="1"/>
-        <ellipse class="xo-b2" cx="24" cy="24.0" rx="13.6" ry="4.6" stroke-opacity=".78" stroke-width="1.15"/>
-        <ellipse class="xo-b3" cx="24" cy="29.8" rx="13.2" ry="3.5" stroke-opacity=".45" stroke-width="1"/>
-      </g>
-
-      <!-- limb: the hard edge that makes it a body and not a glow -->
-      <circle cx="24" cy="24" r="13.6" fill="none" stroke="#b6ff9c" stroke-opacity=".72" stroke-width="1.1"/>
-
-      <!-- one orbital arc — the shapeshift that "comes out of the orb" -->
-      <ellipse class="xo-orbit" cx="24" cy="24" rx="21" ry="7.6"
-               fill="none" stroke="#00ff44" stroke-opacity=".5" stroke-width="1.2"
-               stroke-dasharray="1 3.4" stroke-linecap="round" transform="rotate(-22 24 24)"/>
-    </svg>
-    <span style="display:block">
-      <b class="steel">HITTHE.LINK</b>
-      <span>Command Home // Estate Directory</span>
-    </span>
-  </a>
-  <nav class="chips">
-    <a class="chip hide-xs" href="https://hitthe.link/xen" target="_blank" rel="noopener">/xen</a>
-    <a class="chip hide-s" href="https://hitthe.link/xos" target="_blank">/xos</a>
-    <button class="chip" id="chip-search" aria-label="Search surfaces">&#9906;&nbsp;Search <kbd>/</kbd></button>
-    <a class="chip" href="#s0" id="chip-give"><span class="dot"></span>Live Sweep</a>
-  </nav>
-</header>
-
-<div class="grid-line" id="gl-a"></div>
-<div class="grid-line" id="gl-b"></div>
-
-<div id="hud-top">
-  <div class="hud-l">
-    <span>STN <b class="num w4" id="r-stn">00</b>/13 &nbsp;<b id="r-name">IDENT</b></span>
-  </div>
-  <div class="hud-r">
-    <span>TRK <b class="num w6" id="r-prog">0.000000</b></span>
-  </div>
-</div>
-
-<div id="hud-bot">
-  <div class="hud-l">
-    <span>AZ <b class="num w5" id="r-az">000.00</b>&deg; &nbsp; RAD <b class="num w4" id="r-rad">16.50</b></span>
-    <span>ALT <b class="num w5" id="r-alt">-5.250</b> &nbsp; DIL <b class="num w4" id="r-dil">0.00</b></span>
-  </div>
-  <div class="hud-r">
-    <span>NET SCANNER ACTIVE &nbsp; &bull; &nbsp; ENDPOINTS <b class="num" id="r-endpoints">--</b></span>
-    <span>PTR <b class="num w6" id="r-px">0.0000000</b> <b class="num w6" id="r-py">0.0000000</b></span>
-  </div>
-</div>
-
-<div id="footline">
-  <i class="fill" id="fl-fill"></i>
-  <i class="sq1"></i><i class="sq2"></i><i class="tka"></i><i class="tkb"></i><i class="tkc"></i>
-</div>
-
-<nav id="rail" aria-label="Stations"></nav>
-
-<div id="cue">SCROLL<s></s></div>
-
-<div id="cur-ring"></div>
-<div id="cur-dot"></div>
-
-<div id="track"></div>
-
-
-<!-- ══ SEARCH PALETTE ══ -->
-<div id="pal" role="dialog" aria-modal="true" aria-label="Search surfaces">
-  <div id="pal-box">
-    <input id="pal-q" type="text" placeholder="Search every surface…" autocomplete="off" spellcheck="false">
-    <div id="pal-r"></div>
-    <div id="pal-foot"><span>&uarr;&darr; move</span><span>&crarr; open</span><span>esc close</span><span id="pal-n"></span></div>
-  </div>
-</div>
-
-<div id="boot"><p>Initializing Estate Engine</p><div><s></s></div></div>
-
-<!-- ══ SHADERS ══════════════════════════════════════════════════ -->
-<script type="x-shader/x-vertex" id="vs">
-attribute vec2 aP;
-void main(){ gl_Position = vec4(aP, 0.0, 1.0); }
-</script>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
-     XENOS PLASMA CORE — the new avatar.  qi 2026-08-17 08:44: "that version of
-     this, that's the new avatar" · 09:10: "let me know when the hitthe.link
-     homepage is updated with the avatar swap."
-
-     WHAT CHANGED, AND WHAT DELIBERATELY DID NOT:
-     Swapped — the CENTRAL OBJECT. It was a striated marble; it is now the plasma
-     core (fbm-driven, energy-reactive, bright rim over a dark interior).
-     Kept — the COMPOSITION. His own reference calibration (IMG_0106/IMG_0739,
-     preserved verbatim in #fs-orbital below) established that the sphere reads
-     SMALL (~20-25% of frame, never 70%) and the ORBITAL SYSTEM is the subject.
-     That is a standing preference about what he likes, not a fact about one
-     shader, so the nested rings and satellites stay.
-
-     TO REVERT: rename this block's id to anything, and #fs-orbital back to "fs".
-     The compile path is document.getElementById("fs").textContent — one word.
-     The original is NOT deleted. Nothing calibrated to his photos is lost.
-     ══════════════════════════════════════════════════════════════════════════ -->
-<script type="x-shader/x-fragment" id="fs">
-precision highp float;
-uniform vec2  uRes;
-uniform float uTime;
-uniform vec3  uCam;
-uniform vec3  uTgt;
-uniform vec3  uEyeDir;
-uniform vec2  uShift;
-uniform float uDil;
-uniform float uSteps;
-uniform float uQual;
-
-float h11(float p){ p=fract(p*0.1031); p*=p+33.33; p*=p+p; return fract(p); }
-float h31(vec3 p){
-  p = fract(p*0.3183099 + vec3(0.71,0.113,0.419));
-  p *= 17.0;
-  return fract(p.x*p.y*p.z*(p.x+p.y+p.z));
-}
-float vn(vec3 x){
-  vec3 i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f);
-  float a=h31(i),            b=h31(i+vec3(1,0,0));
-  float c=h31(i+vec3(0,1,0)), d=h31(i+vec3(1,1,0));
-  float e=h31(i+vec3(0,0,1)), g=h31(i+vec3(1,0,1));
-  float j=h31(i+vec3(0,1,1)), k=h31(i+vec3(1,1,1));
-  return mix(mix(mix(a,b,f.x),mix(c,d,f.x),f.y),
-             mix(mix(e,g,f.x),mix(j,k,f.x),f.y),f.z);
-}
-float fbm(vec3 p){
-  float s=0.0,a=0.5;
-  for(int i=0;i<5;i++){ s+=a*vn(p); p*=2.03; a*=0.5; }
-  return s;
-}
-
-// One restrained ring of discrete satellites — the composition he calibrated.
-vec3 ringPass(vec3 ro, vec3 rd, vec3 nrm, float Rr, float w, float spd,
-              float nOrb, float seed, float sphT, bool sphHit){
-  float dn = dot(rd, nrm);
-  if(abs(dn) < 0.0005) return vec3(0.0);
-  float tp = -dot(ro, nrm)/dn;
-  if(tp <= 0.0) return vec3(0.0);
-  if(sphHit && tp > sphT) return vec3(0.0);      // ring occluded by the core
-  vec3  hp = ro + rd*tp;
-  float r  = length(hp);
-  float band = exp(-pow((r-Rr)/w, 2.0));
-  vec3  acc = vec3(0.0);
-  for(int i=0;i<10;i++){
-    float fi = float(i);
-    if(fi >= nOrb) break;
-    float ph = h11(seed+fi*7.13)*6.2831853 + uTime*spd*(0.6+h11(seed+fi)*0.7);
-    vec3  op = vec3(cos(ph)*Rr, sin(ph)*Rr, 0.0);
-    // rotate the orbit plane into the ring's own frame
-    vec3 ax = normalize(cross(nrm, vec3(0.0,0.0,1.0)+1e-4));
-    vec3 by = cross(nrm, ax);
-    vec3 wp = ax*op.x + by*op.y;
-    float d  = length(hp - wp);
-    float sz = 0.030 + h11(seed+fi*3.7)*0.055;
-    acc += vec3(0.55,1.0,0.72) * exp(-pow(d/sz, 2.0)) * (0.9 + h11(seed+fi*11.0)*1.5);
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
   }
-  return acc + vec3(0.10,0.34,0.20)*band*0.55;
-}
-
-void main(){
-  vec2 p = (gl_FragCoord.xy - 0.5*uRes) / uRes.y;
-  p += uShift * 0.22;
-
-  // d=9 with unit fovScale puts a unit sphere at ~0.11 in p-units => ~22% of
-  // frame height. That is his calibrated size, arrived at by arithmetic so it
-  // cannot drift when the shader is edited later.
-  vec3 ro = vec3(0.0, 0.0, 9.0);
-  vec3 rd = normalize(vec3(p, -1.0));
-
-  // analytic sphere intersection — no march needed for a single body, which
-  // keeps this cheap enough for the 0.58 render scale on a phone.
-  float R = 1.0;
-  float bq = dot(ro, rd);
-  float cq = dot(ro, ro) - R*R;
-  float disc = bq*bq - cq;
-  bool  hit = disc > 0.0;
-  float tS = hit ? (-bq - sqrt(disc)) : 1e9;
-
-  vec3 col = vec3(0.0);
-
-  if(hit && tS > 0.0){
-    vec3 sp = ro + rd*tS;
-    vec3 n  = normalize(sp);
-    vec3 V  = -rd;
-
-    // plasma: two fbm fields at different rates, so it churns instead of sliding
-    float f1 = fbm(n*2.4 + vec3(0.0, uTime*0.20, uTime*0.09));
-    float f2 = fbm(n*5.8 - vec3(uTime*0.16, 0.0, uTime*0.06));
-    float pl = f1 + 0.45*f2;
-
-    // ⚠️ SECOND MEASURED CORRECTION, 09:16. First pass drove brightness off
-    // `fres` alone, so at the centre of the disc fres->0 and the body rendered as
-    // a FLAT GREY BALL — the mirror image of the blowout, and just as dead.
-    // The lesson from both: the dark belongs in the CREVICES (low fbm), never
-    // across the whole interior. So PLASMA drives the value and fresnel only
-    // trims the limb. Verified by screenshot, not by reasoning about the maths.
-    float fres = pow(1.0 - max(dot(n, V), 0.0), 2.5);
-    float energy = clamp(pl*1.15 + fres*0.55 - 0.42, 0.0, 1.0);
-    vec3 deep = vec3(0.030, 0.150, 0.075);      // crevice, not whole body
-    vec3 mid  = vec3(0.18,  0.72,  0.40);
-    vec3 hot  = vec3(0.78,  1.00,  0.86);
-    col = mix(deep, mid, smoothstep(0.0, 0.55, energy));
-    col = mix(col,  hot, smoothstep(0.55, 1.0,  energy));
-
-    // swirled striations — the surface note from his reference, following the
-    // plasma field so they curve with it instead of banding across it
-    float striate = sin(pl*13.0 + n.y*5.5 - uTime*0.6)*0.5 + 0.5;
-    col += vec3(0.34, 0.78, 0.52) * pow(striate, 2.2) * (0.30 + energy*0.75);
-
-    // internal emission so the body is a LIGHT SOURCE, not a lit object
-    col += vec3(0.10, 0.42, 0.24) * pow(clamp(pl-0.30, 0.0, 1.0), 1.6) * 1.5;
-
-    // thin brilliant limb
-    col += vec3(0.60,1.0,0.84) * pow(fres, 4.0) * 1.15;
-  }
-
-  // ── the orbital system: 4 nested rings, tilted, satellites of varied size ──
-  vec3 n1 = normalize(vec3( 0.16, 1.00,  0.10));
-  vec3 n2 = normalize(vec3(-0.34, 1.00,  0.24));
-  vec3 n3 = normalize(vec3( 0.44, 1.00, -0.20));
-  vec3 n4 = normalize(vec3(-0.10, 1.00, -0.42));
-  col += ringPass(ro, rd, n1, 1.85, 0.10, 0.42,  8.0,  3.1, tS, hit);
-  col += ringPass(ro, rd, n2, 2.55, 0.13, 0.31, 10.0, 17.7, tS, hit);
-  col += ringPass(ro, rd, n3, 3.35, 0.16, 0.24,  9.0, 41.3, tS, hit);
-  if(uQual > 0.5)
-    col += ringPass(ro, rd, n4, 4.20, 0.19, 0.18, 10.0, 66.9, tS, hit);
-
-  // faint volumetric haze around the core; NO VIGNETTE — he read one as a shadow
-  float gl = 1.0 / (1.0 + 26.0*max(0.0, length(p)-0.055));
-  col += vec3(0.030, 0.105, 0.062) * gl * (0.85 + 0.15*sin(uTime*0.7));
-
-  col *= 0.92 + 0.08*uDil;
-  col = col / (col + vec3(0.85));            // filmic-ish rolloff, keeps the rim
-  col = pow(col, vec3(0.4545));              // to sRGB
-  gl_FragColor = vec4(col, 1.0);
 }
 </script>
 
-<!-- PRESERVED, NOT DELETED — qi's reference-calibrated orbital marble.
-     Rename this id back to "fs" (and change the block above) to restore it. -->
-<script type="x-shader/x-fragment" id="fs-orbital">
-precision highp float;
-uniform vec2  uRes;
-uniform float uTime;
-uniform vec3  uCam;
-uniform vec3  uTgt;
-uniform vec3  uEyeDir;
-uniform vec2  uShift;
-uniform float uDil;
-uniform float uSteps;
-uniform float uQual;
-
-// REBUILT AGAINST qi's REFERENCE. IMG_0106 is the composition, IMG_0739 the surface.
-// Previous pass matched the radial COLOUR profile and got the SUBJECT wrong: a huge
-// washed ball with two wisps. In his reference the sphere is SMALL and brilliant and
-// the ORBITAL SYSTEM is the subject - nested arcs carrying MANY discrete bright
-// satellites of varied size, some with their own rings.
-//   sphere ~20-25% of frame, NOT 70%   |   surface = swirled white striations
-//   4 nested rings, 26-58 satellites   |   NO VIGNETTE (it read as a shadow)
-
-float hash11(float p){ p = fract(p*0.1031); p *= p+33.33; p *= p+p; return fract(p); }
-float hash31(vec3 p){
-  p = fract(p*0.3183099 + vec3(0.71,0.113,0.419));
-  p *= 17.0;
-  return fract(p.x*p.y*p.z*(p.x+p.y+p.z));
-}
-float vnoise(vec3 x){
-  vec3 i = floor(x); vec3 f = fract(x);
-  f = f*f*(3.0-2.0*f);
-  float n000=hash31(i), n100=hash31(i+vec3(1.0,0.0,0.0));
-  float n010=hash31(i+vec3(0.0,1.0,0.0)), n110=hash31(i+vec3(1.0,1.0,0.0));
-  float n001=hash31(i+vec3(0.0,0.0,1.0)), n101=hash31(i+vec3(1.0,0.0,1.0));
-  float n011=hash31(i+vec3(0.0,1.0,1.0)), n111=hash31(i+vec3(1.0,1.0,1.0));
-  return mix(mix(mix(n000,n100,f.x), mix(n010,n110,f.x), f.y),
-             mix(mix(n001,n101,f.x), mix(n011,n111,f.x), f.y), f.z);
-}
-float fbm(vec3 p){
-  float s=0.0, a=0.5;
-  for(int i=0;i<6;i++){ s += a*vnoise(p); p *= 2.03; a *= 0.5; }
-  return s;
-}
-float clouds(vec3 p){
-  vec3 q = vec3(fbm(p), fbm(p+vec3(5.2,1.3,2.7)), fbm(p+vec3(1.7,9.2,3.1)));
-  return fbm(p + 1.9*q);
-}
-
-const float RW = 2.05;
-
-vec3 ring(vec3 ro, vec3 rd, vec3 nrm, float Rr, float w, float spd,
-          float nOrb, float seed, float tS, bool hit){
-  float dn = dot(rd, nrm);
-  if(abs(dn) < 0.0004) return vec3(0.0);
-  float tp = -dot(ro, nrm)/dn;
-  if(tp <= 0.0) return vec3(0.0);
-  if(hit && tp > tS) return vec3(0.0);
-  vec3 pp = ro + rd*tp;
-  float rr = length(pp);
-  vec3 bu = normalize(cross(nrm, vec3(0.0,0.0,1.0)) + vec3(1e-4,0.0,0.0));
-  vec3 bv = cross(nrm, bu);
-  float th = atan(dot(pp,bv), dot(pp,bu));
-  float band = exp(-pow((rr - Rr)/w, 2.0));
-  float gate = exp(-pow((rr - Rr)/(w*2.2), 2.0));
-  float st = 6.28318/nOrb;
-  float ph = uTime*spd + seed*3.1;
-  float k  = floor((th - ph)/st + 0.5);
-  vec3 acc = vec3(0.0);
-  for(int j=-1;j<=1;j++){
-    float kk  = k + float(j);
-    float thk = kk*st + ph;
-    vec3  po  = (cos(thk)*bu + sin(thk)*bv)*Rr;
-    float od  = length(pp - po);
-    float h   = hash11(kk*1.7 + seed*11.0);
-    float osz = RW*(0.048 + 0.055*h*h);
-    float cr  = exp(-pow(od/osz, 2.0));
-    float ha  = exp(-pow(od/(osz*2.6), 2.0))*0.45;
-    float rg  = exp(-pow((od-osz*1.25)/(osz*0.30), 2.0))*0.30*step(0.62,h);
-    acc += (vec3(0.72,1.00,0.68)*cr*1.9 + vec3(0.36,0.95,0.42)*ha
-          + vec3(0.55,1.00,0.60)*rg) * gate;
-  }
-  return vec3(0.22,0.62,0.28)*band*0.22 + acc;
-}
-
-void main(){
-  vec2 uv = (gl_FragCoord.xy - 0.5*uRes)/uRes.y;
-  uv -= uShift;
-  vec3 ro = uCam;
-  vec3 fw = normalize(uTgt - ro);
-  vec3 rt = normalize(cross(vec3(0.0,1.0,0.0), fw));
-  vec3 up = cross(fw, rt);
-  vec3 rd = normalize(uv.x*rt + uv.y*up + 1.42*fw);
-
-  float bq = dot(ro, rd);
-  float cq = dot(ro, ro) - RW*RW;
-  float disc = bq*bq - cq;
-  bool  hit = false; float tS = 1e9;
-  if(disc > 0.0){ float sq=sqrt(disc); float t0=-bq-sq; if(t0>0.0){ tS=t0; hit=true; } }
-
-  float perp = length(ro + rd*max(-bq,0.0));
-  float rn   = clamp(perp/RW, 0.0, 1.0);
-
-  vec3 col = vec3(0.008,0.010,0.012);
-
-  vec3 sdir = floor(rd*300.0);
-  float sh = hash31(sdir);
-  if(sh > 0.9975){
-    float tw = 0.6 + 0.4*sin(uTime*1.7 + sh*40.0);
-    col += vec3(0.80,0.92,0.86)*(sh-0.9975)*340.0*tw;
-  }
-
-  float neb = clouds(rd*2.2 + vec3(0.0, uTime*0.012, 0.0));
-  float nm  = smoothstep(1.4, 7.0, perp/RW)*smoothstep(9.0, 2.5, perp/RW);
-  col += vec3(0.055,0.150,0.090)*pow(neb,2.2)*nm*3.2;
-
-  vec3 n1 = normalize(vec3( 0.22, 1.00,  0.14));
-  vec3 n2 = normalize(vec3(-0.48, 1.00,  0.30));
-  vec3 n3 = normalize(vec3( 0.40, 1.00, -0.52));
-  vec3 n4 = normalize(vec3(-0.14, 1.00,  0.62));
-  col += ring(ro, rd, n1, RW*1.85, RW*0.055,  0.070, 22.0, 1.0, tS, hit);
-  col += ring(ro, rd, n2, RW*2.45, RW*0.048, -0.055, 28.0, 2.0, tS, hit);
-  col += ring(ro, rd, n3, RW*3.05, RW*0.042,  0.042, 34.0, 3.0, tS, hit);
-  col += ring(ro, rd, n4, RW*3.55, RW*0.038, -0.033, 40.0, 4.0, tS, hit);
-
-  if(hit){
-    vec3 p = ro + rd*tS;
-    vec3 n = p/RW;
-    float cl   = clouds(n*3.4 + vec3(0.0,0.0,uTime*0.035));
-    float fine = clouds(n*9.0 + vec3(2.3,0.7,uTime*0.06));
-    float band = pow(clamp(cl,0.0,1.0), 1.15);
-    float wisp = pow(clamp(fine,0.0,1.0), 3.0);
-    vec3 deep  = vec3(0.078,0.480,0.145);
-    vec3 mid   = vec3(0.290,0.820,0.330);
-    vec3 white = vec3(0.960,1.000,0.940);
-    vec3 body = mix(deep, mid, band);
-    body = mix(body, white, wisp*0.85);
-    body = mix(body, mid, 0.20*rn);
-    float rim = exp(-pow((rn-0.93)/0.070, 2.0))*0.95;
-    body += vec3(0.55,1.00,0.60)*rim;
-    float core = exp(-pow(rn/0.30, 2.0))*0.55 + exp(-pow(rn/0.13, 2.0))*1.35;
-    body += vec3(1.0,1.0,0.96)*core;
-    col = body*1.15;
-  }
-
-  float cor = exp(-max(0.0, perp-RW)/(RW*0.30)) + 0.55*exp(-max(0.0, perp-RW)/(RW*1.4));
-  col += vec3(0.20,0.62,0.26)*cor*0.80*smoothstep(0.92, 1.02, perp/RW);
-
-  vec2 fp = uv/max(RW/max(length(uCam),1.0)*1.42, 0.001);
-  float fl = pow(max(0.0, 1.0-abs(fp.y)*7.0), 2.0) + pow(max(0.0, 1.0-abs(fp.x)*7.0), 2.0);
-  col += vec3(0.72,1.00,0.70)*fl*exp(-perp/RW*2.6)*0.55;
-
-  col = col/(1.0+col*0.55);
-  col = pow(col, vec3(0.95,0.96,0.99));
-  float L = dot(col, vec3(0.2126,0.7152,0.0722));
-  col = mix(vec3(L), col, 1.45);
-  col = clamp(col, 0.0, 1.0);
-  col += (hash11(gl_FragCoord.x*1.71 + gl_FragCoord.y*93.7 + uTime*61.0) - 0.5)*0.014;
-  gl_FragColor = vec4(col, 1.0);
-}
-
-</script>
-
-<!-- Harvested VERBATIM from /xt/07/ — same 9-uniform interface as #fs,
-     so it compiles in this page's existing single WebGL context. -->
-<script type="x-shader/x-fragment" id="fs-xt07">
-precision highp float;
-
-uniform vec2  uRes;
-uniform float uTime;
-uniform vec3  uCam;
-uniform vec3  uTgt;
-uniform vec3  uEyeDir;
-uniform vec2  uShift;
-uniform float uDil;
-uniform float uSteps;
-uniform float uQual;
-
-#define TAU 6.28318530718
-
-float hash11(float p){ p=fract(p*0.1031); p*=p+33.33; p*=p+p; return fract(p); }
-vec3 hash33(vec3 p){
-  p = fract(p*vec3(0.1031,0.1030,0.0973));
-  p += dot(p, p.yxz+33.33);
-  return fract((p.xxy+p.yxx)*p.zyx);
-}
-float vnoise(vec3 p){
-  vec3 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
-  float a=hash33(i+vec3(0.,0.,0.)).x, b=hash33(i+vec3(1.,0.,0.)).x;
-  float c=hash33(i+vec3(0.,1.,0.)).x, d=hash33(i+vec3(1.,1.,0.)).x;
-  float e=hash33(i+vec3(0.,0.,1.)).x, g=hash33(i+vec3(1.,0.,1.)).x;
-  float h=hash33(i+vec3(0.,1.,1.)).x, k=hash33(i+vec3(1.,1.,1.)).x;
-  return mix(mix(mix(a,b,f.x),mix(c,d,f.x),f.y),
-             mix(mix(e,g,f.x),mix(h,k,f.x),f.y), f.z);
-}
-mat3 rotX(float a){ float c=cos(a),s=sin(a); return mat3(1.,0.,0., 0.,c,-s, 0.,s,c); }
-mat3 rotY(float a){ float c=cos(a),s=sin(a); return mat3(c,0.,s, 0.,1.,0., -s,0.,c); }
-mat3 rotZ(float a){ float c=cos(a),s=sin(a); return mat3(c,-s,0., s,c,0., 0.,0.,1.); }
-
-float sdTorus(vec3 p, float R, float r){ vec2 q=vec2(length(p.xz)-R, p.y); return length(q)-r; }
-float sdEll(vec3 p, vec3 r){ float k0=length(p/r); float k1=length(p/(r*r)); return k0*(k0-1.0)/k1; }
-
-/* one instanced eye, sitting proud of the outer equator of its ring */
-float eyeAt(vec3 p, float aa, float R, float r, float seed){
-  vec3 dir  = vec3(cos(aa), 0.0, sin(aa));
-  vec3 tang = vec3(-sin(aa), 0.0, cos(aa));
-  vec3 c    = dir*(R + r*0.82);
-  float bh  = hash11(aa*7.13 + seed);
-  float ph  = fract(uTime*0.085 + bh);
-  float bl  = 1.0 - 0.94*smoothstep(0.0,0.016,ph)*(1.0-smoothstep(0.016,0.046,ph));
-  float er  = r*0.40;
-  vec3 q  = p - c;
-  vec3 lq = vec3(dot(q,dir), dot(q,vec3(0.,1.,0.)), dot(q,tang));
-  return sdEll(lq, vec3(er, er*bl + 0.004, er));
-}
-
-/* torus + its ring of eyes. mat 1 = metal, 2 = eye */
-vec2 ring(vec3 p, float R, float r, float N, float seed){
-  float dt = sdTorus(p, R, r);
-  vec2 res = vec2(dt, 1.0);
-  if (dt < r*2.4){
-    float sect = TAU/N;
-    float f  = atan(p.z, p.x)/sect;
-    float i0 = floor(f + 0.5);
-    float i1 = i0 + (f > i0 ? 1.0 : -1.0);
-    float de = min(eyeAt(p, i0*sect, R, r, seed), eyeAt(p, i1*sect, R, r, seed));
-    if (de < res.x) res = vec2(de, 2.0);
-  }
-  return res;
-}
-
-vec2 map(vec3 p){
-  float t = uTime;
-  vec2 res = vec2(1e9, 0.0);
-  vec2 a = ring(rotX(t*0.20)*rotY(t*0.10)*p,        3.00, 0.34, 30.0,  1.0);
-  if (a.x < res.x) res = a;
-  vec2 b = ring(rotY(t*0.15+1.0)*rotZ(t*0.05)*p,    4.60, 0.44, 45.0,  7.0);
-  if (b.x < res.x) res = b;
-  vec2 c = ring(rotX(t*0.10+2.0)*rotZ(t*0.10)*p,    6.30, 0.34, 60.0, 13.0);
-  if (c.x < res.x) res = c;
-  float ds = length(p) - 1.45;
-  if (ds < res.x) res = vec2(ds, 3.0);
-  return res;
-}
-
-vec3 calcNormal(vec3 p){
-  const vec2 k = vec2(1.0,-1.0);
-  float e = 0.0016;
-  return normalize( k.xyy*map(p+k.xyy*e).x + k.yyx*map(p+k.yyx*e).x
-                  + k.yxy*map(p+k.yxy*e).x + k.xxx*map(p+k.xxx*e).x );
-}
-
-/* procedural environment: cold steel + green key + a magenta grazing kick */
-vec3 env(vec3 rd){
-  float y = clamp(rd.y*0.5+0.5, 0.0, 1.0);
-  vec3 c = mix(vec3(0.006,0.008,0.011), vec3(0.052,0.060,0.070), y);
-  c += vec3(0.03,0.52,0.18) * pow(max(0.0, dot(rd, normalize(vec3(-0.55,0.45,-0.70)))), 7.0) * 0.30;
-  c += vec3(0.90,0.95,1.00) * pow(max(0.0, dot(rd, normalize(vec3( 0.55,0.65, 0.45)))),22.0) * 2.10;
-  c += vec3(0.80,0.86,1.00) * pow(max(0.0, dot(rd, normalize(vec3(-0.30,0.85,0.42)))), 5.0) * 0.16;
-  c += vec3(0.42,0.09,0.62) * pow(max(0.0, dot(rd, normalize(vec3( 0.80,-0.30,0.52)))),10.0) * 0.30;
-  return c;
-}
-vec3 irid(float f){ return 0.5 + 0.5*cos(TAU*(vec3(0.00,0.33,0.67) + f*2.35 + 0.20)); }
-
-/* the god eye: iris drawn procedurally on the sphere, facing the camera */
-vec3 irisShade(vec3 n, vec3 rd){
-  vec3 F = uEyeDir;
-  vec3 R = normalize(cross(vec3(0.0,1.0,0.0), F));
-  vec3 U = cross(F, R);
-  float fr = dot(n, F);
-  if (fr < 0.02){
-    float fs = pow(1.0 - max(dot(n,-rd),0.0), 4.0);
-    return vec3(0.014,0.022,0.018) + irid(fs)*fs*0.14;
-  }
-  vec2 e = vec2(dot(n,R), dot(n,U));
-  float rr = length(e);
-  float ang = atan(e.y, e.x);
-  float nz = vnoise(vec3(cos(ang), sin(ang), rr*2.2)*4.0);
-  float fib = 0.5 + 0.5*sin(ang*52.0 + nz*12.0 + rr*7.0);
-  float pupil = 0.170 + uDil*0.078 + sin(uTime*1.5)*0.026;
-
-  vec3 col = mix(vec3(0.00,0.42,0.13), vec3(0.06,1.00,0.30), fib*0.8);
-  col *= smoothstep(pupil-0.015, pupil+0.26, rr);
-  col *= 1.0 - 0.60*smoothstep(0.50, 0.70, rr);
-  col  = mix(col, vec3(0.010,0.030,0.020), smoothstep(0.68,0.82,rr));
-  col += vec3(0.0,0.9,0.32) * (1.0-smoothstep(0.0,0.06,abs(rr-pupil))) * 0.55;
-  float spec = pow(max(0.0, dot(n, normalize(F + R*0.42 + U*0.52))), 44.0);
-  col += vec3(0.92,1.00,0.96)*spec*0.80;
-  col *= mix(0.30, 1.0, clamp(fr,0.0,1.0));
-  return col;
-}
-
-float starLayer(vec3 rd, float sc, float thr){
-  vec3 q = rd*sc;
-  vec3 i = floor(q), f = fract(q);
-  vec3 h = hash33(i);
-  if (h.z < thr) return 0.0;
-  float d = length(f - (h*0.7 + 0.15));
-  return smoothstep(0.13, 0.0, d) * (0.20 + 0.80*h.y);
-}
-vec3 bg(vec3 rd){
-  float s = starLayer(rd, 58.0, 0.855) + starLayer(rd, 121.0, 0.930)*0.65;
-  vec3 c = vec3(s*0.90, s, s*0.95)*0.85;
-  float n = vnoise(rd*2.4);
-  c += mix(vec3(0.0014,0.0026,0.0032), vec3(0.0035,0.0090,0.0072), n);
-  c += vec3(0.0,0.010,0.005) * pow(max(0.0,-rd.y),3.0);
-  return c;
-}
-
-void main(){
-  vec2 uv = (gl_FragCoord.xy - 0.5*uRes)/uRes.y;
-  uv -= uShift;
-
-  vec3 ro = uCam;
-  vec3 fw = normalize(uTgt - ro);
-  vec3 rt = normalize(cross(vec3(0.0,1.0,0.0), fw));
-  vec3 up = cross(fw, rt);
-  vec3 rd = normalize(uv.x*rt + uv.y*up + 1.42*fw);
-
-  float t = 0.05, m = 0.0, glow = 0.0;
-  bool hit = false;
-  for (int i = 0; i < 96; i++){
-    if (float(i) > uSteps) break;
-    vec2 h = map(ro + rd*t);
-    if (h.y > 1.5) glow += 0.0030/(1.0 + h.x*h.x*70.0);
-    if (h.x < 0.0020*t){ m = h.y; hit = true; break; }
-    t += h.x*0.80;
-    if (t > 62.0) break;
-  }
-
-  vec3 col;
-  if (hit){
-    vec3 p = ro + rd*t;
-    vec3 n = calcNormal(p);
-    if (m < 1.5){
-      float b = 0.5;
-      if (uQual > 0.5){
-        b = vnoise(p*20.0);
-        float bx = vnoise(p*20.0 + vec3(0.07,0.0,0.0));
-        float by = vnoise(p*20.0 + vec3(0.0,0.07,0.0));
-        float bz = vnoise(p*20.0 + vec3(0.0,0.0,0.07));
-        n = normalize(n + vec3(bx-b, by-b, bz-b)*1.7);
-      }
-      float fres = pow(1.0 - max(dot(n,-rd),0.0), 4.0);
-      vec3 c = env(reflect(rd,n)) * (0.34 + 0.95*fres);
-      c += irid(fres + 0.18*b) * fres * 0.34;
-      c += vec3(0.0,0.28,0.09) * pow(max(0.0, dot(n, normalize(vec3(-0.5,0.4,-0.7)))), 2.0) * 0.14;
-      c *= 0.86 + 0.28*b;
-      col = c;
-    } else if (m < 2.5){
-      /* eyes get roundness from facing-ratio, so they read as spheres not dots */
-      float fc = max(dot(n,-rd), 0.0);
-      col = vec3(0.03,1.0,0.26) * (0.30 + 1.15*pow(fc,1.4));
-      col += vec3(0.75,1.0,0.85)*pow(fc,26.0)*0.5;
-    } else {
-      col = irisShade(n, rd);
-    }
-    col = mix(col, vec3(0.0), 1.0 - exp(-0.00052*t*t));
-  } else {
-    col = bg(rd);
-  }
-
-  col += vec3(0.06,1.0,0.34) * glow * 1.30;
-
-  vec2 vv = gl_FragCoord.xy/uRes;
-  col *= 0.34 + 0.66*pow(max(0.0,16.0*vv.x*vv.y*(1.0-vv.x)*(1.0-vv.y)), 0.27);
-
-  col = (col*(2.51*col+0.03))/(col*(2.43*col+0.59)+0.14);
-  col = pow(max(col,0.0), vec3(0.4545));
-  col += (hash11(gl_FragCoord.x*1.71 + gl_FragCoord.y*93.7 + uTime*61.0) - 0.5)*0.020;
-
-  gl_FragColor = vec4(col, 1.0);
-}
-</script>
-
-<!-- Harvested VERBATIM from /xt/11/ — same 9-uniform interface as #fs,
-     so it compiles in this page's existing single WebGL context. -->
-<script type="x-shader/x-fragment" id="fs-xt11">
-precision highp float;
-
-uniform vec2  uRes;
-uniform float uTime;
-uniform vec3  uCam;
-uniform vec3  uTgt;
-uniform vec3  uEyeDir;
-uniform vec2  uShift;
-uniform float uDil;
-uniform float uSteps;
-uniform float uQual;
-
-#define TAU 6.28318530718
-
-float hash11(float p){ p=fract(p*0.1031); p*=p+33.33; p*=p+p; return fract(p); }
-vec3 hash33(vec3 p){
-  p = fract(p*vec3(0.1031,0.1030,0.0973));
-  p += dot(p, p.yxz+33.33);
-  return fract((p.xxy+p.yxx)*p.zyx);
-}
-float vnoise(vec3 p){
-  vec3 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
-  float a=hash33(i+vec3(0.,0.,0.)).x, b=hash33(i+vec3(1.,0.,0.)).x;
-  float c=hash33(i+vec3(0.,1.,0.)).x, d=hash33(i+vec3(1.,1.,0.)).x;
-  float e=hash33(i+vec3(0.,0.,1.)).x, g=hash33(i+vec3(1.,0.,1.)).x;
-  float h=hash33(i+vec3(0.,1.,1.)).x, k=hash33(i+vec3(1.,1.,1.)).x;
-  return mix(mix(mix(a,b,f.x),mix(c,d,f.x),f.y),
-             mix(mix(e,g,f.x),mix(h,k,f.x),f.y), f.z);
-}
-mat3 rotX(float a){ float c=cos(a),s=sin(a); return mat3(1.,0.,0., 0.,c,-s, 0.,s,c); }
-mat3 rotY(float a){ float c=cos(a),s=sin(a); return mat3(c,0.,s, 0.,1.,0., -s,0.,c); }
-mat3 rotZ(float a){ float c=cos(a),s=sin(a); return mat3(c,-s,0., s,c,0., 0.,0.,1.); }
-
-float sdTorus(vec3 p, float R, float r){ vec2 q=vec2(length(p.xz)-R, p.y); return length(q)-r; }
-float sdEll(vec3 p, vec3 r){ float k0=length(p/r); float k1=length(p/(r*r)); return k0*(k0-1.0)/k1; }
-
-float eyeAt(vec3 p, float aa, float R, float r, float seed){
-  vec3 dir  = vec3(cos(aa), 0.0, sin(aa));
-  vec3 tang = vec3(-sin(aa), 0.0, cos(aa));
-  vec3 c    = dir*(R + r*0.82);
-  float bh  = hash11(aa*7.13 + seed);
-  float ph  = fract(uTime*0.085 + bh);
-  float bl  = 1.0 - 0.94*smoothstep(0.0,0.016,ph)*(1.0-smoothstep(0.016,0.046,ph));
-  float er  = r*0.40;
-  vec3 q  = p - c;
-  vec3 lq = vec3(dot(q,dir), dot(q,vec3(0.,1.,0.)), dot(q,tang));
-  return sdEll(lq, vec3(er, er*bl + 0.004, er));
-}
-
-vec2 ring(vec3 p, float R, float r, float N, float seed){
-  float dt = sdTorus(p, R, r);
-  vec2 res = vec2(dt, 1.0);
-  if (dt < r*2.4){
-    float sect = TAU/N;
-    float f  = atan(p.z, p.x)/sect;
-    float i0 = floor(f + 0.5);
-    float i1 = i0 + (f > i0 ? 1.0 : -1.0);
-    float de = min(eyeAt(p, i0*sect, R, r, seed), eyeAt(p, i1*sect, R, r, seed));
-    if (de < res.x) res = vec2(de, 2.0);
-  }
-  return res;
-}
-
-vec2 map(vec3 p){
-  float t = uTime;
-  vec2 res = vec2(1e9, 0.0);
-  vec2 a = ring(rotX(t*0.20)*rotY(t*0.10)*p,        3.00, 0.34, 30.0,  1.0);
-  if (a.x < res.x) res = a;
-  vec2 b = ring(rotY(t*0.15+1.0)*rotZ(t*0.05)*p,    4.60, 0.44, 45.0,  7.0);
-  if (b.x < res.x) res = b;
-  vec2 c = ring(rotX(t*0.10+2.0)*rotZ(t*0.10)*p,    6.30, 0.34, 60.0, 13.0);
-  if (c.x < res.x) res = c;
-  float ds = length(p) - 1.45;
-  if (ds < res.x) res = vec2(ds, 3.0);
-  return res;
-}
-
-vec3 calcNormal(vec3 p){
-  const vec2 k = vec2(1.0,-1.0);
-  float e = 0.0016;
-  return normalize( k.xyy*map(p+k.xyy*e).x + k.yyx*map(p+k.yyx*e).x
-                  + k.yxy*map(p+k.yxy*e).x + k.xxx*map(p+k.xxx*e).x );
-}
-
-vec3 env(vec3 rd){
-  float y = clamp(rd.y*0.5+0.5, 0.0, 1.0);
-  vec3 c = mix(vec3(0.006,0.008,0.011), vec3(0.052,0.060,0.070), y);
-  c += vec3(0.03,0.52,0.18) * pow(max(0.0, dot(rd, normalize(vec3(-0.55,0.45,-0.70)))), 7.0) * 0.30;
-  c += vec3(0.90,0.95,1.00) * pow(max(0.0, dot(rd, normalize(vec3( 0.55,0.65, 0.45)))),22.0) * 2.10;
-  c += vec3(0.80,0.86,1.00) * pow(max(0.0, dot(rd, normalize(vec3(-0.30,0.85,0.42)))), 5.0) * 0.16;
-  c += vec3(0.42,0.09,0.62) * pow(max(0.0, dot(rd, normalize(vec3( 0.80,-0.30,0.52)))),10.0) * 0.30;
-  return c;
-}
-vec3 irid(float f){ return 0.5 + 0.5*cos(TAU*(vec3(0.00,0.33,0.67) + f*2.35 + 0.20)); }
-
-vec3 irisShade(vec3 n, vec3 rd){
-  vec3 F = uEyeDir;
-  vec3 R = normalize(cross(vec3(0.0,1.0,0.0), F));
-  vec3 U = cross(F, R);
-  float fr = dot(n, F);
-  if (fr < 0.02){
-    float fs = pow(1.0 - max(dot(n,-rd),0.0), 4.0);
-    return vec3(0.014,0.022,0.018) + irid(fs)*fs*0.14;
-  }
-  vec2 e = vec2(dot(n,R), dot(n,U));
-  float rr = length(e);
-  float ang = atan(e.y, e.x);
-  float nz = vnoise(vec3(cos(ang), sin(ang), rr*2.2)*4.0);
-  float fib = 0.5 + 0.5*sin(ang*52.0 + nz*12.0 + rr*7.0);
-  float pupil = 0.170 + uDil*0.078 + sin(uTime*1.5)*0.026;
-
-  vec3 col = mix(vec3(0.00,0.42,0.13), vec3(0.06,1.00,0.30), fib*0.8);
-  col *= smoothstep(pupil-0.015, pupil+0.26, rr);
-  col *= 1.0 - 0.60*smoothstep(0.50, 0.70, rr);
-  col  = mix(col, vec3(0.010,0.030,0.020), smoothstep(0.68,0.82,rr));
-  col += vec3(0.0,0.9,0.32) * (1.0-smoothstep(0.0,0.06,abs(rr-pupil))) * 0.55;
-  float spec = pow(max(0.0, dot(n, normalize(F + R*0.42 + U*0.52))), 44.0);
-  col += vec3(0.92,1.00,0.96)*spec*0.80;
-  col *= mix(0.30, 1.0, clamp(fr,0.0,1.0));
-  return col;
-}
-
-float starLayer(vec3 rd, float sc, float thr){
-  vec3 q = rd*sc;
-  vec3 i = floor(q), f = fract(q);
-  vec3 h = hash33(i);
-  if (h.z < thr) return 0.0;
-  float d = length(f - (h*0.7 + 0.15));
-  return smoothstep(0.13, 0.0, d) * (0.20 + 0.80*h.y);
-}
-vec3 bg(vec3 rd){
-  float s = starLayer(rd, 58.0, 0.855) + starLayer(rd, 121.0, 0.930)*0.65;
-  vec3 c = vec3(s*0.90, s, s*0.95)*0.85;
-  float n = vnoise(rd*2.4);
-  c += mix(vec3(0.0014,0.0026,0.0032), vec3(0.0035,0.0090,0.0072), n);
-  c += vec3(0.0,0.010,0.005) * pow(max(0.0,-rd.y),3.0);
-  return c;
-}
-
-void main(){
-  vec2 uv = (gl_FragCoord.xy - 0.5*uRes)/uRes.y;
-  uv -= uShift;
-
-  vec3 ro = uCam;
-  vec3 fw = normalize(uTgt - ro);
-  vec3 rt = normalize(cross(vec3(0.0,1.0,0.0), fw));
-  vec3 up = cross(fw, rt);
-  vec3 rd = normalize(uv.x*rt + uv.y*up + 1.42*fw);
-
-  float t = 0.05, m = 0.0, glow = 0.0;
-  bool hit = false;
-  for (int i = 0; i < 96; i++){
-    if (float(i) > uSteps) break;
-    vec2 h = map(ro + rd*t);
-    if (h.y > 1.5) glow += 0.0030/(1.0 + h.x*h.x*70.0);
-    if (h.x < 0.0020*t){ m = h.y; hit = true; break; }
-    t += h.x*0.80;
-    if (t > 62.0) break;
-  }
-
-  vec3 col;
-  if (hit){
-    vec3 p = ro + rd*t;
-    vec3 n = calcNormal(p);
-    if (m < 1.5){
-      float b = 0.5;
-      if (uQual > 0.5){
-        b = vnoise(p*20.0);
-        float bx = vnoise(p*20.0 + vec3(0.07,0.0,0.0));
-        float by = vnoise(p*20.0 + vec3(0.0,0.07,0.0));
-        float bz = vnoise(p*20.0 + vec3(0.0,0.0,0.07));
-        n = normalize(n + vec3(bx-b, by-b, bz-b)*1.7);
-      }
-      float fres = pow(1.0 - max(dot(n,-rd),0.0), 4.0);
-      vec3 c = env(reflect(rd,n)) * (0.34 + 0.95*fres);
-      c += irid(fres + 0.18*b) * fres * 0.34;
-      c += vec3(0.0,0.28,0.09) * pow(max(0.0, dot(n, normalize(vec3(-0.5,0.4,-0.7)))), 2.0) * 0.14;
-      c *= 0.86 + 0.28*b;
-      col = c;
-    } else if (m < 2.5){
-      float fc = max(dot(n,-rd), 0.0);
-      col = vec3(0.03,1.0,0.26) * (0.30 + 1.15*pow(fc,1.4));
-      col += vec3(0.75,1.0,0.85)*pow(fc,26.0)*0.5;
-    } else {
-      col = irisShade(n, rd);
-    }
-    col = mix(col, vec3(0.0), 1.0 - exp(-0.00052*t*t));
-  } else {
-    col = bg(rd);
-  }
-
-  col += vec3(0.06,1.0,0.34) * glow * 1.30;
-  vec2 vv = gl_FragCoord.xy/uRes;
-  col *= 0.34 + 0.66*pow(max(0.0,16.0*vv.x*vv.y*(1.0-vv.x)*(1.0-vv.y)), 0.27);
-  col = (col*(2.51*col+0.03))/(col*(2.43*col+0.59)+0.14);
-  col = pow(max(col,0.0), vec3(0.4545));
-  col += (hash11(gl_FragCoord.x*1.71 + gl_FragCoord.y*93.7 + uTime*61.0) - 0.5)*0.020;
-  gl_FragColor = vec4(col, 1.0);
-}
-</script>
-
-<!-- Harvested VERBATIM from /xt/12/ — same 9-uniform interface as #fs,
-     so it compiles in this page's existing single WebGL context. -->
-<script type="x-shader/x-fragment" id="fs-xt12">
-precision highp float;
-uniform vec2  uRes;
-uniform float uTime;
-uniform vec3  uCam;
-uniform vec3  uTgt;
-uniform vec3  uEyeDir;
-uniform vec2  uShift;
-uniform float uDil;
-uniform float uSteps;
-uniform float uQual;
-
-// ---------------------------------------------------------------------------
-// CHARACTER REBUILT FROM qi's REFERENCE DROP (IMG_0739 / 0740 / 0106).
-// Every constant below is anchored to a MEASURED pixel value, not a guess.
-// Measured radial profile of the reference sphere (fraction of sphere radius):
-//   0.06 #fdfdfd lum 249 | 0.15 #def4cc 236 | 0.25 #bce6a3 216 | 0.36 #9cd787 197
-//   0.50 #92cb83 186 | 0.65 #aad59e 200 | 0.80 #88c180 176 | 0.97 #a3d894 200
-// Body hue is WARM: red exceeds blue by +8..+25 everywhere. Never mint, never cyan.
-// The disc is SELF-EMISSIVE: brightest at centre, flat plateau out to a hard limb.
-// ---------------------------------------------------------------------------
-
-float hash11(float p){ p = fract(p*0.1031); p *= p+33.33; p *= p+p; return fract(p); }
-float hash31(vec3 p){
-  p = fract(p*0.3183099 + vec3(0.71,0.113,0.419));
-  p *= 17.0;
-  return fract(p.x*p.y*p.z*(p.x+p.y+p.z));
-}
-float vnoise(vec3 x){
-  vec3 i = floor(x); vec3 f = fract(x);
-  f = f*f*(3.0-2.0*f);
-  float n000=hash31(i), n100=hash31(i+vec3(1.0,0.0,0.0));
-  float n010=hash31(i+vec3(0.0,1.0,0.0)), n110=hash31(i+vec3(1.0,1.0,0.0));
-  float n001=hash31(i+vec3(0.0,0.0,1.0)), n101=hash31(i+vec3(1.0,0.0,1.0));
-  float n011=hash31(i+vec3(0.0,1.0,1.0)), n111=hash31(i+vec3(1.0,1.0,1.0));
-  return mix(mix(mix(n000,n100,f.x), mix(n010,n110,f.x), f.y),
-             mix(mix(n001,n101,f.x), mix(n011,n111,f.x), f.y), f.z);
-}
-float fbm(vec3 p){
-  float s=0.0, a=0.5;
-  for(int i=0;i<5;i++){ s += a*vnoise(p); p *= 2.02; a *= 0.5; }
-  return s;
-}
-
-// measured stops: white core -> pale -> body -> limb body (STILL BRIGHT)
-vec3 rampGreen(float t){
-  vec3 c0 = vec3(0.992,0.992,0.984);   // #fdfdfb
-  vec3 c1 = vec3(0.871,0.957,0.800);   // #def4cc
-  vec3 c2 = vec3(0.612,0.843,0.529);   // #9cd787
-  vec3 c3 = vec3(0.639,0.847,0.580);   // #a3d894
-  if(t < 0.30) return mix(c0,c1, t/0.30);
-  if(t < 0.70) return mix(c1,c2,(t-0.30)/0.40);
-  return              mix(c2,c3,(t-0.70)/0.30);
-}
-
-const float RW = 4.35;   // body radius in world units; camera orbits at 16.9..25.5
-
-// One orbital ring: intersect the ray with the ring PLANE, band around radius,
-// plus discrete satellites gated to the band so the nearest-orb-by-angle
-// lookup cannot tear into radial wedges off the ring.
-vec3 ringPlane(vec3 ro, vec3 rd, vec3 nrm, float Rr, float w, float spd,
-               float nOrb, float seed, float tOccl, bool occl){
-  float denom = dot(rd, nrm);
-  if(abs(denom) < 0.0005) return vec3(0.0);
-  float tp = -dot(ro, nrm)/denom;
-  if(tp <= 0.0) return vec3(0.0);
-  if(occl && tp > tOccl) return vec3(0.0);       // hidden behind the body
-  vec3 pp = ro + rd*tp;
-  float rr = length(pp);
-
-  vec3 bu = normalize(cross(nrm, vec3(0.0,0.0,1.0)) + vec3(1e-4,0.0,0.0));
-  vec3 bv = cross(nrm, bu);
-  float th = atan(dot(pp,bv), dot(pp,bu));
-
-  float band = exp(-pow((rr - Rr)/w, 2.0));
-
-  float step0 = 6.28318/nOrb;
-  float phase = uTime*spd + seed*3.1;
-  float k     = floor((th - phase)/step0 + 0.5);
-  float thk   = k*step0 + phase;
-  vec3  po    = (cos(thk)*bu + sin(thk)*bv)*Rr;
-  float od    = length(pp - po);
-  float osz   = 0.055*RW + 0.045*RW*hash11(k*1.7 + seed*11.0);
-  float gate  = exp(-pow((rr - Rr)/(w*4.0), 2.0));
-  float orb   = exp(-pow(od/osz, 2.0))*gate;
-  float halo  = exp(-pow(od/(osz*3.0), 2.0))*0.30*gate;
-
-  vec3 dustC = vec3(0.34,0.72,0.36)*band*0.42;
-  vec3 orbC  = vec3(0.70,1.00,0.66)*(orb*2.10 + halo*1.6);
-  return dustC + orbC;
-}
-
-void main(){
-  vec2 uv = (gl_FragCoord.xy - 0.5*uRes)/uRes.y;
-  uv -= uShift;
-
-  vec3 ro = uCam;
-  vec3 fw = normalize(uTgt - ro);
-  vec3 rt = normalize(cross(vec3(0.0,1.0,0.0), fw));
-  vec3 up = cross(fw, rt);
-  vec3 rd = normalize(uv.x*rt + uv.y*up + 1.42*fw);
-
-  // ---- analytic ray/sphere against the body ----
-  float bq   = dot(ro, rd);
-  float cq   = dot(ro, ro) - RW*RW;
-  float disc = bq*bq - cq;
-  bool  hit  = false;
-  float tS   = 1e9;
-  if(disc > 0.0){
-    float sq = sqrt(disc);
-    float t0 = -bq - sq;
-    if(t0 > 0.0){ tS = t0; hit = true; }
-  }
-
-  // perpendicular miss distance -> the screen-radial coordinate the reference
-  // profile was measured in
-  float along = -bq;
-  float perp  = length(ro + rd*max(along, 0.0));
-  float rn    = clamp(perp/RW, 0.0, 1.0);
-
-  vec3 col = vec3(0.019,0.019,0.027);   // measured lifted black #050507
-
-  // ---- starfield (direction-hashed so it is stable under camera orbit) ----
-  vec3 sdir = floor(rd*260.0);
-  float sh  = hash31(sdir);
-  if(sh > 0.9972){
-    float tw = 0.6 + 0.4*sin(uTime*1.7 + sh*40.0);
-    col += vec3(0.80,0.90,0.85)*(sh-0.9972)*300.0*tw;
-  }
-
-  // ---- wide faint nebula arcs (measured ~#12261b) ----
-  float neb = fbm(rd*3.4 + vec3(0.0, uTime*0.015, 0.0));
-  float nebMask = smoothstep(1.05, 3.4, perp/RW)*smoothstep(3.4, 1.4, perp/RW);
-  col += vec3(0.071,0.149,0.106)*pow(neb, 2.0)*nebMask*2.2;
-
-  // ---- orbital system: thin filaments + discrete satellites, depth-sorted ----
-  vec3 n1 = normalize(vec3( 0.25, 1.00,  0.10));
-  vec3 n2 = normalize(vec3(-0.55, 1.00,  0.35));
-  vec3 n3 = normalize(vec3( 0.40, 1.00, -0.60));
-  col += ringPlane(ro, rd, n1, RW*1.20, RW*0.026,  0.055, 18.0, 1.0, tS, hit);
-  col += ringPlane(ro, rd, n2, RW*1.48, RW*0.022, -0.070, 24.0, 2.0, tS, hit);
-  col += ringPlane(ro, rd, n3, RW*1.82, RW*0.020,  0.040, 30.0, 3.0, tS, hit);
-
-  // ---- the body ----
-  if(hit){
-    vec3 p = ro + rd*tS;
-    vec3 n = p/RW;                       // sphere-local: mottling rides the surface
-
-    float cl   = fbm(n*6.5 + vec3(0.0,0.0,uTime*0.05));
-    float wisp = fbm(n*15.0 + vec3(3.1,1.7,uTime*0.08));
-    cl = pow(cl, 1.6);
-    float mott = 0.95 + 0.40*cl + 0.12*pow(wisp, 2.2);
-
-    // anchored ramp: pale by 0.15 R, full body by 0.36 R, plateau to the limb
-    float t = smoothstep(0.04, 0.42, rn)*0.70 + smoothstep(0.42, 1.00, rn)*0.30;
-    float rim = exp(-pow((rn-0.90)/0.075, 2.0))*0.40;
-
-    vec3 body = rampGreen(t)*mott + vec3(0.45,0.72,0.42)*rim;
-    float core = exp(-pow(rn/0.13, 2.0))*0.26 + exp(-pow(rn/0.060, 2.0))*0.78;
-    body += vec3(1.0,1.0,0.97)*core;
-    // Gain was tuned on a standalone render with NO page vignette. In-page the orb
-    // sits off-centre where `col *= 0.42 + 0.58*...` costs it 20-40 luminance; the
-    // orb-anchored profile measured -42 at 0.15R and -41 at 0.65R. Lift to match.
-    body *= 1.62;
-
-    col = body;                          // CLIFF: analytic silhouette, no fade
-  }
-
-  // ---- corona outside the disc ----
-  float cor = exp(-max(0.0, perp-RW)/(RW*0.13)) + 0.45*exp(-max(0.0, perp-RW)/(RW*0.55));
-  col += vec3(0.34,0.66,0.33)*cor*0.80*smoothstep(0.90, 1.02, perp/RW);
-
-  // ---- 4-point lens flare from the core ----
-  vec2 fp = uv/max(RW/max(length(uCam),1.0)*1.42, 0.001);
-  float fl = pow(max(0.0, 1.0-abs(fp.y)*10.0), 2.0) + pow(max(0.0, 1.0-abs(fp.x)*10.0), 2.0);
-  col += vec3(0.72,1.00,0.70)*fl*exp(-perp/RW*7.0)*0.42;
-
-  // ---- grade ----
-  vec2 vv = gl_FragCoord.xy/uRes;
-  col *= 0.42 + 0.58*pow(max(0.0,16.0*vv.x*vv.y*(1.0-vv.x)*(1.0-vv.y)), 0.22);
-  col = col/(1.0+col*0.62);
-  col = pow(col, vec3(0.955,0.965,0.985));
-  float L = dot(col, vec3(0.2126,0.7152,0.0722));
-  col = mix(vec3(L), col, 1.30);
-  col.b *= 0.985;
-  col = clamp(col, 0.0, 1.0);
-  col += (hash11(gl_FragCoord.x*1.71 + gl_FragCoord.y*93.7 + uTime*61.0) - 0.5)*0.016;
-  gl_FragColor = vec4(col, 1.0);
-}
-
-</script>
-
-
-<!-- ══ ESTATE INJECTION ENGINE ══ -->
 <script>
-const directoryData = [
-    { category: "Xen Ecosystem", links: ["/xen", "/xen-01", "/xen-02", "/xen-03", "/xen-04", "/xen-05", "/xen-06", "/xen-07", "/xen-08", "/xen-09", "/xen-10", "/xen-11", "/xen-12", "/xen-13", "/xen-14", "/xen-15", "/xen-16", "/xen-17", "/xen-18", "/xen-19", "/xen-20", "/xen-21", "/xen-22", "/xen-23", "/xen-24", "/xen-25", "/xen-architecture", "/xen-awareness", "/xen-fabric", "/xen-map", "/xen-prd", "/xen-source-of-truth", "/xen-system-decision", "/xen-worklog", "/xenmemory/win", "/xenos", "/xenos-env", "/xenos-plasma", "/xenos-v3", "/xos", "/xos3", "/xql", "/xt", "/xvm", "/clipboard-to-xen"] },
-    { category: "Veinom / VVS", links: ["/vei", "/veinom", "/veinom-inject", "/venom", "/agy/veinom", "/agyveinom", "/claude/veinom", "/grokveinom", "/VVS", "/vvsvei", "/vvsvei-live", "/vvsvei-voice"] },
-    { category: "AI & Agents", links: ["/agents", "/auto-agent", "/coding-agents", "/subagent", "/claude-mem", "/claude-web-api", "/claudeos", "/extendlm", "/grok", "/nblm", "/nblmaudit", "/vectorgen"] },
-    { category: "L7S & Ops", links: ["/l7", "/l7s", "/l7s-client-info", "/l7s-gap", "/l7s-hero", "/l7s-operator-hub", "/l7s-pulse", "/l7s-site", "/l7shero", "/hero/check/bse", "/check-hero"] },
-    { category: "Launchers & UI", links: ["/launchers", "/aio-launcher", "/anime-launcher", "/big-launcher", "/lawnchair", "/new-launcher", "/parallax-launcher", "/scribble-launcher", "/victor-launcher", "/square-home", "/hands-free-tablet", "/autophone"] },
-    { category: "Audits & Sessions", links: ["/063026", "/session-063026", "/070326", "/070326-weekly-export", "/_audit_calc01.html", "/audit", "/memory-audit", "/subs-audit"] },
-    { category: "Voice & Comms", links: ["/comms-health", "/dial", "/gv-call-stt", "/telephony-plan", "/twoway-voice", "/voice-council", "/voice-decouple", "/voice-line", "/voice-status", "/voice-transport", "/maskedcaller/2", "/receptionist", "/receptionist-sprint", "/switchboard"] },
-    { category: "Dev & Code", links: ["/_calc09_tmp.html", "/_shared", "/architecture", "/cache", "/calculators", "/codepens", "/css", "/js", "/container", "/endpoints", "/fs", "/functions", "/gateway", "/hooks", "/index.html", "/index.html.bak-20260724", "/index-portfolio-old.html", "/home-classic.html", "/infra", "/logs", "/mesh", "/requests", "/scripts", "/hetzner-setup", "/oss-sites"] },
-    { category: "Business & Finance", links: ["/costs", "/debt", "/expenses", "/invoice", "/invoice-books-decks", "/pricing", "/taxes", "/subscriptions", "/usage-burn", "/offer-builder", "/offers", "/growth", "/gtm"] },
-    { category: "Life, Notes, SOPs", links: ["/12step", "/action-board", "/actions", "/brain-map", "/commandments", "/cookbook", "/day", "/docs", "/free-brain", "/freedom-number", "/godsop", "/god-sop-dashboard", "/sop/2026-05-22-14h-win", "/life", "/life-note", "/lifenote", "/manifesto", "/manifesto.html", "/mtg-note-ef0006e2.html", "/today"] },
-    { category: "Projects & Domains", links: ["/domain", "/domains", "/domain-board", "/firstcare", "/firstcare-brief", "/firstcare-v2", "/trackingtogether", "/tracking-together", "/trackingtogether-v1", "/xlrd-org", "/xlrd-tech", "/playbook/local-sites", "/template-io-mission-control"] },
-    { category: "Integrations", links: ["/asana", "/clay-integrations", "/ifttt", "/apps/matrix", "/composio", "/finish-gmail-bridge", "/sync/personas/all"] },
-    { category: "Misc Identifiers", links: ["/222church", "/26thTemple", "/8922", "/999", "/PriceHero", "/abos", "/absorb", "/agnostic/send", "/allendale", "/anthony", "/aod", "/arch-jetstream", "/asset-coverage", "/aua", "/auth", "/auto-flow", "/autoship-gaps", "/avatar", "/barnlights", "/bee-gap-05ca3778f9", "/beelogin", "/beside-call-handler", "/beside-proxy", "/big3atl", "/breath-to-life", "/buzycred", "/cc-updates", "/cca", "/cellbrowser-codex", "/cellbrowser/v1", "/clash", "/client_information_sheet.html", "/competition/notis", "/complaints", "/complaints-registry", "/conductor", "/connect", "/context", "/crystal-blur", "/custom-er", "/dcl-demo", "/dcz", "/dcz-call", "/deprecated", "/desk", "/diamond-cut", "/die-list", "/dirtyhawks", "/e", "/east-allen-growth-interface", "/eats", "/egbops", "/eli", "/eliops", "/elios", "/elso", "/execpage", "/firehose", "/fixes", "/flcheats", "/gap", "/gap-analysis", "/gen-stack", "/ggv", "/go-green", "/godmode", "/gov", "/guardian", "/hotl-plan", "/icons", "/infinihash", "/inject", "/intake", "/internal", "/ios-shortcut-deploy", "/itinerary", "/ju", "/lab", "/legacy", "/lib", "/links", "/literary-devices", "/live-curtis-second.html", "/luckie", "/lux-snap.md", "/lyn", "/maskcolor/2", "/mb", "/mbv2", "/mbv3", "/mbv4", "/mcp-live", "/mcps", "/menu", "/metro-vs-straighttalk", "/notifs", "/omni-inbox", "/omnifused", "/online-viewer-net", "/orientation", "/overview", "/p6", "/padre", "/padula", "/pattern-tree", "/pbld", "/pgs", "/pin-feed", "/prd", "/premium", "/psnl/ssv3", "/qi", "/rays", "/rays-home", "/recovered-dictation", "/recovery", "/research", "/review", "/roadmap", "/rss", "/rv-rentals", "/scopes", "/secondme", "/sel", "/selfexec", "/selfown", "/selscorp", "/shalom-snap.md", "/shang", "/shopping", "/signing", "/sleep", "/slid", "/speedrun", "/spine", "/spog/v1", "/stal-lyon", "/stal-lyon-populate", "/state-map", "/status", "/steer", "/studio", "/stylism", "/suno/styles", "/swarm", "/tmp/xt", "/tmux-vocab", "/tomcp", "/tools-worker", "/unblock", "/vibe-repos", "/vibes", "/video-spec", "/vision", "/walmart-list", "/wcci", "/wes", "/wip"] }
+window.directoryData = [
+  { category: "Xen Ecosystem", links: ["/xen", "/xen-01", "/xen-02", "/xen-03", "/xen-04", "/xen-05", "/xen-06", "/xen-07", "/xen-08", "/xen-09", "/xen-10", "/xen-11", "/xen-12", "/xen-13", "/xen-14", "/xen-15", "/xen-16", "/xen-17", "/xen-18", "/xen-19", "/xen-20", "/xen-21", "/xen-22", "/xen-23", "/xen-24", "/xen-25", "/xen-architecture", "/xen-awareness", "/xen-fabric", "/xen-map", "/xen-prd", "/xen-source-of-truth", "/xen-system-decision", "/xen-worklog", "/xenmemory/win", "/xenos", "/xenos-env", "/xenos-plasma", "/xenos-v3", "/xos", "/xos3", "/xql", "/xt", "/xvm", "/clipboard-to-xen"] },
+  { category: "Veinom / VVS", links: ["/vei", "/veinom", "/veinom-inject", "/venom", "/agy/veinom", "/agyveinom", "/claude/veinom", "/grokveinom", "/VVS", "/vvsvei", "/vvsvei-live", "/vvsvei-voice"] },
+  { category: "AI & Agents", links: ["/agents", "/auto-agent", "/coding-agents", "/subagent", "/claude-mem", "/claude-web-api", "/claudeos", "/extendlm", "/grok", "/nblm", "/nblmaudit", "/vectorgen"] },
+  { category: "L7S & Ops", links: ["/l7", "/l7s", "/l7s-client-info", "/l7s-gap", "/l7s-hero", "/l7s-operator-hub", "/l7s-pulse", "/l7s-site", "/l7shero", "/hero/check/bse", "/check-hero"] },
+  { category: "Launchers & UI", links: ["/launchers", "/aio-launcher", "/anime-launcher", "/big-launcher", "/lawnchair", "/new-launcher", "/parallax-launcher", "/scribble-launcher", "/victor-launcher", "/square-home", "/hands-free-tablet", "/autophone"] },
+  { category: "Audits & Sessions", links: ["/063026", "/session-063026", "/070326", "/070326-weekly-export", "/_audit_calc01.html", "/audit", "/memory-audit", "/subs-audit"] },
+  { category: "Voice & Comms", links: ["/comms-health", "/dial", "/gv-call-stt", "/telephony-plan", "/twoway-voice", "/voice-council", "/voice-decouple", "/voice-line", "/voice-status", "/voice-transport", "/maskedcaller/2", "/receptionist", "/receptionist-sprint", "/switchboard"] },
+  { category: "Dev & Code", links: ["/_calc09_tmp.html", "/_shared", "/architecture", "/cache", "/calculators", "/codepens", "/css", "/js", "/container", "/endpoints", "/fs", "/functions", "/gateway", "/hooks", "/index.html", "/index-portfolio-old.html", "/infra", "/logs", "/mesh", "/requests", "/scripts", "/hetzner-setup", "/oss-sites"] },
+  { category: "Business & Finance", links: ["/costs", "/debt", "/expenses", "/invoice", "/invoice-books-decks", "/pricing", "/taxes", "/subscriptions", "/usage-burn", "/offer-builder", "/offers", "/growth", "/gtm"] },
+  { category: "Life & Note", links: ["/12step", "/action-board", "/actions", "/brain-map", "/commandments", "/cookbook", "/day", "/docs", "/free-brain", "/freedom-number", "/godsop", "/god-sop-dashboard", "/sop/2026-05-22", "/life", "/life-note", "/manifesto", "/mtg-note.html", "/today"] },
+  { category: "Projects", links: ["/domain", "/domains", "/domain-board", "/firstcare", "/trackingtogether", "/xlrd-org", "/xlrd-tech", "/playbook/local-sites", "/template-io-mission-control"] },
+  { category: "Integrations", links: ["/asana", "/clay-integrations", "/ifttt", "/apps/matrix", "/composio", "/finish-gmail-bridge", "/sync/personas/all"] }
 ];
-
-const depthContainer = document.getElementById("depth");
-const anchors = [
-  {c: 'a-mr', sx: -0.31, sy: 0.02},
-  {c: 'a-bl', sx: 0.28, sy: 0.10},
-  {c: 'a-tr', sx: -0.29, sy: -0.12},
-  {c: 'a-ml', sx: 0.30, sy: 0.00},
-  {c: 'a-br', sx: -0.31, sy: 0.12},
-  {c: 'a-tl', sx: 0.22, sy: -0.16}
-];
-
-directoryData.forEach((section, idx) => {
-  const a = anchors[idx % anchors.length];
-  const plane = document.createElement('section');
-  plane.className = `plane ${a.c}`;
-  plane.dataset.name = section.category.toUpperCase();
-  plane.dataset.sx = a.sx;
-  plane.dataset.sy = a.sy;
-
-  const words = section.category.split(' ');
-  const styledTitle = words.map((w, i) => i%2!==0 ? `<span class="jade">${w}</span>` : `<span class="steel">${w}</span>`).join(' ');
-
-  plane.innerHTML = `
-    <div class="plane-in">
-      <i class="scrim" style="--sx:50%;--sy:50%"></i>
-      <span class="idx">${String(idx+1).padStart(2, '0')}</span>
-      <div class="blk wide">
-        <p class="cap on">/// ESTATE_DIRECTORY [${section.links.length}]</p>
-        <h2 class="disp-s" style="margin-top:16px">${styledTitle}</h2>
-        <div class="hr" style="max-width:100%"></div>
-        <div class="link-grid">
-          ${section.links.map(link => `<a class="link-item" href="https://hitthe.link${link}" target="_blank" data-url="${link}">${link}</a>`).join('')}
-        </div>
-      </div>
-    </div>
-  `;
-  depthContainer.appendChild(plane);
-});
-
-// Dynamic track height sizing
-document.getElementById('track').style.height = ((directoryData.length + 1) * 125) + 'vh';
 </script>
 
-<!-- ══ CORE WEBSPACER ENGINE ══ -->
-<script>
-(function(){
-"use strict";
-
-var clamp = function(v,a,b){ return v<a?a:(v>b?b:v); };
-var ss = function(a,b,x){ var t=clamp((x-a)/(b-a),0,1); return t*t*(3-2*t); };
-var pad = function(n,d,w){ var s=Math.abs(n).toFixed(d); while(s.length<w) s="0"+s; return (n<0?"-":"")+s; };
-
-var isTouch = window.matchMedia("(pointer:coarse)").matches;
-var isNarrow = function(){ return window.innerWidth < 861; };
-var reduced = window.matchMedia("(prefers-reduced-motion:reduce)").matches;
-
-var stageEl = document.getElementById("stage");
-var depth  = document.getElementById("depth");
-var planes = [].slice.call(document.querySelectorAll(".plane"));
-var N      = planes.length;
-var railEl = document.getElementById("rail");
-var boot   = document.getElementById("boot");
-
-var RAILN = isNarrow() ? 7 : 10;
-var INSETS = [13,21,8,27,17,10,24,15,30,19];
-var rails = [];
-for (var i=0;i<RAILN;i++){
-  var r = document.createElement("div");
-  r.className = "plane rail";
-  var ins = INSETS[i % INSETS.length];
-  r.innerHTML =
-    '<div class="plane-in"><div class="rf" style="--ins:'+ins+'%">'+
-    '<span class="rl t"></span><span class="rl b"></span><span class="rl l"></span><span class="rl r"></span>'+
-    '<span class="cn tl"></span><span class="cn tr"></span><span class="cn bl"></span><span class="cn br"></span>'+
-    '<span class="rtk" style="left:14%;height:8px"></span>'+
-    '<span class="rtk" style="left:23%;height:12px"></span>'+
-    '<span class="rtk" style="left:52%;height:6px"></span>'+
-    '<span class="rtk" style="left:71%;height:10px"></span>'+
-    '<span class="rtk" style="left:88%;height:5px"></span>'+
-    '<b class="rlab" style="left:0;top:-15px">Z '+pad(-450-i*900,0,5)+'</b>'+
-    '<b class="rlab" style="right:0;bottom:-15px">'+(i%2?"REF":"PLN")+'.'+pad(i,0,2)+'</b>'+
-    '</div></div>';
-  depth.appendChild(r);
-  rails.push({ el:r, inn:r.firstChild, f: i - 0.5 });
-}
-
-var MOTEN = isNarrow() ? 18 : 34;
-var motes = [];
-for (var i=0;i<MOTEN;i++){
-  var m = document.createElement("i");
-  m.className = "mote plane-mote";
-  var sz = (Math.random()<0.22) ? 3 : 2;
-  m.style.width = m.style.height = sz+"px";
-  m.style.opacity = (0.25 + Math.random()*0.5);
-  depth.appendChild(m);
-  motes.push({
-    el:m,
-    x:(Math.random()-0.5)*2.1,
-    y:(Math.random()-0.5)*2.1,
-    seed:Math.random()
-  });
-}
-
-var railBtns = [];
-planes.forEach(function(p, idx){
-  var b = document.createElement("button");
-  b.type = "button";
-  b.innerHTML = "<span>"+p.dataset.name+"</span><i></i>";
-  b.setAttribute("aria-label","Station "+idx+": "+p.dataset.name);
-  b.addEventListener("click", function(){ goTo(idx); });
-  railEl.appendChild(b);
-  railBtns.push(b);
-});
-
-function trackMax(){ return Math.max(1, document.documentElement.scrollHeight - window.innerHeight); }
-function goTo(idx){
-  var raw = clamp(idx,0,N-1)/(N-1);
-  window.scrollTo({ top: raw*trackMax(), behavior: reduced ? "auto" : "smooth" });
-}
-
-function jumpFromHash(instant){
-  var m = /^#s(\d+)$/.exec(location.hash || "");
-  if (!m) return false;
-  var idx = clamp(parseInt(m[1],10)||0, 0, N-1);
-  window.scrollTo({ top: (idx/(N-1))*trackMax(), behavior: instant ? "auto" : "smooth" });
-  return true;
-}
-window.addEventListener("hashchange", function(){ jumpFromHash(false); });
-
-window.addEventListener("keydown", function(e){
-  if (e.key === "ArrowDown" || e.key === "ArrowRight"){ e.preventDefault(); goTo(Math.min(N-1, Math.round(posSmooth)+1)); }
-  if (e.key === "ArrowUp"   || e.key === "ArrowLeft"){  e.preventDefault(); goTo(Math.max(0,   Math.round(posSmooth)-1)); }
-});
-
-var cv = document.getElementById("gl");
-var gl = null, prog = null, U = {}, scale = 1, glOK = false;
-try {
-  gl = cv.getContext("webgl", {antialias:false, alpha:false, depth:false, powerPreference:"high-performance", preserveDrawingBuffer:false})
-    || cv.getContext("experimental-webgl", {antialias:false, alpha:false, depth:false});
-} catch(e){ gl = null; }
-
-function mkShader(type, src){
-  var s = gl.createShader(type);
-  gl.shaderSource(s, src); gl.compileShader(s);
-  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
-    console.error(gl.getShaderInfoLog(s)); return null;
-  }
-  return s;
-}
-if (gl){
-  var vs = mkShader(gl.VERTEX_SHADER, document.getElementById("vs").textContent);
-  /* resolved by the AVATAR SWITCH in <head>; falls back to #fs if the
-     named block is absent, so an unknown name can never blank the page. */
-  var fsEl = document.getElementById(window.XEN_AVATAR_ID || "fs")
-          || document.getElementById("fs");
-  var fs = mkShader(gl.FRAGMENT_SHADER, fsEl.textContent);
-  if (vs && fs){
-    prog = gl.createProgram();
-    gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
-    if (gl.getProgramParameter(prog, gl.LINK_STATUS)){
-      gl.useProgram(prog);
-      var buf = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
-      var aP = gl.getAttribLocation(prog, "aP");
-      gl.enableVertexAttribArray(aP);
-      gl.vertexAttribPointer(aP, 2, gl.FLOAT, false, 0, 0);
-      ["uRes","uTime","uCam","uTgt","uEyeDir","uShift","uDil","uSteps","uQual"].forEach(function(k){
-        U[k] = gl.getUniformLocation(prog, k);
-      });
-      glOK = true;
-    } else { console.error(gl.getProgramInfoLog(prog)); }
-  }
-}
-if (!glOK){
-  document.getElementById("glfallback").style.display = "block";
-  cv.style.display = "none";
-}
-
-var STEPS = isNarrow() ? 52 : 88;
-var QUAL  = isNarrow() ? 0 : 1;
-scale     = isNarrow() ? 0.58 : 0.78;
-
-var W=0, H=0;
-function resize(){
-  W = window.innerWidth; H = window.innerHeight;
-  cv.style.width = W+"px"; cv.style.height = H+"px";
-  var dpr = Math.min(window.devicePixelRatio||1, 2);
-  var bw = Math.max(2, Math.round(W*scale*dpr));
-  var bh = Math.max(2, Math.round(H*scale*dpr));
-  var MAXPX = isNarrow() ? 560000 : 1150000;
-  var px = bw*bh;
-  if (px > MAXPX){ var k = Math.sqrt(MAXPX/px); bw = Math.round(bw*k); bh = Math.round(bh*k); }
-  cv.width = bw; cv.height = bh;
-  if (glOK){ gl.viewport(0,0,bw,bh); gl.uniform2f(U.uRes, bw, bh); }
-}
-window.addEventListener("resize", resize, {passive:true});
-window.addEventListener("orientationchange", function(){ setTimeout(resize, 220); });
-resize();
-
-/* ── AVATAR SWAP ────────────────────────────────────────────────────────────
-   Recompiles ONLY the fragment stage and relinks. The vertex shader, the
-   vertex buffer and the canvas are reused, so the context count stays at one.
-   Uniform locations do NOT survive a relink -- they are re-resolved here and
-   resize() is re-run to push uRes into the new program. Returns false and
-   leaves the running program untouched on any failure. */
-function xenApplyAvatar(name){
-  var REG = window.XEN_AVATARS || {};
-  var id  = REG[name];
-  if (!glOK || !id) return false;
-  var el = document.getElementById(id);
-  if (!el) return false;
-  var nfs = mkShader(gl.FRAGMENT_SHADER, el.textContent);
-  if (!nfs) return false;
-  var np = gl.createProgram();
-  gl.attachShader(np, vs); gl.attachShader(np, nfs); gl.linkProgram(np);
-  if (!gl.getProgramParameter(np, gl.LINK_STATUS)){
-    console.error(gl.getProgramInfoLog(np));
-    gl.deleteProgram(np);
-    return false;                       /* old program still bound and drawing */
-  }
-  var old = prog;
-  prog = np;
-  gl.useProgram(prog);
-  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-  var a = gl.getAttribLocation(prog, "aP");
-  gl.enableVertexAttribArray(a);
-  gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
-  ["uRes","uTime","uCam","uTgt","uEyeDir","uShift","uDil","uSteps","uQual"]
-    .forEach(function(k){ U[k] = gl.getUniformLocation(prog, k); });
-  if (old) gl.deleteProgram(old);
-  resize();
-  window.XEN_AVATAR_NAME = name;
-  document.documentElement.setAttribute("data-avatar", name);
-  return true;
-}
-window.setAvatar = xenApplyAvatar;
-document.documentElement.setAttribute("data-avatar", window.XEN_AVATAR_NAME || "plasma");
-
-/* The default lives in /avatar.json so locking a pick in is one word, not a
-   code edit. A ?avatar= preview outranks it. A missing or broken file leaves
-   whatever is already compiled exactly as it is. */
-(function(){
-  if (window.XEN_AVATAR_PINNED) return;
-  try {
-    fetch("/avatar.json", {cache:"no-store"})
-      .then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(j){
-        if (!j || !j.active || !(window.XEN_AVATARS||{})[j.active]) return;
-        try { localStorage.setItem("xen.avatar", j.active); } catch(e){}
-        if (j.active !== window.XEN_AVATAR_NAME) xenApplyAvatar(j.active);
-      })
-      .catch(function(){});
-  } catch(e){}
-})();
-
-
-var mx=0, my=0, mtx=0, mty=0;
-var ptrX=0, ptrY=0, dotX=0, dotY=0, ringX=0, ringY=0, prevDotX=0, prevDotY=0;
-var dilT=0, dil=0;
-var curRing = document.getElementById("cur-ring"), curDot = document.getElementById("cur-dot");
-
-function interactive(el){
-  while (el && el !== document.body){
-    var t = el.tagName;
-    if (t === "A" || t === "BUTTON") return true;
-    if (el.classList && (el.classList.contains("tenet") || el.classList.contains("tier") || el.classList.contains("chip"))) return true;
-    el = el.parentElement;
-  }
-  return false;
-}
-if (!isTouch){
-  window.addEventListener("mousemove", function(e){
-    if (!document.body.classList.contains("pointer")){
-      dotX = ringX = e.clientX; dotY = ringY = e.clientY;
-      document.body.classList.add("pointer");
-    }
-    ptrX = e.clientX; ptrY = e.clientY;
-    mtx = (e.clientX / window.innerWidth  - 0.5) * 2;
-    mty = (e.clientY / window.innerHeight - 0.5) * 2;
-    dilT = interactive(e.target) ? 1 : 0;
-  }, {passive:true});
-  window.addEventListener("mouseleave", function(){ dilT = 0; });
-} else {
-  window.addEventListener("touchstart", function(e){
-    if(!e.touches[0]) return;
-    mtx = (e.touches[0].clientX / window.innerWidth  - 0.5) * 2;
-    mty = (e.touches[0].clientY / window.innerHeight - 0.5) * 2;
-    dilT = 1;
-  }, {passive:true});
-  window.addEventListener("touchend", function(){ dilT = 0; }, {passive:true});
-}
-
-var STEPZ = 900, PERSP = 1000;
-var scrollL = 0, posSmooth = 0, posPrev = 0, roll = 0;
-var shiftX = 0, shiftY = 0;
-var t0 = performance.now();
-var frames = 0, slowFrames = 0, lastT = t0, downgraded = false;
-
-function stationShift(idx){
-  var p = planes[idx];
-  var sx = parseFloat(p.dataset.sx), sy = parseFloat(p.dataset.sy);
-  if (isNarrow()) return [sx*0.34, (sy>=0 ? 0.20 : -0.21)];
-  return [sx, sy];
-}
-
-var rName = document.getElementById("r-name"), rStn = document.getElementById("r-stn"),
-    rProg = document.getElementById("r-prog"), rAz = document.getElementById("r-az"),
-    rRad  = document.getElementById("r-rad"),  rAlt = document.getElementById("r-alt"),
-    rDil  = document.getElementById("r-dil"),  rPx  = document.getElementById("r-px"),
-    rPy   = document.getElementById("r-py"),   flFill = document.getElementById("fl-fill"),
-    cue   = document.getElementById("cue");
-var lastStn = -1;
-// Adjust HUD for dynamically added planes
-document.getElementById('hud-top').querySelector('.hud-l span').innerHTML = `STN <b class="num w4" id="r-stn">00</b>/${String(N).padStart(2,'0')} &nbsp;<b id="r-name">IDENT</b>`;
-
-// ENDPOINTS was the literal string "232" (2026-08-14). The directory had grown well
-// past that, so the front door was quoting an invented number — the one thing the
-// build canon forbids outright. Count the real thing instead: whatever is actually
-// in directoryData at run time, so it can never drift from what the page renders.
-(function(){
-  var el = document.getElementById('r-endpoints');
-  if (!el) return;
-  try {
-    var n = directoryData.reduce(function(a, c){ return a + (c.links ? c.links.length : 0); }, 0);
-    // Only display a real count. If the reduce ever yields nothing, leave the
-    // placeholder visible rather than printing a confident "0" — a wrong number
-    // that looks authoritative is worse than one that visibly has no answer.
-    if (n > 0) el.textContent = String(n);
-  } catch (e) { /* leave "--" so the gap is visible, never fabricated */ }
-})();
-
-
-function frame(now){
-  requestAnimationFrame(frame);
-  var time = (now - t0)/1000;
-  var dt = now - lastT; lastT = now;
-  
-  if (dt > 34) slowFrames++; else slowFrames = Math.max(0, slowFrames-1);
-  frames++;
-  if (!downgraded && frames > 90 && slowFrames > 40){
-    downgraded = true; scale *= 0.68; STEPS = Math.max(34, STEPS*0.62); resize();
-  }
-
-  var raw = clamp(window.scrollY / trackMax(), 0, 1);
-  scrollL += (raw - scrollL) * (isTouch ? 0.17 : 0.105);
-  var s = scrollL * (N-1);
-  var i = Math.min(N-2, Math.floor(s));
-  var tt = s - i;
-  var u = clamp((tt - 0.28)/0.44, 0, 1);
-  var pos = i + u*u*(3-2*u);
-  posPrev = posSmooth; posSmooth = pos;
-  var vel = pos - posPrev;
-  var pe = pos/(N-1);
-
-  mx += (mtx - mx)*0.055; my += (mty - my)*0.055;
-  var ang = pe*Math.PI*2.05 + 0.55;
-  var rad = 25.5 - Math.sin(pe*Math.PI)*8.6;
-  var alt = (pe-0.5)*13.0 + Math.sin(pe*Math.PI*3.0)*1.1;
-  var asp = W/Math.max(1,H);
-  if (asp < 0.86) rad *= 1.0 + (0.86 - asp)*1.45;
-  
-  var cx = Math.sin(ang)*rad, cz = Math.cos(ang)*rad, cy = alt;
-  var tx = mx*1.15, ty = -my*0.85 + alt*0.10, tz = 0;
-
-  var ex = cx - tx, ey = cy - ty, ez = cz - tz;
-  var el = Math.sqrt(ex*ex+ey*ey+ez*ez) || 1;
-  ex/=el; ey/=el; ez/=el;
-
-  dil += (dilT - dil)*0.0135;   
-
-  var i0 = clamp(Math.round(pos),0,N-1);
-  var i1 = clamp(i0 + (pos>i0?1:-1),0,N-1);
-  var mixT = Math.abs(pos - i0);
-  var a0 = stationShift(i0), a1 = stationShift(i1);
-  var tsx = a0[0]+(a1[0]-a0[0])*mixT, tsy = a0[1]+(a1[1]-a0[1])*mixT;
-  shiftX += (tsx - shiftX)*0.07; shiftY += (tsy - shiftY)*0.07;
-
-  if (glOK){
-    gl.uniform1f(U.uTime, time);
-    gl.uniform3f(U.uCam, cx, cy, cz);
-    gl.uniform3f(U.uTgt, tx, ty, tz);
-    gl.uniform3f(U.uEyeDir, ex, ey, ez);
-    gl.uniform2f(U.uShift, shiftX, shiftY);
-    gl.uniform1f(U.uDil, dil);
-    gl.uniform1f(U.uSteps, STEPS);
-    gl.uniform1f(U.uQual, QUAL);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
-  }
-
-  roll += (clamp(-vel*90, -3.2, 3.2) - roll)*0.06;
-  depth.style.transform = "rotateZ("+roll.toFixed(3)+"deg) rotateY("+(mx*1.7).toFixed(3)+"deg) rotateX("+(-my*1.1).toFixed(3)+"deg)";
-  stageEl.style.perspectiveOrigin = (50 + mx*4).toFixed(2)+"% "+(50 + my*4).toFixed(2)+"%";
-
-  var narrow = isNarrow();
-  var maxBlur = narrow ? 4 : 11;
-
-  for (var j=0;j<N;j++){
-    var d = pos - j;
-    var o = (d < 0) ? ss(-0.95, -0.26, d) : (1 - ss(0.18, 0.58, d));
-    var el2 = planes[j], inn = el2.firstElementChild;
-    if (o < 0.005){
-      if (el2.style.visibility !== "hidden"){ el2.style.visibility = "hidden"; el2.classList.remove("live"); }
-      continue;
-    }
-    if (el2.style.visibility !== "visible") el2.style.visibility = "visible";
-    var z = d*STEPZ;
-    var dx = d * (j%2 ? -38 : 34);
-    var dy = d * (j%3===0 ? 26 : -18);
-    el2.style.transform = "translate3d("+dx.toFixed(1)+"px,"+dy.toFixed(1)+"px,"+z.toFixed(1)+"px) rotateY("+(d*2.4).toFixed(2)+"deg)";
-    inn.style.opacity = o.toFixed(3);
-    var bl = clamp((Math.abs(d)-0.16)*9.0, 0, maxBlur);
-    inn.style.filter = bl > 0.12 ? "blur("+bl.toFixed(2)+"px)" : "none";
-    var live = o > 0.72;
-    if (live !== el2.classList.contains("live")) el2.classList.toggle("live", live);
-  }
-
-  for (var k=0;k<rails.length;k++){
-    var rd2 = pos - rails[k].f;
-    var ro2 = (rd2 < 0) ? ss(-1.9, -0.7, rd2) : (1 - ss(0.35, 0.86, rd2));
-    var re = rails[k].el;
-    if (ro2 < 0.006){ if (re.style.visibility!=="hidden") re.style.visibility="hidden"; continue; }
-    if (re.style.visibility!=="visible") re.style.visibility="visible";
-    re.style.transform = "translate3d(0,0,"+(rd2*STEPZ).toFixed(1)+"px) rotateZ("+(rd2*1.1).toFixed(2)+"deg)";
-    rails[k].inn.style.opacity = (ro2*0.85).toFixed(3);
-  }
-
-  var LOOP = 4200;
-  for (var q=0;q<motes.length;q++){
-    var mo = motes[q];
-    var mz = ((pos*STEPZ*0.55 + time*26 + mo.seed*LOOP) % LOOP) - LOOP*0.72;
-    var sc = PERSP/(PERSP - mz);
-    if (sc <= 0.02 || sc > 24){ mo.el.style.opacity = 0; continue; }
-    mo.el.style.transform = "translate3d("+(mo.x*W*0.62).toFixed(0)+"px,"+(mo.y*H*0.62).toFixed(0)+"px,"+mz.toFixed(0)+"px)";
-    mo.el.style.opacity = (clamp(1 - Math.abs(mz+LOOP*0.2)/(LOOP*0.55), 0, 1) * 0.55).toFixed(3);
-  }
-
-  var stn = clamp(Math.round(pos), 0, N-1);
-  if (stn !== lastStn){
-    lastStn = stn;
-    rName.textContent = planes[stn].dataset.name;
-    rStn.textContent = pad(stn,0,2);
-    for (var b2=0;b2<railBtns.length;b2++) railBtns[b2].classList.toggle("on", b2===stn);
-  }
-  rProg.textContent = raw.toFixed(6);
-  rAz.textContent   = pad((ang*57.2957795)%360, 2, 6);
-  rRad.textContent  = rad.toFixed(2);
-  rAlt.textContent  = pad(alt, 3, 6);
-  rDil.textContent  = dil.toFixed(2);
-  rPx.textContent   = (Math.abs(mtx)*46.9897752).toFixed(7);
-  rPy.textContent   = (Math.abs(mty)*33.2873600).toFixed(7);
-  flFill.style.width = (raw*100).toFixed(2)+"%";
-  cue.style.opacity = raw > 0.015 ? 0 : 1;
-
-  if (!isTouch){
-    prevDotX = dotX; prevDotY = dotY;
-    dotX  += (ptrX - dotX)*0.42;  dotY  += (ptrY - dotY)*0.42;
-    ringX += (dotX - ringX)*0.13; ringY += (dotY - ringY)*0.13;
-    var vx = dotX - prevDotX, vy = dotY - prevDotY;
-    var sp = Math.min(Math.sqrt(vx*vx+vy*vy)/16, 1);
-    var rot = Math.atan2(vy,vx)*57.2957795;
-    curDot.style.transform  = "translate3d("+dotX.toFixed(1)+"px,"+dotY.toFixed(1)+"px,0) rotate("+rot.toFixed(1)+"deg) scale("+(1+sp*2.6).toFixed(3)+","+(1-sp*0.62).toFixed(3)+")";
-    curRing.style.transform = "translate3d("+ringX.toFixed(1)+"px,"+ringY.toFixed(1)+"px,0) scale("+(1+dil*0.45).toFixed(3)+")";
-    curRing.style.borderColor = dil > 0.35 ? "rgba(0,255,68,"+(0.25+dil*0.5).toFixed(2)+")" : "rgba(255,255,255,.3)";
-  }
-}
-
-if (jumpFromHash(true)){
-  var _raw0 = clamp(window.scrollY/trackMax(), 0, 1);
-  scrollL = _raw0;
-}
-requestAnimationFrame(frame);
-window.addEventListener("load", function(){
-  jumpFromHash(true);
-  setTimeout(function(){ boot.classList.add("gone"); setTimeout(function(){ boot.style.display="none"; }, 1000); }, 620);
-});
-setTimeout(function(){ boot.classList.add("gone"); setTimeout(function(){ boot.style.display="none"; }, 1000); }, 2600);
-
-})();
-
-// ── LIVE NETWORK SCANNER ──
-(function(){
-  const linksToScan = Array.from(document.querySelectorAll('.link-item'));
-  async function scanLink(el) {
-     try {
-         const res = await fetch("https://hitthe.link" + el.dataset.url, { mode: 'no-cors', cache: 'no-store' });
-         if(res.ok || res.type === 'opaque') {
-             el.classList.add('up');
-         } else {
-             el.classList.add('down');
-         }
-     } catch(e) {
-         el.classList.add('down');
-     }
-  }
-  let scanIdx = 0;
-  async function runScanner() {
-      while(scanIdx < linksToScan.length) {
-          const batch = linksToScan.slice(scanIdx, scanIdx + 5);
-          await Promise.all(batch.map(scanLink));
-          scanIdx += 5;
-          await new Promise(r => setTimeout(r, 150));
-      }
-  }
-  setTimeout(runScanner, 3500); // Trigger after the 3D Engine boots.
-})();
-</script>
-
-<script>
-/* ── SEARCH PALETTE ────────────────────────────────────────────────────────
-   Built 2026-08-18 on qi's "add the search bar"; REBUILT 2026-08-19 after he
-   tested it by hand, typed "Xenos", and got "no surface matches".
-
-   TWO THINGS WERE WRONG, both measured on the live page before this rewrite:
-   1. /xenos was NOT IN THE ESTATE INDEX AT ALL — only /xos and /xos3 were
-      listed, so the palette was answering correctly about a directory that
-      had a hole in it. Fixed in directoryData, not here.
-   2. Matching was strict substring across one flat haystack, so a near-miss
-      spelling returned nothing rather than the obvious neighbour. Now every
-      term is scored: exact path, path prefix, path substring, label/category,
-      then a subsequence fallback — so "xenos", "xos" and "XOS" all land on
-      the right surfaces instead of one of them going dark.
-
-   It still indexes the anchors the page ITSELF injected into #depth, so the
-   index is the estate — never a second registry that can drift out of sync. */
-(function(){
-  var pal  = document.getElementById('pal');
-  var q    = document.getElementById('pal-q');
-  var out  = document.getElementById('pal-r');
-  var nEl  = document.getElementById('pal-n');
-  var chip = document.getElementById('chip-search');
-  if(!pal||!q||!out) return;
-
-  /* Human words the PATHS do not carry. Deliberately tiny and factual: it only
-     cross-links the two spellings of the same surface family, so typing either
-     one finds both. Not a place for invented descriptions. */
-  var ALIAS = {
-    '/xenos':        'xos spatial os avatar orb',
-    '/xenos-env':    'xos spatial os environment',
-    '/xenos-plasma': 'xos spatial os plasma avatar',
-    '/xenos-v3':     'xos3 spatial os v3',
-    '/xos':          'xenos phone os',
-    '/xos3':         'xenos v3 phone os'
-  };
-
-  var IDX = [], sel = 0, cur = [];
-
-  /* Read the real DOM. Runs after injection; re-runs on open so late planes
-     are included rather than silently missing. */
-  function reindex(){
-    var seen = Object.create(null), list = [];
-    var nodes = document.querySelectorAll('#depth a[href]');
-    for(var i=0;i<nodes.length;i++){
-      var a = nodes[i];
-      var href = a.getAttribute('href')||'';
-      if(!href || href.charAt(0)==='#') continue;
-      if(seen[href]) continue;
-      seen[href] = 1;
-      var plane = a.closest ? a.closest('.plane') : null;
-      var cat = (plane && plane.dataset && plane.dataset.name) ? plane.dataset.name : '';
-      var label = (a.textContent||'').trim() || href;
-      /* the path is what a human types; keep it separate from the rest so the
-         ranking can tell "the path IS this" from "this word appears somewhere" */
-      var path = (a.getAttribute('data-url') || label || href).toLowerCase();
-      if(path.charAt(0) !== '/') path = '/' + path.replace(/^https?:\/\/[^\/]+\//,'');
-      list.push({
-        href:  href,
-        label: label,
-        cat:   cat,
-        path:  path,
-        hay:   (label+' '+href+' '+cat+' '+(ALIAS[path]||'')).toLowerCase()
-      });
-    }
-    IDX = list;
-  }
-
-  /* subsequence, not substring: "xos" is inside "/xenos" as x..o.s. Gated to
-     3+ chars so a one-letter query cannot fuzz its way into all 350 rows. */
-  function subseq(t, h){
-    if(t.length < 3) return false;
-    var i = 0;
-    for(var j=0;j<h.length && i<t.length;j++){ if(h.charAt(j)===t.charAt(i)) i++; }
-    return i === t.length;
-  }
-
-  /* Lower is better. -1 means this term does not match at all, so the row is out. */
-  function rank(it, t){
-    var p = it.path;
-    if(p === '/'+t)            return 0;   // exact surface
-    if(p.indexOf('/'+t) === 0) return 1;   // path starts with it
-    if(p.indexOf(t) !== -1)    return 2;   // path contains it
-    if(it.hay.indexOf(t) !== -1) return 3; // label, category or alias
-    if(subseq(t, p))           return 4;   // fuzzy on the path
-    return -1;
-  }
-
-  function render(){
-    var s = q.value.trim().toLowerCase();
-    var terms = s ? s.split(/\s+/) : [];
-    var scored = [];
-    for(var i=0;i<IDX.length;i++){
-      var it = IDX[i], worst = 0, ok = true;
-      for(var k=0;k<terms.length;k++){
-        var r = rank(it, terms[k]);
-        if(r < 0){ ok = false; break; }
-        if(r > worst) worst = r;
-      }
-      if(ok) scored.push([worst, it]);
-    }
-    /* best match class first, then the shortest path — an exact-ish surface
-       outranks a long incidental one carrying the same letters */
-    scored.sort(function(a,b){
-      if(a[0] !== b[0]) return a[0] - b[0];
-      if(a[1].path.length !== b[1].path.length) return a[1].path.length - b[1].path.length;
-      return a[1].path < b[1].path ? -1 : 1;
-    });
-    var total = scored.length;
-    cur = [];
-    for(var j=0;j<scored.length && j<60;j++) cur.push(scored[j][1]);
-    if(sel >= cur.length) sel = 0;
-    nEl.textContent = total + (total===1?' hit':' hits');
-    if(!cur.length){ out.innerHTML = '<div id="pal-none">no surface matches</div>'; return; }
-    var h = '';
-    for(var m=0;m<cur.length;m++){
-      h += '<a href="'+cur[m].href+'" class="'+(m===sel?'sel':'')+'" data-i="'+m+'">'
-         + '<span>'+cur[m].label.replace(/</g,'&lt;')+'</span>'
-         + (cur[m].cat?'<span class="pc">'+cur[m].cat+'</span>':'')+'</a>';
-    }
-    out.innerHTML = h;
-  }
-
-  /* Move the highlight WITHOUT rebuilding the list. Re-rendering on hover
-     replaced the <a> between mousedown and mouseup, which silently ate the
-     click on a result — the row you pressed no longer existed to release on. */
-  function mark(){
-    var as = out.querySelectorAll('a');
-    for(var i=0;i<as.length;i++) as[i].className = (i===sel ? 'sel' : '');
-  }
-  function scrollSel(){
-    var el = out.querySelector('a.sel');
-    if(el && el.scrollIntoView) el.scrollIntoView({block:'nearest'});
-  }
-
-  /* .on goes on FIRST: if reindex ever throws, the palette still opens and the
-     operator sees an empty list, instead of a pill that does nothing at all. */
-  function open(){
-    pal.classList.add('on');
-    try { reindex(); } catch(err) { IDX = IDX || []; }
-    q.value=''; sel=0; render();
-    try { q.focus({preventScroll:true}); } catch(e) { q.focus(); }
-  }
-  function close(){ pal.classList.remove('on'); }
-
-  if(chip){
-    /* touchend AND click: on a handset the tap must open it even if the
-       synthetic click is swallowed. The guard stops the pair double-firing. */
-    var lastTrip = 0;
-    var trip = function(e){
-      var now = Date.now();
-      if(now - lastTrip < 400) return;
-      lastTrip = now;
-      e.preventDefault(); e.stopPropagation();
-      open();
-    };
-    chip.addEventListener('click', trip, false);
-    chip.addEventListener('touchend', trip, false);
-  }
-  pal.addEventListener('mousedown', function(e){ if(e.target===pal) close(); });
-  q.addEventListener('input', function(){ sel=0; render(); });
-
-  document.addEventListener('keydown', function(e){
-    var open_ = pal.classList.contains('on');
-    var t = e.target, tag = t && t.tagName;
-    var typing = (tag==='INPUT'||tag==='TEXTAREA'||(t&&t.isContentEditable));
-
-    if(!open_ && !typing && (e.key==='/' || ((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='k'))){
-      e.preventDefault(); open(); return;
-    }
-    if(!open_) return;
-    if(e.key==='Escape'){ e.preventDefault(); close(); return; }
-    if(e.key==='ArrowDown'){ e.preventDefault(); if(cur.length){ sel=(sel+1)%cur.length; mark(); scrollSel(); } return; }
-    if(e.key==='ArrowUp'){   e.preventDefault(); if(cur.length){ sel=(sel-1+cur.length)%cur.length; mark(); scrollSel(); } return; }
-    if(e.key==='Enter'){
-      e.preventDefault();
-      if(cur[sel]) window.location.href = cur[sel].href;
-      return;
-    }
-  });
-
-  out.addEventListener('mousemove', function(e){
-    var a = e.target.closest && e.target.closest('a[data-i]');
-    if(a){ var i = +a.dataset.i; if(i!==sel){ sel=i; mark(); } }
-  });
-})();
-</script>
-
-<!-- XENOS-ROOT-PORT — the actual three.js object from /xenos/, not a redraw.
-     qi 2026-08-18: 'all it has to do is change the 3D object to another one
-     that we already built.' Ported verbatim; only the canvas attach point
-     changed. To revert: delete this block and the #gl opacity override. -->
 <script type="module">
 import * as THREE from 'three';
-import {EffectComposer}  from 'three/addons/postprocessing/EffectComposer.js';
-import {RenderPass}      from 'three/addons/postprocessing/RenderPass.js';
-import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { EffectComposer }  from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass }      from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass }      from 'three/addons/postprocessing/OutputPass.js';
+import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
 
-const scene=new THREE.Scene(); // qi 2026-08-17: scene haze removed — "ugly and unrealistic". Depth comes from bloom + node scale, never atmosphere.
-const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,1,7000); camera.position.z=580;
-let _cd=580;   // eased orbit RADIUS. Separate from camera.position.z because once the camera can
-               // orbit, z is only one component of the distance — easing z directly would make
-               // the radius shrink as you swing round to the side.
-const renderer=new THREE.WebGLRenderer({antialias:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth,innerHeight);
-(function(){var c=renderer.domElement;c.id='xenos-gl';c.style.cssText='position:fixed;inset:0;z-index:0;display:block';document.body.insertBefore(c, document.body.firstChild);})();
-const composer=new EffectComposer(renderer); composer.addPass(new RenderPass(scene,camera));
-const bloom=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),1.05,.85,.09);
-composer.addPass(bloom);
+// --- UI / EQ SETUP ---
+const NB = 8;
+const BAND = new Float32Array(NB), BTGT = new Float32Array(NB);
 
-/* ================= STATE — GSAP owns everything animatable ============ */
-/* morph:1 == ORB. The orb is the HOME state (qi 2026-08-17: "the orb, the voice
-   reactive orb first / then the shape shifting comes out of that"), and because
-   it sits at the MIDDLE of the morph axis, wheels (0) and form (2) are both
-   reached by continuous deformation OUT OF the sphere — the shapeshift
-   literally comes out of the orb rather than being a separate mode. */
-const S={ fx:0,fy:0, camZ:580, scale:1, spin:.0015, jitter:0, flare:0,
-          energy:0, drift:0, morph:1, bend:0, reach:0, rz:0 };
+// Set track height for scrolling
+document.getElementById('scroll-track').style.height = `${window.directoryData.length * 150 + 100}vh`;
 
-/* ================= DREAM WORLD — it bends ============================= */
+// --- CORE THREE.JS ---
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x000200, 0.00035); // Adjusted fog density for the long tunnel
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 1, 15000);
+camera.position.z = 600;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+document.body.appendChild(renderer.domElement);
+
+const cssRenderer = new CSS3DRenderer();
+cssRenderer.setSize(innerWidth, innerHeight);
+cssRenderer.domElement.style.position = 'fixed';
+cssRenderer.domElement.style.top = '0';
+cssRenderer.domElement.style.left = '0';
+cssRenderer.domElement.style.zIndex = '1';
+cssRenderer.domElement.style.pointerEvents = 'none'; // Essential so mouse events pierce through to window for dragging
+document.body.appendChild(cssRenderer.domElement);
+
+const cssScene = new THREE.Scene();
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 1.5, 0.85, 0.1);
+composer.addPass(bloomPass);
+composer.addPass(new OutputPass());
+
+// --- 3D TUNNEL LAYOUT MATH ---
+const SPACING = 800;
+const END_Z = 600; // Final stop right in front of the Orb
+const START_Z = END_Z + (window.directoryData.length * SPACING) + 1200; // Start at the very back
+
+// --- STATE MANAGEMENT ---
+const S = {
+  fx: 0, fy: 0,
+  camZ: START_Z,
+  scale: 1,
+  spin: 0.0015,
+  flare: 0,
+  energy: 0,
+  drift: 0,
+  morph: 1,
+  reach: 0,
+  rz: 0,
+  velX: 0, velY: 0,
+  time: 0
+};
+camera.position.z = START_Z; // Init properly to avoid jump
+
+const cards = [];
+
+// 1. Initial Title Card
+const identEl = document.createElement('div');
+identEl.className = 'card-3d ident-card';
+identEl.innerHTML = `
+    <p class="cap"><span class="dot" style="width:6px;height:6px;display:inline-block;border-radius:50%;background:var(--accent);margin-right:8px;"></span>ESTATE DIRECTORY</p>
+    <h1 class="mark">HITTHE.<br>LINK</h1>
+    <p class="cap">COMMAND HOME · FORGED BY XEN</p>
+`;
+const identObj = new CSS3DObject(identEl);
+identObj.position.set(0, 0, START_Z);
+cssScene.add(identObj);
+cards.push(identObj);
+
+// 2. Data Cards
+window.directoryData.forEach((sec, i) => {
+    const el = document.createElement('div');
+    el.className = 'card-3d';
+    el.style.pointerEvents = 'auto'; // Re-enable clicks for links
+    el.innerHTML = `
+        <h2>${sec.category}</h2>
+        <div class="card-grid">
+            ${sec.links.map(l => `<a href="https://hitthe.link${l}" class="card-link" target="_blank">${l}</a>`).join('')}
+        </div>
+    `;
+    const obj = new CSS3DObject(el);
+    const isLeft = i % 2 === 0;
+    const z = END_Z + 800 + ((window.directoryData.length - 1 - i) * SPACING);
+
+    obj.position.set(isLeft ? -380 : 380, (Math.random() - 0.5) * 200, z);
+    obj.rotation.y = isLeft ? 0.15 : -0.15;
+    obj.scale.set(0.85, 0.85, 0.85); // Scale CSS pixels to world units comfortably
+
+    cssScene.add(obj);
+    cards.push(obj);
+});
+
+const ophanim = new THREE.Group();
+scene.add(ophanim);
+
+// Plasma Core
+const coreGeometry = new THREE.IcosahedronGeometry(220, 48);
+const plasmaUniforms = { t: { value: 0 }, energy: { value: 0 }, morph: { value: 1 } };
+const plasmaMaterial = new THREE.ShaderMaterial({
+  uniforms: plasmaUniforms, transparent: true, blending: THREE.AdditiveBlending,
+  depthWrite: false, side: THREE.DoubleSide, wireframe: false,
+  vertexShader: `
+    varying vec3 vPos; varying vec3 vNormal; varying vec3 vView;
+    uniform float t; uniform float energy;
+    vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}
+    vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
+    float snoise(vec3 v){
+      const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
+      const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+      vec3 i  = floor(v + dot(v, C.yyy) );
+      vec3 x0 = v - i + dot(i, C.xxx) ;
+      vec3 g = step(x0.yzx, x0.xyz);
+      vec3 l = 1.0 - g;
+      vec3 i1 = min( g.xyz, l.zxy );
+      vec3 i2 = max( g.xyz, l.zxy );
+      vec3 x1 = x0 - i1 + C.xxx;
+      vec3 x2 = x0 - i2 + C.yyy;
+      vec3 x3 = x0 - D.yyy;
+      i = mod(i, 289.0 );
+      vec4 p = permute( permute( permute( i.z + vec4(0.0, i1.z, i2.z, 1.0 )) + i.y + vec4(0.0, i1.y, i2.y, 1.0 )) + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+      float n_ = 0.142857142857;
+      vec3  ns = n_ * D.wyz - D.xzx;
+      vec4 j = p - 49.0 * floor(p * ns.z *ns.z);
+      vec4 x_ = floor(j * ns.z);
+      vec4 y_ = floor(j - 7.0 * x_ );
+      vec4 x = x_ *ns.x + ns.yyyy;
+      vec4 y = y_ *ns.x + ns.yyyy;
+      vec4 h = 1.0 - abs(x) - abs(y);
+      vec4 b0 = vec4( x.xy, y.xy );
+      vec4 b1 = vec4( x.zw, y.zw );
+      vec4 s0 = floor(b0)*2.0 + 1.0;
+      vec4 s1 = floor(b1)*2.0 + 1.0;
+      vec4 sh = -step(h, vec4(0.0));
+      vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+      vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+      vec3 p0 = vec3(a0.xy,h.x);
+      vec3 p1 = vec3(a0.zw,h.y);
+      vec3 p2 = vec3(a1.xy,h.z);
+      vec3 p3 = vec3(a1.zw,h.w);
+      vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+      p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+      vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+      m = m * m;
+      return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3) ) );
+    }
+    void main() {
+      vNormal = normalize(normalMatrix * normal);
+      vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+      vView = normalize(-mvPos.xyz);
+      float time = t * 2.0;
+      float n = snoise(position * 0.012 - time);
+      float n2 = snoise(position * 0.03 + time * 0.8);
+      float spike = pow(max(0.0, n), 5.0) * 450.0 * (0.5 + energy * 2.5);
+      vec3 pos = (position * 0.05) + normal * (spike + n2 * 10.0);
+      vPos = pos;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+    }
+  `,
+  fragmentShader: `
+    varying vec3 vPos; varying vec3 vNormal; varying vec3 vView;
+    uniform float t; uniform float energy; uniform float morph;
+    float hash(vec3 p) {
+        p = fract(p * vec3(0.1031, 0.1030, 0.0973));
+        p += dot(p, p.yxz + 33.33);
+        return fract((p.x + p.y) * p.z);
+    }
+    float noise(vec3 x) {
+        vec3 i = floor(x); vec3 f = fract(x); f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(mix(hash(i + vec3(0,0,0)), hash(i + vec3(1,0,0)), f.x),
+                       mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
+                   mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x),
+                       mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y), f.z);
+    }
+    void main() {
+      float dist = length(vPos) / 220.0;
+      vec3 v = normalize(vPos);
+      float n1 = noise(v * 6.0 + vec3(0.0, t * 4.0, t * 2.0));
+      float n2 = noise(v * 12.0 - vec3(t * 3.0, 0.0, t * 4.0));
+      float veins = abs(sin((n1 + n2) * 20.0));
+      veins = smoothstep(0.97, 1.0, 1.0 - veins);
+      float activity = veins * (1.0 + energy * 3.0);
+      if (activity < 0.02) discard;
+      vec3 lightningGreen = vec3(0.0, 0.85, 0.35); vec3 coreHot = vec3(0.4, 1.0, 0.6);
+      vec3 color = mix(lightningGreen, coreHot, clamp(activity - 0.5, 0.0, 1.0));
+      float orbW = max(0.0, 1.0 - abs(morph - 1.0));
+      float alpha = activity * orbW;
+      alpha *= smoothstep(2.0, 0.2, dist);
+      gl_FragColor = vec4(color, alpha);
+    }
+  `
+});
+
+const plasmaCore = new THREE.Mesh(coreGeometry, plasmaMaterial);
+ophanim.add(plasmaCore);
+const glassBasePositions = coreGeometry.attributes.position.clone();
+
 let world;
-{ const N=3400,p=new Float32Array(N*3),s=new Float32Array(N),ph=new Float32Array(N);
-  for(let i=0;i<N;i++){ const r=1500+Math.random()*3200,th=Math.random()*6.283,pp=Math.acos(2*Math.random()-1);
-    p[i*3]=r*Math.sin(pp)*Math.cos(th);p[i*3+1]=r*Math.sin(pp)*Math.sin(th);p[i*3+2]=r*Math.cos(pp);
-    s[i]=Math.random()*2.4+.4; ph[i]=Math.random()*6.283; }
-  const g=new THREE.BufferGeometry();
-  g.setAttribute('position',new THREE.BufferAttribute(p,3));
-  g.setAttribute('asize',new THREE.BufferAttribute(s,1));
-  g.setAttribute('aph',new THREE.BufferAttribute(ph,1));
-  world=new THREE.Points(g,new THREE.ShaderMaterial({
-    transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
-    uniforms:{t:{value:0},bend:{value:0}},
-    vertexShader:`attribute float asize; attribute float aph; uniform float t; uniform float bend;
-      varying float vo;
-      void main(){ vec3 q=position;
-        float d=length(q);
-        // space folds toward the viewer — the dream bending
-        q.xy*= 1.0 + bend*0.42*sin(d*0.0018 + t*0.24 + aph);
-        q.z  += bend*260.0*sin(q.x*0.0011 + t*0.19);
-        q.x  += bend*180.0*cos(q.y*0.0013 + t*0.15);
-        vec4 mv=modelViewMatrix*vec4(q,1.0);
-        vo=.26+.24*sin(t*.7+aph);
-        gl_PointSize=asize*(320.0/-mv.z); gl_Position=projectionMatrix*mv; }`,
-    fragmentShader:`varying float vo; void main(){ vec2 d=gl_PointCoord-.5;
-      if(length(d)>.5) discard; gl_FragColor=vec4(.44,.95,.62, exp(-dot(d,d)*15.)*vo*.34); }`}));
-  scene.add(world); }
-
-/* ================= FORMS =============================================== */
-const ophanim=new THREE.Group(); scene.add(ophanim);
-let pts, base, T0, T1, T2, N=0, labels=[], shell, wisp, aura, reachLine, bandOf=null;
-const SHELL=220;
-const RINGS=[{t:[0,0,0],r:SHELL},{t:[1.5708,0,0],r:SHELL*1.06},{t:[0,1.5708,0],r:SHELL*.93},
-             {t:[.66,.5,.2],r:SHELL*1.11},{t:[-.8,1.0,-.35],r:SHELL*.88},{t:[1.15,.3,.75],r:SHELL*1.02}];
-const q=new THREE.Quaternion(), eu=new THREE.Euler();
-
-/* humanoid silhouette — same nodes, standing form */
-function humanoid(i,n){
-  const u=i/n, a=Math.random()*6.283, jr=Math.random();
-  let x,y,z,rad;
-  if(u<0.13){ rad=52*Math.sqrt(jr); y=210+Math.sqrt(Math.max(0,1-(rad/60)**2))*46;      // head
-              x=Math.cos(a)*rad; z=Math.sin(a)*rad*.86; }
-  else if(u<0.19){ rad=26+jr*10; y=150+jr*26; x=Math.cos(a)*rad; z=Math.sin(a)*rad*.8; } // neck
-  else if(u<0.34){ rad=118*(0.62+0.38*jr); y=118+jr*34;                                  // shoulders
-              x=Math.cos(a)*rad; z=Math.sin(a)*rad*.46; }
-  else if(u<0.62){ const ty=(u-0.34)/0.28; rad=(96-38*ty)*(0.55+0.45*jr);                // torso taper
-              y=118-ty*186; x=Math.cos(a)*rad; z=Math.sin(a)*rad*.52; }
-  else if(u<0.82){ const s=(u<0.72)?-1:1, ta=(u<0.72)?(u-0.62)/0.10:(u-0.72)/0.10;       // arms
-              x=s*(104+ta*54)+ (Math.random()-.5)*26; y=112-ta*196+(Math.random()-.5)*20;
-              z=(Math.random()-.5)*30; }
-  else { const s=(u<0.91)?-1:1, tl=(u<0.91)?(u-0.82)/0.09:(u-0.91)/0.09;                 // legs
-              x=s*38+(Math.random()-.5)*30; y=-68-tl*168+(Math.random()-.5)*20;
-              z=(Math.random()-.5)*32; }
-  return [x*1.02, y*1.02, z*1.02];
-}
-
-fetch('./xen-graph.json').then(r=>r.json()).then(g=>{
-  const idx=new Map(g.nodes.map((n,i)=>[n.id,i])); N=g.nodes.length;
-  T0=new Float32Array(N*3); T1=new Float32Array(N*3); T2=new Float32Array(N*3);
-  const md=Math.max(...g.nodes.map(n=>n.deg||0),1);
-
-  // T0 — OPHANIM
-  g.nodes.forEach((n,i)=>{ const t=(n.deg||0)/md, R=RINGS[i%RINGS.length];
-    const a=Math.random()*6.283, band=(1-t)*52+10, rr=R.r+(Math.random()-.5)*band;
-    const v=new THREE.Vector3(Math.cos(a)*rr,Math.sin(a)*rr,(Math.random()-.5)*band*.55);
-    eu.set(R.t[0],R.t[1],R.t[2]); q.setFromEuler(eu); v.applyQuaternion(q);
-    T0[i*3]=v.x;T0[i*3+1]=v.y;T0[i*3+2]=v.z; });
-  for(let p=0;p<16;p++){
-    for(const e of g.edges){ const a=idx.get(e.s),b=idx.get(e.t); if(a==null||b==null) continue;
-      const k=(e.w-.68)*.085;
-      for(let d=0;d<3;d++){const m=(T0[a*3+d]+T0[b*3+d])/2;
-        T0[a*3+d]+=(m-T0[a*3+d])*k; T0[b*3+d]+=(m-T0[b*3+d])*k;} }
-    for(let i=0;i<N;i++){ const x=T0[i*3],y=T0[i*3+1],z=T0[i*3+2];
-      const d=Math.hypot(x,y,z)||1e-4, want=SHELL*(.90+.16*((i%7)/7)), f=1+(want/d-1)*.17;
-      T0[i*3]=x*f;T0[i*3+1]=y*f;T0[i*3+2]=z*f; } }
-
-  // T1 — ORB (held sphere, dark core: nodes ride the surface)
-  // Each node also takes a BAND, by latitude, so the spectrum shows up on the
-  // orb as travelling rings instead of one uniform pulse. Low frequencies sit
-  // at the bottom of the sphere, highs at the crown — you can SEE pitch.
-  bandOf=new Uint8Array(N);
-  for(let i=0;i<N;i++){ const th=Math.random()*6.283, pp=Math.acos(2*Math.random()-1);
-    const r=SHELL*(.93+Math.random()*.11);
-    T1[i*3]=r*Math.sin(pp)*Math.cos(th); T1[i*3+1]=r*Math.sin(pp)*Math.sin(th); T1[i*3+2]=r*Math.cos(pp);
-    bandOf[i]=Math.max(0,Math.min(NB-1,Math.floor((T1[i*3+1]/r*.5+.5)*NB))); }
-
-  // T2 — HUMANOID
-  for(let i=0;i<N;i++){ const h=humanoid(i,N); T2[i*3]=h[0];T2[i*3+1]=h[1];T2[i*3+2]=h[2]; }
-
-  // it BOOTS as the orb, not as the ring form — the orb is home
-  base=new Float32Array(T1);
-  const pos=new Float32Array(T1), col=new Float32Array(N*3), siz=new Float32Array(N);
-  g.nodes.forEach((n,i)=>{ const t=Math.min((n.deg||0)/12,1);
-    col[i*3]=.24+.48*t; col[i*3+1]=.96; col[i*3+2]=.46+.24*t; siz[i]=2.2+7.4*t; });
-
-  const gp=new THREE.BufferGeometry();
-  gp.setAttribute('position',new THREE.BufferAttribute(pos,3));
-  gp.setAttribute('acolor',new THREE.BufferAttribute(col,3));
-  gp.setAttribute('asize',new THREE.BufferAttribute(siz,1));
-  pts=new THREE.Points(gp,new THREE.ShaderMaterial({
-    transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
-    uniforms:{t:{value:0},foc:{value:new THREE.Vector3()},flare:{value:0}},
-    vertexShader:`attribute vec3 acolor; attribute float asize; uniform float t; uniform vec3 foc; uniform float flare;
-      varying vec3 vc; varying float vf; varying float vn;
-      void main(){ vc=acolor; vec4 wp=modelMatrix*vec4(position,1.);
-        vn=1.-smoothstep(0.,300.,distance(wp.xyz,foc));
-        vec4 mv=viewMatrix*wp; vf=1.-smoothstep(240.,2000.,-mv.z);
-        gl_PointSize=asize*(340./-mv.z)*(.85+.15*sin(t*1.7+position.x*.02))*(1.+1.5*vn+flare*.7);
-        gl_Position=projectionMatrix*mv; }`,
-    fragmentShader:`varying vec3 vc; varying float vf; varying float vn;
-      void main(){ vec2 d=gl_PointCoord-.5; float r=length(d); if(r>.5) discard;
-        gl_FragColor=vec4(mix(vc,vec3(.86,1.,.93),vn*.75), exp(-r*r*13.)*vf*(.55+.75*vn)); }`}));
-  ophanim.add(pts);
-
-  const ep=new Float32Array(g.edges.length*6), ea=new Float32Array(g.edges.length*2);
-  const eIdx=[]; let k=0,k2=0;
-  for(const e of g.edges){ const a=idx.get(e.s),b=idx.get(e.t); if(a==null||b==null) continue;
-    eIdx.push(a,b);
-    ep[k++]=T0[a*3];ep[k++]=T0[a*3+1];ep[k++]=T0[a*3+2];
-    ep[k++]=T0[b*3];ep[k++]=T0[b*3+1];ep[k++]=T0[b*3+2];
-    const w=Math.pow((e.w-.68)/.32,1.7)*.55; ea[k2++]=w; ea[k2++]=w; }
-  const ge=new THREE.BufferGeometry();
-  ge.setAttribute('position',new THREE.BufferAttribute(ep,3));
-  ge.setAttribute('aw',new THREE.BufferAttribute(ea,1));
-  const lines=new THREE.LineSegments(ge,new THREE.ShaderMaterial({
-    transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
-    vertexShader:`attribute float aw; varying float vw; varying float vf;
-      void main(){vw=aw; vec4 mv=modelViewMatrix*vec4(position,1.);
-        vf=1.-smoothstep(300.,2000.,-mv.z); gl_Position=projectionMatrix*mv;}`,
-    fragmentShader:`varying float vw; varying float vf;
-      void main(){gl_FragColor=vec4(.30,.93,.53,vw*vf*.38);}`}));
-  ophanim.add(lines); lines.userData.eIdx=eIdx;
-
-  /* obsidian glass shell — dark core, bright rim, specular arc */
-  shell=new THREE.Mesh(new THREE.SphereGeometry(268,80,80),new THREE.ShaderMaterial({
-    transparent:true,depthWrite:false,side:THREE.BackSide,blending:THREE.AdditiveBlending,
-    uniforms:{t:{value:0},e:{value:0},op:{value:1}},
-    vertexShader:`varying vec3 vN; varying vec3 vV; varying vec3 vP;
-      void main(){ vP=position; vN=normalize(normalMatrix*normal);
-        vec4 mv=modelViewMatrix*vec4(position,1.); vV=normalize(-mv.xyz);
-        gl_Position=projectionMatrix*mv; }`,
-    fragmentShader:`varying vec3 vN; varying vec3 vV; varying vec3 vP;
-      uniform float t; uniform float e; uniform float op;
-      float h(vec3 p){return fract(sin(dot(p,vec3(12.99,78.23,45.16)))*43758.5453);}
-      float n3(vec3 p){vec3 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
-        return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x),mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x),f.y),
-                   mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x),mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x),f.y),f.z);}
+{
+  const NP = 4000, p = new Float32Array(NP*3), s = new Float32Array(NP), ph = new Float32Array(NP);
+  for(let i=0; i<NP; i++) {
+    const r = 200 + Math.random()*2500;
+    const th = Math.random()*Math.PI*2;
+    p[i*3] = r * Math.cos(th);
+    p[i*3+1] = r * Math.sin(th);
+    p[i*3+2] = (Math.random() * (START_Z + 1500)) - 1000; // Tunnel spread
+    s[i] = Math.random()*2.0 + 0.5; ph[i] = Math.random()*Math.PI*2;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(p, 3));
+  g.setAttribute('asize', new THREE.BufferAttribute(s, 1));
+  g.setAttribute('aph', new THREE.BufferAttribute(ph, 1));
+  world = new THREE.Points(g, new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    uniforms: { t: {value:0} },
+    vertexShader: `
+      attribute float asize; attribute float aph; uniform float t; varying float vo;
       void main(){
-        float fres=pow(1.-abs(dot(normalize(vN),normalize(vV))),2.6);
-        float sm=pow(n3(vP*.0125+vec3(0.,t*.09,t*.05)),2.4);
-        vec3 L=normalize(vec3(-.55,.72,.42));
-        float spec=pow(max(dot(normalize(vN),L),0.),42.);
-        float a=fres*(.50+.22*e)+sm*.13+spec*.62;
-        vec3 c=vec3(.42,1.,.52)*fres*(1.+.5*e)+vec3(.30,.92,.40)*sm*.55+vec3(.85,1.,.90)*spec;
-        gl_FragColor=vec4(c, clamp(a,0.,.55)*op); }`}));
-  /* shell removed: it read as a container */
-
-  /* wisps licking off the surface */
-  { const W=420,wp=new Float32Array(W*3),ws=new Float32Array(W),wf=new Float32Array(W);
-    for(let i=0;i<W;i++){ const r=262+Math.random()*74,th=Math.random()*6.283,pp=Math.acos(2*Math.random()-1);
-      wp[i*3]=r*Math.sin(pp)*Math.cos(th);wp[i*3+1]=r*Math.sin(pp)*Math.sin(th);wp[i*3+2]=r*Math.cos(pp);
-      ws[i]=6+Math.random()*22; wf[i]=Math.random()*6.283; }
-    const wg=new THREE.BufferGeometry();
-    wg.setAttribute('position',new THREE.BufferAttribute(wp,3));
-    wg.setAttribute('asize',new THREE.BufferAttribute(ws,1));
-    wg.setAttribute('aph',new THREE.BufferAttribute(wf,1));
-    wisp=new THREE.Points(wg,new THREE.ShaderMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
-      uniforms:{t:{value:0},e:{value:0}},
-      vertexShader:`attribute float asize; attribute float aph; uniform float t; uniform float e; varying float vo;
-        void main(){ vec3 p=position; float lick=.5+.5*sin(t*1.15+aph*2.);
-          p*=1.+lick*(.10+.09*e); p.x+=sin(t*.9+aph)*7.; p.z+=cos(t*.8+aph)*7.;
-          vec4 mv=modelViewMatrix*vec4(p,1.); vo=(.13+.30*e)*lick;
-          gl_PointSize=asize*(340./-mv.z); gl_Position=projectionMatrix*mv; }`,
-      fragmentShader:`varying float vo; void main(){vec2 d=gl_PointCoord-.5; float r=length(d);
-        if(r>.5) discard; gl_FragColor=vec4(.46,1.,.56, exp(-r*r*8.)*vo);}`}));
-    ophanim.add(wisp); }
-
-  /* ghastly aura */
-  { const A=1400,ap=new Float32Array(A*3),as=new Float32Array(A),ao=new Float32Array(A);
-    for(let i=0;i<A;i++){ const r=250+Math.pow(Math.random(),.55)*230,th=Math.random()*6.283,pp=Math.acos(2*Math.random()-1);
-      ap[i*3]=r*Math.sin(pp)*Math.cos(th);ap[i*3+1]=r*Math.sin(pp)*Math.sin(th);ap[i*3+2]=r*Math.cos(pp);
-      as[i]=34+Math.random()*96; ao[i]=Math.random()*6.283; }
-    const ag=new THREE.BufferGeometry();
-    ag.setAttribute('position',new THREE.BufferAttribute(ap,3));
-    ag.setAttribute('asize',new THREE.BufferAttribute(as,1));
-    ag.setAttribute('aph',new THREE.BufferAttribute(ao,1));
-    aura=new THREE.Points(ag,new THREE.ShaderMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
-      uniforms:{t:{value:0},e:{value:0},cz:{value:580}},
-      vertexShader:`attribute float asize; attribute float aph; uniform float t; uniform float e;
-        uniform float cz; varying float vo;
-        void main(){ vec3 p=position; float r=length(p);
-          vec3 n=p/r;
-          vec3 ax=normalize(vec3(sin(aph*1.7),cos(aph*2.3),sin(aph*.9)));
-          vec3 tang=normalize(cross(n,ax));
-          float sp=t*(.34+.5*e)+aph;
-          p+=tang*sin(sp)*46.+cross(n,tang)*cos(sp*.83)*38.;
-          p*=1.+.04*sin(t*.5+aph)+e*.05;
-          vec4 mv=modelViewMatrix*vec4(p,1.);
-          vo=(.030+.038*e)*(.40+.60*(.5+.5*sin(sp*.7)));
-          /* HALO, NOT VEIL. The aura is what qi asked for back; the SMOKE he
-             rejected was the same points stacking BETWEEN the camera and the
-             core. Measured 2026-08-17: with the orb as the boot state the
-             frontal shell covered the whole viewport in grey discs again.
-             So fade by view depth — points in front of the sphere's near face
-             drop out, points level with it and behind keep their full value.
-             Nothing is removed; the halo and the back-glow are untouched. */
-          vo *= smoothstep(cz-250., cz-30., -mv.z);
-          gl_PointSize=asize*(340./-mv.z); gl_Position=projectionMatrix*mv; }`,
-      fragmentShader:`varying float vo; void main(){vec2 d=gl_PointCoord-.5; float r=length(d);
-        if(r>.5) discard; gl_FragColor=vec4(.74,.95,.83, exp(-r*r*5.2)*vo);}`}));
-    ophanim.add(aura); }
-
-  /* TELEKINESIS — a filament it extends toward what it is reaching for */
-  { const rg=new THREE.BufferGeometry();
-    rg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(6),3));
-    reachLine=new THREE.Line(rg,new THREE.LineBasicMaterial({
-      color:0x8fffbe,transparent:true,opacity:0,blending:THREE.AdditiveBlending}));
-    scene.add(reachLine); }
-
-  document.getElementById('nn').textContent=N.toLocaleString();
-  document.getElementById('ee').textContent=g.edges.length.toLocaleString();
-  const ws2=g.edges.map(e=>e.w);
-  document.getElementById('ww').textContent=Math.min(...ws2).toFixed(3)+'–'+Math.max(...ws2).toFixed(3);
-  g.nodes.slice().sort((a,b)=>(b.deg||0)-(a.deg||0)).slice(0,6).forEach(n=>{
-    const el=document.createElement('div'); el.className='lbl';
-    el.textContent=n.id.replace(/-/g,' ').slice(0,32);
-    document.querySelector('.ui').appendChild(el); labels.push({el,i:idx.get(n.id)}); });
-
-  gsap.fromTo(S,{scale:.15},{scale:1,duration:2.4,ease:'power3.out'});
-});
-
-/* ================= SHAPESHIFT ========================================= */
-const FORMS=['OPHANIM','ORB','FORM'];
-function shift(to){
-  gsap.to(S,{morph:to,duration:2.2,ease:'power2.inOut',
-    onUpdate:()=>{document.getElementById('form').textContent=
-      FORMS[Math.round(S.morph)]||FORMS[0];}});
-  gsap.to(S,{bend:1,duration:.7,ease:'power2.out'});
-  gsap.to(S,{bend:0,duration:2.4,delay:.7,ease:'power2.inOut'});   // world bends during the change
-  gsap.fromTo(S,{flare:1.6},{flare:0,duration:1.8,ease:'power2.out'});
+        vec3 q = position;
+        q.y += sin(t * 0.5 + aph) * 50.0;
+        vec4 mv = modelViewMatrix * vec4(q, 1.0);
+        float dist = -mv.z;
+        // Fade close points to avoid clipping, fade far points for depth
+        float fade = smoothstep(10.0, 250.0, dist) * (1.0 - smoothstep(3000.0, 5000.0, dist));
+        vo = (0.1 + 0.15 * sin(t * 0.8 + aph)) * fade;
+        gl_PointSize = asize * (400.0 / dist);
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader: `
+      varying float vo;
+      void main(){
+        vec2 d = gl_PointCoord - 0.5; if(length(d) > 0.5) discard;
+        gl_FragColor = vec4(0.23, 1.0, 0.58, exp(-dot(d,d)*12.0) * vo);
+      }`
+  }));
+  scene.add(world);
 }
-document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>shift(+b.dataset.f));
 
-/* ================= TELEPATHY / STALKING =============================== */
-const cur=document.getElementById('cur'), mood=document.getElementById('mood');
-const setMood=m=>{ if(mood.textContent!==m){mood.textContent=m; gsap.fromTo(mood,{opacity:0},{opacity:1,duration:.5});} };
-let idleT, lastX=0,lastY=0,vx=0,vy=0;
-function stir(m){ setMood(m); clearTimeout(idleT);
-  idleT=setTimeout(()=>{ setMood('IDLE'); gsap.to(S,{spin:.0015,duration:2.4,ease:'power2.out'});
-    if(Math.abs(S.morph-1)>0.02) shift(1); },3400); }   // it always settles back to the ORB
+let pts, lines, base, T0, T1, T2, N=0, labels=[], bandOf=null;
+const SHELL = 230;
+const RINGS = [ {t:[0,0,0],r:SHELL}, {t:[1.5708,0,0],r:SHELL*1.05}, {t:[0,1.5708,0],r:SHELL*0.95}, {t:[0.5,0.5,0.2],r:SHELL*1.1}, {t:[-0.7,0.8,-0.3],r:SHELL*0.9}, {t:[1.1,0.2,0.7],r:SHELL*1.02} ];
 
-addEventListener('pointermove',e=>{
-  vx=e.clientX-lastX; vy=e.clientY-lastY; lastX=e.clientX; lastY=e.clientY;
-  // ANTICIPATION: lead the cursor by its velocity — it arrives before you do
-  const ax=e.clientX+vx*5.5, ay=e.clientY+vy*5.5;
-  gsap.to(S,{fx:(ax/innerWidth*2-1),fy:-(ay/innerHeight*2-1),duration:.40,ease:'power3.out',overwrite:'auto'});
-  gsap.to(cur,{left:e.clientX,top:e.clientY,duration:.15,ease:'power2.out'});
-  stir('TRACKING');
-});
-addEventListener('touchmove',e=>{const t=e.touches[0]; if(!t)return;
-  gsap.to(S,{fx:(t.clientX/innerWidth*2-1),fy:-(t.clientY/innerHeight*2-1),duration:.4,ease:'power3.out',overwrite:'auto'});
-  gsap.to(cur,{left:t.clientX,top:t.clientY,duration:.15}); stir('TOUCH');},{passive:true});
+function humanoid(i, n) {
+  const u = i/n, a = Math.random()*Math.PI*2, jr = Math.random();
+  let x, y, z, rad;
+  if(u<0.12) { rad=45*Math.sqrt(jr); y=220+Math.sqrt(Math.max(0,1-(rad/50)**2))*40; x=Math.cos(a)*rad; z=Math.sin(a)*rad*0.8; }
+  else if(u<0.18) { rad=25+jr*10; y=160+jr*20; x=Math.cos(a)*rad; z=Math.sin(a)*rad*0.8; }
+  else if(u<0.35) { rad=120*(0.6+0.4*jr); y=120+jr*30; x=Math.cos(a)*rad; z=Math.sin(a)*rad*0.5; }
+  else if(u<0.60) { const ty=(u-0.35)/0.25; rad=(100-40*ty)*(0.5+0.5*jr); y=120-ty*180; x=Math.cos(a)*rad; z=Math.sin(a)*rad*0.6; }
+  else if(u<0.80) { const s=(u<0.7)?-1:1, ta=(u<0.7)?(u-0.6)/0.1:(u-0.7)/0.1; x=s*(110+ta*50)+(Math.random()-0.5)*20; y=110-ta*190+(Math.random()-0.5)*20; z=(Math.random()-0.5)*30; }
+  else { const s=(u<0.9)?-1:1, tl=(u<0.9)?(u-0.8)/0.1:(u-0.9)/0.1; x=s*40+(Math.random()-0.5)*20; y=-60-tl*170+(Math.random()-0.5)*20; z=(Math.random()-0.5)*30; }
+  return [x, y, z];
+}
 
-// qi 2026-08-17 04:28, testing on his phone: "when its touched, that bounce effect is too
-// aggressive." It was scale .80 -> 1.14 on elastic.out(1,.42) — a 34% swing with a springy
-// overshoot, which on a small screen reads as the whole world lurching. Halved and de-sprung:
-// .92 -> 1.045 on a soft back-ease. Still clearly acknowledges the touch, no lurch.
-addEventListener('pointerdown',()=>{ stir('STRUCK');
-  gsap.timeline().to(S,{scale:.92,duration:.10,ease:'power3.in'})
-    .to(S,{scale:1.045,duration:.34,ease:'back.out(1.6)'})
-    .to(S,{scale:1,duration:.6,ease:'power2.out'});
-  gsap.fromTo(S,{flare:1.0},{flare:0,duration:1.0,ease:'power2.out'}); });
+const N_NODES = 500;
+N = N_NODES; T0 = new Float32Array(N*3); T1 = new Float32Array(N*3); T2 = new Float32Array(N*3); bandOf = new Uint8Array(N); const edges = [];
+for(let i=0; i<N*1.5; i++) {
+  const s = Math.floor(Math.random()*N), t = Math.floor(Math.random()*N);
+  if(s !== t) edges.push({s, t, w: Math.random()});
+}
 
-// ── ORBIT + PINCH ────────────────────────────────────────────────────────────────
-// qi 2026-08-17 04:28-04:29, on mobile, verbatim: "Im trying to travel through the world" ·
-// "Its not really changing sides for me or anything" · "its not letting me zoom out" ·
-// "You can zoom in" · "Theres nothing doing the zoom out."
-//
-// He was right on every count, and the cause is one thing: THERE WAS NO ORBIT CONTROL.
-// The camera was only ever `x += (fx*70 - x)*.05` / `y += (fy*54 - y)*.05` at a fixed z — a
-// ±70/±54 unit SWAY around one viewpoint. It can lean, it can never go AROUND. That is exactly
-// "not changing sides".
-// And zoom lived solely on a `wheel` listener. **A phone never fires `wheel`.** So there was
-// literally nothing bound to zoom on touch — what read as "you can zoom in" was Safari scaling
-// the PAGE, and page zoom bottoms out at 1.0, which is why out did nothing.
-//
-// Fixed with true spherical orbit + a two-finger pinch. The pointer-tracking lean (S.fx/S.fy)
-// is DELIBERATELY KEPT — qi liked that ("Following my mouse") — it just no longer owns the
-// camera. Lean is now a small offset ON TOP of the orbit.
-S.az = 0; S.el = 0;                       // azimuth / elevation, radians
-const EL_MAX = 1.35;                      // ~77deg: stop just short of the poles (gimbal flip)
-let drag=null, pinch=null;
-const _dist=(a,b)=>Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+const eu = new THREE.Euler(), q = new THREE.Quaternion();
+for(let i=0; i<N; i++) {
+  const R = RINGS[i%RINGS.length];
+  const a = Math.random()*Math.PI*2, rr = R.r + (Math.random()-0.5)*40;
+  const v = new THREE.Vector3(Math.cos(a)*rr, Math.sin(a)*rr, (Math.random()-0.5)*20);
+  eu.set(R.t[0], R.t[1], R.t[2]); q.setFromEuler(eu); v.applyQuaternion(q);
+  T0[i*3] = v.x; T0[i*3+1] = v.y; T0[i*3+2] = v.z;
 
-addEventListener('touchstart',e=>{
-  if(e.touches.length===2){ drag=null; pinch={d:_dist(e.touches[0],e.touches[1]), z:S.camZ}; }
-  else if(e.touches.length===1){ pinch=null; const t=e.touches[0];
-    drag={x:t.clientX,y:t.clientY,az:S.az,el:S.el}; }
-},{passive:true});
+  const th = Math.random()*Math.PI*2, pp = Math.acos(2*Math.random()-1), rOrb = SHELL * 1.05;
+  T1[i*3] = rOrb*Math.sin(pp)*Math.cos(th); T1[i*3+1] = rOrb*Math.sin(pp)*Math.sin(th); T1[i*3+2] = rOrb*Math.cos(pp);
+  bandOf[i] = Math.max(0, Math.min(NB-1, Math.floor((T1[i*3+1]/rOrb*0.5+0.5)*NB)));
 
-addEventListener('touchmove',e=>{
-  if(pinch && e.touches.length===2){
-    const d=_dist(e.touches[0],e.touches[1]);
-    if(pinch.d>0){ stir('TRAVELLING');
-      // spread fingers -> d grows -> ratio >1 -> camZ shrinks -> move IN. Pinch -> move OUT.
-      gsap.to(S,{camZ:gsap.utils.clamp(260,2400,pinch.z*(pinch.d/d)),
-                 duration:.18,ease:'power2.out',overwrite:'auto'}); }
+  const h = humanoid(i,N);
+  T2[i*3] = h[0]; T2[i*3+1] = h[1]; T2[i*3+2] = h[2];
+}
+
+base = new Float32Array(T1);
+const pos = new Float32Array(T1), col = new Float32Array(N*3), siz = new Float32Array(N);
+for(let i=0; i<N; i++) { col[i*3] = 0.23; col[i*3+1] = 1.0; col[i*3+2] = 0.58; siz[i] = 3.0 + Math.random()*5.0; }
+
+const gp = new THREE.BufferGeometry();
+gp.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+gp.setAttribute('acolor', new THREE.BufferAttribute(col, 3));
+gp.setAttribute('asize', new THREE.BufferAttribute(siz, 1));
+
+pts = new THREE.Points(gp, new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  uniforms: { t: {value:0}, flare: {value:0}, foc: {value: new THREE.Vector3()} },
+  vertexShader: `
+    attribute vec3 acolor; attribute float asize; uniform float t; uniform float flare; uniform vec3 foc;
+    varying vec3 vc; varying float vf; varying float vn;
+    void main(){
+      vc = acolor; vec4 wp = modelMatrix * vec4(position, 1.0);
+      vn = 1.0 - smoothstep(0.0, 300.0, distance(wp.xyz, foc));
+      vec4 mv = viewMatrix * wp;
+      // Add distance fade so it emerges beautifully from the fog
+      vf = 1.0 - smoothstep(1500.0, 4500.0, -mv.z);
+      gl_PointSize = asize * (400.0 / -mv.z) * (1.0 + flare*2.0 + vn*1.5);
+      gl_Position = projectionMatrix * mv;
+    }`,
+  fragmentShader: `
+    varying vec3 vc; varying float vf; varying float vn;
+    void main(){
+      vec2 d = gl_PointCoord - 0.5; float r = length(d); if(r > 0.5) discard;
+      vec3 c = mix(vc, vec3(0.86, 1.0, 0.93), vn * 0.75);
+      gl_FragColor = vec4(c, exp(-r*r*12.0) * vf * (0.55 + 0.75*vn));
+    }`
+}));
+ophanim.add(pts);
+
+const ep = new Float32Array(edges.length * 6), ea = new Float32Array(edges.length * 2);
+let k = 0, k2 = 0;
+for(const e of edges) {
+  ep[k++] = T1[e.s*3]; ep[k++] = T1[e.s*3+1]; ep[k++] = T1[e.s*3+2];
+  ep[k++] = T1[e.t*3]; ep[k++] = T1[e.t*3+1]; ep[k++] = T1[e.t*3+2];
+  ea[k2++] = e.w * 0.5; ea[k2++] = e.w * 0.5;
+}
+const ge = new THREE.BufferGeometry();
+ge.setAttribute('position', new THREE.BufferAttribute(ep, 3));
+ge.setAttribute('aw', new THREE.BufferAttribute(ea, 1));
+lines = new THREE.LineSegments(ge, new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  vertexShader: `
+    attribute float aw; varying float vw; varying float vf;
+    void main(){
+      vw=aw; vec4 mv=modelViewMatrix*vec4(position,1.);
+      vf=1.-smoothstep(1000.,3500.,-mv.z);
+      gl_Position=projectionMatrix*mv;
+    }`,
+  fragmentShader: `varying float vw; varying float vf; void main(){ gl_FragColor=vec4(0.23, 1.0, 0.58, vw*vf*0.4); }`
+}));
+ophanim.add(lines);
+
+let analyser = null, bins = null, actx = null;
+let LEVEL = 0, APEAK = 1e-4, HAS_AUDIO = false;
+
+async function attachMic() {
+  if (HAS_AUDIO) return;
+  try {
+    const st = await navigator.mediaDevices.getUserMedia({audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false}});
+    actx = new (window.AudioContext || window.webkitAudioContext)();
+    if(actx.state === 'suspended') await actx.resume();
+    analyser = actx.createAnalyser(); analyser.fftSize = 2048; analyser.smoothingTimeConstant = 0.72;
+    actx.createMediaStreamSource(st).connect(analyser);
+    bins = new Uint8Array(analyser.frequencyBinCount); HAS_AUDIO = true;
+  } catch(e) {
+    console.warn("Microphone access denied or unavailable.");
+  }
+}
+window.addEventListener('click', attachMic, { once: true });
+
+function readVoice() {
+  if(analyser && HAS_AUDIO) {
+    analyser.getByteFrequencyData(bins);
+    const M = bins.length; let sum = 0;
+    for(let b=0; b<NB; b++) {
+      const lo = Math.floor(Math.pow(M, b/NB)), hi = Math.max(lo+1, Math.floor(Math.pow(M, (b+1)/NB)));
+      let s = 0; for(let i=lo; i<hi; i++) s += bins[i];
+      BTGT[b] = s / ((hi-lo)*255); sum += BTGT[b];
+    }
+    let lv = sum / NB; APEAK = Math.max(APEAK * 0.9992, lv);
+    const g = 1 / Math.max(APEAK, 0.045);
+    for(let b=0; b<NB; b++) BTGT[b] = Math.min(1.6, BTGT[b]*g);
+    lv = Math.min(1.5, lv*g); LEVEL += (lv - LEVEL) * (lv > LEVEL ? 0.55 : 0.06);
+  } else {
+    for(let b=0; b<NB; b++) BTGT[b] = (0.10 + 0.15*(0.5 + 0.5*Math.sin(S.time*(0.37+b*0.211)+b*1.73)) + 0.05*Math.sin(S.time*(1.7+b*0.53)+b)) * (1-b*0.055);
+    const lv = 0.055 + 0.045*Math.sin(S.time*0.55) + 0.022*Math.sin(S.time*1.31+1.7);
+    LEVEL += (lv - LEVEL) * 0.06;
+  }
+  for(let b=0; b<NB; b++) {
+    BAND[b] += (BTGT[b] - BAND[b]) * (BTGT[b] > BAND[b] ? 0.55 : 0.075);
+  }
+}
+
+const ring = document.getElementById('ring');
+let isDragging = false, lastTouch = { x: innerWidth/2, y: innerHeight/2 };
+
+function handleInteractionStart(e) {
+  if (e.target.tagName === 'A' || e.target.closest('a')) return;
+  isDragging = true;
+  const x = e.touches ? e.touches[0].clientX : e.clientX, y = e.touches ? e.touches[0].clientY : e.clientY;
+  lastTouch = { x, y };
+  gsap.to(S, {fx: (x/innerWidth*2-1), fy: -(y/innerHeight*2-1), duration: 0.4, ease: 'power3.out', overwrite: 'auto'});
+  ring.classList.add('active');
+  if(navigator.vibrate) navigator.vibrate(10);
+  gsap.to(S, {flare: 0.6, duration: 0.3});
+}
+function handleInteractionMove(e) {
+  const x = e.touches ? e.touches[0].clientX : e.clientX, y = e.touches ? e.touches[0].clientY : e.clientY;
+  if(!isDragging) {
+    gsap.to(S, {fx: (x/innerWidth*2-1), fy: -(y/innerHeight*2-1), duration: 0.8, ease: 'power2.out', overwrite: 'auto'});
     return;
   }
-  if(drag && e.touches.length===1){ const t=e.touches[0];
-    stir('TRAVELLING');
-    S.az = drag.az + (t.clientX-drag.x)*0.0075;
-    S.el = gsap.utils.clamp(-EL_MAX, EL_MAX, drag.el - (t.clientY-drag.y)*0.0060);
-  }
-},{passive:true});
+  S.velX = (x - lastTouch.x) * 0.005; S.velY = (y - lastTouch.y) * 0.005;
+  gsap.to(S, {fx: (x/innerWidth*2-1), fy: -(y/innerHeight*2-1), duration: 0.2, ease: 'none', overwrite: 'auto'});
+  lastTouch = { x, y };
+}
+function handleInteractionEnd() {
+  isDragging = false; ring.classList.remove('active');
+  gsap.to(S, {flare: 0, duration: 1.0});
+}
 
-addEventListener('touchend',e=>{ if(e.touches.length===0){ drag=null; pinch=null; } },{passive:true});
+window.addEventListener('mousedown', handleInteractionStart, {passive: true});
+window.addEventListener('mousemove', handleInteractionMove, {passive: true});
+window.addEventListener('mouseup', handleInteractionEnd, {passive: true});
+window.addEventListener('touchstart', handleInteractionStart, {passive: true});
+window.addEventListener('touchmove', handleInteractionMove, {passive: true});
+window.addEventListener('touchend', handleInteractionEnd, {passive: true});
 
-// Desktop: drag with the button held orbits too, so the two paths behave the same.
-let mdown=null;
-addEventListener('mousedown',e=>{ mdown={x:e.clientX,y:e.clientY,az:S.az,el:S.el}; });
-addEventListener('mousemove',e=>{ if(!mdown)return; stir('TRAVELLING');
-  S.az = mdown.az + (e.clientX-mdown.x)*0.0075;
-  S.el = gsap.utils.clamp(-EL_MAX, EL_MAX, mdown.el - (e.clientY-mdown.y)*0.0060); });
-addEventListener('mouseup',()=>{ mdown=null; });
+const FORMS = ['OPHANIM','CORE','FORM'];
 
-addEventListener('wheel',e=>{ stir('TRAVELLING');
-  gsap.to(S,{camZ:gsap.utils.clamp(300,1600,S.camZ+e.deltaY*.55),duration:.85,ease:'power3.out',overwrite:'auto'});
-  gsap.to(S,{spin:.011,duration:.25}); gsap.to(S,{spin:.0015,duration:2.2,delay:.5});
-  gsap.to(S,{bend:Math.min(1,Math.abs(e.deltaY)/900),duration:.4});
-  gsap.to(S,{bend:0,duration:1.6,delay:.5}); },{passive:true});
+function shift(idx) {
+  gsap.to(S, { morph: idx, duration: 2.5, ease: 'power3.inOut' });
+  if(idx === 1) gsap.to(plasmaCore.scale, {x: 1, y: 1, z: 1, duration: 2, ease: 'back.out(1.2)'});
+  else gsap.to(plasmaCore.scale, {x: 0.1, y: 0.1, z: 0.1, duration: 2, ease: 'power2.inOut'});
+  gsap.fromTo(S, { flare: 1.0 }, { flare: 0, duration: 1.5, ease: 'power2.out' });
+  if(navigator.vibrate) navigator.vibrate([15, 30, 15]);
+}
 
-addEventListener('keydown',()=>{ stir('LISTENING');
-  gsap.fromTo(S,{jitter:1},{jitter:0,duration:.55,ease:'power2.out'});
-  if(S.morph<1.5) shift(2); });                       // it stands up to answer
-
-/* TELEKINESIS: hover any button and it reaches, and the button drifts */
-document.querySelectorAll('button').forEach(b=>{
-  b.addEventListener('pointerenter',()=>{ stir('REACHING');
-    gsap.to(S,{reach:1,duration:.5,ease:'power2.out'});
-    gsap.to(b,{x:6,y:-3,duration:.6,ease:'power2.out'}); });
-  b.addEventListener('pointerleave',()=>{
-    gsap.to(S,{reach:0,duration:.8,ease:'power2.inOut'});
-    gsap.to(b,{x:0,y:0,duration:.9,ease:'elastic.out(1,.5)'}); });
+window.addEventListener('dblclick', () => {
+  const nextForm = (Math.round(S.morph) + 1) % 3;
+  shift(nextForm);
 });
 
-function arrive(){ stir('EVENT'); shift(1);
-  gsap.timeline().to(S,{rz:S.rz+Math.PI*.42,duration:.9,ease:'power3.inOut'})
-    .fromTo(S,{flare:2.0},{flare:0,duration:1.4},0)
-    .fromTo(S,{scale:1.18},{scale:1,duration:1.1,ease:'elastic.out(1,.5)'},0); }
-document.getElementById('probe').onclick=arrive;
+const proj = new THREE.Vector3(), foc = new THREE.Vector3();
 
-/* ================= VOICE ==============================================
-   AUDIT of what this used to be, before assuming it worked:
-     fftSize was 32 -> frequencyBinCount 16 -> ~1.5 kHz PER BIN. Every human
-     voice fundamental (85-255 Hz) landed in bin 0, and all 16 bins were then
-     averaged into one scalar anyway. So there was NO frequency information in
-     the page at all — only a loudness number, driving point-pull amplitude,
-     wisp/aura opacity and bloom. The `shell` it also drove was never added to
-     the scene, so that leg was dead.
-   Now: 2048-point FFT (~23 Hz per bin, real voice resolution) folded into 8
-   log-spaced bands with per-band attack/release, plus a slow AGC so a quiet
-   room still moves the orb. The bands drive LATITUDE RINGS on the orb (see
-   ORB_BAND in the loop) so frequency is visible as shape, not just brightness.
-   ⚠️ NOT VERIFIED WITH A REAL MIC — this machine is a Mac mini with no
-   microphone (vault: mac-mini-has-no-mic). The render path is verified with a
-   synthesized tone via XENOS.testTone(); the getUserMedia leg is code-shipped
-   and unverified until qi speaks into it.                                   */
-const NB=8;
-let analyser=null,bins=null,actx=null;
-const BAND=new Float32Array(NB), BTGT=new Float32Array(NB);
-let LEVEL=0, APEAK=1e-4, HAS_AUDIO=false;
+function frame() {
+  requestAnimationFrame(frame); S.time += 0.016; S.drift += 0.0041;
+  readVoice(); S.energy += (LEVEL - S.energy) * (LEVEL > S.energy ? 0.6 : 0.045);
 
-function attachAnalyser(node,ctx){
-  const a=ctx.createAnalyser(); a.fftSize=2048; a.smoothingTimeConstant=.72;
-  node.connect(a); analyser=a; bins=new Uint8Array(a.frequencyBinCount);
-  actx=ctx; HAS_AUDIO=true; return a;
-}
-document.getElementById('mic').onclick=async ev=>{
-  try{ const st=await navigator.mediaDevices.getUserMedia({audio:{
-         echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
-    const c=new AudioContext(); if(c.state==='suspended') await c.resume();
-    attachAnalyser(c.createMediaStreamSource(st),c);   // analyser is a SINK — never to destination
-    ev.target.textContent='◉ listening';
-  }catch(e){ ev.target.textContent='◉ denied'; } };
+  // Scroll mapping to camera depth
+  const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+  const scrollT = window.scrollY / maxScroll;
+  const targetZ = START_Z - scrollT * (START_Z - END_Z);
+  S.camZ += (targetZ - S.camZ) * 0.12;
 
-/* read the spectrum, or breathe on our own so it is never a dead page */
-function readVoice(){
-  if(analyser){
-    analyser.getByteFrequencyData(bins);
-    const M=bins.length; let sum=0;
-    for(let b=0;b<NB;b++){                       // log-spaced: voice is not linear in bin index
-      const lo=Math.floor(Math.pow(M,b/NB)), hi=Math.max(lo+1,Math.floor(Math.pow(M,(b+1)/NB)));
-      let s=0; for(let i=lo;i<hi;i++) s+=bins[i];
-      BTGT[b]=s/((hi-lo)*255); sum+=BTGT[b];
-    }
-    let lv=sum/NB;
-    APEAK=Math.max(APEAK*.9992, lv);             // slow AGC — a quiet room still moves it
-    const g=1/Math.max(APEAK,.045);
-    for(let b=0;b<NB;b++) BTGT[b]=Math.min(1.6,BTGT[b]*g);
-    lv=Math.min(1.5,lv*g);
-    LEVEL+= (lv-LEVEL)*(lv>LEVEL?.55:.06);
-  }else{
-    // SELF-DRIVEN BREATH — incommensurate rates, so it never visibly loops
-    // deliberately GENTLE: this is a resting breath, not a performance. It must
-    // read as alive without ever looking like it is hearing something.
-    for(let b=0;b<NB;b++)
-      BTGT[b]=(.10+.15*(.5+.5*Math.sin(t*(.37+b*.211)+b*1.73))
-                  +.05*Math.sin(t*(1.7+b*.53)+b))*(1-b*.055);
-    const lv=.055+.045*Math.sin(t*.55)+.022*Math.sin(t*1.31+1.7);
-    LEVEL+=(lv-LEVEL)*.06;
-  }
-  for(let b=0;b<NB;b++)                          // attack fast, release slow -> reads as a voice
-    BAND[b]+=(BTGT[b]-BAND[b])*(BTGT[b]>BAND[b]?.55:.075);
-}
+  camera.position.z = S.camZ;
+  camera.position.x += ((S.fx * 70) - camera.position.x) * 0.05;
+  camera.position.y += ((S.fy * 54) - camera.position.y) * 0.05;
+  camera.lookAt(S.fx * 40, S.fy * 40, 0); // Keep focus centered but reactive
 
-/* verification hook: drives the analyser with a real WebAudio signal so the
-   render path can be proven without a microphone. Never reaches destination. */
-window.XENOS={
-  get voice(){ return {live:HAS_AUDIO, level:+LEVEL.toFixed(3),
-                       bands:Array.from(BAND).map(v=>+v.toFixed(3))}; },
-  get morph(){ return +S.morph.toFixed(3); },
-  get energy(){ return +S.energy.toFixed(3); },
-  shift,
-  /* geometry probe — proves the spectrum reaches the MESH, not just a uniform.
-     Returns mean radius overall and per latitude band, so a low tone must move
-     the low bands and leave the high ones alone. */
-  stats(){
-    if(!pts||!bandOf) return null;
-    const p=pts.geometry.attributes.position.array;
-    const sum=new Float64Array(NB), cnt=new Float64Array(NB); let all=0;
-    for(let i=0,n=0;i<p.length;i+=3,n++){
-      const r=Math.hypot(p[i],p[i+1],p[i+2]);
-      all+=r; sum[bandOf[n]]+=r; cnt[bandOf[n]]++;
-    }
-    return { meanR:+(all/(p.length/3)).toFixed(2),
-             byBand:Array.from(sum).map((s,i)=>+(s/Math.max(cnt[i],1)).toFixed(2)) };
-  },
-  async testTone(freq){
-    const c=new AudioContext(); if(c.state==='suspended') await c.resume();
-    const o=c.createOscillator(), g=c.createGain();
-    o.type='sawtooth'; o.frequency.value=freq||160; g.gain.value=.9;
-    o.connect(g); attachAnalyser(g,c); o.start();     // into the analyser ONLY
-    return 'tone '+(freq||160)+'Hz -> analyser';
-  }
-};
-
-/* ================= LOOP =============================================== */
-const proj=new THREE.Vector3(), foc=new THREE.Vector3(); let t=0, spoke=false;
-function frame(){
-  requestAnimationFrame(frame); t+=.016;
-  readVoice();
-  const e=LEVEL;
-  // TELEPATHY: reacts to sound ONSET, before any transcript exists.
-  // Only a REAL input can trigger it — the self-driven breath must never make
-  // the entity think it heard something.
-  if(HAS_AUDIO){
-    if(e>.55&&!spoke){ spoke=true; stir('HEARD YOU'); if(S.morph<1.5) shift(2); }
-    if(e<.22) spoke=false;
-  }
-  S.energy+=(e-S.energy)*(e>S.energy?.6:.045);
-  S.drift+=.0041;
-  // how much of the ORB we are currently in — 1 at the sphere, 0 at either edge
-  const orbW=Math.max(0,1-Math.abs(S.morph-1));
-
-  // morph between the three bodies
-  if(pts&&base&&T0){
-    const m=S.morph, A=(m<1)?T0:T1, B=(m<1)?T1:T2, k=(m<1)?m:m-1;
-    for(let i=0;i<N*3;i++) base[i]=A[i]+(B[i]-A[i])*k;
-  }
-
-  const jx=S.jitter*(Math.random()-.5)*.09, jy=S.jitter*(Math.random()-.5)*.09;
-  ophanim.rotation.y += ((S.fx*.95+jx)-ophanim.rotation.y)*.09 + S.spin;
-  ophanim.rotation.x += ((-S.fy*.72+jy)-ophanim.rotation.x)*.09;
-  ophanim.rotation.z  = S.rz + Math.sin(S.drift*.9)*(.05+S.energy*.06);
-  ophanim.position.x += ((S.fx*46)-ophanim.position.x)*.08;
-  ophanim.position.y += ((S.fy*38)-ophanim.position.y)*.08;
+  S.velX *= 0.95; S.velY *= 0.95;
+  ophanim.rotation.y += S.spin + S.velX; ophanim.rotation.x += S.velY;
+  ophanim.rotation.z = S.rz + Math.sin(S.drift*0.9) * (0.05 + S.energy*0.06);
+  ophanim.position.x += ((S.fx * 46) - ophanim.position.x) * 0.08;
+  ophanim.position.y += ((S.fy * 38) - ophanim.position.y) * 0.08;
   ophanim.scale.setScalar(S.scale);
 
-  // TRUE SPHERICAL ORBIT (qi 2026-08-17 04:28: "Its not really changing sides for me").
-  // Was a ±70/±54 sway at fixed z — a lean, never a circumnavigation. Now az/el place the
-  // camera anywhere on the sphere, and the pointer lean he liked survives as a SMALL offset
-  // added on top rather than as the camera's only motion.
-  _cd += (S.camZ - _cd) * .08;                       // eased radius, keeps the old damping feel
-  const _ce = Math.cos(S.el), _tx = Math.sin(S.az)*_ce*_cd,
-        _ty = Math.sin(S.el)*_cd, _tz = Math.cos(S.az)*_ce*_cd;
-  camera.position.x += ((_tx + S.fx*26) - camera.position.x)*.10;
-  camera.position.y += ((_ty + S.fy*20) - camera.position.y)*.10;
-  camera.position.z += ( _tz            - camera.position.z)*.10;
-  camera.lookAt(0,0,0);
+  foc.set(S.fx * 300, S.fy * 240, 120);
 
-  foc.set(S.fx*300,S.fy*240,120);
-  if(pts){ const u=pts.material.uniforms;
-    u.foc.value.copy(foc); u.t.value=t; u.flare.value=S.flare;
-    const p=pts.geometry.attributes.position.array;
-    /* The legacy focus-pull is DAMPED inside the orb. MEASURED 2026-08-17 with
-       a 70 Hz test tone through the analyser: at S.energy~1.0 this term drove
-       amp to 79 and yanked every node toward `foc`, collapsing mean radius
-       216.6 -> 149.3 (-31%). The orb SHRANK when you spoke to it. Outside the
-       orb (orbW 0) the term is untouched, so wheels and form behave exactly as
-       they always did. */
-    const amp=(9+70*Math.min(S.energy,1.2)+S.flare*26)*(1-.62*orbW);
-    /* ORB_BAND — the spectrum as SHAPE. Each node holds a band by latitude, so
-       a low note swells the bottom of the sphere and a high note beads the
-       crown. Applied as a FRACTIONAL radius change: the first version divided
-       by radius and then scaled by .006, which came out ~0.5% and was invisible
-       against the pull above. */
-    const bandK=orbW*.135, breathK=orbW*(.012+.042*Math.min(S.energy,1.2));
-    for(let i=0,n=0;i<p.length;i+=3,n++){
-      const dx=base[i]-foc.x,dy=base[i+1]-foc.y,dz=base[i+2]-foc.z;
-      const d=Math.sqrt(dx*dx+dy*dy+dz*dz)+1e-4, pull=amp/(1+d*.012), w=Math.sin(S.drift*2.3+d*.021);
-      let x=base[i]-(dx/d)*pull*w, y=base[i+1]-(dy/d)*pull*w, z=base[i+2]-(dz/d)*pull*w*.55;
-      if(bandOf&&bandK>1e-4){
-        const b=bandOf[n];
-        // the ring travels around the sphere so a band reads as motion, not a lump
-        const ring=Math.sin(S.drift*3.1+b*1.27+Math.atan2(z,x)*2.0);
-        const f=1+BAND[b]*bandK*(.55+.45*ring)+breathK;
+  if(pts && base && T0) {
+    const m = S.morph, A = (m<1) ? T0 : T1, B = (m<1) ? T1 : T2, k = (m<1) ? m : m-1;
+    const p = pts.geometry.attributes.position.array;
+    pts.material.uniforms.foc.value.copy(foc); pts.material.uniforms.t.value = S.time; pts.material.uniforms.flare.value = S.flare;
+
+    const orbW = Math.max(0, 1 - Math.abs(S.morph - 1)), amp = (9 + 70 * Math.min(S.energy, 1.2) + S.flare * 26) * (1 - 0.62 * orbW);
+    const bandK = orbW * 0.135, breathK = orbW * (0.012 + 0.042 * Math.min(S.energy, 1.2));
+
+    for(let i=0, n=0; i<N*3; i+=3, n++) {
+      base[i] = A[i] + (B[i]-A[i])*k; base[i+1] = A[i+1] + (B[i+1]-A[i+1])*k; base[i+2] = A[i+2] + (B[i+2]-A[i+2])*k;
+      const dx = base[i]-foc.x, dy = base[i+1]-foc.y, dz = base[i+2]-foc.z, d = Math.sqrt(dx*dx+dy*dy+dz*dz)+1e-4;
+      const pull = amp / (1+d*0.012), w = Math.sin(S.drift*2.3+d*0.021);
+      let x = base[i]-(dx/d)*pull*w, y = base[i+1]-(dy/d)*pull*w, z = base[i+2]-(dz/d)*pull*w*0.55;
+
+      if(bandOf && bandK > 1e-4) {
+        const b = bandOf[n], ring = Math.sin(S.drift*3.1+b*1.27+Math.atan2(z,x)*2.0), f = 1+BAND[b]*bandK*(0.55+0.45*ring)+breathK;
         x*=f; y*=f; z*=f;
       }
-      p[i]=x; p[i+1]=y; p[i+2]=z; }
-    pts.geometry.attributes.position.needsUpdate=true; }
+      p[i]=x; p[i+1]=y; p[i+2]=z;
+    }
+    pts.geometry.attributes.position.needsUpdate = true;
+    if (lines) {
+      const lpos = lines.geometry.attributes.position.array; let pIdx = 0;
+      for(const e of edges) { lpos[pIdx++] = p[e.s*3]; lpos[pIdx++] = p[e.s*3+1]; lpos[pIdx++] = p[e.s*3+2]; lpos[pIdx++] = p[e.t*3]; lpos[pIdx++] = p[e.t*3+1]; lpos[pIdx++] = p[e.t*3+2]; }
+      lines.geometry.attributes.position.needsUpdate = true;
+    }
+  }
 
-  // shell fades out as it leaves the orb — a body only when it holds one
-  if(shell){ const u=shell.material.uniforms; u.t.value=t; u.e.value=S.energy+S.flare*.5;
-    u.op.value=Math.max(0,1-Math.abs(S.morph-1)*0.85); }
-  if(wisp){ wisp.material.uniforms.t.value=t; wisp.material.uniforms.e.value=S.energy+S.flare*.5; }
-  if(aura){ aura.material.uniforms.t.value=t; aura.material.uniforms.e.value=S.energy+S.flare*.5;
-    aura.material.uniforms.cz.value=camera.position.distanceTo(ophanim.position);
-    aura.rotation.y-=.00055; aura.rotation.z+=.00031; }
-  if(world){ world.material.uniforms.t.value=t; world.material.uniforms.bend.value=S.bend; }
+  if(S.morph > 0.5 && S.morph < 1.5) {
+    const cPos = coreGeometry.attributes.position.array, cBase = glassBasePositions.array, orbW = Math.max(0, 1 - Math.abs(S.morph - 1));
+    for(let i=0; i<cPos.length; i+=3) {
+      const bx = cBase[i], by = cBase[i+1], bz = cBase[i+2], bandIdx = Math.max(0, Math.min(NB-1, Math.floor((by / 220 * 0.5 + 0.5) * NB)));
+      const disp = (BAND[bandIdx] * 40.0 * orbW) * (1 + Math.sin(bx*0.02+S.time)*Math.cos(by*0.02+S.time)*Math.sin(bz*0.02+S.time));
+      const len = Math.sqrt(bx*bx+by*by+bz*bz);
+      cPos[i] = bx+(bx/len*disp); cPos[i+1] = by+(by/len*disp); cPos[i+2] = bz+(bz/len*disp);
+    }
+    coreGeometry.attributes.position.needsUpdate = true;
+  } else coreGeometry.setAttribute('position', glassBasePositions.clone());
 
-  if(reachLine){ const a=reachLine.geometry.attributes.position.array;
-    a[0]=0;a[1]=0;a[2]=0; a[3]=foc.x;a[4]=foc.y;a[5]=foc.z;
-    reachLine.geometry.attributes.position.needsUpdate=true;
-    reachLine.material.opacity=S.reach*.5; }
+  if(plasmaMaterial) { plasmaMaterial.uniforms.t.value = S.time; plasmaMaterial.uniforms.energy.value = S.energy; plasmaMaterial.uniforms.morph.value = S.morph; }
+  if(world) world.material.uniforms.t.value = S.time;
+  plasmaCore.rotation.y = -S.time * 0.4; plasmaCore.rotation.x = S.time * 0.2;
+  bloomPass.strength = 0.8 + Math.min(S.energy, 1.5) * 0.5 + S.flare * 0.8;
 
-  /* MEASURED 2026-08-17 with a full-scale 70 Hz tone: at *.85 the orb clipped to
-     a solid white disc and every filament inside it disappeared. qi's visual
-     language is near-black with ONE blown source and form defined by WHERE THE
-     LIGHT STOPS — a uniform white circle has no "where". Loud input must make it
-     brighter, never featureless, so the audio term is compressed and capped. */
-  bloom.strength=1.02+Math.min(S.energy,1.2)*.30+S.flare*.5;
+  // Process 3D CSS Cards logic (Depth fog & Blur)
+  cards.forEach(obj => {
+      const dist = camera.position.z - obj.position.z;
+      let op = 1, blur = 0;
 
-  for(const L of labels){ if(L.i==null||!pts) continue;
-    const a=pts.geometry.attributes.position.array;
-    proj.set(a[L.i*3],a[L.i*3+1],a[L.i*3+2]).applyMatrix4(ophanim.matrixWorld).project(camera);
-    if(proj.z<1){ L.el.style.left=((proj.x*.5+.5)*innerWidth+16)+'px';
-      L.el.style.top=((-proj.y*.5+.5)*innerHeight)+'px'; L.el.classList.add('on'); }
-    else L.el.classList.remove('on'); }
+      // Far clip
+      if (dist > 1800) { op = 1 - (dist - 1800) / 800; blur = (dist - 1800) * 0.005; }
+      // Near clip
+      else if (dist < 100) { op = dist / 100; blur = (100 - dist) * 0.05; }
+
+      op = Math.max(0, Math.min(1, op));
+      obj.element.style.opacity = op.toFixed(3);
+      obj.element.style.filter = blur > 0.1 ? `blur(${blur}px)` : 'none';
+      obj.element.style.visibility = op > 0.01 ? 'visible' : 'hidden';
+  });
+
   composer.render();
+  cssRenderer.render(cssScene, camera);
 }
 frame();
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight);});
+
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight);
+  cssRenderer.setSize(innerWidth, innerHeight);
+});
+
+setTimeout(async () => {
+    const links = Array.from(document.querySelectorAll('.card-link'));
+    let scanIdx = 0;
+    while(scanIdx < links.length) {
+        const batch = links.slice(scanIdx, scanIdx + 5);
+        await Promise.all(batch.map(async el => {
+            try {
+                await fetch(el.href, { mode: 'no-cors', cache: 'no-store' });
+                el.classList.add('up');
+            } catch(e) {
+                el.classList.add('down');
+            }
+        }));
+        scanIdx += 5;
+        await new Promise(r => setTimeout(r, 100));
+    }
+}, 3000);
 </script>
 </body>
 </html>
