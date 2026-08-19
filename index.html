@@ -2,12 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <meta name="robots" content="noindex,nofollow"/>
-  <meta name="theme-color" content="#000200"/>
-  <meta name="color-scheme" content="dark"/>
-  <title>XENOS Omni</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@100;300;400&display=swap" rel="stylesheet"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"/>
+  <title>XENOS // hitthe.link</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@100;300;400;700&display=swap" rel="stylesheet"/>
+  
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
 
   <style>
     :root {
@@ -16,424 +22,396 @@
       --alert: #ff4a4a;
       --dim: rgba(223, 251, 233, 0.45);
       --faint: rgba(223, 251, 233, 0.12);
-      --glass: rgba(0, 4, 0, 0.65);
-      --bg: #000200;
+      --bg: #000100;
+      --panel: rgba(5, 12, 8, 0.55);
+      --border: rgba(60, 255, 150, 0.15);
     }
+    
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body {
-      min-height: 100%;
-      background: var(--bg);
-      overflow-x: hidden;
+    
+    html, body { 
+      height: 100%; 
+      background: var(--bg); 
+      overflow: hidden; /* Native scroll is handled by the main container */
+      font-family: 'Inter', sans-serif; 
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    /* The 3D Environment sits purely in the background */
+    #gl-canvas { 
+      display: block; 
+      position: fixed; 
+      inset: 0; 
+      outline: none; 
+      z-index: 0; 
+      pointer-events: none;
+    }
+
+    /* Ambient dark vignette so text pops over the plasma */
+    .vignette {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(0,1,0,0.14) 0%, rgba(0,1,0,0.10) 30%, rgba(0,1,0,0.88) 100%);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* --- NATIVE UI OVERLAY --- */
+    #ui-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
       overflow-y: auto;
-      touch-action: pan-y; /* Allow vertical scroll on mobile */
-      font-family: 'Inter', sans-serif;
-      cursor: crosshair;
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      padding-top: 90px; /* Space for fixed nav */
+      padding-bottom: 100px;
     }
-    body::-webkit-scrollbar { display: none; }
 
-    canvas { display: block; position: fixed; inset: 0; outline: none; z-index: 0; }
+    /* Hide scrollbar for clean look */
+    #ui-layer::-webkit-scrollbar { display: none; }
+    #ui-layer { scrollbar-width: none; }
 
-    #ring {
-      position: fixed; left: 50%; top: 50%; transform: translate(-50%,-50%);
-      width: min(85vmin, 800px); aspect-ratio: 1; border-radius: 50%;
-      border: 1px solid var(--faint);
-      box-shadow: 0 0 140px rgba(94, 255, 168, 0.03) inset; pointer-events: none; z-index: 2;
-      transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    /* Top Sticky Navigation */
+    #top-nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 20;
+      display: flex;
+      gap: 10px;
+      padding: 20px 24px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      background: linear-gradient(to bottom, rgba(0,1,0,0.95) 0%, rgba(0,1,0,0.4) 60%, transparent 100%);
+      pointer-events: auto;
     }
-    #ring.active { transform: translate(-50%,-50%) scale(0.95); border-color: var(--dim); box-shadow: 0 0 160px rgba(94, 255, 168, 0.08) inset; }
+    #top-nav::-webkit-scrollbar { display: none; }
 
-    .crosshair { position: fixed; left: 50%; top: 50%; width: 2px; height: 2px; background: var(--accent); transform: translate(-50%, -50%); border-radius: 50%; opacity: 0.5; z-index: 2; pointer-events: none; }
-    .crosshair::before, .crosshair::after { content: ''; position: absolute; background: var(--faint); }
-    .crosshair::before { width: 40px; height: 1px; left: -19px; top: 0; }
-    .crosshair::after { width: 1px; height: 40px; left: 0; top: -19px; }
-
-    .card-3d {
-      width: 480px;
-      background: rgba(0, 4, 0, 0.65);
-      border: 1px solid rgba(94, 255, 168, 0.15);
-      border-radius: 12px;
-      padding: 32px;
-      color: var(--ink);
-      font-family: 'JetBrains Mono', monospace;
+    .nav-pill {
+      flex-shrink: 0;
+      padding: 10px 18px;
+      border-radius: 30px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.4);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.9), 0 0 0 1px rgba(94, 255, 168, 0.05) inset;
-      will-change: transform, opacity, filter;
-    }
-    .card-3d.ident-card {
-      width: 700px;
-      text-align: center;
-      background: transparent;
-      border: none;
-      box-shadow: none;
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .ident-card .mark {
-      font-size: 110px;
-      font-family: 'Inter', sans-serif;
-      font-weight: 600;
-      letter-spacing: -0.05em;
-      color: var(--ink);
-      line-height: 0.9;
-      margin: 20px 0;
-      text-shadow: 0 0 40px rgba(94, 255, 168, 0.15);
-    }
-    .ident-card .cap { font-size: 12px; letter-spacing: 0.25em; color: var(--accent); }
-
-    .card-3d h2 {
-      font-size: 22px;
-      color: var(--accent);
-      margin-bottom: 24px;
-      font-weight: 300;
-      border-bottom: 1px solid var(--faint);
-      padding-bottom: 12px;
+      color: var(--dim);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      cursor: pointer;
     }
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+
+    .nav-pill:hover {
+      background: rgba(60, 255, 150, 0.05);
+      color: #fff;
+    }
+
+    .nav-pill.active {
+      background: rgba(60, 255, 150, 0.15);
+      color: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 15px rgba(60, 255, 150, 0.1);
+    }
+
+    /* Content Layout */
+    .content-container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    section {
+      margin-bottom: 80px;
+      scroll-margin-top: 120px; /* Offset for sticky nav when anchor jumping */
+    }
+
+    h2 {
+      font-family: 'Inter', sans-serif;
+      font-weight: 300;
+      font-size: 22px;
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
       gap: 12px;
     }
-    .card-link {
-      display: block;
-      position: relative;
-      padding: 10px 12px 10px 24px;
-      background: rgba(94, 255, 168, 0.03);
-      border: 1px solid rgba(94, 255, 168, 0.1);
-      border-radius: 6px;
-      color: var(--dim);
+
+    h2 .badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      background: rgba(60, 255, 150, 0.05);
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(60, 255, 150, 0.15);
+      text-transform: uppercase;
+      margin-left: auto;
+    }
+
+    .card-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .link-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(10, 14, 12, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 18px 24px;
+      color: rgba(255, 255, 255, 0.7);
       text-decoration: none;
-      font-size: 11px;
-      letter-spacing: 0.05em;
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 400;
+      letter-spacing: 0.01em;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .link-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--accent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .link-card .left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .link-card .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+      flex-shrink: 0;
+    }
+
+    .link-card .link-text {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      transition: color 0.3s;
     }
-    .card-link::before {
-      content: ''; position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
-      width: 4px; height: 4px; border-radius: 50%; background: var(--dim);
+
+    .link-card .right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.3);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .link-card .meta-hash {
+      opacity: 0.6;
+    }
+
+    .link-card svg {
+      opacity: 0.3;
       transition: all 0.3s ease;
-    }
-    .card-link:hover { background: rgba(94, 255, 168, 0.15); color: var(--ink); border-color: var(--accent); box-shadow: 0 0 15px rgba(94, 255, 168, 0.15); }
-    .card-link:hover::before { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
-    .card-link.up { color: var(--ink); border-color: rgba(94, 255, 168, 0.3); }
-    .card-link.up::before { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
-    .card-link.down { color: var(--faint); opacity: 0.6; }
-    .card-link.down::before { background: var(--alert); box-shadow: 0 0 8px var(--alert); }
-
-    @media (max-width: 768px) {
-      #ring { width: 95vmin; }
-      .card-3d { width: 340px; padding: 24px; }
-      .ident-card .mark { font-size: 64px; }
+      transform: translateX(-4px);
     }
 
-    /* ==================================================================
-       OMNI INBOX -- the product layer. The XENOS scene stays the ground
-       (canvas z-index 0, CSS3D z-index 1, ring/crosshair z-index 2).
-       This sits at z-index 10: fully on, readable, scrollable, replyable.
-       cursor is an inherited property, so #omni alone re-bases it away
-       from the page-wide crosshair -- do NOT add a "#omni *" rule, its
-       id-weighted specificity would beat every .omni-* cursor below.
-       ================================================================== */
-    #omni {
-      --oj: #00ff44;                     /* qi jade */
-      position: fixed; z-index: 10;
-      right: 0; top: 0; bottom: 0;
-      width: clamp(330px, 33vw, 470px);
-      display: flex; flex-direction: column;
-      color: var(--ink);
-      font-family: 'Inter', system-ui, sans-serif;
-      background:
-        linear-gradient(180deg, rgba(0,10,4,0.90) 0%, rgba(0,4,1,0.80) 40%, rgba(0,3,1,0.88) 100%);
-      backdrop-filter: blur(20px) saturate(1.35);
-      -webkit-backdrop-filter: blur(20px) saturate(1.35);
-      border-left: 1px solid rgba(0, 255, 68, 0.20);
-      box-shadow: -24px 0 70px rgba(0,0,0,0.75), 1px 0 0 rgba(0,255,68,0.06) inset;
+    .link-card:hover, .link-card:active {
+      transform: translateY(-2px);
+      background: rgba(15, 22, 18, 0.7);
+      border-color: rgba(60, 255, 150, 0.2);
+      border-top-color: rgba(60, 255, 150, 0.4);
+      color: #fff;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(60, 255, 150, 0.05) inset;
+    }
+
+    .link-card:hover::before, .link-card:active::before {
+      opacity: 1;
+      box-shadow: 0 0 15px var(--accent);
+    }
+
+    .link-card:hover .status-dot {
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+    }
+
+    .link-card:hover .link-text {
+      color: #fff;
+    }
+
+    .link-card:hover .right {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .link-card:hover svg {
+      opacity: 1;
+      color: var(--accent);
+      transform: translateX(0);
+    }
+
+    /* Real state: page published in the last 48h */
+    .link-card.fresh .status-dot {
+      background: var(--accent);
+      box-shadow: 0 0 8px rgba(60, 255, 150, 0.6);
+    }
+
+    /* Real state: curated path with no page on disk — shown, never hidden */
+    .link-card.dead {
       cursor: default;
-      overscroll-behavior: contain;
-      padding-top: env(safe-area-inset-top, 0px);
-      padding-right: env(safe-area-inset-right, 0px);
+      opacity: 0.4;
+      border-color: rgba(255, 74, 74, 0.15);
     }
+    .link-card.dead .status-dot { background: var(--alert); }
+    .link-card.dead .meta-hash  { color: var(--alert); opacity: 0.8; }
+    .link-card.dead:hover {
+      transform: none;
+      background: rgba(10, 14, 12, 0.5);
+      border-color: rgba(255, 74, 74, 0.15);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+    .link-card.dead:hover::before { opacity: 0; }
+    .link-card.dead svg { opacity: 0.15; }
 
-    /* ---- header ---- */
-    #omni-head {
-      flex: 0 0 auto; padding: 14px 14px 10px;
-      border-bottom: 1px solid rgba(0,255,68,0.14);
-      background: rgba(0,0,0,0.30);
-    }
-    .omni-title { display: flex; align-items: center; gap: 10px; }
-    .omni-name {
-      font-weight: 600; font-size: 15px; letter-spacing: 0.22em;
-      color: var(--ink); margin-right: auto;
-    }
-    .omni-live {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-family: 'JetBrains Mono', monospace; font-size: 9.5px;
-      letter-spacing: 0.16em; padding: 4px 8px; border-radius: 999px;
-      border: 1px solid rgba(223,251,233,0.16); color: var(--dim);
-      background: rgba(0,0,0,0.35); white-space: nowrap;
-    }
-    .omni-live i { width: 7px; height: 7px; border-radius: 50%; background: var(--dim); flex: 0 0 auto; }
-    .omni-live[data-state="live"] { color: var(--oj); border-color: rgba(0,255,68,0.55); }
-    .omni-live[data-state="live"] i { background: var(--oj); box-shadow: 0 0 10px var(--oj); animation: omni-beat 1.1s ease-in-out infinite; }
-    .omni-live[data-state="ok"]   { color: #7fe0a4; border-color: rgba(0,255,68,0.26); }
-    .omni-live[data-state="ok"] i { background: #7fe0a4; box-shadow: 0 0 6px rgba(0,255,68,0.5); }
-    .omni-live[data-state="lag"]  { color: #ffc24a; border-color: rgba(255,194,74,0.45); }
-    .omni-live[data-state="lag"] i { background: #ffc24a; box-shadow: 0 0 8px #ffc24a; }
-    .omni-live[data-state="dead"] { color: var(--alert); border-color: rgba(255,74,74,0.55); }
-    .omni-live[data-state="dead"] i { background: var(--alert); box-shadow: 0 0 10px var(--alert); animation: omni-beat 0.7s steps(2) infinite; }
-    @keyframes omni-beat { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
-
-    .omni-btn {
-      -webkit-appearance: none; appearance: none;
-      min-width: 44px; min-height: 34px; padding: 4px 10px;
-      background: rgba(0,255,68,0.06); color: var(--dim);
-      border: 1px solid rgba(0,255,68,0.16); border-radius: 8px;
-      font-family: 'JetBrains Mono', monospace; font-size: 14px; line-height: 1;
-      cursor: pointer; transition: all 0.2s ease; touch-action: manipulation;
-    }
-    .omni-btn:hover { color: var(--oj); border-color: rgba(0,255,68,0.5); background: rgba(0,255,68,0.14); }
-
-    .omni-stat {
-      margin-top: 8px; font-family: 'JetBrains Mono', monospace;
-      font-size: 10px; letter-spacing: 0.05em; color: var(--dim);
-      line-height: 1.5; word-break: break-word;
-    }
-    .omni-stat.err { color: var(--alert); }
-
-    .omni-nets { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
-    .omni-chip {
-      -webkit-appearance: none; appearance: none;
-      display: inline-flex; align-items: baseline; gap: 5px;
-      padding: 6px 8px; border-radius: 7px;
-      background: rgba(223,251,233,0.04);
-      border: 1px solid rgba(223,251,233,0.10);
-      color: var(--dim); font-family: 'JetBrains Mono', monospace;
-      font-size: 9.5px; letter-spacing: 0.1em; cursor: pointer;
-      transition: all 0.2s ease; touch-action: manipulation;
-    }
-    .omni-chip b { font-weight: 400; color: var(--ink); font-size: 10.5px; }
-    .omni-chip:hover { border-color: rgba(0,255,68,0.4); }
-    .omni-chip[aria-pressed="true"] { background: rgba(0,255,68,0.13); border-color: var(--oj); }
-    .omni-chip[aria-pressed="true"] b { color: var(--oj); }
-
-    .omni-q {
-      -webkit-appearance: none; appearance: none;
-      width: 100%; margin-top: 10px; min-height: 44px; padding: 10px 12px;
-      background: rgba(0,0,0,0.45); color: var(--ink);
-      border: 1px solid rgba(223,251,233,0.14); border-radius: 9px;
-      font-family: 'JetBrains Mono', monospace; font-size: 12px;
-      letter-spacing: 0.04em; cursor: text;
-    }
-    .omni-q::placeholder { color: rgba(223,251,233,0.30); }
-    .omni-q:focus { outline: none; border-color: rgba(0,255,68,0.55); box-shadow: 0 0 0 3px rgba(0,255,68,0.10); }
-
-    /* ---- river ---- */
-    .omni-river {
-      flex: 1 1 auto; min-height: 0;
-      overflow-y: auto; overflow-x: hidden;
-      overscroll-behavior: contain;
-      -webkit-overflow-scrolling: touch;
-      touch-action: pan-y;
-      scrollbar-width: thin; scrollbar-color: rgba(0,255,68,0.25) transparent;
-    }
-    .omni-river::-webkit-scrollbar { width: 6px; }
-    .omni-river::-webkit-scrollbar-thumb { background: rgba(0,255,68,0.22); border-radius: 3px; }
-
-    .omni-row {
-      -webkit-appearance: none; appearance: none;
-      display: block; width: 100%; min-height: 56px;
-      text-align: left; background: transparent; color: inherit;
-      border: 0; border-bottom: 1px solid rgba(223,251,233,0.07);
-      border-left: 2px solid transparent;
-      padding: 11px 14px 12px; cursor: pointer; font: inherit;
-      transition: background 0.18s ease, border-color 0.18s ease;
-      touch-action: manipulation;
-    }
-    .omni-row:hover { background: rgba(0,255,68,0.055); }
-    .omni-row.unread { border-left-color: rgba(0,255,68,0.55); background: rgba(0,255,68,0.035); }
-    .omni-row.unread .omni-rt { color: rgba(223,251,233,0.92); }
-    .omni-row.unread .omni-who { color: var(--oj); }
-    .omni-row.sel { background: rgba(0,255,68,0.10); border-left-color: var(--oj); }
-    .omni-row.out { opacity: 0.8; }
-    .omni-row.pending { opacity: 0.55; }
-    .omni-row.failed { border-left-color: var(--alert); opacity: 1; }
-
-    .omni-rh { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
-    .omni-badge {
-      flex: 0 0 auto; min-width: 30px; text-align: center;
-      padding: 2px 5px; border-radius: 5px;
-      font-family: 'JetBrains Mono', monospace; font-size: 8.5px;
-      letter-spacing: 0.08em; border: 1px solid currentColor; opacity: 0.9;
-    }
-    .omni-who {
-      font-size: 12px; font-weight: 600; color: var(--ink);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 46%;
-    }
-    .omni-where {
-      font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--dim);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1 1 auto;
-    }
-    .omni-when {
-      flex: 0 0 auto; font-family: 'JetBrains Mono', monospace;
-      font-size: 9.5px; color: var(--dim); letter-spacing: 0.04em;
-    }
-    .omni-rt {
-      font-size: 12.5px; line-height: 1.45; color: rgba(223,251,233,0.72);
-      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
-      overflow: hidden; word-break: break-word; white-space: pre-wrap;
-    }
-    .omni-tag {
-      font-family: 'JetBrains Mono', monospace; font-size: 8.5px;
-      letter-spacing: 0.1em; color: var(--oj); opacity: 0.9; margin-right: 5px;
-    }
-    .omni-empty {
-      padding: 26px 16px; color: var(--dim); white-space: pre-line;
-      font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.75;
-      text-align: center;
-    }
-    .omni-empty.err { color: var(--alert); text-align: left; word-break: break-word; }
-
-    /* ---- composer ---- */
-    .omni-composer {
-      flex: 0 0 auto; border-top: 1px solid rgba(0,255,68,0.22);
-      background: rgba(0,0,0,0.55); padding: 10px 12px;
-      padding-bottom: calc(10px + env(safe-area-inset-bottom, 10px));
-    }
-    .omni-composer[hidden] { display: none; }
-    .omni-to {
-      display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
-      font-family: 'JetBrains Mono', monospace; font-size: 10px;
-      letter-spacing: 0.08em; color: var(--oj);
-    }
-    .omni-to span { flex: 1 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .omni-crow { display: flex; gap: 8px; align-items: flex-end; }
-    #omni-text {
-      -webkit-appearance: none; appearance: none;
-      flex: 1 1 auto; min-height: 44px; max-height: 132px; resize: none;
-      padding: 12px; border-radius: 9px;
-      background: rgba(0,0,0,0.5); color: var(--ink);
-      border: 1px solid rgba(0,255,68,0.28);
-      font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.4;
-      cursor: text;
-    }
-    #omni-text:focus { outline: none; border-color: var(--oj); box-shadow: 0 0 0 3px rgba(0,255,68,0.12); }
-    .omni-send {
-      -webkit-appearance: none; appearance: none;
-      flex: 0 0 auto; min-width: 62px; min-height: 44px; padding: 0 14px;
-      background: rgba(0,255,68,0.14); color: var(--oj);
-      border: 1px solid var(--oj); border-radius: 9px;
-      font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
-      letter-spacing: 0.14em; cursor: pointer; transition: all 0.2s ease;
-      touch-action: manipulation;
-    }
-    .omni-send:hover { background: rgba(0,255,68,0.28); }
-    .omni-send:disabled { opacity: 0.4; cursor: default; }
-    .omni-err {
-      margin-top: 8px; color: var(--alert);
-      font-family: 'JetBrains Mono', monospace; font-size: 10px;
-      line-height: 1.5; word-break: break-word;
-    }
-    .omni-err[hidden] { display: none; }
-
-    /* ---- collapsed: header only, inbox stays reachable in one tap ---- */
-    #omni.min { top: auto; bottom: 0; height: auto; }
-    #omni.min .omni-river, #omni.min .omni-composer,
-    #omni.min .omni-nets, #omni.min .omni-q { display: none; }
-    #omni.min #omni-head { border-bottom: 0; }
-
-    /* ---- handset: bottom sheet, the scene breathes above it ---- */
-    @media (max-width: 820px) {
-      #omni {
-        left: 0; right: 0; top: auto; bottom: 0;
-        width: auto; height: min(76vh, calc(100% - 54px));
-        border-left: 0; border-top: 1px solid rgba(0,255,68,0.28);
-        border-radius: 16px 16px 0 0;
-        box-shadow: 0 -22px 60px rgba(0,0,0,0.8);
-        padding-top: 0; padding-left: env(safe-area-inset-left, 0px);
-      }
-      #omni-head { padding: 12px 12px 9px; }
-      .omni-name { font-size: 13px; letter-spacing: 0.18em; }
-      .omni-row { padding: 12px 12px 13px; }
-      .omni-rt { -webkit-line-clamp: 2; }
-      /* thumb-sized targets -- measured 28px chip / 34px button before this block */
-      .omni-chip { min-height: 44px; padding: 6px 11px; font-size: 10px; }
-      .omni-chip b { font-size: 12px; }
-      .omni-btn { min-height: 44px; min-width: 44px; }
-      .omni-nets { gap: 6px; }
+    @media (max-width: 600px) {
+      #top-nav { padding: 16px; gap: 8px; }
+      .nav-pill { padding: 8px 14px; font-size: 10px; }
+      .content-container { padding: 0 16px; }
+      .link-card { padding: 16px; font-size: 14px; }
+      .link-card .meta-hash { display: none; }
+      section { margin-bottom: 60px; }
     }
   </style>
 </head>
 <body>
 
-<div id="scroll-track" style="position: absolute; top: 0; left: 0; width: 1px; pointer-events: none; z-index: -1;"></div>
+<!-- Background Layer -->
+<canvas id="gl-canvas"></canvas>
+<div class="vignette"></div>
 
-<div id="ring"></div><div class="crosshair"></div>
+<!-- UX Layer -->
+<nav id="top-nav" aria-label="Category Navigation">
+  <!-- Generated by JS -->
+</nav>
 
-<!-- ==================== OMNI INBOX (live) ==================== -->
-<section id="omni" aria-label="Omni inbox">
-  <header id="omni-head">
-    <div class="omni-title">
-      <span id="omni-live" class="omni-live" data-state="boot"><i></i><b>OPENING</b></span>
-      <span class="omni-name">OMNI</span>
-      <button id="omni-min" class="omni-btn" type="button" title="Collapse" aria-label="Collapse inbox">&#8722;</button>
-    </div>
-    <div id="omni-stat" class="omni-stat">opening rail &#183; omni.xlrd.org</div>
-    <div id="omni-nets" class="omni-nets"></div>
-    <input id="omni-q" class="omni-q" type="search" inputmode="search" autocomplete="off"
-           spellcheck="false" placeholder="filter &#183; sender, text, network" aria-label="Filter messages"/>
-  </header>
-
-  <div id="omni-river" class="omni-river" role="log" aria-live="polite" aria-label="Message river">
-    <div class="omni-empty">reading the rail&#8230;</div>
+<main id="ui-layer">
+  <div class="content-container" id="content-container">
+    <!-- Generated by JS -->
   </div>
-
-  <form id="omni-composer" class="omni-composer" hidden>
-    <div class="omni-to">
-      <span id="omni-to-name"></span>
-      <button id="omni-close" class="omni-btn" type="button" title="Close composer" aria-label="Close composer">&#10005;</button>
-    </div>
-    <div class="omni-crow">
-      <textarea id="omni-text" rows="1" placeholder="reply&#8230;  (enter sends)" aria-label="Reply text"></textarea>
-      <button id="omni-send" class="omni-send" type="submit">SEND</button>
-    </div>
-    <div id="omni-err" class="omni-err" hidden></div>
-  </form>
-</section>
-<!-- ==================== /OMNI INBOX ==================== -->
+</main>
 
 <script src="https://unpkg.com/gsap@3.13.0/dist/gsap.min.js"></script>
-
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-  }
-}
-</script>
-
 <script>
-window.directoryData = [
-  { category: "Xen Ecosystem", links: ["/xen", "/xen-01", "/xen-02", "/xen-03", "/xen-04", "/xen-05", "/xen-06", "/xen-07", "/xen-08", "/xen-09", "/xen-10", "/xen-11", "/xen-12", "/xen-13", "/xen-14", "/xen-15", "/xen-16", "/xen-17", "/xen-18", "/xen-19", "/xen-20", "/xen-21", "/xen-22", "/xen-23", "/xen-24", "/xen-25", "/xen-architecture", "/xen-awareness", "/xen-fabric", "/xen-map", "/xen-prd", "/xen-source-of-truth", "/xen-system-decision", "/xen-worklog", "/xenmemory/win", "/xenos", "/xenos-env", "/xenos-plasma", "/xenos-v3", "/xos", "/xos3", "/xql", "/xt", "/xvm", "/clipboard-to-xen"] },
-  { category: "Veinom / VVS", links: ["/vei", "/veinom", "/veinom-inject", "/venom", "/agy/veinom", "/agyveinom", "/claude/veinom", "/grokveinom", "/VVS", "/vvsvei", "/vvsvei-live", "/vvsvei-voice"] },
-  { category: "AI & Agents", links: ["/agents", "/auto-agent", "/coding-agents", "/subagent", "/claude-mem", "/claude-web-api", "/claudeos", "/extendlm", "/grok", "/nblm", "/nblmaudit", "/vectorgen"] },
-  { category: "L7S & Ops", links: ["/l7", "/l7s", "/l7s-client-info", "/l7s-gap", "/l7s-hero", "/l7s-operator-hub", "/l7s-pulse", "/l7s-site", "/l7shero", "/hero/check/bse", "/check-hero"] },
-  { category: "Launchers & UI", links: ["/launchers", "/aio-launcher", "/anime-launcher", "/big-launcher", "/lawnchair", "/new-launcher", "/parallax-launcher", "/scribble-launcher", "/victor-launcher", "/square-home", "/hands-free-tablet", "/autophone"] },
-  { category: "Audits & Sessions", links: ["/063026", "/session-063026", "/070326", "/070326-weekly-export", "/_audit_calc01.html", "/audit", "/memory-audit", "/subs-audit"] },
-  { category: "Voice & Comms", links: ["/comms-health", "/dial", "/gv-call-stt", "/telephony-plan", "/twoway-voice", "/voice-council", "/voice-decouple", "/voice-line", "/voice-status", "/voice-transport", "/maskedcaller/2", "/receptionist", "/receptionist-sprint", "/switchboard"] },
-  { category: "Dev & Code", links: ["/_calc09_tmp.html", "/_shared", "/architecture", "/cache", "/calculators", "/codepens", "/css", "/js", "/container", "/endpoints", "/fs", "/functions", "/gateway", "/hooks", "/index.html", "/index-portfolio-old.html", "/infra", "/logs", "/mesh", "/requests", "/scripts", "/hetzner-setup", "/oss-sites"] },
-  { category: "Business & Finance", links: ["/costs", "/debt", "/expenses", "/invoice", "/invoice-books-decks", "/pricing", "/taxes", "/subscriptions", "/usage-burn", "/offer-builder", "/offers", "/growth", "/gtm"] },
-  { category: "Life & Note", links: ["/12step", "/action-board", "/actions", "/brain-map", "/commandments", "/cookbook", "/day", "/docs", "/free-brain", "/freedom-number", "/godsop", "/god-sop-dashboard", "/sop/2026-05-22", "/life", "/life-note", "/manifesto", "/mtg-note.html", "/today"] },
-  { category: "Projects", links: ["/domain", "/domains", "/domain-board", "/firstcare", "/trackingtogether", "/xlrd-org", "/xlrd-tech", "/playbook/local-sites", "/template-io-mission-control"] },
-  { category: "Integrations", links: ["/asana", "/clay-integrations", "/ifttt", "/apps/matrix", "/composio", "/finish-gmail-bridge", "/sync/personas/all"] }
-];
+window.directoryData = [{"category":"Xen Ecosystem","links":[{"p":"/xen","m":"AUG 18","t":"XEN \u2014 Tag It. It's There.","f":1},{"p":"/xen-01","m":"JUL 08","t":"XEN \u2014 Voice-First Autonomous AI"},{"p":"/xen-architecture","m":"JUN 20","t":"XEN \u2014 Architecture White-Paper"},{"p":"/xen-fabric","m":"JUL 22","t":"XEN Real-Time Fabric"},{"p":"/xen-map","m":"AUG 18","t":"Xen \u00b7 Exedus \u2014 Live Architecture Map","f":1},{"p":"/xen-prd","m":"JUN 28","t":"XEN Unified Brain Platform \u00b7 PRD v1.0"},{"p":"/xenos","m":"AUG 18","t":"XENOS \u2014 shapeshifter","f":1},{"p":"/xenos-env","m":"AUG 18","t":"XENOS","f":1},{"p":"/xenos-plasma","m":"AUG 18","t":"XENOS","f":1},{"p":"/xos","m":"AUG 18","t":"Xenphone OS \u2014 iOS 27 \u00b7 dark","f":1},{"p":"/xql","m":"AUG 07","t":"XQL Control Plane \u2014 Genesis\u2194Leviticus Bridge"},{"p":"/xvm","m":"MISSING","d":1}]},{"category":"Veinom / VVS","links":[{"p":"/vei","m":"AUG 07","t":"VEI moved \u2192 VVSVEI"},{"p":"/veinom","m":"AUG 07","t":"VEINOM \u00b7 RUACH"},{"p":"/veinom-inject","m":"AUG 07","t":"VEINOM Inject \u00b7 VVS on any web chat"},{"p":"/venom","m":"AUG 07","t":"VENOM \u2014 Xen Symbiote"},{"p":"/agyveinom","m":"AUG 07","t":"AGY Venom \u2014 Redirecting..."},{"p":"/claude/veinom","m":"AUG 07","t":"VEINOM \u00b7 Voice-control every web AI, your browser & comms"},{"p":"/grokveinom","m":"AUG 07","t":"GrokVeinom \u2014 Redirecting..."},{"p":"/VVS","m":"AUG 07","t":"Variation Vault | East Allen Studios"},{"p":"/vvsvei-live","m":"JUL 26","t":"VVSVEI \u2014 live"}]},{"category":"AI & Agents","links":[{"p":"/agents","m":"AUG 07","t":"AGENTS \u00b7 stress-bench \u00b7 hitthe.link"},{"p":"/auto-agent","m":"JUN 20","t":"AUTO_AGENT Protocol List \u2014 fleet skills audit"},{"p":"/coding-agents","m":"AUG 18","t":"Coding agents, priced \u2014 the budget-night table","f":1},{"p":"/subagent","m":"JUN 28","t":"XEN Guardian Sub-Agent \u00b7 Sonnet Prompt"},{"p":"/claude-mem","m":"JUL 07","t":"claude-mem \u2014 memory browser"},{"p":"/claudeos","m":"AUG 07","t":"ClaudeOS \u2014 Live Swarm"},{"p":"/extendlm","m":"AUG 07","t":"ExtendLM Optimizer | Advanced Scope Merger"},{"p":"/nblm","m":"AUG 07","t":"NBLM Thread \u2014 Full-Scope Build Doc \u00b7 2026-05-17/18"},{"p":"/vectorgen","m":"AUG 07","t":"Pro Client-Side SVG Converter"}]},{"category":"L7S & Ops","links":[{"p":"/l7","m":"AUG 07","t":"L7S \u00b7 Links & Docs Index \u2014 organized by purpose"},{"p":"/l7s","m":"AUG 07","t":"XLRDTECH \u00b7 L7S 11 VOICE-NATIVE CALCULATOR \u00b7 v08"},{"p":"/l7s-client-info","m":"JUN 21","t":"L7S Inc. - Client Information Sheet"},{"p":"/l7s-gap","m":"AUG 18","t":"L7S Gap Analysis \u2014 live site vs. what converts","f":1},{"p":"/l7s-hero","m":"AUG 18","t":"L7S Hero \u00b7 League of Seven Superheroes","f":1},{"p":"/l7s-operator-hub","m":"JUN 20","t":"L7S HERO | B.A.T.M.A.N. Infrastructure Hub"},{"p":"/l7s-pulse","m":"AUG 07","t":"L7S Hero Pulse \u2014 One-Pager for FOODIES"},{"p":"/check-hero","m":"AUG 07","t":"L7CheckMark: HERO"}]},{"category":"Launchers & UI","links":[{"p":"/launchers","m":"JUL 09","t":"10 Android Launchers \u2014 Live Prototypes"},{"p":"/aio-launcher","m":"JUL 09","t":"AIO Launcher \u2014 Everything at a glance"},{"p":"/anime-launcher","m":"JUL 09","t":"Anime Launcher \u2014 Bring your home screen to life"},{"p":"/big-launcher","m":"JUL 09","t":"Big Launcher \u2014 Function over flash, a home screen anyone can read"},{"p":"/lawnchair","m":"JUL 09","t":"Lawnchair \u2014 The perfect balance of style and function"},{"p":"/parallax-launcher","m":"JUL 09","t":"Parallax Launcher \u2014 Motion, depth, and a home screen that feels alive"},{"p":"/autophone","m":"AUG 07","t":"Making Your Business Phone Work for You"}]},{"category":"Voice & Comms","links":[{"p":"/comms-health","m":"AUG 18","t":"Comms Health \u2014 what works, what is lying","f":1},{"p":"/dial","m":"JUL 20","t":"Xen Audio Hub \u2014 Dial Pad"},{"p":"/gv-call-stt","m":"JUN 21","t":"GV Call STT \u00b7 xen-qi-vdo \u2192 inject"},{"p":"/telephony-plan","m":"JUN 15","t":"24/7 Telephony Plan"},{"p":"/twoway-voice","m":"JUN 20","t":"Xen Two-Way Voice \u2014 iOS Shortcut"},{"p":"/voice-council","m":"JUN 20","t":"Voice Pipeline Council \u2014 Root Cause & Fixes"},{"p":"/receptionist","m":"AUG 18","t":"BE\u00b7ME Receptionist \u00b7 by Self Exec","f":1},{"p":"/switchboard","m":"AUG 18","t":"Hook Switchboard \u2014 Claude Code hooks, live inventory | CTO East","f":1}]},{"category":"Dev & Code","links":[{"p":"/architecture","m":"JUN 20","t":"XEN \u2014 Auto-Agent / BPGS Architecture"},{"p":"/cache","m":"MISSING","d":1},{"p":"/container","m":"AUG 07","t":"Container Hub v5.4 | Direct Dial Build"},{"p":"/endpoints","m":"AUG 07","t":"Catalog \u2014 Xen AUA Endpoints"},{"p":"/functions","m":"MISSING","d":1},{"p":"/gateway","m":"JUN 28","t":"XEN Model Gateway \u2014 docs"},{"p":"/hooks","m":"AUG 07","t":"Xen Webhook Control \u00b7 pane %0 2-way bridge"},{"p":"/infra","m":"JUN 20","t":"INFRA MAP \u2014 Xen Architecture Single Source of Truth"},{"p":"/mesh","m":"AUG 07","t":"Universal Mesh \u2014 Self Exec"},{"p":"/hetzner-setup","m":"MISSING","d":1}]},{"category":"Business & Finance","links":[{"p":"/costs","m":"AUG 07","t":"Cost Breakdown Dashboard"},{"p":"/debt","m":"AUG 07","t":"Xen Ledger \u2014 Debt \u00b7 P&amp;L \u00b7 Sentiment"},{"p":"/expenses","m":"AUG 02","t":"Expense Hunt \u2014 mailbox query pack"},{"p":"/invoice","m":"JUL 20"},{"p":"/pricing","m":"AUG 07","t":"XLRD \u00b7 Executive Leverage \u2014 Engagements & Pricing"},{"p":"/taxes","m":"AUG 18","t":"Home | Taxes R Us Elite llc","f":1},{"p":"/subscriptions","m":"JUL 26","t":"XLRD \u00b7 Subscriptions"},{"p":"/usage-burn","m":"JUL 03","t":"XEN \u00b7 Usage Burn Audit \u2014 what ran while you were away"},{"p":"/offer-builder","m":"JUN 20","t":"Offer Builder \u2014 7-Variable Framework \u00b7 XLRD"}]},{"category":"Life & Note","links":[{"p":"/action-board","m":"JUL 26","t":"Xen \u00b7 Action Board \u2014 2026-07-25"},{"p":"/brain-map","m":"JUN 20","t":"XEN \u2014 M4 Brain Map"},{"p":"/commandments","m":"AUG 07","t":"Xen Commandments v51 \u2014 One Canon, No Fallbacks"},{"p":"/godsop","m":"AUG 07","t":"G.O.D. SOP Dashboard | East Allen"},{"p":"/life","m":"AUG 18","t":"XEN \u00b7 LIFE \u2014 Command Dashboard","f":1},{"p":"/manifesto","m":"AUG 07","t":"EXEDUS \u00b7 XEN \u2014 Canon Manifesto"},{"p":"/today","m":"AUG 18","t":"Mon 27 Jul \u2014 Everything","f":1}]},{"category":"Integrations","links":[{"p":"/asana","m":"AUG 07","t":"Asana Progress \u2014 hitthe.link"},{"p":"/clay-integrations","m":"AUG 07","t":"Integrations Catalog - Clay.com Style"},{"p":"/ifttt","m":"AUG 07","t":"IFTTT Ops Overhaul \u2014 Padre \u00b7 Beside \u00b7 PayPal \u00b7 Square \u00b7 Drive \u00b7 Calendar"},{"p":"/apps/matrix","m":"JUN 28","t":"Xen Matrix"},{"p":"/composio","m":"JUN 20","t":"Composio Toolkit Roster \u2014 xlrdtech Connect Console"},{"p":"/finish-gmail-bridge","m":"JUL 03","t":"Finish the Gmail Bridge"}]},{"category":"Index 0-9","links":[{"p":"/063026","m":"JUL 03","t":"063026 \u00b7 Session Export Overview"},{"p":"/070326","m":"JUL 05","t":"070326 \u00b7 Daily Overview & Action Items"},{"p":"/070326-weekly-export","m":"JUL 05","t":"070326 \u00b7 Weekly Session &amp; Matrix Export"},{"p":"/081426","m":"AUG 18","t":"43 Seconds \u2014 where a turn actually goes","f":1},{"p":"/12step","m":"AUG 07","t":"C.A.R.E. Sales Assessment \u201a\u00c4\u00ee 12-Step Call Form"},{"p":"/222church","m":"AUG 07","t":"222 Church | Presence-Based Worship Center"},{"p":"/26thTemple","m":"AUG 07","t":"26th Temple | Non-Profit Compliance & Education"},{"p":"/8922","m":"AUG 07","t":"Numerology Dynamics | 9-22-8 Paradigm"},{"p":"/999","m":"JUN 20","t":"999 OPS \u2014 XLRD999 + X9 \u00b7 Command Hub"}]},{"category":"Index A-C","links":[{"p":"/abos","m":"AUG 07","t":"Automated Business Operation System | Freedom Calculator"},{"p":"/absorb","m":"AUG 07","t":"ABSORB \u2014 Live Source Extractor"},{"p":"/actions","m":"JUL 20","t":"Action board \u2014 from email"},{"p":"/allendale","m":"AUG 07","t":"Allendale Equine Services | Horse Boarding & Riding in Palmetto, GA"},{"p":"/anthony","m":"AUG 07","t":"Anthony \u00d7 Self Exec \u00b7 Your Lead Business, Overview"},{"p":"/arch-jetstream","m":"JUL 22","t":"Xen Architecture \u2014 JetStream Event Sourcing"},{"p":"/asset-coverage","m":"AUG 18","t":"Asset Coverage \u2014 review deck","f":1},{"p":"/aua","m":"AUG 07","t":"AUA \u2014 Agentic URL Manifesto"},{"p":"/audit","m":"AUG 07","t":"Xen Audit Pack \u2014 qi \u00b7 xlrdtech"},{"p":"/auracle","m":"AUG 18","t":"XENOS \u2014 Auxgen Voice GUI","f":1},{"p":"/auth","m":"JUN 20","t":"AUTH CONSOLE \u2014 connect everything"},{"p":"/auto-flow","m":"JUN 15","t":"XEN Auto-Flow / BPGS Canon"},{"p":"/autoship-gaps","m":"JUL 03","t":"Autoship \u2014 Gap Analysis & Repair"},{"p":"/avatar","m":"AUG 07","t":"Ophanim: Gemini Uplink"},{"p":"/barnlights","m":"AUG 18","t":"Barn Lights Payment Dashboard","f":1},{"p":"/bee","m":"AUG 18","t":"Bee","f":1},{"p":"/bee-gap-05ca3778f9","m":"JUL 20","t":"Bee Capability Gap Report"},{"p":"/beelogin","m":"JUL 20","t":"Bee login"},{"p":"/beside-call-handler","m":"JUN 28","t":"East AI \u2014 Beside Call Handler (2026)"},{"p":"/beside-proxy","m":"AUG 07","t":"Beside AI \u00b7 the only path to Twilio"},{"p":"/big3atl","m":"AUG 18","t":"BIG 3 ATL \u2014 Halloween Trail Ride &amp; Field Party","f":1},{"p":"/breath-to-life","m":"AUG 18","t":"Breath to Life","f":1},{"p":"/btl","m":"AUG 18","t":"Breath to Life","f":1},{"p":"/buzycred","m":"AUG 18","t":"BuzyCred \u00b7 Build Credit. Get Funded.","f":1},{"p":"/calculators","m":"AUG 07","t":"L7S \u00b7 Hero Calculators"},{"p":"/cc-updates","m":"AUG 18","t":"Claude Code 2.1.220 \u2192 2.1.224","f":1},{"p":"/cca","m":"JUL 20","t":"Claude Certified Architect (CCA-F) \u2014 Study Guide"},{"p":"/cellbrowser-codex","m":"AUG 07","t":"CellBrowser \u00b7 Codex Handoff"},{"p":"/clash","m":"AUG 18","t":"is tuned for SEARCH INTENT (how a burnt-out caregiver-founder actually types it into Googl","f":1},{"p":"/claude-web-api","m":"JUL 07","t":"claude.ai API map"},{"p":"/clipboard-to-xen","m":"JUN 20","t":"Send Clipboard to Xen \u2014 iOS Shortcut"},{"p":"/complaints-registry","m":"AUG 07","t":"qi Complaint Registry \u2014 Xen System"},{"p":"/comprehension","m":"AUG 18","t":"Comprehension Audit \u00b7 Xen","f":1},{"p":"/conductor","m":"JUL 03","t":"Conductor \u2014 Claude Code Orchestrator"},{"p":"/connect","m":"JUN 29","t":"hitthe.link \u2014 Connect"},{"p":"/context","m":"AUG 07","t":"PGS Context Tracker \u00b7 never forget \u00b7 2026-05-23"},{"p":"/cookbook","m":"AUG 07","t":"XLRD TUI / AUA Inject Cookbook"},{"p":"/crystal-blur","m":"JUL 09","t":"Crystal Blur Launcher \u2014 Elevate your home screen to a polished, modern level."},{"p":"/cto-east","m":"AUG 18","t":"CTO East \u2014 XENOS","f":1},{"p":"/custom-er","m":"AUG 07","t":"Custom ER | Emergency Software Response"}]},{"category":"Index D-G","links":[{"p":"/day","m":"AUG 18","t":"DAY \u2014 what day is it","f":1},{"p":"/dcl-demo","m":"AUG 07","t":"Terance x Designer Collaboration"},{"p":"/dcz","m":"AUG 18","t":"Diamond Cutz Studios \u00b7 Recording Studio","f":1},{"p":"/dcz-call","m":"JUL 26","t":"DCZ + First Care \u2014 Call Brief"},{"p":"/deprecated","m":"AUG 18","t":"Legacy apps &amp; tools \u2014 what not to touch","f":1},{"p":"/desk","m":"JUL 03","t":"desk \u00b7 XEN's universal inbox"},{"p":"/diamond-cut","m":"AUG 07","t":"Diamond Cutz Studios \u00b7 Recording Studio"},{"p":"/die-list","m":"AUG 07","t":"The D.I.E. List \u00b7 Exedus Xen canon"},{"p":"/direction","m":"AUG 18","t":"Direction \u2014 your own words back","f":1},{"p":"/dirtyhawks","m":"AUG 07","t":"Dirty Hawks Shooting Club | Shooting Dept."},{"p":"/docs","m":"AUG 07","t":"Docs \u00b7 hitthe.link"},{"p":"/domain","m":"AUG 18","t":"l7sinc.com \u2014 get it out of Wix","f":1},{"p":"/domain-board","m":"AUG 18","t":"Domain Portfolio Gap Board \u2014 26 domains, what serves and what is dark | CTO East","f":1},{"p":"/domains","m":"JUN 20","t":"DOMAINS \u2014 idea \u2192 available, cheap, short"},{"p":"/e","m":"AUG 07","t":"Electric EATS"},{"p":"/east-allen","m":"AUG 18","t":"East Allen \u2014 XENOS","f":1},{"p":"/east-allen-growth-interface","m":"AUG 07","t":"East Allen's Growth Interface"},{"p":"/eats","m":"AUG 07","t":"Electric EATS \u2014 Decode every food decision"},{"p":"/eli","m":"AUG 07","t":"ELI \u00b7 Qualified Leads, Resold Right"},{"p":"/eliops","m":"AUG 07","t":"Tracking Together \u2014 Portal moved"},{"p":"/elios","m":"AUG 07","t":"Tracking Together &mdash; Sign In"},{"p":"/elso","m":"AUG 07","t":"ELSO \u00b7 Executive Leverage Site Offers"},{"p":"/execpage","m":"AUG 18","t":"Exec Page \u00b7 Executive Presence. 7-Day Launch.","f":1},{"p":"/executive-leverage","m":"AUG 18","t":"Executive Leverage \u2014 XENOS","f":1},{"p":"/firehose","m":"AUG 07","t":"Omnicom \u00b7 live event stream"},{"p":"/firstcare","m":"JUL 24","t":"First Care Surgical Assistant, llc"},{"p":"/firstcare-brief","m":"JUL 24","t":"First Care Surgical Assistant \u2014 Receptionist Brief"},{"p":"/firstcare-v2","m":"JUL 26","t":"First Care Surgical Assistant, LLC \u2014 Where Patient Care Comes First"},{"p":"/flcheats","m":"AUG 07","t":"FL Studio Ultimate Cheatsheet"},{"p":"/free-brain","m":"JUL 24","t":"Free Brain \u2014 tiered $0 LLM (local MLX + OpenRouter :free)"},{"p":"/freedom-number","m":"AUG 18","t":"The Freedom Number \u2014 find your baseline, set your price","f":1},{"p":"/gagateway-snap","m":"AUG 18","t":"Georgia Gateway \u2014 SNAP Reinstatement","f":1},{"p":"/gallery","m":"AUG 18","t":"XLRD Gallery \u2014 XENOS","f":1},{"p":"/gap","m":"AUG 18","t":"Gap analysis \u2014 27 Jul 2026","f":1},{"p":"/gap-analysis","m":"AUG 18","t":"Gap Analysis \u2014 framework vs. operation","f":1},{"p":"/gen-stack","m":"AUG 18","t":"Gen Stack \u2014 what each generator actually costs","f":1},{"p":"/ggv","m":"AUG 07","t":"Google Grok Voice UI - Inline"},{"p":"/go-green","m":"JUN 20","t":"Go Green Contractor \u2014 We Rebuild Your Site, We Send the Leads"},{"p":"/goals","m":"AUG 18","t":"Objectives \u2014 Xen","f":1},{"p":"/god-sop-dashboard","m":"AUG 07","t":"G.O.D. SOP Dashboard | East Allen"},{"p":"/godmode","m":"AUG 07","t":"Godmode Siri \u2014 Xen"},{"p":"/gov","m":"AUG 07","t":"GGV"},{"p":"/grok","m":"AUG 07","t":"Grok Projects \u2022 hitthe.link"},{"p":"/growth","m":"AUG 07","t":"East Allen's Growth Interface"},{"p":"/gtm","m":"AUG 07","t":"Xenphone \u2014 Steps to GTM (attempt 11)"},{"p":"/guardian","m":"JUN 28","t":"XEN Session Guardian \u00b7 Fork Prompt"}]},{"category":"Index H-L","links":[{"p":"/hands-free-tablet","m":"JUL 03","t":"Best Hands-Free Tablet Solutions 2026 \u2014 Mounts, Stands & Accessibility"},{"p":"/hightop-sleep","m":"AUG 18","t":"HighTop + Sleep Study \u2014 One Call","f":1},{"p":"/hittl","m":"AUG 18","t":"hitthe.link \u2014 XENOS","f":1},{"p":"/hotl-plan","m":"JUL 03","t":"HOTL Plan \u2014 Lanes, Echo Fix &amp; Memory Verdict"},{"p":"/infinihash","m":"JUN 20","t":"Infinihash KYT \u2014 Real-Time Crypto Wallet Screening &amp; AML"},{"p":"/inject","m":"AUG 07","t":"Omni Inject \u2014 Mobile Access Surface"},{"p":"/intake","m":"AUG 07","t":"Client Intake \u00b7 Self Exec \u2014 Build Your Site"},{"p":"/invoice-books-decks","m":"JUL 26","t":"XLRD TECH \u2014 Invoice"},{"p":"/ios-shortcut-deploy","m":"AUG 07","t":"iOS Shortcut deploy \u00b7 5 qi-only blocker commands"},{"p":"/itinerary","m":"AUG 07","t":"Itinerary \u00b7 pre-sunrise punch list + full 36-section scope \u00b7 2026-05-23"},{"p":"/ju","m":"AUG 07","t":"Pable Ju \u00b7 Fool For Love"},{"p":"/l7s-site","m":"AUG 06","t":"L7S, Inc. \u2014 Who We Are | Analytical, Architectural, AI-Powered Business Strategy"},{"p":"/l7shero","m":"AUG 07","t":"L7S Hero - Strategic Business Solutions"},{"p":"/lab","m":"AUG 07","t":"The Lab \u2014 Xen Build Telemetry"},{"p":"/legacy","m":"AUG 18","t":"Legacy \u2014 preserved, working, do not change","f":1},{"p":"/life-note","m":"AUG 18","t":"Life Note \u2014 you don't run programs, you write Notes, and they run you","f":1},{"p":"/lifenote","m":"AUG 19","t":"LifeNote","f":1},{"p":"/links","m":"AUG 07","t":"hitthe.link \u00b7 Link Index \u2014 every link, by purpose"},{"p":"/literary-devices","m":"JUN 20","t":"Literary Devices Generator \u00b7 hitthe.link"},{"p":"/luckie","m":"AUG 07","t":"Luckie \"Links\" Goggins \u00b7 L7S INC \u00b7 Operator Hub"},{"p":"/lyn","m":"AUG 07","t":"LYN \u00b7 L7S Hero \u00b7 The Superhero Operating System"}]},{"category":"Index M-P","links":[{"p":"/PriceHero","m":"AUG 07","t":"PriceHero \u00b7 L7S Hero deliverables pricing calculator"},{"p":"/mb","m":"AUG 07","t":"M_B \u00b7 Southern Soul \u2014 bookmb.com"},{"p":"/mbv2","m":"AUG 07","t":"M_B \u2014 Urban King of Southern Soul \u00b7 Benjamin McAllister"},{"p":"/mbv3","m":"AUG 07","t":"M_B\u00ae \u2014 Studio"},{"p":"/mbv4","m":"AUG 07","t":"M_B\u00ae STUDIO"},{"p":"/mcp-live","m":"JUL 21","t":"MCP Live-Streaming Data \u2014 Sourced Brief"},{"p":"/memory-audit","m":"AUG 18","t":"Memory Audit \u2014 five stores, one lineage","f":1},{"p":"/menu","m":"AUG 07","t":"XLRD TECH \u00b7 $111 Menu \u00b7 Build Your Operation One Unit At A Time"},{"p":"/metro-vs-straighttalk","m":"JUN 20","t":"Metro vs Straight Talk \u2014 Plan & SIM Comparison"},{"p":"/nblmaudit","m":"AUG 07","t":"Notebook Archivist"},{"p":"/new-launcher","m":"JUL 09","t":"NewLauncher \u2014 That modern, slightly futuristic feel, for any device"},{"p":"/notifs","m":"AUG 18","t":"Notification Capture \u2014 2026-08-07","f":1},{"p":"/now","m":"AUG 18","t":"NOW &mdash; Xen","f":1},{"p":"/offers","m":"AUG 07","t":"L7S Offer Ladder | Low \u2192 Mid \u2192 High"},{"p":"/omni-inbox","m":"JUL 20","t":"Omni-Inbox \u2014 Architecture & Plan"},{"p":"/omnifused","m":"AUG 18","t":"Omni_Fused \u2014 the architecture, permanently","f":1},{"p":"/omnip","m":"AUG 18","t":"OmniP \u2014 omnipresent capture mesh","f":1},{"p":"/onair","m":"AUG 18","t":"ON AIR &mdash; Xen","f":1},{"p":"/orientation","m":"AUG 18","t":"Xen Orientation Prompt","f":1},{"p":"/oss-sites","m":"AUG 07","t":"OSS VEINOM-SaaS Showdown \u00b7 verbatim prompt"},{"p":"/overview","m":"AUG 07","t":"hitthe.link \u00b7 The Ledger"},{"p":"/p6","m":"AUG 19","t":"PURGATORY 6 \u00b7 P6.5 \u2014 10.13.2026","f":1},{"p":"/padre","m":"AUG 07","t":"Padre Sales Ops \u00b7 Local Business Sites Playbook"},{"p":"/padula","m":"JUN 20","t":"L7S Loan Hero \u2014 Capital &amp; Funding Coordination \u00b7 L7 Solutions"},{"p":"/pattern-tree","m":"JUL 22","t":"Design Pattern Decision Tree \u2014 pick by friction, not by name"},{"p":"/pgs","m":"AUG 07","t":"Shang Tsung PGS \u00b7 soul-steal the source"},{"p":"/pin-feed","m":"AUG 07","t":"Pinterest Feed \u00b7 Infinite Topic Swipe"},{"p":"/plasma-core","m":"AUG 18","t":"XENOS \u2014 Auxgen Voice GUI","f":1},{"p":"/prd","m":"JUL 20","t":"Xen Swarm-of-Swarms \u2014 Sintra Replacement PRD"},{"p":"/premium","m":"JUL 08","t":"XEN \u2014 One Voice. All Systems."}]},{"category":"Index Q-S","links":[{"p":"/rays","m":"AUG 07","t":"Ray's Courses \u2014 Learning Hub"},{"p":"/rays-home","m":"AUG 07","t":"Ray's House of Fun"},{"p":"/realtime-voice","m":"AUG 19","t":"Real-Time Full-Duplex Voice \u2014 the Xen stack","f":1},{"p":"/receptionist-sprint","m":"JUN 28","t":"AI Receptionist Sprint \u00b7 Self Exec"},{"p":"/recovered-dictation","m":"JUN 21","t":"Recovered Dictation \u2014 looped session 2026-06-21"},{"p":"/recovery","m":"AUG 18","t":"Ground Zero Recovery Pack","f":1},{"p":"/requests","m":"JUL 20","t":"xen \u00b7 requests \u00b7 the map"},{"p":"/review","m":"JUN 20","t":"48H REVIEW \u2014 overview + gap analysis"},{"p":"/roadmap","m":"JUN 28","t":"XEN \u00b7 48-Hour Roadmap"},{"p":"/rss","m":"JUN 29","t":"XEN \u00b7 Notification Center"},{"p":"/rv-rentals","m":"JUL 03","t":"RV Rentals Atlanta, GA \u2014 2026 Guide"},{"p":"/scopes","m":"AUG 19","t":"XEN \u00b7 Scope Universe \u2014 766, proven","f":1},{"p":"/scribble-launcher","m":"JUL 09","t":"Scribble Launcher \u2014 Scribble a letter. Get where you're going."},{"p":"/secondme","m":"JUL 20","t":"Second Me \u2014 conversation map"},{"p":"/sel","m":"AUG 07","t":"Self Exec | Enterprise Automation &amp; Intelligent Systems"},{"p":"/selfexec","m":"AUG 18","t":"Self Exec \u00b7 Automation &amp; AI Consulting","f":1},{"p":"/selfexec-3d","m":"AUG 18","t":"Self Exec \u2014 XENOS","f":1},{"p":"/session-063026","m":"JUL 03","t":"XEN \u00b7 Session Overview 6/30 \u2014 M drive, Beeper kill, M4 disk fault"},{"p":"/shang","m":"AUG 19","t":"Shang Tsung PGS \u00b7 Absorbed Sources","f":1},{"p":"/shopping","m":"JUN 28","t":"Pickup \u00b7 checklist"},{"p":"/signing","m":"AUG 07","t":"Digital Forms Portal"},{"p":"/sleep","m":"JUL 07","t":"XEN \u2014 Sleep &amp; Autonomy"},{"p":"/slid","m":"AUG 07","t":"Video Gallery"},{"p":"/spatial-navigator","m":"AUG 18","t":"AUXGEN // SPATIAL NAVIGATOR","f":1},{"p":"/speedrun","m":"JUN 20","t":"Speedrun \u00b7 All Scopes"},{"p":"/spine","m":"AUG 07","t":"The Business Spine \u2014 entities \u00b7 payments \u00b7 roadmaps"},{"p":"/square-home","m":"JUL 09","t":"Square Home \u2014 The Metro UI you missed, live tiles reimagined"},{"p":"/stal-lyon","m":"AUG 07","t":"Stal'lyon \u2192 Diamond Cutz Studios"},{"p":"/stal-lyon-populate","m":"AUG 07","t":"Stal'lyon \u00b7 populate the 9 tokens \u00b7 half-completion gate"},{"p":"/state-map","m":"JUL 26","t":"Xen State Map \u2014 2026-07-25"},{"p":"/status","m":"AUG 07","t":"Status \u2014 Xen Live"},{"p":"/steer","m":"AUG 07","t":"XEN \u00b7 STEER \u2014 the command ledger"},{"p":"/studio","m":"AUG 02","t":"XEN STUDIO \u2014 mashup engine"},{"p":"/stylism","m":"AUG 07","t":"@stylism_ Visual Reference"},{"p":"/subs-audit","m":"AUG 18","t":"Subscription Audit \u2014 the real number","f":1},{"p":"/swarm","m":"AUG 07","t":"PGS \u2014 Parallel Goal Swarm \u00b7 2026-05-30"}]},{"category":"Index T-Z","links":[{"p":"/template-io-mission-control","m":"AUG 07","t":"Template.io | Mission Control"},{"p":"/tmux-vocab","m":"AUG 18","t":"tmux vocabulary \u2014 server, session, window, pane","f":1},{"p":"/tomcp","m":"AUG 07","t":"toMCP \u2014 Live Sites as MCP Servers"},{"p":"/trackingtogether","m":"AUG 18","t":"TrackingTogether \u00b7 Track everything. Automate everything.","f":1},{"p":"/trackingtogether-v1","m":"JUN 20","t":"TrackingTogether \u2014 every deal, knock to paid"},{"p":"/unblock","m":"JUN 20","t":"UNBLOCK \u2014 what Xen needs from qi"},{"p":"/urls","m":"JUL 24","t":"Master URL List \u2014 qi"},{"p":"/v7","m":"AUG 18","t":"XENOS \u2014 frozen versions","f":1},{"p":"/v7-20260817-1227","m":"AUG 18","t":"XLRD Gallery \u2014 XENOS","f":1},{"p":"/vibe-repos","m":"JUN 20","t":"5 New Vibe-Coding Repos"},{"p":"/vibes","m":"AUG 07","t":"Vibes \u00b7 @stylism_"},{"p":"/victor-launcher","m":"JUL 09","t":"Victor Launcher \u2014 Stable, modern, endlessly flexible"},{"p":"/video-spec","m":"AUG 18","t":"Music Video Spec \u2014 and the honest hardware verdict","f":1},{"p":"/vision","m":"AUG 07","t":"Xen \u00b7 Omni Vision Wall"},{"p":"/voice-decouple","m":"JUN 20","t":"Voice Never Interrupts Work \u2014 M4 inject diagnosis"},{"p":"/voice-line","m":"JUN 20","t":"Xen Voice Line \u2014 Status &amp; Fix Log"},{"p":"/voice-status","m":"JUN 20","t":"XEN Voice \u2014 One Queue (live)"},{"p":"/voice-transport","m":"AUG 06","t":"Claude Web Voice Transport \u2014 measured wire spec"},{"p":"/vvsvei","m":"AUG 18","t":"VVSVEI \u00b7 voice vision sms \u00b7 Xen","f":1},{"p":"/vvsvei-voice","m":"AUG 07","t":"Xen Voice -> VEI (canon)"},{"p":"/walmart-list","m":"AUG 18","t":"Walmart Run \u2014 Pest Control","f":1},{"p":"/wcci","m":"AUG 07","t":"World Changers Church International \u2014 Blanketing the World with the Gospel"},{"p":"/wes","m":"AUG 07","t":"Wesley Allen - Job Search Tracker"},{"p":"/wip","m":"AUG 07","t":"Selfown OS - Alpha"},{"p":"/xen-02","m":"JUL 08","t":"XEN \u2014 One Voice. All Systems."},{"p":"/xen-03","m":"JUL 08","t":"Xen \u2014 Intelligence Infrastructure"},{"p":"/xen-04","m":"JUL 08","t":"XEN \u2014 One Voice. All Systems."},{"p":"/xen-05","m":"JUL 08","t":"XEN \u2014 One Voice. All Systems."},{"p":"/xen-06","m":"JUL 08","t":"XEN \u2014 One Voice. All Systems."},{"p":"/xen-07","m":"JUL 08","t":"Xen \u2014 Autonomous Intelligence"},{"p":"/xen-08","m":"JUL 08","t":"XEN \u2014 One Voice. All Systems."},{"p":"/xen-09","m":"JUL 08","t":"XEN \u2014 One Voice. All Systems."},{"p":"/xen-10","m":"JUL 08","t":"XEN \u2014 Autonomous Intelligence System"},{"p":"/xen-11","m":"JUL 08","t":"XEN \u2014 Autonomous Intelligence System"},{"p":"/xen-12","m":"JUL 08","t":"XEN \u2014 One Voice. All Systems."},{"p":"/xen-13","m":"JUL 08","t":"XEN \u2014 Autonomous Intelligence"},{"p":"/xen-14","m":"JUL 08","t":"XEN \u2014 One Voice. All Systems."},{"p":"/xen-15","m":"JUL 08","t":"XEN \u2014 One Voice. All Systems."},{"p":"/xen-16","m":"JUL 08","t":"XEN \u2014 Parallel Intelligence"},{"p":"/xen-17","m":"JUL 08","t":"XEN \u2014 One Voice. All Systems."},{"p":"/xen-18","m":"JUL 08","t":"XEN \u2014 Quantum Resonance"},{"p":"/xen-19","m":"JUL 08","t":"XEN \u2014 One Voice. All Systems."},{"p":"/xen-20","m":"JUL 08","t":"XEN \u2014 Autonomous Intelligence Infrastructure"},{"p":"/xen-21","m":"JUL 08","t":"XEN \u2014 Autonomous Intelligence Infrastructure"},{"p":"/xen-22","m":"JUL 08","t":"XEN \u2014 Autonomous Voice Intelligence"},{"p":"/xen-23","m":"JUL 08","t":"XEN \u2014 Autonomous Intelligence"},{"p":"/xen-24","m":"JUL 08","t":"XEN \u2014 One Voice. All Systems."},{"p":"/xen-25","m":"JUL 08","t":"XEN-25 \u2014 Quantum-Native AI Infrastructure"},{"p":"/xen-awareness","m":"JUN 21","t":"Xen Awareness Map \u2014 registry of registries"},{"p":"/xen-source-of-truth","m":"JUN 20","t":"XEN \u2014 Operational Source of Truth"},{"p":"/xen-status","m":"AUG 19","t":"Xen Status","f":1},{"p":"/xen-system-decision","m":"AUG 07","t":"Xen Unified System \u2014 Decision Canon"},{"p":"/xen-worklog","m":"AUG 18","t":"Xen \u00b7 Work Log \u2014 live","f":1},{"p":"/xenos-v3","m":"AUG 18","t":"XENOS \u2014 Auxgen Hyper-Realism","f":1},{"p":"/xenos-variations","m":"AUG 18","t":"XENOS \u2014 orb variations","f":1},{"p":"/xenos-world","m":"AUG 18","t":"XENOS","f":1},{"p":"/xlrd-org","m":"AUG 18","t":"XLRD.org \u2014 XENOS","f":1},{"p":"/xlrd-tech","m":"AUG 18","t":"XLRD Tech \u2014 XENOS","f":1},{"p":"/xos3","m":"JUL 21","t":"OMNI-INBOX \u00b7 XOS"}]}];
+
+// --- NATIVE DOM INJECTION ---
+const topNav = document.getElementById('top-nav');
+const container = document.getElementById('content-container');
+
+window.directoryData.forEach((sec, i) => {
+  const safeId = `cat-${i}`;
+  
+  // Create Nav Pill
+  const pill = document.createElement('a');
+  pill.href = `#${safeId}`;
+  pill.className = `nav-pill ${i === 0 ? 'active' : ''}`;
+  pill.dataset.target = safeId;
+  pill.textContent = sec.category;
+  
+  // Smooth scroll intercept
+  pill.addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById(safeId).scrollIntoView({ behavior: 'smooth' });
+  });
+  
+  topNav.appendChild(pill);
+
+  // Create Content Section
+  const section = document.createElement('section');
+  section.id = safeId;
+  const padCount = String(sec.links.length).padStart(2, '0');
+  section.innerHTML = `
+    <h2>${sec.category} <span class="badge">${padCount} ENTRIES</span></h2>
+    <div class="card-grid">
+      ${sec.links.map(l => {
+        const dead = !!l.d;
+        const tag  = dead ? 'div' : 'a';
+        const attr = dead ? 'aria-disabled="true"' : `href="${l.p}"`;
+        const tip  = l.t ? ` title="${l.t.replace(/"/g,'&quot;')}"` : '';
+        return `
+        <${tag} ${attr}${tip} class="link-card${dead ? ' dead' : ''}${l.f ? ' fresh' : ''}">
+          <div class="left">
+            <div class="status-dot"></div>
+            <span class="link-text">${l.p}</span>
+          </div>
+          <div class="right">
+            <span class="meta-hash">${l.m}</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </div>
+        </${tag}>
+        `;
+      }).join('')}
+    </div>
+  `;
+  container.appendChild(section);
+});
+
+// --- SCROLL SPY (Active Nav State) ---
+const observerOptions = {
+  root: document.getElementById('ui-layer'),
+  rootMargin: '-20% 0px -75% 0px', // Triggers when section enters upper middle viewport
+  threshold: 0
+};
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      // Update Pills
+      document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
+      const activePill = document.querySelector(`.nav-pill[data-target="${entry.target.id}"]`);
+      if (activePill) {
+        activePill.classList.add('active');
+        // Center the pill by scrolling ONLY the nav. scrollIntoView() would also
+        // scroll #ui-layer (its scrollable ancestor) and yank the page on load.
+        topNav.scrollTo({
+          left: activePill.offsetLeft - (topNav.clientWidth - activePill.offsetWidth) / 2,
+          behavior: 'smooth'
+        });
+      }
+    }
+  });
+}, observerOptions);
+
+document.querySelectorAll('section').forEach(sec => observer.observe(sec));
 </script>
 
 <script type="module">
@@ -441,122 +419,50 @@ import * as THREE from 'three';
 import { EffectComposer }  from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass }      from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-import { OutputPass }      from 'three/addons/postprocessing/OutputPass.js';
-import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
+import { ShaderPass }      from 'three/addons/postprocessing/ShaderPass.js';
+import { RGBShiftShader }  from 'three/addons/shaders/RGBShiftShader.js';
 
-// --- UI / EQ SETUP ---
-const NB = 8;
-const BAND = new Float32Array(NB), BTGT = new Float32Array(NB);
+const canvas = document.getElementById('gl-canvas');
+const scene = new THREE.Scene(); 
+scene.fog = new THREE.FogExp2(0x000100, 0.001);
 
-// Set track height for scrolling
-document.getElementById('scroll-track').style.height = `${window.directoryData.length * 150 + 100}vh`;
-
-// --- CORE THREE.JS ---
-const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x000200, 0.00035); // Adjusted fog density for the long tunnel
-
-const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 1, 15000);
+const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 1, 8000); 
+// Pull camera back so we can see the core clearly behind the UI
 camera.position.z = 600;
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: false, alpha: false, powerPreference: "high-performance" });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
 renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.2;
-document.body.appendChild(renderer.domElement);
+renderer.toneMappingExposure = 1.1;
 
-const cssRenderer = new CSS3DRenderer();
-cssRenderer.setSize(innerWidth, innerHeight);
-cssRenderer.domElement.style.position = 'fixed';
-cssRenderer.domElement.style.top = '0';
-cssRenderer.domElement.style.left = '0';
-cssRenderer.domElement.style.zIndex = '1';
-cssRenderer.domElement.style.pointerEvents = 'none'; // Essential so mouse events pierce through to window for dragging
-document.body.appendChild(cssRenderer.domElement);
-
-const cssScene = new THREE.Scene();
-
-const composer = new EffectComposer(renderer);
+const composer = new EffectComposer(renderer); 
 composer.addPass(new RenderPass(scene, camera));
-const bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 1.5, 0.85, 0.1);
+
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 1.05, 0.8, 0.2);
 composer.addPass(bloomPass);
-composer.addPass(new OutputPass());
 
-// --- 3D TUNNEL LAYOUT MATH ---
-const SPACING = 800;
-const END_Z = 600; // Final stop right in front of the Orb
-const START_Z = END_Z + (window.directoryData.length * SPACING) + 1200; // Start at the very back
+// Subtle chromatic aberration
+const rgbPass = new ShaderPass(RGBShiftShader);
+rgbPass.uniforms['amount'].value = 0.0008;
+rgbPass.uniforms['angle'].value = Math.PI * 0.5;
+composer.addPass(rgbPass);
 
-// --- STATE MANAGEMENT ---
-const S = {
-  fx: 0, fy: 0,
-  camZ: START_Z,
-  scale: 1,
-  spin: 0.0015,
-  flare: 0,
-  energy: 0,
-  drift: 0,
-  morph: 1,
-  reach: 0,
-  rz: 0,
-  velX: 0, velY: 0,
-  time: 0
-};
-camera.position.z = START_Z; // Init properly to avoid jump
-
-const cards = [];
-
-// 1. Initial Title Card
-const identEl = document.createElement('div');
-identEl.className = 'card-3d ident-card';
-identEl.innerHTML = `
-    <p class="cap"><span class="dot" style="width:6px;height:6px;display:inline-block;border-radius:50%;background:var(--accent);margin-right:8px;"></span>ESTATE DIRECTORY</p>
-    <h1 class="mark">HITTHE.<br>LINK</h1>
-    <p class="cap">COMMAND HOME · FORGED BY XEN</p>
-`;
-const identObj = new CSS3DObject(identEl);
-identObj.position.set(0, 0, START_Z);
-cssScene.add(identObj);
-cards.push(identObj);
-
-// 2. Data Cards
-window.directoryData.forEach((sec, i) => {
-    const el = document.createElement('div');
-    el.className = 'card-3d';
-    el.style.pointerEvents = 'auto'; // Re-enable clicks for links
-    el.innerHTML = `
-        <h2>${sec.category}</h2>
-        <div class="card-grid">
-            ${sec.links.map(l => `<a href="https://hitthe.link${l}" class="card-link" target="_blank">${l}</a>`).join('')}
-        </div>
-    `;
-    const obj = new CSS3DObject(el);
-    const isLeft = i % 2 === 0;
-    const z = END_Z + 800 + ((window.directoryData.length - 1 - i) * SPACING);
-
-    obj.position.set(isLeft ? -380 : 380, (Math.random() - 0.5) * 200, z);
-    obj.rotation.y = isLeft ? 0.15 : -0.15;
-    obj.scale.set(0.85, 0.85, 0.85); // Scale CSS pixels to world units comfortably
-
-    cssScene.add(obj);
-    cards.push(obj);
-});
-
-const ophanim = new THREE.Group();
+const ophanim = new THREE.Group(); 
 scene.add(ophanim);
 
-// Plasma Core
-const coreGeometry = new THREE.IcosahedronGeometry(220, 48);
+const coreGeometry = new THREE.IcosahedronGeometry(220, 48); // Restored original scale
 const plasmaUniforms = { t: { value: 0 }, energy: { value: 0 }, morph: { value: 1 } };
 const plasmaMaterial = new THREE.ShaderMaterial({
   uniforms: plasmaUniforms, transparent: true, blending: THREE.AdditiveBlending,
-  depthWrite: false, side: THREE.DoubleSide, wireframe: false,
+  depthWrite: false, side: THREE.DoubleSide,
   vertexShader: `
-    varying vec3 vPos; varying vec3 vNormal; varying vec3 vView;
+    varying vec3 vPos; varying vec3 vNormal;
     uniform float t; uniform float energy;
+    
     vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}
     vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
-    float snoise(vec3 v){
+    float snoise(vec3 v){ 
       const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
       const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
       vec3 i  = floor(v + dot(v, C.yyy) );
@@ -568,37 +474,22 @@ const plasmaMaterial = new THREE.ShaderMaterial({
       vec3 x1 = x0 - i1 + C.xxx;
       vec3 x2 = x0 - i2 + C.yyy;
       vec3 x3 = x0 - D.yyy;
-      i = mod(i, 289.0 );
+      i = mod(i, 289.0 ); 
       vec4 p = permute( permute( permute( i.z + vec4(0.0, i1.z, i2.z, 1.0 )) + i.y + vec4(0.0, i1.y, i2.y, 1.0 )) + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
-      float n_ = 0.142857142857;
-      vec3  ns = n_ * D.wyz - D.xzx;
-      vec4 j = p - 49.0 * floor(p * ns.z *ns.z);
-      vec4 x_ = floor(j * ns.z);
-      vec4 y_ = floor(j - 7.0 * x_ );
-      vec4 x = x_ *ns.x + ns.yyyy;
-      vec4 y = y_ *ns.x + ns.yyyy;
-      vec4 h = 1.0 - abs(x) - abs(y);
-      vec4 b0 = vec4( x.xy, y.xy );
-      vec4 b1 = vec4( x.zw, y.zw );
-      vec4 s0 = floor(b0)*2.0 + 1.0;
-      vec4 s1 = floor(b1)*2.0 + 1.0;
-      vec4 sh = -step(h, vec4(0.0));
-      vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
-      vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
-      vec3 p0 = vec3(a0.xy,h.x);
-      vec3 p1 = vec3(a0.zw,h.y);
-      vec3 p2 = vec3(a1.xy,h.z);
-      vec3 p3 = vec3(a1.zw,h.w);
+      float n_ = 0.142857142857; vec3  ns = n_ * D.wyz - D.xzx;
+      vec4 j = p - 49.0 * floor(p * ns.z *ns.z); vec4 x_ = floor(j * ns.z); vec4 y_ = floor(j - 7.0 * x_ );    
+      vec4 x = x_ *ns.x + ns.yyyy; vec4 y = y_ *ns.x + ns.yyyy; vec4 h = 1.0 - abs(x) - abs(y);
+      vec4 b0 = vec4( x.xy, y.xy ); vec4 b1 = vec4( x.zw, y.zw ); vec4 s0 = floor(b0)*2.0 + 1.0; vec4 s1 = floor(b1)*2.0 + 1.0;
+      vec4 sh = -step(h, vec4(0.0)); vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ; vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+      vec3 p0 = vec3(a0.xy,h.x); vec3 p1 = vec3(a0.zw,h.y); vec3 p2 = vec3(a1.xy,h.z); vec3 p3 = vec3(a1.zw,h.w);
       vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
       p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
-      vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
-      m = m * m;
+      vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0); m = m * m;
       return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3) ) );
     }
+
     void main() {
       vNormal = normalize(normalMatrix * normal);
-      vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
-      vView = normalize(-mvPos.xyz);
       float time = t * 2.0;
       float n = snoise(position * 0.012 - time);
       float n2 = snoise(position * 0.03 + time * 0.8);
@@ -609,20 +500,12 @@ const plasmaMaterial = new THREE.ShaderMaterial({
     }
   `,
   fragmentShader: `
-    varying vec3 vPos; varying vec3 vNormal; varying vec3 vView;
+    varying vec3 vPos; varying vec3 vNormal;
     uniform float t; uniform float energy; uniform float morph;
-    float hash(vec3 p) {
-        p = fract(p * vec3(0.1031, 0.1030, 0.0973));
-        p += dot(p, p.yxz + 33.33);
-        return fract((p.x + p.y) * p.z);
-    }
-    float noise(vec3 x) {
-        vec3 i = floor(x); vec3 f = fract(x); f = f * f * (3.0 - 2.0 * f);
-        return mix(mix(mix(hash(i + vec3(0,0,0)), hash(i + vec3(1,0,0)), f.x),
-                       mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
-                   mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x),
-                       mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y), f.z);
-    }
+
+    float hash(vec3 p) { p = fract(p * vec3(0.1031, 0.1030, 0.0973)); p += dot(p, p.yxz + 33.33); return fract((p.x + p.y) * p.z); }
+    float noise(vec3 x) { vec3 i = floor(x); vec3 f = fract(x); f = f * f * (3.0 - 2.0 * f); return mix(mix(mix(hash(i + vec3(0,0,0)), hash(i + vec3(1,0,0)), f.x), mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y), mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x), mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y), f.z); }
+
     void main() {
       float dist = length(vPos) / 220.0;
       vec3 v = normalize(vPos);
@@ -630,13 +513,18 @@ const plasmaMaterial = new THREE.ShaderMaterial({
       float n2 = noise(v * 12.0 - vec3(t * 3.0, 0.0, t * 4.0));
       float veins = abs(sin((n1 + n2) * 20.0));
       veins = smoothstep(0.97, 1.0, 1.0 - veins);
+      
       float activity = veins * (1.0 + energy * 3.0);
-      if (activity < 0.02) discard;
-      vec3 lightningGreen = vec3(0.0, 0.85, 0.35); vec3 coreHot = vec3(0.4, 1.0, 0.6);
+      if (activity < 0.02) discard; 
+      
+      vec3 lightningGreen = vec3(0.0, 0.85, 0.35); 
+      vec3 coreHot = vec3(0.4, 1.0, 0.6); 
       vec3 color = mix(lightningGreen, coreHot, clamp(activity - 0.5, 0.0, 1.0));
+      
       float orbW = max(0.0, 1.0 - abs(morph - 1.0));
       float alpha = activity * orbW;
-      alpha *= smoothstep(2.0, 0.2, dist);
+      alpha *= smoothstep(2.0, 0.2, dist); 
+      
       gl_FragColor = vec4(color, alpha);
     }
   `
@@ -644,926 +532,115 @@ const plasmaMaterial = new THREE.ShaderMaterial({
 
 const plasmaCore = new THREE.Mesh(coreGeometry, plasmaMaterial);
 ophanim.add(plasmaCore);
-const glassBasePositions = coreGeometry.attributes.position.clone();
 
-let world;
-{
-  const NP = 4000, p = new Float32Array(NP*3), s = new Float32Array(NP), ph = new Float32Array(NP);
-  for(let i=0; i<NP; i++) {
-    const r = 200 + Math.random()*2500;
-    const th = Math.random()*Math.PI*2;
-    p[i*3] = r * Math.cos(th);
-    p[i*3+1] = r * Math.sin(th);
-    p[i*3+2] = (Math.random() * (START_Z + 1500)) - 1000; // Tunnel spread
-    s[i] = Math.random()*2.0 + 0.5; ph[i] = Math.random()*Math.PI*2;
+{ 
+  const NP = 2500, p = new Float32Array(NP*3), s = new Float32Array(NP), ph = new Float32Array(NP);
+  for(let i=0; i<NP; i++) { 
+    const r = 1200 + Math.random()*2000, th = Math.random()*Math.PI*2, pp = Math.acos(2*Math.random()-1);
+    p[i*3] = r*Math.sin(pp)*Math.cos(th); p[i*3+1] = r*Math.sin(pp)*Math.sin(th); p[i*3+2] = r*Math.cos(pp);
+    s[i] = Math.random()*2.0 + 0.5; ph[i] = Math.random()*Math.PI*2; 
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(p, 3));
   g.setAttribute('asize', new THREE.BufferAttribute(s, 1));
   g.setAttribute('aph', new THREE.BufferAttribute(ph, 1));
-  world = new THREE.Points(g, new THREE.ShaderMaterial({
+  
+  const world = new THREE.Points(g, new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    uniforms: { t: {value:0} },
+    uniforms: { t: {value:0}, warp: {value:0} },
     vertexShader: `
-      attribute float asize; attribute float aph; uniform float t; varying float vo;
-      void main(){
+      attribute float asize; attribute float aph; uniform float t; uniform float warp; varying float vo;
+      void main(){ 
         vec3 q = position;
         q.y += sin(t * 0.5 + aph) * 50.0;
         vec4 mv = modelViewMatrix * vec4(q, 1.0);
-        float dist = -mv.z;
-        // Fade close points to avoid clipping, fade far points for depth
-        float fade = smoothstep(10.0, 250.0, dist) * (1.0 - smoothstep(3000.0, 5000.0, dist));
-        vo = (0.1 + 0.15 * sin(t * 0.8 + aph)) * fade;
-        gl_PointSize = asize * (400.0 / dist);
-        gl_Position = projectionMatrix * mv;
+        vo = 0.1 + 0.15 * sin(t * 0.8 + aph);
+        gl_PointSize = asize * (400.0 / -mv.z) * (1.0 + warp); 
+        gl_Position = projectionMatrix * mv; 
       }`,
     fragmentShader: `
-      varying float vo;
-      void main(){
-        vec2 d = gl_PointCoord - 0.5; if(length(d) > 0.5) discard;
-        gl_FragColor = vec4(0.23, 1.0, 0.58, exp(-dot(d,d)*12.0) * vo);
+      varying float vo; 
+      void main(){ 
+        vec2 d = gl_PointCoord - 0.5;
+        if(length(d) > 0.5) discard; 
+        gl_FragColor = vec4(0.23, 1.0, 0.58, exp(-dot(d,d)*12.0) * vo); 
       }`
   }));
-  scene.add(world);
+  scene.add(world); 
+  window.worldDust = world;
 }
 
-let pts, lines, base, T0, T1, T2, N=0, labels=[], bandOf=null;
-const SHELL = 230;
-const RINGS = [ {t:[0,0,0],r:SHELL}, {t:[1.5708,0,0],r:SHELL*1.05}, {t:[0,1.5708,0],r:SHELL*0.95}, {t:[0.5,0.5,0.2],r:SHELL*1.1}, {t:[-0.7,0.8,-0.3],r:SHELL*0.9}, {t:[1.1,0.2,0.7],r:SHELL*1.02} ];
+const uiLayer = document.getElementById('ui-layer');
+const S = { 
+  time: 0, 
+  scrollVel: 0, 
+  lastScroll: 0,
+  fx: 0, fy: 0 
+};
 
-function humanoid(i, n) {
-  const u = i/n, a = Math.random()*Math.PI*2, jr = Math.random();
-  let x, y, z, rad;
-  if(u<0.12) { rad=45*Math.sqrt(jr); y=220+Math.sqrt(Math.max(0,1-(rad/50)**2))*40; x=Math.cos(a)*rad; z=Math.sin(a)*rad*0.8; }
-  else if(u<0.18) { rad=25+jr*10; y=160+jr*20; x=Math.cos(a)*rad; z=Math.sin(a)*rad*0.8; }
-  else if(u<0.35) { rad=120*(0.6+0.4*jr); y=120+jr*30; x=Math.cos(a)*rad; z=Math.sin(a)*rad*0.5; }
-  else if(u<0.60) { const ty=(u-0.35)/0.25; rad=(100-40*ty)*(0.5+0.5*jr); y=120-ty*180; x=Math.cos(a)*rad; z=Math.sin(a)*rad*0.6; }
-  else if(u<0.80) { const s=(u<0.7)?-1:1, ta=(u<0.7)?(u-0.6)/0.1:(u-0.7)/0.1; x=s*(110+ta*50)+(Math.random()-0.5)*20; y=110-ta*190+(Math.random()-0.5)*20; z=(Math.random()-0.5)*30; }
-  else { const s=(u<0.9)?-1:1, tl=(u<0.9)?(u-0.8)/0.1:(u-0.9)/0.1; x=s*40+(Math.random()-0.5)*20; y=-60-tl*170+(Math.random()-0.5)*20; z=(Math.random()-0.5)*30; }
-  return [x, y, z];
+uiLayer.addEventListener('scroll', () => {
+  const currentScroll = uiLayer.scrollTop;
+  // Calculate instantaneous velocity
+  const rawVel = Math.abs(currentScroll - S.lastScroll);
+  // Cap it so aggressive flings don't break the shader
+  S.scrollVel = Math.min(rawVel * 0.1, 3.0); 
+  S.lastScroll = currentScroll;
+}, { passive: true });
+
+function handleMouseMove(e) {
+  const x = e.touches ? e.touches[0].clientX : e.clientX;
+  const y = e.touches ? e.touches[0].clientY : e.clientY;
+  S.fx = (x / innerWidth) * 2 - 1;
+  S.fy = -(y / innerHeight) * 2 + 1;
 }
-
-const N_NODES = 500;
-N = N_NODES; T0 = new Float32Array(N*3); T1 = new Float32Array(N*3); T2 = new Float32Array(N*3); bandOf = new Uint8Array(N); const edges = [];
-for(let i=0; i<N*1.5; i++) {
-  const s = Math.floor(Math.random()*N), t = Math.floor(Math.random()*N);
-  if(s !== t) edges.push({s, t, w: Math.random()});
-}
-
-const eu = new THREE.Euler(), q = new THREE.Quaternion();
-for(let i=0; i<N; i++) {
-  const R = RINGS[i%RINGS.length];
-  const a = Math.random()*Math.PI*2, rr = R.r + (Math.random()-0.5)*40;
-  const v = new THREE.Vector3(Math.cos(a)*rr, Math.sin(a)*rr, (Math.random()-0.5)*20);
-  eu.set(R.t[0], R.t[1], R.t[2]); q.setFromEuler(eu); v.applyQuaternion(q);
-  T0[i*3] = v.x; T0[i*3+1] = v.y; T0[i*3+2] = v.z;
-
-  const th = Math.random()*Math.PI*2, pp = Math.acos(2*Math.random()-1), rOrb = SHELL * 1.05;
-  T1[i*3] = rOrb*Math.sin(pp)*Math.cos(th); T1[i*3+1] = rOrb*Math.sin(pp)*Math.sin(th); T1[i*3+2] = rOrb*Math.cos(pp);
-  bandOf[i] = Math.max(0, Math.min(NB-1, Math.floor((T1[i*3+1]/rOrb*0.5+0.5)*NB)));
-
-  const h = humanoid(i,N);
-  T2[i*3] = h[0]; T2[i*3+1] = h[1]; T2[i*3+2] = h[2];
-}
-
-base = new Float32Array(T1);
-const pos = new Float32Array(T1), col = new Float32Array(N*3), siz = new Float32Array(N);
-for(let i=0; i<N; i++) { col[i*3] = 0.23; col[i*3+1] = 1.0; col[i*3+2] = 0.58; siz[i] = 3.0 + Math.random()*5.0; }
-
-const gp = new THREE.BufferGeometry();
-gp.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-gp.setAttribute('acolor', new THREE.BufferAttribute(col, 3));
-gp.setAttribute('asize', new THREE.BufferAttribute(siz, 1));
-
-pts = new THREE.Points(gp, new THREE.ShaderMaterial({
-  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-  uniforms: { t: {value:0}, flare: {value:0}, foc: {value: new THREE.Vector3()} },
-  vertexShader: `
-    attribute vec3 acolor; attribute float asize; uniform float t; uniform float flare; uniform vec3 foc;
-    varying vec3 vc; varying float vf; varying float vn;
-    void main(){
-      vc = acolor; vec4 wp = modelMatrix * vec4(position, 1.0);
-      vn = 1.0 - smoothstep(0.0, 300.0, distance(wp.xyz, foc));
-      vec4 mv = viewMatrix * wp;
-      // Add distance fade so it emerges beautifully from the fog
-      vf = 1.0 - smoothstep(1500.0, 4500.0, -mv.z);
-      gl_PointSize = asize * (400.0 / -mv.z) * (1.0 + flare*2.0 + vn*1.5);
-      gl_Position = projectionMatrix * mv;
-    }`,
-  fragmentShader: `
-    varying vec3 vc; varying float vf; varying float vn;
-    void main(){
-      vec2 d = gl_PointCoord - 0.5; float r = length(d); if(r > 0.5) discard;
-      vec3 c = mix(vc, vec3(0.86, 1.0, 0.93), vn * 0.75);
-      gl_FragColor = vec4(c, exp(-r*r*12.0) * vf * (0.55 + 0.75*vn));
-    }`
-}));
-ophanim.add(pts);
-
-const ep = new Float32Array(edges.length * 6), ea = new Float32Array(edges.length * 2);
-let k = 0, k2 = 0;
-for(const e of edges) {
-  ep[k++] = T1[e.s*3]; ep[k++] = T1[e.s*3+1]; ep[k++] = T1[e.s*3+2];
-  ep[k++] = T1[e.t*3]; ep[k++] = T1[e.t*3+1]; ep[k++] = T1[e.t*3+2];
-  ea[k2++] = e.w * 0.5; ea[k2++] = e.w * 0.5;
-}
-const ge = new THREE.BufferGeometry();
-ge.setAttribute('position', new THREE.BufferAttribute(ep, 3));
-ge.setAttribute('aw', new THREE.BufferAttribute(ea, 1));
-lines = new THREE.LineSegments(ge, new THREE.ShaderMaterial({
-  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-  vertexShader: `
-    attribute float aw; varying float vw; varying float vf;
-    void main(){
-      vw=aw; vec4 mv=modelViewMatrix*vec4(position,1.);
-      vf=1.-smoothstep(1000.,3500.,-mv.z);
-      gl_Position=projectionMatrix*mv;
-    }`,
-  fragmentShader: `varying float vw; varying float vf; void main(){ gl_FragColor=vec4(0.23, 1.0, 0.58, vw*vf*0.4); }`
-}));
-ophanim.add(lines);
-
-let analyser = null, bins = null, actx = null;
-let LEVEL = 0, APEAK = 1e-4, HAS_AUDIO = false;
-
-async function attachMic() {
-  if (HAS_AUDIO) return;
-  try {
-    const st = await navigator.mediaDevices.getUserMedia({audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false}});
-    actx = new (window.AudioContext || window.webkitAudioContext)();
-    if(actx.state === 'suspended') await actx.resume();
-    analyser = actx.createAnalyser(); analyser.fftSize = 2048; analyser.smoothingTimeConstant = 0.72;
-    actx.createMediaStreamSource(st).connect(analyser);
-    bins = new Uint8Array(analyser.frequencyBinCount); HAS_AUDIO = true;
-  } catch(e) {
-    console.warn("Microphone access denied or unavailable.");
-  }
-}
-window.addEventListener('click', attachMic, { once: true });
-
-function readVoice() {
-  if(analyser && HAS_AUDIO) {
-    analyser.getByteFrequencyData(bins);
-    const M = bins.length; let sum = 0;
-    for(let b=0; b<NB; b++) {
-      const lo = Math.floor(Math.pow(M, b/NB)), hi = Math.max(lo+1, Math.floor(Math.pow(M, (b+1)/NB)));
-      let s = 0; for(let i=lo; i<hi; i++) s += bins[i];
-      BTGT[b] = s / ((hi-lo)*255); sum += BTGT[b];
-    }
-    let lv = sum / NB; APEAK = Math.max(APEAK * 0.9992, lv);
-    const g = 1 / Math.max(APEAK, 0.045);
-    for(let b=0; b<NB; b++) BTGT[b] = Math.min(1.6, BTGT[b]*g);
-    lv = Math.min(1.5, lv*g); LEVEL += (lv - LEVEL) * (lv > LEVEL ? 0.55 : 0.06);
-  } else {
-    for(let b=0; b<NB; b++) BTGT[b] = (0.10 + 0.15*(0.5 + 0.5*Math.sin(S.time*(0.37+b*0.211)+b*1.73)) + 0.05*Math.sin(S.time*(1.7+b*0.53)+b)) * (1-b*0.055);
-    const lv = 0.055 + 0.045*Math.sin(S.time*0.55) + 0.022*Math.sin(S.time*1.31+1.7);
-    LEVEL += (lv - LEVEL) * 0.06;
-  }
-  for(let b=0; b<NB; b++) {
-    BAND[b] += (BTGT[b] - BAND[b]) * (BTGT[b] > BAND[b] ? 0.55 : 0.075);
-  }
-}
-
-const ring = document.getElementById('ring');
-let isDragging = false, lastTouch = { x: innerWidth/2, y: innerHeight/2 };
-
-function handleInteractionStart(e) {
-  if (e.target.tagName === 'A' || e.target.closest('a')) return;
-  isDragging = true;
-  const x = e.touches ? e.touches[0].clientX : e.clientX, y = e.touches ? e.touches[0].clientY : e.clientY;
-  lastTouch = { x, y };
-  gsap.to(S, {fx: (x/innerWidth*2-1), fy: -(y/innerHeight*2-1), duration: 0.4, ease: 'power3.out', overwrite: 'auto'});
-  ring.classList.add('active');
-  if(navigator.vibrate) navigator.vibrate(10);
-  gsap.to(S, {flare: 0.6, duration: 0.3});
-}
-function handleInteractionMove(e) {
-  const x = e.touches ? e.touches[0].clientX : e.clientX, y = e.touches ? e.touches[0].clientY : e.clientY;
-  if(!isDragging) {
-    gsap.to(S, {fx: (x/innerWidth*2-1), fy: -(y/innerHeight*2-1), duration: 0.8, ease: 'power2.out', overwrite: 'auto'});
-    return;
-  }
-  S.velX = (x - lastTouch.x) * 0.005; S.velY = (y - lastTouch.y) * 0.005;
-  gsap.to(S, {fx: (x/innerWidth*2-1), fy: -(y/innerHeight*2-1), duration: 0.2, ease: 'none', overwrite: 'auto'});
-  lastTouch = { x, y };
-}
-function handleInteractionEnd() {
-  isDragging = false; ring.classList.remove('active');
-  gsap.to(S, {flare: 0, duration: 1.0});
-}
-
-window.addEventListener('mousedown', handleInteractionStart, {passive: true});
-window.addEventListener('mousemove', handleInteractionMove, {passive: true});
-window.addEventListener('mouseup', handleInteractionEnd, {passive: true});
-window.addEventListener('touchstart', handleInteractionStart, {passive: true});
-window.addEventListener('touchmove', handleInteractionMove, {passive: true});
-window.addEventListener('touchend', handleInteractionEnd, {passive: true});
-
-const FORMS = ['OPHANIM','CORE','FORM'];
-
-function shift(idx) {
-  gsap.to(S, { morph: idx, duration: 2.5, ease: 'power3.inOut' });
-  if(idx === 1) gsap.to(plasmaCore.scale, {x: 1, y: 1, z: 1, duration: 2, ease: 'back.out(1.2)'});
-  else gsap.to(plasmaCore.scale, {x: 0.1, y: 0.1, z: 0.1, duration: 2, ease: 'power2.inOut'});
-  gsap.fromTo(S, { flare: 1.0 }, { flare: 0, duration: 1.5, ease: 'power2.out' });
-  if(navigator.vibrate) navigator.vibrate([15, 30, 15]);
-}
-
-window.addEventListener('dblclick', () => {
-  const nextForm = (Math.round(S.morph) + 1) % 3;
-  shift(nextForm);
-});
-
-const proj = new THREE.Vector3(), foc = new THREE.Vector3();
+window.addEventListener('mousemove', handleMouseMove, { passive: true });
+window.addEventListener('touchmove', handleMouseMove, { passive: true });
 
 function frame() {
-  requestAnimationFrame(frame); S.time += 0.016; S.drift += 0.0041;
-  readVoice(); S.energy += (LEVEL - S.energy) * (LEVEL > S.energy ? 0.6 : 0.045);
+  requestAnimationFrame(frame); 
+  S.time += 0.016;
 
-  // Scroll mapping to camera depth
-  const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-  const scrollT = window.scrollY / maxScroll;
-  const targetZ = START_Z - scrollT * (START_Z - END_Z);
-  S.camZ += (targetZ - S.camZ) * 0.12;
+  // Physics Decay
+  S.scrollVel *= 0.92; 
+  const energy = Math.min(S.scrollVel * 0.5, 1.5); // Bound the energy
 
-  camera.position.z = S.camZ;
-  camera.position.x += ((S.fx * 70) - camera.position.x) * 0.05;
-  camera.position.y += ((S.fy * 54) - camera.position.y) * 0.05;
-  camera.lookAt(S.fx * 40, S.fy * 40, 0); // Keep focus centered but reactive
+  // Parallax the camera based on scroll position (moves slightly up/down)
+  const maxScroll = Math.max(1, uiLayer.scrollHeight - window.innerHeight);
+  const scrollFraction = uiLayer.scrollTop / maxScroll;
+  const targetCamY = (S.fy * 30) + (scrollFraction * -80 + 40); // Shift down as you scroll down
+  
+  camera.position.x += ((S.fx * 30) - camera.position.x) * 0.05;
+  camera.position.y += (targetCamY - camera.position.y) * 0.05;
+  camera.lookAt(0, 0, 0);
 
-  S.velX *= 0.95; S.velY *= 0.95;
-  ophanim.rotation.y += S.spin + S.velX; ophanim.rotation.x += S.velY;
-  ophanim.rotation.z = S.rz + Math.sin(S.drift*0.9) * (0.05 + S.energy*0.06);
-  ophanim.position.x += ((S.fx * 46) - ophanim.position.x) * 0.08;
-  ophanim.position.y += ((S.fy * 38) - ophanim.position.y) * 0.08;
-  ophanim.scale.setScalar(S.scale);
+  // Rotate Core (Base spin + Scroll velocity)
+  ophanim.rotation.y -= 0.003 + (S.scrollVel * 0.005);
+  ophanim.rotation.x += 0.001 + (S.scrollVel * 0.002);
+  
+  // Update Shader Uniforms
+  plasmaMaterial.uniforms.t.value = S.time;
+  plasmaMaterial.uniforms.energy.value = energy;
 
-  foc.set(S.fx * 300, S.fy * 240, 120);
-
-  if(pts && base && T0) {
-    const m = S.morph, A = (m<1) ? T0 : T1, B = (m<1) ? T1 : T2, k = (m<1) ? m : m-1;
-    const p = pts.geometry.attributes.position.array;
-    pts.material.uniforms.foc.value.copy(foc); pts.material.uniforms.t.value = S.time; pts.material.uniforms.flare.value = S.flare;
-
-    const orbW = Math.max(0, 1 - Math.abs(S.morph - 1)), amp = (9 + 70 * Math.min(S.energy, 1.2) + S.flare * 26) * (1 - 0.62 * orbW);
-    const bandK = orbW * 0.135, breathK = orbW * (0.012 + 0.042 * Math.min(S.energy, 1.2));
-
-    for(let i=0, n=0; i<N*3; i+=3, n++) {
-      base[i] = A[i] + (B[i]-A[i])*k; base[i+1] = A[i+1] + (B[i+1]-A[i+1])*k; base[i+2] = A[i+2] + (B[i+2]-A[i+2])*k;
-      const dx = base[i]-foc.x, dy = base[i+1]-foc.y, dz = base[i+2]-foc.z, d = Math.sqrt(dx*dx+dy*dy+dz*dz)+1e-4;
-      const pull = amp / (1+d*0.012), w = Math.sin(S.drift*2.3+d*0.021);
-      let x = base[i]-(dx/d)*pull*w, y = base[i+1]-(dy/d)*pull*w, z = base[i+2]-(dz/d)*pull*w*0.55;
-
-      if(bandOf && bandK > 1e-4) {
-        const b = bandOf[n], ring = Math.sin(S.drift*3.1+b*1.27+Math.atan2(z,x)*2.0), f = 1+BAND[b]*bandK*(0.55+0.45*ring)+breathK;
-        x*=f; y*=f; z*=f;
-      }
-      p[i]=x; p[i+1]=y; p[i+2]=z;
-    }
-    pts.geometry.attributes.position.needsUpdate = true;
-    if (lines) {
-      const lpos = lines.geometry.attributes.position.array; let pIdx = 0;
-      for(const e of edges) { lpos[pIdx++] = p[e.s*3]; lpos[pIdx++] = p[e.s*3+1]; lpos[pIdx++] = p[e.s*3+2]; lpos[pIdx++] = p[e.t*3]; lpos[pIdx++] = p[e.t*3+1]; lpos[pIdx++] = p[e.t*3+2]; }
-      lines.geometry.attributes.position.needsUpdate = true;
-    }
+  if (window.worldDust) {
+    window.worldDust.material.uniforms.t.value = S.time;
+    window.worldDust.material.uniforms.warp.value = energy * 0.5;
   }
 
-  if(S.morph > 0.5 && S.morph < 1.5) {
-    const cPos = coreGeometry.attributes.position.array, cBase = glassBasePositions.array, orbW = Math.max(0, 1 - Math.abs(S.morph - 1));
-    for(let i=0; i<cPos.length; i+=3) {
-      const bx = cBase[i], by = cBase[i+1], bz = cBase[i+2], bandIdx = Math.max(0, Math.min(NB-1, Math.floor((by / 220 * 0.5 + 0.5) * NB)));
-      const disp = (BAND[bandIdx] * 40.0 * orbW) * (1 + Math.sin(bx*0.02+S.time)*Math.cos(by*0.02+S.time)*Math.sin(bz*0.02+S.time));
-      const len = Math.sqrt(bx*bx+by*by+bz*bz);
-      cPos[i] = bx+(bx/len*disp); cPos[i+1] = by+(by/len*disp); cPos[i+2] = bz+(bz/len*disp);
-    }
-    coreGeometry.attributes.position.needsUpdate = true;
-  } else coreGeometry.setAttribute('position', glassBasePositions.clone());
-
-  if(plasmaMaterial) { plasmaMaterial.uniforms.t.value = S.time; plasmaMaterial.uniforms.energy.value = S.energy; plasmaMaterial.uniforms.morph.value = S.morph; }
-  if(world) world.material.uniforms.t.value = S.time;
-  plasmaCore.rotation.y = -S.time * 0.4; plasmaCore.rotation.x = S.time * 0.2;
-  bloomPass.strength = 0.8 + Math.min(S.energy, 1.5) * 0.5 + S.flare * 0.8;
-
-  // Process 3D CSS Cards logic (Depth fog & Blur)
-  cards.forEach(obj => {
-      const dist = camera.position.z - obj.position.z;
-      let op = 1, blur = 0;
-
-      // Far clip
-      if (dist > 1800) { op = 1 - (dist - 1800) / 800; blur = (dist - 1800) * 0.005; }
-      // Near clip
-      else if (dist < 100) { op = dist / 100; blur = (100 - dist) * 0.05; }
-
-      op = Math.max(0, Math.min(1, op));
-      obj.element.style.opacity = op.toFixed(3);
-      obj.element.style.filter = blur > 0.1 ? `blur(${blur}px)` : 'none';
-      obj.element.style.visibility = op > 0.01 ? 'visible' : 'hidden';
-  });
+  // Reactive Post-Processing
+  bloomPass.strength = 0.85 + (energy * 0.5);
+  rgbPass.uniforms['amount'].value = 0.0005 + (energy * 0.001); 
 
   composer.render();
-  cssRenderer.render(cssScene, camera);
 }
 frame();
 
 window.addEventListener('resize', () => {
-  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight);
-  cssRenderer.setSize(innerWidth, innerHeight);
+  camera.aspect = innerWidth / innerHeight; 
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight); 
+  composer.setSize(innerWidth, innerHeight);
 });
-
-setTimeout(async () => {
-    const links = Array.from(document.querySelectorAll('.card-link'));
-    let scanIdx = 0;
-    while(scanIdx < links.length) {
-        const batch = links.slice(scanIdx, scanIdx + 5);
-        await Promise.all(batch.map(async el => {
-            try {
-                await fetch(el.href, { mode: 'no-cors', cache: 'no-store' });
-                el.classList.add('up');
-            } catch(e) {
-                el.classList.add('down');
-            }
-        }));
-        scanIdx += 5;
-        await new Promise(r => setTimeout(r, 100));
-    }
-}, 3000);
 </script>
-
-<script>
-/* ====================================================================
-   OMNI INBOX RAIL -- live by default, no refresh, no queue.
-   Transport, measured against the real endpoints 2026-08-19:
-     GET  /api/stream  -> {ok,total,cleartext,encrypted,byNet,messages[],fetchedAt,ageMs}
-                          message fields: roomId,title,network,sender,ts,text,account,
-                          unread,encrypted,decrypted,outbound,eventId,direction,msgID,source
-                          (this route carries NO networkLabel/networkIcon -- the badge
-                          map below is local, which is why it is defined here)
-     GET  /sse         -> data:{"type":"connected"} then data:{"type":"rooms",...,rooms[]},
-                          re-pushed on change. Used as the CHANGE TRIGGER, not as the data.
-     POST /api/reply   -> {"roomId","text"}; a 400 body is {"ok":false,"error":"..."}
-   /api/stream is the message truth. SSE says "something moved, pull now". An 8s
-   interval is the safety net under both. Nothing on screen is asserted without a
-   real artifact behind it: the LIVE light is driven by actual new message keys,
-   the age readout is real seconds since the last parsed body, and a dead rail
-   says so instead of showing stale rows quietly.
-   ==================================================================== */
-(function () {
-  'use strict';
-
-  var API   = 'https://omni.xlrd.org/api/stream';
-  var SSE   = 'https://omni.xlrd.org/sse';
-  var REPLY = 'https://omni.xlrd.org/api/reply';
-
-  var POLL_MS  = 8000;    // safety net; SSE is the primary trigger
-  var FRESH_MS = 45000;   // "LIVE" = a new message key inside this window
-  var LAG_MS   = 20000;   // no parsed body for this long -> LAGGING
-  var DEAD_MS  = 90000;   // ... this long -> RAIL SILENT
-  var ECHO_MS  = 10000;   // window for matching a local echo to the real row
-  var MAX_ROWS = 600;
-  var FETCH_MS = 9000;    // a pull that has not answered by here is a HANG, named as one
-  var WEDGE_MS = 12000;   // an inflight flag stuck this long is cleared, never trusted
-  var FIRST_MS = 15000;   // no first answer by here goes RED, never a quiet spinner
-  var SSEUP_MS = 12000;   // SSE that never reaches open by here is torn down and retried
-
-  var NET = {
-    telegram:  { l: 'Telegram',  i: 'TG',  c: '#4bb8f0' },
-    beeper:    { l: 'Beeper',    i: 'BP',  c: '#8b93ff' },
-    whatsapp:  { l: 'WhatsApp',  i: 'WA',  c: '#3ddc84' },
-    gmessages: { l: 'Messages',  i: 'SMS', c: '#5fe08a' },
-    gvoice:    { l: 'Voice',     i: 'GV',  c: '#6aa9ff' },
-    instagram: { l: 'Instagram', i: 'IG',  c: '#f06292' },
-    facebook:  { l: 'Facebook',  i: 'FB',  c: '#5b9bf8' },
-    linkedin:  { l: 'LinkedIn',  i: 'LI',  c: '#4d94d6' },
-    email:     { l: 'Email',     i: 'EM',  c: '#00ff44' },
-    slack:     { l: 'Slack',     i: 'SL',  c: '#f06a86' },
-    signal:    { l: 'Signal',    i: 'SG',  c: '#7aa7ff' },
-    discord:   { l: 'Discord',   i: 'DC',  c: '#8f9bff' },
-    sms:       { l: 'SMS',       i: 'SMS', c: '#5fe08a' }
-  };
-  function netOf(n) {
-    if (n && NET[n]) return NET[n];
-    var s = String(n || 'unknown');
-    return { l: s, i: s.slice(0, 2).toUpperCase(), c: 'rgba(223,251,233,0.62)' };
-  }
-
-  function $(id) { return document.getElementById(id); }
-  var elPanel = $('omni'),   elLive = $('omni-live'), elStat = $('omni-stat');
-  var elNets  = $('omni-nets'), elQ = $('omni-q'),    elRiver = $('omni-river');
-  var elComp  = $('omni-composer'), elTo = $('omni-to-name'), elText = $('omni-text');
-  var elSend  = $('omni-send'), elErr = $('omni-err'), elClose = $('omni-close');
-  var elMin   = $('omni-min');
-
-  /* ---------------- state ---------------- */
-  var msgs      = Object.create(null);   // key -> message
-  var order     = [];                    // keys
-  var byNet     = {};                    // catalog counts, straight from the API
-  var apiTotal  = 0, apiEnc = 0;
-  var booted    = false;
-  var lastNewAt = 0, lastOkAt = 0, lastErr = '';
-  var sseState  = 'closed';
-  var filterNet = '', filterTxt = '';
-  var active    = null;
-  var inflight  = false;
-  var es = null, esTries = 0, esTimer = 0, refetchTimer = 0;
-  var bootAt = Date.now(), inflightAt = 0, sseAt = 0;
-  var lastSig = '', renderedTs = [], lastNetSig = '';
-
-  function keyOf(m) {
-    if (m.eventId) return 'e:' + m.eventId;
-    if (m.msgID)   return 'm:' + m.msgID;
-    return 'h:' + m.roomId + '|' + m.ts + '|' + String(m.text || '').slice(0, 48);
-  }
-
-  /* ---------------- time ---------------- */
-  function rel(ts) {
-    if (!ts) return '--';
-    var s = Math.floor((Date.now() - ts) / 1000); if (s < 0) s = 0;
-    if (s < 10) return 'now';
-    if (s < 60) return s + 's';
-    var m = Math.floor(s / 60); if (m < 60) return m + 'm';
-    var h = Math.floor(m / 60); if (h < 24) return h + 'h';
-    var d = Math.floor(h / 24); if (d < 7)  return d + 'd';
-    return Math.floor(d / 7) + 'w';
-  }
-  function secsSince(t) { return t ? Math.floor((Date.now() - t) / 1000) : -1; }
-
-  /* ---------------- ingest + echo reconciliation ---------------- */
-  function ingest(list) {
-    var fresh = 0, i, m, k;
-    for (i = 0; i < list.length; i++) {
-      m = list[i]; if (!m || !m.roomId) continue;
-      k = keyOf(m);
-      if (!(k in msgs)) { order.push(k); if (booted) fresh++; }
-      msgs[k] = m;
-    }
-    if (fresh > 0) lastNewAt = Date.now();
-    return fresh;
-  }
-
-  /* A local echo is OUR optimistic row. The rail is the only thing that can
-     confirm it; when the real row shows up we drop the echo so nothing is
-     shown twice. An echo that is never echoed back stays labelled SENT and
-     is never silently upgraded to "confirmed". */
-  function reconcileEchoes() {
-    var i, j, k, e, m, keep = [], dropped = 0;
-    for (i = 0; i < order.length; i++) {
-      k = order[i];
-      if (k.slice(0, 6) !== 'local:') { keep.push(k); continue; }
-      e = msgs[k];
-      var matched = false;
-      for (j = 0; j < order.length; j++) {
-        m = msgs[order[j]];
-        if (!m || order[j].slice(0, 6) === 'local:') continue;
-        if (m.roomId === e.roomId &&
-            String(m.text || '').trim() === String(e.text || '').trim() &&
-            m.ts >= e.ts - ECHO_MS) { matched = true; break; }
-      }
-      if (matched) { delete msgs[k]; dropped++; } else { keep.push(k); }
-    }
-    if (dropped) order = keep;
-  }
-
-  /* ---------------- pull ---------------- */
-  function pull() {
-    var now = Date.now();
-    if (inflight) {
-      /* a flag that never clears would silence every later poll -- break it */
-      if (now - inflightAt < WEDGE_MS) return;
-      inflight = false;
-    }
-    inflight = true; inflightAt = now;
-
-    var ac = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-    var hung = false;
-    var killer = setTimeout(function () { hung = true; if (ac) ac.abort(); }, FETCH_MS);
-
-    fetch(API + '?t=' + now, {
-      cache: 'no-store', credentials: 'omit',
-      signal: ac ? ac.signal : undefined
-    })
-      .then(function (r) {
-        return r.text().then(function (body) {
-          if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + body.slice(0, 140));
-          var d;
-          try { d = JSON.parse(body); }
-          catch (e) { throw new Error('bad JSON from /api/stream: ' + body.slice(0, 140)); }
-          if (d.ok !== true) throw new Error('rail returned ok=false: ' + String(d.error || body.slice(0, 140)));
-          return d;
-        });
-      })
-      .then(function (d) {
-        byNet    = d.byNet || {};
-        apiTotal = d.total || 0;
-        apiEnc   = d.encrypted || 0;
-        ingest(Array.isArray(d.messages) ? d.messages : []);
-        reconcileEchoes();
-        lastOkAt = Date.now(); lastErr = ''; booted = true;
-        renderNets(); render();
-      })
-      .catch(function (e) {
-        lastErr = hung
-          ? ('/api/stream did not answer within ' + (FETCH_MS / 1000) + 's -- the rail hung, it did not refuse')
-          : ((e && e.message) ? e.message : String(e));
-        booted = true;
-        render();
-      })
-      .then(function () { clearTimeout(killer); inflight = false; paint(); });
-  }
-  function pullSoon() {
-    if (refetchTimer) return;
-    refetchTimer = setTimeout(function () { refetchTimer = 0; pull(); }, 180);
-  }
-
-  /* ---------------- SSE: the change trigger ---------------- */
-  var seenRoomTs = 0;
-  function openSSE() {
-    if (es) { try { es.close(); } catch (e) {} es = null; }
-    sseState = 'opening'; sseAt = Date.now(); paint();
-    try { es = new EventSource(SSE); }
-    catch (e) { sseState = 'closed'; scheduleSSE(); return; }
-
-    es.onopen = function () { sseState = 'open'; esTries = 0; paint(); };
-    es.onmessage = function (ev) {
-      var d;
-      try { d = JSON.parse(ev.data); } catch (e) { return; }
-      sseState = 'open';
-      if (d.type === 'rooms' && Array.isArray(d.rooms)) {
-        var top = 0, i;
-        for (i = 0; i < d.rooms.length; i++) {
-          if (d.rooms[i] && d.rooms[i].lastTs > top) top = d.rooms[i].lastTs;
-        }
-        if (top > seenRoomTs) { seenRoomTs = top; pullSoon(); }
-      }
-      paint();
-    };
-    es.onerror = function () {
-      sseState = 'reconnecting';
-      if (!es || es.readyState === 2) {
-        if (es) { try { es.close(); } catch (e) {} }
-        es = null; scheduleSSE();
-      }
-      paint();
-    };
-  }
-  function scheduleSSE() {
-    if (esTimer) return;
-    esTries++;
-    var wait = Math.min(1000 * Math.pow(2, Math.min(esTries, 3)), 8000); /* 2s,4s,8s cap */
-    esTimer = setTimeout(function () { esTimer = 0; openSSE(); }, wait);
-  }
-
-  /* ---------------- header ---------------- */
-  function paint() {
-    var newAge = secsSince(lastNewAt), okAge = secsSince(lastOkAt), state, label;
-
-    if (lastErr && (lastOkAt === 0 || okAge > DEAD_MS / 1000)) { state = 'dead'; label = 'RAIL DOWN'; }
-    else if (lastOkAt === 0 && Date.now() - bootAt > FIRST_MS)  { state = 'dead'; label = 'NO ANSWER ' + Math.floor((Date.now() - bootAt) / 1000) + 's'; }
-    else if (lastOkAt === 0)                                   { state = 'boot'; label = 'OPENING'; }
-    else if (okAge > DEAD_MS / 1000)                           { state = 'dead'; label = 'RAIL SILENT ' + okAge + 's'; }
-    else if (okAge > LAG_MS / 1000)                            { state = 'lag';  label = 'LAGGING ' + okAge + 's'; }
-    else if (lastNewAt && newAge <= FRESH_MS / 1000)           { state = 'live'; label = 'LIVE ' + (newAge < 10 ? 'now' : newAge + 's'); }
-    else                                                       { state = 'ok';   label = 'SYNCED ' + okAge + 's'; }
-
-    elLive.setAttribute('data-state', state);
-    elLive.lastChild.textContent = label;
-
-    var catalog = 0, nNets = 0, k;
-    for (k in byNet) { catalog += byNet[k] || 0; nNets++; }
-
-    var bits = [order.length + ' loaded'];
-    if (apiTotal) bits.push(apiTotal + ' in stream');
-    if (nNets)    bits.push(nNets + ' nets');
-    if (catalog)  bits.push('byNet ' + catalog);
-    bits.push(apiEnc + ' encrypted');
-    bits.push('sse ' + sseState);
-    if (lastOkAt) bits.push('sync ' + okAge + 's ago');
-
-    elStat.className = 'omni-stat' + (lastErr ? ' err' : '');
-    elStat.textContent = lastErr ? ('rail error: ' + lastErr) : bits.join('  \u00b7  ');
-  }
-
-  /* relative times tick without rebuilding a single row */
-  function refreshTimes() {
-    var kids = elRiver.children, i, w;
-    if (!renderedTs.length || kids.length !== renderedTs.length) return;
-    for (i = 0; i < kids.length; i++) {
-      w = kids[i].firstChild ? kids[i].firstChild.lastChild : null;
-      if (w && w.className === 'omni-when') w.textContent = rel(renderedTs[i]);
-    }
-  }
-  setInterval(function () {
-    /* SSE that never reached open is torn down and retried -- a socket that is
-       merely CONNECTING reports nothing and would otherwise sit there silently */
-    if (sseState === 'opening' && sseAt && Date.now() - sseAt > SSEUP_MS) {
-      if (es) { try { es.close(); } catch (e) {} es = null; }
-      sseState = 'closed'; scheduleSSE();
-    }
-    /* and if nothing has ever answered, keep asking rather than waiting on a
-       dead promise */
-    if (lastOkAt === 0 && Date.now() - bootAt > FIRST_MS) pull();
-    paint(); refreshTimes();
-  }, 1000);
-
-  /* ---------------- network chips ---------------- */
-  function renderNets() {
-    var live = {}, i, k, m;
-    for (i = 0; i < order.length; i++) { m = msgs[order[i]]; live[m.network] = (live[m.network] || 0) + 1; }
-    var names = Object.keys(byNet);
-    for (k in live) if (names.indexOf(k) < 0) names.push(k);
-    names.sort(function (a, b) { return (live[b] || 0) - (live[a] || 0); });
-
-    /* Rebuilding these on every poll would replace a chip under a finger mid-tap
-       and drop hover/focus every 8s. Only rebuild when something actually moved. */
-    var nsig = filterNet + '|' + order.length + '|';
-    for (i = 0; i < names.length; i++) nsig += names[i] + ':' + (live[names[i]] || 0) + ',';
-    if (nsig === lastNetSig) return;
-    lastNetSig = nsig;
-
-    elNets.textContent = '';
-
-    var all = document.createElement('button');
-    all.type = 'button'; all.className = 'omni-chip';
-    all.setAttribute('data-net', '');
-    all.setAttribute('aria-pressed', filterNet === '' ? 'true' : 'false');
-    all.title = 'every network, as loaded';
-    all.appendChild(document.createTextNode('ALL '));
-    var ab = document.createElement('b'); ab.textContent = String(order.length);
-    all.appendChild(ab); elNets.appendChild(all);
-
-    for (i = 0; i < names.length; i++) {
-      var n = names[i], info = netOf(n);
-      var c = document.createElement('button');
-      c.type = 'button'; c.className = 'omni-chip';
-      c.setAttribute('data-net', n);
-      c.setAttribute('aria-pressed', filterNet === n ? 'true' : 'false');
-      /* the number shown IS the number this chip filters to -- byNet is the rail's
-         own per-network count and does not always agree, so it rides in the title
-         rather than being displayed as if it were the row count. */
-      c.title = info.l + '  \u00b7  ' + (live[n] || 0) + ' loaded here  \u00b7  rail byNet reports ' + (byNet[n] || 0);
-      c.style.color = info.c;
-      c.appendChild(document.createTextNode(info.i + ' '));
-      var b = document.createElement('b');
-      b.textContent = String(live[n] || 0);
-      c.appendChild(b); elNets.appendChild(c);
-    }
-  }
-
-  /* ---------------- river ---------------- */
-  function visible() {
-    var out = [], i, m, hay;
-    for (i = 0; i < order.length; i++) {
-      m = msgs[order[i]];
-      if (!m) continue;
-      if (filterNet && m.network !== filterNet) continue;
-      if (filterTxt) {
-        hay = (String(m.sender || '') + ' ' + String(m.title || '') + ' ' +
-               String(m.text || '') + ' ' + String(m.network || '') + ' ' +
-               String(m.account || '')).toLowerCase();
-        if (hay.indexOf(filterTxt) < 0) continue;
-      }
-      out.push(m);
-    }
-    out.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
-    return out.length > MAX_ROWS ? out.slice(0, MAX_ROWS) : out;
-  }
-
-  function render() {
-    var rows = visible(), i, sig = [];
-    for (i = 0; i < rows.length; i++) {
-      sig.push(keyOf(rows[i]) + (rows[i].pending ? '!p' : '') + (rows[i].failed ? '!f' : '') +
-               (rows[i].unread ? '!u' : ''));
-    }
-    var s = filterNet + '|' + filterTxt + '|' + (active ? active.roomId : '') + '|' +
-            lastErr + '|' + sig.join(',');
-    if (s === lastSig) { refreshTimes(); return; }   /* idle poll -> zero DOM churn */
-    lastSig = s;
-
-    var atTop = elRiver.scrollTop < 8;
-    elRiver.textContent = '';
-    renderedTs = [];
-
-    if (!rows.length) {
-      var e = document.createElement('div');
-      e.className = 'omni-empty' + (lastErr ? ' err' : '');
-      if (lastErr) {
-        e.textContent = 'the rail is not answering.\n' + lastErr +
-                        '\n\nretrying on its own. nothing here is cached or invented.';
-      } else if (!lastOkAt) {
-        e.textContent = 'reading the rail\u2026';
-      } else if (filterNet || filterTxt) {
-        e.textContent = 'no loaded message matches that filter.' +
-          (filterNet ? ('\n' + netOf(filterNet).l + ': the rail byNet reports ' + (byNet[filterNet] || 0) + '.') : '');
-      } else {
-        e.textContent = 'the rail answered with zero messages.';
-      }
-      elRiver.appendChild(e);
-      return;
-    }
-
-    var frag = document.createDocumentFragment();
-    for (i = 0; i < rows.length; i++) { frag.appendChild(row(rows[i])); renderedTs.push(rows[i].ts); }
-    elRiver.appendChild(frag);
-    if (atTop) elRiver.scrollTop = 0;
-  }
-
-  function row(m) {
-    var info = netOf(m.network);
-    var outb = !!(m.outbound || m.direction === 'out');
-    var b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'omni-row' +
-      (m.unread && !outb ? ' unread' : '') +
-      (outb ? ' out' : '') +
-      (m.pending ? ' pending' : '') +
-      (m.failed ? ' failed' : '') +
-      (active && active.roomId === m.roomId ? ' sel' : '');
-    b.setAttribute('data-key', keyOf(m));
-
-    var h = document.createElement('div'); h.className = 'omni-rh';
-
-    var bg = document.createElement('span');
-    bg.className = 'omni-badge'; bg.style.color = info.c; bg.textContent = info.i;
-    h.appendChild(bg);
-
-    var who = document.createElement('span');
-    who.className = 'omni-who';
-    who.textContent = outb ? 'you' : String(m.sender || 'unknown');
-    h.appendChild(who);
-
-    var where = document.createElement('span');
-    where.className = 'omni-where';
-    var wt = String(m.title || '');
-    /* a matrix room id is not a thread name -- show nothing rather than noise */
-    if (/^!\S+:\S+$/.test(wt) || /^@\S+:\S+$/.test(wt)) wt = '';
-    where.textContent = (wt && wt !== String(m.sender || '')) ? wt : '';
-    h.appendChild(where);
-
-    var when = document.createElement('span');
-    when.className = 'omni-when'; when.textContent = rel(m.ts);
-    h.appendChild(when);
-
-    b.appendChild(h);
-
-    var t = document.createElement('div'); t.className = 'omni-rt';
-    if (m.pending || m.failed || m.unconfirmed) {
-      var tg = document.createElement('span'); tg.className = 'omni-tag';
-      if (m.pending)        { tg.textContent = 'SENDING'; }
-      else if (m.failed)    { tg.textContent = 'NOT SENT'; tg.style.color = 'var(--alert)'; }
-      else                  { tg.textContent = 'SENT'; tg.title = 'accepted by /api/reply, not yet echoed back by the rail'; }
-      t.appendChild(tg);
-    }
-    t.appendChild(document.createTextNode(
-      String(m.text || '').length ? String(m.text)
-        : (m.encrypted && !m.decrypted ? '[encrypted \u2014 no cleartext on the rail]' : '[no text]')
-    ));
-    b.appendChild(t);
-    return b;
-  }
-
-  /* ---------------- composer ---------------- */
-  function openComposer(m) {
-    var nm = String(m.title || '');
-    if (!nm || /^[!@]\S+:\S+$/.test(nm)) nm = String(m.sender || '') || String(m.roomId);
-    active = { roomId: m.roomId, title: nm, network: m.network };
-    elTo.textContent = 'reply \u2192 ' + active.title + '  [' + netOf(m.network).l + ']';
-    elErr.hidden = true; elErr.textContent = '';
-    elComp.hidden = false;
-    render(); autoGrow(); elText.focus();
-  }
-  function closeComposer() {
-    active = null; elComp.hidden = true; elText.value = ''; render();
-  }
-  function autoGrow() {
-    elText.style.height = 'auto';
-    elText.style.height = Math.min(elText.scrollHeight, 132) + 'px';
-  }
-
-  function send() {
-    if (!active) return;
-    var text = elText.value.trim();
-    if (!text) return;
-    var room = active.roomId, title = active.title, netw = active.network;
-
-    var echoKey = 'local:' + room + ':' + Date.now();
-    msgs[echoKey] = {
-      roomId: room, title: title, network: netw, sender: 'you',
-      ts: Date.now(), text: text, unread: false, outbound: true,
-      direction: 'out', source: 'local-echo', pending: true
-    };
-    order.push(echoKey);
-    elText.value = ''; autoGrow();
-    elErr.hidden = true; elErr.textContent = '';
-    elSend.disabled = true;
-    render();
-
-    var rac = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-    var rhung = false;
-    var rkill = setTimeout(function () { rhung = true; if (rac) rac.abort(); }, 15000);
-
-    fetch(REPLY, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      cache: 'no-store', credentials: 'omit',
-      signal: rac ? rac.signal : undefined,
-      body: JSON.stringify({ roomId: room, text: text })
-    })
-      .then(function (r) {
-        return r.text().then(function (body) {
-          var d = null;
-          try { d = JSON.parse(body); } catch (e) {}
-          /* a 200 is not proof -- assert on the body */
-          if (!r.ok || !d || d.ok !== true) {
-            throw new Error('HTTP ' + r.status + ' \u00b7 ' +
-              ((d && d.error) ? d.error : (body.slice(0, 160) || 'empty body')));
-          }
-          return d;
-        });
-      })
-      .then(function () {
-        if (msgs[echoKey]) { msgs[echoKey].pending = false; msgs[echoKey].unconfirmed = true; }
-        setTimeout(pull, 700);
-        setTimeout(pull, 2600);
-      })
-      .catch(function (e) {
-        if (msgs[echoKey]) { msgs[echoKey].pending = false; msgs[echoKey].failed = true; }
-        elErr.textContent = 'send failed: ' +
-          (rhung ? '/api/reply did not answer within 15s -- unknown whether it sent'
-                 : ((e && e.message) ? e.message : String(e)));
-        elErr.hidden = false;
-        elText.value = text; autoGrow();
-      })
-      .then(function () { clearTimeout(rkill); elSend.disabled = false; render(); });
-  }
-
-  /* ---------------- wiring ---------------- */
-  elRiver.addEventListener('click', function (ev) {
-    var t = ev.target;
-    while (t && t !== elRiver && !(t.classList && t.classList.contains('omni-row'))) t = t.parentNode;
-    if (!t || t === elRiver) return;
-    var m = msgs[t.getAttribute('data-key')];
-    if (m) openComposer(m);
-  });
-
-  elNets.addEventListener('click', function (ev) {
-    var t = ev.target;
-    while (t && t !== elNets && !(t.classList && t.classList.contains('omni-chip'))) t = t.parentNode;
-    if (!t || t === elNets) return;
-    var n = t.getAttribute('data-net') || '';
-    filterNet = (filterNet === n) ? '' : n;
-    renderNets(); render();
-  });
-
-  elQ.addEventListener('input', function () { filterTxt = elQ.value.trim().toLowerCase(); render(); });
-  elComp.addEventListener('submit', function (ev) { ev.preventDefault(); send(); });
-  elClose.addEventListener('click', closeComposer);
-  elText.addEventListener('input', autoGrow);
-  elText.addEventListener('keydown', function (ev) {
-    if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); send(); }
-    else if (ev.key === 'Escape') closeComposer();
-  });
-  elMin.addEventListener('click', function () {
-    var min = elPanel.classList.toggle('min');
-    elMin.innerHTML = min ? '&#43;' : '&#8722;';
-    elMin.title = min ? 'Expand' : 'Collapse';
-  });
-
-  /* Keep panel gestures out of the scene's window-level drag/parallax handlers.
-     Bubble phase ONLY -- a capture-phase stop would starve the panel's own
-     buttons before they ever see the event. */
-  ['mousedown', 'mousemove', 'mouseup', 'touchstart', 'touchmove', 'touchend',
-   'click', 'dblclick', 'wheel'].forEach(function (evt) {
-    elPanel.addEventListener(evt, function (ev) { ev.stopPropagation(); });
-  });
-
-  /* Live by default: the API paints before the first frame, SSE right behind it,
-     an 8s net under both, and an instant pull whenever the tab or network returns. */
-  pull();
-  openSSE();
-  setInterval(pull, POLL_MS);
-  document.addEventListener('visibilitychange', function () {
-    if (!document.hidden) {
-      pull();
-      if (!es || es.readyState === 2) { esTries = 0; openSSE(); }
-    }
-  });
-  window.addEventListener('online', function () { esTries = 0; openSSE(); pull(); });
-  window.addEventListener('focus', pull);
-
-  /* verification surface -- read this, do not infer from the screen */
-  window.OMNI = {
-    stats: function () {
-      return {
-        loaded: order.length, apiTotal: apiTotal, byNet: byNet, sse: sseState,
-        lastOkSecs: secsSince(lastOkAt), lastNewSecs: secsSince(lastNewAt),
-        lastErr: lastErr, rows: elRiver.children.length,
-        state: elLive.getAttribute('data-state'), label: elLive.lastChild.textContent
-      };
-    },
-    pull: pull
-  };
-})();
-</script>
+<script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
 </body>
-
 </html>
