@@ -1,47 +1,42 @@
-/* Aura OS — service worker (offline app shell).
-   SAFE AT ROOT: only intercepts its OWN shell assets + the root document.
-   Every other hitthe.link path (/aod, /999, /auth, /apps/*, ...) passes straight
-   through to the network untouched — the SW never calls respondWith for them. */
-const CACHE = 'htl-v4';
-const SHELL = [
-  './', 'index.html',
-  'css/os.css', 'js/icons.js', 'js/apps.js', 'js/os.js', 'js/sites.js',
-  'manifest.webmanifest',
-  'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-512-maskable.png'
-];
+/* hitthe.link root service worker — TOMBSTONE, 2026-08-19.
+ *
+ * WHY THIS EXISTS AS A TOMBSTONE AND NOT A DELETION:
+ * The previous root SW ("Aura OS") was CACHE-FIRST over the root document —
+ *   SHELL included './' and 'index.html'
+ *   fetch: caches.match(req).then(hit => hit || fetch(req))
+ * so the cache ALWAYS won. Every device that ever loaded hitthe.link kept
+ * serving itself the OLD root forever, while the CDN served the new one.
+ * MEASURED 2026-08-19: hitthe.link returned 49,086 new bytes with the official
+ * mark, and qi's phone still showed the old site. Both facts were true.
+ *
+ * Simply DELETING this file would 404 — and a 404 on the SW script does not
+ * reliably unregister an already-installed worker. The only guaranteed eviction
+ * is to SHIP a new worker that removes itself. Browsers byte-compare sw.js on
+ * navigation, so this installs, evicts, unregisters and reloads with no tap
+ * from qi (cmd 4: no human in the loop).
+ *
+ * ⚠️ CacheStorage is per-ORIGIN, NOT per-scope. A bare caches.keys() wipe here
+ * would also destroy the caches of /desk/, /vision/, /xos/, /vvsvei/,
+ * /switchboard/, /extendlm/, /rays-home/ and /subscriptions/ — each of which
+ * ships its OWN sw.js. So this deletes ONLY the root worker's own 'htl-v*'
+ * caches and leaves every other app's cache untouched.
+ *
+ * There is deliberately NO fetch handler: nothing is intercepted, ever.
+ */
+const OWN_CACHE_PREFIX = 'htl-v';
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
-});
+self.addEventListener('install', () => self.skipWaiting());
+
 self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
-      .then(() => self.clients.claim())
-  );
-});
-
-// Absolute pathnames of the shell, resolved against this SW's own location.
-const SHELL_PATHS = new Set(SHELL.map(p => new URL(p, self.location).pathname));
-const INDEX_URL = new URL('index.html', self.location).href;
-
-self.addEventListener('fetch', (e) => {
-  if (e.request.method !== 'GET') return;
-  let url;
-  try { url = new URL(e.request.url); } catch { return; }
-  if (url.origin !== self.location.origin) return; // external → untouched
-
-  const isShell = SHELL_PATHS.has(url.pathname);
-  const isRootNav = e.request.mode === 'navigate' &&
-    (url.pathname === new URL('./', self.location).pathname || url.pathname === new URL('index.html', self.location).pathname);
-
-  if (!isShell && !isRootNav) return; // ALL other paths pass through — zero impact on the rest of hitthe.link
-
-  e.respondWith(
-    caches.match(e.request).then(hit => hit || fetch(e.request).then(res => {
-      const copy = res.clone();
-      caches.open(CACHE).then(c => c.put(e.request, copy)).catch(() => {});
-      return res;
-    }).catch(() => caches.match(INDEX_URL)))
-  );
+  e.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(
+      keys.filter(k => k.startsWith(OWN_CACHE_PREFIX)).map(k => caches.delete(k))
+    );
+    await self.registration.unregister();
+    const clients = await self.clients.matchAll({ type: 'window' });
+    for (const c of clients) {
+      try { c.navigate(c.url); } catch (_) { /* client may be gone */ }
+    }
+  })());
 });
