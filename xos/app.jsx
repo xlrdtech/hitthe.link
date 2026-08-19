@@ -1828,6 +1828,23 @@ async function _xosShipRender(bodyEl, url) {
     const holder = document.createElement("div");
     holder.innerHTML = doc.body ? doc.body.innerHTML : "";
     root.appendChild(holder);
+
+    /* AN EMPTY BOX IS A LIE. MEASURED 2026-08-18 23:56 on live /xos/: the card
+       rendered perfectly -- dot, title, timestamp, url, buttons -- around a
+       preview that was COMPLETELY BLANK, and nothing on it said why.
+       CAUSE, and it is by design: scripts are stripped (hazard 3 above), so a
+       page whose <body> is just an empty mount point (`<div id="root">` filled
+       by React at runtime) has literally no markup to show. That is most of the
+       app-shell pages on this domain.
+       A blank frame is indistinguishable from a broken renderer, which is the
+       exact failure class cmd 45 exists to kill: unseen presented as fine. So
+       measure what actually landed and SAY the reason on the card's face. */
+    const txt = (holder.textContent || "").trim();
+    const media = holder.querySelectorAll("img,svg,canvas,video,picture").length;
+    if (txt.length < 40 && media === 0) {
+      root.removeChild(holder);
+      note("This page builds itself with JavaScript, which does not run inside a chat card. Open full to view it.");
+    }
   } catch (e) {
     /* cmd 45: say what actually happened. Never silently show an empty box. */
     note("Could not render inline (" + (e && e.message ? e.message : "fetch failed") + "). Open full below.");
