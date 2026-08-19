@@ -1708,7 +1708,14 @@ function _xosShipStyles() {
   const s = document.createElement("style");
   s.id = "xos-ship-styles";
   s.textContent = [
-    ".xos-ship{margin:10px 0;border-radius:14px;overflow:hidden;",
+        // flex:0 0 auto IS LOAD-BEARING, NOT TIDINESS. MEASURED on live /xos/
+    // 2026-08-18 23:52 at 390x844: #transcript is display:flex/column, so a card
+    // appended into it is a FLEX ITEM and inherits flex:0 1 auto -- it SHRANK to
+    // h=2px (its own border) while its children still measured 17+14+300+33.
+    // overflow:hidden then clipped all of them, so the card was present, correct,
+    // and INVISIBLE. Same failure VvsveiPane paid for at :1740: in a flex chain
+    // every link needs its sizing stated, and "it has content" is not a height.
+    ".xos-ship{margin:10px 0;border-radius:14px;overflow:hidden;flex:0 0 auto;",
     "background:rgba(12,16,20,.86);border:1px solid rgba(255,255,255,.10);",
     "box-shadow:0 6px 22px rgba(0,0,0,.42);max-width:100%;}",
     ".xos-ship-head{display:flex;align-items:center;gap:8px;padding:9px 11px;",
