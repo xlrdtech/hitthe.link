@@ -1750,11 +1750,28 @@ function _xosShipStyles() {
    ship is a hitthe.link subpage), and a cross-origin fetch simply lands in the
    catch and degrades to a link — it must never be papered over with a frame. */
 async function _xosShipRender(bodyEl, url) {
+  /* THE NOTE MUST GO INSIDE THE SHADOW ROOT ONCE ONE EXISTS.
+     MEASURED 2026-08-19 00:03 on live /xos/: the empty-render note was created,
+     appended, and NEVER APPEARED -- the card showed a blank frame anyway.
+     CAUSE: attachShadow REPLACES the host's rendered children. Light-DOM
+     children of a shadow host are not displayed at all unless a <slot> asks for
+     them, so appending to bodyEl after the root exists renders nothing.
+     The element was real, in the DOM, and invisible -- which is precisely the
+     class of failure this note was added to prevent, reproduced by the fix for
+     it. Route to the shadow root when there is one, host when there is not
+     (the early error paths run before attachShadow). */
   const note = (msg) => {
     const d = document.createElement("div");
     d.className = "xos-ship-note";
     d.textContent = msg;
-    bodyEl.appendChild(d);
+    const sr = bodyEl.shadowRoot;
+    if (sr) {
+      // The host's own stylesheet does not cross the boundary; style inline.
+      d.style.cssText = "padding:14px;font:500 11.5px/1.5 Inter,system-ui,sans-serif;color:#c2cdc8;";
+      sr.appendChild(d);
+    } else {
+      bodyEl.appendChild(d);
+    }
   };
   try {
     const res = await fetch(url, { cache: "no-store" });
