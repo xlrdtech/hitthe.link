@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>XEN LIFE — assembled</title>
+<meta name="description" content="Canonical three-pane assembly: /xos3 omni-inbox left, /lifenote center, gv remote right. Mounts the live surfaces same-origin, no iframe.">
+<link rel="manifest" href="/xos/manifest.json">
+<meta name="theme-color" content="#06080A">
+<style>
+/* ══ tokens: LifeNote's own, read off lifenote/index.html — not reinvented ══ */
+:root{
+  --bg:#06080A; --jade:#00FF7F; --ink:#E8EAE8; --resolve:#7CFF9B;
+  --heavy:#6B7280; --luminous:#00FFC2; --restless:#F59E0B;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --line:rgba(0,255,127,.14);
+  --glass:rgba(10,14,12,.72);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+
+/* ══ GLOBAL: the canonical XOS swipeglass ══════════════════════════════════ */
+.panes{display:flex;height:100vh;width:300vw;transition:transform .38s cubic-bezier(.22,1,.36,1);will-change:transform}
+.pane{width:100vw;height:100vh;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.pane > .mount{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch}
+
+.swipeglass{position:fixed;left:0;right:0;bottom:0;z-index:60;
+  background:var(--glass);backdrop-filter:blur(22px) saturate(140%);
+  -webkit-backdrop-filter:blur(22px) saturate(140%);
+  border-top:1px solid var(--line);padding:10px 12px calc(12px + env(safe-area-inset-bottom));
+  display:flex;gap:8px;align-items:center}
+.swipeglass button{flex:1;background:transparent;border:1px solid var(--line);border-radius:999px;
+  color:var(--heavy);font-family:var(--mono);font-size:11px;letter-spacing:.1em;
+  padding:11px 8px;text-transform:uppercase}
+.swipeglass button.on{color:var(--ink);border-color:rgba(0,255,127,.42);
+  background:rgba(0,255,127,.07);box-shadow:0 0 22px rgba(0,255,127,.14) inset}
+
+/* pane chrome */
+.phead{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:12px 14px 10px;
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--heavy);
+  border-bottom:1px solid rgba(255,255,255,.05)}
+.phead b{color:var(--jade);font-weight:500}
+.phead .rail{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:10px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--heavy)}
+.dot.live{background:var(--jade);box-shadow:0 0 10px var(--jade)}
+.dot.err{background:#F87171}
+.mount{padding-bottom:74px}
+.loading{padding:22px 16px;font-family:var(--mono);font-size:12px;color:var(--heavy)}
+.fail{padding:22px 16px;font-family:var(--mono);font-size:12px;color:var(--restless);line-height:1.7}
+.fail a{color:var(--jade)}
+</style>
+</head>
+<body>
+
+<div class="panes" id="panes">
+  <!-- LEFT — /xos3 omni-inbox. Its own EventSource re-arms on mount. -->
+  <section class="pane" id="pane-left">
+    <div class="phead">OMNI-INBOX <b>/xos3</b><span class="rail"><span class="dot" id="d-left"></span><span id="s-left">mounting</span></span></div>
+    <div class="mount" id="m-left"><div class="loading">mounting /xos3/ …</div></div>
+  </section>
+
+  <!-- CENTER — /lifenote. Primary. Carries the write rail. -->
+  <section class="pane" id="pane-center">
+    <div class="phead">LIFENOTE <b>/lifenote</b><span class="rail"><span class="dot" id="d-center"></span><span id="s-center">mounting</span></span></div>
+    <div class="mount" id="m-center"><div class="loading">mounting /lifenote/ …</div></div>
+  </section>
+
+  <!-- RIGHT — gv remote + contacts/recents. -->
+  <section class="pane" id="pane-right">
+    <div class="phead">GV REMOTE <b>/life</b><span class="rail"><span class="dot" id="d-right"></span><span id="s-right">mounting</span></span></div>
+    <div class="mount" id="m-right"><div class="loading">mounting …</div></div>
+  </section>
+</div>
+
+<nav class="swipeglass" id="glass">
+  <button data-i="0">Omni-Inbox</button>
+  <button data-i="1" class="on">LifeNote</button>
+  <button data-i="2">GV Remote</button>
+</nav>
+
+<script>
+(function(){
+"use strict";
+/* ═══════════════════════════════════════════════════════════════════════════
+   ASSEMBLY, not construction.
+
+   qi 2026-08-20, spec given four times (03:13, 12:27, 15:25, 15:30):
+     global: canonical xos swipeglass
+     centerpanel: lifenote + life + vvsvei/xos chat combined, REAL note app
+     leftpanel: omni-inbox, hitthe.link root css + glass searchbar
+     rightpanel: gv remote + contacts/recents, emerald-glass call button
+
+   WHY THIS FILE EXISTS: a Cloudflare rule rewrites life.xlrd.org/ ->
+   /xos/index.html. PROVEN 2026-08-20: life.xlrd.org/ = 16066 B sha d324beb89,
+   byte-identical to /xos/, while life.xlrd.org/index.html = 49086 B (the real
+   root). So the canonical URL served standalone XOS and NO built panel could
+   ever appear there. That is why every prior "done" showed the same surface.
+   Repoint that one rewrite at /life-app/ and the assembly becomes canonical.
+
+   ⛔ NO IFRAME. Ever. That shortcut cost the flagship 18 months. Limbs are
+   fetched same-origin and mounted into this document, scripts re-executed by
+   hand (innerHTML does not run <script>), so each keeps its OWN live rail.
+
+   ⛔ NO STATIC. qi 15:32: "static sites are no longer tolerated. At all."
+   Nothing here polls a file. /xos3 brings its own EventSource; /lifenote
+   brings its write rail. This shell only composes and never caches.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+var $=function(i){return document.getElementById(i);};
+
+/* ── swipeglass ────────────────────────────────────────────────────────── */
+var idx=1, panes=$("panes");
+function go(i){
+  idx=Math.max(0,Math.min(2,i));
+  panes.style.transform="translateX("+(-idx*100)+"vw)";
+  var b=document.querySelectorAll("#glass button");
+  for(var k=0;k<b.length;k++) b[k].className = (+b[k].dataset.i===idx)?"on":"";
+}
+document.getElementById("glass").addEventListener("click",function(e){
+  var t=e.target.closest("button"); if(t) go(+t.dataset.i);
+});
+go(1);                                    // LifeNote is primary — opens centered
+
+/* touch swipe across the glass */
+var x0=null;
+document.addEventListener("touchstart",function(e){ x0=e.touches[0].clientX; },{passive:true});
+document.addEventListener("touchend",function(e){
+  if(x0===null) return;
+  var dx=e.changedTouches[0].clientX-x0;
+  if(Math.abs(dx)>60) go(idx + (dx<0?1:-1));
+  x0=null;
+},{passive:true});
+
+/* ── the mount: fetch same-origin, inject, RE-EXECUTE scripts ──────────── */
+function status(side,state,text){
+  var d=$("d-"+side), s=$("s-"+side);
+  if(d) d.className="dot"+(state==="live"?" live":state==="err"?" err":"");
+  if(s) s.textContent=text;
+}
+
+function runScripts(host, baseHref){
+  // innerHTML never executes <script>. Clone each into a fresh element so it does.
+  var olds=host.querySelectorAll("script");
+  for(var i=0;i<olds.length;i++){
+    var o=olds[i], n=document.createElement("script");
+    for(var a=0;a<o.attributes.length;a++) n.setAttribute(o.attributes[a].name,o.attributes[a].value);
+    if(o.src){ n.src=new URL(o.getAttribute("src"), baseHref).href; }
+    else { n.textContent=o.textContent; }
+    o.parentNode.replaceChild(n,o);
+  }
+}
+
+function mount(side, path){
+  var host=$("m-"+side);
+  status(side,"","fetching");
+  fetch(path,{credentials:"same-origin",cache:"no-store"})
+    .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.text(); })
+    .then(function(html){
+      var doc=new DOMParser().parseFromString(html,"text/html");
+
+      // carry the limb's own <style> and <link rel=stylesheet> so it keeps its look
+      var head=doc.querySelectorAll('style,link[rel="stylesheet"]');
+      for(var i=0;i<head.length;i++){
+        var c=head[i].cloneNode(true);
+        if(c.tagName==="LINK") c.href=new URL(head[i].getAttribute("href"), location.origin+path).href;
+        document.head.appendChild(c);
+      }
+      host.innerHTML="";
+      var body=doc.body;
+      while(body.firstChild) host.appendChild(body.firstChild);
+      runScripts(host, location.origin+path);
+      status(side,"live",path);
+    })
+    .catch(function(err){
+      status(side,"err","failed");
+      host.innerHTML='<div class="fail">could not mount <b>'+path+'</b><br>'+
+        String(err.message)+'<br><br>open it directly: <a href="'+path+'">'+path+'</a></div>';
+    });
+}
+
+/* the three limbs — each already live, each verified reachable same-origin
+   from this host 2026-08-20:
+     /xos3/     27267 B  OMNI-INBOX · XOS   (own EventSource, 1358 msgs)
+     /lifenote/ 64344 B  LifeNote           (write rail: contenteditable + POST)
+     /life/     42073 B  XEN · LIFE dashboard                                */
+mount("left",  "/xos3/");
+mount("center","/lifenote/");
+mount("right", "/life/");
+
+/* keyboard for desktop */
+document.addEventListener("keydown",function(e){
+  if(e.key==="ArrowLeft") go(idx-1);
+  if(e.key==="ArrowRight") go(idx+1);
+});
+})();
+</script>
+</body>
+</html>
