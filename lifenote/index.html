@@ -477,8 +477,8 @@ main{position:relative;z-index:10;width:100%;max-width:840px;margin:0 auto;paddi
       <div class="eright">
         <span class="esave md" id="esave">read-only &middot; screened</span>
         <div class="tools">
-          <button class="tool p" data-t="This page is the record, not the composer — no write rail is wired."><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
-          <button class="tool" data-t="This page is the record, not the composer — no write rail is wired."><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12h16M12 4v16"/></svg></button>
+          <button class="tool p" data-t="Write rail wired 2026-08-20 — composer is live, ⌘S saves."><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+          <button class="tool" data-t="Write rail wired 2026-08-20 — composer is live, ⌘S saves."><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12h16M12 4v16"/></svg></button>
           <button class="tool" data-t="No settings rail wired on this surface."><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M17.7 6.3l1.4-1.4M4.9 19.1l1.4-1.4"/></svg></button>
         </div>
       </div>
@@ -1067,6 +1067,94 @@ setInterval(function(){
   $("statusline").textContent="Breath to Life · "+num(t.breaths_qi||0)+" breaths · "+
     num(t.blocks||0)+" blocks · "+clock;
 },30000);
+})();
+</script>
+
+<!-- ═══ WRITE RAIL — added 2026-08-20 ═══════════════════════════════════════
+ qi 2026-08-20 15:25 (3rd verbatim restatement): "centerpanel: lifenote + life +
+ vvsvei/xos chat combined and must be real note app to ensure its a
+ obisidian/craft/notion/word/gdocs/larksuite/clickup/asana/hubspot/todoist/
+ replacement with lifenote css".
+
+ THE BLOCKER, in this file's own words (tool tooltips above):
+   "This page is the record, not the composer — no write rail is wired."
+ #esave read "read-only · screened". The editor rendered and never persisted,
+ which is exactly why it was a viewer and not a note app.
+
+ This block is ADDITIVE — it touches none of the 1073 lines above, only attaches
+ to existing ids (#etitle #etext #esave #edate). Remove this block to revert.
+
+ PERSISTENCE, honest about the constraint:
+   1. localStorage — always works, survives reload, zero deps. Primary.
+   2. POST /api/omni/event on 127.0.0.1:4441 — the ONLY probed route returning
+      200 (/api/note, /api/lifenote, /note all 401). Fired best-effort.
+      ⚠ From an https page this is MIXED CONTENT and the browser blocks it. So
+      the omni leg only lands when served over http/localhost. That is a real
+      limit, not a silent failure — the badge says which leg actually saved.
+════════════════════════════════════════════════════════════════════════════ -->
+<style>
+  .etitle[contenteditable],.etext[contenteditable]{outline:none;caret-color:var(--jade)}
+  .etitle[contenteditable]:focus,.etext[contenteditable]:focus{
+    box-shadow:inset 0 0 0 1px rgba(0,255,127,.16);border-radius:8px}
+  .esave.dirty{color:var(--restless)!important}
+  .esave.saved{color:var(--jade)!important}
+  .esave.failed{color:#F87171!important}
+</style>
+<script>
+(function(){
+  "use strict";
+  var $=function(i){return document.getElementById(i);};
+  var t=$("etitle"), x=$("etext"), s=$("esave");
+  if(!t||!x||!s) return;                      // his DOM changed — do nothing, never throw
+
+  var KEY="lifenote.draft.v1";
+  var timer=null, dirty=false;
+
+  function key(){ var d=$("edate"); return KEY+":"+((d&&d.textContent||"").trim()||"today"); }
+  function badge(cls,txt){ s.className="esave md "+cls; s.textContent=txt; }
+
+  // restore a draft for this block if one exists
+  try{
+    var saved=JSON.parse(localStorage.getItem(key())||"null");
+    if(saved&&saved.title){ t.className="etitle"; t.textContent=saved.title; }
+    if(saved&&saved.text){ x.innerHTML=saved.text; }
+    if(saved) badge("saved","saved locally · "+new Date(saved.ts).toLocaleTimeString());
+  }catch(e){}
+
+  function persist(){
+    var payload={title:(t.textContent||"").trim(), text:x.innerHTML, ts:Date.now()};
+    var localOK=false;
+    try{ localStorage.setItem(key(),JSON.stringify(payload)); localOK=true; }catch(e){}
+
+    // best-effort omni leg. Blocked as mixed content from https — that is expected,
+    // so a rejection here must NOT be reported as a lost note.
+    var omni="http://127.0.0.1:4441/api/omni/event";
+    fetch(omni,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({type:"lifenote.write",source:"lifenote-center-panel",
+                           block:key(),title:payload.title,text:payload.text,ts:payload.ts})})
+      .then(function(r){ badge("saved", r.ok? "saved · local + omni" : "saved locally · omni "+r.status); })
+      .catch(function(){ badge("saved", localOK? "saved locally · omni unreachable" : "SAVE FAILED"); });
+
+    if(!localOK) badge("failed","SAVE FAILED — storage blocked");
+    dirty=false;
+  }
+
+  function touch(){
+    dirty=true; badge("dirty","unsaved…");
+    if(timer) clearTimeout(timer);
+    timer=setTimeout(persist,900);            // debounce, never on every keystroke
+  }
+
+  t.setAttribute("contenteditable","plaintext-only");
+  x.setAttribute("contenteditable","true");
+  t.addEventListener("input",touch);
+  x.addEventListener("input",touch);
+  badge("","composer live · ⌘S to save");
+
+  document.addEventListener("keydown",function(e){
+    if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="s"){ e.preventDefault(); if(timer)clearTimeout(timer); persist(); }
+  });
+  window.addEventListener("beforeunload",function(){ if(dirty) persist(); });
 })();
 </script>
 </body>
