@@ -79,9 +79,14 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--
       <div class="gvp on" id="gp-recents"><div class="gvempty">reading omni…</div></div>
       <div class="gvp" id="gp-contacts"><div class="gvempty">reading omni…</div></div>
       <div class="gvp" id="gp-keypad">
-        <div id="gv-dialout"><span id="gv-dialtxt" class="ph">enter a number</span><span id="gv-del">&#9003;</span></div>
+        <div id="gv-dialout"><span id="gv-dialtxt" class="ph">&#8212; &#8212; &#8212; &#8212; &#8212; &#8212;</span></div>
+        <div id="gv-hint">&rsaquo; TAP A KEY OR SPEAK A NAME</div>
         <div id="gv-keys"></div>
-        <button id="gv-callbig" disabled>Call</button>
+        <div id="gv-callrow">
+          <div class="gvside" id="gv-contacts-btn" title="contacts">&#128101;</div>
+          <button id="gv-callbig" disabled><span>&#9742;</span><span>Call</span></button>
+          <div class="gvside" id="gv-del" title="delete">&#9003;</div>
+        </div>
       </div>
       <div id="gv-foot"><span id="gv-stat">connecting</span><span id="gv-age"></span></div>
     </div>
@@ -356,17 +361,30 @@ function gvStyles(){
   +   'color:#E8EAE8;display:flex;align-items:center;justify-content:space-between;gap:8px}'
   + '#gv-dialout .ph{color:#6B7280;font-size:12px;letter-spacing:.1em}'
   + '#gv-del{cursor:pointer;color:#6B7280;font-size:15px;padding:0 4px}'
-  + '#gv-keys{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}'
-  + '.gvk{aspect-ratio:1/1;display:grid;place-items:center;cursor:pointer;background:#0A0E11;'
-  +   'border:1px solid rgba(0,255,127,.13);border-radius:11px;font-size:18px;color:#E8EAE8}'
-  + '.gvk:active{background:rgba(0,255,127,.055);border-color:rgba(0,255,127,.22)}'
-  + '.gvk small{display:block;font-size:7px;color:#6B7280;letter-spacing:.14em;margin-top:1px}'
-  + '#gv-callbig{margin-top:11px;width:100%;padding:13px;cursor:pointer;border-radius:13px;font:inherit;'
-  +   'font-size:11px;letter-spacing:.17em;text-transform:uppercase;color:#00FFC2;'
-  +   'background:radial-gradient(circle at 30% 24%,rgba(0,255,194,.30),rgba(0,255,127,.11) 64%,rgba(0,255,127,.04));'
-  +   'border:1px solid rgba(0,255,127,.44);box-shadow:0 0 0 1px rgba(0,255,127,.10) inset,0 3px 20px rgba(0,255,127,.20);'
+  /* ROUND keys, per the canonical GV Phone dialpad — not squares. */
+  + '#gv-keys{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:0 6px;max-width:300px;margin:0 auto}'
+  + '.gvk{aspect-ratio:1/1;border-radius:50%;display:flex;flex-direction:column;align-items:center;'
+  +   'justify-content:center;cursor:pointer;background:#141A1E;border:1px solid rgba(255,255,255,.05);'
+  +   'font-size:26px;font-weight:300;color:#E8EAE8;line-height:1;transition:background .1s ease}'
+  + '.gvk:active{background:rgba(0,255,127,.10)}'
+  + '.gvk small{display:block;font-size:8px;color:#6B7280;letter-spacing:.16em;margin-top:3px;font-weight:400}'
+  /* the hint line above the pad */
+  + '#gv-hint{text-align:center;font-size:11px;letter-spacing:.12em;color:#6B7280;margin:0 0 14px}'
+  /* CALL row: contacts · emerald pill · backspace */
+  + '#gv-callrow{display:flex;align-items:center;gap:12px;margin-top:16px;max-width:300px;margin-left:auto;margin-right:auto}'
+  + '.gvside{flex:0 0 46px;height:46px;border-radius:50%;display:grid;place-items:center;cursor:pointer;'
+  +   'background:#141A1E;border:1px solid rgba(255,255,255,.05);color:#9BA3AA;font-size:17px}'
+  + '.gvside:active{background:rgba(0,255,127,.08)}'
+  + '#gv-callbig{flex:1 1 auto;height:52px;cursor:pointer;border-radius:999px;font:inherit;'
+  +   'display:flex;align-items:center;justify-content:center;gap:9px;'
+  +   'font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#00FF7F;'
+  +   'background:radial-gradient(120% 140% at 50% 10%,rgba(0,255,127,.20),rgba(0,255,127,.07) 60%,rgba(0,255,127,.03));'
+  +   'border:1px solid rgba(0,255,127,.46);'
+  +   'box-shadow:0 0 0 1px rgba(0,255,127,.08) inset,0 4px 30px rgba(0,255,127,.26);'
   +   '-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}'
-  + '#gv-callbig:disabled{opacity:.4;cursor:default;box-shadow:none}'
+  + '#gv-callbig:disabled{opacity:.35;cursor:default;box-shadow:none}'
+  /* big number readout, centred, like the canonical pad */
+  + '#gv-dialout{justify-content:center;font-size:27px;letter-spacing:.08em;border:0;background:transparent;min-height:56px}'
   + '#gv-foot{flex:0 0 auto;padding:7px 11px;border-top:1px solid rgba(0,255,127,.1);'
   +   'font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#6B7280;display:flex;justify-content:space-between;gap:8px}'
   + '#gv-foot .bad{color:#F59E0B}'
@@ -519,13 +537,17 @@ function mountGV(){
          ["7","PQRS"],["8","TUV"],["9","WXYZ"],["*",""],["0","+"],["#",""]];
   var dialed="";
   function sync(){ var t=$("gv-dialtxt");
-    if(dialed){ t.textContent=dialed; t.className=""; } else { t.textContent="enter a number"; t.className="ph"; }
+    if(dialed){ t.textContent=dialed; t.className=""; }
+    else { t.innerHTML="&#8212; &#8212; &#8212; &#8212; &#8212; &#8212;"; t.className="ph"; }
     $("gv-callbig").disabled = dialed.length<3; }
   $("gv-keys").innerHTML=K.map(function(k){
     return '<div class="gvk" data-k="'+k[0]+'">'+k[0]+(k[1]?'<small>'+k[1]+'</small>':'')+'</div>'; }).join("");
   $("gv-keys").addEventListener("click",function(e){
     var k=e.target.closest(".gvk"); if(!k) return; dialed+=k.getAttribute("data-k"); sync(); });
   $("gv-del").addEventListener("click",function(){ dialed=dialed.slice(0,-1); sync(); });
+  $("gv-contacts-btn").addEventListener("click",function(){
+    var t=document.querySelector('#gv-tabs .gvt[data-gp="contacts"]'); if(t) t.click();
+  });
   $("gv-callbig").addEventListener("click",function(){ if(dialed) gvDial(dialed); });
   sync();
 
