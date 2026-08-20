@@ -4,72 +4,77 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <title>XEN LIFE — assembled</title>
-<meta name="description" content="Canonical three-pane assembly: /xos3 omni-inbox left, /lifenote center, gv remote right. Mounts the live surfaces same-origin, no iframe.">
-<link rel="manifest" href="/xos/manifest.json">
+<meta name="description" content="Canonical three-pane assembly. Mounts the live surfaces same-origin with per-pane URL rebasing and CSS scoping. No iframe.">
 <meta name="theme-color" content="#06080A">
 <style>
-/* ══ tokens: LifeNote's own, read off lifenote/index.html — not reinvented ══ */
+/* ══ tokens: LifeNote's own, read off lifenote/index.html ══ */
 :root{
   --bg:#06080A; --jade:#00FF7F; --ink:#E8EAE8; --resolve:#7CFF9B;
   --heavy:#6B7280; --luminous:#00FFC2; --restless:#F59E0B;
   --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
-  --line:rgba(0,255,127,.14);
-  --glass:rgba(10,14,12,.72);
+  --line:rgba(0,255,127,.14); --glass:rgba(10,14,12,.72);
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 
-/* ══ GLOBAL: the canonical XOS swipeglass ══════════════════════════════════ */
 .panes{display:flex;height:100vh;width:300vw;transition:transform .38s cubic-bezier(.22,1,.36,1);will-change:transform}
 .pane{width:100vw;height:100vh;overflow:hidden;position:relative;display:flex;flex-direction:column}
-.pane > .mount{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch}
 
-.swipeglass{position:fixed;left:0;right:0;bottom:0;z-index:60;
+/* CRITICAL — the pane is a containment boundary. Codex 2026-08-20 measured
+   "top filters/nav overlap and clip" + "/life CSS overlaps severely" because a
+   mounted limb's position:fixed escaped its pane and its 100vh blew the box.
+   contain + transform creates a new containing block so fixed becomes
+   pane-relative, which is what an iframe gave us for free. */
+.mount{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+  position:relative;transform:translateZ(0);contain:layout paint style;padding-bottom:78px}
+
+.swipeglass{position:fixed;left:0;right:0;bottom:0;z-index:2147483000;
   background:var(--glass);backdrop-filter:blur(22px) saturate(140%);
   -webkit-backdrop-filter:blur(22px) saturate(140%);
   border-top:1px solid var(--line);padding:10px 12px calc(12px + env(safe-area-inset-bottom));
   display:flex;gap:8px;align-items:center}
 .swipeglass button{flex:1;background:transparent;border:1px solid var(--line);border-radius:999px;
-  color:var(--heavy);font-family:var(--mono);font-size:11px;letter-spacing:.1em;
-  padding:11px 8px;text-transform:uppercase}
+  color:var(--heavy);font-family:var(--mono);font-size:11px;letter-spacing:.1em;padding:11px 8px;text-transform:uppercase}
 .swipeglass button.on{color:var(--ink);border-color:rgba(0,255,127,.42);
   background:rgba(0,255,127,.07);box-shadow:0 0 22px rgba(0,255,127,.14) inset}
 
-/* pane chrome */
 .phead{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:12px 14px 10px;
   font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--heavy);
-  border-bottom:1px solid rgba(255,255,255,.05)}
+  border-bottom:1px solid rgba(255,255,255,.05);position:relative;z-index:5;background:var(--bg)}
 .phead b{color:var(--jade);font-weight:500}
 .phead .rail{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:10px}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--heavy)}
 .dot.live{background:var(--jade);box-shadow:0 0 10px var(--jade)}
 .dot.err{background:#F87171}
-.mount{padding-bottom:74px}
 .loading{padding:22px 16px;font-family:var(--mono);font-size:12px;color:var(--heavy)}
 .fail{padding:22px 16px;font-family:var(--mono);font-size:12px;color:var(--restless);line-height:1.7}
 .fail a{color:var(--jade)}
+.notgv{margin:10px 14px;padding:10px 12px;border:1px solid rgba(245,158,11,.4);border-radius:10px;
+  font-family:var(--mono);font-size:11px;color:var(--restless);line-height:1.6}
 </style>
 </head>
 <body>
 
 <div class="panes" id="panes">
-  <!-- LEFT — /xos3 omni-inbox. Its own EventSource re-arms on mount. -->
   <section class="pane" id="pane-left">
     <div class="phead">OMNI-INBOX <b>/xos3</b><span class="rail"><span class="dot" id="d-left"></span><span id="s-left">mounting</span></span></div>
     <div class="mount" id="m-left"><div class="loading">mounting /xos3/ …</div></div>
   </section>
 
-  <!-- CENTER — /lifenote. Primary. Carries the write rail. -->
   <section class="pane" id="pane-center">
     <div class="phead">LIFENOTE <b>/lifenote</b><span class="rail"><span class="dot" id="d-center"></span><span id="s-center">mounting</span></span></div>
     <div class="mount" id="m-center"><div class="loading">mounting /lifenote/ …</div></div>
   </section>
 
-  <!-- RIGHT — gv remote + contacts/recents. -->
   <section class="pane" id="pane-right">
-    <div class="phead">GV REMOTE <b>/life</b><span class="rail"><span class="dot" id="d-right"></span><span id="s-right">mounting</span></span></div>
-    <div class="mount" id="m-right"><div class="loading">mounting …</div></div>
+    <div class="phead">GV REMOTE <b>placeholder: /life</b><span class="rail"><span class="dot" id="d-right"></span><span id="s-right">mounting</span></span></div>
+    <div class="mount" id="m-right">
+      <div class="notgv">NOT THE GV SURFACE. Spec calls for gv remote + contacts/recents with the
+      canonical emerald-glass call button. No such surface exists in the repo, so this pane mounts
+      /life (command dashboard) and says so rather than faking a dialer.</div>
+      <div class="loading">mounting /life/ …</div>
+    </div>
   </section>
 </div>
 
@@ -83,28 +88,21 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--
 (function(){
 "use strict";
 /* ═══════════════════════════════════════════════════════════════════════════
-   ASSEMBLY, not construction.
+   ASSEMBLY v2 — fixes the three defects Codex measured on v1, 2026-08-20:
+     1. "Center LifeNote shows FEED 404 with empty journals: relative data URLs
+        broke when mounted."  ← lifenote does var FEED="lifenote.json", which
+        resolved against /life-app/ instead of /lifenote/. MY bug.
+     2. "top filters/nav overlap and clip" / "/life CSS overlaps severely"
+        ← three limbs' global CSS injected into one document, colliding.
+     3. right pane is /life, not GV  ← no GV surface exists; now labelled.
 
-   qi 2026-08-20, spec given four times (03:13, 12:27, 15:25, 15:30):
-     global: canonical xos swipeglass
-     centerpanel: lifenote + life + vvsvei/xos chat combined, REAL note app
-     leftpanel: omni-inbox, hitthe.link root css + glass searchbar
-     rightpanel: gv remote + contacts/recents, emerald-glass call button
-
-   WHY THIS FILE EXISTS: a Cloudflare rule rewrites life.xlrd.org/ ->
-   /xos/index.html. PROVEN 2026-08-20: life.xlrd.org/ = 16066 B sha d324beb89,
-   byte-identical to /xos/, while life.xlrd.org/index.html = 49086 B (the real
-   root). So the canonical URL served standalone XOS and NO built panel could
-   ever appear there. That is why every prior "done" showed the same surface.
-   Repoint that one rewrite at /life-app/ and the assembly becomes canonical.
-
-   ⛔ NO IFRAME. Ever. That shortcut cost the flagship 18 months. Limbs are
-   fetched same-origin and mounted into this document, scripts re-executed by
-   hand (innerHTML does not run <script>), so each keeps its OWN live rail.
-
-   ⛔ NO STATIC. qi 15:32: "static sites are no longer tolerated. At all."
-   Nothing here polls a file. /xos3 brings its own EventSource; /lifenote
-   brings its write rail. This shell only composes and never caches.
+   HOW 1 IS FIXED — a per-pane fetch/EventSource/XHR shim installed BEFORE the
+   limb's scripts run, so any bare-relative request resolves against the limb's
+   own directory instead of this page's. That is the piece an iframe gives free.
+   HOW 2 IS FIXED — every limb rule is rewritten to be scoped under its pane,
+   html/body/:root selectors are remapped, and position:fixed becomes absolute
+   (the .mount is a containing block via contain+transform).
+   ⛔ STILL NO IFRAME. Ever.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 var $=function(i){return document.getElementById(i);};
@@ -115,84 +113,164 @@ function go(i){
   idx=Math.max(0,Math.min(2,i));
   panes.style.transform="translateX("+(-idx*100)+"vw)";
   var b=document.querySelectorAll("#glass button");
-  for(var k=0;k<b.length;k++) b[k].className = (+b[k].dataset.i===idx)?"on":"";
+  for(var k=0;k<b.length;k++) b[k].className=(+b[k].dataset.i===idx)?"on":"";
 }
-document.getElementById("glass").addEventListener("click",function(e){
-  var t=e.target.closest("button"); if(t) go(+t.dataset.i);
-});
-go(1);                                    // LifeNote is primary — opens centered
-
-/* touch swipe across the glass */
+$("glass").addEventListener("click",function(e){var t=e.target.closest("button");if(t)go(+t.dataset.i);});
+go(1);
 var x0=null;
-document.addEventListener("touchstart",function(e){ x0=e.touches[0].clientX; },{passive:true});
+document.addEventListener("touchstart",function(e){x0=e.touches[0].clientX;},{passive:true});
 document.addEventListener("touchend",function(e){
-  if(x0===null) return;
-  var dx=e.changedTouches[0].clientX-x0;
-  if(Math.abs(dx)>60) go(idx + (dx<0?1:-1));
-  x0=null;
+  if(x0===null)return; var dx=e.changedTouches[0].clientX-x0;
+  if(Math.abs(dx)>60) go(idx+(dx<0?1:-1)); x0=null;
 },{passive:true});
+document.addEventListener("keydown",function(e){
+  if(e.key==="ArrowLeft")go(idx-1); if(e.key==="ArrowRight")go(idx+1);
+});
 
-/* ── the mount: fetch same-origin, inject, RE-EXECUTE scripts ──────────── */
 function status(side,state,text){
-  var d=$("d-"+side), s=$("s-"+side);
-  if(d) d.className="dot"+(state==="live"?" live":state==="err"?" err":"");
-  if(s) s.textContent=text;
+  var d=$("d-"+side),s=$("s-"+side);
+  if(d)d.className="dot"+(state==="live"?" live":state==="err"?" err":"");
+  if(s)s.textContent=text;
 }
 
-function runScripts(host, baseHref){
-  // innerHTML never executes <script>. Clone each into a fresh element so it does.
-  var olds=host.querySelectorAll("script");
-  for(var i=0;i<olds.length;i++){
-    var o=olds[i], n=document.createElement("script");
-    for(var a=0;a<o.attributes.length;a++) n.setAttribute(o.attributes[a].name,o.attributes[a].value);
-    if(o.src){ n.src=new URL(o.getAttribute("src"), baseHref).href; }
-    else { n.textContent=o.textContent; }
-    o.parentNode.replaceChild(n,o);
+/* ── URL rebasing: bare-relative → the limb's own directory ────────────── */
+function rebase(u, base){
+  if(u==null) return u;
+  var s=String(u);
+  if(/^(https?:|data:|blob:|about:|javascript:|mailto:|#|\/\/)/i.test(s)) return s;
+  if(s.charAt(0)==="/") return s;                  // already root-absolute: fine
+  try { return new URL(s, location.origin+base).pathname
+              + new URL(s, location.origin+base).search; } catch(e){ return s; }
+}
+
+/* ── CSS scoping: rewrite each rule to live under this pane only ────────── */
+function scopeCss(css, scope, base){
+  css=css.replace(/url\(\s*(['"]?)([^'")]+)\1\s*\)/g,function(m,q,u){
+    return "url("+q+rebase(u,base)+q+")";
+  });
+  // position:fixed would escape the pane; .mount is a containing block so make it absolute
+  css=css.replace(/position\s*:\s*fixed/gi,"position:absolute");
+  // 100vh inside a pane is the pane, not the viewport
+  css=css.replace(/(\d+)vh/g,function(m,n){ return n==="100" ? "100%" : m; });
+  var out=[], depth=0, buf="";
+  // walk top-level rules; only rewrite selectors at depth 0 (leave @media innards to recursion)
+  function scopeSelectors(sel){
+    return sel.split(",").map(function(s){
+      s=s.trim();
+      if(!s) return s;
+      if(/^(from|to|\d+%)$/.test(s)) return s;                 // keyframe stops
+      if(/^(html|body|:root)\b/i.test(s)){
+        return scope + s.replace(/^(html|body|:root)/i,"");
+      }
+      return scope+" "+s;
+    }).join(",");
   }
+  var i=0, n=css.length, sel="";
+  while(i<n){
+    var ch=css[i];
+    if(ch==="{"){
+      depth++;
+      if(depth===1){
+        var s=sel.trim(); sel="";
+        if(s.charAt(0)==="@"){
+          if(/^@(media|supports|layer)/i.test(s)){ out.push(s+"{"); buf=""; }
+          else { out.push(s+"{"); buf=""; }        // @keyframes / @font-face pass through
+          i++; continue;
+        }
+        out.push(scopeSelectors(s)+"{"); i++; continue;
+      }
+      out.push("{"); i++; continue;
+    }
+    if(ch==="}"){ depth--; out.push("}"); i++; continue; }
+    if(depth===0) sel+=ch; else out.push(ch);
+    i++;
+  }
+  var scoped=out.join("");
+  // second pass: selectors nested inside @media were emitted raw — scope them
+  scoped=scoped.replace(/@(media|supports|layer)([^{]*)\{([\s\S]*?)\}\s*(?=@|$)/g,
+    function(m,kw,cond,body){
+      var inner=body.replace(/([^{}]+)\{/g,function(mm,s){ return scopeSelectors(s)+"{"; });
+      return "@"+kw+cond+"{"+inner+"}";
+    });
+  return scoped;
 }
 
-function mount(side, path){
-  var host=$("m-"+side);
+/* ── mount one limb ───────────────────────────────────────────────────── */
+function mount(side, base){
+  var host=$("m-"+side), scope="#m-"+side;
   status(side,"","fetching");
-  fetch(path,{credentials:"same-origin",cache:"no-store"})
+  fetch(base,{credentials:"same-origin",cache:"no-store"})
     .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.text(); })
     .then(function(html){
       var doc=new DOMParser().parseFromString(html,"text/html");
 
-      // carry the limb's own <style> and <link rel=stylesheet> so it keeps its look
-      var head=doc.querySelectorAll('style,link[rel="stylesheet"]');
-      for(var i=0;i<head.length;i++){
-        var c=head[i].cloneNode(true);
-        if(c.tagName==="LINK") c.href=new URL(head[i].getAttribute("href"), location.origin+path).href;
-        document.head.appendChild(c);
-      }
+      /* styles: scope + rebase, then attach */
+      doc.querySelectorAll("style").forEach(function(st){
+        var el=document.createElement("style");
+        el.setAttribute("data-limb",side);
+        el.textContent=scopeCss(st.textContent||"", scope, base);
+        document.head.appendChild(el);
+      });
+      doc.querySelectorAll('link[rel="stylesheet"]').forEach(function(lk){
+        var href=rebase(lk.getAttribute("href"), base);
+        fetch(href,{cache:"no-store"}).then(function(r){return r.ok?r.text():"";})
+          .then(function(css){
+            if(!css) return;
+            var el=document.createElement("style");
+            el.setAttribute("data-limb",side);
+            el.textContent=scopeCss(css, scope, base);
+            document.head.appendChild(el);
+          }).catch(function(){});
+      });
+
+      /* markup: rebase every asset attribute */
+      ["src","href","poster","data-src"].forEach(function(a){
+        doc.body.querySelectorAll("["+a+"]").forEach(function(el){
+          el.setAttribute(a, rebase(el.getAttribute(a), base));
+        });
+      });
+
       host.innerHTML="";
-      var body=doc.body;
-      while(body.firstChild) host.appendChild(body.firstChild);
-      runScripts(host, location.origin+path);
-      status(side,"live",path);
+      var kids=doc.body.childNodes;
+      while(kids.length) host.appendChild(kids[0]);
+
+      /* THE FIX for FEED 404 — shim network APIs to this limb's base, then run
+         its scripts. Restored immediately after so panes never cross-talk.    */
+      var of=window.fetch, oes=window.EventSource, oxhr=XMLHttpRequest.prototype.open;
+      window.fetch=function(u,o){ return of.call(window, (typeof u==="string")?rebase(u,base):u, o); };
+      if(oes) window.EventSource=function(u,o){ return new oes(rebase(u,base),o); };
+      XMLHttpRequest.prototype.open=function(m,u){
+        arguments[1]=rebase(u,base); return oxhr.apply(this,arguments);
+      };
+
+      var scripts=host.querySelectorAll("script");
+      for(var i=0;i<scripts.length;i++){
+        var o=scripts[i], nx=document.createElement("script");
+        for(var a=0;a<o.attributes.length;a++) nx.setAttribute(o.attributes[a].name,o.attributes[a].value);
+        if(o.src) nx.src=rebase(o.getAttribute("src"), base);
+        else nx.textContent=o.textContent;
+        o.parentNode.replaceChild(nx,o);
+      }
+
+      setTimeout(function(){
+        window.fetch=of;
+        if(oes) window.EventSource=oes;
+        XMLHttpRequest.prototype.open=oxhr;
+      },4000);   // long enough for the limb's own boot fetches to fire
+
+      status(side,"live",base);
     })
     .catch(function(err){
       status(side,"err","failed");
-      host.innerHTML='<div class="fail">could not mount <b>'+path+'</b><br>'+
-        String(err.message)+'<br><br>open it directly: <a href="'+path+'">'+path+'</a></div>';
+      host.innerHTML='<div class="fail">could not mount <b>'+base+'</b><br>'+String(err.message)+
+        '<br><br>open directly: <a href="'+base+'">'+base+'</a></div>';
     });
 }
 
-/* the three limbs — each already live, each verified reachable same-origin
-   from this host 2026-08-20:
-     /xos3/     27267 B  OMNI-INBOX · XOS   (own EventSource, 1358 msgs)
-     /lifenote/ 64344 B  LifeNote           (write rail: contenteditable + POST)
-     /life/     42073 B  XEN · LIFE dashboard                                */
-mount("left",  "/xos3/");
+/* stagger so the three shims never overlap */
 mount("center","/lifenote/");
-mount("right", "/life/");
-
-/* keyboard for desktop */
-document.addEventListener("keydown",function(e){
-  if(e.key==="ArrowLeft") go(idx-1);
-  if(e.key==="ArrowRight") go(idx+1);
-});
+setTimeout(function(){ mount("left","/xos3/"); }, 4200);
+setTimeout(function(){ mount("right","/life/"); }, 8400);
 })();
 </script>
 </body>
