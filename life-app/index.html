@@ -205,6 +205,42 @@ function scopeCss(css, scope, base){
   return scoped;
 }
 
+/* ── PERMANENT URL REBASING ────────────────────────────────────────────────────
+   MEASURED 2026-08-20 in the live console: 13 identical errors, one every ~20s —
+     404 https://life.xlrd.org/life-app/lifenote.json
+   The previous shim restored the real fetch after 4000ms, with the comment "long
+   enough for the limb's own boot fetches to fire." That assumption is the bug.
+   LifeNote does not fetch once at boot; it POLLS lifenote.json every 20 seconds
+   for the life of the page. So the shim was right for four seconds and wrong for
+   every poll after — the pane rendered, then went stale and showed FEED 404 while
+   the mount itself reported "live". A longer timeout only moves the cliff.
+   SHAPE: separate LEARNING from REBASING. While a limb boots, LIMB_ACTIVE names
+   its base and every bare-relative path it requests is remembered against that
+   base. From then on the shim keeps rewriting those SAME paths forever, so an
+   interval poll resolves exactly like its first fetch did. Panes still cannot
+   cross-talk: each learned path stays bound to the base that asked for it, and a
+   path is only ever learned while its own limb is the active one.
+   Absolute, root-relative and protocol URLs are passed through untouched, which is
+   why /xos3 (it targets https://omni.xlrd.org) needs none of this.            */
+var LIMB_ACTIVE = null;      /* base of the limb currently booting, else null */
+var LIMB_LEARNED = {};       /* bare path -> the base that owns it            */
+(function installPermanentRebase(){
+  var of=window.fetch, oes=window.EventSource, oxhr=XMLHttpRequest.prototype.open;
+  function resolve(u){
+    if(typeof u!=="string" || !u) return u;
+    if(/^(https?:|data:|blob:|about:|javascript:|mailto:|#|\/\/)/i.test(u)) return u;
+    if(u.charAt(0)==="/") return u;
+    var key=u.split("?")[0];
+    var b=LIMB_ACTIVE || LIMB_LEARNED[key];
+    if(!b) return u;
+    LIMB_LEARNED[key]=b;
+    return rebase(u,b);
+  }
+  window.fetch=function(u,o){ return of.call(window, resolve(u), o); };
+  if(oes) window.EventSource=function(u,o){ return new oes(resolve(u),o); };
+  XMLHttpRequest.prototype.open=function(m,u){ arguments[1]=resolve(u); return oxhr.apply(this,arguments); };
+})();
+
 /* ── mount one limb ───────────────────────────────────────────────────── */
 function mount(side, base){
   var host=$("m-"+side), scope="#m-"+side;
@@ -244,14 +280,11 @@ function mount(side, base){
       var kids=doc.body.childNodes;
       while(kids.length) host.appendChild(kids[0]);
 
-      /* THE FIX for FEED 404 — shim network APIs to this limb's base, then run
-         its scripts. Restored immediately after so panes never cross-talk.    */
-      var of=window.fetch, oes=window.EventSource, oxhr=XMLHttpRequest.prototype.open;
-      window.fetch=function(u,o){ return of.call(window, (typeof u==="string")?rebase(u,base):u, o); };
-      if(oes) window.EventSource=function(u,o){ return new oes(rebase(u,base),o); };
-      XMLHttpRequest.prototype.open=function(m,u){
-        arguments[1]=rebase(u,base); return oxhr.apply(this,arguments);
-      };
+      /* Open the LEARNING window for this limb. The permanent shim (installed once,
+         far below) rebases while LIMB_ACTIVE is set and REMEMBERS each bare path it
+         saw, so later polls keep resolving correctly. See the shim for why the old
+         4-second restore was structurally wrong.                                */
+      LIMB_ACTIVE = base;
 
       var scripts=host.querySelectorAll("script");
       for(var i=0;i<scripts.length;i++){
@@ -262,11 +295,9 @@ function mount(side, base){
         o.parentNode.replaceChild(nx,o);
       }
 
-      setTimeout(function(){
-        window.fetch=of;
-        if(oes) window.EventSource=oes;
-        XMLHttpRequest.prototype.open=oxhr;
-      },4000);   // long enough for the limb's own boot fetches to fire
+      /* Close the LEARNING window only. The rebasing itself is permanent for the
+         paths learned here, which is the whole point of the fix.                */
+      setTimeout(function(){ if(LIMB_ACTIVE===base) LIMB_ACTIVE=null; }, 4000);
 
       status(side,"live",base);
     })
