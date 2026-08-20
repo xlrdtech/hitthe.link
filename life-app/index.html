@@ -68,12 +68,22 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--
   </section>
 
   <section class="pane" id="pane-right">
-    <div class="phead">GV REMOTE <b>placeholder: /life</b><span class="rail"><span class="dot" id="d-right"></span><span id="s-right">mounting</span></span></div>
+    <div class="phead">GV REMOTE <b>ggv.xlrd.org</b><span class="rail"><span class="dot" id="d-right"></span><span id="s-right">connecting</span></span></div>
     <div class="mount" id="m-right">
-      <div class="notgv">NOT THE GV SURFACE. Spec calls for gv remote + contacts/recents with the
-      canonical emerald-glass call button. No such surface exists in the repo, so this pane mounts
-      /life (command dashboard) and says so rather than faking a dialer.</div>
-      <div class="loading">mounting /life/ …</div>
+      <div id="gv-live">GOOGLE VOICE · <span id="gv-title">reading the line…</span><span id="gv-ctl" style="display:none"></span></div>
+      <div id="gv-tabs">
+        <div class="gvt on" data-gp="recents">Recents</div>
+        <div class="gvt" data-gp="contacts">Contacts</div>
+        <div class="gvt" data-gp="keypad">Keypad</div>
+      </div>
+      <div class="gvp on" id="gp-recents"><div class="gvempty">reading omni…</div></div>
+      <div class="gvp" id="gp-contacts"><div class="gvempty">reading omni…</div></div>
+      <div class="gvp" id="gp-keypad">
+        <div id="gv-dialout"><span id="gv-dialtxt" class="ph">enter a number</span><span id="gv-del">&#9003;</span></div>
+        <div id="gv-keys"></div>
+        <button id="gv-callbig" disabled>Call</button>
+      </div>
+      <div id="gv-foot"><span id="gv-stat">connecting</span><span id="gv-age"></span></div>
     </div>
   </section>
 </div>
@@ -267,10 +277,272 @@ function mount(side, base){
     });
 }
 
+
+/* ── RIGHT PANE: THE REAL GV REMOTE ────────────────────────────────────────────
+   Wired to the CANONICAL route ggv.xlrd.org (tunnel canon: -> 127.0.0.1:3457,
+   service mcp-gv/gv-mcp.mjs), which had regressed to 502 with no listener and is
+   now restored and guardian-owned. This pane is NATIVE to this page rather than a
+   mounted limb: GV cannot be iframed (Google sends frame-blocking headers) and
+   /life was never the GV surface. Call CONTROL goes through gv-mcp's tools, which
+   puppet Google Voice's OWN hidden controls in the headed logged-in BrowserOS tab —
+   we never reimplement dialing and never touch audio bytes.
+   Contacts + recents are REAL gvoice threads from omni; nothing here is invented.
+   ────────────────────────────────────────────────────────────────────────────── */
+var GGV  = "https://ggv.xlrd.org";
+var OMNI = "https://omni.xlrd.org";
+
+function gvStyles(){
+  var css = ''
+  + '#m-right{padding:0;display:flex;flex-direction:column;overflow:hidden}'
+  + '#gv-live{flex:0 0 auto;padding:9px 12px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;'
+  +   'color:#00FF7F;border-bottom:1px solid rgba(0,255,127,.16);background:linear-gradient(180deg,rgba(0,255,127,.07),transparent)}'
+  + '#gv-live.incall{color:#00FFC2;background:linear-gradient(180deg,rgba(0,255,194,.16),transparent)}'
+  + '#gv-tabs{flex:0 0 auto;display:flex;gap:2px;padding:7px 8px;border-bottom:1px solid rgba(0,255,127,.1)}'
+  + '.gvt{flex:1;padding:7px 3px;text-align:center;cursor:pointer;font-size:10px;letter-spacing:.11em;'
+  +   'text-transform:uppercase;color:#6B7280;border:1px solid transparent;border-radius:8px}'
+  + '.gvt.on{color:#00FF7F;background:rgba(0,255,127,.055);border-color:rgba(0,255,127,.22)}'
+  + '.gvp{display:none;flex:1 1 auto;overflow-y:auto;padding:9px}'
+  + '.gvp.on{display:block}'
+  + '.gvrow{display:flex;align-items:center;gap:9px;padding:9px 10px;margin-bottom:6px;'
+  +   'background:#0A0E11;border:1px solid rgba(0,255,127,.1);border-radius:10px}'
+  + '.gvav{flex:0 0 32px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;'
+  +   'font-size:11px;background:rgba(0,255,127,.055);border:1px solid rgba(0,255,127,.22);color:#00FF7F}'
+  + '.gvmeta{flex:1 1 auto;min-width:0}'
+  + '.gvwho{font-size:12px;color:#E8EAE8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+  + '.gvprev{font-size:10px;color:#6B7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}'
+  + '.gvwhen{flex:0 0 auto;font-size:10px;color:#6B7280}'
+  /* the canonical emerald glass call button */
+  + '.gvcall{flex:0 0 auto;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;cursor:pointer;'
+  +   'background:radial-gradient(circle at 32% 28%,rgba(0,255,194,.34),rgba(0,255,127,.13) 62%,rgba(0,255,127,.05));'
+  +   'border:1px solid rgba(0,255,127,.42);color:#00FFC2;font-size:14px;line-height:1;'
+  +   'box-shadow:0 0 0 1px rgba(0,255,127,.10) inset,0 2px 14px rgba(0,255,127,.20);'
+  +   '-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);transition:transform .12s ease}'
+  + '.gvcall:active{transform:scale(.92)}'
+  + '.gvcall.hangup{background:radial-gradient(circle at 32% 28%,rgba(245,158,11,.34),rgba(245,158,11,.10) 64%,transparent);'
+  +   'border-color:rgba(245,158,11,.46);color:#F59E0B}'
+  + '#gv-dialout{min-height:42px;padding:9px 11px;margin-bottom:11px;background:#0A0E11;'
+  +   'border:1px solid rgba(0,255,127,.22);border-radius:10px;font-size:20px;letter-spacing:.05em;'
+  +   'color:#E8EAE8;display:flex;align-items:center;justify-content:space-between;gap:8px}'
+  + '#gv-dialout .ph{color:#6B7280;font-size:12px;letter-spacing:.1em}'
+  + '#gv-del{cursor:pointer;color:#6B7280;font-size:15px;padding:0 4px}'
+  + '#gv-keys{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}'
+  + '.gvk{aspect-ratio:1/1;display:grid;place-items:center;cursor:pointer;background:#0A0E11;'
+  +   'border:1px solid rgba(0,255,127,.13);border-radius:11px;font-size:18px;color:#E8EAE8}'
+  + '.gvk:active{background:rgba(0,255,127,.055);border-color:rgba(0,255,127,.22)}'
+  + '.gvk small{display:block;font-size:7px;color:#6B7280;letter-spacing:.14em;margin-top:1px}'
+  + '#gv-callbig{margin-top:11px;width:100%;padding:13px;cursor:pointer;border-radius:13px;font:inherit;'
+  +   'font-size:11px;letter-spacing:.17em;text-transform:uppercase;color:#00FFC2;'
+  +   'background:radial-gradient(circle at 30% 24%,rgba(0,255,194,.30),rgba(0,255,127,.11) 64%,rgba(0,255,127,.04));'
+  +   'border:1px solid rgba(0,255,127,.44);box-shadow:0 0 0 1px rgba(0,255,127,.10) inset,0 3px 20px rgba(0,255,127,.20);'
+  +   '-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}'
+  + '#gv-callbig:disabled{opacity:.4;cursor:default;box-shadow:none}'
+  + '#gv-foot{flex:0 0 auto;padding:7px 11px;border-top:1px solid rgba(0,255,127,.1);'
+  +   'font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#6B7280;display:flex;justify-content:space-between;gap:8px}'
+  + '#gv-foot .bad{color:#F59E0B}'
+  + '#gv-ctl{display:flex;gap:7px;margin-left:auto}'
+  + '#gv-live{display:flex;align-items:center;gap:8px}'
+  + '#gv-ctl .gvcall{width:28px;height:28px;font-size:12px}'
+  + '.gvnonum{flex:0 0 auto;width:34px;text-align:center;color:#6B7280;font-size:14px;cursor:default}'
+  + '.gvempty{padding:20px 10px;text-align:center;color:#6B7280;font-size:11px;line-height:1.7}'
+  + '.gvempty b{display:block;color:#F59E0B;margin-bottom:5px;letter-spacing:.1em}';
+  var el=document.createElement("style"); el.setAttribute("data-limb","right");
+  el.textContent=css; document.head.appendChild(el);
+}
+
+function gvEsc(v){ return String(v==null?"":v).replace(/[&<>"']/g,function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+function gvAgo(ts){ if(!ts) return "";
+  var d=Math.floor((Date.now()-ts)/1000);
+  if(d<60) return d+"s"; if(d<3600) return Math.floor(d/60)+"m";
+  if(d<86400) return Math.floor(d/3600)+"h"; return Math.floor(d/86400)+"d"; }
+function gvInit(n){ var t=String(n||"").trim();
+  if(/^\+?[\d\s()\-]+$/.test(t)) return "#";
+  var p=t.split(/\s+/).filter(Boolean);
+  return ((p[0]||"?")[0]+(p[1]?p[1][0]:"")).toUpperCase(); }
+function gvIsNum(v){ return /^\+?[\d\s()\-]{7,}$/.test(String(v||"").trim()); }
+
+/* Every control goes through gv-mcp's own tools. No auth header: qi's explicit
+   decision, stated four times — "if anybody can do that, that means it works."
+   gv-mcp records each call to an M4 audit log with the number redacted to last-4. */
+function gvTool(name, args){
+  return fetch(GGV+"/mcp",{
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({jsonrpc:"2.0",id:Date.now(),method:"tools/call",
+                         params:{name:name,arguments:args||{}}})
+  }).then(function(r){ return r.json(); }).then(function(d){
+    // MCP returns HTTP 200 even when the TOOL failed — the verdict lives in
+    // result.isError and the payload text, never in the status line. Reading the
+    // 200 as success is how a UI ends up announcing "dial sent" on a rejection.
+    if (d && d.error) throw new Error(d.error.message || "rpc error");
+    var res = d && d.result, txt = "";
+    try { txt = (res.content || [])[0].text || ""; } catch(_) {}
+    var inner = null;
+    try { inner = JSON.parse(txt); } catch(_) {}
+    if ((res && res.isError) || (inner && inner.ok === false)) {
+      throw new Error((inner && (inner.detail || inner.error || inner.blocker)) || txt || "tool reported failure");
+    }
+    return inner || res;
+  });
+}
+function gvDial(num){
+  var st=$("gv-stat"); st.textContent="dialing "+num; st.className="";
+  gvTool("gv_dial",{number:num})
+    .then(function(){ st.textContent="dial accepted · watching state"; gvPoll(); })
+    .catch(function(e){ st.textContent="dial failed: "+(e.message||e); st.className="bad"; });
+}
+function gvHangup(){ gvTool("gv_hangup").then(gvPoll).catch(function(){}); }
+
+function gvDialable(r){
+  // A dialable target must be an actual number. MEASURED on the live payload:
+  // omni's 6 gvoice rows carry NO `number` field and only 2 titles are numeric,
+  // so 4 of them are names with no phone number anywhere in the data. Offering a
+  // call button there would dial a name. Nothing is invented to fill the gap.
+  var cand = r.number || r.title || "";
+  var digits = String(cand).replace(/\D/g, "");
+  return (gvIsNum(cand) && digits.length >= 10) ? cand : null;
+}
+function gvRowHTML(r){
+  var who=r.title||r.number||"unknown";
+  var dial=gvDialable(r);
+  return '<div class="gvrow"><div class="gvav">'+gvEsc(gvInit(who))+'</div>'
+    +'<div class="gvmeta"><div class="gvwho">'+gvEsc(who)+'</div>'
+    +'<div class="gvprev">'+gvEsc(r.preview||"")+'</div></div>'
+    +'<div class="gvwhen">'+gvEsc(gvAgo(r.lastTs))+'</div>'
+    +(dial
+       ? '<div class="gvcall" data-dial="'+gvEsc(dial)+'" title="call '+gvEsc(dial)+'">&#9742;</div>'
+       : '<div class="gvnonum" title="no phone number in this thread - omni carries no number field for it">&#8212;</div>')
+    +'</div>';
+}
+function gvEmpty(el,head,why){
+  el.innerHTML='<div class="gvempty"><b>'+gvEsc(head)+'</b>'+gvEsc(why)+'</div>';
+}
+
+/* Contacts and recents are REAL gvoice threads out of omni. If omni answers with
+   zero gvoice rows we say so — nothing is invented to fill the pane. */
+function gvRooms(){
+  fetch(OMNI+"/api/rooms",{cache:"no-store"})
+    .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
+    .then(function(d){
+      var all=Array.isArray(d.rooms)?d.rooms:[];
+      var gv=all.filter(function(r){
+        return ["gvoice","googlevoice","gv"].indexOf(String(r.network||"").toLowerCase())>=0;
+      }).sort(function(a,b){ return (b.lastTs||0)-(a.lastTs||0); });
+      if(!gv.length){
+        gvEmpty($("gp-recents"),"NO GOOGLE VOICE THREADS","Omni answered and reported zero gvoice rows.");
+        gvEmpty($("gp-contacts"),"NO CONTACTS","Contacts come only from real gvoice threads.");
+        return;
+      }
+      $("gp-recents").innerHTML=gv.map(gvRowHTML).join("");
+      var seen={},people=[],nums=[];
+      gv.forEach(function(r){ var w=r.title||r.number; if(!w||seen[w])return; seen[w]=1;
+        (gvIsNum(w)?nums:people).push(r); });
+      $("gp-contacts").innerHTML=people.concat(nums).map(gvRowHTML).join("");
+    })
+    .catch(function(e){
+      gvEmpty($("gp-recents"),"OMNI UNREACHABLE","The gvoice threads live in omni: "+(e.message||e));
+      gvEmpty($("gp-contacts"),"OMNI UNREACHABLE","Contacts come from omni.");
+    });
+}
+
+var gvLastAt=0;
+function gvPoll(){
+  fetch(GGV+"/state",{cache:"no-store"})
+    .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
+    .then(function(d){
+      gvLastAt=Date.now();
+      var live=$("gv-live"), st=$("gv-stat");
+      if(d.ok===false && d.blocker){
+        // The service tells the truth about its own blocker; surface it verbatim.
+        $("gv-title").textContent=d.blocker;
+        status("right","","blocked"); st.textContent=d.blocker; st.className="bad";
+        return;
+      }
+      var s=d.state||{};
+      $("gv-title").textContent = s.inCall
+        ? ("IN CALL · "+(s.callerName||s.callerNumber||"unknown")+(s.duration?(" · "+s.duration):""))
+        : (s.title||"idle");
+      live.className = s.inCall ? "incall" : "";
+      // State-appropriate controls, driven by what gv_state says GV's own DOM
+      // actually exposes. canAnswer/canHangup are false when no call is up — the
+      // controls appear because the real controls exist, not because we guessed.
+      var ctl=$("gv-ctl");
+      var bits="";
+      if(s.canAnswer) bits+='<div class="gvcall" data-act="answer" title="answer">&#9742;</div>';
+      if(s.canHangup) bits+='<div class="gvcall hangup" data-act="hangup" title="hang up">&#9743;</div>';
+      if(s.canHangup) bits+='<div class="gvcall" data-act="mute" title="mute">&#9836;</div>';
+      ctl.innerHTML=bits;
+      ctl.style.display = bits ? "flex" : "none";
+      status("right","live","ggv live");
+      st.textContent = s.inCall ? "in call" : "live · ggv"; st.className="";
+    })
+    .catch(function(e){
+      status("right","err","ggv down");
+      var st=$("gv-stat"); st.textContent="ggv unreachable: "+(e.message||e); st.className="bad";
+    });
+}
+
+function mountGV(){
+  gvStyles();
+  /* keypad */
+  var K=[["1",""],["2","ABC"],["3","DEF"],["4","GHI"],["5","JKL"],["6","MNO"],
+         ["7","PQRS"],["8","TUV"],["9","WXYZ"],["*",""],["0","+"],["#",""]];
+  var dialed="";
+  function sync(){ var t=$("gv-dialtxt");
+    if(dialed){ t.textContent=dialed; t.className=""; } else { t.textContent="enter a number"; t.className="ph"; }
+    $("gv-callbig").disabled = dialed.length<3; }
+  $("gv-keys").innerHTML=K.map(function(k){
+    return '<div class="gvk" data-k="'+k[0]+'">'+k[0]+(k[1]?'<small>'+k[1]+'</small>':'')+'</div>'; }).join("");
+  $("gv-keys").addEventListener("click",function(e){
+    var k=e.target.closest(".gvk"); if(!k) return; dialed+=k.getAttribute("data-k"); sync(); });
+  $("gv-del").addEventListener("click",function(){ dialed=dialed.slice(0,-1); sync(); });
+  $("gv-callbig").addEventListener("click",function(){ if(dialed) gvDial(dialed); });
+  sync();
+
+  /* tabs */
+  $("gv-tabs").addEventListener("click",function(e){
+    var t=e.target.closest(".gvt"); if(!t) return;
+    var want=t.getAttribute("data-gp");
+    Array.prototype.forEach.call(document.querySelectorAll("#gv-tabs .gvt"),function(x){
+      x.classList.toggle("on", x===t); });
+    Array.prototype.forEach.call(document.querySelectorAll("#m-right .gvp"),function(pp){
+      pp.classList.toggle("on", pp.id==="gp-"+want); });
+  });
+
+  /* delegated call buttons — survives every re-render */
+  $("m-right").addEventListener("click",function(e){
+    var b=e.target.closest(".gvcall"); if(!b) return;
+    var act=b.getAttribute("data-act"), st=$("gv-stat");
+    function run(tool){
+      st.textContent=tool.replace("gv_","")+"…"; st.className="";
+      gvTool(tool)
+        .then(function(){ st.textContent=tool.replace("gv_","")+" sent"; gvPoll(); })
+        // Honest selector-miss feedback: gv-mcp reports which selector failed to
+        // match when GV's DOM drifts. Surface that verbatim instead of "failed".
+        .catch(function(err){ st.textContent=tool.replace("gv_","")+" failed: "+(err.message||err); st.className="bad"; });
+    }
+    if(act==="answer") return run("gv_answer");
+    if(act==="hangup") return run("gv_hangup");
+    if(act==="mute")   return run("gv_mute");
+    var num=b.getAttribute("data-dial");
+    if(num) gvDial(num);
+  });
+
+  gvPoll(); gvRooms();
+  setInterval(gvPoll, 6000);      /* call state is the fast lane */
+  setInterval(gvRooms, 20000);    /* threads move slower */
+  setInterval(function(){ $("gv-age").textContent = gvLastAt ? ("state "+gvAgo(gvLastAt)+" old") : ""; }, 1000);
+
+  /* live push when available; polling above is the floor, not the ceiling */
+  try{
+    var ws=new WebSocket("wss://ggv.xlrd.org/ws");
+    ws.onmessage=function(){ gvPoll(); };
+  }catch(_){}
+}
+
 /* stagger so the three shims never overlap */
 mount("center","/lifenote/");
 setTimeout(function(){ mount("left","/xos3/"); }, 4200);
-setTimeout(function(){ mount("right","/life/"); }, 8400);
+setTimeout(mountGV, 8400);
 })();
 </script>
 </body>
