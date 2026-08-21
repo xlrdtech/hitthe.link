@@ -146,7 +146,16 @@ main{position:relative;z-index:10;width:100%;max-width:840px;margin:0 auto;paddi
 .chip .n{font-variant-numeric:tabular-nums;opacity:.6}
 .hint{font-size:10px;letter-spacing:.06em;color:rgba(255,255,255,.22);padding:0 8px 2px;line-height:1.6}
 
-/* journal list */
+/* A menu entry whose page does not exist yet. Visible and labelled so the set of five
+   qi named stays whole, but not clickable — measured 2026-08-21 00:10: /ledger/ returns
+   404. Navigating him into a 404 is worse than showing the gap. */
+.navbtn.dead, .mnav .dead{
+  opacity:.38; cursor:not-allowed; pointer-events:none;
+  text-decoration:line-through; text-decoration-thickness:1px;
+}
+a.navbtn{ text-decoration:none; }
+
+/* lifenote list */
 .list{width:100%;border-radius:18px;border:1px solid rgba(255,255,255,.06);
   background:rgba(10,13,12,.5);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
   padding:8px;display:flex;flex-direction:column;gap:8px;min-width:0}
@@ -428,7 +437,7 @@ main{position:relative;z-index:10;width:100%;max-width:840px;margin:0 auto;paddi
         <span class="ic"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span>
         <span class="lbl">Search&hellip;</span><span class="kbd">&#8984;K</span>
       </button>
-      <button class="newbtn" id="newbtn"><span class="plus">+</span><span class="md">New Journal</span><span class="sm">New</span></button>
+      <button class="newbtn" id="newbtn"><span class="plus">+</span><span class="md">New LifeNote</span><span class="sm">New</span></button>
       <div class="avatar"><i></i></div>
     </div>
   </div>
@@ -441,7 +450,7 @@ main{position:relative;z-index:10;width:100%;max-width:840px;margin:0 auto;paddi
       <div style="display:flex;align-items:center;gap:12px;min-width:0">
         <div class="orb"><i></i></div>
         <div style="min-width:0">
-          <div class="k">XEN GARDEN THEME</div>
+          <div class="k">BREATH TO LIFE TRACKER</div>
           <div class="v" id="statusline">reading the record&hellip;</div>
         </div>
       </div>
@@ -461,7 +470,7 @@ main{position:relative;z-index:10;width:100%;max-width:840px;margin:0 auto;paddi
   </section>
 
   <section class="list" id="listwrap">
-    <div class="lhead"><span class="t" id="lheadt">JOURNALS</span><span class="r" id="lheadr"></span></div>
+    <div class="lhead"><span class="t" id="lheadt">LIFENOTE</span><span class="r" id="lheadr"></span></div>
     <div class="scroller" id="cards"></div>
     <div class="lfoot"><span id="lfootl"></span><span class="g"><i></i> <span id="lfootr">redacted by default</span></span></div>
   </section>
@@ -470,7 +479,7 @@ main{position:relative;z-index:10;width:100%;max-width:840px;margin:0 auto;paddi
     <div class="fx"><div class="top"></div><div class="gw"></div><div class="gl glasshost"></div></div>
     <div class="ehead">
       <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1;overflow:hidden">
-        <div class="crumb md"><span>JOURNALS</span><span style="opacity:.3">/</span><span class="now" id="crumbday">&mdash;</span></div>
+        <div class="crumb md"><span>LIFENOTE</span><span style="opacity:.3">/</span><span class="now" id="crumbday">&mdash;</span></div>
         <div class="vdiv md"></div>
         <div style="display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden" id="eheadpills"></div>
       </div>
@@ -495,7 +504,7 @@ main{position:relative;z-index:10;width:100%;max-width:840px;margin:0 auto;paddi
   <section class="meta">
     <div class="a">
       <span>HITTHE.LINK/LIFENOTE</span><span class="sep"></span>
-      <span class="on">XEN GARDEN &middot; DARK &middot; MATRIX RAIN: ON &middot; 1-COL</span>
+      <span class="on">BREATH TO LIFE &middot; DARK &middot; MATRIX RAIN: ON &middot; 1-COL</span>
     </div>
     <div class="b">
       <a href="/btl/">/btl/</a><span>&middot;</span><a href="/lifenote/spec/">/lifenote/spec/</a>
@@ -649,7 +658,7 @@ var RAILCOLOR={bee:"#00FFC2",in:"#7CFF9B",typed:"#00FF7F",omi:"#F59E0B",sms:"#6B
                mail:"#6B7280",note:"#6B7280"};
 function verdict(s){ return VERDICT[s]||VERDICT.unmeasurable; }
 
-var D=null, sel=null, view="Journals", q="", chip=null, kopen=false, toastT=0, lastGen="";
+var D=null, sel=null, view="Flow", q="", chip=null, kopen=false, toastT=0, lastGen="";
 
 function todayISO(){
   var d=new Date(), p=function(n){return (n<10?"0":"")+n;};
@@ -743,19 +752,31 @@ function navItems(){
   var t=(D&&D.totals)||{};
   var arch=blocks().filter(function(b){return b.day!==todayISO();}).length;
   return [
-    {k:"Journals",count:blocks().length},
-    {k:"Mentors",count:0},
-    {k:"Insights",count:null},
-    {k:"Archive",count:arch}
+    {k:"Flow",    count:blocks().length},
+    {k:"Goals",   count:null, href:"/goals/"},
+    {k:"Steer",   count:null, href:"/steer/"},
+    {k:"Ledger",  count:null, href:"/ledger/", dead:true},
+    {k:"Gallery", count:null, href:"/gallery/"}
   ];
 }
 function renderNav(){
   var items=navItems(), h="", m="";
   for(var i=0;i<items.length;i++){
     var it=items[i], on=(view===it.k);
-    h+='<button class="navbtn'+(on?" on":"")+'" data-k="'+it.k+'">'+it.k+
-       (it.count?'<span class="badge">'+num(it.count)+'</span>':'')+'</button>';
-    m+='<button class="'+(on?"on":"")+'" data-k="'+it.k+'">'+it.k+'</button>';
+    var badge=(it.count?'<span class="badge">'+num(it.count)+'</span>':'');
+    if(it.href){
+      // A real link, not a view switch. dead:true keeps it visible and labelled but
+      // non-navigating, because sending him to a 404 is worse than showing it is absent.
+      var cls="navbtn"+(it.dead?" dead":"");
+      var tip=it.dead?' title="no page at '+it.href+' yet"':'';
+      h+=it.dead ? '<span class="'+cls+'"'+tip+'>'+it.k+badge+'</span>'
+                 : '<a class="'+cls+'" href="'+it.href+'">'+it.k+badge+'</a>';
+      m+=it.dead ? '<span class="dead"'+tip+'>'+it.k+'</span>'
+                 : '<a href="'+it.href+'">'+it.k+'</a>';
+    } else {
+      h+='<button class="navbtn'+(on?" on":"")+'" data-k="'+it.k+'">'+it.k+badge+'</button>';
+      m+='<button class="'+(on?"on":"")+'" data-k="'+it.k+'">'+it.k+'</button>';
+    }
   }
   $("nav").innerHTML=h; $("mnav").innerHTML=m;
 }
@@ -793,7 +814,7 @@ function renderChips(){
 /* ---------------- journal cards ---------------- */
 function renderList(){
   var v=visible();
-  $("lheadt").innerHTML="JOURNALS &middot; "+num(v.length);
+  $("lheadt").innerHTML="LIFENOTE &middot; "+num(v.length);
   $("lheadr").textContent = (D&&D.totals)? (num(D.totals.blocks)+" total") : "";
   if(!v.length){
     $("cards").innerHTML='<div class="empty">'+
@@ -949,7 +970,7 @@ function renderMentorsView(){
 
 /* ---------------- view switch ---------------- */
 function applyView(){
-  var isJ=(view==="Journals"||view==="Archive");
+  var isJ=(view==="Flow");   /* Archive is gone from the menu; Flow is the record list */
   $("filterwrap").className="filters"+(isJ?"":" hide");
   $("listwrap").className="list"+(isJ?"":" hide");
   $("editorwrap").className="editor"+(isJ?"":" hide");
