@@ -1,36 +1,172 @@
-#!/usr/bin/env bash
-# xen-pages-put — publish ONE file to a Pages repo through the GitHub Contents API.
-#
-# WHY THIS EXISTS (measured, 2026-08-20): the receipts publisher pushes hitthe.link
-# roughly every 90s while a Pages build takes ~150s. Those numbers cannot converge —
-# each push cancels the in-flight build, which is the `dur=0ms` "errored" pattern in
-# logs/pages-watch.log (9 errored / 105 built over 7 days, ZERO real faults). The
-# Contents API takes a PER-FILE blob sha, so it never fights the commit graph.
-#
-# TRAP THIS FIXES: `gh api <path> --jq .sha` on a MISSING file does not return empty
-# — it can emit the error body on stdout, so a naive capture sets sha='{"message":...}'
-# and the next update carries a bogus sha. Probe the STATUS, never the piped body.
-#
-# usage: xen-pages-put <repo> <repo-path> <local-file> [commit message]
-set -euo pipefail
-REPO=${1:?repo, e.g. xlrdtech/hitthe.link}
-RPATH=${2:?path in repo, e.g. tools/index.html}
-LOCAL=${3:?local file}
-MSG=${4:-"publish: $RPATH"}
-[ -f "$LOCAL" ] || { echo "no such file: $LOCAL" >&2; exit 2; }
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Xen Tools — terminal-browser · code-server</title>
+<meta name="description" content="Two tools qi put into service on 2026-08-20: a browser that renders inside the terminal, and VS Code served over HTTP. What each one is, how it is wired here, and the evidence it works.">
+<style>
+  :root{
+    --bg:#08090b; --panel:#0f1114; --line:#1c2026; --line2:#262b33;
+    --ink:#e8ecf1; --dim:#8b95a3; --dimmer:#5d6673;
+    --ok:#3ddc84; --warn:#ffb340; --bad:#ff5c5c; --accent:#7aa2ff;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding:0 18px calc(48px + env(safe-area-inset-bottom));
+  }
+  .wrap{max-width:760px;margin:0 auto}
+  header{padding:44px 0 26px;text-align:center;border-bottom:1px solid var(--line)}
+  h1{margin:0 0 8px;font-size:26px;letter-spacing:-.02em;font-weight:650}
+  .sub{color:var(--dim);font-size:14px;margin:0}
+  .stamp{font:11px/1.5 var(--mono);color:var(--dimmer);margin-top:14px;letter-spacing:.04em}
 
-# STATUS first — the only reliable create-vs-update signal.
-code=$(gh api "repos/$REPO/contents/$RPATH" --include --silent 2>/dev/null \
-       | head -1 | awk '{print $2}') || code=""
-sha=""
-if [ "$code" = "200" ]; then
-  sha=$(gh api "repos/$REPO/contents/$RPATH" --jq '.sha' 2>/dev/null || true)
-  case "$sha" in *'{'*|*' '*|'') sha="" ;; esac   # reject anything not a bare hex sha
-fi
-[ -n "$sha" ] && echo "update (blob ${sha:0:12})" || echo "create (no existing blob, status=${code:-none})"
+  section{margin:30px 0 0;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .head{padding:18px 20px 16px;border-bottom:1px solid var(--line)}
+  .head h2{margin:0 0 6px;font-size:19px;font-weight:600;letter-spacing:-.01em}
+  .head .who{margin:0;color:var(--dim);font-size:13.5px}
+  .head a{color:var(--accent);text-decoration:none;border-bottom:1px solid #7aa2ff33}
+  .body{padding:18px 20px}
+  .body p{margin:0 0 13px}
+  .body p:last-child{margin-bottom:0}
 
-args=(-X PUT "repos/$REPO/contents/$RPATH" -f "message=$MSG"
-      -f "content=$(base64 -i "$LOCAL" | tr -d '\n')" -f branch=main)
-[ -n "$sha" ] && args+=(-f "sha=$sha")
+  .badge{display:inline-block;font:11px/1 var(--mono);padding:5px 9px;border-radius:999px;
+         letter-spacing:.06em;text-transform:uppercase;vertical-align:middle;margin-left:8px}
+  .b-ok{background:#3ddc8419;color:var(--ok);border:1px solid #3ddc8433}
+  .b-local{background:#ffb34019;color:var(--warn);border:1px solid #ffb34033}
 
-gh api "${args[@]}" --jq '"commit \(.commit.sha[0:12])  \(.content.path)  \(.content.size)B"'
+  dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:9px 16px;align-items:baseline}
+  dt{font:11px/1.5 var(--mono);color:var(--dimmer);letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+  dd{margin:0;font:12.5px/1.55 var(--mono);color:var(--ink);word-break:break-word;min-width:0}
+  @media (max-width:520px){
+    dl{grid-template-columns:1fr;gap:2px 0}
+    dt{margin-top:10px}
+  }
+
+  pre{margin:14px 0 0;background:#0a0c0f;border:1px solid var(--line2);border-radius:10px;
+      padding:13px 14px;overflow-x:auto;font:12.5px/1.7 var(--mono);color:#c8d2df}
+  pre b{color:var(--ok);font-weight:400}
+  pre i{color:var(--dimmer);font-style:normal}
+  code{font:12.5px/1.5 var(--mono);background:#171a1f;border:1px solid var(--line2);
+       border-radius:5px;padding:1.5px 5px;color:#d5deea}
+
+  .ev{margin:16px 0 0;border-top:1px solid var(--line);padding-top:15px}
+  .ev h3{margin:0 0 11px;font:11px/1 var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--dimmer)}
+  .note{margin:16px 0 0;padding:13px 15px;border-left:2px solid var(--warn);
+        background:#ffb3400d;border-radius:0 8px 8px 0;font-size:13.5px;color:#d8ccb4}
+  .note b{color:var(--warn);font-weight:600}
+  footer{margin:34px 0 0;padding-top:20px;border-top:1px solid var(--line);
+         text-align:center;font:11px/1.7 var(--mono);color:var(--dimmer)}
+</style></head><body><div class="wrap">
+
+<header>
+  <h1>Two tools, in service</h1>
+  <p class="sub">A browser that draws inside the terminal, and VS&nbsp;Code served over HTTP.</p>
+  <p class="stamp">PUT INTO SERVICE 2026-08-20 · VERIFIED ON THE BODY, NOT THE STATUS CODE</p>
+</header>
+
+<section>
+  <div class="head">
+    <h2>terminal-browser <span class="badge b-ok">in use</span></h2>
+    <p class="who">v0.5.8 · <a href="https://github.com/zenbu-labs/terminal-browser">zenbu-labs/terminal-browser</a></p>
+  </div>
+  <div class="body">
+    <p>A real Chromium, painted into a terminal pane. Terminals that speak the kitty graphics
+    protocol let a program hand pixels to the terminal, so the page renders where a shell would
+    normally be — which means it opens in a split <em>beside</em> the conversation instead of
+    stealing a window.</p>
+
+    <p>That geometry is the whole point. An agent and the page it is working on end up scoped to
+    the same terminal tab, and <code>terminal-browser action</code> exposes that live tab as a CLI —
+    snapshot, click, fill, eval. It replaced a browser-automation server that had timed out twice
+    the same evening, and it works over SSH, so a site running on a remote machine previews
+    locally with no tunnel.</p>
+
+    <dl>
+      <dt>Install</dt><dd>curl -fsSL https://terminal-browser.sh/install | bash</dd>
+      <dt>Source</dt><dd>vendor/terminal-browser · pnpm workspace (browser · cli · engine)</dd>
+      <dt>Open</dt><dd>terminal-browser open &lt;url&gt; --split right</dd>
+      <dt>Drive</dt><dd>terminal-browser action -- eval "document.title"</dd>
+    </dl>
+
+    <div class="ev">
+      <h3>Evidence — it drove a live page and answered a real question</h3>
+<pre><i>$ terminal-browser ls</i>
+71213-1  1:@1:%20
+  * 1  XEN LIFE — assembled
+        https://life.xlrd.org/life-app/
+
+<i>$ terminal-browser action -- eval …</i>
+  ascii-key count : <b>12</b>
+  phead count     : <b>0</b>
+  call button     : <b>true</b>
+  panes           : <b>4</b></pre>
+      <p style="margin-top:13px;color:var(--dim);font-size:13.5px">Twelve keys, three chrome bars
+      gone, call button present — the dialpad shipped earlier that night, confirmed by driving the
+      deployed page rather than by re-reading the markup that produced it.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="head">
+    <h2>code-server <span class="badge b-local">loopback only</span></h2>
+    <p class="who">VS Code over HTTP · <a href="https://github.com/coder/code-server">coder/code-server</a></p>
+  </div>
+  <div class="body">
+    <p>The editor runs on the machine that holds the tree; the browser is only the screen. Any
+    device on the desk opens the same workspace, with the same extensions and the same terminal,
+    and nothing has to be checked out twice.</p>
+
+    <p>It runs under <code>launchd</code> rather than a shell job on purpose. A backgrounded shell
+    child gets reaped when its parent exits and leaves an empty log that reads exactly like a clean
+    start — so "running" has to mean a supervisor that restarts it, not a process that happened to
+    survive.</p>
+
+    <dl>
+      <dt>Service</dt><dd>com.xen.code-server · RunAtLoad + KeepAlive</dd>
+      <dt>Bind</dt><dd>127.0.0.1:8842</dd>
+      <dt>Auth</dt><dd>password — generated by code-server itself, never authored, never published</dd>
+      <dt>TLS</dt><dd>off — nothing leaves the loopback interface</dd>
+    </dl>
+
+    <div class="ev">
+      <h3>Evidence — the login page, not the redirect</h3>
+<pre><i>launchctl print … | state</i>
+  state = <b>running</b>   pid = 77181   last exit = <b>(never exited)</b>
+
+<i>curl -s /        </i>  → 302  "Found. Redirecting to ./login"
+<i>curl -s /login   </i>  → <b>200</b>  2,628 B
+  &lt;title&gt;      <b>code-server login</b>
+  marker code-server  <b>2</b>
+  marker PASSWORD     <b>1</b>
+
+<i>startup log</i>
+  Authentication is <b>enabled</b>
+  Using password from the generated config
+  Not serving HTTPS</pre>
+      <p style="margin-top:13px;color:var(--dim);font-size:13.5px">The 302 on <code>/</code> is the
+      proof auth is on, and the 200 on <code>/login</code> is the proof the app is really there —
+      a status code alone would have said neither.</p>
+    </div>
+
+    <div class="note">
+      <b>Why it is not public.</b> code-server is a full IDE with a terminal in it. Reachable from
+      the internet without a gate, it is a remote shell on the machine holding everything — so the
+      default here is the loopback interface and auth left on. Publishing it is a separate,
+      deliberate decision, made through an authenticated tunnel, and it belongs to the person whose
+      machine it is.
+    </div>
+  </div>
+</section>
+
+<footer>
+  hitthe.link/tools · xen<br>
+  evidence captured at the moment of the step, not reconstructed after
+</footer>
+
+</div></body></html>
