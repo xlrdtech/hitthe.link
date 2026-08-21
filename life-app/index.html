@@ -6,6 +6,29 @@
 <title>XEN LIFE — assembled</title>
 <meta name="description" content="Canonical three-pane assembly. Mounts the live surfaces same-origin with per-pane URL rebasing and CSS scoping. No iframe.">
 <meta name="theme-color" content="#06080A">
+
+<!-- PWA head — qi 2026-08-20 22:24: "Its a pure PWA. It does not need iOS or Android at all."
+     Copied from the pattern already proven in xos-capacitor/www/index.html. NO Capacitor,
+     no native shell: apple-mobile-web-app-capable + viewport-fit=cover (already on line 5)
+     is what makes env(safe-area-inset-*) resolve to REAL device insets once the page is
+     launched from the home screen. black-translucent lets the view extend under the status
+     bar, which is the half that actually produces the inset. -->
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="XEN LIFE">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<script>
+  // Register late and never block first paint. sw.js is network-first for everything but
+  // the icons, so it cannot serve stale code (see the comment header in sw.js).
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("sw.js", { scope: "./" }).catch(function () {
+        /* a failed SW registration must never break the app */
+      });
+    });
+  }
+</script>
 <style>
 /* ══ tokens: LifeNote's own, read off lifenote/index.html ══ */
 :root{
