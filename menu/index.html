@@ -404,7 +404,7 @@
         <div class="iid">${it[0]}</div>
         <div class="ititle">${it[1]}</div>
         <div class="icap">${it[2]}</div>
-        <div class="ifoot"><span class="iprice">111</span><button class="add-btn" data-id="${it[0]}"><i class="ph ph-plus"></i> Add</button></div>
+        <div class="ifoot"><span class="iprice">$${PRICE}</span><button class="add-btn" data-id="${it[0]}"><i class="ph ph-plus"></i> Add</button></div>
       </div>`).join('');
     sec.innerHTML = `<section class="bucket glass-panel">
       <div class="bucket-header"><span class="num text-liquid-steel">${b.n}</span><span class="name">${b.name}</span><span class="count">${b.items.length} units</span></div>
@@ -447,7 +447,7 @@
       co.classList.remove('disabled');
       const lines = ids.map(id => `• ${cart[id]}× ${NAMES[id]||id} (${id}) — $${(cart[id]*PRICE).toLocaleString()}`).join('\n');
       const body = `My XLRD TECH order (${c} unit${c>1?'s':''}, total $${t.toLocaleString()}):\n\n${lines}\n\nWhat I need / context:\n`;
-      co.href = 'mailto:east@xlrd.org?subject=' + encodeURIComponent('Order · '+c+' units ($'+t.toLocaleString()+')') + '&body=' + encodeURIComponent(body);
+      co.href = 'mailto:east@xlrd.org?subject=' + encodeURIComponent('Order · '+c+' unit'+(c>1?'s':'')+' ($'+t.toLocaleString()+')') + '&body=' + encodeURIComponent(body);
       co.innerHTML = '<i class="ph ph-paper-plane-tilt"></i> Send my order · $' + t.toLocaleString();
     } else {
       co.classList.add('disabled'); co.removeAttribute('href');
