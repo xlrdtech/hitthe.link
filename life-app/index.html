@@ -43,6 +43,33 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--
   font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--heavy);
   border-bottom:1px solid rgba(255,255,255,.05);position:relative;z-index:5;background:var(--bg)}
 .phead b{color:var(--jade);font-weight:500}
+
+/* ══ CENTER COMPOSER ══ the write leg's face.            (added 2026-08-20)
+   GEOMETRY IS SAFE BY CONSTRUCTION, NOT BY CARE: .pane is already
+   flex-direction:column with .phead flex:0 0 auto and .mount flex:1;min-height:0.
+   A third child at flex:0 0 auto simply makes .mount shorter. Nothing here reads
+   or writes .panes{width:300vw} or .pane{width:100vw}, so the one-pane-at-a-time
+   swipeglass carousel cannot be disturbed by this block — that geometry is
+   untouchable canon and a previous attempt of mine to "fix" it was a real defect.
+   Nothing here touches .dock.dock-swipe either; the drawer IS the product. */
+.composer{flex:0 0 auto;border-top:1px solid var(--line);background:var(--glass);
+  padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px}
+.composer .crow{display:flex;align-items:flex-end;gap:8px}
+.composer textarea{flex:1;min-width:0;resize:none;height:38px;max-height:112px;
+  background:rgba(0,0,0,.42);border:1px solid var(--line);border-radius:10px;
+  color:var(--ink);font-family:var(--mono);font-size:12.5px;line-height:1.45;
+  padding:9px 11px;outline:none}
+.composer textarea:focus{border-color:rgba(0,255,127,.42)}
+.composer textarea::placeholder{color:var(--heavy)}
+.composer .send{flex:0 0 auto;height:38px;padding:0 16px;border:0;border-radius:999px;
+  background:linear-gradient(180deg,#00FF7F,#00C765);color:#04120A;font-family:var(--mono);
+  font-size:11px;font-weight:700;letter-spacing:.06em;cursor:pointer}
+.composer .send:disabled{opacity:.42;cursor:default}
+.composer .cstat{font-family:var(--mono);font-size:10px;letter-spacing:.04em;
+  color:var(--heavy);min-height:12px}
+.composer .cstat.ok{color:var(--resolve)}
+.composer .cstat.pending{color:var(--restless)}
+.composer .cstat.bad{color:#FF6B6B}
 .phead .rail{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:10px}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--heavy)}
 .dot.live{background:var(--jade);box-shadow:0 0 10px var(--jade)}
@@ -65,6 +92,17 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--
   <section class="pane" id="pane-center">
     <div class="phead">LIFENOTE <b>/lifenote</b><span class="rail"><span class="dot" id="d-center"></span><span id="s-center">mounting</span></span></div>
     <div class="mount" id="m-center"><div class="loading">mounting /lifenote/ …</div></div>
+    <!-- The composer is a SIBLING of .mount, never inside it: the mounted limb's
+         own DOM is replaced on every remount, so anything living in there would
+         vanish. flex:0 0 auto keeps it pinned under the feed. -->
+    <div class="composer" id="composer">
+      <div class="crow">
+        <textarea id="cnote" rows="1" maxlength="3800"
+          placeholder="note to the record… ⌘⏎ to save"></textarea>
+        <button class="send" id="csend">SAVE</button>
+      </div>
+      <div class="cstat" id="cstat"></div>
+    </div>
   </section>
 
   <section class="pane" id="pane-right">
@@ -596,6 +634,68 @@ function mountGV(){
 mount("center","/lifenote/");
 setTimeout(function(){ mount("left","/xos3/"); }, 4200);
 setTimeout(mountGV, 8400);
+
+/* ══ CENTER COMPOSER WIRING ══                            (added 2026-08-20)
+   POSTs to omni's /api/note, which appends `note: <text>` to qi's canonical
+   capture log — the same jsonl xen-lifenote-feed reads as its FIRST source. The
+   rail is a TEXT PREFIX, not a field (xen-lifenote-feed:239), and the server adds
+   it, so nothing here needs to know the schema.
+
+   THE STATUS LINE TELLS THE TRUTH AND THAT IS THE POINT: a 200 here means the
+   append is on disk, NOT that the note is visible in the feed. Rendering needs
+   the generator to rebuild, and the PUBLIC build additionally needs a Pages
+   publish. Saying "posted" would be the lie; it says saved + when it will appear.
+   MEASURED 2026-08-20: an unverified 200 from this exact route sat on a note that
+   rendered ZERO times because of a timezone bug. Never trust the status code alone.
+   Public path proven: preflight 204 with ACAO:* from the life.xlrd.org origin. */
+(function wireComposer(){
+  var ta = document.getElementById("cnote");
+  var btn = document.getElementById("csend");
+  var out = document.getElementById("cstat");
+  if(!ta || !btn || !out) return;
+
+  function stat(msg, cls){ out.textContent = msg; out.className = "cstat" + (cls ? " " + cls : ""); }
+
+  function grow(){ ta.style.height = "38px"; ta.style.height = Math.min(ta.scrollHeight, 112) + "px"; }
+  ta.addEventListener("input", grow);
+
+  var sending = false;
+  function save(){
+    var text = (ta.value || "").trim();
+    if(!text || sending) return;
+    // The server caps a note at 4000 B for atomicity against the capture writer;
+    // fail here with a real reason rather than letting the POST 413.
+    if(text.length > 3800){ stat("too long — " + text.length + "/3800 characters", "bad"); return; }
+    sending = true; btn.disabled = true; stat("saving…", "pending");
+    fetch(OMNI + "/api/note", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: text })
+    }).then(function(r){
+      return r.text().then(function(t){
+        var j = null; try { j = JSON.parse(t); } catch(e){}
+        // Assert on the BODY. This server answers 200 with ok:false on a real
+        // failure, so a status-only check would report success that did not happen.
+        if(!r.ok || !j || j.ok !== true){
+          throw new Error((j && j.error) ? j.error : ("HTTP " + r.status + " " + t.slice(0,90)));
+        }
+        return j;
+      });
+    }).then(function(j){
+      ta.value = ""; grow();
+      stat("saved to the record · " + j.bytes + " B · shows in the feed after the next rebuild", "ok");
+    }).catch(function(e){
+      stat("NOT saved — " + (e && e.message ? e.message : e), "bad");
+    }).then(function(){
+      sending = false; btn.disabled = false;
+    });
+  }
+
+  btn.addEventListener("click", save);
+  ta.addEventListener("keydown", function(e){
+    if(e.key === "Enter" && (e.metaKey || e.ctrlKey)){ e.preventDefault(); save(); }
+  });
+})();
 })();
 </script>
 </body>
