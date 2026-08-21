@@ -54,8 +54,29 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--
    mounted limb's position:fixed escaped its pane and its 100vh blew the box.
    contain + transform creates a new containing block so fixed becomes
    pane-relative, which is what an iframe gave us for free. */
+/* ⭐ TOP INSET — from qi's OWN HANDSET SHOT, IMG_1661.png, 2026-08-21 12:40.
+   MEASURED FROM THE SCREENSHOT (not inferred): his kicker-bar and the "Dialpad · 131"
+   badge were rendering UNDERNEATH the iOS status bar — faint ghost text bleeding through
+   behind the 12:40 clock and the battery. That is also why a byte-grep for the badge text
+   returned 0 while the element existed: it was present and hidden.
+
+   CAUSE, AND IT IS MINE: I added `apple-mobile-web-app-status-bar-style: black-translucent`
+   the night before, copied from XOS. black-translucent is DEFINED to extend the web view
+   under the status bar. XOS compensates with its own top strip; this document had no top
+   inset at all, so the first row slid under the clock.
+
+   WHY env() AND NOT A PIXEL NUMBER: his ?geo=1 probe reported top=0, but that probe ran in
+   Safari — in a standalone home-screen launch with black-translucent, inset-top becomes the
+   real device value. env() resolves to 0 in every browser I can drive, so this CANNOT change
+   the desktop view; on his handset it can only supply the inset that was missing.
+
+   --sat mirrors his --sab knob: one line to zero it if he wants the overlap back. His
+   "no safe area" decree (2026-08-13 22:42) was explicitly about the BOTTOM gap; this is the
+   opposite failure — content HIDDEN, not space added. */
 .mount{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
-  position:relative;transform:translateZ(0);contain:layout paint style;padding-bottom:78px}
+  position:relative;transform:translateZ(0);contain:layout paint style;
+  --sat:env(safe-area-inset-top, 0px);
+  padding-top:var(--sat);padding-bottom:78px}
 
 /* ── DOCK HIT + APP DRAWER ──  replaces .swipeglass  (qi 2026-08-20 21:31)
    MEASURED DEFECT THIS REPLACES: the old .swipeglass was a full bar at

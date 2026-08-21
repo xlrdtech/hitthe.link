@@ -65,6 +65,39 @@
     padding:calc(env(safe-area-inset-top) + 12px) 14px 10px}
   /* kicker bar: OMNIBOX label + live pill */
   .kicker-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;height:26px}
+
+  /* ══ CARD GRID ══ the hitthe.link link-index layout, omni data (qi 2026-08-20).
+     Uses this file's OWN tokens (--accent/--text-bright/--text-muted/--card-accent)
+     so it inherits the surface instead of introducing a second palette. */
+  #ui-layer{display:block;padding:10px 12px 16px}
+  .content-container{display:flex;flex-direction:column;gap:18px}
+  #ui-layer section{display:block}
+  #ui-layer section h2{display:flex;align-items:center;gap:10px;margin:0 0 8px;
+    font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--text-muted)}
+  #ui-layer section h2 .badge{font-size:9.5px;letter-spacing:.1em;padding:2px 7px;
+    border:1px solid rgba(255,255,255,.14);border-radius:999px;color:var(--text-muted)}
+  .card-grid{display:flex;flex-direction:column;gap:6px}
+
+  .link-card{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:11px 13px;border:1px solid rgba(255,255,255,.09);border-radius:12px;
+    background:rgba(255,255,255,.022);text-decoration:none;color:var(--text-bright);
+    border-left:2px solid var(--card-accent,var(--accent))}
+  .link-card:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.18)}
+  .link-card .left{display:flex;align-items:center;gap:10px;min-width:0}
+  .link-card .right{display:flex;align-items:center;gap:9px;flex:0 0 auto;color:var(--text-muted)}
+  .link-card .status-dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto;
+    background:var(--card-accent,var(--accent))}
+  .link-card .link-text{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .link-card .meta-hash{font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--text-muted);flex:0 0 auto}
+  /* fresh = arrived in the last hour */
+  .link-card.fresh .status-dot{box-shadow:0 0 0 3px rgba(255,255,255,.07)}
+  .link-card.fresh .meta-hash{color:var(--accent)}
+  /* dead = encrypted or empty body: nothing to open, so it must not LOOK openable */
+  .link-card.dead{opacity:.42;cursor:default}
+  .link-card.dead:hover{background:rgba(255,255,255,.022);border-color:rgba(255,255,255,.09)}
+  .link-card:focus-visible{outline:1px solid var(--accent);outline-offset:2px}
   .kicker{font-family:var(--f-mono);font-size:10px;color:rgba(255,255,255,0.5);
     letter-spacing:.16em;text-transform:uppercase}
   .livepill{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:99px;
@@ -195,17 +228,24 @@
 </style>
 </head>
 <body>
-<header>
-  <div class="kicker-bar">
-    <span class="kicker">OMNIBOX · ONE MERGED THREAD</span>
-    <span class="livepill" id="dot"><span class="led"></span>LIVE</span>
-  </div>
-  <div class="title"><h1>Omni-Inbox</h1></div>
-  <div class="sub" id="sub">one thread · every network · newest first</div>
-  <div class="filters" id="filters"></div>
-</header>
+<!-- qi 2026-08-20 21:39, verbatim: remove the <header> and the <ul id="list">,
+     replace with the ui-layer / content-container card grid — "but the data is
+     from omni-inbox". So the LAYOUT is the hitthe.link link-index card grid and
+     the CONTENT is the live omni stream. Sections are networks (his own filter
+     chips were exactly network+count, so that is the faithful mapping); each
+     card is a thread. Flagged as my inference, not his instruction.
+
+     #dot, #sub and #filters LIVED IN THAT HEADER and are referenced by live JS
+     (renderFilters -> filtersEl.innerHTML, the counts line -> subEl.innerHTML).
+     Deleting the markup without guarding those is the exact TypeError-at-module-
+     scope failure that would have white-screened life-app an hour ago. Every one
+     is now null-guarded below. -->
 <div class="note" id="encnote" style="display:none"></div>
-<ul id="list"><li class="empty">Loading one merged thread…</li></ul>
+<main id="ui-layer">
+  <div class="content-container" id="content-container">
+    <div class="empty">Loading one merged thread…</div>
+  </div>
+</main>
 <!-- Baked snapshot: a real interleaved-stream snapshot injected at ship time so a
      cold public GET paints the unified thread instantly (no JS round-trip needed). -->
 <!--STREAM_SNAPSHOT-->
@@ -266,10 +306,30 @@
     });
   }
 
-  var listEl=document.getElementById('list');
-  var subEl=document.getElementById('sub');
-  var dotEl=document.getElementById('dot');
-  var filtersEl=document.getElementById('filters');
+  /* NULL-SAFE HANDLES — the header that owned #dot/#sub/#filters and the
+     <ul id="list"> were removed (qi 2026-08-20), but SEVEN live call sites still
+     write to them: filtersEl.innerHTML, filtersEl.querySelectorAll, subEl.textContent
+     x2, subEl.innerHTML, dotEl.classList x3.
+
+     Guarding each site individually is how you miss one, and a missed one is a
+     TypeError at the TOP of the render path — the pane goes blank while the server
+     still answers 200. So the handle itself is inert when the element is gone:
+     assignments land nowhere, classList and querySelectorAll are no-ops. Reads
+     stay type-correct so nothing downstream sees undefined. */
+  function nullSafe(id){
+    var el=document.getElementById(id);
+    if(el) return el;
+    return { innerHTML:'', textContent:'', style:{},
+             classList:{ add:function(){}, remove:function(){}, toggle:function(){},
+                         contains:function(){return false;} },
+             querySelectorAll:function(){return [];}, querySelector:function(){return null;},
+             setAttribute:function(){}, getAttribute:function(){return null;},
+             addEventListener:function(){}, appendChild:function(){} };
+  }
+  var listEl=nullSafe('list');       // retired: the card grid replaced <ul id="list">
+  var subEl=nullSafe('sub');         // retired with the header
+  var dotEl=nullSafe('dot');         // retired with the header
+  var filtersEl=nullSafe('filters'); // retired: section headings ARE the categories now
   var encNote=document.getElementById('encnote');
   // ONE unified thread: state.msgs = every network's latest message, interleaved
   // by timestamp into a single time-sorted river (qi's exact ask: no per-chat clicking).
@@ -306,37 +366,92 @@
   // try/catch by every caller — if it throws, we DO NOT touch/hide the server-rendered
   // #omni-ssr fallback, so the user still sees the full merged thread. Only on a clean
   // paint do we mark <body class="js-rendered">, which hides the duplicate SSR block.
+  /* CARD-GRID RENDER (qi 2026-08-20). Same shape as the hitthe.link link index —
+     section per category, card-grid of link-cards — but every value comes from the
+     LIVE omni stream, never a static list.
+
+     MAPPING, and the parts that are my inference are marked:
+       section        <- network            (his filter chips were network+count,
+                                             so this is his own grouping)
+       N ENTRIES      <- messages on it     (real count, not a guess)
+       .link-text     <- sender, else title
+       .meta-hash     <- time               (omni is time-based; his static index
+                                             showed dates because pages are dated)
+       title=         <- the message preview, so hover shows the actual content
+       .fresh         <- inside the last hour        [inference]
+       .dead          <- encrypted or empty body     [inference: his .dead meant
+                          "MISSING", i.e. nothing to open — an encrypted body with
+                          no device key is the same dead end, so it renders as a
+                          non-clickable <div aria-disabled> exactly like his]
+
+     The click -> openDrawer(roomId) binding is PRESERVED. That is the reply path;
+     dropping it would turn a working inbox into a picture of one. */
+  var ARROW = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+    + ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+    + '<line x1="5" y1="12" x2="19" y2="12"></line>'
+    + '<polyline points="12 5 19 12 12 19"></polyline></svg>';
+
+  function pad2(n){ return (n<10?'0':'')+n; }
+
   function renderList(){
+    var host = document.getElementById('content-container');
+    if(!host) return;   // markup changed under us — never throw, never blank SSR
     var rows=state.msgs.filter(function(m){return state.filter==='all'||m.network===state.filter;});
     if(!rows.length){
-      // No live rows to show. Do NOT hide SSR — leave the baked thread visible.
-      listEl.innerHTML='<li class="empty">No messages yet.</li>';
+      // No live rows. Do NOT hide SSR — leave the baked thread visible.
+      host.innerHTML='<div class="empty">No messages yet.</div>';
       return;
     }
-    var html='';
+
+    // group by network, preserving the newest-first order inside each group
+    var order=[], groups={};
     rows.forEach(function(m){
-      var net = m.network || 'beeper';
-      var body = m.encrypted
-               ? '<span class="enc">encrypted</span>'
-               : (m.text ? esc(String(m.text).slice(0,240)) : '<span class="enc">no text</span>');
-      var who = m.sender ? esc(m.sender) : esc(m.title||'');
-      var accentVar = 'var(--'+net+', var(--accent))';
-      var acct = m.account ? '<span class="acct">'+esc(m.account)+'</span>' : '';
-      html+='<li class="item" data-room-id="'+esc(m.roomId)+'" style="--card-accent:'+accentVar+';cursor:pointer">'
-        + '<div class="badge b-'+net+'">'+esc(m.networkIcon||'')+'</div>'
-        + '<div class="mid">'
-        +   '<div class="name">'+who+' <span class="net">'+esc(m.networkLabel||net)+'</span>'+acct+'</div>'
-        +   '<div class="msgtext">'+body+'</div>'
-        +   '<div class="ctx">'+esc(m.title||'')+'</div>'
-        + '</div>'
-        + '<div class="right">'
-        +   '<div class="time">'+fmtTime(m.ts)+'</div>'
-        + '</div>'
-        +'</li>';
+      var net=m.network||'beeper';
+      if(!groups[net]){ groups[net]=[]; order.push(net); }
+      groups[net].push(m);
     });
-    listEl.innerHTML=html;
-    Array.prototype.forEach.call(listEl.querySelectorAll('.item'),function(el){
+    // biggest network first, same as the filter chips sorted by count
+    order.sort(function(a,b){ return groups[b].length-groups[a].length; });
+
+    var now=Date.now(), html='', ci=0;
+    order.forEach(function(net){
+      var list=groups[net];
+      var label=(list[0]&&list[0].networkLabel)||net;
+      html+='<section id="cat-'+(ci++)+'">'
+          + '<h2>'+esc(label)+' <span class="badge">'+pad2(list.length)+' ENTRIES</span></h2>'
+          + '<div class="card-grid">';
+      list.forEach(function(m){
+        var body = m.encrypted ? 'encrypted'
+                 : (m.text ? String(m.text).slice(0,240) : 'no text');
+        var dead = !!(m.encrypted || !m.text);
+        var fresh = m.ts && (now - m.ts) < 3600000;
+        var who  = m.sender || m.title || net;
+        var cls  = 'link-card' + (dead ? ' dead' : (fresh ? ' fresh' : ''));
+        var accent = 'var(--'+net+', var(--accent))';
+        var open = dead
+          ? '<div aria-disabled="true" class="'+cls+'" style="--card-accent:'+accent+'"'
+          : '<div class="'+cls+'" role="button" tabindex="0" data-room-id="'+esc(m.roomId)+'"'
+            + ' style="--card-accent:'+accent+';cursor:pointer"';
+        html+= open + ' title="'+esc(body)+'">'
+            + '<div class="left">'
+            +   '<div class="status-dot"></div>'
+            +   '<span class="link-text">'+esc(who)+'</span>'
+            + '</div>'
+            + '<div class="right">'
+            +   '<span class="meta-hash">'+(dead ? 'ENCRYPTED' : esc(fmtTime(m.ts)))+'</span>'
+            +   ARROW
+            + '</div>'
+            + '</div>';
+      });
+      html+='</div></section>';
+    });
+    host.innerHTML=html;
+
+    Array.prototype.forEach.call(host.querySelectorAll('.link-card[data-room-id]'),function(el){
       el.onclick=function(){openDrawer(el.getAttribute('data-room-id'));};
+      el.onkeydown=function(e){
+        if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openDrawer(el.getAttribute('data-room-id')); }
+      };
     });
     // Clean paint succeeded with real rows -> hide the duplicate SSR fallback.
     document.body.classList.add('js-rendered');
@@ -449,5 +564,114 @@
 })();
 </script>
 <script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
+<script>
+/* omni reply composer — static, no server-side interpolation. Delegated click on
+   li[data-room-id]; POST {roomId,text} to /api/reply; result shown inline. */
+(function () {
+  var CLS = 'omni-composer';
+  var BOX_CSS = 'list-style:none;margin:4px 0 10px;padding:8px;border:1px solid rgba(127,127,127,.35);border-radius:8px;background:rgba(127,127,127,.10);font:13px/1.45 system-ui,-apple-system,sans-serif';
+  var TA_CSS = 'display:block;width:100%;min-height:64px;box-sizing:border-box;padding:6px 7px;border:1px solid rgba(127,127,127,.4);border-radius:6px;background:rgba(255,255,255,.06);color:inherit;font:inherit;resize:vertical';
+  var BAR_CSS = 'display:flex;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap';
+  var BTN_CSS = 'padding:5px 14px;border:1px solid rgba(127,127,127,.45);border-radius:6px;background:#2a6df4;color:#fff;font:inherit;cursor:pointer';
+  var HINT_CSS = 'opacity:.55;font-size:11px';
+  var MSG_CSS = 'white-space:pre-wrap;word-break:break-word;flex:1 1 140px';
+  var OK = '#3fae5a', BAD = '#d9534f';
+
+  function closeAll() {
+    var els = document.querySelectorAll('.' + CLS);
+    for (var i = 0; i < els.length; i++) { if (els[i].parentNode) els[i].parentNode.removeChild(els[i]); }
+  }
+
+  function build(roomId) {
+    var box = document.createElement('li');
+    box.className = CLS;
+    box.setAttribute('style', BOX_CSS);
+
+    var ta = document.createElement('textarea');
+    ta.setAttribute('style', TA_CSS);
+    ta.setAttribute('placeholder', 'Reply…');
+
+    var bar = document.createElement('div');
+    bar.setAttribute('style', BAR_CSS);
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = 'Send';
+    btn.setAttribute('style', BTN_CSS);
+    var hint = document.createElement('span');
+    hint.setAttribute('style', HINT_CSS);
+    hint.textContent = '⌘/Ctrl+Enter sends · Esc closes';
+    var msg = document.createElement('span');
+    msg.setAttribute('style', MSG_CSS);
+
+    bar.appendChild(btn); bar.appendChild(hint); bar.appendChild(msg);
+    box.appendChild(ta); box.appendChild(bar);
+
+    function say(color, text) { msg.style.color = color || ''; msg.textContent = text; }
+
+    function send() {
+      var text = ta.value;
+      if (!text.trim()) { say(BAD, 'nothing to send'); ta.focus(); return; }
+      btn.disabled = true;
+      say('', 'sending…');
+      fetch('/api/reply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomId: roomId, text: text })
+      }).then(function (r) {
+        return r.text().then(function (raw) {
+          var j = null; try { j = JSON.parse(raw); } catch (e) {}
+          return { status: r.status, raw: raw, json: j };
+        });
+      }).then(function (res) {
+        btn.disabled = false;
+        var j = res.json;
+        if (j && j.ok) {
+          var id = j.eventId || j.messageId || '';
+          var note = (j.delivered === true || j.verified === true) ? 'delivered'
+                   : (j.verifyNote ? String(j.verifyNote) : (j.encrypted ? 'unverified' : 'sent'));
+          say(OK, 'ok · ' + note + (id ? ' · ' + id : ''));
+          ta.value = '';
+        } else {
+          var err = (j && (j.error || (j.accepted ? 'accepted by homeserver but not decryptable' : ''))) || res.raw.slice(0, 240) || 'no body';
+          say(BAD, 'error ' + res.status + ' · ' + err);
+        }
+      }).catch(function (e) {
+        btn.disabled = false;
+        say(BAD, 'error · ' + ((e && e.message) ? e.message : String(e)));
+      });
+    }
+
+    btn.addEventListener('click', function (ev) { ev.preventDefault(); ev.stopPropagation(); send(); });
+    ta.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter' && (ev.metaKey || ev.ctrlKey)) { ev.preventDefault(); ev.stopPropagation(); send(); return; }
+      if (ev.key === 'Escape' || ev.key === 'Esc') {
+        ev.preventDefault(); ev.stopPropagation();
+        if (box.parentNode) box.parentNode.removeChild(box);
+      }
+    });
+
+    box._omniTa = ta;
+    return box;
+  }
+
+  document.addEventListener('click', function (ev) {
+    var t = ev.target;
+    if (!t || !t.closest) return;
+    if (t.closest('.' + CLS)) return;
+    if (t.closest('a') || t.closest('button') || t.closest('input') || t.closest('textarea')) return;
+    var row = t.closest('li[data-room-id]');
+    if (!row) return;
+    var next = row.nextElementSibling;
+    if (next && next.classList && next.classList.contains(CLS)) {
+      next.parentNode.removeChild(next);
+      return;
+    }
+    closeAll();
+    var box = build(row.getAttribute('data-room-id') || '');
+    row.parentNode.insertBefore(box, row.nextSibling);
+    try { box._omniTa.focus(); } catch (e) {}
+  }, false);
+})();
+</script>
 </body>
 </html>

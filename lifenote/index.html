@@ -458,6 +458,14 @@ a.navbtn{ text-decoration:none; }
     </div>
   </section>
 
+  <!-- ⭐ FILTERS LIVE INSIDE LIFENOTE NOW — qi 2026-08-20 23:44, verbatim:
+       "the search bar and the filters should not be a separate section, it should be
+        inside the life notes section that used to be called journal, where you pick
+        the threads" + "make that whole entire piece collapsible."
+       It was its own <section class="filters"> sibling of the list. Moved into
+       #listwrap below the LIFENOTE head, and the head is now the collapse toggle.
+       Markup kept byte-identical inside — only its PARENT and one wrapper changed,
+       so #q / #chips / #chiphint keep their ids and every handler still binds. -->
   <section class="filters" id="filterwrap">
     <div class="sbar">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.6" style="flex:0 0 auto"><circle cx="11" cy="11" r="6"/><path d="M20 20l-3.2-3.2"/></svg>
@@ -749,8 +757,10 @@ function say(msg){
 
 /* ---------------- header nav ---------------- */
 function navItems(){
-  var t=(D&&D.totals)||{};
-  var arch=blocks().filter(function(b){return b.day!==todayISO();}).length;
+  // `arch` (blocks not from today) and `t` (D.totals) both went dead when Archive and the
+  // old counted tabs left this menu — arch was a full filter over every block running on
+  // EVERY renderNav() call with its result thrown away. Removed rather than left as a
+  // silent cost on a function called from renderAll().
   return [
     {k:"Flow",    count:blocks().length},
     {k:"Goals",   count:null, href:"/goals/"},
