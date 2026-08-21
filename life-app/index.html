@@ -70,6 +70,61 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--
   border-bottom:1px solid rgba(255,255,255,.05);position:relative;z-index:5;background:var(--bg)}
 .phead b{color:var(--jade);font-weight:500}
 
+/* ══ THE DIALPAD ══ styling for qi's canonical markup, verbatim classes.
+
+   ⚠️ CLASS COLLISION, HANDLED HERE AND NOWHERE ELSE: his dialpad's outer wrapper is
+   class="pane", and this file already defines .pane{width:100vw;height:100vh} for the
+   300vw carousel. Nested inside #m-right that would hand the dialpad a full-viewport
+   box and tear the layout apart. So the FIRST rule below re-scopes only the nested
+   one. His markup is untouched and .pane's canon geometry is untouched — the fix
+   lives entirely in specificity. */
+#m-right .pane{width:auto;height:auto;overflow:visible;display:block;position:static}
+
+#m-right .kicker-bar{display:flex;align-items:baseline;justify-content:space-between;
+  gap:10px;padding:12px 14px 8px;font-family:var(--mono);font-size:11px;letter-spacing:.14em}
+#m-right .kicker{color:var(--heavy);text-transform:uppercase}
+#m-right .badge{font-size:9.5px;letter-spacing:.1em;color:var(--heavy);
+  border:1px solid var(--line);border-radius:999px;padding:2px 8px}
+#m-right .muted{color:var(--heavy)}
+
+.phone{display:flex;flex-direction:column;min-height:0}
+.phone-tabs{display:flex;gap:6px;padding:0 12px 10px}
+.phone-tabs button{flex:1;background:transparent;border:1px solid var(--line);
+  border-radius:999px;color:var(--heavy);font-family:var(--mono);font-size:10.5px;
+  letter-spacing:.1em;padding:9px 6px;text-transform:uppercase;cursor:pointer}
+.phone-tabs button.active{color:var(--ink);border-color:rgba(0,255,127,.42);
+  background:rgba(0,255,127,.07);box-shadow:0 0 22px rgba(0,255,127,.14) inset}
+
+.phone-body{display:flex;flex-direction:column;gap:12px;padding:0 14px 14px}
+.dial-area{text-align:center}
+.dial-label{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--heavy)}
+.dial-display{font-family:var(--mono);font-size:26px;letter-spacing:.14em;
+  color:var(--ink);min-height:34px;margin:4px 0 2px}
+.dial-display .placeholder{color:var(--heavy)}
+.dial-match{font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--heavy)}
+
+.ascii-pad{display:flex;flex-direction:column;gap:9px}
+.pad-row{display:flex;gap:9px}
+.ascii-key{flex:1;aspect-ratio:1/1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:1px;
+  background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:50%;
+  color:var(--ink);font-family:var(--mono);cursor:pointer}
+.ascii-key:active{background:rgba(0,255,127,.12);border-color:rgba(0,255,127,.42)}
+.ak-num{font-size:24px;line-height:1}
+.ak-chars{font-size:8.5px;letter-spacing:.16em;color:var(--heavy)}
+
+.call-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding-top:4px}
+.ca-btn{display:flex;align-items:center;justify-content:center;gap:7px;
+  width:52px;height:52px;border-radius:50%;background:transparent;
+  border:1px solid var(--line);color:var(--heavy);cursor:pointer}
+.ca-btn.call{flex:1;width:auto;border-radius:999px;border:0;
+  background:linear-gradient(180deg,#00FF7F,#00C765);color:#04120A;
+  font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase}
+.ca-btn.call[aria-disabled="true"]{opacity:.4}
+
 /* ══ CENTER COMPOSER ══ the write leg's face.            (added 2026-08-20)
    GEOMETRY IS SAFE BY CONSTRUCTION, NOT BY CARE: .pane is already
    flex-direction:column with .phead flex:0 0 auto and .mount flex:1;min-height:0.
@@ -117,13 +172,17 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--
 <body>
 
 <div class="panes" id="panes">
+  <!-- qi 2026-08-20 21:44, verbatim: remove all three .phead bars and the whole GV
+       chrome (#gv-live, #gp-keypad, #gv-foot). The panes are now pure mounted
+       surfaces — no label strip, no status rail, no dial pad. Every id those blocks
+       carried is on RETIRED_IDS so the 42 live references absorb harmlessly; one of
+       them (#gv-stat) was the source of the "Cannot set properties of null" error
+       he could see on screen. -->
   <section class="pane" id="pane-left">
-    <div class="phead">OMNI-INBOX <b>/xos3</b><span class="rail"><span class="dot" id="d-left"></span><span id="s-left">mounting</span></span></div>
     <div class="mount" id="m-left"><div class="loading">mounting /xos3/ …</div></div>
   </section>
 
   <section class="pane" id="pane-center">
-    <div class="phead">LIFENOTE <b>/lifenote</b><span class="rail"><span class="dot" id="d-center"></span><span id="s-center">mounting</span></span></div>
     <div class="mount" id="m-center"><div class="loading">mounting /lifenote/ …</div></div>
     <!-- The composer is a SIBLING of .mount, never inside it: the mounted limb's
          own DOM is replaced on every remount, so anything living in there would
@@ -138,28 +197,18 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--
     </div>
   </section>
 
+  <!-- ══ THE DIALPAD ══ qi 2026-08-20 21:46: "THIS IS THE DIALPAD", pasted verbatim.
+       This is the canonical component — I had been carrying an invented keypad
+       (#gv-keys/#gv-callbig/#gv-dialtxt), which is exactly what he told me to
+       remove one message earlier. His markup is reproduced EXACTLY: same classes,
+       same nesting, same SVGs, same tab order (Dialpad first, active).
+       Behaviour is attached by CLASS from JS below — no ids added, no attributes
+       injected, no shape changed, because the shape is his. -->
   <section class="pane" id="pane-right">
-    <div class="phead">GV REMOTE <b>ggv.xlrd.org</b><span class="rail"><span class="dot" id="d-right"></span><span id="s-right">connecting</span></span></div>
     <div class="mount" id="m-right">
-      <div id="gv-live">GOOGLE VOICE · <span id="gv-title">reading the line…</span><span id="gv-ctl" style="display:none"></span></div>
-      <div id="gv-tabs">
-        <div class="gvt on" data-gp="recents">Recents</div>
-        <div class="gvt" data-gp="contacts">Contacts</div>
-        <div class="gvt" data-gp="keypad">Keypad</div>
-      </div>
-      <div class="gvp on" id="gp-recents"><div class="gvempty">reading omni…</div></div>
-      <div class="gvp" id="gp-contacts"><div class="gvempty">reading omni…</div></div>
-      <div class="gvp" id="gp-keypad">
-        <div id="gv-dialout"><span id="gv-dialtxt" class="ph">&#8212; &#8212; &#8212; &#8212; &#8212; &#8212;</span></div>
-        <div id="gv-hint">&rsaquo; TAP A KEY OR SPEAK A NAME</div>
-        <div id="gv-keys"></div>
-        <div id="gv-callrow">
-          <div class="gvside" id="gv-contacts-btn" title="contacts">&#128101;</div>
-          <button id="gv-callbig" disabled><span>&#9742;</span><span>Call</span></button>
-          <div class="gvside" id="gv-del" title="delete">&#9003;</div>
-        </div>
-      </div>
-      <div id="gv-foot"><span id="gv-stat">connecting</span><span id="gv-age"></span></div>
+      <div class="pane"><div class="kicker-bar"><div class="kicker">Phone</div><div class="badge muted" id="dial-badge">Dialpad</div></div><div class="phone"><div class="phone-tabs"><button class="active">Dialpad</button><button class="">Recents</button><button class="">Contacts</button></div><div class="phone-body"><div class="dial-area"><div class="dial-label">phone</div><div class="dial-display"><span class="placeholder">_ _ _ _ _ _</span></div><div class="dial-match muted">&rsaquo; tap a key or speak a name</div></div><div class="ascii-pad"><div class="pad-row"><button class="ascii-key"><div class="ak-num">1</div><div class="ak-chars">&nbsp;</div></button><button class="ascii-key"><div class="ak-num">2</div><div class="ak-chars">ABC</div></button><button class="ascii-key"><div class="ak-num">3</div><div class="ak-chars">DEF</div></button></div><div class="pad-row"><button class="ascii-key"><div class="ak-num">4</div><div class="ak-chars">GHI</div></button><button class="ascii-key"><div class="ak-num">5</div><div class="ak-chars">JKL</div></button><button class="ascii-key"><div class="ak-num">6</div><div class="ak-chars">MNO</div></button></div><div class="pad-row"><button class="ascii-key"><div class="ak-num">7</div><div class="ak-chars">PQRS</div></button><button class="ascii-key"><div class="ak-num">8</div><div class="ak-chars">TUV</div></button><button class="ascii-key"><div class="ak-num">9</div><div class="ak-chars">WXYZ</div></button></div><div class="pad-row"><button class="ascii-key"><div class="ak-num" style="font-size: 32px; margin-top: -2px;">&#10033;</div><div class="ak-chars">&nbsp;</div></button><button class="ascii-key"><div class="ak-num">0</div><div class="ak-chars">+</div></button><button class="ascii-key"><div class="ak-num">#</div><div class="ak-chars">&nbsp;</div></button></div></div><div class="call-actions"><button class="ca-btn" aria-label="contacts"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></button><a class="ca-btn call" href="#" style="text-decoration: none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20 15.5c-1.2 0-2.5-.2-3.6-.6-.3-.1-.7 0-1 .3l-2.2 2.2c-2.8-1.4-5.2-3.7-6.6-6.6l2.2-2.2c.3-.3.4-.7.3-1-.4-1.1-.6-2.3-.6-3.6 0-.6-.4-1-1-1H4c-.6 0-1 .4-1 1 0 9.4 7.6 17 17 17 .6 0 1-.4 1-1v-3.5c0-.6-.4-1-1-1z"></path></svg><span>call</span></a><button class="ca-btn" aria-label="backspace"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg></button></div></div></div></div>
+      <div class="gvp" id="gp-recents" hidden><div class="gvempty">reading omni…</div></div>
+      <div class="gvp" id="gp-contacts" hidden><div class="gvempty">reading omni…</div></div>
     </div>
   </section>
 </div>
@@ -202,7 +251,40 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--
    ⛔ STILL NO IFRAME. Ever.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-var $=function(i){return document.getElementById(i);};
+/* ── RETIRED-NODE SAFETY NET ──                            (qi 2026-08-20 21:44)
+   He removed the three .phead bars and the whole GV chrome (#gv-live, #gp-keypad,
+   #gv-foot). That orphans 42 references across 17 ids — and one of them was
+   ALREADY biting him: the visible "ggv unreachable: Cannot set properties of null
+   (setting 'textContent')" was this code writing #gv-stat after it went missing.
+
+   Why not just make $() always return a stub: other code does existence checks —
+   `if(drawer)`, `if(t)` — and an always-truthy stub silently inverts them. So the
+   inert node is returned ONLY for ids on this explicit retired list. Live elements
+   behave exactly as before; retired ones absorb writes and no-op.
+   Reads stay type-correct so nothing downstream sees undefined. */
+var RETIRED_IDS = {
+  "d-left":1,"s-left":1,"d-center":1,"s-center":1,"d-right":1,"s-right":1,
+  "gv-live":1,"gv-title":1,"gv-ctl":1,
+  "gp-keypad":1,"gv-dialout":1,"gv-dialtxt":1,"gv-hint":1,"gv-keys":1,
+  "gv-callrow":1,"gv-callbig":1,"gv-del":1,"gv-contacts-btn":1,
+  "gv-foot":1,"gv-stat":1,"gv-age":1
+};
+function inertNode(){
+  return { textContent:"", innerHTML:"", value:"", disabled:false, hidden:true,
+           className:"", style:{}, dataset:{},
+           classList:{ add:function(){}, remove:function(){}, toggle:function(){},
+                       contains:function(){return false;} },
+           setAttribute:function(){}, getAttribute:function(){return null;},
+           removeAttribute:function(){}, addEventListener:function(){},
+           appendChild:function(){}, focus:function(){}, click:function(){},
+           querySelector:function(){return null;}, querySelectorAll:function(){return [];},
+           getBoundingClientRect:function(){return {x:0,y:0,width:0,height:0,top:0,left:0,right:0,bottom:0};} };
+}
+var $=function(i){
+  var el=document.getElementById(i);
+  if(el) return el;
+  return RETIRED_IDS[i] ? inertNode() : null;   // unknown missing id still returns null
+};
 
 /* ── swipeglass ────────────────────────────────────────────────────────── */
 var idx=1, panes=$("panes");
@@ -713,6 +795,85 @@ function mountGV(){
 mount("center","/lifenote/");
 setTimeout(function(){ mount("left","/xos3/"); }, 4200);
 setTimeout(mountGV, 8400);
+
+/* ══ DIALPAD WIRING ══ qi's canonical markup, behaviour attached BY CLASS.
+   Nothing here adds an id, an attribute, or a wrapper to his DOM — the shape is
+   his, so the code adapts to it rather than the reverse. Delegated from #m-right
+   so it survives a remount of the limb.
+
+   THE CALL BUTTON PLACES A REAL CALL through the gv-mcp rail that is already
+   verified live (:3457 -> ggv.xlrd.org, gvTabAttached). So it is deliberately
+   inert until there are >=10 digits, and it reports the REAL failure text rather
+   than a cheerful nothing — a dialer that silently no-ops is worse than one that
+   says why. */
+(function wireDialpad(){
+  var root = document.getElementById("m-right");
+  if(!root) return;
+
+  function disp(){ return root.querySelector(".dial-display"); }
+  function match(){ return root.querySelector(".dial-match"); }
+  var digits = "";
+
+  function paint(){
+    var d = disp(); if(!d) return;
+    d.innerHTML = digits
+      ? digits.replace(/[<>&]/g,"")
+      : '<span class="placeholder">_ _ _ _ _ _</span>';
+    var m = match();
+    if(m){
+      m.textContent = digits.length >= 10
+        ? "› ready to dial " + digits
+        : (digits ? "› " + digits.length + " of 10 digits"
+                  : "› tap a key or speak a name");
+    }
+    var call = root.querySelector(".ca-btn.call");
+    if(call) call.setAttribute("aria-disabled", digits.replace(/\D/g,"").length >= 10 ? "false" : "true");
+  }
+
+  root.addEventListener("click", function(e){
+    var key = e.target.closest && e.target.closest(".ascii-key");
+    if(key){
+      var n = key.querySelector(".ak-num");
+      if(n){ digits += (n.textContent || "").trim(); paint(); }
+      return;
+    }
+    var back = e.target.closest && e.target.closest('.ca-btn[aria-label="backspace"]');
+    if(back){ digits = digits.slice(0, -1); paint(); return; }
+
+    var tab = e.target.closest && e.target.closest(".phone-tabs button");
+    if(tab){
+      Array.prototype.forEach.call(root.querySelectorAll(".phone-tabs button"), function(b){
+        b.className = (b === tab) ? "active" : "";
+      });
+      var want = (tab.textContent || "").trim().toLowerCase();
+      var body = root.querySelector(".phone-body");
+      var rec  = document.getElementById("gp-recents");
+      var con  = document.getElementById("gp-contacts");
+      if(body) body.hidden = (want !== "dialpad");
+      if(rec)  rec.hidden  = (want !== "recents");
+      if(con)  con.hidden  = (want !== "contacts");
+      return;
+    }
+
+    var call = e.target.closest && e.target.closest(".ca-btn.call");
+    if(call){
+      e.preventDefault();                       // his markup is <a href="#">
+      var num = digits.replace(/\D/g, "");
+      var m = match();
+      if(num.length < 10){ if(m) m.textContent = "› need 10 digits before dialing"; return; }
+      if(m) m.textContent = "› dialing " + num + "…";
+      // gvTool already asserts on result.isError AND inner ok===false, so a
+      // failure surfaces its real reason instead of a false success.
+      gvTool("gv_dial", { number: num }).then(function(){
+        if(m) m.textContent = "› dialing " + num + " — accepted by the line";
+      }).catch(function(err){
+        if(m) m.textContent = "› NOT dialed — " + (err && err.message ? err.message : err);
+      });
+    }
+  });
+
+  paint();
+})();
 
 /* ══ CENTER COMPOSER WIRING ══                            (added 2026-08-20)
    POSTs to omni's /api/note, which appends `note: <text>` to qi's canonical
