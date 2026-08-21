@@ -36,6 +36,11 @@
   --heavy:#6B7280; --luminous:#00FFC2; --restless:#F59E0B;
   --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   --line:rgba(0,255,127,.14); --glass:rgba(10,14,12,.72);
+  /* CANONICAL SWIPE GLASS geometry, ported from xos-capacitor/www/styles.css.
+     --sab is 0 BY DECREE (qi 2026-08-13 22:42, twice): the inset was the only thing
+     between his design and the bottom of the screen, and it cost him a clipped wave.
+     --dock-h 60px is the value XOS always resolved to, since nothing ever set it. */
+  --dock-h:60px; --sab:0px;
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);
@@ -61,17 +66,93 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--
    The dock keeps its z-index and its glass; the COMPOSER gets clearance
    instead (see .composer padding-bottom below) — his dock is never restyled
    to accommodate my element. */
-.dock-hit{position:fixed;left:0;right:0;bottom:0;z-index:2147483000;
-  height:calc(26px + env(safe-area-inset-bottom));
-  background:var(--glass);backdrop-filter:blur(22px) saturate(140%);
-  -webkit-backdrop-filter:blur(22px) saturate(140%);
-  border-top:1px solid var(--line);cursor:pointer}
-/* the grab affordance — the strip is otherwise featureless */
-.dock-hit::after{content:"";position:absolute;left:50%;top:9px;width:104px;height:4px;
-  margin-left:-52px;border-radius:999px;background:rgba(0,255,127,.34)}
-.dock-hit:focus-visible{outline:1px solid rgba(0,255,127,.5);outline-offset:-2px}
+/* ═══ CANONICAL SWIPE GLASS — qi 2026-08-20 22:53: "the canonical swipe glass from xos
+   is MANDATORY" + "CANONICAL". Ported from xos-capacitor/www/styles.css, extracted from
+   the LIVE rendered /xos/ DOM, not retyped from the 186KB app.jsx.
 
-.drawer{position:fixed;left:0;right:0;bottom:calc(26px + env(safe-area-inset-bottom));
+   WHAT WAS WRONG: .dock-hit here was doing two jobs — it WAS the glass and the hit
+   target, in one 26px bar. Canonical is 60px, blur(40px) saturate(220%) not blur(22px)
+   saturate(140%), a layered radial-sheen + 3-stop gradient not a flat var(--glass), plus
+   a border-top and three inset shadows. And .dock-hit is not the bar at all: in XOS it is
+   an absolutely-positioned gesture layer INSIDE the glass, which is why the glass carries
+   pointer-events:none and the hit layer takes them back.
+
+   RE-SCOPED DELIBERATELY: every XOS rule is under `.os.os-fullscreen`, which does not
+   exist in this document. Copying the selectors verbatim would have produced dead CSS
+   that looks correct in the file — so the scope is dropped, nothing else is.
+
+   z-index stays this document's 2147483000 (not XOS's 6): the panes here establish their
+   own stacking and 6 would bury the glass. Geometry is canonical; layering is local. */
+.dock.dock-swipe{
+  position:fixed;left:0;right:0;bottom:0;z-index:2147483000;
+  min-height:calc(var(--dock-h) + var(--sab));
+  padding:0 0 var(--sab);
+  display:flex;flex-direction:column;justify-content:flex-end;align-items:stretch;
+  overflow:hidden;border-radius:12px;
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 60%),
+    linear-gradient(to bottom,
+      rgba(20,28,24,0.42) 0%,
+      rgba(18,26,22,0.44) 50%,
+      rgba(16,24,20,0.46) 100%);
+  backdrop-filter:blur(40px) saturate(220%) brightness(1.05);
+  -webkit-backdrop-filter:blur(40px) saturate(220%) brightness(1.05);
+  border-top:1px solid rgba(255,255,255,0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    inset 0 -1px 0 rgba(0,0,0,0.4),
+    0 -8px 24px rgba(0,0,0,0.45);
+  transition:backdrop-filter .18s ease, background .18s ease;
+  pointer-events:none;
+}
+/* press feedback — "glass densifies under finger". Deliberate in XOS, kept verbatim. */
+.dock.dock-swipe:active{
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0) 60%),
+    linear-gradient(to bottom, rgba(20,28,24,0.55) 0%, rgba(10,14,12,0.75) 50%, rgba(6,10,8,0.88) 100%);
+  backdrop-filter:blur(48px) saturate(240%) brightness(1.1);
+  -webkit-backdrop-filter:blur(48px) saturate(240%) brightness(1.1);
+}
+.dock.dock-swipe:hover{
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 60%),
+    linear-gradient(to bottom, rgba(22,30,26,0.48) 0%, rgba(12,16,14,0.68) 50%, rgba(8,12,10,0.82) 100%);
+}
+/* display:none in XOS — the handle is deliberately not drawn. The green pill this file
+   used to draw with .dock-hit::after was a local invention and is gone with it. */
+.dock.dock-swipe .dock-handle{display:none}
+.dock.dock-swipe .dock-sheen{
+  position:absolute;top:0;left:8%;right:8%;height:1px;pointer-events:none;
+  background:linear-gradient(to right,
+    rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+}
+.dock.dock-swipe .dock-edge-light{
+  position:absolute;top:4px;bottom:4px;left:0;right:0;pointer-events:none;
+  background:linear-gradient(to right,
+    rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 8%,
+    rgba(255,255,255,0) 92%, rgba(255,255,255,0.06) 100%);
+}
+/* --dock-notif-h reserves the ticker strip BELOW the wave. It is a variable so the two
+   can never drift into the overlap that produced the stacked-wave bug. */
+.dock.dock-swipe .dock-vei-host{
+  position:relative;z-index:2;pointer-events:auto;flex:0 0 auto;width:100%;
+  --dock-notif-h:22px;margin-bottom:var(--dock-notif-h);
+}
+.dock.dock-swipe .dock-vei-host #waveform-canvas{
+  display:block;width:100%;height:37px;pointer-events:none;background:transparent;border:0;
+}
+/* the gesture layer. touch-action:none so the OS cannot steal a horizontal drag before
+   the handler classifies its axis. */
+.dock.dock-swipe .dock-hit{
+  position:absolute;inset:0;width:auto;height:auto;transform:none;
+  pointer-events:auto;cursor:grab;background:transparent;
+  touch-action:none;-webkit-tap-highlight-color:transparent;
+}
+.dock.dock-swipe .dock-hit:focus-visible{
+  outline:2px solid rgba(0,255,127,.5);outline-offset:-4px;border-radius:12px;
+}
+
+.drawer{position:fixed;left:0;right:0;bottom:var(--xos-dock-real, calc(var(--dock-h) + var(--sab)));
   z-index:2147483001;background:var(--glass);
   backdrop-filter:blur(26px) saturate(150%);-webkit-backdrop-filter:blur(26px) saturate(150%);
   border-top:1px solid var(--line);padding:10px 12px 14px;
@@ -163,7 +244,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--
      the button — visible, focusable, and impossible to click. Clearance equals the
      dock strip + the safe-area inset, so it tracks the dock instead of guessing.
      The dock is NOT restyled to make room; my element yields to his. */
-  padding:10px 12px calc(12px + 26px + env(safe-area-inset-bottom));
+  padding:10px 12px calc(12px + var(--xos-dock-real, calc(var(--dock-h) + var(--sab))));
   display:flex;flex-direction:column;gap:8px}
 .composer .crow{display:flex;align-items:flex-end;gap:8px}
 .composer textarea{flex:1;min-width:0;resize:none;height:38px;max-height:112px;
@@ -239,7 +320,13 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--
 <!-- qi 2026-08-20 21:31, verbatim: remove the three-button swipeglass nav, replace
      with a dock hit strip that opens the app drawer. The labelled button bar is
      gone; the drawer is the surface. -->
-<div class="dock-hit" role="button" tabindex="0" aria-label="Open app drawer"></div>
+<div class="dock dock-swipe">
+  <span class="dock-handle" aria-hidden="true"></span>
+  <span class="dock-sheen" aria-hidden="true"></span>
+  <span class="dock-edge-light" aria-hidden="true"></span>
+  <div class="dock-vei-host"><canvas id="waveform-canvas" width="333" height="37" data-xos-docked="1"></canvas></div>
+  <div class="dock-hit" role="button" tabindex="0" aria-label="Open app drawer"></div>
+</div>
 
 <!-- The drawer the aria-label names. It did not exist — measured: "drawer" matched
      exactly once in this file, and that one hit was my own comment. An element with
@@ -330,6 +417,29 @@ function go(i){
    dies with it — go(1), the touch + keyboard handlers, URL rebasing, all three
    pane mounts, the composer. A blank shell that still returns HTTP 200. */
 var hit=document.querySelector(".dock-hit"), drawer=$("drawer");
+
+/* PUBLISH THE GLASS'S MEASURED HEIGHT — ported from xos-capacitor/www/app.jsx:1606-1641.
+   --xos-dock-real is what .drawer and .composer read for their bottom offsets, so nothing
+   downstream hardcodes a dock height again. The CSS fallback calc() covers the frames
+   before the first measure.
+
+   NO FEEDBACK LOOP BY CONSTRUCTION: --xos-dock-real is consumed by .drawer and .composer,
+   neither of which is inside .dock.dock-swipe, so writing it can never change the observed
+   element's own height. The prev-value guard also stops a same-value write from scheduling
+   another layout. */
+(function(){
+  var dock = document.querySelector(".dock.dock-swipe");
+  if (!dock || typeof ResizeObserver === "undefined") return;
+  function publish(){
+    var h = Math.round(dock.getBoundingClientRect().height);
+    if (!h) return;                       // 0 during a hidden/pre-layout frame — ignore
+    var next = h + "px";
+    if (document.documentElement.style.getPropertyValue("--xos-dock-real") === next) return;
+    document.documentElement.style.setProperty("--xos-dock-real", next);
+  }
+  new ResizeObserver(publish).observe(dock);
+  publish();
+})();
 
 function setDrawer(open){
   if(!drawer) return;
