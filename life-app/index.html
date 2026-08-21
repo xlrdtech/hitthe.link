@@ -29,14 +29,40 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--
 .mount{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
   position:relative;transform:translateZ(0);contain:layout paint style;padding-bottom:78px}
 
-.swipeglass{position:fixed;left:0;right:0;bottom:0;z-index:2147483000;
+/* ── DOCK HIT + APP DRAWER ──  replaces .swipeglass  (qi 2026-08-20 21:31)
+   MEASURED DEFECT THIS REPLACES: the old .swipeglass was a full bar at
+   z-index 2147483000 pinned to bottom:0. In a 720x865 viewport the composer's
+   SAVE button centred at y=814 — under the glass. elementFromPoint(677,814)
+   returned "glass", not the button, so SAVE was visibility:visible and
+   physically unclickable. DOM presence is not reachability.
+   The dock keeps its z-index and its glass; the COMPOSER gets clearance
+   instead (see .composer padding-bottom below) — his dock is never restyled
+   to accommodate my element. */
+.dock-hit{position:fixed;left:0;right:0;bottom:0;z-index:2147483000;
+  height:calc(26px + env(safe-area-inset-bottom));
   background:var(--glass);backdrop-filter:blur(22px) saturate(140%);
   -webkit-backdrop-filter:blur(22px) saturate(140%);
-  border-top:1px solid var(--line);padding:10px 12px calc(12px + env(safe-area-inset-bottom));
-  display:flex;gap:8px;align-items:center}
-.swipeglass button{flex:1;background:transparent;border:1px solid var(--line);border-radius:999px;
-  color:var(--heavy);font-family:var(--mono);font-size:11px;letter-spacing:.1em;padding:11px 8px;text-transform:uppercase}
-.swipeglass button.on{color:var(--ink);border-color:rgba(0,255,127,.42);
+  border-top:1px solid var(--line);cursor:pointer}
+/* the grab affordance — the strip is otherwise featureless */
+.dock-hit::after{content:"";position:absolute;left:50%;top:9px;width:104px;height:4px;
+  margin-left:-52px;border-radius:999px;background:rgba(0,255,127,.34)}
+.dock-hit:focus-visible{outline:1px solid rgba(0,255,127,.5);outline-offset:-2px}
+
+.drawer{position:fixed;left:0;right:0;bottom:calc(26px + env(safe-area-inset-bottom));
+  z-index:2147483001;background:var(--glass);
+  backdrop-filter:blur(26px) saturate(150%);-webkit-backdrop-filter:blur(26px) saturate(150%);
+  border-top:1px solid var(--line);padding:10px 12px 14px;
+  display:flex;flex-direction:column;gap:8px}
+.drawer[hidden]{display:none}
+.drawer-grip{width:70px;height:4px;border-radius:999px;background:rgba(0,255,127,.22);
+  align-self:center;margin-bottom:2px}
+.drawer-app{display:flex;align-items:baseline;gap:10px;width:100%;text-align:left;
+  background:transparent;border:1px solid var(--line);border-radius:12px;
+  color:var(--heavy);font-family:var(--mono);font-size:11px;letter-spacing:.1em;
+  padding:12px 14px;text-transform:uppercase;cursor:pointer}
+.drawer-app em{font-style:normal;color:var(--jade);letter-spacing:.04em;text-transform:none;
+  margin-left:auto;font-size:10px}
+.drawer-app.on{color:var(--ink);border-color:rgba(0,255,127,.42);
   background:rgba(0,255,127,.07);box-shadow:0 0 22px rgba(0,255,127,.14) inset}
 
 .phead{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:12px 14px 10px;
@@ -53,7 +79,14 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--
    untouchable canon and a previous attempt of mine to "fix" it was a real defect.
    Nothing here touches .dock.dock-swipe either; the drawer IS the product. */
 .composer{flex:0 0 auto;border-top:1px solid var(--line);background:var(--glass);
-  padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px}
+  /* BOTTOM PADDING IS THE FIX FOR A MEASURED DEFECT, not spacing taste: the dock
+     is fixed at bottom:0 with z-index 2147483000, so without clearance the SAVE
+     button lands underneath it and elementFromPoint returns "glass" instead of
+     the button — visible, focusable, and impossible to click. Clearance equals the
+     dock strip + the safe-area inset, so it tracks the dock instead of guessing.
+     The dock is NOT restyled to make room; my element yields to his. */
+  padding:10px 12px calc(12px + 26px + env(safe-area-inset-bottom));
+  display:flex;flex-direction:column;gap:8px}
 .composer .crow{display:flex;align-items:flex-end;gap:8px}
 .composer textarea{flex:1;min-width:0;resize:none;height:38px;max-height:112px;
   background:rgba(0,0,0,.42);border:1px solid var(--line);border-radius:10px;
@@ -131,11 +164,22 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--
   </section>
 </div>
 
-<nav class="swipeglass" id="glass">
-  <button data-i="0">Omni-Inbox</button>
-  <button data-i="1" class="on">LifeNote</button>
-  <button data-i="2">GV Remote</button>
-</nav>
+<!-- qi 2026-08-20 21:31, verbatim: remove the three-button swipeglass nav, replace
+     with a dock hit strip that opens the app drawer. The labelled button bar is
+     gone; the drawer is the surface. -->
+<div class="dock-hit" role="button" tabindex="0" aria-label="Open app drawer"></div>
+
+<!-- The drawer the aria-label names. It did not exist — measured: "drawer" matched
+     exactly once in this file, and that one hit was my own comment. An element with
+     role="button" that opens nothing is a dead control (cmd 4), so this is the
+     minimum surface that makes the label true. Flagged to qi as my inference.
+     It still calls go(i), so the 300vw carousel is driven exactly as before. -->
+<div class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="App drawer" hidden>
+  <div class="drawer-grip"></div>
+  <button class="drawer-app" data-i="0"><span>OMNI-INBOX</span><em>/xos3</em></button>
+  <button class="drawer-app" data-i="1"><span>LIFENOTE</span><em>/lifenote</em></button>
+  <button class="drawer-app" data-i="2"><span>GV REMOTE</span><em>ggv.xlrd.org</em></button>
+</div>
 
 <script>
 (function(){
@@ -165,10 +209,45 @@ var idx=1, panes=$("panes");
 function go(i){
   idx=Math.max(0,Math.min(2,i));
   panes.style.transform="translateX("+(-idx*100)+"vw)";
-  var b=document.querySelectorAll("#glass button");
-  for(var k=0;k<b.length;k++) b[k].className=(+b[k].dataset.i===idx)?"on":"";
+  /* #glass is GONE (qi 2026-08-20). Kept as a tolerant lookup rather than deleted:
+     an empty NodeList just skips the loop, so this stays correct whether the old
+     nav is present or not. The drawer's own buttons carry the .on state now. */
+  var b=document.querySelectorAll("#glass button, #drawer .drawer-app");
+  for(var k=0;k<b.length;k++) b[k].className=
+    (b[k].classList.contains("drawer-app") ? "drawer-app" : "")
+    + ((+b[k].dataset.i===idx) ? " on" : "");
 }
-$("glass").addEventListener("click",function(e){var t=e.target.closest("button");if(t)go(+t.dataset.i);});
+
+/* ── dock hit → app drawer ──────────────────────────────────────────────────
+   THIS GUARD IS THE WHOLE REASON THE PAGE STILL BOOTS. The old line was
+   `$("glass").addEventListener(...)` at module scope. With the nav removed
+   $("glass") is null, that line throws a TypeError, and EVERY statement after it
+   dies with it — go(1), the touch + keyboard handlers, URL rebasing, all three
+   pane mounts, the composer. A blank shell that still returns HTTP 200. */
+var hit=document.querySelector(".dock-hit"), drawer=$("drawer");
+
+function setDrawer(open){
+  if(!drawer) return;
+  drawer.hidden=!open;
+  drawer.classList.toggle("open",!!open);
+  if(hit) hit.setAttribute("aria-expanded",open?"true":"false");
+}
+if(hit){
+  hit.setAttribute("aria-expanded","false");
+  hit.addEventListener("click",function(){ setDrawer(drawer && drawer.hidden); });
+  // role="button" promises keyboard operability; Enter/Space must work or the
+  // role is a lie to a screen reader.
+  hit.addEventListener("keydown",function(e){
+    if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setDrawer(drawer && drawer.hidden); }
+  });
+}
+if(drawer){
+  drawer.addEventListener("click",function(e){
+    var t=e.target.closest(".drawer-app");
+    if(t){ go(+t.dataset.i); setDrawer(false); }
+  });
+}
+document.addEventListener("keydown",function(e){ if(e.key==="Escape") setDrawer(false); });
 go(1);
 var x0=null;
 document.addEventListener("touchstart",function(e){x0=e.touches[0].clientX;},{passive:true});
