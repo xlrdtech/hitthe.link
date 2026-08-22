@@ -247,7 +247,13 @@ body.views section[data-view].view-on{display:block}
 .del:hover{color:var(--ox)}
 .fire{margin-left:auto;font-family:var(--mono);font-size:8px;letter-spacing:.1em;color:var(--ng-leaf);align-self:center;text-transform:uppercase;text-shadow:0 0 9px rgba(57,255,20,.65);animation:fpulse 1.8s infinite}
 @keyframes fpulse{0%,100%{opacity:.25}50%{opacity:.85}}
-#steer-out{margin-top:20px;border:1px solid var(--ng-line);border-radius:6px;padding:14px 16px;background:linear-gradient(165deg,#0b0d0b,#070909);display:none}
+/* scroll-margin-top: the send verdict is the FIRST line in #steer-out, and .plate is
+   position:sticky. MEASURED 2026-08-22 07:29 at 390x844 on the live origin: plate occupies
+   viewport y 0-91, and scrollIntoView() put "⚠️ NOT sent — Failed to fetch" at y=16 —
+   underneath it. The honest line existed and qi could not see it without scrolling UP,
+   which is the same defect as not printing it at all. 110px clears the 91px plate with
+   room for the row-wrap it does at narrow widths. */
+#steer-out{margin-top:20px;scroll-margin-top:110px;border:1px solid var(--ng-line);border-radius:6px;padding:14px 16px;background:linear-gradient(165deg,#0b0d0b,#070909);display:none}
 #steer-out pre{white-space:pre-wrap;font-family:var(--mono);font-size:12px;color:var(--ng-hi);margin:0;line-height:1.55}
 
 /* ── SUGG PANEL ── */
