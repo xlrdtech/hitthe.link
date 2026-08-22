@@ -256,6 +256,11 @@ body.views section[data-view].view-on{display:block}
 #sugg-list{display:flex;flex-wrap:wrap;gap:7px}
 .sugg-btn{font-family:var(--body);font-size:12px;font-weight:400;background:rgba(57,255,20,.06);border:1px solid rgba(57,255,20,.2);border-radius:20px;color:var(--bone);padding:6px 13px;cursor:pointer;text-align:left;transition:.14s;overflow-wrap:break-word;word-break:normal;hyphens:none}
 .sugg-btn:hover{background:rgba(57,255,20,.14);border-color:var(--ng);color:#fff;box-shadow:0 0 12px rgba(57,255,20,.18)}
+/* A send that did NOT reach Xen has to be VISIBLE, not a tooltip. Before this, a failed
+   firesugg() dimmed the button exactly like a successful one — the only two states qi
+   could see were "not clicked" and "dimmed", so a total outage looked like success. */
+.sugg-btn.pending{border-color:var(--amber);color:var(--amber);opacity:.75}
+.sugg-btn.failed{border-color:var(--ox);color:var(--ox);background:rgba(194,91,74,.10);opacity:1}
 
 /* ── LEDGER ── */
 .ledger{max-width:760px;margin:0 auto;border:1px solid var(--ng-line);border-radius:14px;overflow:hidden;background:linear-gradient(165deg,rgba(14,15,18,.7),rgba(8,9,10,.5));backdrop-filter:blur(8px);box-shadow:inset 0 1px 0 rgba(57,255,20,.05),0 20px 56px rgba(0,0,0,.5)}
@@ -751,16 +756,64 @@ document.getElementById('addall').onclick = () => {
   lines.forEach(l => T.unshift({id:'q'+Date.now()+Math.floor(Math.random()*999),p:'P0',s:'qi',t:l}));
   document.getElementById('bulk').value=''; save(); render();
 };
-document.getElementById('send').onclick = () => {
+/* ── TRUTHFUL INJECT (work order ship #2, 2026-08-22) ─────────────────────────
+   The old code was `fetch(...)` with no await, then immediately printed
+   "⚡ auto-injected into Xen". Two separate lies in four lines:
+
+   (a) TIMING — the claim rendered before the promise settled, so it asserted
+       delivery of a request that had not yet left, and would print identically
+       during a total tui.xlrd.org outage.
+   (b) SEMANTICS — MEASURED 2026-08-22 11:18, tui.xlrd.org/tui?q= answers
+       `{"ok":true,"queued":true,"chars":N}` with `access-control-allow-origin: *`.
+       The server claims QUEUED. It does not claim executed. "Auto-injected into
+       Xen" overstates the strongest thing the rail is willing to say.
+
+   And the `catch` could not have helped: fetch REJECTS its promise on network
+   failure, it does not throw synchronously, so `try{fetch()}catch{}` never runs
+   its handler for the case it was written for. The "(inject unreachable)" line
+   has effectively never rendered.
+
+   CORS is real here (measured above), so the body IS readable cross-origin and
+   we assert on the BODY, never on the status code. Nothing is ever lost on
+   failure: the text stays on screen, goes to the clipboard, and is retained in
+   localStorage — retain a copy, never hold the original. */
+var XEN_RETAIN_KEY = 'xen-life-inject-retained-v1';
+function retainInject(text, why){
+  try{
+    var q = JSON.parse(localStorage.getItem(XEN_RETAIN_KEY) || '[]');
+    q.push({ at: new Date().toISOString(), why: String(why || 'unknown'), text: String(text) });
+    localStorage.setItem(XEN_RETAIN_KEY, JSON.stringify(q.slice(-50)));
+  }catch(e){ /* storage full or blocked — the on-screen text is still the copy */ }
+}
+async function injectToXen(text){
+  try{
+    var r = await fetch('https://tui.xlrd.org/tui?q='+encodeURIComponent(text), {mode:'cors'});
+    var body = null;
+    try { body = await r.json(); } catch(e) { body = null; }
+    if (r.ok && body && body.ok === true){
+      return { accepted:true, detail: body.queued ? 'queued' : 'accepted', chars: body.chars };
+    }
+    return { accepted:false, detail:'HTTP '+r.status+' · '+(body ? JSON.stringify(body) : 'unreadable body') };
+  }catch(e){
+    return { accepted:false, detail: String((e && e.message) || e) };
+  }
+}
+document.getElementById('send').onclick = async () => {
   let txt = 'XEN LIFE — '+T.length+' tasks, ALL PARALLEL / instant auto-manifest (pills = weight, not order):\n';
   PILLS.forEach(p => { const g=T.filter(x=>x.p===p); if(g.length){txt+='\n['+p+']\n'; g.forEach(x=>txt+='  • '+x.t+'\n');} });
   const out = document.getElementById('steer-out'), o = document.getElementById('steer-outtxt');
-  out.style.display='block'; o.textContent=txt; out.scrollIntoView({behavior:'smooth'});
+  out.style.display='block';
+  o.textContent='… sending to tui.xlrd.org …\n\n'+txt;   // pending, never a success claim
+  out.scrollIntoView({behavior:'smooth'});
   navigator.clipboard?.writeText(txt);
-  try {
-    fetch('https://tui.xlrd.org/tui?q='+encodeURIComponent('[LIFE STEER] auto-inject — execute as PGS, all parallel:\n'+txt),{mode:'cors'});
-    o.textContent='⚡ auto-injected into Xen (tui.xlrd.org) — also copied as backup\n\n'+txt;
-  } catch(e) { o.textContent='(inject unreachable — copied to clipboard)\n\n'+txt; }
+  const v = await injectToXen('[LIFE STEER] auto-inject — execute as PGS, all parallel:\n'+txt);
+  if (v.accepted){
+    o.textContent='✅ tui.xlrd.org '+v.detail+' it'+(v.chars!=null?' ('+v.chars+' chars)':'')
+      +' — queued is acceptance, not proof it ran. Copied as backup.\n\n'+txt;
+  } else {
+    retainInject(txt, v.detail);
+    o.textContent='⚠️ NOT sent — '+v.detail+'\nRetained locally and copied to the clipboard; nothing was lost.\n\n'+txt;
+  }
 };
 document.getElementById('reset').onclick = () => { if(confirm('Reset to the original gather?')){T=JSON.parse(JSON.stringify(SEED));save();render();} };
 const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -799,11 +852,24 @@ function renderSugg() {
   [...SUGG].reverse().forEach(entry=>{ (entry.suggestions||[]).forEach(s=>{if(s&&!all.includes(s))all.push(s);}); });
   el.innerHTML=all.slice(0,20).map(s=>`<button class="sugg-btn" onclick="firesugg(this)" data-s="${escH(s)}">${escH(s)}</button>`).join('');
 }
-function firesugg(btn) {
+async function firesugg(btn) {
   const s=btn.dataset.s;
+  // The local list is the durable half and is committed either way — a send that
+  // fails must not also cost him the item.
   T.unshift({id:'s'+Date.now(),p:'P0',s:'qi',t:s}); save(); render();
-  try{ fetch('https://tui.xlrd.org/tui?q='+encodeURIComponent(s),{mode:'cors'}); }catch(e){}
-  btn.style.opacity='.4';
+  // Dimming BEFORE the verdict was the bug: `try{fetch()}catch{}` cannot catch a
+  // rejected promise, so an outage dimmed the button exactly like a success.
+  btn.classList.remove('failed'); btn.classList.add('pending');
+  btn.disabled = true; btn.title = 'sending to tui.xlrd.org…';
+  const v = await injectToXen(s);
+  btn.classList.remove('pending');
+  if (v.accepted){
+    btn.style.opacity='.4'; btn.title = 'tui.xlrd.org '+v.detail+' — acceptance, not proof it ran';
+  } else {
+    retainInject(s, v.detail);
+    btn.classList.add('failed'); btn.disabled = false;
+    btn.title = 'NOT sent — '+v.detail+' · kept in your list and retained locally; tap to retry';
+  }
 }
 loadSuggestions();
 setInterval(loadSuggestions, 30000);
