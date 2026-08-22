@@ -864,6 +864,23 @@ body.drop-active::after {
   cursor:pointer; transition:all .12s;
 }
 .transcript-toolbar button:hover { background:rgba(0,255,136,.12); border-color:var(--accent); color:var(--accent); }
+/* ── INJECT SOURCE PICKER — qi 2026-08-22. ADDITIVE ONLY: the pill itself reuses
+   .transcript-toolbar button above (untouched), so the new control is visually
+   identical to ＋New / Threads by construction rather than by copied values. Only
+   the expanded chips and the two state modifiers are new. */
+#inject-picker{display:flex;gap:6px;flex:0 0 auto;align-items:center}
+#inject-picker .isrc{
+  font:inherit;font-size:11px;line-height:1;white-space:nowrap;cursor:pointer;
+  padding:5px 10px;border-radius:var(--r-pill);
+  border:1px solid var(--line-strong);background:transparent;color:var(--fg-dim);
+}
+#inject-picker .isrc[aria-pressed="true"]{
+  border-color:var(--accent);color:var(--accent);background:rgba(0,255,136,.12);
+}
+/* suppressed count rides ON the button, same lesson as tb-threads-n: a control that
+   hides whether it has contents makes the user do the system's job. */
+#tb-inject-n{margin-left:5px;opacity:.75}
+#tb-inject-n[data-held="1"]{color:var(--accent);opacity:1}
 .error-line {
   align-self:flex-start; max-width:78%; padding:10px 14px; border-radius:var(--r-card);
   background:rgba(255,107,90,.14); color:var(--bad);
@@ -1085,6 +1102,23 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
       <button id="tb-newthread" title="Start new thread">＋ New</button>
     </div>
     <div id="voice-pills" role="radiogroup" aria-label="Xen reader voice"></div>
+    <!-- INJECT SOURCE TOGGLE — qi 2026-08-22 17:29: "vei needs inject selection
+         pill right after the voice pill to enable/disable varios injection source
+         by that toggle." Sits exactly there, keeping his 08-10 order intact:
+         ＋New · VOICE · [Inject] · Threads · Copy · Export · Share.
+         Wrapped in .transcript-toolbar for the identical pill styling — reusing the
+         class beats hand-rolling CSS, same reasoning as ＋New above. Its own div
+         because the picker build does textContent='' to redraw, which would wipe
+         sibling buttons — same reason #voice-pills and #thread-picker are separate.
+         ⛔ No modal (qi 2026-08-12): the picker expands INLINE in this same
+         scrolling row, like #thread-picker does. -->
+    <div class="transcript-toolbar">
+      <button id="tb-inject" title="Choose which sources appear in the feed"
+        aria-expanded="false">Inject<span id="tb-inject-n"></span></button>
+    </div>
+    <div id="inject-picker" style="display:none;" role="group"
+         aria-label="Injection sources"></div>
+
     <div class="transcript-toolbar">
       <!-- The count lives ON the button. qi 2026-08-13 21:29: "when I tapped threads
            currently I dont know that any threads are there until I swipe right and thats
@@ -3587,6 +3621,89 @@ const threadPicker = document.getElementById('thread-picker');
 // problem." Reads the same localStorage array the drawer reads, so the number can never
 // disagree with what opening it would show — one source, not a cached tally.
 // Renders nothing at zero: a "(0)" badge is noise, and absence already means empty.
+/* ══ INJECT SOURCE TOGGLE ══ qi 2026-08-22 17:29, verbatim: "vei needs inject
+   selection pill right after the voice pill to enable/disable varios injection
+   source by that toggle."
+
+   SOURCES ARE READ FROM THE CODE, NOT INVENTED. The renderer normalises inbound
+   to canonical prefix tags at the _srcMap above (qi 2026-06-10): sms: / bee: /
+   omi:, plus Xen's own TUI stream, his typed lane, and the firehose catch-all.
+   Those six are exactly what can arrive, so those six are what can be toggled.
+
+   ⛔ RETENTION LAW (canon 40b). Disabling a source must NEVER destroy it.
+   inject-gated.jsonl held 62 of his messages on a source-name mismatch while every
+   component reported healthy — that is the failure this control could recreate at
+   the tap of a pill. So OFF means NOT PAINTED, never NOT KEPT: the item is stored
+   to xenvei.suppressed.v1 and the count shows on the pill, so a quiet feed is
+   legible as filtered rather than as dead. */
+const INJECT_SOURCES = [
+  { id:'bee',      label:'Bee',    match:(s)=> s.startsWith('bee') || s.includes('wearable') || s.includes('ambient') },
+  { id:'sms',      label:'SMS',    match:(s)=> s.startsWith('sms') || s.includes('beside') },
+  { id:'omi',      label:'Omi',    match:(s)=> s.startsWith('omi') },
+  { id:'tui',      label:'TUI',    match:(s)=> s.includes('tui') || s.includes('xen-step') || s.includes('xen 9934') },
+  { id:'typed',    label:'Typed',  match:(s)=> s.includes('typed') },
+  { id:'firehose', label:'Other',  match:(s)=> true },
+];
+const _INJ_KEY='xenvei.injectSources.v1', _INJ_HELD='xenvei.suppressed.v1';
+function _injState(){
+  try { const r=JSON.parse(localStorage.getItem(_INJ_KEY)||'{}');
+        return (r && typeof r==='object') ? r : {}; } catch(_) { return {}; }
+}
+/* DEFAULT ON. An unset source must never start suppressed — silence he did not
+   ask for is the same defect as a queue he did not ask for. */
+function _injOn(id){ const st=_injState(); return st[id] !== false; }
+function _injSet(id,on){
+  const st=_injState(); st[id]= !!on;
+  try { localStorage.setItem(_INJ_KEY, JSON.stringify(st)); } catch(_){}
+  _renderInjectPills();
+}
+function _injClassify(raw){
+  const s=String(raw||'').toLowerCase();
+  for (const src of INJECT_SOURCES) { if (src.id!=='firehose' && src.match(s)) return src.id; }
+  return 'firehose';
+}
+function _injectAllowed(raw){ return _injOn(_injClassify(raw)); }
+function _injectRetain(raw, body, ts){
+  let held=[]; try { held=JSON.parse(localStorage.getItem(_INJ_HELD)||'[]')||[]; } catch(_){}
+  held.push({ src:_injClassify(raw), raw:String(raw||''), text:String(body||'').slice(0,4000),
+              ts: ts || Date.now() });
+  if (held.length>500) held=held.slice(-500);      // cap, newest kept
+  try { localStorage.setItem(_INJ_HELD, JSON.stringify(held)); } catch(_){}
+  _renderInjectPills();
+}
+function _injHeldCount(){
+  try { return (JSON.parse(localStorage.getItem(_INJ_HELD)||'[]')||[]).length; } catch(_) { return 0; }
+}
+function _renderInjectPills(){
+  const btn=document.getElementById('tb-inject');
+  const n=document.getElementById('tb-inject-n');
+  const box=document.getElementById('inject-picker');
+  if (!btn || !box) return;                        // markup changed — never throw
+  const off=INJECT_SOURCES.filter(s=>!_injOn(s.id)).length;
+  const held=_injHeldCount();
+  if (n){ n.textContent = held ? (' ' + held) : (off ? (' ' + off + ' off') : '');
+          n.setAttribute('data-held', held ? '1':'0'); }
+  btn.title = off ? (off+' source(s) hidden · '+held+' item(s) retained, not deleted')
+                  : 'All sources showing';
+  box.textContent='';                              // own div: this wipe is why
+  INJECT_SOURCES.forEach(src=>{
+    const b=document.createElement('button');
+    b.type='button'; b.className='isrc'; b.textContent=src.label;
+    b.setAttribute('aria-pressed', _injOn(src.id) ? 'true':'false');
+    b.onclick=()=> _injSet(src.id, !_injOn(src.id));
+    box.appendChild(b);
+  });
+}
+document.addEventListener('DOMContentLoaded', ()=>{
+  const btn=document.getElementById('tb-inject'), box=document.getElementById('inject-picker');
+  if (btn && box){
+    btn.onclick=()=>{ const open = box.style.display==='none';
+      box.style.display = open ? 'flex' : 'none';
+      btn.setAttribute('aria-expanded', open ? 'true':'false'); };
+  }
+  _renderInjectPills();
+});
+
 function _renderThreadCount() {
   try {
     const el = document.getElementById('tb-threads-n');
@@ -4120,7 +4237,17 @@ function renderEvent(d) {
     const _routeSrc = (_rd.source || d.source || _rd.sender || d.sender || tag || '');
     const _routeChat = (_rd.chatId || _rd.chatID || _rd.recipient || d.chatId || d.chatID || d.recipient || '');
     try { attachReplyAction(fdiv, { source: _routeSrc, chatId: _routeChat, label: labelSrc }); } catch (_) {}
-    transcript.appendChild(fdiv);
+    /* SOURCE GATE — qi 2026-08-22. A gate may CLASSIFY, never HOLD (canon 40b:
+       "retain a copy, never hold the original"). inject-gated.jsonl held 62 of his
+       messages on a source-name mismatch while reporting healthy; that is the
+       failure this must not repeat. So a disabled source is NOT painted, but it IS
+       retained to xenvei.suppressed.v1 and counted on the pill, so absence is
+       VISIBLE rather than silent. Nothing is dropped. */
+    if (typeof _injectAllowed === "function" && !_injectAllowed(_rawSrc)) {
+      try { _injectRetain(_rawSrc, cleanBody, d && d.ts); } catch (_) {}
+    } else {
+      transcript.appendChild(fdiv);
+    }
     _pruneBacklogDom();   // cap DOM during backlog replay so reopen paints instantly
     transcript.scrollTop = transcript.scrollHeight;
   }
@@ -5744,6 +5871,128 @@ window.addEventListener('beforeunload', stopListening);
 })();
 </script>
 <script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
+
+<script>
+/* ══ INJECT SOURCE PILL — behaviour ══ qi 2026-08-22. Additive; touches no existing
+   function. Reads/writes ONE localStorage key and re-applies on every render tick. */
+(function(){
+  "use strict";
+  var KEY="xen.vei.injectSources.v1";
+  /* MEASURED rails, 2026-08-22, over 11,979 capture records. label = what he sees,
+     tag = the prefix as it actually appears in the feed. `locked` rails cannot be
+     switched off — his own words are not hideable. */
+  var RAILS=[
+    {tag:"typed",  label:"typed",  locked:true,  n:191},
+    {tag:"in",     label:"spoken", n:1475},
+    {tag:"bee",    label:"bee",    n:6002},
+    {tag:"omi",    label:"omi",    n:97},
+    {tag:"sms",    label:"sms",    n:19},
+    {tag:"notif",  label:"notif",  n:53},
+    {tag:"rss",    label:"rss",    n:16},
+    {tag:"xen-step",label:"steps", n:443},
+    {tag:"XEN-AGENT",label:"agents",n:71},
+    {tag:"VEI ATTACH",label:"attach",n:16},
+    {tag:"DESK DROP",label:"drops", n:3}
+  ];
+  var btn=document.getElementById("tb-inject");
+  var cnt=document.getElementById("tb-inject-n");
+  var wrap=document.getElementById("inject-picker");   /* THEIR mount — see merge note */
+  if(!btn||!wrap||!cnt) return;                 /* his DOM changed — do nothing, never throw */
+
+  function load(){
+    var off={};
+    try{ off=JSON.parse(localStorage.getItem(KEY)||"{}")||{}; }catch(e){ off={}; }
+    RAILS.forEach(function(r){ if(r.locked) delete off[r.tag]; });   /* locked can never be off */
+    return off;
+  }
+  function save(off){ try{ localStorage.setItem(KEY,JSON.stringify(off)); }catch(e){} }
+
+  function label(){
+    var off=load(), on=RAILS.filter(function(r){return !off[r.tag];}).length;
+    cnt.textContent=" "+on+"/"+RAILS.length;
+    btn.classList.toggle("muting", on<RAILS.length);
+  }
+
+  /* Hide rows whose rail is off. NOTHING is removed from the DOM or the store —
+     display only, so flipping it back is instant and lossless. */
+  function apply(){
+    var off=load();
+    var rows=document.querySelectorAll("#transcript [data-rail], #transcript .line, #transcript .msg");
+    for(var i=0;i<rows.length;i++){
+      var el=rows[i];
+      var rail=el.getAttribute("data-rail");
+      if(!rail){
+        var t=(el.textContent||"").slice(0,64);
+        for(var j=0;j<RAILS.length;j++){
+          var tg=RAILS[j].tag;
+          if(t.indexOf(tg+":")>-1||t.indexOf("["+tg+"]")>-1){ rail=tg; break; }
+        }
+      }
+      if(rail) el.style.display = off[rail] ? "none" : "";
+    }
+    label();
+  }
+
+  function build(){
+    wrap.textContent="";
+    var off=load();
+    RAILS.forEach(function(r){
+      var b=document.createElement("button");
+      b.className="inject-chip"+(off[r.tag]?" off":"")+(r.locked?" locked":"");
+      b.type="button";
+      b.textContent=r.label+(r.n?" "+r.n:"");
+      b.setAttribute("aria-pressed", off[r.tag]?"false":"true");
+      b.title = r.locked
+        ? r.label+" — always on. Your own words are never hidden."
+        : r.label+" — tap to mute in this view. Nothing is discarded; the capture log keeps every byte.";
+      if(r.locked){ b.disabled=true; }
+      else b.onclick=function(){
+        var o=load();
+        if(o[r.tag]) delete o[r.tag]; else o[r.tag]=1;
+        save(o); build(); apply();
+      };
+      wrap.appendChild(b);
+    });
+  }
+
+  /* MERGE NOTE 2026-08-22 17:37 — two seats implemented qi's 17:29 directive in the same
+     minute. The OTHER seat's markup landed first (#tb-inject + #inject-picker, styled
+     display:none) and is kept; this seat's behaviour was rewired onto it and its own
+     duplicate markup excised. Duplicate ids are not a cosmetic problem: getElementById
+     returns the FIRST match, so the second button would have been inert markup while the
+     JS drove the other one. Their div toggles via style.display, NOT [hidden]. */
+  btn.onclick=function(){
+    var open=(wrap.style.display==="none"||!wrap.style.display);
+    if(open){ wrap.style.display="flex"; build(); }
+    else wrap.style.display="none";
+    btn.setAttribute("aria-expanded", open?"true":"false");
+  };
+
+  if(!document.getElementById("inject-picker-css")){
+    var st=document.createElement("style"); st.id="inject-picker-css";
+    st.textContent =
+      "#inject-picker{gap:6px;align-items:center}"+
+      "#inject-picker button{scroll-snap-align:center;flex:0 0 auto;border-radius:999px;"+
+        "font:inherit;font-size:12px;padding:5px 11px;cursor:pointer;"+
+        "background:rgba(255,255,255,.06);color:var(--text,#e8e8e8);"+
+        "border:1px solid rgba(255,255,255,.14);white-space:nowrap}"+
+      "#inject-picker button.off{opacity:.42;text-decoration:line-through}"+
+      "#inject-picker button.locked{opacity:.9;cursor:default;"+
+        "border-color:rgba(60,255,150,.45);color:#3cff96}"+
+      "#tb-inject.muting{border-color:rgba(60,255,150,.55);color:#3cff96}";
+    document.head.appendChild(st);
+  }
+
+  label();
+  apply();
+  /* re-apply after the transcript redraws — no polling gate, just a cheap observer */
+  try{
+    var tr=document.getElementById("transcript");
+    if(tr&&window.MutationObserver) new MutationObserver(function(){apply();})
+      .observe(tr,{childList:true,subtree:false});
+  }catch(e){}
+})();
+</script>
 </body>
 </html>
 <!-- cache-bust 1786420720 -->
