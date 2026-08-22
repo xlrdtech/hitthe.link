@@ -5814,22 +5814,52 @@ window.addEventListener('beforeunload', stopListening);
 
   /* Hide rows whose rail is off. NOTHING is removed from the DOM or the store —
      display only, so flipping it back is instant and lossless. */
-  function apply(){
-    var off=load();
-    var rows=document.querySelectorAll("#transcript [data-rail], #transcript .line, #transcript .msg");
-    for(var i=0;i<rows.length;i++){
-      var el=rows[i];
-      var rail=el.getAttribute("data-rail");
-      if(!rail){
-        var t=(el.textContent||"").slice(0,64);
-        for(var j=0;j<RAILS.length;j++){
-          var tg=RAILS[j].tag;
-          if(t.indexOf(tg+":")>-1||t.indexOf("["+tg+"]")>-1){ rail=tg; break; }
-        }
+  /* ⚠️ 2026-08-22 18:23 — THIS FUNCTION FROZE HIS PAGE. Measured by clicking the live
+     page over CDP: the click returned "clicked", then the page stopped answering for
+     >30s. v1 re-queried the ENTIRE transcript and wrote style.display on every match,
+     driven by an UNTHROTTLED MutationObserver on a LIVE SSE feed — so every inbound
+     message triggered a full-document walk. He reported it as "injection device list
+     did not appear"; the list was fine, the thread was blocked.
+     THREE FIXES, all required:
+       1. classify each row ONCE and cache it in dataset.xrail — never re-scan text
+       2. process ONLY the nodes a mutation actually added, not the whole tree
+       3. coalesce bursts through requestAnimationFrame — SSE arrives in clumps
+     ⭐ A filter that walks every node on every event is O(feed x dom). On a live
+        stream that is not slow, it is a lock. */
+  function railOf(el){
+    var c=el.dataset?el.dataset.xrail:null;
+    if(c) return c==="-"?null:c;
+    var rail=el.getAttribute("data-rail");
+    if(!rail){
+      var t=(el.textContent||"").slice(0,64);
+      for(var j=0;j<RAILS.length;j++){
+        var tg=RAILS[j].tag;
+        if(t.indexOf(tg+":")>-1||t.indexOf("["+tg+"]")>-1){ rail=tg; break; }
       }
+    }
+    try{ el.dataset.xrail = rail || "-"; }catch(e){}
+    return rail;
+  }
+  function paint(nodes,off){
+    for(var i=0;i<nodes.length;i++){
+      var el=nodes[i];
+      if(!el||el.nodeType!==1) continue;
+      var rail=railOf(el);
       if(rail) el.style.display = off[rail] ? "none" : "";
     }
-    label();
+  }
+  var pending=false;
+  function apply(scope){
+    var off=load();
+    if(scope&&scope.length){ paint(scope,off); label(); return; }
+    if(pending) return;                        /* coalesce a burst into one pass */
+    pending=true;
+    var run=function(){
+      pending=false;
+      paint(document.querySelectorAll("#transcript [data-rail], #transcript .line, #transcript .msg"),load());
+      label();
+    };
+    if(window.requestAnimationFrame) requestAnimationFrame(run); else setTimeout(run,16);
   }
 
   function build(){
@@ -5896,8 +5926,15 @@ window.addEventListener('beforeunload', stopListening);
   /* re-apply after the transcript redraws — no polling gate, just a cheap observer */
   try{
     var tr=document.getElementById("transcript");
-    if(tr&&window.MutationObserver) new MutationObserver(function(){apply();})
-      .observe(tr,{childList:true,subtree:false});
+    if(tr&&window.MutationObserver) new MutationObserver(function(muts){
+      /* only the nodes this mutation ADDED — never the whole tree */
+      var added=[];
+      for(var i=0;i<muts.length;i++){
+        var a=muts[i].addedNodes;
+        for(var j=0;j<a.length;j++) if(a[j].nodeType===1) added.push(a[j]);
+      }
+      if(added.length) apply(added); else apply();
+    }).observe(tr,{childList:true,subtree:false});
   }catch(e){}
 })();
 </script>
