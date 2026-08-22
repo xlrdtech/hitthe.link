@@ -616,7 +616,10 @@
     function finish(kind,msg){
       if(settled) return; settled=true;
       if(wd){clearTimeout(wd);wd=null;}
+      if(wdSoft){clearTimeout(wdSoft);wdSoft=null;}
       if(kind==='ok'){
+        // delivered: the retained copy has served its purpose, drop it
+        try{ localStorage.removeItem('xa-unsent:'+curRoom); }catch(e){}
         pend.style.color='var(--text)';
         pend.innerHTML='<b style="color:var(--text-bright)">you:</b> '+esc(txt)+' <span style="color:var(--accent)">· sent ✓</span>';
         // Pull the live thread so the delivered message shows from the server too.
@@ -624,9 +627,32 @@
       } else {
         pend.style.color='var(--red)';
         pend.innerHTML='<b style="color:var(--text-bright)">you:</b> '+esc(txt)+' <span style="color:var(--red)">· NOT sent — '+esc(msg)+'</span>';
+        /* 2026-08-22: A TIMEOUT MUST NOT DESTROY THE MESSAGE. MEASURED: qi typed "Yeah"
+           to Lleh's "Are you ok?" at 16:02, /api/reply stalled (box at load 388, 1108
+           procs), the watchdog fired, and the text was GONE — dInput was already cleared
+           at the top of sendReply, nothing queued, nothing retried, and a reload would
+           have erased even the red row. Retention law: retain a copy, never hold the
+           original. So on ANY fail verdict, give the words back: restore the composer if
+           the user hasn't typed something new, and stash per-room so a reload survives. */
+        try{
+          if(!dInput.value.trim()) dInput.value=txt;
+          localStorage.setItem('xa-unsent:'+curRoom, JSON.stringify({text:txt,at:Date.now(),why:msg}));
+        }catch(e){}
       }
     }
-    var wd=setTimeout(function(){ finish('fail','no response in 12s'); },12000);
+    /* 2026-08-22: the timer was 12s while THIS FILE's own comment above records hangs of
+       "28s+". So under load it declared FAILED on sends that were still in flight — the
+       mirror image of the bug it was built to fix, and it produces the same wrong belief
+       about a message's fate. Two-stage verdict now: at 12s say IN FLIGHT (not settled,
+       so a late resolve can still win and mark it sent), and only call it failed at 35s,
+       past the measured hang. UNKNOWN and FAILED are different states; one counter cannot
+       carry both. */
+    var wdSoft=setTimeout(function(){
+      if(settled) return;
+      pend.style.color='var(--text-muted)';
+      pend.innerHTML='<b style="color:var(--text-bright)">you:</b> '+esc(txt)+' <span style="color:var(--text-muted)">· in flight — no answer yet (12s)</span>';
+    },12000);
+    var wd=setTimeout(function(){ finish('fail','no response in 35s'); },35000);
     // Unified reply: /api/reply routes to the item's ORIGIN channel (email→SMTP,
     // chat→Matrix). Server resolves the origin from the merged stream by roomId.
     apiFetch('/api/reply',{
@@ -665,10 +691,11 @@
     if(!roomId||!input||!input.value.trim())return;
     var txt=input.value;
     input.disabled=true; stat.style.color='var(--text-muted)'; stat.textContent='· sending…';
-    var settled=false, wd=null;
+    var settled=false, wd=null, wdSoft=null;
     function finish(ok,reason){
       if(settled) return; settled=true;
       if(wd){clearTimeout(wd);wd=null;}
+      if(wdSoft){clearTimeout(wdSoft);wdSoft=null;}
       if(ok){
         stat.style.color='var(--accent)'; stat.textContent='· sent ✓';
         input.value=''; input.disabled=false;
@@ -681,7 +708,18 @@
         input.disabled=false;
       }
     }
-    wd=setTimeout(function(){ finish(false,'no response in 12s'); },12000);
+    /* 2026-08-22: THIS is the path qi's reply to Lleh went through — the red row in his
+       16:02 screenshot reads verbatim "NOT sent - no response in 12s". The 12s number is
+       younger than this file's own measurement of "28s+" hangs, so under load the timer
+       convicted sends that were still in flight. Two stages now, same as the drawer:
+       12s = IN FLIGHT (unsettled, a late resolve can still win and mark it sent),
+       35s = FAILED, past the measured hang. UNKNOWN and FAILED are different states and
+       one counter cannot carry both. The text stays in the box the whole time either way. */
+    wdSoft=setTimeout(function(){
+      if(settled) return;
+      stat.style.color='var(--text-muted)'; stat.textContent='\u00b7 in flight \u2014 no answer yet (12s)';
+    },12000);
+    wd=setTimeout(function(){ finish(false,'no response in 35s'); },35000);
     apiFetch('/api/reply',{
       method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({roomId:roomId,text:txt})
     }).then(function(x){return x.json().catch(function(){return{ok:false,error:'HTTP '+x.status};});})
