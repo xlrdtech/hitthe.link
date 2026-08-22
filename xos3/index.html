@@ -174,6 +174,52 @@
     background:var(--accent);color:#000;font-family:var(--f-mono);
     font-size:10px;font-weight:700;font-variant-numeric:tabular-nums;
     display:flex;align-items:center;justify-content:center}
+  /* ══ UNCOLLAPSED-STREAM AFFORDANCES (qi 2026-08-22) ══
+     ADDITIVE ONLY. Nothing above this block was altered — the merged card chrome
+     is canon and byte-exact. With sections retired, the rail rides on the ROW, so
+     these two pieces carry what the <h2> used to: which network a row belongs to,
+     and how to answer it without leaving the stream. Written in the left pane's
+     own merged language: accent #3cff96, JetBrains Mono, radius 12px, and the
+     canonical emerald glass for the composer. */
+  /* ══ MESSAGE BODIES WRAP AS PARAGRAPHS ══ qi 2026-08-22, canon 1b + 5.
+     The swipe law ("rows never wrap or overlap") governs CONTROL rows; a message
+     body is document flow and wraps. Written as an ADDITIVE override so
+     .link-card / .left / .right / .link-text / .meta-hash keep the exact bytes
+     they were merged with — flex-wrap only lets the paragraph fall onto its own
+     line beneath the head row; it does not restyle the head row. */
+  .link-card{flex-wrap:wrap;row-gap:7px;align-items:flex-start}
+  .link-card .left,.link-card .right{align-items:center;min-height:20px}
+  .link-card .msg-body{flex:1 0 100%;margin:0;font-size:13px;line-height:1.55;
+    color:var(--text-bright);white-space:pre-wrap;overflow-wrap:anywhere;
+    text-align:left}
+  .link-card .msg-body .msg-time{margin-left:9px;white-space:nowrap}
+  .link-card .msg-body .msg-none{color:var(--text-muted);font-style:italic}
+  .link-card.dead .msg-body{color:var(--text-dim);font-style:italic}
+
+  .rail-badge{font-family:var(--f-mono);font-size:9px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--card-accent,var(--accent));opacity:.85;
+    padding:1px 6px;border:.5px solid var(--card-accent,var(--accent));border-radius:99px;
+    white-space:nowrap}
+  .row-reply{font-family:var(--f-mono);font-size:9px;font-weight:700;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--accent);background:transparent;cursor:pointer;
+    border:.5px solid rgba(0,220,130,.45);border-radius:99px;padding:2px 8px;
+    transition:background .15s}
+  .row-reply:hover,.row-reply:focus-visible{background:rgba(0,220,130,.14);outline:none}
+  .row-composer{grid-column:1/-1;display:flex;align-items:center;gap:8px;
+    margin:-4px 0 8px;padding:10px 12px;border-radius:12px;
+    background:linear-gradient(135deg,rgba(0,220,130,0.20),rgba(0,220,130,0.06));
+    border:1px solid rgba(0,220,130,0.45);
+    backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%)}
+  .row-composer[hidden]{display:none}
+  .rc-input{flex:1 1 auto;min-width:0;background:transparent;border:none;outline:none;
+    color:var(--text-bright);font-family:inherit;font-size:13px}
+  .rc-input::placeholder{color:var(--text-muted)}
+  .rc-input:disabled{opacity:.6}
+  .rc-send{flex:0 0 auto;font-family:var(--f-mono);font-size:9px;font-weight:700;
+    letter-spacing:.14em;color:#000;background:var(--accent);border:none;border-radius:99px;
+    padding:4px 12px;cursor:pointer}
+  .rc-status{flex:0 0 auto;font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;
+    white-space:nowrap}
   .empty{padding:60px 24px;text-align:center;color:var(--text-dim);
     font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
   .note{margin:12px 12px 0;padding:11px 12px 10px;border-radius:12px;position:relative;z-index:1;
@@ -242,6 +288,13 @@
      is now null-guarded below. -->
 <div class="note" id="encnote" style="display:none"></div>
 <main id="ui-layer">
+  <!-- FILTER PILLS — restored 2026-08-22 with the uncollapse. They had been retired
+       on the reasoning "section headings ARE the categories now"; that reasoning
+       died with the sections. renderFilters() was still writing into a null-safe
+       stub, so the channel affordance existed in code and nowhere on screen.
+       Contract per canon: All + one pill per distinct channel + live count, read
+       off the CARDS (m.network === the row's data-net), never off sections. -->
+  <div id="filters" class="filters" aria-label="Filter by channel"></div>
   <div class="content-container" id="content-container">
     <div class="empty">Loading one merged thread…</div>
   </div>
@@ -403,55 +456,111 @@
       return;
     }
 
-    // group by network, preserving the newest-first order inside each group
-    var order=[], groups={};
-    rows.forEach(function(m){
-      var net=m.network||'beeper';
-      if(!groups[net]){ groups[net]=[]; order.push(net); }
-      groups[net].push(m);
-    });
-    // biggest network first, same as the filter chips sorted by count
-    order.sort(function(a,b){ return groups[b].length-groups[a].length; });
+    /* ══ ONE UNCOLLAPSED STREAM ══ qi 2026-08-22, verbatim: "the Omni Inbox needs
+       to be uncollapsed so its a unified stream that i can reply to anyone from
+       eliminated the need to jump from chat to chat but i want the styling to
+       remain like it is but all one omni comms stream".
 
-    var now=Date.now(), html='', ci=0;
-    order.forEach(function(net){
-      var list=groups[net];
-      var label=(list[0]&&list[0].networkLabel)||net;
-      html+='<section id="cat-'+(ci++)+'">'
-          + '<h2>'+esc(label)+' <span class="badge">'+pad2(list.length)+' ENTRIES</span></h2>'
-          + '<div class="card-grid">';
-      list.forEach(function(m){
-        var body = m.encrypted ? 'encrypted'
-                 : (m.text ? String(m.text).slice(0,240) : 'no text');
-        var dead = !!(m.encrypted || !m.text);
-        var fresh = m.ts && (now - m.ts) < 3600000;
-        var who  = m.sender || m.title || net;
-        var cls  = 'link-card' + (dead ? ' dead' : (fresh ? ' fresh' : ''));
-        var accent = 'var(--'+net+', var(--accent))';
-        var open = dead
-          ? '<div aria-disabled="true" class="'+cls+'" style="--card-accent:'+accent+'"'
-          : '<div class="'+cls+'" role="button" tabindex="0" data-room-id="'+esc(m.roomId)+'"'
-            + ' style="--card-accent:'+accent+';cursor:pointer"';
-        html+= open + ' title="'+esc(body)+'">'
-            + '<div class="left">'
-            +   '<div class="status-dot"></div>'
-            +   '<span class="link-text">'+esc(who)+'</span>'
-            + '</div>'
-            + '<div class="right">'
-            +   '<span class="meta-hash">'+(dead ? 'ENCRYPTED' : esc(fmtTime(m.ts)))+'</span>'
-            +   ARROW
-            + '</div>'
+       RETIRED: group-by-network. There is now exactly ONE <section id="cat-all">
+       and ZERO <h2> headers — every rail interleaves in true time order, newest
+       first. The rail did not disappear, it MOVED ONTO THE ROW (data-net +
+       data-netlabel + a small badge), so unfolding costs no context and the
+       filter pills read channels off the CARDS instead of off sections.
+
+       STYLING IS UNCHANGED (his words): .link-card / .left / .status-dot /
+       .link-text / .right / .meta-hash / ARROW are the same bytes in the same
+       order. Only the rail badge and the reply affordance are added, in the left
+       pane's own merged language. */
+    var sorted = rows.slice().sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+
+    var now=Date.now(), html='';
+    html+='<section id="cat-all"><div class="card-grid">';
+    sorted.forEach(function(m,i){
+      var net=m.network||'beeper';
+      var label=m.networkLabel||net;
+      /* FULL message text — qi 2026-08-22 canon 1b: "the row shows the FULL
+         message text wrapping as a paragraph". The old .slice(0,240) was a
+         truncation, i.e. collapse under another name, so it is gone. An absent
+         body stays honestly empty rather than inventing one. */
+      var body = m.encrypted ? 'encrypted — no device key'
+               : (m.text ? String(m.text) : '');
+      var dead = !!(m.encrypted || !m.text);
+      var fresh = m.ts && (now - m.ts) < 3600000;
+      var who  = m.sender || m.title || net;
+      var cls  = 'link-card' + (dead ? ' dead' : (fresh ? ' fresh' : ''));
+      var accent = 'var(--'+net+', var(--accent))';
+      var rail = ' data-net="'+esc(net)+'" data-netlabel="'+esc(label)+'"';
+      var open = dead
+        ? '<div aria-disabled="true" class="'+cls+'"'+rail+' style="--card-accent:'+accent+'"'
+        : '<div class="'+cls+'"'+rail+' role="button" tabindex="0" data-room-id="'+esc(m.roomId)+'"'
+          + ' style="--card-accent:'+accent+';cursor:pointer"';
+      /* UNCOLLAPSED, SENSE (b) — qi 2026-08-22. The head row is unchanged CONTROL
+         chrome (identity left, rail badge + reply right) and still never wraps.
+         Beneath it, inside the same card, the MESSAGE renders in document flow:
+         full text, wrapping as a paragraph, timestamp trailing the text. The old
+         title="" hover copy is retired — the message is ON the row now, and a
+         tooltip WAS the collapse. The time moved out of the right rail so it is
+         not printed twice; .meta-hash there now carries ENCRYPTED only, which is
+         a status, not a time. Dead rows still offer no reply. */
+      html+= open + '>'
+          + '<div class="left">'
+          +   '<div class="status-dot"></div>'
+          +   '<span class="link-text">'+esc(who)+'</span>'
+          + '</div>'
+          + '<div class="right">'
+          +   '<span class="rail-badge">'+esc(label)+'</span>'
+          +   (dead ? '<span class="meta-hash">ENCRYPTED</span>' : '')
+          +   (dead ? '' : '<button class="row-reply" data-reply-for="'+esc(m.roomId)+'"'
+                          + ' aria-label="Reply to '+esc(who)+' on '+esc(label)+'">REPLY</button>')
+          +   ARROW
+          + '</div>'
+          + '<p class="msg-body">'
+          +   (body ? esc(body) : '<em class="msg-none">no text</em>')
+          +   '<span class="meta-hash msg-time">'+esc(fmtTime(m.ts))+'</span>'
+          + '</p>'
+          + '</div>';
+      // inline composer slot — ONE composer answers every network (/api/reply
+      // resolves the origin channel from roomId: email→SMTP, chat→Matrix)
+      if(!dead){
+        html+='<div class="row-composer" id="rc-'+i+'" data-room-id="'+esc(m.roomId)+'" hidden>'
+            +   '<input class="rc-input" type="text" placeholder="Reply to '+esc(who)+' on '+esc(label)+'…">'
+            +   '<button class="rc-send">SEND</button>'
+            +   '<span class="rc-status"></span>'
             + '</div>';
-      });
-      html+='</div></section>';
+      }
     });
+    html+='</div></section>';
     host.innerHTML=html;
 
     Array.prototype.forEach.call(host.querySelectorAll('.link-card[data-room-id]'),function(el){
-      el.onclick=function(){openDrawer(el.getAttribute('data-room-id'));};
+      el.onclick=function(ev){
+        // the reply button owns its own click; the card body still opens the thread
+        if(ev && ev.target && ev.target.closest && ev.target.closest('.row-reply')) return;
+        openDrawer(el.getAttribute('data-room-id'));
+      };
       el.onkeydown=function(e){
         if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openDrawer(el.getAttribute('data-room-id')); }
       };
+    });
+    // REPLY IN PLACE — never a per-chat detour as the only way to answer.
+    Array.prototype.forEach.call(host.querySelectorAll('.row-reply'),function(btn){
+      btn.onclick=function(ev){
+        ev.stopPropagation();
+        var card=btn.closest('.link-card');
+        var box=card && card.nextElementSibling;
+        if(!box || !box.classList.contains('row-composer')) return;
+        var opening = box.hasAttribute('hidden');
+        if(opening){ box.removeAttribute('hidden'); var f=box.querySelector('.rc-input'); if(f) f.focus(); }
+        else box.setAttribute('hidden','');
+      };
+    });
+    Array.prototype.forEach.call(host.querySelectorAll('.row-composer'),function(box){
+      var input=box.querySelector('.rc-input');
+      var send =box.querySelector('.rc-send');
+      var stat =box.querySelector('.rc-status');
+      function go(){ sendInline(box.getAttribute('data-room-id'), input, stat, box); }
+      if(send)  send.onclick=function(ev){ ev.stopPropagation(); go(); };
+      if(input) input.onkeydown=function(e){ e.stopPropagation(); if(e.key==='Enter') go(); };
     });
     // Clean paint succeeded with real rows -> hide the duplicate SSR fallback.
     document.body.classList.add('js-rendered');
@@ -488,27 +597,88 @@
     pend.style.cssText='margin:4px 0;color:var(--accent-dim)';
     pend.innerHTML='<b style="color:var(--text-bright)">you:</b> '+esc(txt)+' <span style="color:var(--text-muted)">· sending…</span>';
     dMsgs.appendChild(pend);dMsgs.scrollTop=dMsgs.scrollHeight;
-    // Unified reply: /api/reply routes to the item's ORIGIN channel (email→SMTP,
-    // chat→Matrix). Server resolves the origin from the merged stream by roomId.
-    apiFetch('/api/reply',{
-      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({roomId:curRoom,text:txt})
-    }).then(function(x){return x.json().catch(function(){return{ok:false,error:'HTTP '+x.status};});}).then(function(d){
-      if(d.ok){
+    /* P35 WATCHDOG — mirrors build.py. MEASURED: a socket to omni can hang 28s+
+       WITHOUT ever rejecting, and a phone on a dead cell does the same. In that
+       state neither .then nor .catch ever runs, so the row below sat on
+       "sending…" forever — a claim with nothing behind it. Reject and !ok were
+       already honest; the HANG was the hole. 12s watchdog + a `settled` latch so
+       a late resolve cannot overwrite the timeout verdict (or write twice). */
+    var settled=false;
+    function finish(kind,msg){
+      if(settled) return; settled=true;
+      if(wd){clearTimeout(wd);wd=null;}
+      if(kind==='ok'){
         pend.style.color='var(--text)';
         pend.innerHTML='<b style="color:var(--text-bright)">you:</b> '+esc(txt)+' <span style="color:var(--accent)">· sent ✓</span>';
         // Pull the live thread so the delivered message shows from the server too.
         setTimeout(function(){apiFetch('/api/stream?limit=300').then(function(r){return r.json();}).then(apply).catch(function(){});},1500);
       } else {
         pend.style.color='var(--red)';
-        pend.innerHTML='<b style="color:var(--text-bright)">you:</b> '+esc(txt)+' <span style="color:var(--red)">· NOT sent — '+esc(d.error||'send failed')+'</span>';
+        pend.innerHTML='<b style="color:var(--text-bright)">you:</b> '+esc(txt)+' <span style="color:var(--red)">· NOT sent — '+esc(msg)+'</span>';
       }
+    }
+    var wd=setTimeout(function(){ finish('fail','no response in 12s'); },12000);
+    // Unified reply: /api/reply routes to the item's ORIGIN channel (email→SMTP,
+    // chat→Matrix). Server resolves the origin from the merged stream by roomId.
+    apiFetch('/api/reply',{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({roomId:curRoom,text:txt})
+    }).then(function(x){return x.json().catch(function(){return{ok:false,error:'HTTP '+x.status};});}).then(function(d){
+      if(d.ok) finish('ok');
+      else     finish('fail',d.error||'send failed');
     }).catch(function(e){
-      pend.style.color='var(--red)';
-      pend.innerHTML='<b style="color:var(--text-bright)">you:</b> '+esc(txt)+' <span style="color:var(--red)">· NOT sent — network error</span>';
+      finish('fail','network error');
     });
   }
   document.getElementById('drawer-send').onclick=sendReply;
   dInput.addEventListener('keydown',function(e){if(e.key==='Enter')sendReply();});
+
+  /* ── INLINE ROW COMPOSER ── the reply path that eliminates chat-to-chat jumping.
+     Same rail as the drawer (/api/reply resolves origin channel by roomId), and the
+     SAME honesty contract, because a composer that lies is worse than no composer:
+       success  → sent ✓, composer closes
+       refusal  → NOT sent — <reason> · queued (n)
+       HANG     → NOT sent — no response in 12s · queued (n)
+     Anything not delivered is RETAINED in xenlife.replies.v1 — a failed send must
+     never silently eat his words (retain a copy, never hold the original). */
+  var RQ='xenlife.replies.v1';
+  function queueReply(roomId,text,reason){
+    var n=0;
+    try{
+      var q=JSON.parse(localStorage.getItem(RQ)||'[]');
+      q.push({roomId:roomId,text:text,reason:reason,at:Date.now()});
+      if(q.length>200) q=q.slice(-200);
+      localStorage.setItem(RQ,JSON.stringify(q));
+      n=q.length;
+    }catch(e){ /* private mode / quota — the on-screen verdict is still honest */ }
+    return n;
+  }
+  function sendInline(roomId,input,stat,box){
+    if(!roomId||!input||!input.value.trim())return;
+    var txt=input.value;
+    input.disabled=true; stat.style.color='var(--text-muted)'; stat.textContent='· sending…';
+    var settled=false, wd=null;
+    function finish(ok,reason){
+      if(settled) return; settled=true;
+      if(wd){clearTimeout(wd);wd=null;}
+      if(ok){
+        stat.style.color='var(--accent)'; stat.textContent='· sent ✓';
+        input.value=''; input.disabled=false;
+        setTimeout(function(){ if(box) box.setAttribute('hidden',''); stat.textContent=''; },900);
+        setTimeout(function(){apiFetch('/api/stream?limit=300').then(function(r){return r.json();}).then(apply).catch(function(){});},1500);
+      } else {
+        var n=queueReply(roomId,txt,reason);
+        stat.style.color='var(--red)';
+        stat.textContent='· NOT sent — '+reason+' · queued ('+n+')';
+        input.disabled=false;
+      }
+    }
+    wd=setTimeout(function(){ finish(false,'no response in 12s'); },12000);
+    apiFetch('/api/reply',{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({roomId:roomId,text:txt})
+    }).then(function(x){return x.json().catch(function(){return{ok:false,error:'HTTP '+x.status};});})
+      .then(function(d){ finish(!!d.ok, d.ok?'':(d.error||'send failed')); })
+      .catch(function(){ finish(false,'network error'); });
+  }
 
   function apply(data){
     if(!data||!data.ok){subEl.textContent='error: '+((data&&data.error)||'unknown');dotEl.classList.remove('live');return;}
