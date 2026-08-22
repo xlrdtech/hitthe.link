@@ -286,6 +286,44 @@ footer .f2 em{color:var(--ng)}
   .entry .st{display:none}
   .fcard{flex:1 1 140px}
 }
+
+/* ── MOBILE VIEW TABS ── added 2026-08-22 after a MEASURED dead end.
+   `.plate nav{display:none}` above is the ORIGINAL rule and was CORRECT for its
+   original job: the nav entries were scroll anchors, so hiding them on a phone
+   cost nothing — you could still scroll to every section.
+   Tagging the sections as data-view VIEWS changed that. Four of five views became
+   reachable ONLY through this nav, and Playwright refused to click
+   a[href="#goals"] at 547px wide — "element is not visible", rendered 0x0.
+   A cosmetic rule had quietly become the only door, and it was locked.
+   NOTE the shape of the miss: querySelector found all 5 links with the right
+   hrefs and reported them "present". Presence passed on an unclickable element;
+   only the CLICK caught it.
+   So: while the view switcher is live (body.views, which JS sets), the nav comes
+   back on a phone as a scrollable chip row. Desktop is untouched, and if JS never
+   runs, body.views is absent, the nav stays hidden, and the page degrades to the
+   plain scrolling document it was before. */
+@media(max-width:600px){
+  body.views .plate{flex-wrap:wrap;row-gap:9px;padding-bottom:9px}
+  body.views .plate nav{
+    display:flex;order:2;flex:1 0 100%;gap:6px;  /* 6, not 8: at 8 the row was scrollWidth 333 vs clientWidth 331 — GALLERY clipped by exactly 2px. Measured, not guessed. */
+    overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+  }
+  body.views .plate nav::-webkit-scrollbar{display:none}
+  body.views .plate nav a{
+    flex:0 0 auto;display:inline-flex;align-items:center;
+    padding:0 11px;min-height:38px;
+    border:1px solid var(--ng-line);border-radius:999px;
+    background:rgba(255,255,255,.02);
+    /* .6rem + 11px padding is what makes all FIVE chips fit inside 390px.
+       At .66rem/15px the GALLERY chip was clipped past the right edge —
+       still reachable by scroll, but a nav you have to discover by swiping
+       is a weaker nav, and this row is now the ONLY way to change view. */
+    font-size:.6rem;letter-spacing:.1em;
+  }
+  body.views .plate nav a.active{
+    border-color:var(--ng);background:rgba(57,255,20,.09);
+  }
+}
 </style>
 </head>
 <body>
