@@ -5901,6 +5901,50 @@ window.addEventListener('beforeunload', stopListening);
   }catch(e){}
 })();
 </script>
+<script>
+/* ── INJECT PICKER: BRING IT INTO VIEW ─────────────────────────────────────────
+   qi 2026-08-22 18:12, measured: "injection device list did not appear."
+   He was right and the earlier "11 chips / 11 rails MATCH" was a useless pass —
+   it proved the chips EXIST and that display:flex, never that a pixel was on
+   screen. getBoundingClientRect against the viewport, at 430x932:
+
+       pill-row      y = 16336        (viewport is 932 tall)
+       inject-picker x = 251, w = 1084 inside a 430-wide scroller
+       chips on screen: 0 of 11       ← the actual product state
+
+   TWO failures, both fixed here:
+     (a) VERTICAL — the row lives ~16,000px down the transcript, so opening the
+         picker changed nothing in view. scrollIntoView({block:'nearest'}) on the
+         row is enough; 'nearest' will not yank him if it is already visible.
+     (b) HORIZONTAL — 1084px of chips in a 430px rail with scrollLeft 0, so even
+         at the row the list starts past the fold. scrollIntoView({inline:'start'})
+         drives #pill-row's own horizontal scroll to the picker.
+
+   ⛔ addEventListener, NOT btn.onclick. The measured 6-chips-under-an-11/11-label
+      defect earlier today was caused by a second block ASSIGNING onclick and
+      silently replacing the handler that calls build(). A listener composes; an
+      assignment destroys. One writer per behaviour: their block owns open/close
+      and the chips, this one owns only "make it visible".
+   Runs after their handler on the same click, on the next frame so display has
+   already flipped to flex and the rects are real. */
+(function(){
+  var btn=document.getElementById('tb-inject');
+  if(!btn) return;                                   /* markup changed — never throw */
+  btn.addEventListener('click', function(){
+    requestAnimationFrame(function(){
+      var pick=document.getElementById('inject-picker');
+      if(!pick) return;
+      var open=getComputedStyle(pick).display!=='none';
+      if(!open) return;                              /* closing — leave his scroll alone */
+      var row=document.getElementById('pill-row');
+      try{ if(row) row.scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(e){
+           try{ if(row) row.scrollIntoView(false); }catch(_){} }
+      try{ pick.scrollIntoView({inline:'start',block:'nearest',behavior:'smooth'}); }catch(e){
+           try{ if(row) row.scrollLeft = pick.offsetLeft - row.offsetLeft; }catch(_){} }
+    });
+  });
+})();
+</script>
 </body>
 </html>
 <!-- cache-bust 1786420720 -->
