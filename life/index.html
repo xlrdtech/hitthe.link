@@ -126,6 +126,16 @@ h1 i{font-style:italic;font-weight:600;
 
 /* ── SECTION HEADS ── */
 section{padding:52px 0}
+
+/* ── VIEW SWITCHING (qi DECREE 2026-08-22: "/life modules FLOW GOALS STEER LEDGER
+   GALLERY each become their own VIEW — switch views, never scroll a long page.")
+   ADDITIVE ONLY: nothing inside any section is touched, so every live id keeps its
+   wiring (flow-cards, goals-body, steer-list, net-fill, g-total, …). The nav already
+   listed all five names as scroll anchors; only what a click DOES changes. */
+body.views section[data-view]{display:none}
+body.views section[data-view].view-on{display:block}
+/* active-link styling is ALREADY correct at .plate a.active (--ng-leaf + glow).
+   Do not add a second rule here — this file's palette is --ng, not --jade. */
 .sechead{text-align:center;margin-bottom:36px}
 .sechead .ix{font-family:var(--mono);font-size:.64rem;letter-spacing:.4em;color:var(--ng);opacity:.75;text-transform:uppercase}
 .sechead h2{font-family:var(--disp);font-weight:500;font-size:1.9rem;margin:10px 0 14px;font-style:italic;color:var(--bone)}
@@ -313,7 +323,7 @@ footer .f2 em{color:var(--ng)}
 </header>
 
 <!-- FLOW STATUS -->
-<section class="wrap" id="flow">
+<section class="wrap" id="flow" data-view="flow">
   <div class="sechead">
     <div class="ix">I · Live Flow Status</div>
     <h2>System pulse</h2>
@@ -332,7 +342,7 @@ footer .f2 em{color:var(--ng)}
 </section>
 
 <!-- GOAL SWARM -->
-<section class="wrap" id="goals">
+<section class="wrap" id="goals" data-view="goals">
   <div class="sechead">
     <div class="ix">II · Parallel Goal Swarm</div>
     <h2>Active goals, live-tracked</h2>
@@ -343,7 +353,7 @@ footer .f2 em{color:var(--ng)}
 </section>
 
 <!-- STEER CONTROL -->
-<section id="steer" style="padding:52px 0">
+<section id="steer" data-view="steer" style="padding:52px 0">
   <div class="wrap-narrow">
     <div class="sechead">
       <div class="ix">III · Steer Control</div>
@@ -372,7 +382,7 @@ footer .f2 em{color:var(--ng)}
 </section>
 
 <!-- LEDGER -->
-<section class="wrap" id="ledger">
+<section class="wrap" id="ledger" data-view="ledger">
   <div class="sechead">
     <div class="ix">IV · This Cycle</div>
     <h2>Latest, struck</h2>
@@ -385,6 +395,14 @@ footer .f2 em{color:var(--ng)}
     <div class="entry"><div class="no">04</div><div><div class="ti">M_B — live client edits</div><div class="de">Glass audio players, duplicate reel pulled, YouTube cut self-hosted, mislabeled flyers re-housed. Same-day turns.</div></div><div class="st"><span class="lit"></span>Live</div></div>
     <div class="entry"><div class="no">05</div><div><div class="ti">A leak, sealed</div><div class="de">Nine internal sales briefs were serving publicly — owner contacts and scripts. Pulled from the repo and warded going forward.</div></div><div class="st"><span class="lit"></span>Secured</div></div>
     <div class="entry"><div class="no">06</div><div><div class="ti">The watch, always on</div><div class="de">A persistent inbound monitor with logon auto-start — every message logged so nothing slips between sessions.</div></div><div class="st"><span class="lit"></span>Live</div></div>
+  </div>
+</section>
+
+<section class="wrap" id="gallery" data-view="gallery">
+  <div class="sechead"><h2>Gallery</h2></div>
+  <div id="gallery-body" style="display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">
+    <!-- Populated at runtime. Left EMPTY deliberately: qi's rule is real data or an
+         honest empty, never placeholder tiles. -->
   </div>
 </section>
 
@@ -677,6 +695,51 @@ loadSuggestions();
 setInterval(loadSuggestions, 30000);
 
 document.getElementById('ts').textContent = new Date().toISOString().slice(0,10);
+
+/* ── /life VIEW SWITCHER (qi DECREE 2026-08-22).
+   The nav at .plate already listed Flow/Goals/Steer/Ledger/Gallery as SCROLL anchors.
+   This changes only what a click DOES: show one section, hide the rest. No section
+   content is modified, so flow-cards / goals-body / steer-list / net-fill / g-total
+   and every other live id keeps its existing wiring untouched.
+   Deep-linkable via #hash so a view survives a reload and can be shared. */
+(function lifeViews(){
+  var VIEWS = ["flow","goals","steer","ledger","gallery"];
+  var links = document.querySelectorAll(".plate nav a");
+  if (!links.length) return;                      /* fail soft — never break the page */
+
+  function show(name){
+    if (VIEWS.indexOf(name) < 0) name = "flow";
+    VIEWS.forEach(function(v){
+      var el = document.querySelector('section[data-view="' + v + '"]');
+      if (el) el.classList.toggle("view-on", v === name);
+    });
+    Array.prototype.forEach.call(links, function(a){
+      var h = (a.getAttribute("href") || "").replace("#","");
+      a.classList.toggle("active", h === name);
+    });
+    if (location.hash.replace("#","") !== name) history.replaceState(null,"","#"+name);
+  }
+
+  /* Gallery's link pointed at "/" and LEFT the page entirely. Retarget it in place. */
+  Array.prototype.forEach.call(links, function(a){
+    var t = (a.textContent || "").trim().toLowerCase();
+    if (VIEWS.indexOf(t) >= 0) a.setAttribute("href", "#" + t);
+    a.addEventListener("click", function(e){
+      var h = (a.getAttribute("href") || "").replace("#","");
+      if (VIEWS.indexOf(h) < 0) return;           /* external link: leave it alone */
+      e.preventDefault();
+      show(h);
+    });
+  });
+
+  document.body.classList.add("views");           /* arms the CSS only once JS is live,
+                                                     so a JS failure degrades to the old
+                                                     scrolling page instead of a blank one */
+  show(location.hash.replace("#","") || "flow");
+  window.addEventListener("hashchange", function(){
+    show(location.hash.replace("#","") || "flow");
+  });
+})();
 </script>
 </body>
 </html>
