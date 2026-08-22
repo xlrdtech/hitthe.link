@@ -5862,7 +5862,16 @@ window.addEventListener('beforeunload', stopListening);
      JS drove the other one. Their div toggles via style.display, NOT [hidden]. */
   btn.onclick=function(){
     var open=(wrap.style.display==="none"||!wrap.style.display);
-    if(open){ wrap.style.display="flex"; build(); }
+    if(open){
+      wrap.style.display="flex"; build();
+      /* bring it into view — an inline picker in a scrolling row is invisible if it
+         opens past the right edge. Two belts: scroll the row, then scroll the node. */
+      try{
+        var row=document.getElementById("pill-row");
+        if(row) row.scrollLeft = Math.max(0, wrap.offsetLeft - 8);
+        if(wrap.scrollIntoView) wrap.scrollIntoView({block:"nearest",inline:"start"});
+      }catch(e){}
+    }
     else wrap.style.display="none";
     btn.setAttribute("aria-expanded", open?"true":"false");
   };
@@ -5870,8 +5879,8 @@ window.addEventListener('beforeunload', stopListening);
   if(!document.getElementById("inject-picker-css")){
     var st=document.createElement("style"); st.id="inject-picker-css";
     st.textContent =
-      "#inject-picker{gap:6px;align-items:center}"+
-      "#inject-picker button{scroll-snap-align:center;flex:0 0 auto;border-radius:999px;"+
+      "#inject-picker{display:flex;gap:6px;align-items:center;flex:0 0 auto}"+
+      "#inject-picker{flex-wrap:wrap;max-width:100%}"+"#inject-picker button{scroll-snap-align:center;flex:0 0 auto;border-radius:999px;"+
         "font:inherit;font-size:12px;padding:5px 11px;cursor:pointer;"+
         "background:rgba(255,255,255,.06);color:var(--text,#e8e8e8);"+
         "border:1px solid rgba(255,255,255,.14);white-space:nowrap}"+
