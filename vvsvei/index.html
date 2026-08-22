@@ -1250,6 +1250,65 @@ const RTC_ICE = {
 };
 
 const transcript = document.getElementById('transcript');
+
+/* ── SOURCE STAMP AT BIRTH ──────────────────────────────────────────────────
+   MEASURED 2026-08-22 on the live page: the inject filter hid NOTHING. 0 of 190
+   rows carried a rail; every single one was cached as "-". railOf() re-reads
+   el.textContent hunting an "in:"/"typed:"/"bee:" prefix — but EVERY renderer
+   STRIPS that prefix before painting. The feed sends
+       "6:37:05 PM, in: Corporate stories"
+   and the DOM receives
+       "Corporate stories".
+   The source is destroyed BEFORE classification ever runs, so no amount of
+   pattern-matching inside railOf can recover it. That is why the chips flipped,
+   the counter ticked 11/11 -> 10/11, localStorage was written, and not one
+   message moved: every component reported success against its own state instead
+   of the DOM it governs.
+
+   FIX: classify from the EVENT — where d.text still has the prefix intact — and
+   stamp data-rail on whatever that event appends. railOf() already reads
+   data-rail first, so nothing downstream changes.
+
+   ONE wrapper, not 16 patched appendChild sites: renderEvent's appends are
+   synchronous, so the scope cannot be clobbered mid-render, and it is released
+   on the next microtask once every sync append has landed.
+
+   FAIL-SAFE BY DESIGN: an unclassified row gets no data-rail, and paint() acts
+   only `if(rail)` — so anything this cannot identify stays VISIBLE. A mute can
+   never make one of qi's own messages disappear by accident. */
+var _railScope = null;
+function _stampRail(node){
+  if(!node || !_railScope) return node;
+  if(node.nodeType === 11){                    /* DocumentFragment — stamp kids */
+    for(var i=0;i<node.children.length;i++){
+      if(!node.children[i].hasAttribute('data-rail')) node.children[i].setAttribute('data-rail', _railScope);
+    }
+    return node;
+  }
+  if(node.nodeType === 1 && !node.hasAttribute('data-rail')) node.setAttribute('data-rail', _railScope);
+  return node;
+}
+(function(){
+  var _ac = transcript.appendChild.bind(transcript);
+  var _ib = transcript.insertBefore.bind(transcript);
+  transcript.appendChild  = function(n){ return _ac(_stampRail(n)); };
+  transcript.insertBefore = function(n, ref){ return _ib(_stampRail(n), ref); };
+})();
+function _railFromEvent(d){
+  if(!d) return null;
+  var t = (d.text || d.body || d.message || d.preview || '').toString().slice(0,64);
+  var R = ['typed','in','bee','omi','sms','notif','rss','xen-step','XEN-AGENT','VEI ATTACH','DESK DROP'];
+  for(var i=0;i<R.length;i++){
+    if(t.indexOf(R[i]+':') > -1 || t.indexOf('['+R[i]+']') > -1) return R[i];
+  }
+  var s = (d.source||'').toString().toLowerCase(), l = (d.lane||'').toString().toLowerCase();
+  /* Measured off 105 live events 2026-08-22: these three carry step telemetry
+     and belong to the "steps" chip. netwatch and bare xen-out stay
+     unclassified ON PURPOSE — no RAILS entry claims them, and inventing one
+     would let a toggle hide traffic it never named. */
+  if(l === 'steps' || s === 'xen-step' || s === 'otlp' || s === 'claude-code') return 'xen-step';
+  return null;
+}
 const status = document.getElementById('status');
 const statusLbl = document.getElementById('status-lbl');
 const countEl = document.getElementById('count');
@@ -3770,6 +3829,11 @@ function renderEvent(d) {
   if (d && d.data && typeof d.data === 'object' && (d.data.text || d.data.body || d.data.message || d.data.preview || d.data.chatId || d.data.chatID)) {
     d = d.data;
   }
+  /* Stamp the rail for every row THIS event appends (see _railFromEvent above).
+     Released on the next microtask — after all synchronous appends have landed,
+     before any later event can be rendered. */
+  _railScope = _railFromEvent(d);
+  Promise.resolve().then(function(){ _railScope = null; });
   // CANONICAL sentinel (qi 2026-05-30, grok+gemini-3.1-pro+codex converged): the
   // 'caught-up' event marks the end of the SSE backlog replay. Everything before
   // it = backlog (render silently), everything after = LIVE (speak). Clock-skew-
