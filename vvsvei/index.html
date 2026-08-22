@@ -5856,7 +5856,16 @@ window.addEventListener('beforeunload', stopListening);
     pending=true;
     var run=function(){
       pending=false;
-      paint(document.querySelectorAll("#transcript [data-rail], #transcript .line, #transcript .msg"),load());
+      /* MEASURED 2026-08-22 18:38 — this selector matched ZERO elements, so the mute
+         was cosmetic: chip flipped to .off, label went 11/11 -> 10/11, store wrote
+         {"bee":1}, and all 116 messages stayed on screen. A control reporting success
+         against its own state instead of the DOM it governs.
+         Live tally of #transcript children: final 108 · xen-reply 5 · tui-live 2 ·
+         tl-daybreak 1. No [data-rail], no .line, no .msg exist in this app at all.
+         SAFE BY CONSTRUCTION: railOf() returns null for a bubble with no rail prefix and
+         paint() only touches `if(rail)`, so qi's own untagged words can never be hidden —
+         the `typed` lock stays a second belt, not the only one. */
+      paint(document.querySelectorAll("#transcript [data-rail], #transcript .line, #transcript .msg, #transcript .final, #transcript .xen-reply, #transcript .tui-live"),load());
       label();
     };
     if(window.requestAnimationFrame) requestAnimationFrame(run); else setTimeout(run,16);
