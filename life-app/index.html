@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <title>XEN LIFE — assembled</title>
 <meta name="description" content="Canonical three-pane assembly. Mounts the live surfaces same-origin with per-pane URL rebasing and CSS scoping. No iframe.">
-<meta name="theme-color" content="#06080A">
+<meta name="theme-color" content="#000000">
 
 <!-- PWA head — qi 2026-08-20 22:24: "Its a pure PWA. It does not need iOS or Android at all."
      Copied from the pattern already proven in xos-capacitor/www/index.html. NO Capacitor,
@@ -32,7 +32,15 @@
 <style>
 /* ══ tokens: LifeNote's own, read off lifenote/index.html ══ */
 :root{
-  --bg:#06080A; --jade:#00FF7F; --ink:#E8EAE8; --resolve:#7CFF9B;
+  /* TRUE BLACK grounds — TRANSFORM-DIGEST decree: "TRUE BLACK #000 grounds".
+     MEASURED 2026-08-22 07:38 on the live surface: body computed background was
+     rgb(6,8,10), i.e. #06080A — near-black, not black. On his OLED handset a
+     non-zero ground lights every pixel instead of leaving them off, which is the
+     whole point of the decree. --bg has exactly two consumers, both grounds
+     (html,body :46 and the bar :228), so this token is the correct single lever.
+     NOT doing the "ambiance dim over true black" here — that one is still listed
+     PENDING QI'S WORD in the work order and is his call, not mine. */
+  --bg:#000000; --jade:#00FF7F; --ink:#E8EAE8; --resolve:#7CFF9B;
   --heavy:#6B7280; --luminous:#00FFC2; --restless:#F59E0B;
   --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   --line:rgba(0,255,127,.14); --glass:rgba(10,14,12,.72);
