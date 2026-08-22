@@ -600,13 +600,29 @@ function renderGallery(sites, generated){
       return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
     });
   }
+  // sites.json stores each page's RAW <title> markup, entities and all, so 4 of the 318
+  // records arrive pre-encoded: 'XOS &middot; moved', 'ON AIR &mdash; Xen', 'NOW &mdash;
+  // Xen', 'Tracking Together &mdash; Sign In'. esc() then correctly escapes the leading
+  // '&' and the card renders the literal text "XOS &middot; moved".
+  // MEASURED 2026-08-22 07:06 by rendering at 390x844 and LOOKING at the pixels — every
+  // byte-level check passed this: the sha matched, node --check was clean, 318/318 cards
+  // had non-zero height. Only the screenshot showed it.
+  // Decode first, then escape. Order matters and cannot be swapped: escaping first would
+  // make deent() undo our own escaping and hand raw '<' back to innerHTML.
+  // A detached <textarea> is the decoder because its content is parsed as RCDATA — no
+  // elements are constructed and no script can run, unlike innerHTML on a div.
+  var DEENT = document.createElement('textarea');
+  function deent(v){
+    DEENT.innerHTML = String(v == null ? '' : v);
+    return DEENT.value;
+  }
   // newest first. ISO-8601 sorts correctly as a string, so no Date objects needed.
   var ordered = sites.slice().sort(function(a,b){
     return String(b.updated || '').localeCompare(String(a.updated || ''));
   });
   host.innerHTML = ordered.map(function(x){
     return '<a class="gal-card" href="' + esc(x.url) + '" target="_blank" rel="noopener">'
-         +   '<div class="gal-t">' + esc(x.title || x.slug) + '</div>'
+         +   '<div class="gal-t">' + esc(deent(x.title || x.slug)) + '</div>'
          +   '<div class="gal-u">hitthe.link' + esc(x.url) + '</div>'
          +   '<div class="gal-m"><span class="gal-cat">' + esc(x.category || 'Other') + '</span>'
          +     '<span class="gal-age">' + esc(age(x.updated)) + '</span></div>'
