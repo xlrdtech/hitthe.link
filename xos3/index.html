@@ -188,7 +188,16 @@
      they were merged with — flex-wrap only lets the paragraph fall onto its own
      line beneath the head row; it does not restyle the head row. */
   .link-card{flex-wrap:wrap;row-gap:7px;align-items:flex-start}
+  /* ⚠ PRE-EXISTING LEAK, found by SCREENSHOT not by counting (2026-08-22).
+     Line ~171 carries a BARE `.right{...flex-direction:column...}` belonging to a
+     different component. `.link-card .right` (0,2,0) outranks it — but it never
+     DECLARED a direction, so the bare rule applied unopposed and the card's control
+     rail stacked vertically. Every DOM count passed on it: 751 badges, 751 reply
+     buttons, all present, all in a 66px-tall column beside a 20px name.
+     Declaring the direction explicitly is the whole fix; line 171 is left untouched
+     because the other component needs it. */
   .link-card .left,.link-card .right{align-items:center;min-height:20px}
+  .link-card .right{flex-direction:row;flex-wrap:nowrap}
   .link-card .msg-body{flex:1 0 100%;margin:0;font-size:13px;line-height:1.55;
     color:var(--text-bright);white-space:pre-wrap;overflow-wrap:anywhere;
     text-align:left}
