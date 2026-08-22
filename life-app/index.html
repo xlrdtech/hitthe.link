@@ -433,6 +433,13 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--
 var RETIRED_IDS = {
   "d-left":1,"s-left":1,"d-center":1,"s-center":1,"d-right":1,"s-right":1,
   "gv-live":1,"gv-title":1,"gv-ctl":1,
+  /* gv-tabs added 2026-08-22 per WORK-ORDER-life-xlrd.md. MEASURED: L945
+     `$("gv-tabs").addEventListener(...)` threw on null at +8.4s, which killed
+     every statement after it in that block — gvRooms never ran and recents
+     stayed stuck on "reading omni…". The element is genuinely retired; the
+     call sites are the 4 live references that absorb harmlessly once it is
+     registered here. Fix belongs in the REGISTRY, not at the call site. */
+  "gv-tabs":1,
   "gp-keypad":1,"gv-dialout":1,"gv-dialtxt":1,"gv-hint":1,"gv-keys":1,
   "gv-callrow":1,"gv-callbig":1,"gv-del":1,"gv-contacts-btn":1,
   "gv-foot":1,"gv-stat":1,"gv-age":1
@@ -626,9 +633,20 @@ var LIMB_LEARNED = {};       /* bare path -> the base that owns it            */
     if(/^(https?:|data:|blob:|about:|javascript:|mailto:|#|\/\/)/i.test(u)) return u;
     if(u.charAt(0)==="/") return u;
     var key=u.split("?")[0];
-    var b=LIMB_ACTIVE || LIMB_LEARNED[key];
+    /* PRECEDENCE FIX 2026-08-22 per WORK-ORDER-life-xlrd.md. WAS:
+         var b = LIMB_ACTIVE || LIMB_LEARNED[key];
+       which contradicted this block's OWN stated invariant two comments up —
+       "a path is only ever learned while its own limb is the active one".
+       LIMB_ACTIVE is set for a 4s window while ANY limb boots (see :689, cleared
+       at :702). With LIMB_ACTIVE first, a path that ALREADY had an owner got
+       re-bound to whatever was booting, and the very next line PERSISTED that
+       wrong owner — so one unlucky boot poisoned it forever. MEASURED: lifenote.json
+       learned /vvsvei/ and the pane went FEED OFFLINE.
+       A learned owner is now permanent; LIMB_ACTIVE only claims paths that are
+       genuinely unowned. Learning is write-once, which is what the comment promised. */
+    var b=LIMB_LEARNED[key] || LIMB_ACTIVE;
     if(!b) return u;
-    LIMB_LEARNED[key]=b;
+    if(!LIMB_LEARNED[key]) LIMB_LEARNED[key]=b;
     return rebase(u,b);
   }
   window.fetch=function(u,o){ return of.call(window, resolve(u), o); };
