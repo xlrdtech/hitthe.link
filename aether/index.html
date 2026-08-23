@@ -378,6 +378,8 @@ vec3 envRead(vec2 uv){
 // are those edges, and they are what make it read as chrome.
 float hash(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1)))*43758.5453); }
 
+float gTree = 0.0;      // treeline coverage, set inside dusk()'s sky branch
+vec3  gTreeC = vec3(0.0);
 vec3 dusk(vec3 dir){
   vec3 d = normalize(dir);
   float h = d.y;                       // -1 down, +1 up
@@ -409,7 +411,20 @@ vec3 dusk(vec3 dir){
   float st = step(0.9975, hash(floor(sc*22.0)));
   sky += vec3(0.85,0.86,1.0) * st * smoothstep(0.22, 0.62, h) * 0.8;
 
-  if(h > 0.0){
+  // ⭐ THE BLACK BAR — measured 2026-08-23, and it was NEVER a canvas-edge artifact:
+  // it sat 466 px from the edge, dead centre, and forcing look.y +/-0.35 moved it
+  // 465 -> 253 and 465 -> 677 (predicted 212 px, measured 212 px both ways). It tracks
+  // the camera, so it is the HORIZON. The silhouette used to be clipped flat on the
+  // h == 0 plane by an if(h > 0.0) branch, while the strip just below got the
+  // FULL-STRENGTH horizon ember (up clamps to 0 so pow(1.0-up,5.5) is exactly 1.0, and
+  // smoothstep(0.0,0.06,dep) is ~0.0008 there). treeC 0.028 sat directly on horizon
+  // 0.430 — a 15x step in ONE pixel row, straight, full width: +128 luminance from
+  // y=465 to y=466 at EVERY column. That reads as a drawn bar, not as trees.
+  // ⭐ Trees now stand THROUGH the horizon and their bases dissolve into the road.
+  //   Rig-measured: max one-row step 92.5 -> 0.7, rows above the ridge bit-identical.
+  // ⛔ Never clip the silhouette on the h == 0 plane again, and never let the ember
+  //    slab be the surface a tree base terminates against.
+  {
     // ── treeline: a ragged silhouette biting into the sky at the horizon
     float ridge = 0.020
       + 0.030*sin(az*3.1)
@@ -418,7 +433,9 @@ vec3 dusk(vec3 dir){
       + 0.007*sin(az*41.0 + 2.1);
     float tree = smoothstep(ridge + 0.006, ridge - 0.006, h);   // HARD edge
     vec3 treeC = vec3(0.028,0.026,0.048);
-    return mix(sky, treeC, tree);
+    tree *= smoothstep(-0.055, -0.008, h);   // base melts into the road, no flat cut
+    gTree  = tree;
+    gTreeC = treeC;
   }
 
   // ── ground: dark asphalt receding, with the sky's ember bouncing off it
@@ -427,7 +444,8 @@ vec3 dusk(vec3 dir){
   road += ember * pow(max(dot(vec3(d.x,-d.y,d.z), sunDir),0.0), 18.0) * 0.18;
   // faint lane sheen so the ground is not a flat wash
   road += vec3(0.10,0.095,0.135) * smoothstep(0.10,0.0,abs(d.x)) * (1.0-dep) * 0.6;
-  return mix(sky, road, smoothstep(0.0, 0.06, dep));
+  vec3 baseCol = mix(sky, road, smoothstep(0.0, 0.06, dep));
+  return mix(baseCol, gTreeC, gTree);
 }
 
 // ⭐⭐⭐ THE ORB IS A COMPONENT — qi 2026-08-23 06:28, verbatim:
