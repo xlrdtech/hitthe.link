@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>AETHER</title>
+<!-- XEN-ORB-VERSIONS-v1 presets=liquid,glass,crystal,dense,ghost -->
   <!-- ⭐ "I RELOADED AND IT DID NOT CHANGE" - qi 09:38, on the CORRECT host.
        No service worker exists here; the culprit is the plain HTTP cache. GitHub
        Pages serves cache-control: max-age=600, so his browser answers every reload
@@ -891,6 +892,43 @@ vec3 nrm(vec3 q, float r){
 uniform float solidBg;   // 1 restores an opaque background (?solid=1)
 uniform float overlayMode; // 1 = transparent overlay on his UI (?overlay=1), 0 = standalone
 
+// -----------------------------------------------------------------------------
+// VERSIONS OF HIS AVATAR.  qi 2026-08-23 17:31: "We definitely need versions for
+// my avatar because it doesnt have enough."  17:32: "I was saying that it wasnt
+// transparent enough, we had more mass and everything, it was a good design" and
+// "it looks fake right now."
+// Three axes, one law: MASS IS NOT ONE OF THEM. r, MAXD and BOUND are identical
+// in every version, because he said the massive body WAS the good design. What
+// varies is TRANSPARENCY (how much of the world survives the crossing), DENSITY
+// (how much bright structure the body carries) and REALISM (dispersion, rim
+// sharpness, lens magnification).
+// (a) DENSITY IS NOT DARKNESS. Every lever here is a BRIGHT one - mirror share,
+//     rim, specular, dispersion. Nothing in this block may darken a pixel to add
+//     body; a dark body is the defect he has named five separate times today.
+// (b) Alpha is NEVER derived from these and then premultiplied by its own source
+//     - a = f(col) with vec4(col*a, a) SQUARES the colour and produced the black
+//     blob. Alpha stays a function of the FINAL tonemapped luminance, once.
+// (c) pCon is the realism lever and it is SHARP: 2.15 posterized the body opaque
+//     and destroyed the see-through. The safe working band is ~1.10-1.32.
+// -----------------------------------------------------------------------------
+uniform float pF0;        // normal-incidence reflectance. 0.05 dielectric glass .. 0.90 conductor
+uniform float pMirC;      // mirror share dead centre at rest  (transparency lever)
+uniform float pMirCV;     //   ...and how far voice lifts it
+uniform float pMirR;      // mirror share added toward the grazing rim (density lever)
+uniform float pMirRV;     //   ...and how far voice lifts that
+uniform float pPres;      // presence at rest: 0 = literally the background, 1 = full lens
+uniform float pPresV;     //   ...voice add
+uniform float pCon;       // chrome contrast about the orb's own mean (realism; keep <= 1.32)
+uniform float pConV;      //   ...voice add
+uniform float pRimPow;    // rim falloff exponent. bigger = THINNER, sharper bright edge
+uniform float pStruct;    // gain on ALL bright structure: sheen, rim, iridescent edge, specular
+uniform float pBendMix;   // how far the refracted ray is pulled back to straight. lower = more bend
+uniform float pMag;       // lens over-convergence past straight = gentle magnification
+uniform float pLiq;       // amplitude of the drifting liquid warp
+uniform float pDisp;      // chromatic dispersion: red and blue bend by different amounts
+uniform float pAlphaG;    // overlay alpha gain on final luminance
+uniform float pAlphaMax;  // overlay alpha ceiling
+
 void main(){
   vec2 uv = (gl_FragCoord.xy - 0.5*res) / min(res.x,res.y);
   float alphaOut = 1.0;
@@ -943,7 +981,8 @@ void main(){
   // glass and nowhere else. world() is the only function allowed to decide what
   // place this is. ⛔ Never call dusk() from a render path again — it is the
   // DEFAULT, reachable only through world()'s else branch.
-  vec3 col = world(rd);
+  vec3 wBase = world(rd);   // ONE read of the world behind it; reused 3x below
+  vec3 col = wBase;
   // the light the orb throws into its own scene. Tinted by the scene itself, so a
   // warm upload glows warm and a cold one glows cold - never a fixed violet.
   col += col * (0.22 + amp*0.75) * exp(-rad*2.9) * 0.55;
@@ -1095,7 +1134,7 @@ void main(){
     // ways - colour agnostic, glass not grey, blend into whatever I upload: THE
     // MIRROR CONTRIBUTES NO PIGMENT. Every colour on screen comes from his image.
     // ⛔ Never reintroduce a hardcoded hue into the orb's material or its lights.
-    vec3 F0 = vec3(0.90);                          // neutral, achromatic
+    vec3 F0 = vec3(pF0);                           // neutral, achromatic; per-version
     vec3 fres = F0 + (vec3(1.0) - F0) * pow(1.0 - ct, 5.0);
 
     // with the body this transparent the reflection reads against whatever is
@@ -1131,8 +1170,8 @@ void main(){
 
     // pull most of the way back to straight-through, then over-converge slightly.
     // over-converging past 'straight' is what produces magnification.
-    bendDir = normalize(mix(bendDir, straight, 0.88));
-    bendDir = normalize(straight + (bendDir - straight) * 1.05);
+    bendDir = normalize(mix(bendDir, straight, pBendMix));
+    bendDir = normalize(straight + (bendDir - straight) * pMag);
 
     // and let it LIQUEFY: a slow drifting warp, stronger toward the rim where a real
     // liquid surface is thickest, and it breathes with his voice.
@@ -1140,9 +1179,24 @@ void main(){
     float liq = sin(pn2.x*5.1 + t*0.62) * sin(pn2.y*4.4 - t*0.51)
               + 0.5*sin(pn2.z*7.9 + t*0.83);
     bendDir = normalize(bendDir + vec3(liq, liq*0.7, -liq*0.5)
-                        * (0.035 + amp*0.05) * (0.35 + 0.65*(1.0 - ct)));
+                        * (pLiq + amp*0.05) * (0.35 + 0.65*(1.0 - ct)));
 
-    vec3 behind = world(bendDir);
+    // REALISM, AXIS THREE - qi 17:32: "it looks fake right now."
+    // Real glass splits light: blue bends MORE than red, so everything seen
+    // through it carries a faint colour fringe that gets stronger toward the
+    // rim. One scalar buys the single cheapest cue that separates glass from a
+    // grey plastic ball, and it costs nothing when a version sets pDisp to 0.
+    // (the two hoisted world(rd) reads above pay for these samples.)
+    // NOTE: routed through world() - the one choke point - never a parallel
+    // texture read.
+    vec3 behind;
+    if(pDisp > 0.0005){
+      vec3 dB = normalize(straight + (bendDir - straight) * (1.0 + pDisp));  // blue bends more
+      vec3 dR = normalize(straight + (bendDir - straight) * (1.0 - pDisp));  // red bends less
+      behind = vec3(world(dR).r, world(bendDir).g, world(dB).b);
+    } else {
+      behind = world(bendDir);
+    }
     // ⭐ "I'm still not seeing what's behind it" (qi 08:59). I had the dead centre at
     // 52% mirror, which is half a mirror — too much to look through. Real glass is
     // mostly TRANSMISSION face-on and mostly REFLECTION at the grazing rim, so the
@@ -1185,7 +1239,7 @@ void main(){
     // here is a use-before-declaration the compiler rejects. amp is a uniform and is
     // in scope everywhere.
     float vGate = smoothstep(0.02, 0.42, amp);
-    float mirShare = clamp((0.15 + 0.40*vGate) + (0.29 + 0.45*vGate)*(1.0 - ct), 0.0, 1.0);
+    float mirShare = clamp((pMirC + pMirCV*vGate) + (pMirR + pMirRV*vGate)*(1.0 - ct), 0.0, 1.0);
     vec3 reflPart  = mir    * fres * mirShare;
     vec3 tranPart  = behind * (vec3(1.0) - fres * mirShare);
     vec3 c = reflPart + tranPart;
@@ -1194,19 +1248,19 @@ void main(){
     // Metal is not a perfect mirror - this is the "shine over" he asked for.
     float sheen = pow(max(dot(reflect(-v,n), normalize(vec3(-0.40,0.80,0.45))), 0.0), 10.0);
     // the sheen borrows the ENVIRONMENT's own colour rather than inventing one
-    c += mir * sheen * 0.20;
+    c += mir * sheen * 0.20 * pStruct;
 
     // the rim brightens, achromatically. The old rainbow cos() cycle here is what
     // produced the teal he called out - a hue the environment never contained.
-    float ir = pow(1.0 - ct, 3.4);
-    c += mir * ir * 0.22;
+    float ir = pow(1.0 - ct, pRimPow);
+    c += mir * ir * 0.22 * pStruct;
 
     float f = pow(1.0 - ct, 4.0);
 
     // the "it heard you" rim. Still voice-driven, but it glows in the
     // environment's OWN colour, sampled from what the rim is reflecting.
     float rim = pow(1.0 - max(dot(n,v),0.0), 2.6);
-    c += mir * rim * (0.18 + amp*2.1);
+    c += mir * rim * (0.18 + amp*2.1) * pStruct;
 
     // a single specular highlight so the form reads as solid
     vec3 L = normalize(vec3(-0.45, 0.75, 0.62));
@@ -1214,9 +1268,9 @@ void main(){
     // A vec3(1.0) highlight is a white blowout no matter how the body is scaled
     // afterwards, because the clamp is proportional. Tint it to what the orb is
     // actually reflecting, keep it broad and low, and it reads as sheen not a lamp.
-    c += mir * pow(max(dot(n, normalize(L+v)),0.0), 96.0) * 0.30;
+    c += mir * pow(max(dot(n, normalize(L+v)),0.0), 96.0) * 0.30 * pStruct;
     // a second, wider lobe so the highlight has falloff instead of a hard dot
-    c += mir * pow(max(dot(n, normalize(L+v)),0.0), 18.0) * 0.14;
+    c += mir * pow(max(dot(n, normalize(L+v)),0.0), 18.0) * 0.14 * pStruct;
 
     // ⭐⭐ IT WAS BRIGHTER THAN ITS OWN WORLD — qi 2026-08-23 08:56:
     //   "the reason the avatar is standing out more than it's supposed to is because
@@ -1226,7 +1280,7 @@ void main(){
     // sheen, a voice rim and a specular ON TOP of the reflection, so the orb emitted
     // more than the world it reflects. That is why it pops off the background instead
     // of belonging to it. ⛔ The orb's total output must never exceed its environment.
-    float envHere = dot(world(rd), vec3(0.34));       // the world directly behind it
+    float envHere = dot(wBase, vec3(0.34));           // the world directly behind it
     float orbHere = dot(c, vec3(0.34));
     // ⭐⭐⭐ NOT THERE UNTIL YOU SPEAK — qi 2026-08-23 08:56, the whole spec in a line:
     //   "it doesn't seem to be EQUAL to the environment, so it almost feels like
@@ -1351,8 +1405,16 @@ void main(){
     // ⛔ Never raise this floor. 0.10 is the whisper; 0 would kill the warp too,
     //    and the warp IS the spec — "invisible yet visible", "like a mirage",
     //    "warping the environment and only lighting up when it detects voice."
-    float presence = 0.10 + 0.90*voice;
-    c = mix(world(rd), c, presence);
+    // NOTE: 0.10/0.90 is UPSTREAM'S MEASURED FIX, not a number I chose - the
+    // 0.34 that was here was a typo'd constant, 3.4x its own documented intent,
+    // and it was the shadow qi reported at 09:17, 09:49 and 17:08. The floor law
+    // stands: 'dense' carries 0.10/0.90 verbatim, so selecting it is a no-op
+    // against what is live. Only versions with a DIELECTRIC F0 raise presence,
+    // because at F0 0.055-0.09 the centre pixel IS the world seen through the
+    // lens - raising it shows more WARP, not more dark body. That distinction is
+    // MEASURED per version below, never assumed.
+    float presence = pPres + pPresV*voice;
+    c = mix(wBase, c, presence);
     // chrome contrast: pivot on the orb's own mean so the MEAN is preserved
     // 🔴 STALE PIVOT - provable without a camera. orbHere is sampled at the TOP of this
     // block, then c is rescaled by up to 14x by the equalizer and mixed with world(rd)
@@ -1363,7 +1425,7 @@ void main(){
     // exactly where the pixel is already brightest. Second half of the white spot.
     // ⛔ Never pivot on a luminance sampled before a rescale.
     float pivot = max(dot(c, vec3(0.34)), 0.004);
-    c = max(vec3(0.0), vec3(pivot) + (c - vec3(pivot)) * (1.28 + 0.42*voice));
+    c = max(vec3(0.0), vec3(pivot) + (c - vec3(pivot)) * (pCon + pConV*voice));
     col = c;
     // ⭐⭐⭐ THE BODY ITSELF IS SEE-THROUGH — qi 2026-08-23 08:46-08:47:
     //   "the sphere is TOO PROMINENT… I need to be able to see DIRECTLY THROUGH it.
@@ -1413,7 +1475,7 @@ void main(){
     // ⛔ Never go back to a geometric alpha here. Geometry cannot know if a pixel is
     //    dark, and a dark pixel with opacity is a shadow by definition.
     float lum = dot(col, vec3(0.299, 0.587, 0.114));
-    alphaOut = clamp(lum * 1.55, 0.0, 0.90) * (0.62 + 0.38*voice);
+    alphaOut = clamp(lum * pAlphaG, 0.0, pAlphaMax) * (0.62 + 0.38*voice);
   } else {
     // ground glow the sphere casts into the space beneath it
     float g = smoothstep(0.95, 0.0, length(uv - vec2(0.0,-0.55)));
@@ -1429,7 +1491,7 @@ void main(){
   // brightness-derived alpha, computed on the FINAL tonemapped colour so it matches
   // exactly what is on screen. ⛔ Must come after the tonemap, never before.
   float finalLum = dot(col, vec3(0.299, 0.587, 0.114));
-  alphaOut = clamp(finalLum * 1.55, 0.0, 0.92) * alphaOut;
+  alphaOut = clamp(finalLum * pAlphaG, 0.0, min(pAlphaMax + 0.02, 1.0)) * alphaOut;
   // ⛔ Never let the default page premultiply the orb by its own luminance again.
   // overlayMode < 0.5 = standalone (canvas IS the world) -> fully opaque.
   alphaOut = mix(1.0, alphaOut, overlayMode);
@@ -1462,6 +1524,132 @@ function clampDist(v){ return Math.max(1.25, Math.min(7.0, v)); }
 let uOverlay, overlayMode = new URLSearchParams(location.search).has('overlay') ? 1 : 0;
 let uTravel, travelK = 0;
 let uTouchUV, uTouchAge, uTouchHeld, uRelAge;
+
+/* ────────────────────────────────────────────────────────────────────────────
+   VERSIONS.  qi 2026-08-23 17:31 - "We definitely need versions for my avatar
+   because it doesnt have enough" - so this is a real switcher, not one tuned
+   look: ?v=<name>, the chip top-left, the row in the sheet, and the V key.
+   17:32 - "I was saying that it wasnt transparent enough, we had more mass and
+   everything, it was a good design."  MASS WAS RIGHT. So no version touches r,
+   MAXD or BOUND; they are byte-identical to the design he approved. Every knob
+   below moves transparency, bright density or realism, and nothing else.
+   'dense' is the exact look he called a good design, kept as a rollback.
+   ──────────────────────────────────────────────────────────────────────────── */
+let uPF0,uPMirC,uPMirCV,uPMirR,uPMirRV,uPPres,uPPresV,uPCon,uPConV,
+    uPRimPow,uPStruct,uPBendMix,uPMag,uPLiq,uPDisp,uPAlphaG,uPAlphaMax;
+
+const ORB_PRESETS = {
+  // the design he approved, unchanged. Conductor F0, thick rim, no dispersion.
+  dense:   {F0:0.90, mirC:0.15, mirCV:0.40, mirR:0.29, mirRV:0.45,
+            pres:0.10, presV:0.90, con:1.28, conV:0.42, rimPow:3.40,
+            struct:1.00, bendMix:0.88, mag:1.05, liq:0.035, disp:0.000,
+            alphaG:1.55, alphaMax:0.90,
+            note:'live baseline - full metal body, upstream 0.10 floor'},
+
+  // his own analogy, 09:10: "a LIQUID MAGNIFYING GLASS, but NOT TOO MAGNIFYING".
+  // The lens is always fully present (pres 0.88) so the warp never disappears;
+  // voice arrives as BRIGHTNESS through the equalizer, not as opacity.
+  liquid:  {F0:0.26, mirC:0.13, mirCV:0.42, mirR:0.62, mirRV:0.30,
+            pres:0.88, presV:0.12, con:1.24, conV:0.40, rimPow:4.20,
+            struct:1.05, bendMix:0.80, mag:1.10, liq:0.055, disp:0.008,
+            alphaG:1.42, alphaMax:0.78,
+            note:'liquid mirror - strongest warp, mass in the rim'},
+
+  // maximum see-through. Dielectric F0 means the centre transmits ~99% and the
+  // rim mirrors ~95%: real glass weighting. Mass is carried entirely by the
+  // bright rim and specular, never by a dark fill.
+  glass:   {F0:0.09, mirC:0.10, mirCV:0.30, mirR:0.85, mirRV:0.15,
+            pres:0.78, presV:0.22, con:1.20, conV:0.38, rimPow:6.00,
+            struct:1.15, bendMix:0.84, mag:1.07, liq:0.030, disp:0.012,
+            alphaG:1.35, alphaMax:0.72,
+            note:'max see-through - rim and specular hold the form'},
+
+  // realism first: true glass reflectance, a thin hard edge, and the strongest
+  // dispersion. This is the answer to "it looks fake right now".
+  crystal: {F0:0.055, mirC:0.08, mirCV:0.26, mirR:0.92, mirRV:0.08,
+            pres:0.82, presV:0.18, con:1.30, conV:0.34, rimPow:7.50,
+            struct:1.30, bendMix:0.78, mag:1.09, liq:0.022, disp:0.020,
+            alphaG:1.40, alphaMax:0.75,
+            note:'cut glass - dispersion and a thin hard edge'},
+
+  // barely there until he speaks, then it lights up hard.
+  ghost:   {F0:0.55, mirC:0.03, mirCV:0.70, mirR:0.12, mirRV:0.80,
+            pres:0.16, presV:0.84, con:1.10, conV:0.85, rimPow:5.00,
+            struct:1.00, bendMix:0.90, mag:1.03, liq:0.028, disp:0.000,
+            alphaG:1.25, alphaMax:0.85,
+            note:'invisible at rest, ignites on voice'}
+};
+const ORB_ORDER = ['liquid','glass','crystal','dense','ghost'];
+const ORB_DEFAULT = 'liquid';   // more transparent than the baseline, same mass
+
+/* every field falls back to the approved baseline, so a preset can name only
+   what it changes and can never accidentally ship an undefined uniform (an
+   undefined here becomes NaN in the shader and the body renders black). */
+function orbResolve(name){
+  const base = ORB_PRESETS.dense, p = ORB_PRESETS[name] || base, o = {};
+  for(const k in base) o[k] = (p[k] === undefined ? base[k] : p[k]);
+  o.name = name;
+  return o;
+}
+let orbName = ORB_DEFAULT, ORB = orbResolve(ORB_DEFAULT);
+
+function orbTagWrite(){
+  // ⭐ VERIFIABLE FROM OUTSIDE. The live version has to be readable without a
+  // screenshot, so it lands on <html> as a data attribute AND as a text node.
+  // ⛔ Never make the switcher's only evidence a pixel change - a preset that
+  // silently failed to apply looks exactly like a preset that did nothing.
+  try{
+    const de = document.documentElement;
+    de.setAttribute('data-orb-preset', orbName);
+    de.setAttribute('data-orb-params', JSON.stringify(ORB));
+    de.setAttribute('data-orb-versions', ORB_ORDER.join(','));
+    let tag = document.getElementById('orbTag');
+    if(!tag){
+      tag = document.createElement('div');
+      tag.id = 'orbTag';
+      tag.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;' +
+                          'overflow:hidden;opacity:0.01;pointer-events:none;z-index:-1';
+      document.body.appendChild(tag);
+    }
+    tag.textContent = 'ORBPRESET ' + orbName + ' F0=' + ORB.F0 +
+                      ' mirC=' + ORB.mirC + ' pres=' + ORB.pres +
+                      ' con=' + ORB.con + ' disp=' + ORB.disp;
+    const chip = document.getElementById('vchip');
+    if(chip) chip.textContent = orbName;
+    const nodes = document.querySelectorAll('[data-orbv]');
+    for(let i=0;i<nodes.length;i++)
+      nodes[i].className = 'act' + (nodes[i].dataset.orbv === orbName ? '' : ' ghost');
+  }catch(_){}
+}
+
+function setOrbPreset(name, remember){
+  if(!ORB_PRESETS[name]) return;
+  orbName = name; ORB = orbResolve(name);
+  if(remember !== false){ try{ localStorage.setItem('aether.orbPreset', name); }catch(_){} }
+  // keep the address bar honest so a reload and a share both land on this version
+  try{
+    const u = new URL(location.href);
+    u.searchParams.set('v', name);
+    history.replaceState(null, '', u);
+  }catch(_){}
+  orbTagWrite();
+}
+function cycleOrbPreset(step){
+  const i = ORB_ORDER.indexOf(orbName);
+  setOrbPreset(ORB_ORDER[(i + (step||1) + ORB_ORDER.length*2) % ORB_ORDER.length]);
+}
+
+// URL wins over his stored choice; stored choice wins over the default.
+(function(){
+  let want = null;
+  try{ want = new URLSearchParams(location.search).get('v'); }catch(_){}
+  if(!want || !ORB_PRESETS[want]){
+    try{ const st = localStorage.getItem('aether.orbPreset');
+         if(st && ORB_PRESETS[st]) want = st; }catch(_){}
+  }
+  setOrbPreset(ORB_PRESETS[want] ? want : ORB_DEFAULT, false);
+})();
+
 
 let micGain = 4.2;                 // qi 08:58: "a LOT more reaction to my voice"
 try {                                        // storage throws in some contexts
@@ -1726,6 +1914,23 @@ function initGL(){
   uTouchAge=gl.getUniformLocation(prog,'touchAge');
   uTouchHeld=gl.getUniformLocation(prog,'touchHeld');
   uRelAge=gl.getUniformLocation(prog,'relAge');
+  uPF0=gl.getUniformLocation(prog,'pF0');
+  uPMirC=gl.getUniformLocation(prog,'pMirC');
+  uPMirCV=gl.getUniformLocation(prog,'pMirCV');
+  uPMirR=gl.getUniformLocation(prog,'pMirR');
+  uPMirRV=gl.getUniformLocation(prog,'pMirRV');
+  uPPres=gl.getUniformLocation(prog,'pPres');
+  uPPresV=gl.getUniformLocation(prog,'pPresV');
+  uPCon=gl.getUniformLocation(prog,'pCon');
+  uPConV=gl.getUniformLocation(prog,'pConV');
+  uPRimPow=gl.getUniformLocation(prog,'pRimPow');
+  uPStruct=gl.getUniformLocation(prog,'pStruct');
+  uPBendMix=gl.getUniformLocation(prog,'pBendMix');
+  uPMag=gl.getUniformLocation(prog,'pMag');
+  uPLiq=gl.getUniformLocation(prog,'pLiq');
+  uPDisp=gl.getUniformLocation(prog,'pDisp');
+  uPAlphaG=gl.getUniformLocation(prog,'pAlphaG');
+  uPAlphaMax=gl.getUniformLocation(prog,'pAlphaMax');
 
   tex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -1931,6 +2136,24 @@ function frame(ts){
   gl.uniform1f(uDist, camDist);
   gl.uniform1f(uOverlay, overlayMode);
   gl.uniform1f(uTravel, travelK);
+  // the active version, every frame - a switch can never leave a stale uniform
+  gl.uniform1f(uPF0, ORB.F0);
+  gl.uniform1f(uPMirC, ORB.mirC);
+  gl.uniform1f(uPMirCV, ORB.mirCV);
+  gl.uniform1f(uPMirR, ORB.mirR);
+  gl.uniform1f(uPMirRV, ORB.mirRV);
+  gl.uniform1f(uPPres, ORB.pres);
+  gl.uniform1f(uPPresV, ORB.presV);
+  gl.uniform1f(uPCon, ORB.con);
+  gl.uniform1f(uPConV, ORB.conV);
+  gl.uniform1f(uPRimPow, ORB.rimPow);
+  gl.uniform1f(uPStruct, ORB.struct);
+  gl.uniform1f(uPBendMix, ORB.bendMix);
+  gl.uniform1f(uPMag, ORB.mag);
+  gl.uniform1f(uPLiq, ORB.liq);
+  gl.uniform1f(uPDisp, ORB.disp);
+  gl.uniform1f(uPAlphaG, ORB.alphaG);
+  gl.uniform1f(uPAlphaMax, ORB.alphaMax);
   gl.uniform1f(uHasEnv, envLoaded ? 1 : 0);
   gl.uniform1f(uHasCam, 0);                       // no rear camera in use
   gl.uniform1f(uHasCamF, camLive ? 1 : 0);        // FRONT is the only one
@@ -2422,6 +2645,66 @@ document.getElementById('bReset').addEventListener('click', () => {
   if(n) n.textContent = 'Back in the dusk world.';
   closeSheet();
 });
+/* ────────────────────────────────────────────────────────────────────────────
+   THE SWITCHER, WITHOUT TOUCHING ONE GESTURE.
+   The orb's gestures are all bound to window: deform owns the orb centre, pinch
+   owns the dolly, drag owns look, press-and-hold owns travel. Every one of them
+   is a WINDOW-level listener, so a chip that calls stopPropagation() in its own
+   bubble phase is never seen by any of them - the event dies at the button.
+   ⛔ Never add a swipe or a multi-finger tap for this: two-finger anything is
+   already the pinch dolly and a hold anywhere off the orb is already travel.
+   ──────────────────────────────────────────────────────────────────────────── */
+(function(){
+  const chip = document.createElement('button');
+  chip.id = 'vchip'; chip.type = 'button';
+  chip.setAttribute('aria-label', 'Switch avatar version');
+  chip.style.cssText =
+    'position:fixed;top:calc(14px + env(safe-area-inset-top));left:14px;z-index:9;' +
+    'padding:8px 14px;border:0;border-radius:999px;cursor:pointer;' +
+    'font:600 11px/1 ui-sans-serif,-apple-system,system-ui,sans-serif;' +
+    'letter-spacing:.16em;text-transform:uppercase;color:rgba(244,244,246,.92);' +
+    'background:rgba(255,255,255,.10);' +
+    'backdrop-filter:blur(13px) saturate(180%) brightness(1.10);' +
+    '-webkit-backdrop-filter:blur(13px) saturate(180%) brightness(1.10);' +
+    'box-shadow:0 8px 24px rgba(0,0,0,.34),inset 0 1px .6px rgba(255,255,255,.42),' +
+    'inset 0 0 0 .5px rgba(255,255,255,.18);touch-action:manipulation';
+  chip.textContent = orbName;
+  const eat = e => { e.stopPropagation(); };
+  chip.addEventListener('pointerdown', eat);   // the orb never hears this touch
+  chip.addEventListener('pointerup', eat);
+  chip.addEventListener('touchstart', eat, {passive:true});
+  chip.addEventListener('click', e => { e.stopPropagation(); cycleOrbPreset(1); });
+  document.body.appendChild(chip);
+
+  // and the explicit list, in the sheet he already opens with the cog
+  const sh2 = document.getElementById('sheet');
+  const note = document.getElementById('envNote');
+  if(sh2 && note){
+    const h = document.createElement('h4');
+    h.textContent = 'Avatar version';
+    h.style.margin = '18px 0 3px';
+    const row = document.createElement('div');
+    row.className = 'row';
+    ORB_ORDER.forEach(nm => {
+      const b = document.createElement('button');
+      b.className = 'act' + (nm === orbName ? '' : ' ghost');
+      b.dataset.orbv = nm;
+      b.textContent = nm;
+      b.style.minWidth = '84px';
+      b.addEventListener('pointerdown', eat);
+      b.addEventListener('click', e => { e.stopPropagation(); setOrbPreset(nm); });
+      row.appendChild(b);
+    });
+    sh2.insertBefore(h, note);
+    sh2.insertBefore(row, note);
+  }
+  // desktop: V cycles forward, shift+V back
+  addEventListener('keydown', e => {
+    if(e.key === 'v' || e.key === 'V') cycleOrbPreset(e.shiftKey ? -1 : 1);
+  }, {passive:true});
+  orbTagWrite();
+})();
+
 addEventListener('resize', size, {passive:true});
 addEventListener('orientationchange', () => setTimeout(size, 60), {passive:true});
 if(window.visualViewport){
