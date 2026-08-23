@@ -1,0 +1,140 @@
+<title>xlrd.life</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="xlrd.life">
+<meta name="theme-color" content="#060b07">
+<!-- xlrd.life — THE DIRECTORY IS THE APP SHELL.
+     qi's finding, 2026-08-23 02:31: opening links from a plain directory index keeps
+     them in the same document, so iOS edge-swipe navigates BACK TO THE DIRECTORY and
+     no back/close chrome appears. His words: "it might be the cheat code, it might be
+     exactly what I needed to keep it all inside."
+     Verified from the config: @capacitor/browser, Browser.open, InAppBrowser and
+     WKWebView appear in ZERO files — the chrome was never a plugin, it was the app
+     navigating OUT to a system view. A directory index never navigates out.
+     ⇒ history is the router, iOS edge-swipe is the back button, zero nav code shipped.
+
+     ⛔ NO IFRAMES. Canon-banned — cost the flagship _SelfOwn eighteen months.
+        Every tile below is a plain anchor. That is the entire mechanism.
+     ⛔ NO REACT, NO BABEL, NO BUNDLER (canon 9). One file, all CSS inline.
+     ⚠️ rel="noopener" on every external: without it the opened page gets a handle on
+        window.opener and can navigate this one out from under him.
+     ⚠️ Externals are the OPEN QUESTION he named — whether swipe-back survives leaving
+        the origin is unobservable from a headless Chrome on macOS (no iOS gesture model,
+        same wall as env(safe-area-inset-*) reading 0). These tiles ARE the experiment.
+-->
+<style>
+  :root{
+    --ink:#a8c0a4; --bright:#d8f0d4; --dim:#6f8a6c;
+    --rim:rgba(176,255,200,.12); --rim-lit:rgba(176,255,200,.30);
+    --bg:#060b07; --card:#0e1711; --card2:#0a110c;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);font-family:var(--mono);
+    min-height:100vh;
+    padding:calc(26px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom));
+    -webkit-font-smoothing:antialiased;
+  }
+  header{text-align:center;margin:0 0 26px}
+  h1{font-size:13px;letter-spacing:3.4px;text-transform:uppercase;margin:0;color:var(--bright);font-weight:600}
+  .tag{font-size:9px;letter-spacing:1.4px;opacity:.42;margin:7px 0 0}
+  .sec{margin:0 0 26px}
+  .lbl{
+    font-size:8.5px;letter-spacing:1.8px;text-transform:uppercase;
+    opacity:.4;margin:0 0 10px;padding-left:2px;
+  }
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+  a.tile{
+    display:flex;flex-direction:column;justify-content:space-between;
+    min-height:76px;padding:12px 12px 11px;border-radius:15px;text-decoration:none;
+    background:linear-gradient(180deg,var(--card),var(--card2));
+    border:1px solid var(--rim);color:var(--bright);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.045), 0 6px 16px -10px rgba(0,0,0,.8);
+    transition:border-color .14s ease;
+  }
+  a.tile:active{border-color:var(--rim-lit)}
+  a.tile .n{font-size:12.5px;letter-spacing:.2px;line-height:1.25}
+  a.tile .h{font-size:7.5px;letter-spacing:1.1px;text-transform:uppercase;color:var(--dim);margin-top:8px}
+  .note{
+    font-size:9px;line-height:1.9;opacity:.4;letter-spacing:.2px;
+    border-left:1px solid var(--rim);padding-left:12px;margin:8px 0 0;
+  }
+  .note b{color:var(--ink);font-weight:600}
+</style>
+
+<header>
+  <h1>xlrd.life</h1>
+  <div class="tag">the directory is the shell · swipe to come back</div>
+</header>
+
+<div class="sec">
+  <div class="lbl">Mine</div>
+  <div class="grid">
+    <a class="tile" href="/life/"><span class="n">life</span><span class="h">app</span></a>
+    <a class="tile" href="/vvsvei/"><span class="n">vvsvei</span><span class="h">voice · inject</span></a>
+    <a class="tile" href="/xos3/"><span class="n">xos3</span><span class="h">phone</span></a>
+    <a class="tile" href="/xos/"><span class="n">xos</span><span class="h">phone</span></a>
+    <a class="tile" href="/glass/"><span class="n">glass</span><span class="h">dispersion</span></a>
+    <a class="tile" href="/swipetest/"><span class="n">swipe</span><span class="h">test</span></a>
+    <!-- life.xlrd.org is a DIFFERENT ORIGIN from this page, so it needs noopener
+         like any external — even though it is his own property. -->
+    <a class="tile" href="https://life.xlrd.org/" rel="noopener"><span class="n">life.xlrd</span><span class="h">.org</span></a>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="lbl">AI</div>
+  <div class="grid">
+    <a class="tile" href="https://gemini.google.com/" rel="noopener"><span class="n">Gemini</span><span class="h">google</span></a>
+    <a class="tile" href="https://notebooklm.google.com/" rel="noopener"><span class="n">NotebookLM</span><span class="h">google</span></a>
+    <a class="tile" href="https://grok.com/" rel="noopener"><span class="n">Grok</span><span class="h">xai</span></a>
+    <a class="tile" href="https://www.meta.ai/" rel="noopener"><span class="n">Meta AI</span><span class="h">vibes</span></a>
+    <a class="tile" href="https://www.perplexity.ai/" rel="noopener"><span class="n">Perplexity</span><span class="h">search</span></a>
+    <a class="tile" href="https://sintra.ai/" rel="noopener"><span class="n">Sintra</span><span class="h">agents</span></a>
+    <a class="tile" href="https://second.me/" rel="noopener"><span class="n">Second Me</span><span class="h">self</span></a>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="lbl">Build</div>
+  <div class="grid">
+    <a class="tile" href="https://github.com/" rel="noopener"><span class="n">GitHub</span><span class="h">code</span></a>
+    <a class="tile" href="https://www.skool.com/" rel="noopener"><span class="n">Skool</span><span class="h">community</span></a>
+    <a class="tile" href="https://www.google.com/" rel="noopener"><span class="n">Google</span><span class="h">search</span></a>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="lbl">Read · Listen</div>
+  <div class="grid">
+    <!-- ElevenReader has NO API (measured) — the web app is the only surface. -->
+    <a class="tile" href="https://elevenreader.io/" rel="noopener"><span class="n">ElevenReader</span><span class="h">listen</span></a>
+    <a class="tile" href="https://medium.com/" rel="noopener"><span class="n">Medium</span><span class="h">read</span></a>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="lbl">Reach</div>
+  <div class="grid">
+    <a class="tile" href="https://chat.beeper.com/" rel="noopener"><span class="n">Beeper</span><span class="h">all chats</span></a>
+    <a class="tile" href="https://x.com/" rel="noopener"><span class="n">X</span><span class="h">social</span></a>
+    <a class="tile" href="https://www.instagram.com/" rel="noopener"><span class="n">Instagram</span><span class="h">social</span></a>
+    <a class="tile" href="https://www.facebook.com/" rel="noopener"><span class="n">Facebook</span><span class="h">social</span></a>
+    <a class="tile" href="https://www.youtube.com/" rel="noopener"><span class="n">YouTube</span><span class="h">video</span></a>
+    <a class="tile" href="https://www.pinterest.com/" rel="noopener"><span class="n">Pinterest</span><span class="h">refs</span></a>
+    <!-- Telegram Web K is the /k/ client specifically — web.telegram.org/a/ is the
+         other one. Linking /k/ because that is what he named. -->
+    <a class="tile" href="https://web.telegram.org/k/" rel="noopener"><span class="n">Telegram</span><span class="h">web k</span></a>
+    <a class="tile" href="https://voice.google.com/" rel="noopener"><span class="n">Google Voice</span><span class="h">sms · calls</span></a>
+  </div>
+</div>
+
+<div class="note">
+  <b>The test.</b> Tap any tile in AI / Build / Reach, then swipe from the left edge.
+  Land back here with no top bar and externals live in the same shell as your own pages.
+  Get stranded, and externals need their own route — that is the one thing still unknown,
+  and it is unknown because an iOS gesture cannot be observed from a desktop browser.<br><br>
+  <b>Mine</b> tiles are same-origin and already behave that way.
+</div>
