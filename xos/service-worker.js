@@ -17,7 +17,7 @@
 // only. CACHE-FIRST stays for genuinely immutable assets (icons, manifest), where
 // staleness is harmless and offline speed is the entire point.
 
-const VERSION = "xos-v4-2026-08-12";     // bumped: activate() drops every older cache
+const VERSION = "xos-v5-2026-08-23";     // bumped: activate() drops every older cache
 const SHELL = [
   "/xos/",
   "/xos/index.html",
