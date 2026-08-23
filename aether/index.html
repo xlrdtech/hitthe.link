@@ -771,11 +771,36 @@ vec3 env(vec3 dir){
         ml = dot(me, vec3(0.299, 0.587, 0.114));
         me *= clamp((bl * 1.15) / max(ml, 0.02), 0.05, 1.9);   // midtones match the world
 
-        // Reinhard-style rolloff referenced to the world's own level: values below it
-        // pass through nearly untouched, values above it compress toward it and can
-        // never bloom. knee scales with the environment, so it works on any upload.
-        float knee = max(bl * 1.7, 0.05);
-        me = me / (1.0 + me / knee);
+        // 🔴🔴 THIS IS WHY HE COULD NOT SEE HIS REFLECTION. The line directly above
+        // deliberately matches his midtones to 1.15x the world. What used to be here —
+        //     float knee = max(bl * 1.7, 0.05);
+        //     me = me / (1.0 + me / knee);
+        // — then dropped him to 0.69x it. IT UNDID THE MATCH AND OVERSHOT, at every
+        // single exposure level, so his face ended up DIMMER than the environment it
+        // was being reflected in. qi 09:06: "I haven't seen my reflection at all."
+        // AND ITS COMMENT WAS FALSE. It claimed "values below it pass through nearly
+        // untouched". For f(x) = x/(1 + x/k), measured:
+        //     x = 0.10k -> keeps 90.9%   (takes 9%)
+        //     x = 0.50k -> keeps 66.7%   (takes 33%)
+        //     x = 1.00k -> keeps 50.0%   HALVES, exactly at the knee
+        // It is identity NOWHERE. It compresses everywhere, with loss that grows the
+        // brighter the pixel gets. "Nearly untouched" holds only below ~2% of the knee.
+        // ⭐ THE TRUE SHOULDER, same one now used on the orb: identity below the knee,
+        //   monotonic and asymptotic above. Branchless via min(), C1-continuous.
+        //   knee sits at bl*1.25, just ABOVE his matched midtone of bl*1.15, so his
+        //   FACE passes through untouched and only a genuinely blown highlight — his
+        //   air conditioner, the object that started this whole thread — rolls off.
+        // ⭐⭐ THIRD INSTANCE TONIGHT of one underlying error: a curve meant to protect
+        //   the top end that quietly changed everything. The orb equalizer floor, the
+        //   orb hard clip, and this. THE INVARIANT, and it is trivially testable:
+        //   BELOW THE KNEE, f(x) MUST EQUAL x EXACTLY. Assert it, do not eyeball it.
+        // ⛔ Never use x/(1 + x/k) as a "shoulder". It is a global compressor.
+        float knee  = max(bl * 1.25, 0.05);
+        float top   = knee * 1.55;
+        float mLum  = dot(me, vec3(0.299, 0.587, 0.114));
+        float mOver = max(mLum - knee, 0.0);
+        float mNew  = min(mLum, knee) + mOver / (1.0 + mOver / (top - knee));
+        me *= mNew / max(mLum, 0.0015);
         vec3 envCast = base / max(bl, 0.02);   // 'cast' is a GLSL RESERVED WORD - never use it                  // the world's hue, unit-luma
         me = mix(me, me * envCast, 0.62);
 
