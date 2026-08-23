@@ -1102,6 +1102,30 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
     <div id="inject-picker" style="display:none;" role="group"
          aria-label="Injection sources"></div>
 
+    <!-- SKILL PILL - qi 2026-08-22 20:28: "i also need a skill pill as well".
+         Same shape as #tb-inject above: toolbar-wrapped button + its OWN sibling
+         picker div (the picker redraws with textContent='', which would wipe
+         neighbouring buttons if they shared a container). Expands INLINE in this
+         same scrolling row -- no modal (qi 2026-08-12) -- and horizontal-only with
+         metrics identical to every other pill (qi 2026-08-22 20:25). -->
+    <div class="transcript-toolbar">
+      <button id="tb-skill" title="Xen skills on disk"
+        aria-expanded="false">Skill<span id="tb-skill-n"></span></button>
+    </div>
+    <div id="skill-picker" style="display:none;" role="group"
+         aria-label="Xen skills"></div>
+
+    <!-- LIFE|NOTE SWITCHER PILL - qi 2026-08-22 21:23. ONE pill, two segments,
+         two REAL deployed surfaces: /life/ (XEN - LIFE Command Dashboard) and
+         /lifenote/ (LifeNote). Segments are joined into a single pill silhouette
+         so it reads as one switcher, not two buttons, while keeping the shared
+         pill height/font/padding. -->
+    <div class="transcript-toolbar" id="lifenote-switch" role="group"
+         aria-label="LIFE / NOTE switcher">
+      <button id="tb-life" data-href="/life/" title="XEN - LIFE Command Dashboard">LIFE</button>
+      <button id="tb-note" data-href="/lifenote/" title="LifeNote">NOTE</button>
+    </div>
+
     <div class="transcript-toolbar">
       <!-- The count lives ON the button. qi 2026-08-13 21:29: "when I tapped threads
            currently I dont know that any threads are there until I swipe right and thats
@@ -6052,6 +6076,75 @@ window.addEventListener('beforeunload', stopListening);
       try{ pick.scrollIntoView({inline:'start',block:'nearest',behavior:'smooth'}); }catch(e){
            try{ if(row) row.scrollLeft = pick.offsetLeft - row.offsetLeft; }catch(_){} }
     });
+  });
+})();
+</script>
+<script>
+/* SKILL pill + LIFE|NOTE switcher. Mirrors the #tb-inject IIFE deliberately:
+   same open/close contract, same inline-in-row expansion, same pill metrics. */
+(function(){
+  var SKILLS = ["a-timeout-is-not-a-delivery-verdict", "ai-3d-website", "arm-the-listener-before-you-trigger", "assert-on-what-the-user-sees", "auto-mapping", "auto-tracked-progress", "autogoal", "bastra-recall", "before-acting-on-a-stored-decision", "breath-to-life-tracking", "browser-control", "canon-mirror-drift-check", "classify-at-the-source-not-at-the-sink", "claude-m4-launch-guardian", "claude-web-orchestrate", "client-tool-factory", "control-samples-from-the-corpus", "design", "empty-grep-is-a-tooling-fault", "force-the-failure-path", "hitthelink-deploy-verify", "human-conversation", "local-service-openapi-first", "loop-engineering", "maestri", "maestri-portal", "mail-across-all-accounts", "oc-blitz", "output-grounding", "parallel-goal-swarms", "remember", "routine-hub", "run-reliability", "screenshot-any-url", "screenshot-verify-rig", "skill-creator", "spark-recipe-calendar-audit", "spark-recipe-end-of-day", "spark-recipe-evening-email", "spark-recipe-inbox-by-category", "spark-recipe-invitation-manager", "spark-recipe-meeting-prep", "spark-recipe-morning-email", "spark-recipe-morning-standup", "spark-recipe-multi-account-review", "spark-recipe-schedule-meeting", "spark-recipe-shared-inbox-status", "spark-recipe-stakeholder-brief", "spark-recipe-team-workload", "spark-recipe-topic-timeline", "spark-recipe-weekly-digest", "state-change-watcher", "stylism", "three-js-cross-file-objects", "tts-costs-too-much", "unify-one-call", "use-spark", "verify-before-concluding", "voice-comes-out-wrong", "xos-phone-proportions", "xos-voice-rails", "yt-pipeline", "yt-search"];
+  var PILL_BTN = "scroll-snap-align:center;flex:0 0 auto;border-radius:999px;font:500 11px/1 -apple-system,system-ui,sans-serif;letter-spacing:.2px;padding:6px 11px;cursor:pointer;background:rgba(255,255,255,.06);color:var(--text,#e8e8e8);border:1px solid rgba(255,255,255,.14);white-space:nowrap";
+
+  if(!document.getElementById("skill-pill-css")){
+    var st=document.createElement("style"); st.id="skill-pill-css";
+    st.textContent =
+      /* horizontal-only, exactly like #inject-picker: no wrap, and NO max-width --
+         a max-width clamps the child to #pill-row's VISIBLE width and forces the
+         second row this whole change exists to remove. */
+      "#skill-picker{display:flex;gap:6px;align-items:center;flex:0 0 auto;flex-wrap:nowrap}"+
+      "#skill-picker button{"+PILL_BTN+"}"+
+      "#skill-picker button.on{border-color:rgba(60,255,150,.45);color:#3cff96}"+
+      /* one pill silhouette, two segments */
+      "#lifenote-switch{display:inline-flex;gap:0;flex:0 0 auto}"+
+      "#lifenote-switch button{"+PILL_BTN+";border-radius:0}"+
+      "#lifenote-switch button:first-child{border-radius:999px 0 0 999px;border-right-width:0}"+
+      "#lifenote-switch button:last-child{border-radius:0 999px 999px 0}"+
+      "#lifenote-switch button.here{border-color:rgba(60,255,150,.55);color:#3cff96}";
+    document.head.appendChild(st);
+  }
+
+  /* ---- LIFE|NOTE switcher: real navigation to two real deployed surfaces ---- */
+  var here = location.pathname.replace(/\/+$/,"/");
+  ["tb-life","tb-note"].forEach(function(id){
+    var b=document.getElementById(id); if(!b) return;
+    var href=b.getAttribute("data-href");
+    if(here.indexOf(href)===0) b.classList.add("here");
+    b.addEventListener("click",function(){ location.href=href; });
+  });
+
+  /* ---- SKILL picker ---- */
+  var btn=document.getElementById("tb-skill");
+  var wrap=document.getElementById("skill-picker");
+  var cnt=document.getElementById("tb-skill-n");
+  if(!btn||!wrap) return;
+  if(cnt) cnt.textContent=" "+SKILLS.length;
+
+  SKILLS.forEach(function(name){
+    var b=document.createElement("button");
+    b.type="button"; b.textContent=name; b.title=name;
+    b.addEventListener("click",function(){
+      /* Put the skill invocation in the composer rather than firing it blind --
+         the operator confirms before anything runs. */
+      var ta=document.querySelector(".composer-bar textarea, #composer, textarea");
+      if(ta){ ta.value="/"+name+" "; ta.focus();
+              try{ ta.dispatchEvent(new Event("input",{bubbles:true})); }catch(e){} }
+      wrap.querySelectorAll("button.on").forEach(function(x){x.classList.remove("on");});
+      b.classList.add("on");
+    });
+    wrap.appendChild(b);
+  });
+
+  btn.addEventListener("click",function(){
+    var open = wrap.style.display==="none";
+    wrap.style.display = open ? "flex" : "none";
+    btn.setAttribute("aria-expanded", open?"true":"false");
+    if(open){
+      /* bring it into the row's horizontal scroll, same as the inject picker */
+      var row=document.getElementById("pill-row");
+      try{ wrap.scrollIntoView({inline:"start",block:"nearest",behavior:"smooth"}); }
+      catch(e){ try{ if(row) row.scrollLeft = wrap.offsetLeft - row.offsetLeft; }catch(_){} }
+    }
   });
 })();
 </script>
