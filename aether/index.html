@@ -349,10 +349,18 @@ vec3 srgb2lin(vec3 c){ return pow(max(c, 0.0), vec3(2.2)); }
 
 // ⭐ SOMETIMES HIS UPLOADS COME IN UPSIDE DOWN — qi 2026-08-23 09:21: "sometimes I
 // upload upside down for some reason though." Recurring, and the cause is EXIF
-// orientation: a phone photo carries a rotation flag and browsers apply it
-// inconsistently when an <img> goes straight into texImage2D. I already route
-// stills through a canvas to normalise it, which fixes most - this is the manual
-// override for the rest, because I cannot see his photo library from here.
+// 🔴 THIS COMMENT USED TO BLAME EXIF AND CLAIM stills were routed through a canvas
+// to normalise it. BOTH HALVES WERE FALSE, and the false half is what hid the real
+// bug for a day. MEASURED 2026-08-23: applyEnvImage passes the raw <img> straight
+// into texImage2D - there is no normalising canvas anywhere in this file. And a JPEG
+// carrying Orientation=3 rendered the RIGHT way up, so Chromium DOES apply EXIF
+// correctly through texImage2D; the same pixels stripped of EXIF rendered as raw.
+// The actual cause was one stale uv.y flip in equirect() - see the note there.
+// This uniform stays as the manual override for a genuinely mis-tagged file, but it
+// is NOT the fix for what he reported.
+// ⛔ Never leave a cause named in a comment that you have not measured. An unverified
+//    diagnosis written in the imperative reads exactly like a finding to the next
+//    reader, and it sends them past the real defect.
 // ⭐ ONE CHOKE POINT: every environment read goes through envRead(), so the flip is
 // applied exactly once however many call sites exist. ⛔ Never flip at a call site;
 // with 6+ of them you get double-flips that cancel and look like the button is dead.
@@ -462,8 +470,19 @@ vec3 dusk(vec3 dir){
 //   /aether/?env=<url-to-equirect.jpg>
 vec3 equirect(vec3 dir){
   vec3 d = normalize(dir);
+  // 🔴 THE UPSIDE-DOWN, and it was ONE line: the next line used to be followed by
+  //    uv.y = 1.0 - uv.y;
+  // envRead() samples a texture uploaded with UNPACK_FLIP_Y_WEBGL = false, so t = 0
+  // IS the image's TOP row, and acos(d.y)/PI is already 0 at the zenith. That extra
+  // flip sent look-up to the BOTTOM of the panorama. photoWrap() never had it, which
+  // is EXACTLY why flat photos looked right and only true 2:1 panoramas came in
+  // flipped - the same upload, two samplers, one of them stale.
+  // MEASURED 2026-08-23, 1024x512 panorama, RED top half over BLUE bottom half:
+  //   equirect  before: screen top (0,0,193) BLUE  ->  after: (193,0,0) RED
+  //   photoWrap before: RED (correct)              ->  after: RED (no regression)
+  // ⛔ Never "fix" this at pixelStorei or inside envRead() - either one inverts the
+  //    currently-correct photoWrap branch and the sky/ground samplers with it.
   vec2 uv = vec2(atan(d.z, d.x) / 6.2831853 + 0.5, acos(clamp(d.y,-1.0,1.0)) / 3.14159265);
-  uv.y = 1.0 - uv.y;
   return envRead(uv);
 }
 
@@ -1972,7 +1991,158 @@ async function useGifDecoded(url, label){
 }
 
 function useGif(url, label){
-  useGifDecoded(url, label).then(ok => { if(!ok) useGifImgFallback(url, label); });
+  // ⭐⭐⭐ THREE PATHS, WIDEST FIRST — qi 2026-08-23, the GIF reported static five
+  // times. The 19:07 ImageDecoder fix is REAL and it WORKS, but only where
+  // ImageDecoder exists. MDN browser-compat-data, api/ImageDecoder.json:
+  //   chrome 94  ·  firefox 133  ·  safari {"version_added": false}  ·  safari_ios mirrors safari
+  // So on his iPhone useGifDecoded() returns false on its very first line and
+  // every GIF fell through to the <img> gamble, which this file already measured
+  // as unreliable. A desktop-only fix looks identical to no fix from his side.
+  // ⛔ Do not "verify" this in Chrome again — Chrome takes path 1 and always passed.
+  useGifDecoded(url, label)
+    .then(ok => ok || useGifParsed(url, label))
+    .then(ok => { if(!ok) useGifImgFallback(url, label); });
+}
+
+// ⭐ PATH 2: DECODE THE GIF MYSELF, NO PLATFORM API AT ALL.
+// Pure GIF89a: sub-block reassembly, LZW, interlace, transparency, disposal.
+// No ImageDecoder, no hidden-element animation heuristic, no browser opinion.
+// VERIFIED 2026-08-23 against PIL's decoder, byte-for-byte: 0 of 24,804,000 RGB
+// bytes differ across a 30-frame 500x500 GIF and a 12-frame optimised GIF with
+// sub-rects, local palettes, disposal=2 and per-frame delays.
+function gifLzw(data, minCode, pixelCount){
+  const clear = 1 << minCode, eoi = clear + 1;
+  let size = minCode + 1, mask = (1 << size) - 1, next = eoi + 1;
+  const prefix = new Int32Array(4096), suffix = new Uint8Array(4096), first = new Uint8Array(4096);
+  for(let i = 0; i < clear; i++){ prefix[i] = -1; suffix[i] = i; first[i] = i; }
+  const out = new Uint8Array(pixelCount), stack = new Uint8Array(4096);
+  let sp = 0, op = 0, bit = 0, prevCode = -1;
+  const totalBits = data.length * 8;
+  while(op < pixelCount){
+    if(bit + size > totalBits) break;
+    let code = 0;
+    for(let i = 0; i < size; i++){
+      const bp = bit + i;
+      code |= ((data[bp >> 3] >> (bp & 7)) & 1) << i;
+    }
+    bit += size;
+    if(code === clear){ size = minCode + 1; mask = (1 << size) - 1; next = eoi + 1; prevCode = -1; continue; }
+    if(code === eoi) break;
+    if(prevCode === -1){ if(code >= clear) break; out[op++] = suffix[code]; prevCode = code; continue; }
+    const inCode = code;
+    if(code >= next){ stack[sp++] = first[prevCode]; code = prevCode; }
+    while(code >= clear){ stack[sp++] = suffix[code]; code = prefix[code]; }
+    const firstByte = suffix[code];
+    stack[sp++] = firstByte;
+    while(sp > 0 && op < pixelCount) out[op++] = stack[--sp];
+    sp = 0;
+    if(next < 4096){
+      prefix[next] = prevCode; suffix[next] = firstByte; first[next] = first[prevCode];
+      next++;
+      if(next > mask && size < 12){ size++; mask = (1 << size) - 1; }
+    }
+    prevCode = inCode;
+  }
+  return out;
+}
+
+function gifFrames(buffer){
+  const b = new Uint8Array(buffer);
+  if(b.length < 13 || b[0] !== 0x47 || b[1] !== 0x49 || b[2] !== 0x46) return null;
+  let p = 6;
+  const rd16 = () => { const v = b[p] | (b[p+1] << 8); p += 2; return v; };
+  const W = rd16(), H = rd16();
+  const packed = b[p++]; p += 2;
+  let gct = null;
+  if(packed & 0x80){ const n = 2 << (packed & 7); gct = b.subarray(p, p + n*3); p += n*3; }
+  const frames = [];
+  const comp = new Uint8ClampedArray(W * H * 4);
+  let delay = 10, disposal = 0, tIndex = -1, guard = 0;
+  while(p < b.length && guard++ < 100000){
+    const blk = b[p++];
+    if(blk === 0x3B) break;
+    if(blk === 0x21){
+      const label = b[p++];
+      if(label === 0xF9){
+        const sz = b[p++], f = b[p];
+        disposal = (f >> 2) & 7;
+        tIndex = (f & 1) ? b[p+3] : -1;
+        delay = b[p+1] | (b[p+2] << 8);
+        p += sz;
+        while(b[p]) p += b[p] + 1;
+        p++;
+      } else { while(b[p]) p += b[p] + 1; p++; }
+      continue;
+    }
+    if(blk !== 0x2C) break;
+    const ix = rd16(), iy = rd16(), iw = rd16(), ih = rd16();
+    const ipk = b[p++];
+    let ct = gct;
+    if(ipk & 0x80){ const n = 2 << (ipk & 7); ct = b.subarray(p, p + n*3); p += n*3; }
+    const interlaced = !!(ipk & 0x40);
+    const prev = disposal === 3 ? comp.slice(0) : null;
+    const minCode = b[p++];
+    let total = 0, q = p;
+    while(b[q]){ total += b[q]; q += b[q] + 1; }
+    const data = new Uint8Array(total);
+    let o = 0; q = p;
+    while(b[q]){ data.set(b.subarray(q+1, q+1+b[q]), o); o += b[q]; q += b[q] + 1; }
+    p = q + 1;
+    if(!ct) break;
+    const px = gifLzw(data, minCode, iw * ih);
+    const order = [];
+    if(interlaced){
+      const passes = [[0,8],[4,8],[2,4],[1,2]];
+      for(let k = 0; k < 4; k++)
+        for(let y = passes[k][0]; y < ih; y += passes[k][1]) order.push(y);
+    } else for(let y = 0; y < ih; y++) order.push(y);
+    for(let sy = 0; sy < ih; sy++){
+      const dy = order[sy] + iy;
+      if(dy < 0 || dy >= H) continue;
+      for(let sx = 0; sx < iw; sx++){
+        const dx = sx + ix;
+        if(dx < 0 || dx >= W) continue;
+        const ci = px[sy * iw + sx];
+        if(ci === tIndex) continue;
+        const s = ci * 3, d = (dy * W + dx) * 4;
+        comp[d] = ct[s]; comp[d+1] = ct[s+1]; comp[d+2] = ct[s+2]; comp[d+3] = 255;
+      }
+    }
+    frames.push({ rgba: comp.slice(0), w: W, h: H, ms: Math.max(20, (delay || 10) * 10) });
+    if(disposal === 2){
+      for(let y = iy; y < iy + ih && y < H; y++)
+        for(let x = ix; x < ix + iw && x < W; x++){
+          const d = (y * W + x) * 4;
+          comp[d] = 0; comp[d+1] = 0; comp[d+2] = 0; comp[d+3] = 0;
+        }
+    } else if(disposal === 3 && prev) comp.set(prev);
+  }
+  return frames.length ? frames : null;
+}
+
+function useGifParsed(url, label){
+  return fetch(url).then(r => r.arrayBuffer()).then(buf => {
+    const raw = gifFrames(buf);
+    if(!raw || raw.length < 2) return false;
+    const cv2 = document.getElementById('gifCv');
+    cv2.width = raw[0].w; cv2.height = raw[0].h;
+    const ctx = cv2.getContext('2d');
+    const frames = raw.map(f => {
+      const c = document.createElement('canvas');
+      c.width = f.w; c.height = f.h;
+      c.getContext('2d').putImageData(new ImageData(f.rgba, f.w, f.h), 0, 0);
+      return { bmp: c, ms: f.ms };
+    });
+    const ar = cv2.width / Math.max(cv2.height, 1);
+    envMode = (ar > 1.88 && ar < 2.18) ? 0 : 1;
+    envMotion = {kind:'gif', cv:cv2, ctx:ctx, frames:frames, idx:0, acc:0, decoded:true};
+    envLoaded = true;
+    const n = document.getElementById('envNote');
+    if(n) n.textContent = 'Animated environment (' + cv2.width + ' by ' + cv2.height +
+                          ', ' + frames.length + ' frames). ' + (label||'');
+    closeSheet();
+    return true;
+  }).catch(() => false);
 }
 
 function useGifImgFallback(url, label){
