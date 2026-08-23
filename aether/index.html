@@ -308,6 +308,19 @@ uniform float zoomF;     // focal multiplier (wheel/trackpad), 1.0 = default fra
 uniform float dist;      // camera orbit radius - two-finger pinch dolly (restored)
 uniform float travelK;   // press-and-hold travel: forward push through the world
 vec3 gTravel = vec3(0.0);  // set in main once zAx exists; read by world()
+// 🔴🔴 PROVEN 2026-08-23 by replaying this shader's own arithmetic: the direction
+// main() hands env() has ALREADY been rotated by spin, while env()'s camera cone is
+// nailed to world -z. At the orb centre reflect(-v,n) == +z, so env()'s gate fwd=-dd.z
+// reads -1.000 at spin=0 — THE CAMERA CANNOT FIRE AT THE CENTRE. Measured over one lap:
+//   t=0s fwd=-1.000 no · t=27s +0.663 YES · t=37s +1.000 YES · t=64s -0.665 no
+//   full lap 2*pi/0.085 = 73.9s, so his face is absent from centre ~half of every cycle.
+// Its home is the ANTI-VIEWER pole, which a sphere squeezes into a ring at the
+// silhouette — that ring IS "the slit cut into it". And amp*2.2 slews it up to 126deg,
+// so his own VOICE throws his reflection a third of the way around the ball.
+// ⭐ This carries the UNSPUN reflection in the VIEW frame, so the camera term samples
+//    where a chrome ball actually puts the person holding it: the dead centre.
+// ⛔ Never feed the spun direction to the camera term again. The WORLD may spin; HE may not.
+vec3 gCamRefl = vec3(0.0, 0.0, 1.0);   // z=+1 => fwd<0 => camera off until main() sets it
 uniform vec2  look;      // yaw, pitch in radians - gyro or drag
 uniform vec2  touchUV;   // where he last touched, in the same units as uv
 uniform float touchAge;  // seconds since touchdown
@@ -628,7 +641,9 @@ vec3 env(vec3 dir){
   vec3 base = world(dir);
 
   if(hasCamF > 0.5){
-    vec3 dd = vec3(-dir.x, dir.y, dir.z);
+    // ⛔ NOT 'dir'. dir is the SPUN reflection and is only correct for the WORLD.
+    // The camera term must ride the viewer-anchored, unspun direction or he slides.
+    vec3 dd = vec3(-gCamRefl.x, gCamRefl.y, gCamRefl.z);
     float fwd = -dd.z;
     if(fwd > 0.02){
       // ⭐ MIRROR-BALL COMPRESSION. On a real chrome sphere a person in front of
@@ -984,8 +999,12 @@ void main(){
     // looks like it is turning toward you when you speak.
     float spin = t*0.085 + amp*2.2;
     float cs = cos(spin), sn = sin(spin);
-    vec3 refl = reflect(-v, n);
-    refl = vec3(cs*refl.x + sn*refl.z, refl.y, -sn*refl.x + cs*refl.z);
+    vec3 refl0 = reflect(-v, n);                 // UNSPUN: where the eye truly looks
+    // View-frame copy for the camera term. At the orb centre refl0 == out3 (straight back
+    // at the viewer) and zAx == -out3, so view-frame z is -1, fwd is +1, and his face lands
+    // dead centre and STAYS there. The environment below still spins — that is deliberate.
+    gCamRefl = vec3(dot(refl0, xAx), dot(refl0, yAx), dot(refl0, zAx));
+    vec3 refl = vec3(cs*refl0.x + sn*refl0.z, refl0.y, -sn*refl0.x + cs*refl0.z);
     vec3 mir  = env(refl);
 
     // ⭐⭐ METAL, NOT GLASS — qi 2026-08-23 08:00, verbatim:
