@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- XEN-VOICE-TIER1-20260823 browser-speech-floor-restored vsq-park-never-drop -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -4152,7 +4153,25 @@ function renderEvent(d) {
     if (_avaLive) {
       try { _avaTelemetry("speak-gate live=T armed="+_avaAudioUnlocked+" ctx="+!!_avaCtx); } catch(_){}
       if (_avaAudioUnlocked && _vsqMaySpeak()) { speakAva(txt); }
-      else if (_avaAudioUnlocked) { try { _avaTelemetry('speak-gate vsq-yield owner=' + _vsqOwner + ' self=' + VSQ_SELF); } catch (_) {} }
+      else if (_avaAudioUnlocked) {
+        try { _avaTelemetry('speak-gate vsq-park owner=' + _vsqOwner + ' self=' + VSQ_SELF); } catch (_) {}
+        /* ⚠️ PARK, NEVER DROP (cmd 40b: a gate may CLASSIFY, never HOLD — and it must
+           never DISCARD; cmd 27b: nothing drops). This branch previously logged one
+           telemetry string and threw the reply AWAY. The VSQ lease is 60s and ANY other
+           surface can take it — XOS's own playBubble() claims owner "xos-replay" — so a
+           single tap on a replay button muted every reply for the following minute,
+           the lines unrecoverable, nothing but a debug line to show it happened.
+           Now the reply waits for the channel and is spoken LATE rather than never;
+           if the holder never yields we speak anyway rather than lose his words. */
+        (function (t, tries) {
+          var again = function () {
+            if (_vsqMaySpeak()) { speakAva(t); }
+            else if (--tries > 0) { setTimeout(again, 1500); }
+            else { speakAva(t); }          // lease outlived its holder — never drop
+          };
+          setTimeout(again, 1500);
+        })(txt, 20);
+      }
       else { _avaPending.push(txt); if (_avaPending.length > 12) _avaPending = _avaPending.slice(-12); }   // park: iOS unarmed play() would emit a doomed play()+telemetry storm — speak on first tap (H2)
     } else { try { _avaTelemetry("speak-gate live=F armed="+_avaAudioUnlocked+" ctx="+!!_avaCtx); } catch(_){} }   // sentinel-gated: only live replies speak
   } else if (isUserDictate) {
@@ -5015,7 +5034,34 @@ function _ssSpeakClip(clip, genAtStart) {
     u.onend = go; u.onerror = go;                             // never block the queue on one utterance
     const wd = setTimeout(() => { try { ss.cancel(); } catch (_) {} go(); }, part.length * 70 + 4000); // stuck watchdog
     _avaStatus = 'speaking'; _renderAvaPill();
-    /* CANON 2026-07-25: browser fallback voice ELIMINATED by construction — never call ss.speak; advance queue silently. Ava /api/tts premium path untouched. */ clearTimeout(wd); go();
+    /* ⭐ TIER 1 RESTORED — qi DECREE 2026-08-23 18:15-18:16, verbatim: "It cannot
+       depend on my local desktop at all that would never work that is not what this
+       shit is fucking built for" · "I would never hear you through the desktop I
+       would not be here" · "no local audio devices allowed at all".
+
+       🔴 THE ABSENCE OF ONE STATEMENT WAS THE SILENCE. The 2026-07-25 edit left
+       EVERY line of this function intact — it chunks by sentence, resolves the voice,
+       sets rate/pitch/volume, arms a stuck-watchdog, wires onend/onerror — and then
+       replaced the single ss.speak(u) call with go(). So the documented "never silent"
+       floor walked the whole queue in perfect silence: no error, no telemetry, no
+       failed request. Read top-to-bottom this function looks complete; the only
+       missing statement was the one that makes sound (cmd 45: unseen is false).
+
+       WHY IT IS LOAD-BEARING: every OTHER audio path in this file terminates at the
+       Mac — _avaDrain's <audio> and _avaSpeakDevice's retry both fetch
+       api.xlrd.org/api/tts, which omnimind renders with a LOCAL process on that
+       machine. With this floor disabled, a rebooting Mac, an asleep Mac, a
+       fork-starved Mac or a dropped cloudflared tunnel (one measured down at 16:33
+       today) = ZERO sound on his phone. speechSynthesis synthesises ON HIS DEVICE:
+       no Mac, no tunnel, no local playback binary, no output device, no Loopback.
+       It survives every failure that took the voice out tonight.
+
+       THE 07-25 RATIONALE IS REAL BUT SUPERSEDED (cmd 24: recent + qi-decreed wins).
+       He did call the browser voice "not good" — which is why Ava via /api/tts is
+       still attempted FIRST and still wins whenever it is reachable. This is strictly
+       the floor beneath it: a voice that sounds wrong but IS HEARD beats his canonical
+       voice that is not. Silence is the only unrecoverable outcome. */
+    try { ss.speak(u); } catch (_) { clearTimeout(wd); go(); }
   };
   try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; } catch (_) {}
   next();
