@@ -121,20 +121,28 @@
   /* the sharp ring — mask carves the centre out so it is a RING, not a disc.
      A filled disc reads as a rainbow button instead of light refracting at an edge.
      Annulus narrowed 63%→71%: v1's band was too thick against a 74px orb. */
+  /* ⚠️ v3, chosen by a 5-variant LOCAL SWEEP rather than a third publish cycle.
+     ANNULUS WIDTH IS THE DOMINANT VARIABLE — not brightness, not saturation.
+     Measured: at 71–73% on a 74px orb the visible band is only 1–2px and the
+     ring DISAPPEARS however bright it is. The sweep's variant C isolated this
+     cleanly: brightest setting tested (1.35) at 73% width, still invisible.
+     So the v2 regression was caused by narrowing 63%→71%; the saturation and
+     opacity cuts I made alongside it were noise. 66% is the value that reads.
+     Keep the dark stops (correct), restore the arc brightness (v2's mistake). */
   .orb::before{
-    -webkit-mask:radial-gradient(circle,transparent 0 71%,#000 72.5% 100%);
-            mask:radial-gradient(circle,transparent 0 71%,#000 72.5% 100%);
-    filter:saturate(1.18) brightness(1.02);   /* was 1.5/1.12 — overcooked */
-    opacity:.92;
+    -webkit-mask:radial-gradient(circle,transparent 0 66%,#000 67.5% 100%);
+            mask:radial-gradient(circle,transparent 0 66%,#000 67.5% 100%);
+    filter:saturate(1.5) brightness(1.15);
+    opacity:1;
     z-index:1;
   }
   /* the bloom — same gradient, heavily blurred, pushed behind everything.
-     Dialed 0.62→0.4: with dark stops now in the gradient the bloom carries
-     less total light, and at 0.62 it smeared into a continuous halo. */
+     0.5 with the dark stops in place: the stops already cut total light, so
+     this no longer smears into the continuous halo v1 produced at 0.62. */
   .orb::after{
-    filter:blur(11px) saturate(1.3);
-    opacity:.4;
-    transform:scale(1.13);
+    filter:blur(12px) saturate(1.5);
+    opacity:.5;
+    transform:scale(1.14);
     z-index:-1;
   }
   /* glass face over the ring: a faint dark disc so the ring reads as an EDGE
