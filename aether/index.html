@@ -1245,24 +1245,39 @@ void main(){
     // ⛔ Never reintroduce a hard clamp on this ratio.
     float lin = envHere * (1.0 + voice*1.9);
     c *= min(pow(lin / max(orbHere, 0.004), 0.82), 14.0);
-    // 🔴 THE WHITE SPOT IS WHAT THE LINE ABOVE COULD NOT FLATTEN.
-    // It levels every orb pixel to envHere EXCEPT where the ratio saturates. On the
-    // 0.35 floor a pixel already ~2.9x brighter than the world behind it KEEPS its
-    // excess while everything around it is levelled, so it becomes the only structure
-    // left on the surface and reads as a lamp instead of as part of an image.
-    //   why WHITE     - one SCALAR gain on r,g,b, and col/(col+0.85) below compresses
-    //                   all three identically, so the survivor desaturates
-    //   why FEATHERED - orbHere is a smooth field, so the boundary is a gradient, not
-    //                   an edge. That is the "feathered brush in Photoshop" edge.
-    //   why ON HIM    - the brightest thing on the orb IS his camera frame, so the
-    //                   white spot and the "hole" are ONE defect, not two.
-    // Not the specular: both lobes are tinted by mir, capped 0.30/0.14, and keyed to an
-    // UPPER-LEFT light, while the blob he screenshotted sits below-left.
-    // ⛔ No clamp VALUE fixes this. ANY bound leaves a survivor sitting AT the bound.
-    // ⭐ Roll the top off against the world's own level instead - the same Reinhard
-    //    shoulder already used on his camera frame. Below the ceiling the factor is
-    //    EXACTLY 1.0 (no-op); above it everything compresses toward the environment
-    //    asymptotically, so the orb can never out-shine the place it reflects.
+    // ⚠️⚠️ A STALE COMMENT STOOD HERE AND qi FOUND IT BY READING THE FILE.
+    // It described a 0.35 floor and a Reinhard shoulder — neither of which still
+    // exists — and it sat directly above the code that replaced them. He quoted it
+    // back at me twice. That is the SEVENTH wrong-cause comment in this file, and the
+    // first one I created myself: I added the new explanation and left the old one in
+    // place, so three layers of archaeology were stacked at one call site with nothing
+    // marking which described the running code.
+    // ⛔ THE RULE, and it is the most expensive one in this file: WHEN THE CODE
+    //    CHANGES, THE COMMENT ABOVE IT IS PART OF THE CHANGE. Delete it or rewrite it
+    //    in the same edit. A comment naming a cause reads exactly like a finding, and
+    //    it sends the next reader — including him — straight past the real defect.
+    //    Six of these cost hours today. Do not leave a eighth.
+    //
+    // WHAT REMAINS TRUE, and each line below was re-checked against the CODE, not
+    // carried forward on the strength of the old comment:
+    //   why a flat region reads as a LAMP - the gain is one SCALAR on r,g,b, and
+    //     col/(col+0.85) further down compresses all three identically, so anything
+    //     that survives flattening desaturates toward white.
+    //   why its edge looks FEATHERED - envHere is a smooth field, so any boundary
+    //     defined against it is a gradient, never a hard edge. That is precisely the
+    //     "feathered brush in Photoshop" edge he described.
+    //   why it lands ON HIM - the brightest thing on the orb IS his camera frame, so
+    //     the white spot and the "hole" were always ONE defect, not two.
+    // ✅ NOT THE SPECULAR — verified in the served bytes just now, not assumed:
+    //     vec3 L = normalize(vec3(-0.45, 0.75, 0.62));   x<0, y>0  =  UPPER-LEFT
+    //     c += mir * pow(..., 96.0) * 0.30;              lobe 1, mir-tinted, cap 0.30
+    //     c += mir * pow(..., 18.0) * 0.14;              lobe 2, mir-tinted, cap 0.14
+    //   Both lobes are tinted by mir and capped low, and the light is upper-left while
+    //   the blob he screenshotted sits below-left. The exclusion holds.
+    // ⛔ And the rule that outlived both mechanisms: NO BOUND. A clamp, a cap, a
+    //    ceiling — any hard bound leaves survivors sitting exactly AT it, and a set of
+    //    pixels sharing one value IS the spot. Keep every transform on this orb
+    //    strictly monotonic.
     // 🔴🔴 THE LINE THAT USED TO BE HERE WAS A HARD CLIP WEARING THE NAME OF A SOFT ONE,
     // and it was WORSE than the floor above it. It read:
     //     c *= (cLum / (1.0 + max(cLum - ceilL, 0.0) / ceilL)) / cLum;
