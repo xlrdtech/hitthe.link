@@ -6096,7 +6096,12 @@ window.addEventListener('beforeunload', stopListening);
       "#skill-picker button{"+PILL_BTN+"}"+
       "#skill-picker button.on{border-color:rgba(60,255,150,.45);color:#3cff96}"+
       /* one pill silhouette, two segments */
-      "#lifenote-switch{display:inline-flex;gap:0;flex:0 0 auto}"+
+      /* gap:0 must out-specify `#pill-row .transcript-toolbar{gap:6px}` (id+class).
+         A bare #lifenote-switch LOSES that cascade, which left the two segments 6px
+         apart with their flat cut edges exposed -- two broken half-pills instead of
+         one switcher. Measured 6px on the rendered page; only the screenshot showed
+         it, every numeric check passed. */
+      "#pill-row #lifenote-switch{display:inline-flex;gap:0;flex:0 0 auto}"+
       /* Inherit .transcript-toolbar button WHOLESALE -- mono 9.5px/600, uppercase,
          var(--line), var(--r-pill). This pill sits among THREADS/COPY/EXPORT and has
          to read as one of them; overriding the font is what made LIFE|NOTE render
