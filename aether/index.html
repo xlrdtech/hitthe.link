@@ -1184,7 +1184,17 @@ void main(){
     // whisper of the lens warp visible; voice takes it to the full mirror.
     // ⛔ Never make the resting body a formula that COULD land dark. Make it the
     // background, plus a fraction.
-    float presence = 0.34 + 0.66*voice;
+    // 🔴 THE IDLE BLOB WAS A TYPO'D CONSTANT, not a missing feature. The comment
+    //    four lines up specifies "0.10 at rest keeps a whisper of the lens warp
+    //    visible; voice takes it to the full mirror." The code shipped 0.34 —
+    //    3.4x the documented intent — so 34% of the orb's colour was painted over
+    //    the world at all times. That is the shadow qi reported at 09:17, 09:49,
+    //    and again at 17:08 ("its not fixed I'm not satisfied").
+    //    Reasoning was already correct and written down; only the number was wrong.
+    // ⛔ Never raise this floor. 0.10 is the whisper; 0 would kill the warp too,
+    //    and the warp IS the spec — "invisible yet visible", "like a mirage",
+    //    "warping the environment and only lighting up when it detects voice."
+    float presence = 0.10 + 0.90*voice;
     c = mix(world(rd), c, presence);
     // chrome contrast: pivot on the orb's own mean so the MEAN is preserved
     float pivot = max(orbHere, 0.004);
