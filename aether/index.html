@@ -121,7 +121,7 @@ body.fallback .fb{display:block;position:fixed;top:50%;left:50%;
     <button class="act ghost" id="bUrl">Paste a link</button>
     <button class="act ghost" id="bReset">Back to dusk</button>
   </div>
-  <p class="note" id="envNote">Drag to look around. Move the phone if it has a gyroscope.</p>
+  <p class="note" id="envNote">Drag to look around. Pinch with two fingers to move in and pull back.</p>
 </div>
 <input type="file" id="pick" accept="image/*">
 <div class="err" id="err"></div>
@@ -201,6 +201,7 @@ uniform sampler2D envMap; // supplied 360 equirectangular environment
 uniform float hasEnv;    // 1 when a panorama has loaded
 uniform float envMode;   // 0 = true equirectangular, 1 = flat photo mirror-wrap
 uniform vec2  look;      // yaw, pitch in radians - gyro or drag
+uniform float dist;      // camera orbit radius - two-finger pinch
 
 const float PI = 3.14159265;
 
@@ -439,7 +440,10 @@ void main(){
   float cp = cos(pit), sp = sin(pit);
 
   vec3 out3 = vec3(sy*cp, sp, cy*cp);        // orb -> camera
-  vec3 ro   = out3 * 2.9;
+  // qi 09:47 "Pitch to Zoom, two fingers" + 07:36 "drag and pull back".
+  // The radius is the zoom. Moving the camera OUT reveals more of the world he
+  // is standing in; a focal-length crop would only magnify the same framing.
+  vec3 ro   = out3 * dist;
   vec3 zAx  = -out3;                                       // camera forward
   vec3 xAx  = normalize(cross(vec3(0.0,1.0,0.0), zAx));
   vec3 yAx  = cross(zAx, xAx);
@@ -540,7 +544,7 @@ void main(){
 let prog, aP, uRes, uT, uAmp, uHasCam, uCamAsp, uCam, tex;
 let uHasCamF, uCamAspF, uCamF;
 let uEnvMap, uHasEnv, envTex, envLoaded = false;
-let uEnvMode, uLook, envMode = 0;
+let uEnvMode, uLook, uDist, envMode = 0;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LOOK AROUND.  qi 07:34 - "it either needs to follow the movement of the phone
@@ -548,30 +552,74 @@ let uEnvMode, uLook, envMode = 0;
 // Both, because they are the same mechanism: a yaw/pitch pair that the shader
 // orbits the camera by. The gyroscope drives it where there is one, a drag
 // drives it everywhere, and neither is required for the page to work.
-const look = {yaw:0, pit:0, tYaw:0, tPit:0, gyro:false, a0:null, b0:null};
+const look = {yaw:0, pit:0, tYaw:0, tPit:0, gyro:false, a0:null, b0:null, dist:2.9, tDist:2.9};
 const D2R = Math.PI/180;
 
 function clampPit(v){ return Math.max(-1.15, Math.min(1.15, v)); }
+// 1.25 keeps the camera outside the orb (radius 0.86 + amp) at the near end;
+// 7.0 is far enough that the horizon and the sky both read at the far end.
+function clampDist(v){ return Math.max(1.25, Math.min(7.0, v)); }
 
 // ── drag: always available, desktop and phone alike
 (function(){
-  let down=false, lx=0, ly=0;
-  const start=e=>{ const p=e.touches?e.touches[0]:e; down=true; lx=p.clientX; ly=p.clientY; };
-  const move =e=>{
-    if(!down) return;
-    const p=e.touches?e.touches[0]:e;
-    // dragging LEFT should sweep the world left, so the sign follows the finger
-    look.tYaw += (p.clientX-lx) * 0.0055;
-    look.tPit = clampPit(look.tPit + (p.clientY-ly) * 0.0040);
-    lx=p.clientX; ly=p.clientY;
-    look.gyro=false;                       // a deliberate drag wins over the gyro
+  // Every live pointer, by id. One finger orbits; two pinch. Tracking them in a
+  // map is what makes the two modes exclusive instead of fighting each other.
+  const pts = new Map();
+  let lx=0, ly=0;                 // orbit anchor, valid only while exactly 1 is down
+  let pinch0=0, dist0=0;          // finger spread and radius when the pinch began
+
+  const spread = () => {
+    const [a,b] = [...pts.values()];
+    return Math.hypot(a.x-b.x, a.y-b.y);
+  };
+
+  const start = e => {
+    pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if(pts.size === 1){ lx=e.clientX; ly=e.clientY; }
+    if(pts.size === 2){ pinch0 = spread() || 1; dist0 = look.tDist; }
+  };
+
+  const move = e => {
+    if(!pts.has(e.pointerId)) return;
+    pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
+
+    if(pts.size >= 2){
+      // fingers apart -> spread grows -> radius shrinks -> he moves IN.
+      // Ratio against the spread AT PINCH START, never the previous frame, so
+      // rounding never accumulates and letting go leaves it exactly where he put it.
+      const s = spread();
+      if(s > 0) look.tDist = clampDist(dist0 * (pinch0 / s));
+      look.gyro = false;
+    } else {
+      // dragging LEFT should sweep the world left, so the sign follows the finger
+      look.tYaw += (e.clientX-lx) * 0.0055;
+      look.tPit  = clampPit(look.tPit + (e.clientY-ly) * 0.0040);
+      look.gyro  = false;                  // a deliberate drag wins over the gyro
+    }
+    lx=e.clientX; ly=e.clientY;
     if(e.cancelable) e.preventDefault();
   };
-  const end=()=>{ down=false; };
-  addEventListener('pointerdown',start,{passive:true});
-  addEventListener('pointermove',move,{passive:false});
-  addEventListener('pointerup',end,{passive:true});
-  addEventListener('pointercancel',end,{passive:true});
+
+  const end = e => {
+    pts.delete(e.pointerId);
+    // Lifting one of two fingers must NOT hand the survivor a stale anchor —
+    // that would fling the view by the whole gap between the fingers.
+    if(pts.size === 1){
+      const p = [...pts.values()][0];
+      lx = p.x; ly = p.y;
+    }
+  };
+
+  addEventListener('pointerdown',  start,{passive:true});
+  addEventListener('pointermove',  move, {passive:false});
+  addEventListener('pointerup',    end,  {passive:true});
+  addEventListener('pointercancel',end,  {passive:true});
+
+  // desktop parity: the same dolly on a trackpad or wheel
+  addEventListener('wheel', e => {
+    look.tDist = clampDist(look.tDist * (1 + Math.sign(e.deltaY)*0.08));
+    if(e.cancelable) e.preventDefault();
+  }, {passive:false});
 })();
 
 // ── gyroscope: relative to wherever he was pointing when it started, so "front"
@@ -647,6 +695,7 @@ function initGL(){
   uHasEnv=gl.getUniformLocation(prog,'hasEnv');
   uEnvMode=gl.getUniformLocation(prog,'envMode');
   uLook=gl.getUniformLocation(prog,'look');
+  uDist=gl.getUniformLocation(prog,'dist');
 
   tex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -788,7 +837,9 @@ function frame(ts){
   const k = look.gyro ? 0.16 : 0.22;
   look.yaw += (look.tYaw - look.yaw) * k;
   look.pit += (look.tPit - look.pit) * k;
+  look.dist += (look.tDist - look.dist) * 0.18;   // same easing idea as the look
   gl.uniform2f(uLook, look.yaw, look.pit);
+  gl.uniform1f(uDist, look.dist);
   gl.uniform1f(uEnvMode, envMode);
   gl.uniform1f(uHasEnv, envLoaded ? 1 : 0);
   gl.uniform1f(uHasCam, 0);                       // no rear camera in use
