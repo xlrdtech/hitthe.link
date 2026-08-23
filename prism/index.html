@@ -1,0 +1,148 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Prism Ring — pill study</title>
+<!--
+  PRISM RING PILL — a pure-CSS recreation of the reference qi sent 2026-08-22 22:44
+  (pin 1029776271063482829, "Home Button Liquid ui Web3" by jakubwuzik4).
+
+  NO IMAGES. The rainbow is a conic-gradient ring, the dispersion bloom is the same
+  ring blurred and scaled behind it. That matters: an <img> cannot take the pill's
+  colour from a CSS variable, cannot animate per-state, and cannot be recoloured to
+  match VVSVEI's accent. A gradient can do all three.
+
+  ⛔ This is a STUDY PAGE. It deliberately does NOT touch VVSVEI's #pill-row.
+  qi 2026-08-17 03:40: "the menu bar was already perfect" — the live rail is not
+  restyled on a hunch. This exists so he can look at the treatment in public and
+  say where, or whether, it lands.
+-->
+<style>
+  :root{
+    --bg:#080809;
+    --pill:#1a1b1d;
+    --pill-edge:rgba(255,255,255,.10);
+    --txt:#f2f2f3;
+    --ring-w:6px;          /* rainbow band thickness */
+    --btn:104px;           /* circular button diameter */
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;background:var(--bg);color:var(--txt);
+    font:400 16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:54px;
+    padding:48px 20px;
+  }
+
+  /* ── the capsule ─────────────────────────────────────────────────────── */
+  .pill{
+    position:relative;display:inline-flex;align-items:center;gap:26px;
+    padding:14px 46px 14px 14px;
+    background:linear-gradient(180deg,#202124 0%,#141517 100%);
+    border:1px solid var(--pill-edge);
+    border-radius:999px;
+    box-shadow:0 1px 0 rgba(255,255,255,.05) inset, 0 26px 60px -20px #000;
+  }
+  .pill__label{font-size:44px;letter-spacing:-.02em;font-weight:400}
+
+  /* ── the button + its prism ring ─────────────────────────────────────── */
+  .knob{
+    position:relative;width:var(--btn);height:var(--btn);flex:0 0 auto;
+    display:grid;place-items:center;
+  }
+
+  /* One gradient, used twice: once as the crisp ring, once blurred as the bloom.
+     Kept in a custom property so both layers cannot drift apart. */
+  .knob::before,.knob::after{
+    content:"";position:absolute;inset:0;border-radius:50%;
+    background:conic-gradient(from 210deg,
+      #ff2d00 0deg,  #ff9a00 38deg, #f6f14a 72deg, #46ff8f 118deg,
+      #23d5ff 165deg,#2b5bff 205deg,#a534ff 245deg,#ff2bb5 285deg,
+      #ff2d00 330deg,#ffffff 348deg,#ff2d00 360deg);
+  }
+  /* crisp band: punch the middle out so only a rim remains */
+  .knob::before{
+    -webkit-mask:radial-gradient(closest-side,transparent calc(50% - var(--ring-w)),#000 calc(50% - var(--ring-w)));
+            mask:radial-gradient(closest-side,transparent calc(50% - var(--ring-w)),#000 calc(50% - var(--ring-w)));
+  }
+  /* dispersion: the same ring, blurred outward — this is what reads as refracted light */
+  .knob::after{ filter:blur(17px) saturate(150%); transform:scale(1.14); opacity:.85; z-index:-1; }
+
+  .knob__face{
+    position:relative;z-index:1;
+    width:calc(100% - (var(--ring-w) * 2));height:calc(100% - (var(--ring-w) * 2));
+    border-radius:50%;
+    background:radial-gradient(120% 120% at 32% 22%,#3a3d42 0%,#191a1d 58%,#0e0f11 100%);
+    box-shadow:0 0 0 1px rgba(255,255,255,.06) inset, 0 10px 24px -8px #000;
+    display:grid;place-items:center;
+  }
+  .knob__face svg{width:44%;height:44%;display:block;
+    filter:drop-shadow(0 2px 5px rgba(0,0,0,.65));}
+
+  /* ── spin on hover/focus: the ring is a gradient, so rotation is free ── */
+  @media (hover:hover){
+    .pill:hover .knob::before,.pill:hover .knob::after{animation:spin 3.6s linear infinite}
+  }
+  .pill:focus-within .knob::before,.pill:focus-within .knob::after{animation:spin 3.6s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  /* the bloom keeps its scale while spinning */
+  .knob::after{transform-origin:50% 50%}
+  @keyframes spinBloom{to{transform:rotate(360deg) scale(1.14)}}
+  @media (hover:hover){ .pill:hover .knob::after{animation-name:spinBloom} }
+  .pill:focus-within .knob::after{animation-name:spinBloom}
+  @media (prefers-reduced-motion:reduce){
+    .pill:hover .knob::before,.pill:hover .knob::after,
+    .pill:focus-within .knob::before,.pill:focus-within .knob::after{animation:none}
+  }
+
+  button.pill{cursor:pointer;font:inherit;color:inherit;-webkit-tap-highlight-color:transparent}
+  button.pill:focus-visible{outline:2px solid #7cc7ff;outline-offset:6px}
+
+  /* ── the same treatment at VVSVEI pill scale, for comparison ─────────── */
+  .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center}
+  .mini{
+    --btn:22px;--ring-w:2px;
+    display:inline-flex;align-items:center;gap:8px;
+    padding:4px 12px 4px 4px;border-radius:999px;
+    background:rgba(255,255,255,.06);border:1px solid rgba(176,255,200,.12);
+    font:600 9.5px/1 ui-monospace,"JetBrains Mono",Menlo,monospace;
+    letter-spacing:.10em;text-transform:uppercase;color:#a8c0a4;
+  }
+  .mini .knob__face svg{width:52%;height:52%}
+  .plain{
+    padding:5px 10px;border-radius:999px;
+    background:rgba(255,255,255,.06);border:1px solid rgba(176,255,200,.12);
+    font:600 9.5px/1 ui-monospace,"JetBrains Mono",Menlo,monospace;
+    letter-spacing:.10em;text-transform:uppercase;color:#a8c0a4;
+  }
+  .cap{font:500 11px/1.5 ui-monospace,Menlo,monospace;color:#6b6f76;letter-spacing:.06em;
+       text-transform:uppercase;text-align:center}
+</style>
+
+<button class="pill" type="button">
+  <span class="knob">
+    <span class="knob__face">
+      <svg viewBox="0 0 24 24" fill="#f4f4f5" aria-hidden="true">
+        <path d="M12 3.2 2.6 11.1a1 1 0 0 0 .64 1.77H5v7.1a1 1 0 0 0 1 1h3.6v-5.2h4.8v5.2H18a1 1 0 0 0 1-1v-7.1h1.76a1 1 0 0 0 .64-1.77L12 3.2Z"/>
+      </svg>
+    </span>
+  </span>
+  <span class="pill__label">Home</span>
+</button>
+<p class="cap">hover or focus — the ring is a gradient, so it spins for free</p>
+
+<div class="row">
+  <span class="plain">Inject 11/11</span>
+  <span class="plain">Skill 63</span>
+  <span class="mini">
+    <span class="knob"><span class="knob__face">
+      <svg viewBox="0 0 24 24" fill="#eaf6ea" aria-hidden="true">
+        <path d="M12 3.2 2.6 11.1a1 1 0 0 0 .64 1.77H5v7.1a1 1 0 0 0 1 1h3.6v-5.2h4.8v5.2H18a1 1 0 0 0 1-1v-7.1h1.76a1 1 0 0 0 .64-1.77L12 3.2Z"/>
+      </svg>
+    </span></span>
+    Home
+  </span>
+  <span class="plain">Threads (10)</span>
+  <span class="plain">Copy</span>
+</div>
+<p class="cap">same ring at VVSVEI pill scale, beside the real mono pills</p>
