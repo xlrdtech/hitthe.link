@@ -2611,6 +2611,10 @@ function _analyserAlive() {
   return true;
 }
 
+// Backoff + last-error state for the analyser. Both reset on a SUCCESSFUL
+// acquire, so a fresh failure after a working period does announce again.
+var _micErrLast = null, _analyserRetryAfter = 0;
+
 async function startAnalyser() {
   // Resume-then-recheck: a suspended context is recoverable WITHOUT re-prompting for
   // the mic, so try that before tearing anything down. Re-acquiring getUserMedia
@@ -2645,8 +2649,23 @@ async function startAnalyser() {
     source.connect(analyser);
     if (rafId) cancelAnimationFrame(rafId);
     rafId = requestAnimationFrame(tickListening);
+    _micErrLast = null; _analyserRetryAfter = 0;   // recovered: re-arm reporting
   } catch (e) {
-    appendError('mic visualizer denied: ' + e.message);
+    // ANNOUNCE ON STATE CHANGE, NOT PER ATTEMPT. The watchdog below retries every
+    // 2000ms by design; this catch used to appendError() unconditionally, so a
+    // permanently-denied mic emitted 30 identical bubbles a MINUTE (~1,800/hour)
+    // and buried qi's real feed under "mic visualizer denied". Measured on the
+    // served page 2026-08-22. Same message twice in a row is now silent.
+    if (_micErrLast !== e.message) {
+      appendError('mic visualizer denied: ' + e.message);
+      _micErrLast = e.message;
+    }
+    // A permission denial is NOT transient -- re-calling getUserMedia every 2s
+    // cannot change it and costs battery. Back off hard, but KEEP retrying so a
+    // later Allow recovers the meter with no tap from him (canon 4).
+    var _n = (e && e.name) || '';
+    var _denied = _n === 'NotAllowedError' || _n === 'SecurityError' || _n === 'PermissionDeniedError';
+    _analyserRetryAfter = Date.now() + (_denied ? 30000 : 4000);
   }
 }
 
@@ -2676,6 +2695,7 @@ function stopAnalyser() {
     setInterval(() => {
       if (!viz_listening) return;          // he turned it off — respect that
       if (_analyserAlive() && rafId) return;
+      if (Date.now() < _analyserRetryAfter) return;   // denied: retry slowly, silently
       startAnalyser();                     // idempotent: resumes, restarts, or rebuilds
     }, 2000);
     document.addEventListener('visibilitychange', () => {
