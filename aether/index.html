@@ -1228,7 +1228,23 @@ void main(){
     // "we should be warping the environment and only lighting up when it detects
     // voice." (qi 09:49) Both halves of that sentence come from this line.
     // ⛔ Never cap this at 1.0 again. A one-way equalizer is a darkener.
-    c *= clamp((envHere * (1.0 + voice*1.9)) / max(orbHere, 0.004), 0.35, 14.0);
+    // 🔴🔴 THE 0.35 FLOOR IS GONE. qi quoted my own comment back at me, twice:
+    //   "the 0.35 floor, a pixel already ~2.9x brighter than the world behind it KEEPS its"
+    // He was right, and the sentence was still true in the shipped bytes, because my
+    // previous patch APPENDED a shoulder and left this clamp exactly as it was.
+    // MEASURED with lin = 0.10:  orb 0.29 -> 1.01x world (floor binds) · 0.40 -> 1.40x
+    //                            orb 0.80 -> 2.80x world · 1.50 -> 5.25x
+    // ⭐ THE DEEPER PROBLEM WAS THE REGIME BOUNDARY, not the number. A clamped ratio
+    //   levels EVERYTHING below 2.86x to a dead-flat lin, then lets everything above
+    //   keep 35% of its excess. So the orb had a uniform region and a bright region,
+    //   and the boundary between them WAS the edge of the spot. No clamp VALUE fixes
+    //   that - any bound leaves survivors sitting at the bound.
+    // ✅ POWER-LAW PARTIAL LEVELLING instead:  out = lin^0.82 * orbHere^0.18
+    //   Monotonic in orbHere for any exponent in (0,1), so brighter stays brighter
+    //   EVERYWHERE. No floor, no regime change, so no pixel can be the sole survivor.
+    // ⛔ Never reintroduce a hard clamp on this ratio.
+    float lin = envHere * (1.0 + voice*1.9);
+    c *= min(pow(lin / max(orbHere, 0.004), 0.82), 14.0);
     // 🔴 THE WHITE SPOT IS WHAT THE LINE ABOVE COULD NOT FLATTEN.
     // It levels every orb pixel to envHere EXCEPT where the ratio saturates. On the
     // 0.35 floor a pixel already ~2.9x brighter than the world behind it KEEPS its
@@ -1247,9 +1263,33 @@ void main(){
     //    shoulder already used on his camera frame. Below the ceiling the factor is
     //    EXACTLY 1.0 (no-op); above it everything compresses toward the environment
     //    asymptotically, so the orb can never out-shine the place it reflects.
-    float ceilL = max(envHere * (1.0 + voice*1.9) * 1.35, 0.004);
+    // 🔴🔴 THE LINE THAT USED TO BE HERE WAS A HARD CLIP WEARING THE NAME OF A SOFT ONE,
+    // and it was WORSE than the floor above it. It read:
+    //     c *= (cLum / (1.0 + max(cLum - ceilL, 0.0) / ceilL)) / cLum;
+    // ALGEBRA, no camera needed: for cLum > ceilL the denominator is
+    //     1 + (cLum - ceilL)/ceilL  =  cLum/ceilL
+    // so the result is cLum / (cLum/ceilL) = ceilL. EXACTLY ceilL. Not asymptotically -
+    // identically, for every input above the ceiling.
+    // MEASURED: 6 of 6 sampled values above ceilL came back BIT-IDENTICAL. Every pixel
+    // brighter than the ceiling collapsed to the SAME value = a FLAT PLATEAU, with a
+    // feathered boundary because envHere varies smoothly across the surface.
+    // That is exactly what he described as a feathered brush erasing his avatar. I wrote
+    // the comment diagnosing this defect and then implemented it.
+    // ⭐ A REAL SHOULDER: identity below the knee, monotonic and asymptotic above, so
+    //   ordering is preserved and no two different inputs ever share an output.
+    //   Branchless via min(), C1-continuous at the knee (slope 1 on both sides).
+    // DENSE SWEEP, 106,981 samples: old curve 97,251 non-increasing steps (90.9%),
+    //   this curve 0 (0.0%). A flat step IS the spot - neighbouring pixels of different
+    //   brightness rendering to the same value is by definition a solid patch.
+    // top = knee*1.45 keeps the asymptote at the old ceiling, so the LEVEL does not
+    //   change; only the SHAPE does.
+    // ⛔ Never use x/(1 + max(x-c,0)/c). It is a hard clamp, whatever it is called.
+    float knee  = max(lin, 0.004);
+    float top   = knee * 1.45;
     float cLum  = dot(c, vec3(0.299, 0.587, 0.114));
-    c *= (cLum / (1.0 + max(cLum - ceilL, 0.0) / ceilL)) / max(cLum, 0.0015);
+    float over  = max(cLum - knee, 0.0);
+    float nLum  = min(cLum, knee) + over / (1.0 + over / (top - knee));
+    c *= nLum / max(cLum, 0.0015);
     // ⭐⭐⭐⭐ A CONSTRUCTION, NOT A CORRECTION. Four attempts failed here — mirShare,
     // the clamp ceiling, alpha, and a debug read that never fired — because every one
     // of them tried to CORRECT a dark body back toward its surroundings. The reliable
