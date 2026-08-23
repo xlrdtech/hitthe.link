@@ -1925,6 +1925,10 @@ document.getElementById('bPick').addEventListener('click', () => {
 //            re-read directly, so draw it to a 2D canvas each frame and upload that
 // Video is the better choice of the two: smaller, smoother, and it can run minutes.
 let envMotion = null;        // {kind:'video'|'gif', el, cv, ctx}
+// 🔴 CONSECUTIVE failures, reset by any success. See the note on the catch in
+// pumpMotion(): nulling envMotion on the FIRST throw is a one-way trapdoor,
+// because envMotion is only ever assigned at LOAD time and nothing restores it.
+let envMotionFails = 0;
 
 function useVideo(url, label){
   const v = document.getElementById('envVid');
@@ -2213,7 +2217,39 @@ function pumpMotion(){
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, src);
     gl.activeTexture(gl.TEXTURE0);
-  } catch(_) { envMotion = null; }                  // never let this kill the loop
+    envMotionFails = 0;             // a good frame clears the streak
+  } catch(err) {
+    // 🔴🔴 THIS USED TO BE  catch(_) { envMotion = null; }  and it was a SECOND,
+    // INDEPENDENT CAUSE OF THE STATIC GIF - the same symptom qi reported five
+    // times, hiding behind the ImageDecoder one. It would have killed the pure-JS
+    // decoder too, on its first hiccup.
+    // MEASURED on the served bytes: envMotion is assigned ONLY at load (four
+    // sites) and nulled at teardown. NOTHING restores it. So one transient throw
+    // - a zero-sized canvas on the frame a GIF lands, a texture upload during a
+    // context blip, one bad frame - permanently disabled animation for the whole
+    // session, and the only recovery was to upload the file again.
+    // It was invisible THREE ways at once: catch(_) discarded the error, the
+    // guard at the top of this function then returned silently forever, and the
+    // render loop kept running at 60fps so every health signal stayed green.
+    // The old comment said "never let this kill the loop" and did the opposite of
+    // what it meant - it saved the LOOP by killing the FEATURE. The loop was
+    // never the hard part.
+    // ⭐ A transient must not be terminal: count CONSECUTIVE failures, let any
+    //    success clear the streak, and retry for a full second before giving up.
+    // ⭐ And when it does give up, SAY SO - in the console with the real error and
+    //    on screen - so this can never be an invisible disable again.
+    // ⛔ Never null a feature's state on a single throw inside a render loop.
+    // ⛔ Never swallow the error object. catch(_) is how a defect goes invisible.
+    envMotionFails++;
+    if(envMotionFails >= 60){                      // ~1s at 60fps, then stop trying
+      console.warn('aether: animated environment disabled after 60 consecutive frame errors', err);
+      const n = document.getElementById('envNote');
+      if(n) n.textContent = 'Animation stopped: ' + ((err && err.message) || 'frame error')
+                          + '. The still image is still showing. Re-upload to retry.';
+      envMotion = null;
+      envMotionFails = 0;
+    }
+  }
 }
 
 document.getElementById('pick').addEventListener('change', e => {
