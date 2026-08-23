@@ -6097,10 +6097,15 @@ window.addEventListener('beforeunload', stopListening);
       "#skill-picker button.on{border-color:rgba(60,255,150,.45);color:#3cff96}"+
       /* one pill silhouette, two segments */
       "#lifenote-switch{display:inline-flex;gap:0;flex:0 0 auto}"+
-      "#lifenote-switch button{"+PILL_BTN+";border-radius:0}"+
-      "#lifenote-switch button:first-child{border-radius:999px 0 0 999px;border-right-width:0}"+
-      "#lifenote-switch button:last-child{border-radius:0 999px 999px 0}"+
-      "#lifenote-switch button.here{border-color:rgba(60,255,150,.55);color:#3cff96}";
+      /* Inherit .transcript-toolbar button WHOLESALE -- mono 9.5px/600, uppercase,
+         var(--line), var(--r-pill). This pill sits among THREADS/COPY/EXPORT and has
+         to read as one of them; overriding the font is what made LIFE|NOTE render
+         white-sans beside its green-mono neighbours. Only corner geometry differs,
+         so only corner geometry is declared. */
+      "#lifenote-switch button{border-radius:0;flex:0 0 auto;white-space:nowrap}"+
+      "#lifenote-switch button:first-child{border-radius:var(--r-pill) 0 0 var(--r-pill);border-right-width:0}"+
+      "#lifenote-switch button:last-child{border-radius:0 var(--r-pill) var(--r-pill) 0}"+
+      "#lifenote-switch button.here{border-color:var(--accent);color:var(--accent)}";
     document.head.appendChild(st);
   }
 
