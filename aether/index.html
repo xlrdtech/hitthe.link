@@ -1696,6 +1696,15 @@ function initGL(){
   // 1px placeholder so the sampler is always valid, even before permission
   gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([6,5,12,255]));
   gl.uniform1i(uCam, 0);
+  // ⭐ camF was FRAGILE, NOT BROKEN - saying it plainly rather than dressing it up.
+  // There are 22 getUniformLocation calls and exactly TWO uniform1i calls in this
+  // file. uCamF was fetched and never assigned, so it defaulted to unit 0 - and it
+  // WORKED, because there is only one camera texture and it lives on unit 0 (grep for
+  // texF returns zero hits; the rear camera is permanently off). It was correct by
+  // coincidence, held up only by three activeTexture(TEXTURE0) restores elsewhere.
+  // Drop any one of them, or put a second texture on unit 0, and camF silently samples
+  // the wrong texture with NO GL ERROR. One line ends the coincidence.
+  gl.uniform1i(uCamF, 0);
 
   // ── the supplied environment: /aether/?env=<equirect.jpg>
   // ⭐ qi 06:28: "the images were examples of how it should REFLECT, not examples
@@ -1753,9 +1762,26 @@ function size(){
     document.documentElement.clientWidth || 0,
     (window.visualViewport && window.visualViewport.width) || 0
   );
-  cv.style.height = vh + 'px';
-  cv.style.width  = vw + 'px';
-  const w = Math.round(vw*dpr), h = Math.round(vh*dpr);
+  // 🔴 THE BLACK BAND ON THE RIGHT AND BOTTOM EDGES. The stylesheet declares a 2px
+  // overscan - top:-2px, left:-2px, width:calc(100% + 4px), height:calc(100% + 4px) -
+  // but these three lines wrote the size as an INLINE style, and inline beats the
+  // stylesheet. The -2px offsets SURVIVED; the compensating +4px did NOT. So the
+  // canvas sat shifted -2,-2 and sized to exactly the viewport, leaving 2 CSS px
+  // uncovered on the RIGHT and the BOTTOM. At dpr 3 that is 6 DEVICE PIXELS down two
+  // whole edges of an edge-to-edge orb.
+  // AND NOTHING PAINTS BEHIND IT: html and body both compute to background-color
+  // rgba(0,0,0,0), and the canvas has only BODY and HTML as ancestors, so anything
+  // the canvas misses renders as the UA dark base. The gap has nowhere to hide.
+  // MEASURED at 393x852: bottom row y=851 distinct values = [(18,18,18)], EVERY pixel;
+  // right column x=392 identical; one pixel inward = (56,54,66), actual scene.
+  // Deterministic across 430x932, 393x852, 1024x768, 431x933, 375x667, 414x896 - six
+  // for six, so it was never fractional-pixel rounding.
+  // ⭐ The centre is unchanged, so the orb does not move - only the 2px bleed returns.
+  // ⛔ Never write an inline width/height here without the +4. Inline always wins, and
+  //    the stylesheet's calc() cannot defend itself.
+  cv.style.height = (vh + 4) + 'px';
+  cv.style.width  = (vw + 4) + 'px';
+  const w = Math.round((vw+4)*dpr), h = Math.round((vh+4)*dpr);
   if(w===W && h===H) return;
   W=w; H=h; cv.width=w; cv.height=h;
   gl.viewport(0,0,w,h);
