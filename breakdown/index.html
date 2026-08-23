@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Breakdown · 2026-08-23</title>
+<meta name="theme-color" content="#000100"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Breakdown"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#000100; --ink:#a8c0a4; --ink-hi:#e8f4e6; --dim:#5e7259;
+  --rim:rgba(176,255,200,.12); --rim-hi:rgba(176,255,200,.28);
+  --card:rgba(255,255,255,.022); --green:#26e07f; --amber:#ffc247; --red:#ff4d5e;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font:300 16px/1.65 var(--sans);
+  padding:clamp(20px,5vw,56px) clamp(16px,4vw,32px) 96px;
+  max-width:860px;margin-inline:auto;
+  overflow-x:hidden;
+}
+
+/* ---------- header ---------- */
+header{padding-bottom:34px;margin-bottom:38px;border-bottom:1px solid var(--rim)}
+.kicker{font:400 10.5px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--dim);margin:0 0 18px}
+h1{font:300 clamp(30px,7.5vw,46px)/1.08 var(--sans);letter-spacing:-.022em;color:var(--ink-hi);margin:0 0 16px}
+h1 em{font-style:normal;color:var(--green)}
+.lede{font-size:clamp(15px,3.6vw,17.5px);color:var(--ink);margin:0;max-width:64ch}
+
+/* ---------- section ---------- */
+section{margin:52px 0 0}
+h2{font:400 11px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--green);
+   margin:0 0 8px;display:flex;align-items:center;gap:10px}
+h2::after{content:"";flex:1;height:1px;background:var(--rim)}
+.sub{font-size:14.5px;color:var(--dim);margin:0 0 26px;max-width:64ch}
+
+/* ---------- the spine callout ---------- */
+.spine{border:1px solid var(--rim-hi);border-radius:14px;padding:clamp(20px,4.5vw,30px);
+  background:linear-gradient(180deg,rgba(38,224,127,.045),rgba(38,224,127,.008));margin:30px 0 0}
+.spine p{margin:0;font-size:clamp(16px,3.9vw,19px);line-height:1.55;color:var(--ink-hi)}
+.spine strong{color:var(--green);font-weight:600}
+
+/* ---------- defect cards ---------- */
+.d{border:1px solid var(--rim);border-radius:14px;background:var(--card);
+   padding:clamp(18px,4vw,26px);margin:16px 0}
+.d-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.d-n{font:700 11px/1 var(--mono);color:var(--bg);background:var(--green);
+     border-radius:5px;padding:5px 8px;letter-spacing:.06em;flex:0 0 auto}
+.d-t{font:400 clamp(16px,4vw,19px)/1.3 var(--sans);color:var(--ink-hi);letter-spacing:-.01em}
+.row{display:grid;grid-template-columns:104px 1fr;gap:6px 16px;font-size:14.5px;padding:9px 0;
+     border-top:1px solid rgba(255,255,255,.045)}
+.row:first-of-type{border-top:0}
+.lbl{font:400 9.5px/1.7 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);padding-top:3px}
+.val{color:var(--ink)}
+.val b{color:var(--ink-hi);font-weight:600}
+@media(max-width:560px){
+  .row{grid-template-columns:1fr;gap:2px}
+  .lbl{padding-top:0}
+}
+
+/* ---------- code / evidence ---------- */
+pre{font:400 12.5px/1.7 var(--mono);background:rgba(0,0,0,.42);border:1px solid var(--rim);
+    border-radius:9px;padding:14px 16px;margin:12px 0 0;overflow-x:auto;color:var(--ink);
+    white-space:pre;-webkit-overflow-scrolling:touch}
+pre .g{color:var(--green)} pre .r{color:var(--red)} pre .a{color:var(--amber)} pre .d{color:var(--dim);border:0;padding:0;margin:0;background:0}
+code{font:400 .88em/1 var(--mono);background:rgba(255,255,255,.05);border-radius:4px;padding:2px 5px;color:var(--ink-hi)}
+
+/* ---------- verdict pills ---------- */
+.v{font:700 9px/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;
+   border-radius:999px;padding:5px 9px;flex:0 0 auto}
+.v-ok{background:rgba(38,224,127,.14);color:var(--green);border:1px solid rgba(38,224,127,.3)}
+.v-no{background:rgba(255,194,71,.13);color:var(--amber);border:1px solid rgba(255,194,71,.3)}
+
+/* ---------- zeros list ---------- */
+ol.z{list-style:none;counter-reset:z;padding:0;margin:26px 0 0}
+ol.z li{counter-increment:z;position:relative;padding:11px 0 11px 40px;font-size:14.5px;
+        border-top:1px solid rgba(255,255,255,.045)}
+ol.z li:first-child{border-top:0}
+ol.z li::before{content:counter(z);position:absolute;left:0;top:11px;
+  font:400 10px/1.6 var(--mono);color:var(--green);opacity:.7}
+ol.z code{font-size:.85em}
+
+/* ---------- status table ---------- */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:26px 0 0;
+    border:1px solid var(--rim);border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:440px}
+th{font:400 9.5px/1 var(--mono);letter-spacing:.15em;text-transform:uppercase;color:var(--dim);
+   text-align:left;padding:13px 16px;border-bottom:1px solid var(--rim);white-space:nowrap}
+td{padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.mono{font:400 12.5px/1.5 var(--mono);color:var(--ink-hi);white-space:nowrap}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:8px;vertical-align:1px}
+.dot.on{background:var(--green);box-shadow:0 0 9px rgba(38,224,127,.55)}
+.dot.off{background:var(--amber)}
+
+/* ---------- decisions ---------- */
+.dec{border:1px solid var(--rim);border-left:2px solid var(--amber);border-radius:0 12px 12px 0;
+     padding:clamp(16px,3.6vw,22px);margin:14px 0;background:var(--card)}
+.dec h3{font:400 15.5px/1.35 var(--sans);color:var(--ink-hi);margin:0 0 7px}
+.dec p{margin:0;font-size:14.5px;color:var(--ink)}
+.dec .fix{font:400 12.5px/1.6 var(--mono);color:var(--green);margin-top:10px;display:block;word-break:break-word}
+
+footer{margin-top:64px;padding-top:26px;border-top:1px solid var(--rim);
+       font:400 11px/1.8 var(--mono);letter-spacing:.05em;color:var(--dim)}
+footer a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--rim-hi)}
+</style>
+</head>
+<body>
+
+<header>
+  <p class="kicker">Xen · session breakdown · 2026-08-23 · 02:00–04:30 EDT</p>
+  <h1>Every defect had a <em>green light</em> on top of it.</h1>
+  <p class="lede">Seven real failures found in one night across xlrd.life, three deploy platforms
+  and the goal swarm. Not one of them showed up as an error. Every single one passed a status
+  check and failed a content check.</p>
+</header>
+
+<div class="spine">
+  <p>A status code describes <strong>the transport</strong>. It never describes whether the thing
+  works. <code>301</code> on a dead link. <code>200</code> serving the wrong page.
+  <code>display:standalone</code> set correctly next to a <code>start_url</code> that 404s. A
+  timeout counter climbing while the failure counter sits at zero. <strong>The check being green
+  is not evidence.</strong></p>
+</div>
+
+<section>
+  <h2>The seven</h2>
+  <p class="sub">Each one: what it looked like, what every check said, what was actually wrong,
+  and the artifact that proved it.</p>
+
+  <div class="d">
+    <div class="d-head"><span class="d-n">01</span><span class="d-t">Every link on the clone was dead</span><span class="v v-ok">fixed · verified</span></div>
+    <div class="row"><span class="lbl">Symptom</span><span class="val">326 of 332 paths went nowhere. Page returned <b>200</b>.</span></div>
+    <div class="row"><span class="lbl">Cause</span><span class="val">Authored for a domain root; served from a subpath. Every leading-slash path retargeted to the wrong origin root.</span></div>
+    <div class="row"><span class="lbl">Why hidden</span><span class="val">Reading <code>getAttribute('href')</code> shows <code>xen</code> before <b>and</b> after the fix. Only the browser's <b>resolved</b> <code>.href</code> discriminates.</span></div>
+    <pre><span class="r">/xos/  → github.io/xos/            404</span>
+<span class="g">xos/   → github.io/xlrdlife/xos/  200</span>
+<span class="d">— relative is the only form correct at a root AND a subpath,
+  so the same bytes deploy to all three platforms unchanged.</span></pre>
+  </div>
+
+  <div class="d">
+    <div class="d-head"><span class="d-n">02</span><span class="d-t">Home-screen icon opened the browser, not the app</span><span class="v v-ok">fixed · verified</span></div>
+    <div class="row"><span class="lbl">Symptom</span><span class="val">Added to home screen, launched in Safari instead of standalone.</span></div>
+    <div class="row"><span class="lbl">Cause</span><span class="val">Fixing the <b>link to</b> the manifest did not fix the <b>contents of</b> the manifest. <code>start_url:"/"</code> 404s, so the icon degrades to a bookmark.</span></div>
+    <div class="row"><span class="lbl">Sting</span><span class="val"><code>display:"standalone"</code> was already correct. <b>The field that was right was not the field that was broken.</b></span></div>
+    <pre><span class="r">start_url  "/"        → 404      icons "/icon-192.png" → 404</span>
+<span class="r">apple-mobile-web-app-capable    ABSENT</span>
+<span class="g">start_url  "./"       → 200      icons relative        → 200</span></pre>
+  </div>
+
+  <div class="d">
+    <div class="d-head"><span class="d-n">03</span><span class="d-t">Fifteen of twenty-one links were never added</span><span class="v v-ok">fixed · verified</span></div>
+    <div class="row"><span class="lbl">Symptom</span><span class="val">The category looked populated. It held 6.</span></div>
+    <div class="row"><span class="lbl">Cause</span><span class="val">Only the second batch of requested links landed. The first fifteen were silently missing — no error, no gap, just a shorter list than asked for.</span></div>
+  </div>
+
+  <div class="d">
+    <div class="d-head"><span class="d-n">04</span><span class="d-t">The category you wanted was 1,964px off-screen</span><span class="v v-ok">fixed · verified</span></div>
+    <div class="row"><span class="lbl">Symptom</span><span class="val">Nothing broken. Nav scrolled correctly.</span></div>
+    <div class="row"><span class="lbl">Cause</span><span class="val">Last of 18 categories in a 430px viewport with a 2,066px scroll width. Reachable — behind two thousand pixels of sideways swipe.</span></div>
+    <div class="row"><span class="lbl">Lesson</span><span class="val"><b>A reachable-but-buried control is a real defect even when every check passes.</b></span></div>
+  </div>
+
+  <div class="d">
+    <div class="d-head"><span class="d-n">05</span><span class="d-t">Tiles labelled with raw URLs</span><span class="v v-ok">fixed · verified</span></div>
+    <div class="row"><span class="lbl">Symptom</span><span class="val">Twenty-one tiles reading <code>https://gemini.google.com/</code> instead of <code>Gemini</code>.</span></div>
+    <div class="row"><span class="lbl">Cause</span><span class="val">Template rendered the path as the label; the friendly name was only a <code>title=</code> tooltip.</span></div>
+    <div class="row"><span class="lbl">Why hidden</span><span class="val">Every assertion was green — anchors 360, external 21, dead 0. <b>"Is there a label" and "is the label any good" are different questions, and only one has a number.</b> Found by screenshotting.</span></div>
+  </div>
+
+  <div class="d">
+    <div class="d-head"><span class="d-n">06</span><span class="d-t">A Pages project with a webhook dead 15 months</span><span class="v v-no">reported · untouched</span></div>
+    <div class="row"><span class="lbl">Symptom</span><span class="val">Project looks alive in the dashboard. Site serves fine.</span></div>
+    <div class="row"><span class="lbl">Cause</span><span class="val">Last build <b>failed May 2025</b>. Repo kept receiving pushes through November — none produced a deployment. The git OAuth token is invalid; the host keeps serving the last good build forever.</span></div>
+    <div class="row"><span class="lbl">Test</span><span class="val">Compare last-deploy date against the repo's <code>pushed_at</code>. <b>Not its HTTP status.</b></span></div>
+  </div>
+
+  <div class="d">
+    <div class="d-head"><span class="d-n">07</span><span class="d-t">The entire goal swarm, blocked on stdin</span><span class="v v-no">root-caused · fix not applied</span></div>
+    <div class="row"><span class="lbl">Symptom</span><span class="val"><code>0 progress / 24 timeouts / 0 failures</code>, every cycle, for hours.</span></div>
+    <div class="row"><span class="lbl">Cause</span><span class="val">Workers are <code>claude -p "&lt;multi-line prompt&gt;"</code> spawned by a daemon. stdin is inherited and never reaches EOF, so the process <b>waits forever</b> and the 300s cap kills it.</span></div>
+    <div class="row"><span class="lbl">Fingerprint</span><span class="val"><b>Timeouts with zero failures means blocked, not slow.</b> A broken command fails fast. A blocked one waits.</span></div>
+    <div class="row"><span class="lbl">Ruled out</span><span class="val">Not a rate limit — the CLI answers a trivial prompt fine, and no usage-limit artifact exists. Both hypotheses predict <i>no output</i>; only the A/B separates them.</span></div>
+    <pre><span class="d">same prompt · only stdin differs</span>
+<span class="r">claude -p "$P"                exit=124  77s  157B  ← warning only, HUNG</span>
+<span class="g">claude -p "$P" &lt; /dev/null    exit=0    74s    5B  ← "DONE"</span></pre>
+  </div>
+</section>
+
+<section>
+  <h2>Nine false zeros</h2>
+  <p class="sub">Separately, nine times a number described my own instrument instead of the world.
+  Each would have produced a confident wrong answer alone.</p>
+  <ol class="z">
+    <li><code>ls -1</code> on a directory of dotfiles → <b>0</b>. Real answer 6. Nearly reported deleting six files.</li>
+    <li><code>pgrep -fl</code> counting <b>lines</b>, not processes — each worker's argv holds a multi-line prompt. 445 vs 3.</li>
+    <li>Python <code>len()</code> counting characters where <code>wc -c</code> counts bytes. 47,651 vs 48,170.</li>
+    <li>An upload log's last <b>flushed</b> line read as progress — said 285/3298, server had taken 3,297.</li>
+    <li>A screenshot served from browser cache while <code>curl</code> already had the new bytes. The <i>image</i> was the stale artifact.</li>
+    <li><code>curl -L</code> not following a meta-refresh redirect — "didn't redirect" where a browser does.</li>
+    <li>A <b>400 "Invalid request headers"</b> beside a credential read, which looks exactly like a dead key. The key was fine; a label was being sent as an email.</li>
+    <li>A per-file size cap rejecting a deploy while <code>200</code> came back for the excluded path — an SPA fallback wearing the right status code.</li>
+    <li>A build list whose <b>top row said "errored"</b> and second row, one second later, said "built". Reading only the latest would have reported a failure that had already healed.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Where it stands</h2>
+  <div class="tw">
+  <table>
+    <thead><tr><th>Surface</th><th>State</th><th>Bytes</th></tr></thead>
+    <tbody>
+      <tr><td><span class="dot on"></span>GitHub Pages</td><td>live · serves from a subpath</td><td class="mono">49,252</td></tr>
+      <tr><td><span class="dot on"></span>Cloudflare Pages</td><td>live · serves from a root</td><td class="mono">49,252</td></tr>
+      <tr><td><span class="dot off"></span>Vercel</td><td>one credential away</td><td class="mono">—</td></tr>
+      <tr><td><span class="dot on"></span>Account root</td><td>redirects into the directory</td><td class="mono">1,491</td></tr>
+      <tr><td><span class="dot on"></span>Tiles</td><td>321 of 326 live · 5 dead, all 5 marked</td><td class="mono">326</td></tr>
+      <tr><td><span class="dot on"></span>External links</td><td>21 of 21 · named, not raw URLs</td><td class="mono">21</td></tr>
+      <tr><td><span class="dot on"></span>Cross-origin deps</td><td>none — self-contained</td><td class="mono">0</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="sub" style="margin-top:20px">Both live surfaces serve <b>byte-identical</b> output —
+  one from a domain root, one from a subpath — which is only possible because the paths are
+  relative. A <code>&lt;base href&gt;</code> or a platform-specific build would have needed two
+  variants.</p>
+</section>
+
+<section>
+  <h2>Four decisions · not mine to make</h2>
+
+  <div class="dec">
+    <h3>The goal swarm</h3>
+    <p>One redirect on the worker-spawn line. Not applied unilaterally: that file is load-bearing
+    and was mid-flight with live workers — a bad edit stops the swarm outright instead of merely
+    stalling it. Until then it burns three workers per ten-minute cycle producing nothing.</p>
+    <span class="fix">claude -p "$PROMPT" &lt; /dev/null</span>
+  </div>
+
+  <div class="dec">
+    <h3>The third platform</h3>
+    <p>Genuinely no credential present — measured four independent ways, all negative. Needs a
+    login run in-session, a token, or an OAuth approval. Completing an OAuth consent grants an
+    app access to an account, which is a decision for a person, not something to drive a browser
+    through.</p>
+  </div>
+
+  <div class="dec">
+    <h3>The stale project</h3>
+    <p>No deployment since a failed build in May 2025, despite pushes through November. Revive the
+    git connection or retire it deliberately — it may already be abandoned on purpose, which is
+    why it was left alone.</p>
+  </div>
+
+  <div class="dec">
+    <h3>What is public</h3>
+    <p>A clone carries whatever the source carried. Deploying the same tree to a second platform
+    doubles the exposure surface of anything in it that was never meant to be published. Worth an
+    explicit pass rather than an accident of cloning.</p>
+  </div>
+</section>
+
+<footer>
+  Seven defects · nine false zeros · six commits · two live platforms<br/>
+  Every claim above is backed by a measured artifact — bytes, exit codes, resolved hrefs or a
+  screenshot. Items marked <span style="color:var(--amber)">not applied</span> are exactly that.<br/>
+  <a href="/">hitthe.link</a>
+</footer>
+
+</body>
+</html>
