@@ -1192,6 +1192,27 @@ void main(){
     // voice." (qi 09:49) Both halves of that sentence come from this line.
     // ⛔ Never cap this at 1.0 again. A one-way equalizer is a darkener.
     c *= clamp((envHere * (1.0 + voice*1.9)) / max(orbHere, 0.004), 0.35, 14.0);
+    // 🔴 THE WHITE SPOT IS WHAT THE LINE ABOVE COULD NOT FLATTEN.
+    // It levels every orb pixel to envHere EXCEPT where the ratio saturates. On the
+    // 0.35 floor a pixel already ~2.9x brighter than the world behind it KEEPS its
+    // excess while everything around it is levelled, so it becomes the only structure
+    // left on the surface and reads as a lamp instead of as part of an image.
+    //   why WHITE     - one SCALAR gain on r,g,b, and col/(col+0.85) below compresses
+    //                   all three identically, so the survivor desaturates
+    //   why FEATHERED - orbHere is a smooth field, so the boundary is a gradient, not
+    //                   an edge. That is the "feathered brush in Photoshop" edge.
+    //   why ON HIM    - the brightest thing on the orb IS his camera frame, so the
+    //                   white spot and the "hole" are ONE defect, not two.
+    // Not the specular: both lobes are tinted by mir, capped 0.30/0.14, and keyed to an
+    // UPPER-LEFT light, while the blob he screenshotted sits below-left.
+    // ⛔ No clamp VALUE fixes this. ANY bound leaves a survivor sitting AT the bound.
+    // ⭐ Roll the top off against the world's own level instead - the same Reinhard
+    //    shoulder already used on his camera frame. Below the ceiling the factor is
+    //    EXACTLY 1.0 (no-op); above it everything compresses toward the environment
+    //    asymptotically, so the orb can never out-shine the place it reflects.
+    float ceilL = max(envHere * (1.0 + voice*1.9) * 1.35, 0.004);
+    float cLum  = dot(c, vec3(0.299, 0.587, 0.114));
+    c *= (cLum / (1.0 + max(cLum - ceilL, 0.0) / ceilL)) / max(cLum, 0.0015);
     // ⭐⭐⭐⭐ A CONSTRUCTION, NOT A CORRECTION. Four attempts failed here — mirShare,
     // the clamp ceiling, alpha, and a debug read that never fired — because every one
     // of them tried to CORRECT a dark body back toward its surroundings. The reliable
@@ -1216,7 +1237,15 @@ void main(){
     float presence = 0.10 + 0.90*voice;
     c = mix(world(rd), c, presence);
     // chrome contrast: pivot on the orb's own mean so the MEAN is preserved
-    float pivot = max(orbHere, 0.004);
+    // 🔴 STALE PIVOT - provable without a camera. orbHere is sampled at the TOP of this
+    // block, then c is rescaled by up to 14x by the equalizer and mixed with world(rd)
+    // by presence BEFORE this line reads it. The comment below claims the mean is
+    // preserved; two transforms out of date it cannot be. orbHere runs BELOW the
+    // post-equalizer value (that is the entire reason the equalizer exists), so the
+    // expansion collapses to roughly 1.28*c - a net brightness LIFT applied hardest
+    // exactly where the pixel is already brightest. Second half of the white spot.
+    // ⛔ Never pivot on a luminance sampled before a rescale.
+    float pivot = max(dot(c, vec3(0.34)), 0.004);
     c = max(vec3(0.0), vec3(pivot) + (c - vec3(pivot)) * (1.28 + 0.42*voice));
     col = c;
     // ⭐⭐⭐ THE BODY ITSELF IS SEE-THROUGH — qi 2026-08-23 08:46-08:47:
