@@ -212,7 +212,7 @@ body.fallback .fb{display:block;position:fixed;top:50%;left:50%;
     <span id="sensV" style="font:500 12px/1 inherit;color:rgba(236,236,240,.48);
       min-width:26px;text-align:right">4.2</span>
   </div>
-  <p class="note" id="envNote">Drag to look around. Move the phone if it has a gyroscope.</p>
+  <p class="note" id="envNote">Drag to look around. Pinch with two fingers to move in and pull back. Move the phone if it has a gyroscope.</p>
 </div>
 <input type="file" id="pick" accept="image/*,video/*">
 <!-- ⛔ NEVER display:none ON A VIDEO OR GIF SOURCE. qi 09:50: "and video still not
@@ -304,7 +304,8 @@ uniform sampler2D envMap; // supplied 360 equirectangular environment
 uniform float hasEnv;    // 1 when a panorama has loaded
 uniform float envMode;   // 0 = true equirectangular, 1 = flat photo mirror-wrap
 uniform float flipY;     // 1 flips the uploaded environment vertically
-uniform float zoomF;     // pinch zoom: focal multiplier, 1.0 = default framing
+uniform float zoomF;     // kept at 1.0 - the gesture drives dist, not focal
+uniform float dist;      // camera orbit radius - two-finger pinch     // pinch zoom: focal multiplier, 1.0 = default framing
 uniform vec2  look;      // yaw, pitch in radians - gyro or drag
 uniform vec2  touchUV;   // where he last touched, in the same units as uv
 uniform float touchAge;  // seconds since touchdown
@@ -827,7 +828,12 @@ void main(){
   float cp = cos(pit), sp = sin(pit);
 
   vec3 out3 = vec3(sy*cp, sp, cy*cp);        // orb -> camera
-  vec3 ro   = out3 * 2.9;
+  // qi 09:47 "Pitch to Zoom, two fingers" + 07:36 "drag and pull back".
+  // The RADIUS is the zoom. Moving the camera out reveals more of the world he
+  // is standing in; a focal-length crop only magnifies the same framing, and on
+  // a MIRROR that is the difference between a new reflection and a bigger one.
+  // ⛔ Restored 2026-08-23 after commit 553c40af overwrote it with life's copy.
+  vec3 ro   = out3 * dist;
   vec3 zAx  = -out3;                                       // camera forward
   vec3 xAx  = normalize(cross(vec3(0.0,1.0,0.0), zAx));
   vec3 yAx  = cross(zAx, xAx);
@@ -1276,6 +1282,8 @@ let uEnvMap, uHasEnv, envTex, envLoaded = false;
 let uEnvMode, uLook, envMode = 0;
 let uFlipY, envFlip = 0;
 let uZoomF, zoomF = 1.0;
+let uDist, camDist = 2.9, tCamDist = 2.9;   // eased radius, and its target
+function clampDist(v){ return Math.max(1.25, Math.min(7.0, v)); }
 let uOverlay, overlayMode = new URLSearchParams(location.search).has('overlay') ? 1 : 0;
 let uTouchUV, uTouchAge, uTouchHeld, uRelAge;
 
@@ -1367,7 +1375,7 @@ const pinch = {on:false, pts:new Map(), d0:0, z0:1};
   };
   addEventListener('pointerdown', e => {
     pinch.pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
-    if(pinch.pts.size === 2){ pinch.on = true; pinch.d0 = dist(); pinch.z0 = zoomF; }
+    if(pinch.pts.size === 2){ pinch.on = true; pinch.d0 = dist(); pinch.z0 = tCamDist; }
   }, {passive:true});
   addEventListener('pointermove', e => {
     if(!pinch.pts.has(e.pointerId)) return;
@@ -1376,7 +1384,7 @@ const pinch = {on:false, pts:new Map(), d0:0, z0:1};
     const d = dist();
     if(pinch.d0 > 8){
       // spreading fingers -> longer focal -> narrower cone -> zoomed IN
-      zoomF = Math.max(0.55, Math.min(4.0, pinch.z0 * (d / pinch.d0)));
+      tCamDist = clampDist(pinch.z0 * (pinch.d0 / d));
     }
     if(e.cancelable) e.preventDefault();
   }, {passive:false});
@@ -1388,7 +1396,7 @@ const pinch = {on:false, pts:new Map(), d0:0, z0:1};
   addEventListener('pointercancel', drop, {passive:true});
   // desktop: wheel / trackpad pinch
   addEventListener('wheel', e => {
-    zoomF = Math.max(0.55, Math.min(4.0, zoomF * (e.deltaY < 0 ? 1.06 : 0.943)));
+    tCamDist = clampDist(tCamDist * (e.deltaY < 0 ? 0.943 : 1.06));
     if(e.cancelable) e.preventDefault();
   }, {passive:false});
 })();
@@ -1496,6 +1504,7 @@ function initGL(){
   uEnvMode=gl.getUniformLocation(prog,'envMode');
   uFlipY=gl.getUniformLocation(prog,'flipY');
   uZoomF=gl.getUniformLocation(prog,'zoomF');
+  uDist=gl.getUniformLocation(prog,'dist');
   uOverlay=gl.getUniformLocation(prog,'overlayMode');
   uLook=gl.getUniformLocation(prog,'look');
   uTouchUV=gl.getUniformLocation(prog,'touchUV');
@@ -1677,6 +1686,8 @@ function frame(ts){
   gl.uniform1f(uEnvMode, envMode);
   gl.uniform1f(uFlipY, envFlip);
   gl.uniform1f(uZoomF, zoomF);
+  camDist += (tCamDist - camDist) * 0.18;
+  gl.uniform1f(uDist, camDist);
   gl.uniform1f(uOverlay, overlayMode);
   gl.uniform1f(uHasEnv, envLoaded ? 1 : 0);
   gl.uniform1f(uHasCam, 0);                       // no rear camera in use
