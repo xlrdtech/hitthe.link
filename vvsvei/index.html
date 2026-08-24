@@ -6565,7 +6565,8 @@ window.addEventListener('beforeunload', stopListening);
     };
 
     ws.onerror = () => hud('SOCKET ERROR — if this is a 403 it is the Origin header the probe suppressed');
-    ws.onclose = (e) => { hud('closed code=' + e.code + ' reason=' + (e.reason||'-')); ws = null; ready = false; };
+    ws.onclose = (e) => { hud('closed code=' + e.code + ' reason=' + (e.reason||'-')); ws = null; ready = false;
+      try { if (window._omiOnClose) window._omiOnClose(); } catch(_){} };
 
     // Mic -> raw PCM16. No MediaRecorder, no container, no upload: a continuous
     // stream, because a POST-then-restart cycle is what lost 40% of his words.
@@ -6627,10 +6628,26 @@ window.addEventListener('beforeunload', stopListening);
   } else {
     window.addEventListener('DOMContentLoaded', () => setTimeout(() => _omiAuto('domready'), 800));
   }
-  /* Reconnect if the socket drops — a dead socket must never look like silence. */
-  setInterval(() => {
-    if (!ws || ws.readyState > 1) { _omiAutoTried = false; _omiAuto('reconnect'); }
-  }, 20000);
+  /* ⛔ RECONNECT LOOP REMOVED (qi 2026-08-24 16:03) ──────────────────────────
+     I added a 20s reconnect at 15:26 so a dead socket could not look like silence.
+     MEASURED CONSEQUENCE: Omi REPLAYS its stored conversation on every connect, so
+     every 20 seconds it re-dumped his history into his own feed — his 15:39-15:52
+     speech arrived again at 15:54, 15:57 and 15:58, each time stamped with the
+     CURRENT minute, which is why old words looked live. His words: "why is it
+     playing old inputs? I didn't tell you to be doing that shit."
+     ⭐ THE LESSON: a retry against an endpoint that replays on connect is not a
+     retry, it is a broadcast loop. Check what reconnecting COSTS before automating
+     it. Reconnect only on an actual close event, once, with backoff — never on a
+     timer that fires while the socket is healthy. */
+  let _reconnects = 0;
+  function _omiOnClose(){
+    if (_reconnects >= 3) { hud('socket closed 3x — not reconnecting, say the word'); return; }
+    _reconnects++;
+    const wait = 2000 * _reconnects;
+    hud('socket closed, one reconnect in ' + (wait/1000) + 's (#' + _reconnects + ')');
+    setTimeout(() => { _omiAutoTried = false; _omiAuto('after-close'); }, wait);
+  }
+  window._omiOnClose = _omiOnClose;
 
   window.omiSttStop = function(){
     try { if (node) node.disconnect(); } catch(_){}
