@@ -2267,6 +2267,9 @@ async function startMediaRecorder() {
   // listening. Simple + robust (no WebSocket, survives flaky mobile networks).
   // The server returns the transcript and injects it; we render it locally too.
   const CHUNK_MS = 5000;
+  // Uploads are CHAINED, not awaited inline. The chain preserves transcript ORDER
+  // across windows while never sitting in front of the next recorder.
+  let _postChain = Promise.resolve();
   function recordOneChunk() {
     if (!listening || !mediaStream) return;
     let chunks = [];
@@ -2280,15 +2283,30 @@ async function startMediaRecorder() {
     }
     mediaRecorder = rec;
     rec.ondataavailable = (ev) => { if (ev.data && ev.data.size > 0) chunks.push(ev.data); };
-    rec.onstop = async () => {
-      if (chunks.length) {
-        const blob = new Blob(chunks, { type: mime || 'audio/webm' });
-        // Only POST if there's meaningful audio (skip near-empty silence windows).
-        if (blob.size > 2000) {
-          try { await postAudioChunk(blob); } catch (_) {}
-        }
+    // RE-ARM BEFORE UPLOADING. Never place an awaited upload ahead of the
+    // recordOneChunk() call below — that single ordering is the whole bug.
+    // qi 2026-08-24, diagnosing it himself and correcting me twice: "The issue is not
+    // that it's posting. It POSTS and then it STOPS LISTENING. So everything that I
+    // said, if I wouldn't finish, it's getting missed." He had the mechanism exactly.
+    // The previous body blocked here on the upload, so for the whole round trip of
+    // upload + ffmpeg transcode + recognition — roughly 1-2s out of every ~5s window —
+    // NO MediaRecorder existed at all. The getUserMedia stream stayed open and the
+    // waveform kept animating, which is exactly why this presented as a silence
+    // THRESHOLD problem rather than as a mic that went periodically deaf.
+    // MEASURED that day: 645 injects, inter-arrival gaps spiking at 5s (88) and 6s (74)
+    // with clean harmonics at 11/12s and 16/17s. That is a CLOCK, not human speech —
+    // real utterance boundaries do not land on a 5-second grid.
+    rec.onstop = () => {
+      const blob = chunks.length ? new Blob(chunks, { type: mime || 'audio/webm' }) : null;
+      // FIRST, unconditionally: the mic must never be left unowned.
+      if (listening) recordOneChunk();
+      // Then hand the audio to the ordered chain. Fire-and-forget by design: a slow or
+      // failed upload must never again be able to cost him a word.
+      if (blob && blob.size > 2000) {
+        _postChain = _postChain
+          .then(() => postAudioChunk(blob))
+          .catch(() => {});   // one bad window must not break the chain for later ones
       }
-      if (listening) recordOneChunk();  // loop to next window
     };
     rec.start();
     setTimeout(() => { if (rec.state !== 'inactive') { try { rec.stop(); } catch (_) {} } }, CHUNK_MS);
