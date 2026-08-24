@@ -4518,6 +4518,24 @@ function subscribeXenReplies() {
     // only thing actually making sound.
     // Hard cut, never a fade — his spec: the audio stops at full amplitude.
     function _avaHardStop(why) {
+      // ⛔ EVERY window[...] LOOKUP BELOW RESOLVES TO undefined AND ALWAYS DID.
+      // Measured 2026-08-24: `_avaAudio` (let, ~:4795), `_avaCurrentSource` (~:5165),
+      // `_avaCtx` and `audioCtx` are ALL plain `let` bindings in this classic script,
+      // so they are NEVER properties of `window`. This function therefore found nothing
+      // and stopped nothing — except speechSynthesis, the one path that IS on window.
+      // The page also has no <audio> markup (every player is `new Audio()`, never
+      // appended), so the querySelectorAll sweep matched zero elements too.
+      // THAT is why qi's interface-side stop and his speaker tap both did nothing while
+      // every component reported fine. Reaching for state through the wrong object is
+      // indistinguishable from the state not existing.
+      //
+      // FIX: delegate to _avaBargeIn(), the stop that is already proven to work — it
+      // holds the real in-scope references (_avaCurrentSource, _avaAudio,
+      // speechSynthesis, the queue) and it broadcasts to the other surfaces, which a
+      // local-only cut never could. Same `typeof` guard idiom already used at ~:5848.
+      // Duplicating its body here would be a second thing to keep in sync; one stop,
+      // called from every path, cannot drift.
+      try { if (typeof _avaBargeIn === 'function') { _avaBargeIn(); } } catch (_) {}
       try { if (window._avaAudio) { window._avaAudio.pause(); window._avaAudio.currentTime = 0; } } catch (_) {}
       // Generic sweep: stop EVERY media element, because the voice has more than one
       // playback path (3x new Audio() + AudioContext/createBufferSource) and naming
@@ -5362,7 +5380,18 @@ function _renderAvaPill() {
       if (!_avaAudioUnlocked) { _unlockAvaAudio(); _avaOn = true; }   // first tap = arm + enable
       else {
         _avaOn = !_avaOn;                                            // later taps = mute toggle
-        if (!_avaOn) { try { if (_avaAudio) _avaAudio.pause(); } catch (_) {} try { window.speechSynthesis.cancel(); } catch (_) {} }
+        // qi 2026-08-24: "when it comes to silence, I am the only one to be in control
+        // of that." So this tap has to actually silence him on the FIRST press.
+        // It used to pause `_avaAudio` and cancel speechSynthesis and nothing else —
+        // but the primary playback path is the Web Audio `_avaCurrentSource` buffer
+        // node (~:5165), which neither of those touches. Six distinct sinks in this
+        // page can make sound; the old tap covered two, so the voice kept going and
+        // the button read as dead. Delegate to the one stop that covers all of them.
+        if (!_avaOn) {
+          try { if (typeof _avaBargeIn === 'function') { _avaBargeIn(); } } catch (_) {}
+          try { if (_avaAudio) _avaAudio.pause(); } catch (_) {}
+          try { window.speechSynthesis.cancel(); } catch (_) {}
+        }
       }
       _renderAvaPill();
     });
