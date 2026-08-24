@@ -2267,9 +2267,6 @@ async function startMediaRecorder() {
   // listening. Simple + robust (no WebSocket, survives flaky mobile networks).
   // The server returns the transcript and injects it; we render it locally too.
   const CHUNK_MS = 5000;
-  // Uploads are CHAINED, not awaited inline. The chain preserves transcript ORDER
-  // across windows while never sitting in front of the next recorder.
-  let _postChain = Promise.resolve();
   function recordOneChunk() {
     if (!listening || !mediaStream) return;
     let chunks = [];
@@ -2283,30 +2280,15 @@ async function startMediaRecorder() {
     }
     mediaRecorder = rec;
     rec.ondataavailable = (ev) => { if (ev.data && ev.data.size > 0) chunks.push(ev.data); };
-    // RE-ARM BEFORE UPLOADING. Never place an awaited upload ahead of the
-    // recordOneChunk() call below — that single ordering is the whole bug.
-    // qi 2026-08-24, diagnosing it himself and correcting me twice: "The issue is not
-    // that it's posting. It POSTS and then it STOPS LISTENING. So everything that I
-    // said, if I wouldn't finish, it's getting missed." He had the mechanism exactly.
-    // The previous body blocked here on the upload, so for the whole round trip of
-    // upload + ffmpeg transcode + recognition — roughly 1-2s out of every ~5s window —
-    // NO MediaRecorder existed at all. The getUserMedia stream stayed open and the
-    // waveform kept animating, which is exactly why this presented as a silence
-    // THRESHOLD problem rather than as a mic that went periodically deaf.
-    // MEASURED that day: 645 injects, inter-arrival gaps spiking at 5s (88) and 6s (74)
-    // with clean harmonics at 11/12s and 16/17s. That is a CLOCK, not human speech —
-    // real utterance boundaries do not land on a 5-second grid.
-    rec.onstop = () => {
-      const blob = chunks.length ? new Blob(chunks, { type: mime || 'audio/webm' }) : null;
-      // FIRST, unconditionally: the mic must never be left unowned.
-      if (listening) recordOneChunk();
-      // Then hand the audio to the ordered chain. Fire-and-forget by design: a slow or
-      // failed upload must never again be able to cost him a word.
-      if (blob && blob.size > 2000) {
-        _postChain = _postChain
-          .then(() => postAudioChunk(blob))
-          .catch(() => {});   // one bad window must not break the chain for later ones
+    rec.onstop = async () => {
+      if (chunks.length) {
+        const blob = new Blob(chunks, { type: mime || 'audio/webm' });
+        // Only POST if there's meaningful audio (skip near-empty silence windows).
+        if (blob.size > 2000) {
+          try { await postAudioChunk(blob); } catch (_) {}
+        }
       }
+      if (listening) recordOneChunk();  // loop to next window
     };
     rec.start();
     setTimeout(() => { if (rec.state !== 'inactive') { try { rec.stop(); } catch (_) {} } }, CHUNK_MS);
@@ -4518,24 +4500,6 @@ function subscribeXenReplies() {
     // only thing actually making sound.
     // Hard cut, never a fade — his spec: the audio stops at full amplitude.
     function _avaHardStop(why) {
-      // ⛔ EVERY window[...] LOOKUP BELOW RESOLVES TO undefined AND ALWAYS DID.
-      // Measured 2026-08-24: `_avaAudio` (let, ~:4795), `_avaCurrentSource` (~:5165),
-      // `_avaCtx` and `audioCtx` are ALL plain `let` bindings in this classic script,
-      // so they are NEVER properties of `window`. This function therefore found nothing
-      // and stopped nothing — except speechSynthesis, the one path that IS on window.
-      // The page also has no <audio> markup (every player is `new Audio()`, never
-      // appended), so the querySelectorAll sweep matched zero elements too.
-      // THAT is why qi's interface-side stop and his speaker tap both did nothing while
-      // every component reported fine. Reaching for state through the wrong object is
-      // indistinguishable from the state not existing.
-      //
-      // FIX: delegate to _avaBargeIn(), the stop that is already proven to work — it
-      // holds the real in-scope references (_avaCurrentSource, _avaAudio,
-      // speechSynthesis, the queue) and it broadcasts to the other surfaces, which a
-      // local-only cut never could. Same `typeof` guard idiom already used at ~:5848.
-      // Duplicating its body here would be a second thing to keep in sync; one stop,
-      // called from every path, cannot drift.
-      try { if (typeof _avaBargeIn === 'function') { _avaBargeIn(); } } catch (_) {}
       try { if (window._avaAudio) { window._avaAudio.pause(); window._avaAudio.currentTime = 0; } } catch (_) {}
       // Generic sweep: stop EVERY media element, because the voice has more than one
       // playback path (3x new Audio() + AudioContext/createBufferSource) and naming
@@ -5380,18 +5344,7 @@ function _renderAvaPill() {
       if (!_avaAudioUnlocked) { _unlockAvaAudio(); _avaOn = true; }   // first tap = arm + enable
       else {
         _avaOn = !_avaOn;                                            // later taps = mute toggle
-        // qi 2026-08-24: "when it comes to silence, I am the only one to be in control
-        // of that." So this tap has to actually silence him on the FIRST press.
-        // It used to pause `_avaAudio` and cancel speechSynthesis and nothing else —
-        // but the primary playback path is the Web Audio `_avaCurrentSource` buffer
-        // node (~:5165), which neither of those touches. Six distinct sinks in this
-        // page can make sound; the old tap covered two, so the voice kept going and
-        // the button read as dead. Delegate to the one stop that covers all of them.
-        if (!_avaOn) {
-          try { if (typeof _avaBargeIn === 'function') { _avaBargeIn(); } } catch (_) {}
-          try { if (_avaAudio) _avaAudio.pause(); } catch (_) {}
-          try { window.speechSynthesis.cancel(); } catch (_) {}
-        }
+        if (!_avaOn) { try { if (_avaAudio) _avaAudio.pause(); } catch (_) {} try { window.speechSynthesis.cancel(); } catch (_) {} }
       }
       _renderAvaPill();
     });
