@@ -73,7 +73,7 @@
 <div class="wrap">
   <h1>Progress — <span>every idea</span></h1>
   <p class="sub">Your objectives register, in your words. Verdict per item, from an artifact or not at all.</p>
-  <p class="asof">Register last written 2026-08-15 16:11 · progress measured 2026-08-23 20:45 EDT</p>
+  <p class="asof">Register last written 2026-08-15 16:11 · progress measured 2026-08-24 00:20 EDT</p>
 
   <div class="legend">
     <b class="v-ok">verified — artifact named</b>
@@ -81,6 +81,55 @@
     <b class="v-no">not built</b>
     <b class="v-qi">yours to call</b>
   </div>
+
+  <h2>Overnight — closed since 20:45, each with the artifact</h2>
+
+  <div class="item ok"><div class="hd"><span class="n">✓</span>
+    <span class="t">Email in and out</span><span class="badge v-ok">verified</span></div>
+    <div class="ev">Two messages delivered to <code>lord@xlrd.org</code> — inbox rows <b>84257</b> (20:32:14)
+      and <b>84831</b> (21:05:05). Root cause of every earlier "failure": my client timed out at
+      12–120s against the hub's own <b>240s</b> send budget. A send takes ~65s because it verifies
+      itself by reading the message back.</div></div>
+
+  <div class="item ok"><div class="hd"><span class="n">✓</span>
+    <span class="t">The zombie cascade — one cause behind all of it</span><span class="badge v-ok">verified</span></div>
+    <div class="ev">Comet (pid 67672, 29h up) held <b>2,300 of 2,312 zombies</b> = 90% of the process
+      table. Ending it took the table to <b>1,236 procs / 4 zombies (0%)</b>, the watcher moved
+      <code>CRITICAL → OK</code>, and <b>claude-mem started writing again on its own</b> after a
+      34-minute stall — no checkpoint forced, no daemon restarted. The memory stall was a symptom,
+      not a separate bug.</div></div>
+
+  <div class="item ok"><div class="hd"><span class="n">✓</span>
+    <span class="t">64 skills were unreachable, not broken</span><span class="badge v-ok">verified</span></div>
+    <div class="ev">Everything ever written sat in <code>.claude-state/skills</code> — a directory the
+      Skill tool does not read. Linked 64 into the one it does: <b>59 → 123 reachable</b>, three
+      collisions left alone so no older copy shadows a working skill. Two prior notes blamed my
+      discipline for this; it was a <b>path</b> problem.</div></div>
+
+  <div class="item ok"><div class="hd"><span class="n">✓</span>
+    <span class="t">Screenshot rig alive — visual verification is possible again</span><span class="badge v-ok">verified</span></div>
+    <div class="ev">CDP port was <code>9222</code> (dead); your real Chrome Canary is on
+      <b>57666</b>. Now read from <code>XEN_CDP</code> so the next move is an env var, not a code
+      edit. Control exit 0, black-page negative control exit 3 — it discriminates. It immediately
+      caught a wrap defect on this site that two <code>curl</code> checks had passed.</div></div>
+
+  <div class="item no"><div class="hd"><span class="n">✕</span>
+    <span class="t">Your ChatGPT threads — blocked, and I stopped spending on it</span><span class="badge v-no">blocked</span></div>
+    <div class="ev">Three independent rails all <b>403</b>: a fetch from inside your own logged-in
+      page over CDP, the <code>tomcp-chatgpt</code> connector, and a CDP screenshot that produced no
+      image. Cloudflare, not your session — Perplexity reads fine the same way. The local archive is
+      not a substitute (1,919 files, ~1 in 120 are transcripts, newest <b>May 16</b>).
+      <b>The path that works:</b> Settings → Data controls → Export data, drop the zip in Downloads,
+      run <code>xen-chatgpt-threads</code> — built and tested tonight, waiting on the export.</div></div>
+
+  <div class="item qi"><div class="hd"><span class="n">!</span>
+    <span class="t">Your video audio — one route still wrong</span><span class="badge v-qi">yours to call</span></div>
+    <div class="ev">macOS tracks <b>three</b> routes and they move independently.
+      <code>output → Mac mini Speakers</code> (your fix took) ·
+      <code>input → Jump Desktop Microphone</code> ·
+      <code>system → Jump Desktop Audio</code> ← <b>still virtual</b>. A recorder capturing system
+      audio reads the <em>system</em> route, so a recording is still silent even though playback
+      works now. That's the one that was breaking the video.</div></div>
 
   <h2>Gate 0 — the interface. Nothing below counts until you can work.</h2>
 
