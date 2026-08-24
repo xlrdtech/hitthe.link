@@ -6490,7 +6490,24 @@ window.addEventListener('beforeunload', stopListening);
          than dropping his words on a key name. */
       const segs = d.segments || d.transcript_segments || (d.data && d.data.segments);
       let text = '';
-      if (Array.isArray(segs)) text = segs.map(x => (x && (x.text || x.transcript)) || '').join(' ').trim();
+      if (Array.isArray(segs)) {
+        /* ⭐ TAKE THE LAST VERSION OF EACH SEGMENT, NOT EVERY PARTIAL.
+           MEASURED 2026-08-24 15:33 on his live speech: "Okay. This this is me
+           speak speaking speaking speaking". Omi streams a segment repeatedly as
+           it firms up — "speak" then "speaking" then "speaking" — and joining the
+           whole array concatenates every revision instead of the final one.
+           Key on segment id when Omi gives one, else on start time, else index.
+           ⛔ Never dedupe by comparing TEXT: "this this" can be genuine speech,
+           and stripping repeated words would edit his words. Dedupe by IDENTITY. */
+        const byId = new Map();
+        segs.forEach((x, i) => {
+          if (!x) return;
+          const key = x.id || x.segment_id || x.start_timestamp || x.start || i;
+          const t = (x.text || x.transcript || '').trim();
+          if (t) byId.set(key, t);          // later frame for the same id wins
+        });
+        text = Array.from(byId.values()).join(' ').trim();
+      }
       else if (typeof d.text === 'string') text = d.text.trim();
       if (!text) return;
 
