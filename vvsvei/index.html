@@ -2245,6 +2245,30 @@ async function startMediaRecorder() {
     mediaStream = await navigator.mediaDevices.getUserMedia({
       audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
     });
+    // ── START THE VAD ON THIS PATH. It was never running here. ──────────────────
+    // The energy VAD (_vadCheck) is what tells recordOneChunk when he has paused, and
+    // it only runs from tickListening(), which returns immediately unless the global
+    // `analyser` exists. `analyser` is built in the Web-Speech/visualizer path only —
+    // so on Android, which routes to startMediaRecorder, the VAD had NO input at all.
+    // Attach it to the stream we ALREADY hold: no second getUserMedia, therefore no
+    // new permission prompt and no extra tap (qi: barge-in must need zero taps).
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') { try { audioCtx.resume(); } catch (_) {} }
+      if (!analyser) {
+        const _mrSrc = audioCtx.createMediaStreamSource(mediaStream);
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 1024;
+        analyser.smoothingTimeConstant = 0.78;
+        _mrSrc.connect(analyser);
+      }
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(tickListening);
+    } catch (_) {
+      // No analyser => _vadIsLive() stays false => recordOneChunk falls back to the
+      // old flat 5000ms window. Degraded, never worse. Deliberately not surfaced as
+      // an error bubble: it costs him nothing and a per-attempt bubble would flood.
+    }
   } catch (e) {
     setStatus('err', 'mic blocked');
     appendError('MIC BLOCKED — grant microphone access (lock/page icon → Permissions → Microphone → Allow; on Android also Settings → Apps → your browser → Permissions → Microphone). Then reload. Type below meanwhile.');
@@ -2340,9 +2364,22 @@ async function startMediaRecorder() {
     const _t0 = Date.now();
     (function _waitForGap() {
       if (!rec || rec.state === 'inactive') return;
-      if (typeof _vadSpeaking !== 'undefined' && _vadSpeaking) rec._sawSpeech = true;
+      const vadLive = (typeof _vadIsLive === 'function') && _vadIsLive();
+      if (vadLive && _vadSpeaking) rec._sawSpeech = true;
       const el = Date.now() - _t0;
-      const inGap = (typeof _vadSpeaking === 'undefined') ? true : !_vadSpeaking;
+      // ⛔ FAIL SAFE, NEVER FAIL SHORTER. Caught 2026-08-24 before this reached him:
+      // startMediaRecorder never started the analyser, so on his Android path
+      // `_vadSpeaking` would have been permanently false, `inGap` permanently true,
+      // and this would have cut every CHUNK_MIN_MS — 1.2s, FOUR TIMES more slicing
+      // than the 5s clock it replaced. A "smarter" cut that degrades to a faster one
+      // is worse than the dumb clock. So with no live VAD we reproduce the old
+      // behaviour exactly: one flat 5000ms window, no better, no worse.
+      if (!vadLive) {
+        if (el >= 5000) { try { rec.stop(); } catch (_) {} return; }
+        setTimeout(_waitForGap, GAP_POLL_MS);
+        return;
+      }
+      const inGap = !_vadSpeaking;
       // Hard cap first so a monologue can never wedge the window open forever.
       if (el >= CHUNK_MAX_MS || (el >= CHUNK_MIN_MS && inGap)) {
         try { rec.stop(); } catch (_) {}
@@ -2608,7 +2645,15 @@ const VAD_ONSET_FRAMES = 4;      // ~66ms @60fps of energy before we trust it's 
 const VAD_OFFSET_FRAMES = 12;    // ~200ms of quiet ends the segment and re-arms the cut
 const VAD_ABS_MIN = 0.045;       // absolute floor so a silent room can't collapse the
                                  // adaptive threshold to ~0 and trigger on faint hiss
+let _vadLastTick = 0;   // ms timestamp of the last real VAD evaluation.
+// ⛔ THE ONLY HONEST PROOF THE VAD IS ALIVE. `analyser !== null` is not proof: the
+// rAF loop may never have started, or may be stalled/backgrounded. Anything that
+// depends on _vadSpeaking must check FRESHNESS, or it silently trusts a value that
+// stopped updating — the same class of failure as reading state off the wrong object.
+function _vadIsLive() { return (Date.now() - _vadLastTick) < 500; }
+
 function _vadCheck(samples) {
+  _vadLastTick = Date.now();
   // Short-time RMS of the centered waveform (bytes 0..255, 128 = silence).
   let sum = 0;
   for (let i = 0; i < samples.length; i++) { const v = (samples[i] - 128) / 128; sum += v * v; }
