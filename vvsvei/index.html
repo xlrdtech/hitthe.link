@@ -1086,6 +1086,20 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
       <button id="tb-newthread" title="Start new thread">＋ New</button>
     </div>
     <div id="voice-pills" role="radiogroup" aria-label="Xen reader voice"></div>
+    <!-- ESCALATE PILL — qi asked five times on 2026-08-24 and spelled it out letter by
+         letter ("P I L L") after "teal" came through as a mistranscription:
+         "It's also important for the escalate button and the escalate pill to be right
+         between voice and inject in my interface." Reason, in his words: "I just had to
+         go all the way to the desktop to run escalate because I was waiting in the
+         queue. That's the exact thing it exists to prevent." And at 11:01: "And I still
+         don't have the escalate button."
+         ⚠️ It genuinely did not exist: `grep -c -i escalate` returned 0 on BOTH the live
+         served page and this source. Never misplaced — unbuilt.
+         ⛔ HE ALONE PRESSES IT. Never on a timer, a heuristic, or a hook.
+         ⛔ Touches nothing in the capture path. Additive only. -->
+    <div class="transcript-toolbar">
+      <button id="tb-escalate" title="Interrupt Xen now (qi only)">Escalate</button>
+    </div>
     <!-- INJECT SOURCE TOGGLE — qi 2026-08-22 17:29: "vei needs inject selection
          pill right after the voice pill to enable/disable varios injection source
          by that toggle." Sits exactly there, keeping his 08-10 order intact:
@@ -5967,6 +5981,58 @@ window.addEventListener('beforeunload', stopListening);
 })();
 </script>
 <script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
+
+<script>
+/* ══ ESCALATE PILL — behaviour ══ qi 2026-08-24. Additive; no shared state, cannot
+   touch capture.
+   RAIL, verified before this shipped — he named it: "_god-mode aka selmcp
+   mcp.xlrd.org/mcp... its already wired in".
+     POST https://mcp.xlrd.org/mcp  tools/call  exedus__xen_escalate  {text}
+     · initialize -> http 200 + mcp-session-id
+     · tools/list -> 86 tools incl. exedus__xen_escalate, schema {"text": string}
+     · CORS: allow-origin *, allow-methods GET/POST/OPTIONS, preflight 204
+     · no auth — that endpoint was ALREADY public; this adds a caller, not exposure.
+   ⛔ NO AUTO-FIRE. Escalate interrupts Xen mid-turn and is his to press.
+   ⛔ NO MODAL (qi 2026-08-12). Uses composer text if present, else a bare interrupt. */
+(function(){
+  "use strict";
+  var btn = document.getElementById("tb-escalate");
+  if (!btn) return;
+  var ENDPOINT = "https://mcp.xlrd.org/mcp", busy = false;
+  function flash(m, ok){
+    try { btn.textContent = m; btn.classList.toggle("muting", !ok);
+          setTimeout(function(){ btn.textContent = "Escalate";
+                                 btn.classList.remove("muting"); }, 2200); } catch(_){}
+  }
+  btn.addEventListener("click", function(e){
+    e.stopPropagation();
+    if (busy) return;                    /* one in flight — never a double interrupt */
+    busy = true;
+    var box = null, t = "";
+    try {
+      box = document.getElementById("composer") || document.querySelector("textarea");
+      if (box && box.value) t = String(box.value).trim();
+    } catch(_){}
+    if (!t) t = "[escalate]";
+    flash("...", true);
+    fetch(ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json",
+                 "Accept": "application/json, text/event-stream" },
+      body: JSON.stringify({ jsonrpc:"2.0", id: Date.now(), method:"tools/call",
+              params:{ name:"exedus__xen_escalate", arguments:{ text: t } } })
+    }).then(function(r){
+      return r.text().then(function(b){
+        /* ASSERT ON THE BODY — a 200 here can still carry a JSON-RPC error. */
+        var ok = r.ok && b.indexOf('"error"') === -1;
+        flash(ok ? "sent" : "failed", ok);
+        if (ok && box) { try { box.value = ""; } catch(_){} }
+      });
+    }).catch(function(){ flash("failed", false); })
+      .then(function(){ busy = false; });
+  });
+})();
+</script>
 
 <script>
 /* ══ INJECT SOURCE PILL — behaviour ══ qi 2026-08-22. Additive; touches no existing
