@@ -1,0 +1,104 @@
+<!-- XEN-SOURCE-COMPARE-v1 5-VARIANTS -->
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SOURCE — 5 versions</title>
+<style>
+  :root{
+    --bg:#05070a; --card:#0c1118; --line:#1b2430; --ink:#e8eef6; --dim:#8fa2b8;
+    --em:#34e6a8; --am:#b98cff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:15px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh; display:flex; flex-direction:column; align-items:center;
+    padding:28px 18px calc(40px + env(safe-area-inset-bottom));
+  }
+  .wrap{width:100%; max-width:620px}
+  h1{
+    margin:0 0 6px; font-size:26px; letter-spacing:-.02em; font-weight:650;
+    text-align:center;
+  }
+  h1 span{color:var(--em)}
+  .sub{margin:0 0 26px; text-align:center; color:var(--dim); font-size:13.5px}
+  .grid{display:flex; flex-direction:column; gap:12px}
+  a.card{
+    display:block; text-decoration:none; color:inherit;
+    background:var(--card); border:1px solid var(--line); border-radius:16px;
+    padding:16px 18px; transition:border-color .18s, transform .18s, background .18s;
+  }
+  a.card:hover,a.card:focus-visible{
+    border-color:var(--em); transform:translateY(-1px); background:#0f151d; outline:none;
+  }
+  .row{display:flex; align-items:baseline; justify-content:space-between; gap:12px}
+  .name{font-size:19px; font-weight:600; letter-spacing:-.01em}
+  .pct{font-variant-numeric:tabular-nums; font-size:19px; font-weight:650; color:var(--em)}
+  .note{margin-top:5px; color:var(--dim); font-size:13px}
+  .bar{
+    margin-top:11px; height:5px; border-radius:99px; background:#151d28; overflow:hidden;
+  }
+  .bar i{display:block; height:100%; border-radius:99px;
+    background:linear-gradient(90deg,var(--am),var(--em))}
+  .meta{
+    margin:26px 0 0; padding-top:18px; border-top:1px solid var(--line);
+    color:var(--dim); font-size:12.5px; text-align:center;
+  }
+  .meta b{color:var(--ink); font-weight:600}
+  .meta code{
+    background:#0c1118; border:1px solid var(--line); border-radius:6px;
+    padding:1px 6px; font-size:12px;
+  }
+  .links{margin-top:14px; display:flex; gap:14px; justify-content:center; flex-wrap:wrap}
+  .links a{color:var(--am); text-decoration:none; font-size:13px}
+  .links a:hover{text-decoration:underline}
+</style>
+</head><body>
+<div class="wrap">
+  <h1>SOURCE — <span>5 versions</span></h1>
+  <p class="sub">Transparency measured on the rendered surface. Higher = more see-through; every
+     one keeps its mass.</p>
+
+  <div class="grid">
+    <a class="card" href="./?v=glass">
+      <div class="row"><span class="name">glass</span><span class="pct">79.7%</span></div>
+      <div class="note">Most see-through. Clearest read of the UI underneath.</div>
+      <div class="bar"><i style="width:79.7%"></i></div>
+    </a>
+    <a class="card" href="./?v=ghost">
+      <div class="row"><span class="name">ghost</span><span class="pct">79.4%</span></div>
+      <div class="note">Near-identical transparency to glass, softer edge falloff.</div>
+      <div class="bar"><i style="width:79.4%"></i></div>
+    </a>
+    <a class="card" href="./?v=crystal">
+      <div class="row"><span class="name">crystal</span><span class="pct">78.2%</span></div>
+      <div class="note">Transparent with harder facet definition.</div>
+      <div class="bar"><i style="width:78.2%"></i></div>
+    </a>
+    <a class="card" href="./?v=liquid">
+      <div class="row"><span class="name">liquid</span><span class="pct">71.1%</span></div>
+      <div class="note">Heaviest body of the translucent set — most mass retained.</div>
+      <div class="bar"><i style="width:71.1%"></i></div>
+    </a>
+    <a class="card" href="./?v=dense">
+      <div class="row"><span class="name">dense</span><span class="pct">71.0%</span></div>
+      <div class="note">Maximum density. Least see-through, most physical presence.</div>
+      <div class="bar"><i style="width:71%"></i></div>
+    </a>
+  </div>
+
+  <p class="meta">
+    All five are the same file — the variant is applied live from the
+    <code>?v=</code> parameter, so nothing reloads a different build.<br>
+    Every luminance delta measured <b>&ge; 0</b>: none of them darken what is behind it.
+  </p>
+
+  <div class="links">
+    <a href="./">open SOURCE (default)</a>
+    <a href="https://hitthe.link/estate/">estate index</a>
+  </div>
+</div>
+</body></html>
