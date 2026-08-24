@@ -2266,7 +2266,22 @@ async function startMediaRecorder() {
   // Chunk-per-utterance loop: record fixed ~5s windows, POST each, repeat while
   // listening. Simple + robust (no WebSocket, survives flaky mobile networks).
   // The server returns the transcript and injects it; we render it locally too.
-  const CHUNK_MS = 5000;
+  // ⛔ NEVER CUT ON A CLOCK. qi 2026-08-24, after the deaf-window fix shipped and he
+  // tested it: he said "testing one two three" and the interface delivered "testing
+  // one two" — "Three never came." Then: "So that was a fraction." And: "So it's not
+  // working."  A fixed wall-clock slice lands wherever it lands, so a word straddling
+  // the boundary is split into two blobs, transcribed separately, and BOTH halves die.
+  // That is the second and larger half of the word loss; closing the deaf window
+  // between windows did nothing about cuts INSIDE a word.
+  //
+  // The page already computes a real VAD — _vadCheck() does short-time RMS on the
+  // analyser every animation frame and maintains `_vadSpeaking` with onset/offset
+  // debounce (~66ms on, ~200ms off) and an adaptive noise floor. It was built for
+  // barge-in and it works. Reuse it: the ONLY safe moment to close a window is a gap
+  // in his speech.
+  const CHUNK_MIN_MS = 1200;    // don't fire off absurdly short windows on every breath
+  const CHUNK_MAX_MS = 20000;   // backstop: a continuous monologue still flushes
+  const GAP_POLL_MS  = 60;      // how often to look for the gap
   // Uploads are CHAINED, not awaited inline. The chain preserves transcript ORDER
   // across windows while never sitting in front of the next recorder.
   let _postChain = Promise.resolve();
@@ -2302,14 +2317,39 @@ async function startMediaRecorder() {
       if (listening) recordOneChunk();
       // Then hand the audio to the ordered chain. Fire-and-forget by design: a slow or
       // failed upload must never again be able to cost him a word.
-      if (blob && blob.size > 2000) {
+      // ⛔ A WINDOW THAT CONTAINED HIS VOICE IS NEVER DISCARDED, AT ANY SIZE.
+      // The old gate was `blob.size > 2000` with no else branch, so any smaller blob
+      // vanished with no log and no trace. A trailing syllable — the "three" in
+      // "testing one two three" — is exactly that small. That is how the tail of his
+      // sentence disappeared while every component reported success.
+      // Now: speech present => always post, regardless of size. No speech => drop
+      // quietly (correct, that is a silence window). Speech present but somehow empty
+      // => say so out loud, because a silent drop is the bug we are fixing.
+      const sawSpeech = !!rec._sawSpeech;
+      if (blob && (sawSpeech || blob.size > 600)) {
         _postChain = _postChain
           .then(() => postAudioChunk(blob))
           .catch(() => {});   // one bad window must not break the chain for later ones
+      } else if (sawSpeech) {
+        try { appendError('audio window had speech but no data — a word may be missing here'); } catch (_) {}
       }
     };
     rec.start();
-    setTimeout(() => { if (rec.state !== 'inactive') { try { rec.stop(); } catch (_) {} } }, CHUNK_MS);
+    // Close on a GAP, not on a clock. Poll `_vadSpeaking` (module-scope, maintained by
+    // _vadCheck on every animation frame) and only stop when he is between words.
+    const _t0 = Date.now();
+    (function _waitForGap() {
+      if (!rec || rec.state === 'inactive') return;
+      if (typeof _vadSpeaking !== 'undefined' && _vadSpeaking) rec._sawSpeech = true;
+      const el = Date.now() - _t0;
+      const inGap = (typeof _vadSpeaking === 'undefined') ? true : !_vadSpeaking;
+      // Hard cap first so a monologue can never wedge the window open forever.
+      if (el >= CHUNK_MAX_MS || (el >= CHUNK_MIN_MS && inGap)) {
+        try { rec.stop(); } catch (_) {}
+        return;
+      }
+      setTimeout(_waitForGap, GAP_POLL_MS);
+    })();
   }
   recordOneChunk();
 }
