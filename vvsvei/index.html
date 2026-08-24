@@ -6568,6 +6568,42 @@ window.addEventListener('beforeunload', stopListening);
     hud('mic capturing at ' + ctx.sampleRate + ' Hz');
   };
 
+  /* ── AUTO-START. HE MUST NEVER HAVE TO TRIGGER IT. (cmd 4) ─────────────────
+     qi 2026-08-24 15:26: "well, what would be the task?" — the task is that this
+     starts itself. A voice rail that waits for a tap is a human-in-the-loop, which
+     is a total failure by his canon, and he has said all session that any required
+     click is the defect.
+     ⚠️ getUserMedia needs a user gesture on iOS Safari, so a bare autostart can be
+     refused by the browser. Therefore: try immediately, and if the browser refuses,
+     arm a one-shot retry on the FIRST interaction of any kind he happens to make —
+     never a button that says "click to enable", which would be the tap dressed up.
+     ⛔ If it still cannot start, SAY SO in the HUD. Silent failure is what let Apple
+     STT keep running for hours while he thought Omi was live. */
+  let _omiAutoTried = false;
+  async function _omiAuto(why){
+    if (_omiAutoTried && ws) return;
+    _omiAutoTried = true;
+    try {
+      await window.omiSttStart();
+      hud('auto-started (' + why + ')');
+    } catch (e) {
+      _omiAutoTried = false;
+      hud('AUTOSTART BLOCKED (' + why + '): ' + (e && e.name || e) + ' — will retry on first interaction');
+      for (const ev of ['pointerdown','keydown','touchstart']) {
+        window.addEventListener(ev, () => _omiAuto(ev), { once: true, passive: true });
+      }
+    }
+  }
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(() => _omiAuto('load'), 800);
+  } else {
+    window.addEventListener('DOMContentLoaded', () => setTimeout(() => _omiAuto('domready'), 800));
+  }
+  /* Reconnect if the socket drops — a dead socket must never look like silence. */
+  setInterval(() => {
+    if (!ws || ws.readyState > 1) { _omiAutoTried = false; _omiAuto('reconnect'); }
+  }, 20000);
+
   window.omiSttStop = function(){
     try { if (node) node.disconnect(); } catch(_){}
     try { if (stream) stream.getTracks().forEach(t=>t.stop()); } catch(_){}
