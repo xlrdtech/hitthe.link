@@ -6397,9 +6397,10 @@ window.addEventListener('beforeunload', stopListening);
         and the transcript came back EMPTY while every status said success.
      3. real-time pace, 3200 B = 100 ms, and ~1 s of silence so the endpointer fires.
 
-   ⚠️ KNOWN RISK, NOT YET DISPROVED: the working probe used suppress_origin=True.
-   A browser ALWAYS sends Origin and cannot suppress it. If Omi 403s on Origin this
-   fails at the handshake — the code says so out loud rather than failing quietly.
+   ✅ ORIGIN RISK DISPROVED 2026-08-24 15:07: tested the handshake with and without
+   an Origin header of https://hitthe.link. IDENTICAL results, auth_response
+   success:true both times. Omi does not care about Origin. A browser can open this
+   socket directly, which is what makes the same experience possible on every device.
    ══════════════════════════════════════════════════════════════════════════════ */
 (function(){
   "use strict";
@@ -6410,6 +6411,7 @@ window.addEventListener('beforeunload', stopListening);
   const RATE = 16000, FRAME = 1600;   // 1600 samples = 3200 bytes = 100 ms
 
   let ws = null, ready = false, ctx = null, node = null, stream = null;
+  let _omiLiveFrom = 0;   // when this socket connected — anything older is replay
   let pending = [];                    // frames captured before "ready" — NEVER dropped
 
   function hud(m){ try { if (window._hud) window._hud('[omi] ' + m);
@@ -6455,26 +6457,72 @@ window.addEventListener('beforeunload', stopListening);
       let d = null;
       try { d = JSON.parse(typeof ev.data === 'string' ? ev.data : '{}'); } catch(_){ return; }
 
-      // STEP 2 OF THE GATE. Do not stream a single byte before this.
-      if (d.status === 'ready') {
-        ready = true;
-        hud('READY provider=' + (d.provider || '?') + ' — flushing ' + pending.length + ' buffered frames');
-        for (const f of pending) { try { ws.send(f); } catch(_){} }
-        pending = [];
+      /* STEP 2 OF THE GATE — and the word is NOT "ready".
+         MEASURED 2026-08-24 15:07 against the real socket, with and without an
+         Origin header. The frames Omi actually sends after auth are:
+           {"type":"auth_response","success":true}
+           {"type":"service_status","status":"initiating","status_text":"Service Starting"}
+           {"type":"last_memory","memory_id":…}
+           {"type":"service_status","status":"in_progress_conversations_processing"}
+         The contract doc said {"status":"ready","provider":"deepgram"} and I coded
+         that literally. It never arrives, so the buffer would have filled and every
+         word would have been dropped while the socket looked perfectly healthy.
+         ⭐ Gate on the SERVICE STATUS type, and treat anything that is not an
+         explicit failure as go — fail SAFE, never fail SILENT. */
+      if (d.type === 'service_status' || d.status === 'ready') {
+        const st = String(d.status || '');
+        if (/error|failed|unauthor/i.test(st)) { hud('SERVICE FAILED: ' + st); return; }
+        if (!ready) {
+          ready = true;
+          hud('streaming — status=' + (st || 'ready') + ' — flushing ' + pending.length + ' frames');
+          for (const f of pending) { try { ws.send(f); } catch(_){} }
+          pending = [];
+        }
         return;
       }
+      if (d.type === 'last_memory') return;   // housekeeping frame, not a transcript
       if (d.type === 'auth_response' || d.success !== undefined) {
-        hud('auth_response success=' + d.success + (d.success ? ' — waiting for ready' : ' FAILED'));
+        hud('auth_response success=' + d.success + (d.success ? ' — Origin accepted, awaiting service_status' : ' FAILED'));
         return;
       }
 
-      // Transcript segments. Omi has shipped several shapes; accept all of them
-      // rather than dropping his words on a key name.
+      /* Transcript segments. Omi ships several shapes; accept all of them rather
+         than dropping his words on a key name. */
       const segs = d.segments || d.transcript_segments || (d.data && d.data.segments);
       let text = '';
       if (Array.isArray(segs)) text = segs.map(x => (x && (x.text || x.transcript)) || '').join(' ').trim();
       else if (typeof d.text === 'string') text = d.text.trim();
       if (!text) return;
+
+      /* ⭐ FRESHNESS GATE — qi 2026-08-24 15:07, on seeing his own words from 12:15
+         arrive as if he had just said them: "oh, that's old information."
+         The socket REPLAYS stored conversations on connect. Without this, a backlog
+         reads exactly like live speech: the words are genuinely his, so nothing looks
+         wrong, and I would answer questions he asked an hour ago as though they were
+         current. That is worse than dropping them.
+         Same defect shape as the SSE lane replaying xen-dictate-in frames from 12:37
+         at 13:23. Any stream that replays needs a clock, not a key check.
+         No usable timestamp = treat as REPLAY and drop, because the failure of
+         accepting stale words is unbounded and the failure of dropping one live word
+         is that he says it again. Fail toward silence, never toward fiction. */
+      const startedAt = Date.now();
+      const segTs = (Array.isArray(segs) && segs.length && (segs[0].start_timestamp || segs[0].timestamp))
+                    || d.timestamp || d.ts || null;
+      if (!_omiLiveFrom) { _omiLiveFrom = startedAt; }
+      let ageMs = null;
+      if (segTs) {
+        const ms = Number(segTs) < 1e12 ? Number(segTs) * 1000 : Number(segTs);
+        ageMs = Date.now() - ms;
+      }
+      if (ageMs !== null && ageMs > 15000) {
+        hud('REPLAY dropped (' + Math.round(ageMs/1000) + 's old): ' + text.slice(0, 48));
+        return;
+      }
+      if (ageMs === null && (Date.now() - _omiLiveFrom) < 4000) {
+        // No timestamp AND we only just connected — this is the backlog burst.
+        hud('REPLAY dropped (no ts, within connect window): ' + text.slice(0, 48));
+        return;
+      }
 
       hud('-> ' + text);
       // Into the SAME inject rail everything else uses. One path in, no second door.
