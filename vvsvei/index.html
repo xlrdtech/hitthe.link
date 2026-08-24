@@ -4479,8 +4479,51 @@ function subscribeXenReplies() {
       setTimeout(() => { if (!_avaLive) { _avaLive = true; _hud("LIVE (grace timeout)"); if (window._avaDismissOverlay) window._avaDismissOverlay(); } }, 1500);
     };
     src.onmessage = (ev) => {
+      // BARGE-IN, default channel. His speech arrives here as xen-dictate-in; stop
+      // BEFORE rendering so a render exception can never swallow the interrupt.
+      try {
+        const _d = JSON.parse(ev.data);
+        if (_d && (_d.event === 'xen-barge-stop' || _d.event === 'xen-dictate-in')) {
+          _avaHardStop(_d.event);
+        }
+      } catch (_) {}
       try { renderEvent(JSON.parse(ev.data)); } catch (_) {}
     };
+    // ─── BARGE-IN: qi SPOKE, SO STOP. (qi 2026-08-24 05:45-05:56) ──────────────
+    // "barge in is still not working yet. So that's why my thoughts are getting
+    //  fragmented and I can't finish my sentences."
+    // MEASURED that night: xen-bargein-cut fires and exits 0, but it only cancels
+    // GENERATION server-side and kills LOCAL playback. Audio now plays HERE, in his
+    // browser — the bytes are already delivered, so cancelling generation stops
+    // nothing and killing a local process stops nothing. THIS PAGE had 63 event
+    // listeners and not one for stop/cancel/barge, so the cut was invisible to the
+    // only thing actually making sound.
+    // Hard cut, never a fade — his spec: the audio stops at full amplitude.
+    function _avaHardStop(why) {
+      try { if (window._avaAudio) { window._avaAudio.pause(); window._avaAudio.currentTime = 0; } } catch (_) {}
+      // Generic sweep: stop EVERY media element, because the voice has more than one
+      // playback path (3x new Audio() + AudioContext/createBufferSource) and naming
+      // only the one I know about is how half a fix ships.
+      try {
+        document.querySelectorAll('audio,video').forEach((el) => {
+          try { el.pause(); el.currentTime = 0; } catch (_) {}
+        });
+      } catch (_) {}
+      // Web Audio path: suspend the context so a scheduled buffer goes quiet too.
+      try {
+        ['_avaCtx','_audioCtx','audioCtx','_ctx'].forEach((k) => {
+          const c = window[k];
+          if (c && typeof c.suspend === 'function' && c.state === 'running') c.suspend();
+        });
+      } catch (_) {}
+      try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (_) {}
+      try { _hud('BARGE — stopped (' + (why || 'qi spoke') + ')'); } catch (_) {}
+    }
+    window._avaHardStop = _avaHardStop;
+
+    // Named channel: the cutter emits this when he speaks.
+    try { src.addEventListener('xen-barge-stop', (e) => _avaHardStop('named')); } catch (_) {}
+
     // Also catch a NAMED 'caught-up' SSE event (not just JSON-body on default channel).
     try { src.addEventListener('caught-up', () => { _avaLive = true; _hud('LIVE (named caught-up)'); if (window._avaDismissOverlay) setTimeout(window._avaDismissOverlay, 600); }); } catch (_) {}
     src.onerror = () => {
