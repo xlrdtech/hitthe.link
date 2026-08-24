@@ -4498,7 +4498,13 @@ function subscribeXenReplies() {
       try {
         const _d = JSON.parse(ev.data);
         if (_d && (_d.event === 'xen-barge-stop' || _d.event === 'xen-dictate-in')) {
-          _avaHardStop(_d.event);
+          // FRESHNESS GATE (qi 2026-08-24 13:23). MEASURED: this lane REPLAYS his
+          // backlog on every reconnect — 12:37 PM frames arrived at 1:23 PM — so
+          // without this, one reconnect reads as him speaking dozens of times and
+          // machine-guns the stop. Only a frame from the last few seconds is a live
+          // interruption. No ts at all = treat as live (xen-barge-stop is explicit).
+          const _age = _d.ts ? (Date.now() - _d.ts) : 0;
+          if (_age <= 8000) _avaHardStop(_d.event);
         }
       } catch (_) {}
       try { renderEvent(JSON.parse(ev.data)); } catch (_) {}
@@ -4514,20 +4520,29 @@ function subscribeXenReplies() {
     // only thing actually making sound.
     // Hard cut, never a fade — his spec: the audio stops at full amplitude.
     function _avaHardStop(why) {
-      try { if (window._avaAudio) { window._avaAudio.pause(); window._avaAudio.currentTime = 0; } } catch (_) {}
-      // Generic sweep: stop EVERY media element, because the voice has more than one
-      // playback path (3x new Audio() + AudioContext/createBufferSource) and naming
-      // only the one I know about is how half a fix ships.
+      // ── BARE IDENTIFIERS, NOT window.* (qi 2026-08-24 13:24) ─────────────────
+      // The previous version of this function reached for window._avaAudio,
+      // window._avaCtx and a ['_avaCtx','_audioCtx',...] sweep over window[k].
+      // Every one of those is `let` at top level of a CLASSIC script, so none of
+      // them is a window property and all four paths resolved to undefined. The
+      // function ran, logged "BARGE — stopped", and stopped nothing — which is
+      // exactly why he kept saying barge-in does not work while every log agreed
+      // that it did. A stop that reports success and makes no silence is worse
+      // than no stop at all, because it closes the investigation.
+      // These are top-level `let`s in this same script, so a nested function CAN
+      // see them by bare name at call time. Reference them directly. Never
+      // re-introduce a window.* lookup here.
+      try { if (_avaAudio) { _avaAudio.pause(); _avaAudio.currentTime = 0; } } catch (_) {}
+      // The AudioBufferSourceNode path — this is the one that actually carries the
+      // Ava MP3 on his handset. Stopping the <audio> element alone leaves it playing.
+      try { if (_avaCurrentSource) { _avaCurrentSource.stop(); _avaCurrentSource = null; } } catch (_) {}
+      try { if (_avaCtx && _avaCtx.state === 'running') _avaCtx.suspend(); } catch (_) {}
+      // CLEAR THE QUEUE, or cutting clip 1 just starts clip 2 and he hears no cut.
+      try { _avaQueue = []; _avaPlaying = false; } catch (_) {}
+      // Still sweep the DOM: harmless, and covers any element-based player.
       try {
         document.querySelectorAll('audio,video').forEach((el) => {
           try { el.pause(); el.currentTime = 0; } catch (_) {}
-        });
-      } catch (_) {}
-      // Web Audio path: suspend the context so a scheduled buffer goes quiet too.
-      try {
-        ['_avaCtx','_audioCtx','audioCtx','_ctx'].forEach((k) => {
-          const c = window[k];
-          if (c && typeof c.suspend === 'function' && c.state === 'running') c.suspend();
         });
       } catch (_) {}
       try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (_) {}
