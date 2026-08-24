@@ -1098,7 +1098,7 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
          ⛔ HE ALONE PRESSES IT. Never on a timer, a heuristic, or a hook.
          ⛔ Touches nothing in the capture path. Additive only. -->
     <div class="transcript-toolbar">
-      <button id="tb-escalate" title="Interrupt Xen now (qi only)">ESC</button>
+      <button id="tb-escalate" title="ESC switch — tap to flip. ON = my voice also escalates.">ESC|--</button>
     </div>
     <!-- INJECT SOURCE TOGGLE — qi 2026-08-22 17:29: "vei needs inject selection
          pill right after the voice pill to enable/disable varios injection source
@@ -6011,40 +6011,65 @@ window.addEventListener('beforeunload', stopListening);
    ⛔ NO MODAL (qi 2026-08-12). Uses composer text if present, else a bare interrupt. */
 (function(){
   "use strict";
+  /* ══ THE ESC SWITCH PILL ══ qi 2026-08-24, typed 14:03: "esc|off and esc|on the
+     switch pill". Spoken 14:02: "if my voice is traveling normally without the
+     escalate, it should say ESC off. If it does do the escalate after I tap it, it
+     shows me that it's on."
+     ONE control, TWO labels, NO gestures. Tap flips. THE LABEL IS THE STATE — he
+     reads which mode he is in without pressing anything to find out.
+     ⛔ I proposed tap-vs-long-press "two modes" and he killed it: "not two modes,
+        that's too complicated, you're going to fail. I was trying to simplify it and
+        you just tried to complicate it more." Never re-introduce a gesture scheme.
+     ⛔ NEVER shows a guessed label. The server owns the truth; until it answers, the
+        pill reads ESC|-- . A control that lies about its own state is worse than one
+        that admits it does not know yet.
+     WHY THE SWITCH EXISTS: the old tap-to-escalate path costs 0.53-2.94s from the Mac
+     and longer from his handset (CORS preflight + network + a fresh node process per
+     hub call). His words: "it took unlimited time because it waited for me to speak
+     again." His VOICE has no tunnel in it, so ON puts escalate on the fast rail. */
   var btn = document.getElementById("tb-escalate");
   if (!btn) return;
   var ENDPOINT = "https://mcp.xlrd.org/mcp", busy = false;
-  function flash(m, ok){
-    try { btn.textContent = m; btn.classList.toggle("muting", !ok);
-          setTimeout(function(){ btn.textContent = "ESC";
-                                 btn.classList.remove("muting"); }, 2200); } catch(_){}
-  }
-  btn.addEventListener("click", function(e){
-    e.stopPropagation();
-    if (busy) return;                    /* one in flight — never a double interrupt */
-    busy = true;
-    var box = null, t = "";
+
+  function paint(txt, warn){
     try {
-      box = document.getElementById("composer") || document.querySelector("textarea");
-      if (box && box.value) t = String(box.value).trim();
+      btn.textContent = txt;
+      btn.classList.toggle("muting", !!warn);
+      btn.dataset.escState = txt;
     } catch(_){}
-    if (!t) t = "[escalate]";
-    flash("...", true);
-    fetch(ENDPOINT, {
+  }
+
+  function call(mode){
+    return fetch(ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json",
                  "Accept": "application/json, text/event-stream" },
       body: JSON.stringify({ jsonrpc:"2.0", id: Date.now(), method:"tools/call",
-              params:{ name:"exedus__xen_escalate", arguments:{ text: t } } })
+              params:{ name:"exedus__xen_escalate_mode", arguments:{ mode: mode } } })
     }).then(function(r){
       return r.text().then(function(b){
-        /* ASSERT ON THE BODY — a 200 here can still carry a JSON-RPC error. */
-        var ok = r.ok && b.indexOf('"error"') === -1;
-        flash(ok ? "sent" : "failed", ok);
-        if (ok && box) { try { box.value = ""; } catch(_){} }
+        /* ASSERT ON THE BODY. A 200 can still carry a JSON-RPC error, and the hub
+           answers tools:0 for ~2 min after any restart. */
+        if (!r.ok || b.indexOf('"error"') !== -1) return null;
+        if (b.indexOf("ESC|ON")  !== -1) return "ESC|ON";
+        if (b.indexOf("ESC|OFF") !== -1) return "ESC|OFF";
+        return null;
       });
-    }).catch(function(){ flash("failed", false); })
-      .then(function(){ busy = false; });
+    }).catch(function(){ return null; });
+  }
+
+  /* Read the real state on load — the label must match the daemon, not a default. */
+  call("status").then(function(st){ paint(st || "ESC|--", !st); });
+
+  btn.addEventListener("click", function(e){
+    e.stopPropagation();
+    if (busy) return;
+    busy = true;
+    paint("ESC|..", false);
+    call("toggle").then(function(st){
+      paint(st || "ESC|!!", !st);
+      busy = false;
+    });
   });
 })();
 </script>
