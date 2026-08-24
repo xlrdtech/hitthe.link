@@ -6373,6 +6373,164 @@ window.addEventListener('beforeunload', stopListening);
   });
 })();
 </script>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════════════════
+   OMI STT — HIS BROWSER TALKS TO OMI DIRECTLY (qi 2026-08-24 14:46)
+   "Making OMI via the web the handler of the STT universally ... my interface, so
+    it's the same experience on all devices ... the same experience universally."
+
+   WHY THE BROWSER AND NOT THIS MAC: Apple STT runs on his desktop, so it cannot
+   follow him to the phone — and he ruled the desktop out entirely: "you are not to
+   route any audio through anything that has to do with my local desktop at all.
+   Point blank, period." Audio goes device -> Omi. Nothing in between.
+
+   WHY OMI AND ONLY OMI: he rejected the alternatives by name — "Whisper
+   hallucinates", no Deepgram, no Gemini — "we need to use Omi. I know for sure we
+   need to use Omi." Measured the same day: Apple gave him "Erica" for words he
+   never said, "wereaboos" for wearables, "B is eating it" for nothing at all.
+
+   THE THREE-STEP GATE, PAID FOR ALREADY (docs/omi-web-listen-contract.md):
+     1. auth frame FIRST                     {"type":"auth","token":…,"device_id_hash":…}
+     2. ⭐ WAIT FOR {"status":"ready"} — auth success is NOT the engine being up.
+        My first attempt sent 18 frames in 0.4s, ready arrived after the last one,
+        and the transcript came back EMPTY while every status said success.
+     3. real-time pace, 3200 B = 100 ms, and ~1 s of silence so the endpointer fires.
+
+   ⚠️ KNOWN RISK, NOT YET DISPROVED: the working probe used suppress_origin=True.
+   A browser ALWAYS sends Origin and cannot suppress it. If Omi 403s on Origin this
+   fails at the handshake — the code says so out loud rather than failing quietly.
+   ══════════════════════════════════════════════════════════════════════════════ */
+(function(){
+  "use strict";
+  const TOKEN_URL = 'https://omi.xlrd.org/omi/token';
+  const WS_URL = 'wss://api.omi.me/v4/web/listen'
+               + '?language=multi&sample_rate=16000&codec=pcm16&source=web'
+               + '&include_speech_profile=true';
+  const RATE = 16000, FRAME = 1600;   // 1600 samples = 3200 bytes = 100 ms
+
+  let ws = null, ready = false, ctx = null, node = null, stream = null;
+  let pending = [];                    // frames captured before "ready" — NEVER dropped
+
+  function hud(m){ try { if (window._hud) window._hud('[omi] ' + m);
+                        else console.log('[omi]', m); } catch(_){} }
+
+  async function deviceIdHash(){
+    // Omi keys the socket to a device id hash. Reuse a stable per-browser id so his
+    // speech profile applies; sha256 it the same way the proven probe did.
+    let id = null;
+    try { id = localStorage.getItem('omi-web-device-id'); } catch(_){}
+    if (!id) {
+      id = 'xen-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+      try { localStorage.setItem('omi-web-device-id', id); } catch(_){}
+    }
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(id));
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+
+  async function getToken(){
+    const r = await fetch(TOKEN_URL, { cache: 'no-store' });
+    const d = await r.json();
+    if (!d.token) throw new Error('no token: ' + JSON.stringify(d).slice(0,120));
+    // Assert on FRESHNESS. A stale token fails the handshake, and a silent
+    // handshake failure is exactly how this looks broken for the wrong reason.
+    if (d.age_seconds > 3000) hud('WARNING token is ' + d.age_seconds + 's old');
+    return d.token;
+  }
+
+  window.omiSttStart = async function(){
+    if (ws) { hud('already open'); return; }
+    hud('getting token');
+    const [tok, devh] = await Promise.all([getToken(), deviceIdHash()]);
+
+    ws = new WebSocket(WS_URL);
+    ws.binaryType = 'arraybuffer';
+
+    ws.onopen = () => {
+      hud('socket open — sending auth');
+      ws.send(JSON.stringify({ type:'auth', token: tok, device_id_hash: devh }));
+    };
+
+    ws.onmessage = (ev) => {
+      let d = null;
+      try { d = JSON.parse(typeof ev.data === 'string' ? ev.data : '{}'); } catch(_){ return; }
+
+      // STEP 2 OF THE GATE. Do not stream a single byte before this.
+      if (d.status === 'ready') {
+        ready = true;
+        hud('READY provider=' + (d.provider || '?') + ' — flushing ' + pending.length + ' buffered frames');
+        for (const f of pending) { try { ws.send(f); } catch(_){} }
+        pending = [];
+        return;
+      }
+      if (d.type === 'auth_response' || d.success !== undefined) {
+        hud('auth_response success=' + d.success + (d.success ? ' — waiting for ready' : ' FAILED'));
+        return;
+      }
+
+      // Transcript segments. Omi has shipped several shapes; accept all of them
+      // rather than dropping his words on a key name.
+      const segs = d.segments || d.transcript_segments || (d.data && d.data.segments);
+      let text = '';
+      if (Array.isArray(segs)) text = segs.map(x => (x && (x.text || x.transcript)) || '').join(' ').trim();
+      else if (typeof d.text === 'string') text = d.text.trim();
+      if (!text) return;
+
+      hud('-> ' + text);
+      // Into the SAME inject rail everything else uses. One path in, no second door.
+      try {
+        if (window.injectTranscript) window.injectTranscript(text);
+        else fetch('https://xen.xlrd.org/api/omni/event', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event:'xen-dictate-in', source:'omi-web',
+                                 sender:'omi-web', text: text, ts: Date.now() })
+        }).catch(()=>{});
+      } catch(_){}
+    };
+
+    ws.onerror = () => hud('SOCKET ERROR — if this is a 403 it is the Origin header the probe suppressed');
+    ws.onclose = (e) => { hud('closed code=' + e.code + ' reason=' + (e.reason||'-')); ws = null; ready = false; };
+
+    // Mic -> raw PCM16. No MediaRecorder, no container, no upload: a continuous
+    // stream, because a POST-then-restart cycle is what lost 40% of his words.
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: { channelCount:1, echoCancellation:true, noiseSuppression:true, autoGainControl:true }
+    });
+    ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: RATE });
+    const src = ctx.createMediaStreamSource(stream);
+    node = ctx.createScriptProcessor(4096, 1, 1);
+    let acc = [];
+    node.onaudioprocess = (e) => {
+      const inp = e.inputBuffer.getChannelData(0);
+      for (let i = 0; i < inp.length; i++) acc.push(inp[i]);
+      while (acc.length >= FRAME) {
+        const chunk = acc.splice(0, FRAME);
+        const pcm = new Int16Array(FRAME);
+        for (let i = 0; i < FRAME; i++) {
+          const v = Math.max(-1, Math.min(1, chunk[i]));
+          pcm[i] = v < 0 ? v * 0x8000 : v * 0x7FFF;
+        }
+        const buf = pcm.buffer;
+        if (ready && ws && ws.readyState === 1) { try { ws.send(buf); } catch(_){} }
+        else if (pending.length < 200) pending.push(buf);   // ~20 s ceiling, then drop oldest
+        else { pending.shift(); pending.push(buf); }
+      }
+    };
+    src.connect(node); node.connect(ctx.destination);
+    hud('mic capturing at ' + ctx.sampleRate + ' Hz');
+  };
+
+  window.omiSttStop = function(){
+    try { if (node) node.disconnect(); } catch(_){}
+    try { if (stream) stream.getTracks().forEach(t=>t.stop()); } catch(_){}
+    try { if (ctx) ctx.close(); } catch(_){}
+    try { if (ws) ws.close(); } catch(_){}
+    ws = null; ready = false; pending = []; node = null; ctx = null; stream = null;
+    hud('stopped');
+  };
+})();
+</script>
+
 </body>
 </html>
 <!-- cache-bust 1786420720 -->
