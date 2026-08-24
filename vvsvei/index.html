@@ -6568,7 +6568,10 @@ window.addEventListener('beforeunload', stopListening);
   const RATE = 16000, FRAME = 1600;   // 1600 samples = 3200 bytes = 100 ms
 
   let ws = null, ready = false, ctx = null, node = null, stream = null;
-  let _omiLiveFrom = 0;   // when this socket connected — anything older is replay
+  let _omiLiveFrom = 0;   // when THIS socket connected — RE-STAMPED on every open
+  let _omiLastFrame = 0;  // last frame of any kind off the socket — liveness stamp
+  let _omiCursor = 0;     // resume position: newest segment ts ever ACCEPTED
+  const _omiSeen = new Map();   // fingerprint -> ts accepted; kills re-stamped replay
   let pending = [];                    // frames captured before "ready" — NEVER dropped
 
   function hud(m){ try { if (window._hud) window._hud('[omi] ' + m);
@@ -6599,6 +6602,16 @@ window.addEventListener('beforeunload', stopListening);
 
   window.omiSttStart = async function(){
     if (ws) { hud('already open'); return; }
+    /* ⚠️ TEAR DOWN THE OLD AUDIO GRAPH BEFORE BUILDING A NEW ONE.
+       With the 3-reconnect cap removed (see below), a long session can revive the
+       socket many times. Every start used to allocate a fresh getUserMedia stream
+       and AudioContext while orphaning the previous one — three reconnects hid
+       that; unlimited reconnects turn it into a leak and a stack of live mic
+       captures. Same-file symbols only, never the _ava* playback graph. */
+    try { if (node) node.disconnect(); } catch(_){}
+    try { if (stream) stream.getTracks().forEach(t=>t.stop()); } catch(_){}
+    try { if (ctx && ctx.state !== 'closed') ctx.close(); } catch(_){}
+    node = null; ctx = null; stream = null;
     hud('getting token');
     const [tok, devh] = await Promise.all([getToken(), deviceIdHash()]);
 
@@ -6606,7 +6619,16 @@ window.addEventListener('beforeunload', stopListening);
     ws.binaryType = 'arraybuffer';
 
     ws.onopen = () => {
-      hud('socket open — sending auth');
+      /* ⭐ THE CONNECT WINDOW IS RE-ARMED HERE, ON EVERY OPEN — this is the bug fix.
+         The old code stamped _omiLiveFrom exactly once, via `if (!_omiLiveFrom)`.
+         From the SECOND socket onward `Date.now() - _omiLiveFrom` was minutes, so
+         the no-timestamp replay guard below (`< 4000`) was permanently false and
+         the whole backlog burst walked straight into his feed. The guard read as
+         working — it was simply never true again after the first connect. */
+      _omiLiveFrom = Date.now();
+      _omiLastFrame = Date.now();
+      hud('socket open — sending auth (resume cursor '
+          + (_omiCursor ? new Date(_omiCursor).toLocaleTimeString() : 'none') + ')');
       ws.send(JSON.stringify({ type:'auth', token: tok, device_id_hash: devh }));
     };
 
@@ -6679,23 +6701,58 @@ window.addEventListener('beforeunload', stopListening);
          No usable timestamp = treat as REPLAY and drop, because the failure of
          accepting stale words is unbounded and the failure of dropping one live word
          is that he says it again. Fail toward silence, never toward fiction. */
+      /* ⭐⭐ THE RESUME POSITION IS EXPLICIT, AND IT IS AN IDENTITY CHECK, NOT A CLOCK.
+         qi 2026-08-24 19:08: "it should not be disconnecting and reconnecting,
+         it's not an on-and-off thing." Right — and where a reconnect cannot be
+         avoided, it must be unable to re-inject a single word he already said.
+         ⚠️ A CLOCK ALONE CANNOT DO THAT, and the comment 60 lines above says why
+         without drawing the conclusion: on the 15:26 reconnect loop his 15:39-15:52
+         speech came back "each time stamped with the CURRENT minute." Omi RE-STAMPS
+         replayed segments as it sends them. So `ageMs > 15000` never fires on a
+         replay — the burst arrives looking perfectly fresh, which is exactly why it
+         was indistinguishable from live speech. The age gate is kept for replays
+         that DO keep their original timestamp; the fingerprint below is what
+         actually catches the re-stamped ones.
+         ⛔ FAIL OPEN, ALWAYS (his words are never worth losing): the fingerprint
+         only suppresses lines of ECHO_MIN_TOKENS words or more. He repeats short
+         utterances constantly — "yeah", "okay", "no, do it" — and silencing a real
+         one costs more than letting a short replay through. Same threshold the
+         bridge already uses for the same reason. */
       const startedAt = Date.now();
       const segTs = (Array.isArray(segs) && segs.length && (segs[0].start_timestamp || segs[0].timestamp))
                     || d.timestamp || d.ts || null;
+      _omiLastFrame = startedAt;            // liveness stamp, read by _omiRevive
       if (!_omiLiveFrom) { _omiLiveFrom = startedAt; }
-      let ageMs = null;
+      let ageMs = null, tsMs = 0;
       if (segTs) {
-        const ms = Number(segTs) < 1e12 ? Number(segTs) * 1000 : Number(segTs);
-        ageMs = Date.now() - ms;
+        tsMs = Number(segTs) < 1e12 ? Number(segTs) * 1000 : Number(segTs);
+        ageMs = startedAt - tsMs;
       }
+      const _words = String(text).trim().split(/\s+/).filter(Boolean).length;
+      const _fp = String(text).trim().toLowerCase().replace(/[^a-z0-9 ]/g, '').slice(0, 120);
+      // 1. RE-STAMPED REPLAY — same words already accepted inside the replay window.
+      //    Long lines only; short ones always pass (fail open).
+      if (_words >= 5 && _omiSeen.has(_fp) && (startedAt - _omiSeen.get(_fp)) < 600000) {
+        hud('REPLAY dropped (already accepted '
+            + Math.round((startedAt - _omiSeen.get(_fp)) / 1000) + 's ago): ' + text.slice(0, 48));
+        return;
+      }
+      // 2. Replays that kept their original timestamp.
       if (ageMs !== null && ageMs > 15000) {
         hud('REPLAY dropped (' + Math.round(ageMs/1000) + 's old): ' + text.slice(0, 48));
         return;
       }
-      if (ageMs === null && (Date.now() - _omiLiveFrom) < 4000) {
-        // No timestamp AND we only just connected — this is the backlog burst.
+      // 3. No timestamp AND this socket only just opened — the backlog burst.
+      //    Correct now that _omiLiveFrom is re-stamped in ws.onopen on EVERY connect.
+      if (ageMs === null && (startedAt - _omiLiveFrom) < 4000) {
         hud('REPLAY dropped (no ts, within connect window): ' + text.slice(0, 48));
         return;
+      }
+      // ACCEPTED — advance the resume position so this cannot come back on reconnect.
+      if (tsMs && tsMs > _omiCursor) _omiCursor = tsMs;
+      _omiSeen.set(_fp, startedAt);
+      if (_omiSeen.size > 500) {            // bounded, oldest-first, never unbounded
+        for (const k of _omiSeen.keys()) { _omiSeen.delete(k); if (_omiSeen.size <= 400) break; }
       }
 
       hud('-> ' + text);
@@ -6785,15 +6842,57 @@ window.addEventListener('beforeunload', stopListening);
      retry, it is a broadcast loop. Check what reconnecting COSTS before automating
      it. Reconnect only on an actual close event, once, with backoff — never on a
      timer that fires while the socket is healthy. */
+  /* ⭐⭐ THE CAP IS GONE. A PERMANENTLY DEAD MICROPHONE IS THE WORST OUTCOME THERE IS.
+     The 3-strike cap was solving the wrong problem. It existed because a reconnect
+     could re-inject his old speech, so limiting reconnects limited the damage —
+     treating the symptom by making his input rail die for good on the third close,
+     with nothing to revive it but a page reload HE would have to think to do. That
+     is precisely the failure cmd 44 forbids: he finds it himself.
+     The replay damage is now handled where it belongs, at the gate above, by
+     identity. With that in place reconnecting is cheap, so it is unlimited. */
   let _reconnects = 0;
   function _omiOnClose(){
-    if (_reconnects >= 3) { hud('socket closed 3x — not reconnecting, say the word'); return; }
     _reconnects++;
-    const wait = 2000 * _reconnects;
-    hud('socket closed, one reconnect in ' + (wait/1000) + 's (#' + _reconnects + ')');
+    /* Backoff hangs off the CLOSE EVENT ITSELF — it is never a timer that fires
+       while the socket is healthy. That distinction is the whole 15:26 lesson:
+       a retry against an endpoint that replays on connect is a broadcast loop. */
+    const wait = Math.min(1000 * _reconnects, 10000);
+    hud('socket closed (#' + _reconnects + ') — reviving in ' + (wait/1000) + 's');
     setTimeout(() => { _omiAutoTried = false; _omiAuto('after-close'); }, wait);
   }
   window._omiOnClose = _omiOnClose;
+
+  /* ⭐ KEEPING THE STANDING CONNECTION STANDING — EVENT-DRIVEN, NEVER POLLED.
+     Every trigger below is a real browser event the OS hands us for free: the tab
+     came back, the network came back, the page was restored from bfcache. Those are
+     exactly the moments a WebSocket dies quietly with no close event ever firing —
+     a backgrounded tab on a phone is the classic one. No sleep, no interval, no
+     "check in five minutes" (qi banned those outright today).
+     Each trigger asks ONE question — is the socket actually OPEN? — and acts only
+     if it is not. A healthy socket is never touched, which is the property the old
+     20-second reconnect loop lacked and why that loop re-broadcast his history. */
+  function _omiRevive(why){
+    if (ws && ws.readyState === 1 /* OPEN */) return;   // healthy — leave it alone
+    hud('revive (' + why + '): socket not open, restarting');
+    _omiAutoTried = false;
+    _omiAuto('revive-' + why);
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') _omiRevive('visible');
+  });
+  window.addEventListener('online',   () => _omiRevive('online'));
+  window.addEventListener('focus',    () => _omiRevive('focus'));
+  window.addEventListener('pageshow',  () => _omiRevive('pageshow'));
+
+  /* Read-only introspection. The rail's true state must be answerable without a
+     screenshot and without guessing — cmd 45: unseen is false, so make it seeable. */
+  window.omiSttState = () => ({
+    open: !!(ws && ws.readyState === 1),
+    readyState: ws ? ws.readyState : -1,
+    reconnects: _reconnects,
+    lastFrameAgoMs: _omiLastFrame ? (Date.now() - _omiLastFrame) : null,
+    liveFrom: _omiLiveFrom, cursor: _omiCursor, seen: _omiSeen.size
+  });
 
   window.omiSttStop = function(){
     try { if (node) node.disconnect(); } catch(_){}
