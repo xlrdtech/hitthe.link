@@ -1247,8 +1247,16 @@ const HEADERS = { 'Content-Type': 'application/json' };
 const CHUNK_MS = 5000;
 
 // ── Reply feedback (qi rates Xen replies 👍/👎 → Xen learns good vs not) ───────
-// Endpoint may not exist yet — POST is fire-and-forget, no-cors, errors swallowed.
-// localStorage is the source of truth so nothing is lost when the endpoint is down.
+// ⭐ FIXED 2026-08-24. WHAT IT WAS, MEASURED: this POSTed to /api/feedback with
+// mode:'no-cors' + .catch(()=>{}), and NO handler for that route existed anywhere in
+// omnimind.js — the request hit the auth write-gate and came back 401 every single
+// time. Both the no-cors mode AND the empty catch made that unobservable from the
+// page, so the button could not detect its own failure. Ratings went nowhere and the
+// thumb still lit up.
+// NOW: omnimind.js serves POST /api/feedback (appends ~/.xen/state/reply-feedback.jsonl,
+// on AUTH_BYPASS_PATHS) and this call is a REAL cors fetch that ASSERTS ON THE BODY
+// (ok:true), surfacing a fault on the button when it does not land.
+// localStorage stays as the local copy so a rating survives an offline tap.
 const FEEDBACK_URL = 'https://xen.xlrd.org/api/feedback';
 const FEEDBACK_LOG_KEY = 'xen-feedback-log';
 function logFeedback(entry) {
@@ -1259,14 +1267,20 @@ function logFeedback(entry) {
   log.push(entry);
   if (log.length > 500) log.splice(0, log.length - 500);   // bound growth
   try { localStorage.setItem(FEEDBACK_LOG_KEY, JSON.stringify(log)); } catch (_) {}
-  // (a) fire-and-forget POST — graceful: endpoint may 404/not-exist, swallow all.
+  // (a) REAL cors POST. Returns a promise the caller uses to paint success or fault —
+  // never swallowed, never no-cors. A 200 alone is not a yes: assert on ok===true.
   try {
-    fetch(FEEDBACK_URL, {
-      method: 'POST', mode: 'no-cors', keepalive: true,
+    return fetch(FEEDBACK_URL, {
+      method: 'POST', keepalive: true,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(entry),
-    }).catch(() => {});
-  } catch (_) {}
+    }).then(function (r) {
+      return r.text().then(function (b) {
+        if (!r.ok) return false;
+        try { return JSON.parse(b).ok === true; } catch (_) { return false; }
+      });
+    }).catch(function () { return false; });
+  } catch (_) { return Promise.resolve(false); }
 }
 
 // ── VEI RTC: transport Mac say-worker voice to phone over WebRTC (peer-to-peer,
@@ -2864,13 +2878,25 @@ function attachBubbleActions(bubbleEl, text) {
         if (!now) {
           btn.classList.add('active');
           btn.setAttribute('aria-pressed', 'true'); other.setAttribute('aria-pressed', 'false');
-          logFeedback({ id: replyId, text: snippet, rating, ts: Date.now() });
+          logFeedback({ id: replyId, text: snippet, rating, ts: Date.now() })
+            .then(function (ok) { markFeedback(btn, ok); });
         } else {
           // toggled OFF — record the retraction so the learner sees the un-rate too.
           btn.setAttribute('aria-pressed', 'false');
-          logFeedback({ id: replyId, text: snippet, rating: null, ts: Date.now() });
+          logFeedback({ id: replyId, text: snippet, rating: null, ts: Date.now() })
+            .then(function (ok) { markFeedback(btn, ok); });
         }
       };
+      // The whole point of the 2026-08-24 fix: the button SHOWS when its own POST did
+      // not land. Silent success on an unverified write is what made this theatre.
+      function markFeedback(el, ok) {
+        try {
+          el.classList.toggle('fb-fault', !ok);
+          el.title = ok ? 'rating recorded' : 'rating did NOT reach the server — not recorded';
+          if (!ok) el.style.color = '#ff6b6b';
+          else el.style.color = '';
+        } catch (_) {}
+      }
       up.onclick = rate('up', up, down);
       down.onclick = rate('down', down, up);
       fb.appendChild(up); fb.appendChild(down);
@@ -6079,7 +6105,32 @@ window.addEventListener('beforeunload', stopListening);
    function. Reads/writes ONE localStorage key and re-applies on every render tick. */
 (function(){
   "use strict";
-  var KEY="xen.vei.injectSources.v1";
+  /* ⭐⭐ THE CHIPS NOW GATE THE REAL INJECTION PATH — qi 2026-08-24 ⭐⭐
+     WHAT THEY WERE, MEASURED: this block wrote localStorage `xen.vei.injectSources.v1`
+     and set style.display="none" on matching rows. That key appeared EXACTLY ONCE in
+     the entire dev_ tree — this write. ZERO readers. No backend consulted it. So he
+     tapped BEE, the chip struck through, the counter fell 11/11 -> 10/11, and bee kept
+     injecting into his session. The pill reported success against its own state instead
+     of against the system it names — the confirmed lie in his interface.
+     Note the 2026-08-22 comment further down, which caught the same shape one layer up
+     (the selector matched zero rows). Fixing the hiding never touched the injecting.
+
+     NOW: omnimind (:4441, dev_/omnimind/omnimind.js) owns the truth in
+     ~/.xen/state/inject-sources.json, and its injectTui wrapper DROPS the pane inject
+     for a muted rail with a `[RAIL_MUTED]` log line naming the rail and the text.
+
+     ⛔ SERVER-SIDE, NOT localStorage. He runs this interface on phone, watch and
+        desktop; a mute that lives in one browser tab is not a mute.
+     ⛔ PAINT FROM THE SERVER RESPONSE ONLY — never optimistically. This is exactly the
+        discipline the ESC pill uses (see the block above: "NEVER shows a guessed label.
+        The server owns the truth"), and it is why ESC was the one control on this page
+        that survived the audit. Until the server answers, the counter reads "–/11" and
+        no chip claims to be off.
+     ⛔ A FAILED CALL SHOWS A FAULT, NOT A STRIKE-THROUGH. A control that cannot detect
+        its own failure is the thing being deleted here; do not re-add a .catch(()=>{}).
+     ⛔ THE STORE FAILS OPEN AT EVERY LAYER: missing/corrupt/unreadable state = nothing
+        muted = EVERYTHING INJECTS. Silencing him is far worse than an echo. */
+  var MUTE_URL="https://xen.xlrd.org/api/inject-sources";
   /* MEASURED rails, 2026-08-22, over 11,979 capture records. label = what he sees,
      tag = the prefix as it actually appears in the feed. `locked` rails cannot be
      switched off — his own words are not hideable. */
@@ -6112,16 +6163,45 @@ window.addEventListener('beforeunload', stopListening);
   var wrap=document.getElementById("inject-picker");   /* THEIR mount — see merge note */
   if(!btn||!wrap||!cnt) return;                 /* his DOM changed — do nothing, never throw */
 
-  function load(){
-    var off={};
-    try{ off=JSON.parse(localStorage.getItem(KEY)||"{}")||{}; }catch(e){ off={}; }
-    RAILS.forEach(function(r){ if(r.locked) delete off[r.tag]; });   /* locked can never be off */
-    return off;
+  /* OFF is a MIRROR of server truth, never a source of it. It is only ever assigned
+     from a response body — see adopt(). `known` stays false until the server has
+     actually answered once, and every label/aria/strike-through is suppressed while
+     it is false. An unknown state must LOOK unknown. */
+  var OFF={}, known=false, busy=false;
+  function load(){ return OFF; }        /* kept so paint()/apply() below are untouched */
+
+  /* The server lowercases every tag (RAIL_TAGS in omnimind.js). "XEN-AGENT",
+     "VEI ATTACH" and "DESK DROP" would otherwise be refused as unknown rails and mute
+     NOTHING — a chip that strikes through and gates nothing is the original bug wearing
+     a new coat. Key everything through here, both directions. */
+  function key(t){ return String(t||"").toLowerCase(); }
+
+  function adopt(body){
+    /* ASSERT ON THE BODY. A 200 is not a yes — this endpoint answers {ok:false,error}
+       with a 500 and would otherwise read as success. */
+    if(!body || body.ok!==true || !Array.isArray(body.muted)) return false;
+    var next={};
+    body.muted.forEach(function(t){ next[key(t)]=1; });
+    RAILS.forEach(function(r){ if(r.locked) delete next[key(r.tag)]; });
+    OFF=next; known=true;
+    return true;
   }
-  function save(off){ try{ localStorage.setItem(KEY,JSON.stringify(off)); }catch(e){} }
+
+  function call(payload){
+    var opt={ method: payload?"POST":"GET", cache:"no-store" };
+    if(payload){ opt.headers={"Content-Type":"application/json"}; opt.body=JSON.stringify(payload); }
+    return fetch(MUTE_URL,opt).then(function(r){
+      return r.text().then(function(b){
+        if(!r.ok) return null;
+        try{ return JSON.parse(b); }catch(e){ return null; }
+      });
+    }).catch(function(){ return null; });   /* null == "I do not know", never "off" */
+  }
 
   function label(){
-    var off=load(), on=RAILS.filter(function(r){return !off[r.tag];}).length;
+    if(!known){ cnt.textContent=" –/"+RAILS.length; btn.classList.remove("muting"); btn.classList.add("unknown"); return; }
+    btn.classList.remove("unknown");
+    var on=RAILS.filter(function(r){return !OFF[key(r.tag)];}).length;
     cnt.textContent=" "+on+"/"+RAILS.length;
     btn.classList.toggle("muting", on<RAILS.length);
   }
@@ -6190,18 +6270,33 @@ window.addEventListener('beforeunload', stopListening);
     var off=load();
     RAILS.forEach(function(r){
       var b=document.createElement("button");
-      b.className="inject-chip"+(off[r.tag]?" off":"")+(r.locked?" locked":"");
+      var isOff=!!off[key(r.tag)];
+      /* Only claim a state the server has confirmed. Before that: no .off, no
+         aria-pressed=false, and the title says so out loud. */
+      b.className="inject-chip"+(known&&isOff?" off":"")+(r.locked?" locked":"")+(known?"":" unknown");
       b.type="button";
       b.textContent=r.label+(r.n?" "+r.n:"");
-      b.setAttribute("aria-pressed", off[r.tag]?"false":"true");
+      b.setAttribute("aria-pressed", known?(isOff?"false":"true"):"mixed");
       b.title = r.locked
         ? r.label+" — always on. Your own words are never hidden."
-        : r.label+" — tap to mute in this view. Nothing is discarded; the capture log keeps every byte.";
+        : (known
+            ? r.label+" — tap to stop this rail reaching the Claude session. Dropped at the injection point on the server, never queued; the feed still shows it and the capture log keeps every byte."
+            : r.label+" — state unknown, the server has not answered yet.");
       if(r.locked){ b.disabled=true; }
       else b.onclick=function(){
-        var o=load();
-        if(o[r.tag]) delete o[r.tag]; else o[r.tag]=1;
-        save(o); build(); apply();
+        if(busy) return;
+        busy=true;
+        b.classList.add("pending"); b.textContent=r.label+" …";
+        /* Round trip FIRST, paint SECOND. Nothing here guesses the outcome. */
+        call({ tag:key(r.tag), muted: !isOff }).then(function(body){
+          busy=false;
+          if(adopt(body)){ build(); apply(); return; }
+          /* Honest failure: say the tap did not land, keep the last KNOWN state, and
+             never draw a strike-through we cannot back with a server response. */
+          b.classList.remove("pending"); b.classList.add("fault");
+          b.textContent=r.label+" !";
+          b.title=r.label+" — the mute did NOT take. The server did not confirm it; this rail is still reaching the session.";
+        });
       };
       wrap.appendChild(b);
     });
@@ -6238,13 +6333,22 @@ window.addEventListener('beforeunload', stopListening);
         "background:rgba(255,255,255,.06);color:var(--text,#e8e8e8);"+
         "border:1px solid rgba(255,255,255,.14);white-space:nowrap}"+
       "#inject-picker button.off{opacity:.42;text-decoration:line-through}"+
+      /* An unconfirmed chip must not look confident, and a failed tap must look failed. */
+      "#inject-picker button.unknown{opacity:.55;border-style:dashed}"+
+      "#inject-picker button.pending{opacity:.7}"+
+      "#inject-picker button.fault{border-color:rgba(255,90,90,.75);color:#ff6b6b;opacity:1}"+
+      "#tb-inject.unknown{opacity:.7}"+
       "#inject-picker button.locked{opacity:.9;cursor:default;"+
         "border-color:rgba(60,255,150,.45);color:#3cff96}"+
       "#tb-inject.muting{border-color:rgba(60,255,150,.55);color:#3cff96}";
     document.head.appendChild(st);
   }
 
+  /* Read the REAL state on load — the chips must match the daemon, not a default.
+     One GET, no polling: the state only changes when he taps, and a tap already
+     returns the fresh state in its own response. */
   label();
+  call(null).then(function(body){ adopt(body); label(); build(); });
   apply();
   /* re-apply after the transcript redraws — no polling gate, just a cheap observer */
   try{
@@ -6312,6 +6416,33 @@ window.addEventListener('beforeunload', stopListening);
   var SKILLS = ["a-timeout-is-not-a-delivery-verdict", "ai-3d-website", "arm-the-listener-before-you-trigger", "assert-on-what-the-user-sees", "auto-mapping", "auto-tracked-progress", "autogoal", "bastra-recall", "before-acting-on-a-stored-decision", "breath-to-life-tracking", "browser-control", "canon-mirror-drift-check", "classify-at-the-source-not-at-the-sink", "claude-m4-launch-guardian", "claude-web-orchestrate", "client-tool-factory", "control-samples-from-the-corpus", "design", "empty-grep-is-a-tooling-fault", "force-the-failure-path", "hitthelink-deploy-verify", "human-conversation", "local-service-openapi-first", "loop-engineering", "maestri", "maestri-portal", "mail-across-all-accounts", "oc-blitz", "output-grounding", "parallel-goal-swarms", "remember", "routine-hub", "run-reliability", "screenshot-any-url", "screenshot-verify-rig", "skill-creator", "spark-recipe-calendar-audit", "spark-recipe-end-of-day", "spark-recipe-evening-email", "spark-recipe-inbox-by-category", "spark-recipe-invitation-manager", "spark-recipe-meeting-prep", "spark-recipe-morning-email", "spark-recipe-morning-standup", "spark-recipe-multi-account-review", "spark-recipe-schedule-meeting", "spark-recipe-shared-inbox-status", "spark-recipe-stakeholder-brief", "spark-recipe-team-workload", "spark-recipe-topic-timeline", "spark-recipe-weekly-digest", "state-change-watcher", "stylism", "three-js-cross-file-objects", "tts-costs-too-much", "unify-one-call", "use-spark", "verify-before-concluding", "voice-comes-out-wrong", "xos-phone-proportions", "xos-voice-rails", "yt-pipeline", "yt-search"];
   var PILL_BTN = "scroll-snap-align:center;flex:0 0 auto;border-radius:999px;font:500 11px/1 -apple-system,system-ui,sans-serif;letter-spacing:.2px;padding:6px 11px;cursor:pointer;background:rgba(255,255,255,.06);color:var(--text,#e8e8e8);border:1px solid rgba(255,255,255,.14);white-space:nowrap";
 
+  /* ⭐ FIXED 2026-08-24 — SKILLS above was a HARDCODED array frozen at build time. It
+     said 63 while /Volumes/M4/sync_/exedus/dev_/xen/.claude-state/skills held 72, so
+     the pill stated a real-sounding number that was simply wrong, and got wronger every
+     time a skill was written. omnimind now serves GET /api/skills off that directory.
+     The literal array stays ONLY as the pre-answer placeholder; the moment the server
+     replies the real list replaces it. If the server does NOT reply the pill says so
+     rather than showing a stale count — same rule as the rail chips and the ESC pill:
+     never state a number you have not just measured. */
+  /* skillsKnown gates the LABEL, never the array. Blanking SKILLS itself would throw
+     in renderSkills() — measured while writing this: my first version set SKILLS=null
+     and the forEach below would have taken the whole pill down. The array always stays
+     an array; only the COUNT is allowed to say "I do not know". */
+  var skillsKnown=false;
+  fetch("https://xen.xlrd.org/api/skills", { cache: "no-store" })
+    .then(function(r){ return r.text().then(function(b){
+      if(!r.ok) return null;
+      try{ return JSON.parse(b); }catch(e){ return null; }
+    }); })
+    .then(function(j){
+      /* ASSERT ON THE BODY — ok:true, not merely a 200. */
+      if(j && j.ok===true && Array.isArray(j.skills) && j.skills.length){
+        SKILLS=j.skills; skillsKnown=true;
+      }
+      renderSkills();
+    })
+    .catch(function(){ renderSkills(); });
+
   if(!document.getElementById("skill-pill-css")){
     var st=document.createElement("style"); st.id="skill-pill-css";
     st.textContent =
@@ -6354,22 +6485,37 @@ window.addEventListener('beforeunload', stopListening);
   var wrap=document.getElementById("skill-picker");
   var cnt=document.getElementById("tb-skill-n");
   if(!btn||!wrap) return;
-  if(cnt) cnt.textContent=" "+SKILLS.length;
-
-  SKILLS.forEach(function(name){
-    var b=document.createElement("button");
-    b.type="button"; b.textContent=name; b.title=name;
-    b.addEventListener("click",function(){
-      /* Put the skill invocation in the composer rather than firing it blind --
-         the operator confirms before anything runs. */
-      var ta=document.querySelector(".composer-bar textarea, #composer, textarea");
-      if(ta){ ta.value="/"+name+" "; ta.focus();
-              try{ ta.dispatchEvent(new Event("input",{bubbles:true})); }catch(e){} }
-      wrap.querySelectorAll("button.on").forEach(function(x){x.classList.remove("on");});
-      b.classList.add("on");
+  /* Re-runnable so the server answer can replace the placeholder list in place.
+     ⭐ The COUNT is only stated once the server has answered. Until then it reads
+     "–", not a number — the frozen 63 was wrong precisely because a stale count is
+     indistinguishable from a measured one on screen. */
+  function renderSkills(){
+    /* The IIFE returns early when the markup is missing, but this runs from an async
+       callback that does not know that — without the guard a missing pill turns into
+       an unhandled rejection on his page. */
+    if(!wrap) return;
+    if(cnt) cnt.textContent = skillsKnown ? (" "+SKILLS.length) : " \u2013";
+    if(btn) btn.classList.toggle("unknown", !skillsKnown);
+    if(btn) btn.title = skillsKnown
+      ? (SKILLS.length+" skills on disk")
+      : "skill count unknown \u2014 the server has not answered";
+    wrap.textContent="";
+    SKILLS.forEach(function(name){
+      var b=document.createElement("button");
+      b.type="button"; b.textContent=name; b.title=name;
+      b.addEventListener("click",function(){
+        /* Put the skill invocation in the composer rather than firing it blind --
+           the operator confirms before anything runs. */
+        var ta=document.querySelector(".composer-bar textarea, #composer, textarea");
+        if(ta){ ta.value="/"+name+" "; ta.focus();
+                try{ ta.dispatchEvent(new Event("input",{bubbles:true})); }catch(e){} }
+        wrap.querySelectorAll("button.on").forEach(function(x){x.classList.remove("on");});
+        b.classList.add("on");
+      });
+      wrap.appendChild(b);
     });
-    wrap.appendChild(b);
-  });
+  }
+  renderSkills();
 
   btn.addEventListener("click",function(){
     var open = wrap.style.display==="none";
