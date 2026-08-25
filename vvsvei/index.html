@@ -3967,9 +3967,21 @@ function renderEvent(d) {
     try {
       const _au = (d.audio_url || d.audioUrl || '').toString();
       const _atx = (d.text || '').toString();
-      const _aage = d.ts ? (Date.now() - Number(d.ts)) : 0;
+      /* ⚠ THE STAMP IS ON THE OUTER FRAME AND THE UNWRAP AT THE TOP OF THIS
+         FUNCTION EATS IT. omnimind wraps as {event,data:{...},ts} and the hook's
+         payload carries no ts of its own, so after `d = d.data` there is NO
+         d.ts — a naive `d.ts ? age : 0` reads every frame as 0ms old, i.e. LIVE,
+         and one reconnect would replay the whole audio backlog at him. Caught
+         before this shipped; the earlier /events capture is what proves the
+         shape (outer ts=1787615157979, inner keys text/source/event only).
+         So: stamped frames are judged on freshness; UNSTAMPED frames defer to
+         _avaLive, which is false for exactly the backlog-replay window and flips
+         true 1.5s after connect. Fail CLOSED here — a missed line is recoverable
+         from the xen-out path, a machine-gunned backlog is not. */
+      const _ats = Number(d.ts || 0);
       if (!_au) return;                                  // nothing to play
-      if (_aage > 20000) return;                         // backlog replay — never speak
+      if (_ats) { if (Date.now() - _ats > 20000) return; }  // stamped: too old = backlog
+      else if (!_avaLive) return;                           // unstamped: still replaying backlog
       if (!_avaOn) return;                               // he muted the voice
       if (!_avaAudioUnlocked) return;                    // not armed yet: xen-out parks it
       if (!_vsqMaySpeak()) return;                       // another surface holds the lease
