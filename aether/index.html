@@ -1580,7 +1580,18 @@ const ORB_PRESETS = {
             note:'invisible at rest, ignites on voice'}
 };
 const ORB_ORDER = ['liquid','glass','crystal','dense','ghost'];
-const ORB_DEFAULT = 'liquid';   // more transparent than the baseline, same mass
+const ORB_DEFAULT = 'dense';   // qi 2026-08-25 19:17, typed: "the invisibility is fine
+                               // but i need my mass and density back".
+                               // 'liquid' held this slot, and liquid is the THIN one
+                               // (F0 0.26, pres 0.88), so a cold open never reached the
+                               // body he approved. 'dense' IS that body - F0 0.90,
+                               // pres 0.10 - and it was sitting right here the whole
+                               // time, labelled 'kept as a rollback'. Nothing about the
+                               // mass was ever deleted; the DEFAULT walked him past it.
+                               // His invisibility is untouched: dense still rests at
+                               // pres 0.10 and only lifts on voice (presV 0.90).
+                               // The other four stay one keypress (V) or one ?v= away.
+                               // \u26d4 Do not revert this to 'liquid' without his word.
 
 /* every field falls back to the approved baseline, so a preset can name only
    what it changes and can never accidentally ship an undefined uniform (an
