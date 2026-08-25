@@ -3930,6 +3930,58 @@ function renderEvent(d) {
     try { if (window._avaDismissOverlay) setTimeout(window._avaDismissOverlay, 700); } catch (_) {}
     return;
   }
+  /* ── xen:audio — THE RENDERED VOICE LEG THAT HAD NO EAR ────────────────────
+     MEASURED 2026-08-24 19:54, two independent artifacts:
+       · omnimind /health lanes.byEvent reported  "xen:audio": 76  over one 42-minute
+         uptime, and 2 more inside a single 60s /events capture, each frame carrying
+         a fully-rendered  audio_url = https://xen.xlrd.org/api/tts?text=…&engine=eleven
+       · `grep -rl "xen:audio" .deploy` matched ZERO files — not this page, not XOS,
+         not anything. Same for xen:speak and audio_url.
+     So the emitter (xen-speak-outputs.py::_edge_audio_leg, added 05:38 THE SAME DAY)
+     had been shipping finished audio into nothing on every reply, while its own log
+     wrote "edge web-audio leg dispatched" 76 times and qi heard silence. That is the
+     cmd-19 silent-failure shape exactly: both ends of the rail report success and the
+     middle does not exist. The fix is the missing half, not a new rail.
+
+     WHY IT PLAYS THE URL RATHER THAN CALLING speakAva(text): the clip is already
+     rendered server-side. Routing through speakAva would discard it and re-synthesise
+     the same sentence from this page — which would make this leg fail in precisely
+     the places the existing leg already fails, and buy nothing. A bare <audio> src is
+     the most permissive player available: no fetch, no CORS preflight, and no
+     decodeAudioData (deliberately DISABLED in _avaDrain because it fails on the
+     edge-tts MPEG-2 layer-III stream).
+
+     ⚠ EXACTLY ONE UTTERANCE. The same sentence also arrives as xen-out, and which
+     lands first is a race — so both paths consult _avaSpokenAlready/_avaMarkSpoken.
+     Never wire one without the other; a second dispatch is the double voice he has
+     rejected.
+
+     ⚠ FRESHNESS, NOT _avaLive. Gating on the caught-up sentinel is one of the ways
+     this page goes quiet after a reconnect. A timestamp is used instead: a frame
+     older than 20s is backlog and is never spoken, so a replay cannot machine-gun
+     him, while a live frame is still heard if the sentinel never arrives.
+
+     ⚠ ALWAYS RETURNS. xen-out already renders the bubble for this sentence; falling
+     through would paint a duplicate. This leg is audio only. */
+  if ((d.event || d.kind || '').toString().toLowerCase() === 'xen:audio') {
+    try {
+      const _au = (d.audio_url || d.audioUrl || '').toString();
+      const _atx = (d.text || '').toString();
+      const _aage = d.ts ? (Date.now() - Number(d.ts)) : 0;
+      if (!_au) return;                                  // nothing to play
+      if (_aage > 20000) return;                         // backlog replay — never speak
+      if (!_avaOn) return;                               // he muted the voice
+      if (!_avaAudioUnlocked) return;                    // not armed yet: xen-out parks it
+      if (!_vsqMaySpeak()) return;                       // another surface holds the lease
+      if (_avaSpokenAlready(_atx)) return;               // xen-out already took this line
+      _avaMarkSpoken(_atx);
+      _avaQueue.push({ url: _au, text: _atx.slice(0, 800) });
+      if (_avaQueue.length > 40) _avaQueue = _avaQueue.slice(-40);
+      try { _avaTelemetry('xen:audio prerendered ' + _atx.length + 'c'); } catch (_) {}
+      _avaDrain();
+    } catch (_) {}
+    return;
+  }
   // SELF-UPDATE (qi 2026-06-09, C4 no-human-in-loop): omnimind emits a __reload__
   // event after a deploy → the running tab purges its SW caches, unregisters, and
   // hard-reloads itself. Makes a manual reload the LAST one ever — future deploys
@@ -5168,7 +5220,16 @@ function _ssSpeakClip(clip, genAtStart) {
 function _avaDrain() {
   if (_avaPlaying || !_avaQueue.length) return;
   if (!_avaOn) { _avaQueue = []; return; }
-  const clip = _avaQueue.shift();
+  /* A queue entry is EITHER a plain string (this page synthesises it) OR
+     {url,text} handed over by the xen:audio leg, which arrives already rendered.
+     `clip` stays the TEXT in both cases on purpose: every downstream consumer —
+     the host-rotation retry (`_hosts[_hostIdx] + '?text=' + clip`), _avaSpeakDevice
+     and the _ssSpeakClip floor — re-derives from text, so a pre-rendered clip that
+     fails to load still falls back exactly like a normal one. Only `url` differs. */
+  let clip = _avaQueue.shift();
+  let _preUrl = '';
+  if (clip && typeof clip === 'object') { _preUrl = String(clip.url || ''); clip = String(clip.text || ''); }
+  if (!clip && !_preUrl) { _avaPlaying = false; return; }
   _avaPlaying = true; _drainStarted = Date.now(); _wdLastT = -1;
   const _genAtStart = _avaGen;  // capture gen — if qi barges in mid-fetch/decode, this goes stale
   // MP3 via <audio> — the path that WORKED (qi confirmed hearing on 2026-05-30).
@@ -5181,7 +5242,7 @@ function _avaDrain() {
   // THE speaking path — every reply qi hears comes through here, so this is the
   // one that actually had to carry `engine`. Without it omnimind fell through to
   // edge-tts Ava on EVERY utterance regardless of the voice picker (see :2679).
-  const url = AVA_TTS_URL + '?text=' + encodeURIComponent(clip) + '&engine=eleven';
+  const url = _preUrl || (AVA_TTS_URL + '?text=' + encodeURIComponent(clip) + '&engine=eleven');
   // WEBAUDIO DISABLED 2026-06-06 (qi): decodeAudioData reliably FAILS on the edge-tts
   // MPEG-2 layer-III MP3, so this path always threw "Decoding failed -> device-tts"
   // and only THEN fell through to the good voice — alarming log + wasted latency.
@@ -5349,11 +5410,45 @@ function _avaTelemetry(what) {
     }).catch(function(){});
   } catch (_) {}
 }
+/* ── ONE-UTTERANCE LEDGER ──────────────────────────────────────────────────
+   xen-reply-vvs emits BOTH `xen-out` (spoken here by speakAva, which synthesises
+   its own URL) and — through xen-speak-outputs.py — `xen:audio` carrying the SAME
+   sentence already rendered. Their arrival order is a race, so without a shared
+   ledger wiring the second consumer would make every reply speak twice, which is
+   the double-voice qi has rejected outright.
+   Keyed on normalised text, 15s window: long enough to cover the gap between the
+   two frames for one reply, short enough that a genuinely repeated short line
+   ("Yes.") a few turns later is still spoken. Same shape the server-side rail
+   already uses ("same text spoken 18.3s ago -> skip"). Marked only when a clip is
+   actually ENQUEUED, never when a gate merely declined — a line that was refused
+   must stay speakable by the other path (nothing drops). */
+const _avaSpokenLedger = new Map();
+function _avaLedgerKey(t) {
+  return String(t || '').replace(/^\s*(Xen|Lyn|Eli)\s*:\s*/i, '')
+                        .replace(/\s+/g, ' ').trim().slice(0, 220).toLowerCase();
+}
+function _avaSpokenAlready(t) {
+  const k = _avaLedgerKey(t);
+  if (!k) return false;
+  const at = _avaSpokenLedger.get(k);
+  return !!(at && (Date.now() - at) < 15000);
+}
+function _avaMarkSpoken(t) {
+  const k = _avaLedgerKey(t);
+  if (!k) return;
+  _avaSpokenLedger.set(k, Date.now());
+  if (_avaSpokenLedger.size > 60) {              // bounded — drop the oldest half
+    const ks = Array.from(_avaSpokenLedger.keys()).slice(0, 30);
+    ks.forEach((x) => _avaSpokenLedger.delete(x));
+  }
+}
 function speakAva(text) {
   if (!_avaOn || !text) return;
   // Strip a leading persona tag — Xen never speaks "Xen:" aloud (one-Xen canon,
   // qi heard it as "Zantac"). Lyn/Eli tags also stripped from the spoken leg.
   const spoken = String(text).replace(/^\s*(Xen|Lyn|Eli)\s*:\s*/i, '');
+  if (_avaSpokenAlready(spoken)) return;   // the xen:audio leg already took this line
+  _avaMarkSpoken(spoken);
   _avaQueue.push(spoken.slice(0, 800));
   if (_avaQueue.length > 40) _avaQueue = _avaQueue.slice(-40);   // higher cap (qi nothing-drops); 800-char clips x40 is bounded memory
   // qi 2026-07-23: an inject must SPEAK IMMEDIATELY, never wait on a drain. If the
