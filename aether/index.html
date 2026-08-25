@@ -926,6 +926,22 @@ uniform float pBendMix;   // how far the refracted ray is pulled back to straigh
 uniform float pMag;       // lens over-convergence past straight = gentle magnification
 uniform float pLiq;       // amplitude of the drifting liquid warp
 uniform float pDisp;      // chromatic dispersion: red and blue bend by different amounts
+uniform float pMass;      // BODY SIZE multiplier. qi 2026-08-25: "i need my mass and
+                          // density back". Mass was deliberately NOT a version axis -
+                          // "Three axes, one law: MASS IS NOT ONE OF THEM" - because in
+                          // Aug he had said the massive body was already right. It is not
+                          // right any more, and a preset switch could therefore never fix
+                          // what he was complaining about. Mass is now a real axis.
+uniform float pCarve;     // how deep the lobes may bite INWARD, as a fraction of r.
+                          // lobes() is a PRODUCT OF SINES: signed, range about +/-1.55.
+                          // rr = r*(1 + lobes*MAXD), so at full voice (MAXD 0.575) the
+                          // radius swung 0.11r .. 1.89r - in half of all directions the
+                          // body collapsed to ELEVEN PERCENT of itself. That is not mass,
+                          // it is a hole punched clean through, and it is exactly the
+                          // crumpled-foil shape in his 19:35 screenshot.
+                          // Clamping only the INWARD side keeps every outward lobe (his
+                          // 08:49 "it shouldn't be CONTAINED" fix is untouched) while the
+                          // body keeps its volume. 1.60 = the old unclamped behaviour.
 uniform float pAlphaG;    // overlay alpha gain on final luminance
 uniform float pAlphaMax;  // overlay alpha ceiling
 
@@ -954,7 +970,7 @@ void main(){
   gTravel = zAx * travelK;      // forward is -out3; zAx IS that, measured not guessed
   vec3 rd   = normalize(xAx*uv.x + yAx*uv.y + zAx*(1.35*zoomF));
 
-  float r = 0.86 + amp*0.11;
+  float r = (0.86 + amp*0.11) * pMass;   // pMass is the body-size axis (2026-08-25)
 
   // ⭐⭐ qi 2026-08-23 06:26: "I wanted it to be in a 3D IMMERSIVE ENVIRONMENT."
   // That is the whole reframe. Not a sphere on a black page — a sphere standing
@@ -1009,13 +1025,15 @@ void main(){
   // "I keep saying I need this thing to be MORE AMORPHIC" (08:45): 0.52, plus a
   // permanent 0.055 so it is never a perfect ball even at rest.
   float MAXD  = 0.52 * apart + 0.055;
-  float BOUND = r * (1.0 + MAXD * 1.40);
+  float BOUND = r * (1.0 + MAXD * 1.40);   // still >= max outward lobe; pCarve only cuts inward
 
   float th = hitSphere(ro, rd, BOUND);
   if(th > 0.0){
     for(int i = 0; i < 5; i++){          // walk in from the hull to the surface
       vec3 pp = normalize(ro + rd*th);
-      float rr = r * (1.0 + lobes(pp, t) * MAXD);
+      // clamp ONLY the inward excursion - outward lobes stay unbounded so the
+      // silhouette can still grow (the 08:49 containment fix must not regress).
+      float rr = r * (1.0 + max(lobes(pp, t), -pCarve) * MAXD);
       float t2 = hitSphere(ro, rd, rr);
       if(t2 <= 0.0){ th = -1.0; break; } // a genuine gap - the ray passes through
       th = t2;
@@ -1535,12 +1553,17 @@ let uTouchUV, uTouchAge, uTouchHeld, uRelAge;
    below moves transparency, bright density or realism, and nothing else.
    'dense' is the exact look he called a good design, kept as a rollback.
    ──────────────────────────────────────────────────────────────────────────── */
-let uPF0,uPMirC,uPMirCV,uPMirR,uPMirRV,uPPres,uPPresV,uPCon,uPConV,
+let uPMass,uPCarve,
+    uPF0,uPMirC,uPMirCV,uPMirR,uPMirRV,uPPres,uPPresV,uPCon,uPConV,
     uPRimPow,uPStruct,uPBendMix,uPMag,uPLiq,uPDisp,uPAlphaG,uPAlphaMax;
 
 const ORB_PRESETS = {
   // the design he approved, unchanged. Conductor F0, thick rim, no dispersion.
-  dense:   {F0:0.90, mirC:0.15, mirCV:0.40, mirR:0.29, mirRV:0.45,
+  // qi 2026-08-25 19:39: "as hyper realistic as possible". 1.20 was timid; a
+  // headless render at mass 1.50 filled the frame and read as a real body, so
+  // dense lands at 1.45 - unmistakably bigger than what he called unchanged.
+  dense:   {mass:1.45, carve:0.28,
+            F0:0.90, mirC:0.15, mirCV:0.40, mirR:0.29, mirRV:0.45,
             pres:0.10, presV:0.90, con:1.28, conV:0.42, rimPow:3.40,
             struct:1.00, bendMix:0.88, mag:1.05, liq:0.035, disp:0.000,
             alphaG:1.55, alphaMax:0.90,
@@ -1549,7 +1572,9 @@ const ORB_PRESETS = {
   // his own analogy, 09:10: "a LIQUID MAGNIFYING GLASS, but NOT TOO MAGNIFYING".
   // The lens is always fully present (pres 0.88) so the warp never disappears;
   // voice arrives as BRIGHTNESS through the equalizer, not as opacity.
-  liquid:  {F0:0.26, mirC:0.13, mirCV:0.42, mirR:0.62, mirRV:0.30,
+
+  liquid:   {mass:1.00, carve:1.60,
+            F0:0.26, mirC:0.13, mirCV:0.42, mirR:0.62, mirRV:0.30,
             pres:0.88, presV:0.12, con:1.24, conV:0.40, rimPow:4.20,
             struct:1.05, bendMix:0.80, mag:1.10, liq:0.055, disp:0.008,
             alphaG:1.42, alphaMax:0.78,
@@ -1558,7 +1583,9 @@ const ORB_PRESETS = {
   // maximum see-through. Dielectric F0 means the centre transmits ~99% and the
   // rim mirrors ~95%: real glass weighting. Mass is carried entirely by the
   // bright rim and specular, never by a dark fill.
-  glass:   {F0:0.09, mirC:0.10, mirCV:0.30, mirR:0.85, mirRV:0.15,
+
+  glass:    {mass:1.00, carve:1.60,
+            F0:0.09, mirC:0.10, mirCV:0.30, mirR:0.85, mirRV:0.15,
             pres:0.78, presV:0.22, con:1.20, conV:0.38, rimPow:6.00,
             struct:1.15, bendMix:0.84, mag:1.07, liq:0.030, disp:0.012,
             alphaG:1.35, alphaMax:0.72,
@@ -1566,14 +1593,18 @@ const ORB_PRESETS = {
 
   // realism first: true glass reflectance, a thin hard edge, and the strongest
   // dispersion. This is the answer to "it looks fake right now".
-  crystal: {F0:0.055, mirC:0.08, mirCV:0.26, mirR:0.92, mirRV:0.08,
+
+  crystal:  {mass:1.00, carve:1.60,
+            F0:0.055, mirC:0.08, mirCV:0.26, mirR:0.92, mirRV:0.08,
             pres:0.82, presV:0.18, con:1.30, conV:0.34, rimPow:7.50,
             struct:1.30, bendMix:0.78, mag:1.09, liq:0.022, disp:0.020,
             alphaG:1.40, alphaMax:0.75,
             note:'cut glass - dispersion and a thin hard edge'},
 
   // barely there until he speaks, then it lights up hard.
-  ghost:   {F0:0.55, mirC:0.03, mirCV:0.70, mirR:0.12, mirRV:0.80,
+
+  ghost:    {mass:1.00, carve:1.60,
+            F0:0.55, mirC:0.03, mirCV:0.70, mirR:0.12, mirRV:0.80,
             pres:0.16, presV:0.84, con:1.10, conV:0.85, rimPow:5.00,
             struct:1.00, bendMix:0.90, mag:1.03, liq:0.028, disp:0.000,
             alphaG:1.25, alphaMax:0.85,
@@ -1602,7 +1633,7 @@ function orbResolve(name){
   o.name = name;
   return o;
 }
-let orbName = ORB_DEFAULT, ORB = orbResolve(ORB_DEFAULT);
+let orbName = ORB_DEFAULT, ORB = orbResolve(ORB_DEFAULT);   // ?mass=/?carve= applied in setOrbPreset
 
 function orbTagWrite(){
   // ⭐ VERIFIABLE FROM OUTSIDE. The live version has to be readable without a
@@ -1622,7 +1653,7 @@ function orbTagWrite(){
                           'overflow:hidden;opacity:0.01;pointer-events:none;z-index:-1';
       document.body.appendChild(tag);
     }
-    tag.textContent = 'ORBPRESET ' + orbName + ' F0=' + ORB.F0 +
+    tag.textContent = 'ORBPRESET ' + orbName + ' mass=' + ORB.mass + ' carve=' + ORB.carve + ' F0=' + ORB.F0 +
                       ' mirC=' + ORB.mirC + ' pres=' + ORB.pres +
                       ' con=' + ORB.con + ' disp=' + ORB.disp;
     const chip = document.getElementById('vchip');
@@ -1633,9 +1664,26 @@ function orbTagWrite(){
   }catch(_){}
 }
 
+// LIVE MASS OVERRIDE. qi 2026-08-25: he should not have to wait on a deploy to
+// find the number he likes. ?mass=1.35&carve=0.22 overrides the preset in place,
+// and the values land on <html data-orb-params> so the value he settled on is
+// readable from outside without a screenshot.
+// mass  : body-size multiplier. 1.00 = the old size.
+// carve : how deep the lobes may bite inward. 1.60 = the old unclamped shred,
+//         lower = keeps its volume. Never negative (that would invert the body).
+function orbUrlOverride(o){
+  try{
+    const q = new URLSearchParams(location.search);
+    const m = parseFloat(q.get('mass')), c = parseFloat(q.get('carve'));
+    if(isFinite(m)) o.mass  = Math.max(0.25, Math.min(3.0, m));
+    if(isFinite(c)) o.carve = Math.max(0.0,  Math.min(1.6, c));
+  }catch(_){}
+  return o;
+}
+
 function setOrbPreset(name, remember){
   if(!ORB_PRESETS[name]) return;
-  orbName = name; ORB = orbResolve(name);
+  orbName = name; ORB = orbUrlOverride(orbResolve(name));
   if(remember !== false){ try{ localStorage.setItem('aether.orbPreset', name); }catch(_){} }
   // keep the address bar honest so a reload and a share both land on this version
   try{
@@ -1925,6 +1973,8 @@ function initGL(){
   uTouchAge=gl.getUniformLocation(prog,'touchAge');
   uTouchHeld=gl.getUniformLocation(prog,'touchHeld');
   uRelAge=gl.getUniformLocation(prog,'relAge');
+  uPMass=gl.getUniformLocation(prog,'pMass');
+  uPCarve=gl.getUniformLocation(prog,'pCarve');
   uPF0=gl.getUniformLocation(prog,'pF0');
   uPMirC=gl.getUniformLocation(prog,'pMirC');
   uPMirCV=gl.getUniformLocation(prog,'pMirCV');
@@ -2148,6 +2198,8 @@ function frame(ts){
   gl.uniform1f(uOverlay, overlayMode);
   gl.uniform1f(uTravel, travelK);
   // the active version, every frame - a switch can never leave a stale uniform
+  gl.uniform1f(uPMass, ORB.mass);
+  gl.uniform1f(uPCarve, ORB.carve);
   gl.uniform1f(uPF0, ORB.F0);
   gl.uniform1f(uPMirC, ORB.mirC);
   gl.uniform1f(uPMirCV, ORB.mirCV);
