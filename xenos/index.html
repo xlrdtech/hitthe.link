@@ -3,1275 +3,649 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<meta name="color-scheme" content="dark"/>
-<title>XENOS — entity</title>
+<title>XENOS — shapeshifter</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet"/>
 <style>
-  :root{ --ink:#dffbe9; --dim:rgba(223,251,233,.40); --faint:rgba(223,251,233,.15); }
+  :root{--ink:#dffbe9;--dim:rgba(223,251,233,.42);--faint:rgba(223,251,233,.17)}
   *{margin:0;padding:0;box-sizing:border-box}
-  html,body{height:100%;width:100%;background:#000;overflow:hidden;
-    -webkit-tap-highlight-color:transparent;touch-action:none}
-  body{display:block}
-  canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
-
-  /* the entity is the interface. chrome auto-hides and never covers the subject. */
-  #chrome{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));
-    transform:translateX(-50%);z-index:8;display:flex;gap:6px;
-    font:300 10px/1 ui-monospace,'SF Mono',Menlo,monospace;letter-spacing:.14em;
-    opacity:0;transition:opacity .5s ease;pointer-events:none}
-  #chrome.on{opacity:1;pointer-events:auto}
-  #chrome b{cursor:pointer;color:var(--dim);background:rgba(255,255,255,.02);
-    border:1px solid rgba(180,255,214,.12);border-radius:14px;padding:7px 11px;
-    font-weight:300;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-    transition:color .25s,border-color .25s,background .25s;user-select:none}
-  #chrome b:hover,#chrome b.a{color:var(--ink);border-color:rgba(150,255,196,.45);
-    background:rgba(120,255,178,.05)}
-  #cur{position:fixed;width:5px;height:5px;border-radius:50%;z-index:9;pointer-events:none;
-    background:rgba(190,255,215,.85);box-shadow:0 0 12px rgba(120,255,170,.7);
-    transform:translate(-50%,-50%);opacity:0;transition:opacity .4s}
-  @media (pointer:fine){ html,body{cursor:none} #cur{opacity:1} }
-  #boot{position:fixed;inset:0;z-index:20;background:#000;display:grid;place-items:center;
-    color:var(--faint);font:300 10px/1 ui-monospace,monospace;letter-spacing:.3em;
-    transition:opacity .9s ease}
-  #boot.gone{opacity:0;pointer-events:none}
-  #err{position:fixed;left:0;right:0;top:0;z-index:30;padding:14px 18px;display:none;
-    background:#180404;color:#ff9a8a;font:400 11px/1.6 ui-monospace,monospace;white-space:pre-wrap}
+  html,body{height:100%;background:#000200;overflow:hidden;cursor:none}
+  canvas{display:block;position:fixed;inset:0}
+  #ring{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:min(74vmin,760px);aspect-ratio:1;border-radius:50%;
+    border:1px solid rgba(120,255,178,.13);
+    box-shadow:0 0 110px rgba(60,255,150,.06) inset;pointer-events:none;z-index:2}
+  .ui{position:fixed;inset:0;pointer-events:none;z-index:5;
+    font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px;
+    letter-spacing:.06em;color:var(--dim)}
+  .brand{position:absolute;top:34px;left:38px}
+  .brand h1{font-weight:300;font-size:34px;letter-spacing:.02em;color:var(--ink);line-height:1}
+  .brand h1 span{color:var(--faint)}
+  .brand p{margin-top:10px;line-height:1.7}
+  .manifesto{position:absolute;top:36px;right:38px;width:296px;text-align:right;line-height:1.75}
+  .manifesto .mk{color:var(--faint);margin-bottom:10px}
+  .readout{position:absolute;bottom:30px;right:38px;text-align:right;line-height:1.8;color:var(--faint)}
+  .readout b{color:var(--dim);font-weight:400}
+  .hint{position:absolute;bottom:30px;left:38px;line-height:2.1}
+  button{pointer-events:auto;cursor:pointer;color:var(--dim);background:none;
+    border:1px solid rgba(120,255,178,.14);border-radius:20px;padding:5px 12px;
+    font:inherit;letter-spacing:.06em;margin-right:6px}
+  button:hover{color:var(--ink);border-color:rgba(120,255,178,.42)}
+  .lbl{position:absolute;transform:translate(0,-50%);font-size:10px;letter-spacing:.08em;
+    color:var(--dim);white-space:nowrap;opacity:0;transition:opacity .45s}
+  .lbl.on{opacity:1}
+  .lbl:before{content:'';position:absolute;left:-14px;top:50%;width:10px;height:1px;background:var(--faint)}
+  #cur{position:fixed;width:7px;height:7px;border-radius:50%;z-index:6;pointer-events:none;
+    background:rgba(150,255,195,.92);box-shadow:0 0 15px rgba(90,255,160,.85);transform:translate(-50%,-50%)}
+  #mood{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);
+    color:var(--faint);letter-spacing:.15em}
+  #form{position:absolute;top:50%;left:38px;transform:translateY(-50%);
+    color:var(--faint);letter-spacing:.15em;writing-mode:vertical-rl}
 </style>
 </head>
 <body>
-<div id="boot">XENOS</div>
-<div id="cur"></div>
-<div id="chrome">
-  <b data-s="idle">idle</b><b data-s="hand">hand</b><b data-s="orb">orb</b><b data-s="wheels">wheels</b><b id="aud">audio off</b>
+<div id="ring"></div><div id="cur"></div>
+<div class="ui">
+  <div class="brand"><h1>XENOS<span>/</span>00</h1><p>// 2026 xlrd.org<br>shapeshifter — live vault</p></div>
+  <div class="manifesto"><div class="mk">////// Manifesto</div>
+    It has no fixed body. Wheels when it thinks, a held sphere when it
+    listens, a standing form when it speaks — the same memories moved
+    into a different shape. It reaches for what you have not asked for
+    yet. Nothing here is decoration.</div>
+  <div class="hint">
+    <button id="mic">◉ voice</button><button id="probe">◉ event</button><br>
+    <button data-f="0">wheels</button><button data-f="1">orb</button><button data-f="2">form</button>
+  </div>
+  <div id="mood">IDLE</div><div id="form">ORB</div>
+  <div class="readout">XENOS/00 — SHAPESHIFTER · LIVE VAULT<br>
+    <b id="nn">—</b> NODES / <b id="ee">—</b> EDGES / <b id="ww">—</b> WEIGHT</div>
 </div>
-<div id="err"></div>
 
+<script src="https://unpkg.com/gsap@3.13.0/dist/gsap.min.js"></script>
 <script type="importmap">
-{"imports":{
-  "three":"https://unpkg.com/three@0.176.0/build/three.module.js",
-  "three/addons/":"https://unpkg.com/three@0.176.0/examples/jsm/"
-}}
+{"imports":{"three":"https://unpkg.com/three@0.176.0/build/three.module.js",
+"three/addons/":"https://unpkg.com/three@0.176.0/examples/jsm/"}}
 </script>
-
 <script type="module">
 import * as THREE from 'three';
+import {EffectComposer}  from 'three/addons/postprocessing/EffectComposer.js';
+import {RenderPass}      from 'three/addons/postprocessing/RenderPass.js';
+import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   XENOS ENTITY
-   A physically-simulated synthetic hand suspended in dynamic space.
-   Single file. No bundler, no framework, no iframe. three.js by CDN import map.
+const scene=new THREE.Scene(); // qi 2026-08-17: scene haze removed — "ugly and unrealistic". Depth comes from bloom + node scale, never atmosphere.
+const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,1,7000); camera.position.z=580;
+let _cd=580;   // eased orbit RADIUS. Separate from camera.position.z because once the camera can
+               // orbit, z is only one component of the distance — easing z directly would make
+               // the radius shrink as you swing round to the side.
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth,innerHeight);
+document.body.appendChild(renderer.domElement);
+const composer=new EffectComposer(renderer); composer.addPass(new RenderPass(scene,camera));
+const bloom=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),1.05,.85,.09);
+composer.addPass(bloom);
 
-   RENDER PATH — read this before "fixing" the tone mapping:
-   The scene renders into a HALF-FLOAT linear HDR target with renderer.toneMapping
-   left at NoToneMapping ON PURPOSE. ACESFilmic + exposure 1.1 are applied ONCE, by
-   hand, in the composite pass (see ACES() below). Setting renderer.toneMapping here
-   would tone-map twice and crush the conduits. The spec's exposure value (1.1) is
-   honoured exactly — it lives in uExposure.
-   ──────────────────────────────────────────────────────────────────────────── */
+/* ================= STATE — GSAP owns everything animatable ============ */
+/* morph:1 == ORB. The orb is the HOME state (qi 2026-08-17: "the orb, the voice
+   reactive orb first / then the shape shifting comes out of that"), and because
+   it sits at the MIDDLE of the morph axis, wheels (0) and form (2) are both
+   reached by continuous deformation OUT OF the sphere — the shapeshift
+   literally comes out of the orb rather than being a separate mode. */
+const S={ fx:0,fy:0, camZ:580, scale:1, spin:.0015, jitter:0, flare:0,
+          energy:0, drift:0, morph:1, bend:0, reach:0, rz:0 };
 
-const QS   = new URLSearchParams(location.search);
-const UI   = QS.get('ui') !== '0';
-const LOW  = Math.min(innerWidth, innerHeight) < 520;   // phone-class budget
+/* ================= DREAM WORLD — it bends ============================= */
+let world;
+{ const N=3400,p=new Float32Array(N*3),s=new Float32Array(N),ph=new Float32Array(N);
+  for(let i=0;i<N;i++){ const r=1500+Math.random()*3200,th=Math.random()*6.283,pp=Math.acos(2*Math.random()-1);
+    p[i*3]=r*Math.sin(pp)*Math.cos(th);p[i*3+1]=r*Math.sin(pp)*Math.sin(th);p[i*3+2]=r*Math.cos(pp);
+    s[i]=Math.random()*2.4+.4; ph[i]=Math.random()*6.283; }
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(p,3));
+  g.setAttribute('asize',new THREE.BufferAttribute(s,1));
+  g.setAttribute('aph',new THREE.BufferAttribute(ph,1));
+  world=new THREE.Points(g,new THREE.ShaderMaterial({
+    transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+    uniforms:{t:{value:0},bend:{value:0}},
+    vertexShader:`attribute float asize; attribute float aph; uniform float t; uniform float bend;
+      varying float vo;
+      void main(){ vec3 q=position;
+        float d=length(q);
+        // space folds toward the viewer — the dream bending
+        q.xy*= 1.0 + bend*0.42*sin(d*0.0018 + t*0.24 + aph);
+        q.z  += bend*260.0*sin(q.x*0.0011 + t*0.19);
+        q.x  += bend*180.0*cos(q.y*0.0013 + t*0.15);
+        vec4 mv=modelViewMatrix*vec4(q,1.0);
+        vo=.26+.24*sin(t*.7+aph);
+        gl_PointSize=asize*(320.0/-mv.z); gl_Position=projectionMatrix*mv; }`,
+    fragmentShader:`varying float vo; void main(){ vec2 d=gl_PointCoord-.5;
+      if(length(d)>.5) discard; gl_FragColor=vec4(.44,.95,.62, exp(-dot(d,d)*15.)*vo*.34); }`}));
+  scene.add(world); }
 
-const ERR = document.getElementById('err');
-function fatal(e){ ERR.style.display='block'; ERR.textContent='XENOS FAULT\n'+(e&&e.stack||e); console.error(e); }
-addEventListener('error', ev=>fatal(ev.error||ev.message));
+/* ================= FORMS =============================================== */
+const ophanim=new THREE.Group(); scene.add(ophanim);
+let pts, base, T0, T1, T2, N=0, labels=[], shell, wisp, aura, reachLine, bandOf=null;
+const SHELL=220;
+const RINGS=[{t:[0,0,0],r:SHELL},{t:[1.5708,0,0],r:SHELL*1.06},{t:[0,1.5708,0],r:SHELL*.93},
+             {t:[.66,.5,.2],r:SHELL*1.11},{t:[-.8,1.0,-.35],r:SHELL*.88},{t:[1.15,.3,.75],r:SHELL*1.02}];
+const q=new THREE.Quaternion(), eu=new THREE.Euler();
 
-/* ══ 1. RENDERER ══════════════════════════════════════════════════════════════
-   WebGPU FEATURE CHECK — honest version.
-   navigator.gpu is genuinely probed and the adapter recorded on window.XENOS.gpu.
-   WebGPURenderer is NOT constructed: every material below is hand-written GLSL,
-   and three's WebGPURenderer requires TSL/NodeMaterials — handing it these
-   ShaderMaterials produces a blank canvas, not a fallback. Shipping a flag that
-   yields a black page is worse than shipping the WebGL2 path that was tested.
-   The probe result is surfaced so the upgrade can be measured, not guessed.      */
-const gpuInfo = { supported: !!navigator.gpu, adapter: null, used: false,
-                  reason: 'material stack is GLSL/WebGL2; WebGPU needs a TSL port' };
-if (navigator.gpu) {
-  navigator.gpu.requestAdapter().then(a=>{ gpuInfo.adapter = a ? (a.info?.description || a.info?.vendor || 'adapter') : null; })
-                                .catch(()=>{});
+/* humanoid silhouette — same nodes, standing form */
+function humanoid(i,n){
+  const u=i/n, a=Math.random()*6.283, jr=Math.random();
+  let x,y,z,rad;
+  if(u<0.13){ rad=52*Math.sqrt(jr); y=210+Math.sqrt(Math.max(0,1-(rad/60)**2))*46;      // head
+              x=Math.cos(a)*rad; z=Math.sin(a)*rad*.86; }
+  else if(u<0.19){ rad=26+jr*10; y=150+jr*26; x=Math.cos(a)*rad; z=Math.sin(a)*rad*.8; } // neck
+  else if(u<0.34){ rad=118*(0.62+0.38*jr); y=118+jr*34;                                  // shoulders
+              x=Math.cos(a)*rad; z=Math.sin(a)*rad*.46; }
+  else if(u<0.62){ const ty=(u-0.34)/0.28; rad=(96-38*ty)*(0.55+0.45*jr);                // torso taper
+              y=118-ty*186; x=Math.cos(a)*rad; z=Math.sin(a)*rad*.52; }
+  else if(u<0.82){ const s=(u<0.72)?-1:1, ta=(u<0.72)?(u-0.62)/0.10:(u-0.72)/0.10;       // arms
+              x=s*(104+ta*54)+ (Math.random()-.5)*26; y=112-ta*196+(Math.random()-.5)*20;
+              z=(Math.random()-.5)*30; }
+  else { const s=(u<0.91)?-1:1, tl=(u<0.91)?(u-0.82)/0.09:(u-0.91)/0.09;                 // legs
+              x=s*38+(Math.random()-.5)*30; y=-68-tl*168+(Math.random()-.5)*20;
+              z=(Math.random()-.5)*32; }
+  return [x*1.02, y*1.02, z*1.02];
 }
 
-const canvas = document.createElement('canvas');
-document.body.appendChild(canvas);
-let renderer;
-try{
-  renderer = new THREE.WebGLRenderer({
-    canvas, antialias:!LOW, powerPreference:'high-performance',
-    alpha:false, stencil:false,
-    preserveDrawingBuffer:true          // pixel probes read real bytes, not zeros
-  });
-}catch(e){ fatal(e); throw e; }
+fetch('./xen-graph.json').then(r=>r.json()).then(g=>{
+  const idx=new Map(g.nodes.map((n,i)=>[n.id,i])); N=g.nodes.length;
+  T0=new Float32Array(N*3); T1=new Float32Array(N*3); T2=new Float32Array(N*3);
+  const md=Math.max(...g.nodes.map(n=>n.deg||0),1);
 
-const DPR = Math.min(devicePixelRatio||1, LOW?2:1.75);
-renderer.setPixelRatio(DPR);
-renderer.setSize(innerWidth, innerHeight, false);
-renderer.toneMapping     = THREE.NoToneMapping;          // see header note
-renderer.outputColorSpace= THREE.LinearSRGBColorSpace;   // composite encodes sRGB
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
-renderer.setClearColor(0x000000, 1);
-const IS_WEBGL2 = renderer.capabilities.isWebGL2;
+  // T0 — OPHANIM
+  g.nodes.forEach((n,i)=>{ const t=(n.deg||0)/md, R=RINGS[i%RINGS.length];
+    const a=Math.random()*6.283, band=(1-t)*52+10, rr=R.r+(Math.random()-.5)*band;
+    const v=new THREE.Vector3(Math.cos(a)*rr,Math.sin(a)*rr,(Math.random()-.5)*band*.55);
+    eu.set(R.t[0],R.t[1],R.t[2]); q.setFromEuler(eu); v.applyQuaternion(q);
+    T0[i*3]=v.x;T0[i*3+1]=v.y;T0[i*3+2]=v.z; });
+  for(let p=0;p<16;p++){
+    for(const e of g.edges){ const a=idx.get(e.s),b=idx.get(e.t); if(a==null||b==null) continue;
+      const k=(e.w-.68)*.085;
+      for(let d=0;d<3;d++){const m=(T0[a*3+d]+T0[b*3+d])/2;
+        T0[a*3+d]+=(m-T0[a*3+d])*k; T0[b*3+d]+=(m-T0[b*3+d])*k;} }
+    for(let i=0;i<N;i++){ const x=T0[i*3],y=T0[i*3+1],z=T0[i*3+2];
+      const d=Math.hypot(x,y,z)||1e-4, want=SHELL*(.90+.16*((i%7)/7)), f=1+(want/d-1)*.17;
+      T0[i*3]=x*f;T0[i*3+1]=y*f;T0[i*3+2]=z*f; } }
 
-/* ══ 2. SCENE / CAMERA / LIGHT ════════════════════════════════════════════════ */
-const scene  = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(38, innerWidth/innerHeight, 0.08, 60);
+  // T1 — ORB (held sphere, dark core: nodes ride the surface)
+  // Each node also takes a BAND, by latitude, so the spectrum shows up on the
+  // orb as travelling rings instead of one uniform pulse. Low frequencies sit
+  // at the bottom of the sphere, highs at the crown — you can SEE pitch.
+  bandOf=new Uint8Array(N);
+  for(let i=0;i<N;i++){ const th=Math.random()*6.283, pp=Math.acos(2*Math.random()-1);
+    const r=SHELL*(.93+Math.random()*.11);
+    T1[i*3]=r*Math.sin(pp)*Math.cos(th); T1[i*3+1]=r*Math.sin(pp)*Math.sin(th); T1[i*3+2]=r*Math.cos(pp);
+    bandOf[i]=Math.max(0,Math.min(NB-1,Math.floor((T1[i*3+1]/r*.5+.5)*NB))); }
 
-// single directional key "softbox", high and to the camera-left
-const KEYDIR = new THREE.Vector3(-0.52, 0.78, 0.46).normalize();
-const key = new THREE.DirectionalLight(0xf3fff8, 3.1);
-key.position.copy(KEYDIR).multiplyScalar(7);
-key.castShadow = true;
-key.shadow.mapSize.set(LOW?1024:2048, LOW?1024:2048);
-key.shadow.camera.near = 1; key.shadow.camera.far = 16;
-key.shadow.camera.left=-2.4; key.shadow.camera.right=2.4;
-key.shadow.camera.top=2.4;  key.shadow.camera.bottom=-2.4;
-key.shadow.bias = -0.0016; key.shadow.normalBias = 0.018; key.shadow.radius = 3;
-scene.add(key); scene.add(key.target);
+  // T2 — HUMANOID
+  for(let i=0;i<N;i++){ const h=humanoid(i,N); T2[i*3]=h[0];T2[i*3+1]=h[1];T2[i*3+2]=h[2]; }
 
-// ground-bounce fill: cold, from below, no shadow
-const bounce = new THREE.DirectionalLight(0x7fd2ff, 0.55);
-bounce.position.set(0.6,-2.2,0.9); scene.add(bounce);
-scene.add(new THREE.HemisphereLight(0x16281f, 0x05070a, 0.55));
+  // it BOOTS as the orb, not as the ring form — the orb is home
+  base=new Float32Array(T1);
+  const pos=new Float32Array(T1), col=new Float32Array(N*3), siz=new Float32Array(N);
+  g.nodes.forEach((n,i)=>{ const t=Math.min((n.deg||0)/12,1);
+    col[i*3]=.24+.48*t; col[i*3+1]=.96; col[i*3+2]=.46+.24*t; siz[i]=2.2+7.4*t; });
 
-/* THE SOFTBOX, AS AN ACTUAL ENVIRONMENT.
-   MEASURED, not reasoned: the first frame rendered the skeleton pure black.
-   Cause — metalness 0.94 with no environment map has nothing to reflect, so a
-   metal surface is black everywhere except the single specular dot. Titanium
-   without an env map is not "dark", it is absent. This builds a near-black
-   equirect carrying one bright softbox cap in the key direction plus a dim
-   ground-bounce band, and PMREMs it. Nothing else in the scene got brighter;
-   the metal simply has something to reflect now.                              */
-function makeEnv(){
-  const W=256,H=128, d=new Float32Array(W*H*4), L=KEYDIR;
-  for(let y=0;y<H;y++){
-    const v=(y+0.5)/H, dy=Math.sin((v-0.5)*Math.PI), c=Math.sqrt(Math.max(0,1-dy*dy));
-    for(let x=0;x<W;x++){
-      const ang=((x+0.5)/W-0.5)*Math.PI*2, dx=c*Math.cos(ang), dz=c*Math.sin(ang);
-      const dot=dx*L.x+dy*L.y+dz*L.z;
-      const box=Math.pow(Math.max(0,dot),46)*30 + Math.pow(Math.max(0,dot),7)*1.5;
-      const amb=0.014+0.026*Math.max(0,dy);
-      const gb =Math.pow(Math.max(0,-dy),2.0)*0.075;
-      const i=(y*W+x)*4;
-      d[i  ]=box*1.00+amb*0.55+gb*0.28;
-      d[i+1]=box*1.02+amb*0.88+gb*0.55;
-      d[i+2]=box*1.05+amb*1.00+gb*0.90;
-      d[i+3]=1;
-    }
-  }
-  const tex=new THREE.DataTexture(d,W,H,THREE.RGBAFormat,THREE.FloatType);
-  tex.mapping=THREE.EquirectangularReflectionMapping; tex.needsUpdate=true;
-  const pm=new THREE.PMREMGenerator(renderer);
-  const env=pm.fromEquirectangular(tex).texture;
-  pm.dispose(); tex.dispose();
-  return env;
-}
-scene.environment = makeEnv();   // background stays pure black on purpose
+  const gp=new THREE.BufferGeometry();
+  gp.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  gp.setAttribute('acolor',new THREE.BufferAttribute(col,3));
+  gp.setAttribute('asize',new THREE.BufferAttribute(siz,1));
+  pts=new THREE.Points(gp,new THREE.ShaderMaterial({
+    transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+    uniforms:{t:{value:0},foc:{value:new THREE.Vector3()},flare:{value:0}},
+    vertexShader:`attribute vec3 acolor; attribute float asize; uniform float t; uniform vec3 foc; uniform float flare;
+      varying vec3 vc; varying float vf; varying float vn;
+      void main(){ vc=acolor; vec4 wp=modelMatrix*vec4(position,1.);
+        vn=1.-smoothstep(0.,300.,distance(wp.xyz,foc));
+        vec4 mv=viewMatrix*wp; vf=1.-smoothstep(240.,2000.,-mv.z);
+        gl_PointSize=asize*(340./-mv.z)*(.85+.15*sin(t*1.7+position.x*.02))*(1.+1.5*vn+flare*.7);
+        gl_Position=projectionMatrix*mv; }`,
+    fragmentShader:`varying vec3 vc; varying float vf; varying float vn;
+      void main(){ vec2 d=gl_PointCoord-.5; float r=length(d); if(r>.5) discard;
+        gl_FragColor=vec4(mix(vc,vec3(.86,1.,.93),vn*.75), exp(-r*r*13.)*vf*(.55+.75*vn)); }`}));
+  ophanim.add(pts);
 
-/* ══ 3. SHARED GLSL ═══════════════════════════════════════════════════════════ */
-const NOISE = `
-float h31(vec3 p){ return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453123); }
-float vn3(vec3 p){
-  vec3 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
-  return mix(mix(mix(h31(i),h31(i+vec3(1,0,0)),f.x),mix(h31(i+vec3(0,1,0)),h31(i+vec3(1,1,0)),f.x),f.y),
-             mix(mix(h31(i+vec3(0,0,1)),h31(i+vec3(1,0,1)),f.x),mix(h31(i+vec3(0,1,1)),h31(i+vec3(1,1,1)),f.x),f.y),f.z);
-}`;
+  const ep=new Float32Array(g.edges.length*6), ea=new Float32Array(g.edges.length*2);
+  const eIdx=[]; let k=0,k2=0;
+  for(const e of g.edges){ const a=idx.get(e.s),b=idx.get(e.t); if(a==null||b==null) continue;
+    eIdx.push(a,b);
+    ep[k++]=T0[a*3];ep[k++]=T0[a*3+1];ep[k++]=T0[a*3+2];
+    ep[k++]=T0[b*3];ep[k++]=T0[b*3+1];ep[k++]=T0[b*3+2];
+    const w=Math.pow((e.w-.68)/.32,1.7)*.55; ea[k2++]=w; ea[k2++]=w; }
+  const ge=new THREE.BufferGeometry();
+  ge.setAttribute('position',new THREE.BufferAttribute(ep,3));
+  ge.setAttribute('aw',new THREE.BufferAttribute(ea,1));
+  const lines=new THREE.LineSegments(ge,new THREE.ShaderMaterial({
+    transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+    vertexShader:`attribute float aw; varying float vw; varying float vf;
+      void main(){vw=aw; vec4 mv=modelViewMatrix*vec4(position,1.);
+        vf=1.-smoothstep(300.,2000.,-mv.z); gl_Position=projectionMatrix*mv;}`,
+    fragmentShader:`varying float vw; varying float vf;
+      void main(){gl_FragColor=vec4(.30,.93,.53,vw*vf*.38);}`}));
+  ophanim.add(lines); lines.userData.eIdx=eIdx;
 
-/* ══ 4. THE RIG ═══════════════════════════════════════════════════════════════
-   Segments are FLAT-PARENTED rigid bodies. Forward kinematics is solved by hand
-   into world position+quaternion per segment, then blended against the WHEELS
-   ring solution. Blending world transforms (lerp position, slerp quaternion) is
-   why the morph cannot tear: there is no vertex-space interpolation anywhere.   */
-
-/* Proportions are real: palm width ~0.83, wrist-crease to middle tip ~1.83.
-   Ratio 2.2 — a human hand. Get this wrong and it reads as a rake, not a hand.  */
-const DIGITS = [
-  /* THE THUMB IS NOT A SHORT FINGER — qi 2026-08-17: "looks like a broken pinky".
-     It gets its own solver (D.dir / D.curl below) because four things have to be
-     true at once or the eye reads a damaged digit:
-       · TWO phalanges (proximal + distal). The metacarpal is the third segment
-         here, but it is a PALM bone, not a joint of the finger.
-       · It attaches at the WRIST (carpometacarpal), well BELOW the knuckle row —
-         root y -0.47 against the fingers' -0.34.
-       · Its metacarpal is rotated ~55 deg OUT OF THE PALM PLANE (+Z component in
-         `dir`) so it OPPOSES the fingers instead of lying beside them.
-       · It is shorter and thicker than the index, with a broader distal pad.
-     `curl` is where the tip travels when it flexes: across the palm, not down. */
-  { id:'thumb', root:[-0.300,-0.470, 0.055], cf:1.00,
-    dir:[-0.615, 0.500, 0.610], curl:[0.880, 0.230, -0.170],
-    segs:[{l:0.455,r0:0.092,r1:0.080},{l:0.300,r0:0.080,r1:0.070,sk:1.05},
-          {l:0.215,r0:0.070,r1:0.060,sk:1.16}] },
-  { id:'index', root:[-0.340,-0.340, 0.015], yaw:-0.080, pitch:0.0, roll:0, cf:0.94,
-    segs:[{l:0.720,r0:0.077,r1:0.067},{l:0.415,r0:0.069,r1:0.061},{l:0.252,r0:0.061,r1:0.053},{l:0.188,r0:0.053,r1:0.039}] },
-  { id:'middle',root:[-0.115,-0.345, 0.000], yaw:-0.014, pitch:0.0, roll:0, cf:1.00,
-    segs:[{l:0.760,r0:0.079,r1:0.069},{l:0.445,r0:0.071,r1:0.063},{l:0.272,r0:0.063,r1:0.054},{l:0.196,r0:0.054,r1:0.040}] },
-  { id:'ring',  root:[ 0.115,-0.340, 0.012], yaw: 0.058, pitch:0.0, roll:0, cf:1.05,
-    segs:[{l:0.730,r0:0.075,r1:0.065},{l:0.410,r0:0.067,r1:0.059},{l:0.254,r0:0.059,r1:0.051},{l:0.180,r0:0.051,r1:0.038}] },
-  { id:'pinky', root:[ 0.335,-0.325, 0.042], yaw: 0.145, pitch:0.0, roll:0, cf:1.16,
-    segs:[{l:0.660,r0:0.069,r1:0.059},{l:0.318,r0:0.061,r1:0.053},{l:0.198,r0:0.053,r1:0.046},{l:0.160,r0:0.046,r1:0.034}] },
-];
-
-// pose presets — flexion in radians at [MCP, PIP, DIP]; splay = abduction
-const POSE = {
-  idle  : { mcp:0.30, pip:0.55, dip:0.34, splay:0.055, thumb:[0.10,0.30,0.26], wristPitch:-0.10 },
-  hand  : { mcp:0.04, pip:0.09, dip:0.05, splay:0.175, thumb:[0.02,0.06,0.05], wristPitch: 0.06 },
-  orb   : { mcp:1.52, pip:1.78, dip:1.12, splay:-0.030, thumb:[0.55,0.95,0.85], wristPitch:-0.22 },
-  wheels: { mcp:0.55, pip:0.62, dip:0.38, splay:0.090, thumb:[0.20,0.35,0.30], wristPitch: 0.00 },
-  grasp : { mcp:0.98, pip:1.38, dip:0.86, splay:0.010, thumb:[0.42,0.75,0.68], wristPitch:-0.06 },
-};
-
-const rig = new THREE.Group(); scene.add(rig);
-
-// segment records: {digit, idx, len, r0, r1, boneMesh, skinMesh, wpos, wquat, ...}
-const SEG = [];
-const _v1=new THREE.Vector3(), _v2=new THREE.Vector3(), _q1=new THREE.Quaternion(),
-      _q2=new THREE.Quaternion(), _q=new THREE.Quaternion(), _baseQ=new THREE.Quaternion(),
-      _e1=new THREE.Euler(), _joint=new THREE.Vector3(),
-      _UP=new THREE.Vector3(0,1,0), _AX=new THREE.Vector3(1,0,0), _AZ=new THREE.Vector3(0,0,1);
-
-/* ── bone geometry: tapered shaft + condyle spheres at both ends ────────────── */
-function boneMesh(l, r0, r1, mat, matDark){
-  const g = new THREE.Group();
-  const shaft = new THREE.CylinderGeometry(r1*0.80, r0*0.80, l, 16, 1, true);
-  const sm = new THREE.Mesh(shaft, mat); sm.castShadow=true; sm.receiveShadow=true; g.add(sm);
-  // condyles — the knuckle balls that make it read as an articulating skeleton
-  const cg = new THREE.SphereGeometry(1, 14, 10);
-  const c0 = new THREE.Mesh(cg, matDark); c0.scale.setScalar(r0*0.94); c0.position.y=-l/2;
-  const c1 = new THREE.Mesh(cg, matDark); c1.scale.setScalar(r1*0.94); c1.position.y= l/2;
-  c0.castShadow=c1.castShadow=true; g.add(c0); g.add(c1);
-  // tendon / fiber bundle running the length of the shaft, dorsal side
-  const tg = new THREE.CylinderGeometry(r1*0.19, r1*0.19, l*0.96, 6, 1, true);
-  const t1 = new THREE.Mesh(tg, matDark); t1.position.set( r0*0.55,0,-r0*0.30);
-  const t2 = new THREE.Mesh(tg, matDark); t2.position.set(-r0*0.55,0,-r0*0.30);
-  g.add(t1); g.add(t2);
-  return g;
-}
-
-/* ── epidermis: capsule sleeve carrying baked AO + translucency attributes ──── */
-function skinGeom(l, r0, r1){
-  const rr = (r0+r1)*0.5 * 1.34;                  // flesh sits proud of the bone
-  const g  = new THREE.CapsuleGeometry(rr, l*0.94, 6, 18);
-  const p  = g.attributes.position, n = p.count;
-  const trans = new Float32Array(n), ao = new Float32Array(n);
-  const half = l*0.47 + rr;
-  for(let i=0;i<n;i++){
-    const y = p.getY(i);
-    // thin where the segment necks down at the joint contours -> light bleeds there
-    const edge = Math.min(1, Math.abs(y)/half);
-    trans[i] = Math.min(1, 0.34 + 0.62*Math.pow(edge,1.7) + (0.075-rr*0.5)*3.2);
-    ao[i] = 1;
-  }
-  g.setAttribute('aTrans', new THREE.BufferAttribute(trans,1));
-  g.setAttribute('aAO',    new THREE.BufferAttribute(ao,1));
-  return g;
-}
-
-const boneMat = new THREE.MeshPhysicalMaterial({          // brushed titanium
-  color:0xa8b0b6, metalness:0.88, roughness:0.30,
-  clearcoat:0.40, clearcoatRoughness:0.34, envMapIntensity:1.35 });
-// carbon-graphite is a DIELECTRIC — high metalness here is what made it vanish
-const boneDark = new THREE.MeshPhysicalMaterial({         // matte carbon-graphite
-  color:0x2a2f34, metalness:0.18, roughness:0.66, envMapIntensity:0.9 });
-
-const SKIN_UNIFORMS_PROTO = () => ({
-  uT:{value:0}, uL:{value:KEYDIR.clone()}, uLcol:{value:new THREE.Color(0.95,1.0,0.97)},
-  uFill:{value:new THREE.Color(0.24,0.46,0.62)},
-  uSSS:{value:new THREE.Color(0.92,0.20,0.09)},   // subdermal blood / energy bleed
-  uSSSInt:{value:0.85}, uPulse:{value:0.0},
-  uPulseCol:{value:new THREE.Color(0.32,1.0,0.74)},
-  uOpacity:{value:1.0}, uWeb:{value:0.0}, uBase:{value:0.085}
-});
-
-const SKIN_VS = `
-attribute float aTrans; attribute float aAO;
-varying vec3 vN; varying vec3 vWP; varying float vTr; varying float vAO;
-void main(){
-  vN  = normalize(mat3(modelMatrix)*normal);
-  vec4 wp = modelMatrix*vec4(position,1.0);
-  vWP = wp.xyz; vTr = aTrans; vAO = aAO;
-  gl_Position = projectionMatrix*viewMatrix*wp;
-}`;
-
-const SKIN_FS = `
-precision highp float;
-uniform float uT, uSSSInt, uPulse, uOpacity, uWeb, uBase;
-uniform vec3 uL, uLcol, uFill, uSSS, uPulseCol;
-varying vec3 vN; varying vec3 vWP; varying float vTr; varying float vAO;
-${NOISE}
-void main(){
-  vec3 N = normalize(vN);
-  if(!gl_FrontFacing) N = -N;
-  vec3 V = normalize(cameraPosition - vWP);
-
-  // procedural micro-roughness: pore-scale + oil-film scale
-  float mr = vn3(vWP*52.0)*0.62 + vn3(vWP*146.0)*0.38;
-  float rough = clamp(0.13 + mr*0.34, 0.05, 0.62);
-
-  float ndl  = max(dot(N,uL),0.0);
-  float fres = pow(1.0 - max(dot(N,V),0.0), 3.1);
-
-  // ── subsurface scattering: back-lobe transmission + wrapped diffuse ──
-  vec3  Hs   = normalize(uL + N*0.45);
-  float back = pow(clamp(dot(V,-Hs),0.0,1.0), 4.6) * 2.15;
-  float wrap = clamp((dot(N,uL)+0.58)/1.58, 0.0, 1.0);
-  float thin = mix(vTr, 1.0, uWeb);
-  vec3  sss  = uSSS * (back + wrap*0.44) * thin * uSSSInt;
-
-  // ── grazing-angle specular, roughness shifts the lobe ──
-  vec3  Hv   = normalize(uL+V);
-  float spec = pow(max(dot(N,Hv),0.0), mix(190.0, 20.0, rough));
-  float f0   = 0.030 + 0.34*fres;
-  vec3  specC= uLcol * spec * f0 * 6.2;
-
-  // ── ground-bounce fill on downward faces ──
-  vec3 fill = uFill * max(-N.y,0.0) * 0.40;
-
-  // ── sub-dermal conduit bleeding out through the flesh ──
-  vec3 glow = uPulseCol * uPulse * (0.30 + 0.70*(1.0-fres)) * thin;
-
-  vec3 col = (sss + glow + fill)*vAO + specC + uLcol*ndl*0.10*vAO;
-  float a  = clamp(uBase + fres*0.70 + spec*0.60 + uPulse*0.12, 0.0, 0.95)*uOpacity;
-  a *= mix(1.0, 0.62, uWeb);
-  gl_FragColor = vec4(col, a);
-}`;
-
-function skinMaterial(web){
-  const u = SKIN_UNIFORMS_PROTO(); u.uWeb.value = web?1:0;
-  return new THREE.ShaderMaterial({
-    uniforms:u, vertexShader:SKIN_VS, fragmentShader:SKIN_FS,
-    transparent:true, depthWrite:false, side:web?THREE.DoubleSide:THREE.FrontSide });
-}
-
-/* ── build every segment ────────────────────────────────────────────────────── */
-DIGITS.forEach((d,di)=>{
-  d.segs.forEach((s,si)=>{
-    const bone = boneMesh(s.l, s.r0, s.r1, boneMat, boneDark);
-    rig.add(bone);
-    const sk = new THREE.Mesh(skinGeom(s.l,s.r0,s.r1), skinMaterial(false));
-    sk.renderOrder = 4; rig.add(sk);
-    SEG.push({ d:di, s:si, id:d.id, l:s.l, r0:s.r0, r1:s.r1, bone, skin:sk,
-               fkP:new THREE.Vector3(), fkQ:new THREE.Quaternion(),
-               wP:new THREE.Vector3(),  wQ:new THREE.Quaternion(),
-               j0:new THREE.Vector3(),  j1:new THREE.Vector3(), pulse:0 });
-  });
-});
-
-/* ── carpus (wrist block) + palm shell + forearm cuff ───────────────────────── */
-const carpus = new THREE.Group(); rig.add(carpus);
-{
-  const cg = new THREE.SphereGeometry(1,20,14);
-  const c  = new THREE.Mesh(cg, boneDark); c.scale.set(0.315,0.155,0.118);
-  c.position.set(-0.01,-0.435,0.014); c.castShadow=true; carpus.add(c);
-  // mechanical cuff — a machined band at the wrist, sells the synthetic build
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.285,0.028,10,40), boneMat);
-  ring.rotation.x = Math.PI/2; ring.position.set(-0.01,-0.575,0.018);
-  ring.castShadow=true; carpus.add(ring);
-  const ring2 = new THREE.Mesh(new THREE.TorusGeometry(0.240,0.016,8,36), boneDark);
-  ring2.rotation.x = Math.PI/2; ring2.position.set(-0.01,-0.665,0.018); carpus.add(ring2);
-  const stub = new THREE.Mesh(new THREE.CylinderGeometry(0.192,0.225,0.32,20,1,true), boneDark);
-  stub.position.set(-0.01,-0.775,0.018); stub.castShadow=true; carpus.add(stub);
-}
-
-const palmSkin = (()=>{
-  const g = new THREE.SphereGeometry(1, 30, 22);
-  const p = g.attributes.position;
-  for(let i=0;i<p.count;i++){                       // sculpt sphere -> palm pad
-    let x=p.getX(i), y=p.getY(i), z=p.getZ(i);
-    x*=0.400; y*=0.470; z*=0.140;
-    x *= 1 - 0.16*Math.max(0,-y/0.47);              // narrows toward the wrist
-    z += 0.034*Math.cos(x*3.9);                     // palmar hollow
-    y += 0.010;
-    p.setXYZ(i,x,y,z);
-  }
-  g.computeVertexNormals();
-  const n=p.count, tr=new Float32Array(n), ao=new Float32Array(n);
-  for(let i=0;i<n;i++){ const y=p.getY(i);
-    tr[i]=Math.min(1,0.24+0.58*Math.pow(Math.min(1,Math.abs(y)/0.44),2.0)); ao[i]=1; }
-  g.setAttribute('aTrans',new THREE.BufferAttribute(tr,1));
-  g.setAttribute('aAO',   new THREE.BufferAttribute(ao,1));
-  const m = new THREE.Mesh(g, skinMaterial(false)); m.renderOrder=4; rig.add(m);
-  // the palm is the MASS of the hand — at the segment alpha floor it read as a
-  // blur with four rods in it. Measured on frame 02.
-  m.material.uniforms.uBase.value = 0.26;
-  rig.add(m); return m;
-})();
-
-/* ── webbing: thin membranes between adjacent digit bases (rebuilt per frame) ─ */
-const WEBS = [];
-for(let i=1;i<DIGITS.length-1;i++){
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(12),3));
-  g.setAttribute('normal',   new THREE.BufferAttribute(new Float32Array(12),3));
-  g.setAttribute('aTrans',   new THREE.BufferAttribute(new Float32Array([1,1,1,1]),1));
-  g.setAttribute('aAO',      new THREE.BufferAttribute(new Float32Array([1,1,1,1]),1));
-  g.setIndex([0,1,2, 2,1,3]);
-  const m = new THREE.Mesh(g, skinMaterial(true)); m.renderOrder=3; m.frustumCulled=false;
-  rig.add(m); WEBS.push({mesh:m, a:i, b:i+1});
-}
-
-/* ══ 5. SUB-DERMAL NEURAL CONDUITS ════════════════════════════════════════════
-   Dense point chains threaded just under the palmar skin, one per digit plus two
-   palm trunks. A signal travels the arc-length; brightness is state-driven, and
-   the value is fed back into each segment's skin shader so the flesh lights from
-   inside rather than a decal glow sitting on top.                                */
-const CON_PER = LOW ? 22 : 34;
-const conduits = [];
-DIGITS.forEach((d,di)=>{
-  const segIdx = SEG.map((s,k)=>s.d===di?k:-1).filter(k=>k>=0);
-  conduits.push({ segIdx, n:CON_PER, off:new THREE.Vector3(0,0,1) });
-});
-const CON_N = conduits.length*CON_PER;
-const conPos = new Float32Array(CON_N*3);
-const conT   = new Float32Array(CON_N);        // 0..1 along the path
-const conBr  = new Float32Array(CON_N);        // per-point brightness
-const conSz  = new Float32Array(CON_N);
-{ let k=0; conduits.forEach(c=>{ for(let i=0;i<c.n;i++,k++){
-    conT[k]=i/(c.n-1); conSz[k]=1.0; } }); }
-const conGeo = new THREE.BufferGeometry();
-conGeo.setAttribute('position',new THREE.BufferAttribute(conPos,3));
-conGeo.setAttribute('aT',      new THREE.BufferAttribute(conT,1));
-conGeo.setAttribute('aBr',     new THREE.BufferAttribute(conBr,1));
-conGeo.setAttribute('aSz',     new THREE.BufferAttribute(conSz,1));
-conGeo.setDrawRange(0,CON_N);
-const conMat = new THREE.ShaderMaterial({
-  transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
-  uniforms:{ uT:{value:0}, uPx:{value:1}, uCol:{value:new THREE.Color(0.30,1.0,0.72)},
-             uAmp:{value:1.0} },
-  vertexShader:`
-    attribute float aT; attribute float aBr; attribute float aSz;
-    uniform float uT; uniform float uPx; uniform float uAmp;
-    varying float vB;
-    void main(){
-      vec4 mv = modelViewMatrix*vec4(position,1.0);
-      float travel = fract(uT*0.42 - aT*1.25);
-      float pulse  = pow(1.0-abs(travel*2.0-1.0), 7.0);
-      vB = (0.10 + aBr*0.55 + pulse*1.35)*uAmp;
-      gl_PointSize = aSz*uPx*(0.9+pulse*1.5)*(6.4/max(-mv.z,0.001));
-      gl_Position  = projectionMatrix*mv;
-    }`,
-  fragmentShader:`
-    precision highp float; uniform vec3 uCol; varying float vB;
-    void main(){ vec2 d=gl_PointCoord-0.5; float r=dot(d,d);
-      if(r>0.25) discard;
-      float f = exp(-r*13.0);
-      gl_FragColor = vec4(uCol*vB*f*1.9, f*min(vB,1.0)); }`
-});
-const conPts = new THREE.Points(conGeo, conMat);
-conPts.renderOrder = 3; conPts.frustumCulled = false; rig.add(conPts);
-
-/* ══ 6. ENTITY MOTES — the particle field that re-clusters on morph ═══════════ */
-const MOTE_N = LOW ? 420 : 900;
-const motePos = new Float32Array(MOTE_N*3);
-const moteSeg = new Int32Array(MOTE_N);
-const moteOff = new Float32Array(MOTE_N*3);
-const moteSz  = new Float32Array(MOTE_N);
-const motePh  = new Float32Array(MOTE_N);
-for(let i=0;i<MOTE_N;i++){
-  moteSeg[i] = (Math.random()*SEG.length)|0;
-  const s = SEG[moteSeg[i]];
-  const rr = (s.r0+s.r1)*0.5*1.34;
-  moteOff[i*3  ] = (Math.random()-0.5)*rr*3.1;
-  moteOff[i*3+1] = (Math.random()-0.5)*s.l*1.15;
-  moteOff[i*3+2] = (Math.random()-0.5)*rr*3.1;
-  moteSz[i] = 0.5+Math.random()*1.6;
-  motePh[i] = Math.random()*6.283;
-}
-const moteGeo = new THREE.BufferGeometry();
-moteGeo.setAttribute('position',new THREE.BufferAttribute(motePos,3));
-moteGeo.setAttribute('aSz',new THREE.BufferAttribute(moteSz,1));
-moteGeo.setAttribute('aPh',new THREE.BufferAttribute(motePh,1));
-const moteMat = new THREE.ShaderMaterial({
-  transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
-  uniforms:{ uT:{value:0}, uPx:{value:1}, uE:{value:0}, uCol:{value:new THREE.Color(0.44,1.0,0.80)} },
-  vertexShader:`attribute float aSz; attribute float aPh; uniform float uT; uniform float uPx;
-    uniform float uE; varying float vO;
-    void main(){ vec4 mv=modelViewMatrix*vec4(position,1.0);
-      vO = (0.10+0.24*uE)*(0.45+0.55*sin(uT*1.7+aPh));
-      gl_PointSize = aSz*uPx*(3.1/max(-mv.z,0.001));
-      gl_Position  = projectionMatrix*mv; }`,
-  fragmentShader:`precision highp float; uniform vec3 uCol; varying float vO;
-    void main(){ vec2 d=gl_PointCoord-0.5; float r=dot(d,d); if(r>0.25) discard;
-      gl_FragColor=vec4(uCol*vO*exp(-r*11.0)*1.5, vO*exp(-r*11.0)); }`
-});
-const motes = new THREE.Points(moteGeo, moteMat);
-motes.frustumCulled=false; motes.renderOrder=3; rig.add(motes);
-
-/* ══ 7. ORB CONTAINMENT SHELL ═════════════════════════════════════════════════ */
-const orbShell = new THREE.Mesh(new THREE.SphereGeometry(0.70, 56, 40),
-  new THREE.ShaderMaterial({
-    transparent:true, depthWrite:false, side:THREE.DoubleSide,
-    blending:THREE.AdditiveBlending,
-    uniforms:{uT:{value:0}, uOp:{value:0}},
-    vertexShader:`varying vec3 vN; varying vec3 vWP; varying vec3 vLP;
-      void main(){ vN=normalize(mat3(modelMatrix)*normal); vLP=position;
-        vec4 wp=modelMatrix*vec4(position,1.0); vWP=wp.xyz;
-        gl_Position=projectionMatrix*viewMatrix*wp; }`,
-    fragmentShader:`precision highp float; uniform float uT; uniform float uOp;
-      varying vec3 vN; varying vec3 vWP; varying vec3 vLP;
-      ${NOISE}
+  /* obsidian glass shell — dark core, bright rim, specular arc */
+  shell=new THREE.Mesh(new THREE.SphereGeometry(268,80,80),new THREE.ShaderMaterial({
+    transparent:true,depthWrite:false,side:THREE.BackSide,blending:THREE.AdditiveBlending,
+    uniforms:{t:{value:0},e:{value:0},op:{value:1}},
+    vertexShader:`varying vec3 vN; varying vec3 vV; varying vec3 vP;
+      void main(){ vP=position; vN=normalize(normalMatrix*normal);
+        vec4 mv=modelViewMatrix*vec4(position,1.); vV=normalize(-mv.xyz);
+        gl_Position=projectionMatrix*mv; }`,
+    fragmentShader:`varying vec3 vN; varying vec3 vV; varying vec3 vP;
+      uniform float t; uniform float e; uniform float op;
+      float h(vec3 p){return fract(sin(dot(p,vec3(12.99,78.23,45.16)))*43758.5453);}
+      float n3(vec3 p){vec3 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
+        return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x),mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x),f.y),
+                   mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x),mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x),f.y),f.z);}
       void main(){
-        vec3 N=normalize(vN), V=normalize(cameraPosition-vWP);
-        float f=pow(1.0-abs(dot(N,V)),3.0);
-        float sm=pow(vn3(vLP*5.4+vec3(0.0,uT*0.16,uT*0.09)),2.6);
-        vec3 L=normalize(vec3(-0.52,0.78,0.46));
-        float sp=pow(max(dot(N,L),0.0),64.0);
-        vec3 c = vec3(0.30,0.95,0.70)*f*1.5 + vec3(0.95,0.28,0.14)*sm*0.55 + vec3(1.0)*sp*1.4;
-        gl_FragColor=vec4(c*uOp, clamp(f*0.55+sp*0.5,0.0,0.7)*uOp); }`
-  }));
-orbShell.renderOrder=5; orbShell.frustumCulled=false; rig.add(orbShell);
+        float fres=pow(1.-abs(dot(normalize(vN),normalize(vV))),2.6);
+        float sm=pow(n3(vP*.0125+vec3(0.,t*.09,t*.05)),2.4);
+        vec3 L=normalize(vec3(-.55,.72,.42));
+        float spec=pow(max(dot(normalize(vN),L),0.),42.);
+        float a=fres*(.50+.22*e)+sm*.13+spec*.62;
+        vec3 c=vec3(.42,1.,.52)*fres*(1.+.5*e)+vec3(.30,.92,.40)*sm*.55+vec3(.85,1.,.90)*spec;
+        gl_FragColor=vec4(c, clamp(a,0.,.55)*op); }`}));
+  /* shell removed: it read as a container */
 
-/* ══ 8. GROUND — real shadow map + analytic distance-based penumbra ═══════════ */
-const OCC_N = 7;
-const occPos = []; for(let i=0;i<OCC_N;i++) occPos.push(new THREE.Vector4(0,9,0,0.001));
-const groundMat = new THREE.MeshStandardMaterial({
-  color:0x05070a, roughness:0.90, metalness:0.10 });
-const GROUND_OCC = `
-  // analytic contact shadow: the penumbra widens with the occluder's height,
-  // and the core darkens as the entity approaches the floor. This is the
-  // "distance-based penumbra falloff" the spec asks for; the shadow map on top
-  // of it supplies the crisp near-contact detail.
-  float occ = 0.0;
-  for(int i=0;i<${OCC_N};i++){
-    vec4 o = uOcc[i];
-    float h = max(o.y - vGP.y, 0.001);
-    float pen = o.w + h*0.62;
-    float d = length(vGP.xz - o.xz);
-    float s = 1.0 - smoothstep(pen*0.26, pen, d);
-    occ = max(occ, s / (1.0 + h*1.55));
-  }
-  gl_FragColor.rgb *= (1.0 - clamp(occ,0.0,1.0)*0.92);
-`;
-groundMat.onBeforeCompile = (sh)=>{
-  sh.uniforms.uOcc = { value: occPos };
-  sh.vertexShader = sh.vertexShader
-    .replace('#include <common>', '#include <common>\nvarying vec3 vGP;')
-    .replace('#include <begin_vertex>', '#include <begin_vertex>\nvGP = (modelMatrix*vec4(transformed,1.0)).xyz;');
-  sh.fragmentShader = sh.fragmentShader
-    .replace('#include <common>', '#include <common>\nvarying vec3 vGP;\nuniform vec4 uOcc['+OCC_N+'];')
-    .replace('#include <dithering_fragment>', GROUND_OCC + '\n#include <dithering_fragment>');
-  groundMat.userData.sh = sh;
-};
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(26,26,1,1), groundMat);
-ground.rotation.x = -Math.PI/2; ground.position.y = -1.62; ground.receiveShadow = true;
-scene.add(ground);
+  /* wisps licking off the surface */
+  { const W=420,wp=new Float32Array(W*3),ws=new Float32Array(W),wf=new Float32Array(W);
+    for(let i=0;i<W;i++){ const r=262+Math.random()*74,th=Math.random()*6.283,pp=Math.acos(2*Math.random()-1);
+      wp[i*3]=r*Math.sin(pp)*Math.cos(th);wp[i*3+1]=r*Math.sin(pp)*Math.sin(th);wp[i*3+2]=r*Math.cos(pp);
+      ws[i]=6+Math.random()*22; wf[i]=Math.random()*6.283; }
+    const wg=new THREE.BufferGeometry();
+    wg.setAttribute('position',new THREE.BufferAttribute(wp,3));
+    wg.setAttribute('asize',new THREE.BufferAttribute(ws,1));
+    wg.setAttribute('aph',new THREE.BufferAttribute(wf,1));
+    wisp=new THREE.Points(wg,new THREE.ShaderMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+      uniforms:{t:{value:0},e:{value:0}},
+      vertexShader:`attribute float asize; attribute float aph; uniform float t; uniform float e; varying float vo;
+        void main(){ vec3 p=position; float lick=.5+.5*sin(t*1.15+aph*2.);
+          p*=1.+lick*(.10+.09*e); p.x+=sin(t*.9+aph)*7.; p.z+=cos(t*.8+aph)*7.;
+          vec4 mv=modelViewMatrix*vec4(p,1.); vo=(.13+.30*e)*lick;
+          gl_PointSize=asize*(340./-mv.z); gl_Position=projectionMatrix*mv; }`,
+      fragmentShader:`varying float vo; void main(){vec2 d=gl_PointCoord-.5; float r=length(d);
+        if(r>.5) discard; gl_FragColor=vec4(.46,1.,.56, exp(-r*r*8.)*vo);}`}));
+    ophanim.add(wisp); }
 
-/* ══ 9. VOLUMETRIC DUST — strictly inside the light cone, and occluded ════════
-   qi rejected untextured haze on the graph page. This is not that. Every mote is
-   cone-gated (outside the key light's cone it contributes literally nothing), is
-   shadowed by the same occluder spheres that darken the floor, and is weighted by
-   a forward-scattering Mie phase term so the volume brightens only when you look
-   into the light. Turn the light off and the volume disappears.                  */
-const DUST_N = LOW ? 900 : 2600;
-const dustP = new Float32Array(DUST_N*3), dustPh = new Float32Array(DUST_N),
-      dustS = new Float32Array(DUST_N),   dustK  = new Float32Array(DUST_N);
-for(let i=0;i<DUST_N;i++){
-  const ground_layer = Math.random()<0.34;
-  const r = Math.pow(Math.random(),0.55)*2.35;
-  const a = Math.random()*6.283;
-  dustP[i*3  ] = Math.cos(a)*r;
-  dustP[i*3+1] = ground_layer ? (-1.60 + Math.random()*0.42) : (-1.6 + Math.random()*3.5);
-  dustP[i*3+2] = Math.sin(a)*r;
-  dustPh[i] = Math.random()*6.283;
-  dustS[i]  = ground_layer ? (1.6+Math.random()*3.4) : (0.35+Math.random()*1.25);
-  dustK[i]  = ground_layer ? 0.0 : 1.0;
-}
-const dustGeo = new THREE.BufferGeometry();
-dustGeo.setAttribute('position',new THREE.BufferAttribute(dustP,3));
-dustGeo.setAttribute('aPh',new THREE.BufferAttribute(dustPh,1));
-dustGeo.setAttribute('aSz',new THREE.BufferAttribute(dustS,1));
-dustGeo.setAttribute('aK', new THREE.BufferAttribute(dustK,1));
-const dustMat = new THREE.ShaderMaterial({
-  transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
-  uniforms:{
-    uT:{value:0}, uPx:{value:1},
-    uLpos:{value:KEYDIR.clone().multiplyScalar(7)},
-    uLdir:{value:KEYDIR.clone().negate()},
-    uCos:{value:Math.cos(0.46)},
-    uOcc:{value:occPos},
-    uCol:{value:new THREE.Color(0.86,0.96,1.0)}
-  },
-  vertexShader:`
-    attribute float aPh; attribute float aSz; attribute float aK;
-    uniform float uT, uPx, uCos; uniform vec3 uLpos, uLdir; uniform vec4 uOcc[${OCC_N}];
-    varying float vA;
-    void main(){
-      // Brownian wander — layered incommensurate drift, never a loop
-      vec3 p = position;
-      p.x += sin(uT*0.31+aPh)*0.16 + sin(uT*0.87+aPh*2.7)*0.045;
-      p.y += cos(uT*0.24+aPh*1.7)*0.11*aK + uT*0.014*aK;
-      p.z += cos(uT*0.37+aPh*0.6)*0.16 + cos(uT*0.79+aPh*3.1)*0.045;
-      p.y = mod(p.y+1.85, 5.2) - 1.85;
+  /* ghastly aura */
+  { const A=1400,ap=new Float32Array(A*3),as=new Float32Array(A),ao=new Float32Array(A);
+    for(let i=0;i<A;i++){ const r=250+Math.pow(Math.random(),.55)*230,th=Math.random()*6.283,pp=Math.acos(2*Math.random()-1);
+      ap[i*3]=r*Math.sin(pp)*Math.cos(th);ap[i*3+1]=r*Math.sin(pp)*Math.sin(th);ap[i*3+2]=r*Math.cos(pp);
+      as[i]=34+Math.random()*96; ao[i]=Math.random()*6.283; }
+    const ag=new THREE.BufferGeometry();
+    ag.setAttribute('position',new THREE.BufferAttribute(ap,3));
+    ag.setAttribute('asize',new THREE.BufferAttribute(as,1));
+    ag.setAttribute('aph',new THREE.BufferAttribute(ao,1));
+    aura=new THREE.Points(ag,new THREE.ShaderMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+      uniforms:{t:{value:0},e:{value:0},cz:{value:580}},
+      vertexShader:`attribute float asize; attribute float aph; uniform float t; uniform float e;
+        uniform float cz; varying float vo;
+        void main(){ vec3 p=position; float r=length(p);
+          vec3 n=p/r;
+          vec3 ax=normalize(vec3(sin(aph*1.7),cos(aph*2.3),sin(aph*.9)));
+          vec3 tang=normalize(cross(n,ax));
+          float sp=t*(.34+.5*e)+aph;
+          p+=tang*sin(sp)*46.+cross(n,tang)*cos(sp*.83)*38.;
+          p*=1.+.04*sin(t*.5+aph)+e*.05;
+          vec4 mv=modelViewMatrix*vec4(p,1.);
+          vo=(.030+.038*e)*(.40+.60*(.5+.5*sin(sp*.7)));
+          /* HALO, NOT VEIL. The aura is what qi asked for back; the SMOKE he
+             rejected was the same points stacking BETWEEN the camera and the
+             core. Measured 2026-08-17: with the orb as the boot state the
+             frontal shell covered the whole viewport in grey discs again.
+             So fade by view depth — points in front of the sphere's near face
+             drop out, points level with it and behind keep their full value.
+             Nothing is removed; the halo and the back-glow are untouched. */
+          vo *= smoothstep(cz-250., cz-30., -mv.z);
+          gl_PointSize=asize*(340./-mv.z); gl_Position=projectionMatrix*mv; }`,
+      fragmentShader:`varying float vo; void main(){vec2 d=gl_PointCoord-.5; float r=length(d);
+        if(r>.5) discard; gl_FragColor=vec4(.74,.95,.83, exp(-r*r*5.2)*vo);}`}));
+    ophanim.add(aura); }
 
-      // CONE GATE — outside the key light's cone this mote is pure black
-      vec3 toP  = p - uLpos;
-      float ax  = dot(toP, uLdir);
-      vec3  perp= toP - uLdir*ax;
-      float cosA= ax / max(length(toP),0.0001);
-      float cone= smoothstep(uCos, uCos+0.085, cosA);
+  /* TELEKINESIS — a filament it extends toward what it is reaching for */
+  { const rg=new THREE.BufferGeometry();
+    rg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(6),3));
+    reachLine=new THREE.Line(rg,new THREE.LineBasicMaterial({
+      color:0x8fffbe,transparent:true,opacity:0,blending:THREE.AdditiveBlending}));
+    scene.add(reachLine); }
 
-      // OCCLUSION — shafts: is the path back to the light blocked by the entity?
-      float sh = 0.0;
-      for(int i=0;i<${OCC_N};i++){
-        vec4 o = uOcc[i];
-        vec3 L = normalize(uLpos - p);
-        vec3 d = o.xyz - p;
-        float t = dot(d, L);
-        if(t > 0.0){
-          float r = length(d - L*t);
-          sh = max(sh, 1.0 - smoothstep(o.w*0.55, o.w*1.9, r));
-        }
-      }
+  document.getElementById('nn').textContent=N.toLocaleString();
+  document.getElementById('ee').textContent=g.edges.length.toLocaleString();
+  const ws2=g.edges.map(e=>e.w);
+  document.getElementById('ww').textContent=Math.min(...ws2).toFixed(3)+'–'+Math.max(...ws2).toFixed(3);
+  g.nodes.slice().sort((a,b)=>(b.deg||0)-(a.deg||0)).slice(0,6).forEach(n=>{
+    const el=document.createElement('div'); el.className='lbl';
+    el.textContent=n.id.replace(/-/g,' ').slice(0,32);
+    document.querySelector('.ui').appendChild(el); labels.push({el,i:idx.get(n.id)}); });
 
-      // MIE forward scattering — the volume only lights up facing the source
-      vec4 mv = modelViewMatrix*vec4(p,1.0);
-      vec3 V  = normalize(cameraPosition - p);
-      float phase = 0.28 + 0.90*pow(max(dot(V,-uLdir),0.0), 3.4);
-
-      float falloff = 1.0/(1.0+ax*ax*0.024);
-      vA = cone*(1.0-sh*0.92)*phase*falloff*(aK>0.5?0.055:0.030);
-      gl_PointSize = aSz*uPx*(2.4/max(-mv.z,0.001));
-      gl_Position  = projectionMatrix*mv;
-    }`,
-  fragmentShader:`precision highp float; uniform vec3 uCol; varying float vA;
-    void main(){ vec2 d=gl_PointCoord-0.5; float r=dot(d,d); if(r>0.25) discard;
-      float f=exp(-r*9.0); gl_FragColor=vec4(uCol*vA*f*2.6, vA*f); }`
-});
-const dust = new THREE.Points(dustGeo, dustMat);
-dust.frustumCulled=false; dust.renderOrder=2; scene.add(dust);
-
-/* ══ 10. POST CHAIN (hand-rolled: HDR -> bloom -> DoF+CA+grain -> ACES) ═══════ */
-const fsScene = new THREE.Scene();
-const fsCam   = new THREE.OrthographicCamera(-1,1,1,-1,0,1);
-const fsQuad  = new THREE.Mesh(new THREE.PlaneGeometry(2,2), null);
-fsQuad.frustumCulled=false; fsScene.add(fsQuad);
-function blit(mat, target){
-  fsQuad.material = mat;
-  renderer.setRenderTarget(target||null);
-  renderer.render(fsScene, fsCam);
-}
-const RTopt = { minFilter:THREE.LinearFilter, magFilter:THREE.LinearFilter,
-                type:THREE.HalfFloatType, format:THREE.RGBAFormat,
-                depthBuffer:false, generateMipmaps:false };
-let rtScene, rtA0, rtA1, rtB0, rtB1, depthTex;
-
-function makeTargets(w,h){
-  [rtScene,rtA0,rtA1,rtB0,rtB1].forEach(t=>t&&t.dispose());
-  if(depthTex) depthTex.dispose();
-  depthTex = new THREE.DepthTexture(w,h);
-  depthTex.type = IS_WEBGL2 ? THREE.UnsignedIntType : THREE.UnsignedShortType;
-  depthTex.minFilter = depthTex.magFilter = THREE.NearestFilter;
-  rtScene = new THREE.WebGLRenderTarget(w,h,{...RTopt, depthBuffer:true, depthTexture:depthTex});
-  const hw=Math.max(2,w>>1), hh=Math.max(2,h>>1), qw=Math.max(2,w>>2), qh=Math.max(2,h>>2);
-  rtA0=new THREE.WebGLRenderTarget(hw,hh,RTopt); rtA1=new THREE.WebGLRenderTarget(hw,hh,RTopt);
-  rtB0=new THREE.WebGLRenderTarget(qw,qh,RTopt); rtB1=new THREE.WebGLRenderTarget(qw,qh,RTopt);
-}
-
-const brightMat = new THREE.ShaderMaterial({
-  uniforms:{ tD:{value:null}, uThr:{value:0.62}, uKnee:{value:0.42} },
-  vertexShader:`varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }`,
-  fragmentShader:`precision highp float; uniform sampler2D tD; uniform float uThr,uKnee;
-    varying vec2 vUv;
-    void main(){ vec3 c=texture2D(tD,vUv).rgb;
-      float l=max(c.r,max(c.g,c.b));
-      float s=clamp((l-uThr)/max(uKnee,1e-4),0.0,1.0); s=s*s;
-      gl_FragColor=vec4(c*s, 1.0); }`
-});
-const blurMat = new THREE.ShaderMaterial({
-  uniforms:{ tD:{value:null}, uDir:{value:new THREE.Vector2(1,0)}, uTex:{value:new THREE.Vector2(1,1)} },
-  vertexShader:`varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }`,
-  fragmentShader:`precision highp float; uniform sampler2D tD; uniform vec2 uDir,uTex;
-    varying vec2 vUv;
-    void main(){
-      vec2 o = uDir/uTex;
-      vec3 c = texture2D(tD,vUv).rgb*0.2270270270;
-      c += (texture2D(tD,vUv+o*1.3846153846).rgb + texture2D(tD,vUv-o*1.3846153846).rgb)*0.3162162162;
-      c += (texture2D(tD,vUv+o*3.2307692308).rgb + texture2D(tD,vUv-o*3.2307692308).rgb)*0.0702702703;
-      gl_FragColor=vec4(c,1.0); }`
-});
-const downMat = new THREE.ShaderMaterial({
-  uniforms:{ tD:{value:null}, uTex:{value:new THREE.Vector2(1,1)} },
-  vertexShader:`varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }`,
-  fragmentShader:`precision highp float; uniform sampler2D tD; uniform vec2 uTex; varying vec2 vUv;
-    void main(){ vec2 o=1.0/uTex;
-      vec3 c = texture2D(tD,vUv+vec2(-o.x,-o.y)).rgb + texture2D(tD,vUv+vec2(o.x,-o.y)).rgb
-             + texture2D(tD,vUv+vec2(-o.x, o.y)).rgb + texture2D(tD,vUv+vec2(o.x, o.y)).rgb;
-      gl_FragColor=vec4(c*0.25,1.0); }`
+  gsap.fromTo(S,{scale:.15},{scale:1,duration:2.4,ease:'power3.out'});
 });
 
-const compMat = new THREE.ShaderMaterial({
-  uniforms:{
-    tScene:{value:null}, tBloomA:{value:null}, tBloomB:{value:null}, tDepth:{value:null},
-    uRes:{value:new THREE.Vector2(1,1)}, uT:{value:0},
-    uNear:{value:camera.near}, uFar:{value:camera.far},
-    uFocus:{value:4.0}, uAperture:{value:1.0},
-    uExposure:{value:1.1},        // spec value, applied exactly once, here
-    uBloom:{value:0.62}, uCA:{value:1.0}, uGrain:{value:1.0}, uVig:{value:1.0}
-  },
-  vertexShader:`varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }`,
-  fragmentShader:`
-precision highp float;
-uniform sampler2D tScene,tBloomA,tBloomB,tDepth;
-uniform vec2 uRes; uniform float uT,uNear,uFar,uFocus,uAperture,uExposure,uBloom,uCA,uGrain,uVig;
-varying vec2 vUv;
-
-float linDepth(vec2 uv){
-  float d = texture2D(tDepth,uv).x;
-  float vz = (uNear*uFar)/((uFar-uNear)*d - uFar);
-  return -vz;
+/* ================= SHAPESHIFT ========================================= */
+const FORMS=['OPHANIM','ORB','FORM'];
+function shift(to){
+  gsap.to(S,{morph:to,duration:2.2,ease:'power2.inOut',
+    onUpdate:()=>{document.getElementById('form').textContent=
+      FORMS[Math.round(S.morph)]||FORMS[0];}});
+  gsap.to(S,{bend:1,duration:.7,ease:'power2.out'});
+  gsap.to(S,{bend:0,duration:2.4,delay:.7,ease:'power2.inOut'});   // world bends during the change
+  gsap.fromTo(S,{flare:1.6},{flare:0,duration:1.8,ease:'power2.out'});
 }
-vec3 ACES(vec3 x){
-  const float a=2.51,b=0.03,c=2.43,d=0.59,e=0.14;
-  return clamp((x*(a*x+b))/(x*(c*x+d)+e),0.0,1.0);
-}
-float hash12(vec2 p){ vec3 p3=fract(vec3(p.xyx)*0.1031); p3+=dot(p3,p3.yzx+33.33);
-  return fract((p3.x+p3.y)*p3.z); }
+document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>shift(+b.dataset.f));
 
-void main(){
-  vec2 uv = vUv;
-  vec2 ctr = uv-0.5;
-  float r2 = dot(ctr,ctr);
+/* ================= TELEPATHY / STALKING =============================== */
+const cur=document.getElementById('cur'), mood=document.getElementById('mood');
+const setMood=m=>{ if(mood.textContent!==m){mood.textContent=m; gsap.fromTo(mood,{opacity:0},{opacity:1,duration:.5});} };
+let idleT, lastX=0,lastY=0,vx=0,vy=0;
+function stir(m){ setMood(m); clearTimeout(idleT);
+  idleT=setTimeout(()=>{ setMood('IDLE'); gsap.to(S,{spin:.0015,duration:2.4,ease:'power2.out'});
+    if(Math.abs(S.morph-1)>0.02) shift(1); },3400); }   // it always settles back to the ORB
 
-  // ── depth of field: circle of confusion against the active-digit focus ──
-  float dep = linDepth(uv);
-  float coc = clamp(abs(dep-uFocus)/max(dep,0.001)*uAperture, 0.0, 1.0);
-  coc = pow(coc,0.85)*0.026;
-
-  // ── chromatic aberration: radial channel split, grows with r^2 ──
-  vec2 ca = ctr*r2*0.0125*uCA;
-
-  // 12-tap poisson gather, unrolled (GLSL ES 1.00 — no array initialisers)
-  #define TAP(OX,OY) { vec2 o=vec2(OX,OY)*coc; float dd=linDepth(uv+o); \
-      float w=(dd > uFocus-0.35) ? 1.0 : 0.55; \
-      acc += texture2D(tScene, uv+o).rgb * w; wsum += w; }
-
-  vec3 col;
-  if(coc > 0.0016){
-    vec3 acc = vec3(0.0); float wsum = 0.0;
-    TAP(-0.326,-0.406) TAP(-0.840,-0.074) TAP(-0.696, 0.457) TAP(-0.203, 0.621)
-    TAP( 0.962,-0.195) TAP( 0.473,-0.480) TAP( 0.519, 0.767) TAP( 0.185,-0.893)
-    TAP( 0.507, 0.064) TAP( 0.896, 0.412) TAP(-0.322,-0.933) TAP(-0.792,-0.598)
-    col = acc/max(wsum,1e-4);
-  } else {
-    col = texture2D(tScene, uv).rgb;
-  }
-  // apply CA on top of the (possibly blurred) result using sharp channel taps
-  float caAmt = clamp(r2*3.4,0.0,1.0)*uCA;
-  if(caAmt > 0.004){
-    vec3 sh = vec3(
-      texture2D(tScene, uv+ca).r,
-      texture2D(tScene, uv     ).g,
-      texture2D(tScene, uv-ca).b);
-    col = mix(col, mix(col, sh, 0.85), caAmt);
-  }
-
-  // ── bloom ──
-  vec3 bl = texture2D(tBloomA,uv).rgb*0.62 + texture2D(tBloomB,uv).rgb*0.88;
-  col += bl*uBloom;
-
-  // ── exposure + ACES filmic ──
-  col = ACES(col*uExposure);
-
-  // ── sensor grain: strongest in the shadows, kills the CG sheen ──
-  // MEASURED: at 0.030/0.055 the grain WAS the image — a near-black frame is
-  // almost all shadow, so the shadow-boost applied everywhere. Keep it a texture,
-  // never a texture you notice.
-  float lum = dot(col, vec3(0.299,0.587,0.114));
-  float g = hash12(uv*uRes + fract(uT)*911.7) - 0.5;
-  col += g * (0.008 + 0.017*(1.0-smoothstep(0.0,0.55,lum))) * uGrain;
-
-  // ── vignette ──
-  col *= mix(1.0, 1.0 - r2*0.55, uVig);
-
-  // linear -> sRGB
-  col = max(col, 0.0);
-  vec3 lo = col*12.92;
-  vec3 hi = 1.055*pow(col, vec3(1.0/2.4)) - 0.055;
-  gl_FragColor = vec4(mix(hi, lo, step(col, vec3(0.0031308))), 1.0);
-}`
+addEventListener('pointermove',e=>{
+  vx=e.clientX-lastX; vy=e.clientY-lastY; lastX=e.clientX; lastY=e.clientY;
+  // ANTICIPATION: lead the cursor by its velocity — it arrives before you do
+  const ax=e.clientX+vx*5.5, ay=e.clientY+vy*5.5;
+  gsap.to(S,{fx:(ax/innerWidth*2-1),fy:-(ay/innerHeight*2-1),duration:.40,ease:'power3.out',overwrite:'auto'});
+  gsap.to(cur,{left:e.clientX,top:e.clientY,duration:.15,ease:'power2.out'});
+  stir('TRACKING');
 });
+addEventListener('touchmove',e=>{const t=e.touches[0]; if(!t)return;
+  gsap.to(S,{fx:(t.clientX/innerWidth*2-1),fy:-(t.clientY/innerHeight*2-1),duration:.4,ease:'power3.out',overwrite:'auto'});
+  gsap.to(cur,{left:t.clientX,top:t.clientY,duration:.15}); stir('TOUCH');},{passive:true});
 
-/* ══ 11. INTERACTION — mass, inertia, damping. Never 1:1. ═════════════════════ */
-const IN = {
-  px:0, py:0,                 // pointer in NDC
-  tx:0, ty:0,                 // damped target the entity actually believes
-  vx:0, vy:0,                 // target velocity (the mass)
-  prox:0, proxT:0,            // 0..1 proximity
-  down:false, grasp:0, graspT:0,
-  orbYaw:0.10, orbPitch:0.08, orbVYaw:0, orbVPitch:0, dragging:false,
-  lastX:0, lastY:0, dist: LOW?4.3:3.35, distT: LOW?4.3:3.35,
-  idleAt: performance.now()
-};
-const curEl = document.getElementById('cur');
-const chrome = document.getElementById('chrome');
-let chromeT = 0;
-function wake(){ chromeT = performance.now(); if(UI) chrome.classList.add('on'); }
+// qi 2026-08-17 04:28, testing on his phone: "when its touched, that bounce effect is too
+// aggressive." It was scale .80 -> 1.14 on elastic.out(1,.42) — a 34% swing with a springy
+// overshoot, which on a small screen reads as the whole world lurching. Halved and de-sprung:
+// .92 -> 1.045 on a soft back-ease. Still clearly acknowledges the touch, no lurch.
+addEventListener('pointerdown',()=>{ stir('STRUCK');
+  gsap.timeline().to(S,{scale:.92,duration:.10,ease:'power3.in'})
+    .to(S,{scale:1.045,duration:.34,ease:'back.out(1.6)'})
+    .to(S,{scale:1,duration:.6,ease:'power2.out'});
+  gsap.fromTo(S,{flare:1.0},{flare:0,duration:1.0,ease:'power2.out'}); });
 
-function pointerNDC(e){
-  IN.px = (e.clientX/innerWidth)*2-1;
-  IN.py = -((e.clientY/innerHeight)*2-1);
-  IN.idleAt = performance.now();
-}
-addEventListener('pointermove', e=>{
-  pointerNDC(e);
-  if(IN.dragging){
-    IN.orbVYaw   += (e.clientX-IN.lastX)*0.00062;
-    IN.orbVPitch += (e.clientY-IN.lastY)*0.00046;
-  }
-  IN.lastX=e.clientX; IN.lastY=e.clientY;
-  curEl.style.left=e.clientX+'px'; curEl.style.top=e.clientY+'px';
-  if(e.clientY > innerHeight-120) wake();
+// ── ORBIT + PINCH ────────────────────────────────────────────────────────────────
+// qi 2026-08-17 04:28-04:29, on mobile, verbatim: "Im trying to travel through the world" ·
+// "Its not really changing sides for me or anything" · "its not letting me zoom out" ·
+// "You can zoom in" · "Theres nothing doing the zoom out."
+//
+// He was right on every count, and the cause is one thing: THERE WAS NO ORBIT CONTROL.
+// The camera was only ever `x += (fx*70 - x)*.05` / `y += (fy*54 - y)*.05` at a fixed z — a
+// ±70/±54 unit SWAY around one viewpoint. It can lean, it can never go AROUND. That is exactly
+// "not changing sides".
+// And zoom lived solely on a `wheel` listener. **A phone never fires `wheel`.** So there was
+// literally nothing bound to zoom on touch — what read as "you can zoom in" was Safari scaling
+// the PAGE, and page zoom bottoms out at 1.0, which is why out did nothing.
+//
+// Fixed with true spherical orbit + a two-finger pinch. The pointer-tracking lean (S.fx/S.fy)
+// is DELIBERATELY KEPT — qi liked that ("Following my mouse") — it just no longer owns the
+// camera. Lean is now a small offset ON TOP of the orbit.
+S.az = 0; S.el = 0;                       // azimuth / elevation, radians
+const EL_MAX = 1.35;                      // ~77deg: stop just short of the poles (gimbal flip)
+let drag=null, pinch=null;
+const _dist=(a,b)=>Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+
+addEventListener('touchstart',e=>{
+  if(e.touches.length===2){ drag=null; pinch={d:_dist(e.touches[0],e.touches[1]), z:S.camZ}; }
+  else if(e.touches.length===1){ pinch=null; const t=e.touches[0];
+    drag={x:t.clientX,y:t.clientY,az:S.az,el:S.el}; }
 },{passive:true});
-addEventListener('pointerdown', e=>{
-  IN.down=true; IN.dragging=true; IN.lastX=e.clientX; IN.lastY=e.clientY; pointerNDC(e); wake();
+
+addEventListener('touchmove',e=>{
+  if(pinch && e.touches.length===2){
+    const d=_dist(e.touches[0],e.touches[1]);
+    if(pinch.d>0){ stir('TRAVELLING');
+      // spread fingers -> d grows -> ratio >1 -> camZ shrinks -> move IN. Pinch -> move OUT.
+      gsap.to(S,{camZ:gsap.utils.clamp(260,2400,pinch.z*(pinch.d/d)),
+                 duration:.18,ease:'power2.out',overwrite:'auto'}); }
+    return;
+  }
+  if(drag && e.touches.length===1){ const t=e.touches[0];
+    stir('TRAVELLING');
+    S.az = drag.az + (t.clientX-drag.x)*0.0075;
+    S.el = gsap.utils.clamp(-EL_MAX, EL_MAX, drag.el - (t.clientY-drag.y)*0.0060);
+  }
 },{passive:true});
-addEventListener('pointerup',   ()=>{ IN.down=false; IN.dragging=false; },{passive:true});
-addEventListener('pointercancel',()=>{ IN.down=false; IN.dragging=false; },{passive:true});
-addEventListener('wheel', e=>{ IN.distT = Math.min(9.5, Math.max(2.2, IN.distT + e.deltaY*0.0026)); },{passive:true});
-addEventListener('keydown', e=>{
-  const k={'1':'idle','2':'hand','3':'orb','4':'wheels'}[e.key];
-  if(k) setState(k);
+
+addEventListener('touchend',e=>{ if(e.touches.length===0){ drag=null; pinch=null; } },{passive:true});
+
+// Desktop: drag with the button held orbits too, so the two paths behave the same.
+let mdown=null;
+addEventListener('mousedown',e=>{ mdown={x:e.clientX,y:e.clientY,az:S.az,el:S.el}; });
+addEventListener('mousemove',e=>{ if(!mdown)return; stir('TRAVELLING');
+  S.az = mdown.az + (e.clientX-mdown.x)*0.0075;
+  S.el = gsap.utils.clamp(-EL_MAX, EL_MAX, mdown.el - (e.clientY-mdown.y)*0.0060); });
+addEventListener('mouseup',()=>{ mdown=null; });
+
+addEventListener('wheel',e=>{ stir('TRAVELLING');
+  gsap.to(S,{camZ:gsap.utils.clamp(300,1600,S.camZ+e.deltaY*.55),duration:.85,ease:'power3.out',overwrite:'auto'});
+  gsap.to(S,{spin:.011,duration:.25}); gsap.to(S,{spin:.0015,duration:2.2,delay:.5});
+  gsap.to(S,{bend:Math.min(1,Math.abs(e.deltaY)/900),duration:.4});
+  gsap.to(S,{bend:0,duration:1.6,delay:.5}); },{passive:true});
+
+addEventListener('keydown',()=>{ stir('LISTENING');
+  gsap.fromTo(S,{jitter:1},{jitter:0,duration:.55,ease:'power2.out'});
+  if(S.morph<1.5) shift(2); });                       // it stands up to answer
+
+/* TELEKINESIS: hover any button and it reaches, and the button drifts */
+document.querySelectorAll('button').forEach(b=>{
+  b.addEventListener('pointerenter',()=>{ stir('REACHING');
+    gsap.to(S,{reach:1,duration:.5,ease:'power2.out'});
+    gsap.to(b,{x:6,y:-3,duration:.6,ease:'power2.out'}); });
+  b.addEventListener('pointerleave',()=>{
+    gsap.to(S,{reach:0,duration:.8,ease:'power2.inOut'});
+    gsap.to(b,{x:0,y:0,duration:.9,ease:'elastic.out(1,.5)'}); });
 });
 
-/* ══ 12. MORPHOLOGICAL STATE ══════════════════════════════════════════════════ */
-const W = { idle:1, hand:0, orb:0, wheels:0 };
-let STATE = 'idle';
-function setState(s){
-  if(!(s in W)) return;
-  STATE = s; wake();
-  for(const b of chrome.querySelectorAll('[data-s]')) b.classList.toggle('a', b.dataset.s===s);
-  tick(0.0001, true);           // land one frame of the new weights immediately
-  audioCue(s);
+function arrive(){ stir('EVENT'); shift(1);
+  gsap.timeline().to(S,{rz:S.rz+Math.PI*.42,duration:.9,ease:'power3.inOut'})
+    .fromTo(S,{flare:2.0},{flare:0,duration:1.4},0)
+    .fromTo(S,{scale:1.18},{scale:1,duration:1.1,ease:'elastic.out(1,.5)'},0); }
+document.getElementById('probe').onclick=arrive;
+
+/* ================= VOICE ==============================================
+   AUDIT of what this used to be, before assuming it worked:
+     fftSize was 32 -> frequencyBinCount 16 -> ~1.5 kHz PER BIN. Every human
+     voice fundamental (85-255 Hz) landed in bin 0, and all 16 bins were then
+     averaged into one scalar anyway. So there was NO frequency information in
+     the page at all — only a loudness number, driving point-pull amplitude,
+     wisp/aura opacity and bloom. The `shell` it also drove was never added to
+     the scene, so that leg was dead.
+   Now: 2048-point FFT (~23 Hz per bin, real voice resolution) folded into 8
+   log-spaced bands with per-band attack/release, plus a slow AGC so a quiet
+   room still moves the orb. The bands drive LATITUDE RINGS on the orb (see
+   ORB_BAND in the loop) so frequency is visible as shape, not just brightness.
+   ⚠️ NOT VERIFIED WITH A REAL MIC — this machine is a Mac mini with no
+   microphone (vault: mac-mini-has-no-mic). The render path is verified with a
+   synthesized tone via XENOS.testTone(); the getUserMedia leg is code-shipped
+   and unverified until qi speaks into it.                                   */
+const NB=8;
+let analyser=null,bins=null,actx=null;
+const BAND=new Float32Array(NB), BTGT=new Float32Array(NB);
+let LEVEL=0, APEAK=1e-4, HAS_AUDIO=false;
+
+function attachAnalyser(node,ctx){
+  const a=ctx.createAnalyser(); a.fftSize=2048; a.smoothingTimeConstant=.72;
+  node.connect(a); analyser=a; bins=new Uint8Array(a.frequencyBinCount);
+  actx=ctx; HAS_AUDIO=true; return a;
 }
-if(UI) for(const b of chrome.querySelectorAll('[data-s]')) b.onclick=()=>setState(b.dataset.s);
+document.getElementById('mic').onclick=async ev=>{
+  try{ const st=await navigator.mediaDevices.getUserMedia({audio:{
+         echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    const c=new AudioContext(); if(c.state==='suspended') await c.resume();
+    attachAnalyser(c.createMediaStreamSource(st),c);   // analyser is a SINK — never to destination
+    ev.target.textContent='◉ listening';
+  }catch(e){ ev.target.textContent='◉ denied'; } };
 
-/* ══ 13. WHEELS RING TARGETS ══════════════════════════════════════════════════ */
-const RINGS = [
-  { q:new THREE.Quaternion().setFromEuler(new THREE.Euler(0,0,0)),          r:0.92, sp: 0.55 },
-  { q:new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI/2,0,0)),  r:1.06, sp:-0.41 },
-  { q:new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI/2,.35)),r:0.79, sp: 0.72 },
-];
-const _ringP = new THREE.Vector3(), _ringT = new THREE.Vector3(), _ringQ = new THREE.Quaternion();
-
-/* ══ 14. FORWARD KINEMATICS ═══════════════════════════════════════════════════ */
-function lerpPose(w){
-  const P = {mcp:0,pip:0,dip:0,splay:0,thumb:[0,0,0],wristPitch:0};
-  let tot=0;
-  for(const k of ['idle','hand','orb','wheels']){
-    const a=w[k]; if(a<=0.0001) continue; tot+=a;
-    const s=POSE[k];
-    P.mcp+=s.mcp*a; P.pip+=s.pip*a; P.dip+=s.dip*a; P.splay+=s.splay*a;
-    P.wristPitch+=s.wristPitch*a;
-    for(let i=0;i<3;i++) P.thumb[i]+=s.thumb[i]*a;
-  }
-  if(tot>0.0001){ P.mcp/=tot;P.pip/=tot;P.dip/=tot;P.splay/=tot;P.wristPitch/=tot;
-    for(let i=0;i<3;i++) P.thumb[i]/=tot; }
-  return P;
-}
-
-const wristQ = new THREE.Quaternion();
-const TIP = new THREE.Vector3();     // active digit tip, world — the DoF focus
-
-function solveFK(P, t, tremor, graspW, reachW){
-  // wrist: tracks the damped pointer with mass, plus slow postural drift
-  const yaw   = IN.tx*0.60 + Math.sin(t*0.17)*0.045;
-  const pitch = -IN.ty*0.46 + P.wristPitch + Math.sin(t*0.13+1.1)*0.035;
-  const roll  = Math.sin(t*0.11+2.2)*0.05 + IN.tx*0.14;
-  _e1.set(pitch, yaw, roll, 'YXZ');
-  wristQ.setFromEuler(_e1);
-  rig.quaternion.copy(wristQ);
-
-  let si = 0;
-  for(let di=0; di<DIGITS.length; di++){
-    const D = DIGITS[di];
-    const isThumb = D.id==='thumb';
-    // digit base orientation
-    _e1.set(D.pitch, D.yaw + (isThumb?0:P.splay*(di-2.5)*0.42), D.roll, 'YXZ');
-    _baseQ.setFromEuler(_e1);
-    _joint.set(D.root[0],D.root[1],D.root[2]);
-    const joint = _joint;
-    _q.copy(_baseQ);
-    const q = _q;
-
-    for(let k=0;k<D.segs.length;k++,si++){
-      const S = D.segs[k];
-      const seg = SEG[si];
-      let flex;
-      if(isThumb){ flex = P.thumb[k]*D.cf; }
-      else if(k===0){ flex = 0.03 + P.mcp*0.05; }        // metacarpal barely moves
-      else if(k===1){ flex = P.mcp*D.cf; }
-      else if(k===2){ flex = P.pip*D.cf; }
-      else           { flex = P.dip*D.cf; }
-
-      // organic tremor — per-joint, incommensurate, never repeats
-      flex += tremor*(Math.sin(t*(5.7+di*0.83+k*1.31)+di*2.1+k*0.7)*0.0125
-                    + Math.sin(t*(13.1+k*2.7)+di)*0.0055);
-      // proximity: the digits extend slightly toward what is near
-      flex -= reachW*0.20*(k>=1?1:0.25);
-      flex += graspW*0.30*(k>=1?1:0.15);
-
-      _q1.setFromAxisAngle(_AX, flex);
-      if(k===1 && !isThumb){
-        _q2.setFromAxisAngle(_AZ, -P.splay*(di-2.5)*0.30);
-        _q1.multiply(_q2);
-      }
-      q.multiply(_q1);
-
-      // segment centre = joint + dir * len/2
-      const dir = _v2.set(0,1,0).applyQuaternion(q);
-      seg.j0.copy(joint);
-      seg.fkP.copy(joint).addScaledVector(dir, S.l*0.5);
-      seg.fkQ.copy(q);
-      joint.addScaledVector(dir, S.l);
-      seg.j1.copy(joint);
+/* read the spectrum, or breathe on our own so it is never a dead page */
+function readVoice(){
+  if(analyser){
+    analyser.getByteFrequencyData(bins);
+    const M=bins.length; let sum=0;
+    for(let b=0;b<NB;b++){                       // log-spaced: voice is not linear in bin index
+      const lo=Math.floor(Math.pow(M,b/NB)), hi=Math.max(lo+1,Math.floor(Math.pow(M,(b+1)/NB)));
+      let s=0; for(let i=lo;i<hi;i++) s+=bins[i];
+      BTGT[b]=s/((hi-lo)*255); sum+=BTGT[b];
     }
+    let lv=sum/NB;
+    APEAK=Math.max(APEAK*.9992, lv);             // slow AGC — a quiet room still moves it
+    const g=1/Math.max(APEAK,.045);
+    for(let b=0;b<NB;b++) BTGT[b]=Math.min(1.6,BTGT[b]*g);
+    lv=Math.min(1.5,lv*g);
+    LEVEL+= (lv-LEVEL)*(lv>LEVEL?.55:.06);
+  }else{
+    // SELF-DRIVEN BREATH — incommensurate rates, so it never visibly loops
+    // deliberately GENTLE: this is a resting breath, not a performance. It must
+    // read as alive without ever looking like it is hearing something.
+    for(let b=0;b<NB;b++)
+      BTGT[b]=(.10+.15*(.5+.5*Math.sin(t*(.37+b*.211)+b*1.73))
+                  +.05*Math.sin(t*(1.7+b*.53)+b))*(1-b*.055);
+    const lv=.055+.045*Math.sin(t*.55)+.022*Math.sin(t*1.31+1.7);
+    LEVEL+=(lv-LEVEL)*.06;
   }
+  for(let b=0;b<NB;b++)                          // attack fast, release slow -> reads as a voice
+    BAND[b]+=(BTGT[b]-BAND[b])*(BTGT[b]>BAND[b]?.55:.075);
 }
 
-/* ── bake AO into the epidermis from the resting pose ──────────────────────── */
-function bakeAO(){
-  const A=new THREE.Vector3(),B=new THREE.Vector3(),Pp=new THREE.Vector3(),AB=new THREE.Vector3(),AP=new THREE.Vector3();
-  const all = SEG.map(s=>({p0:s.j0.clone(), p1:s.j1.clone(), r:(s.r0+s.r1)*0.5*1.34}));
-  for(const s of SEG){
-    const g=s.skin.geometry, pos=g.attributes.position, ao=g.attributes.aAO;
-    for(let i=0;i<pos.count;i++){
-      Pp.set(pos.getX(i),pos.getY(i),pos.getZ(i)).applyQuaternion(s.fkQ).add(s.fkP);
-      let occ=0;
-      for(let j=0;j<all.length;j++){
-        const o=all[j];
-        if(o.p0.distanceToSquared(s.j0)<1e-9 && o.p1.distanceToSquared(s.j1)<1e-9) continue;
-        A.copy(o.p0); B.copy(o.p1); AB.subVectors(B,A); AP.subVectors(Pp,A);
-        let tt = AP.dot(AB)/Math.max(AB.lengthSq(),1e-9); tt=Math.max(0,Math.min(1,tt));
-        const d = Pp.distanceTo(A.addScaledVector(AB,tt));
-        occ += Math.max(0, 1 - d/(o.r*2.55));
-      }
-      ao.setX(i, Math.max(0.22, 1 - occ*0.60));
+/* verification hook: drives the analyser with a real WebAudio signal so the
+   render path can be proven without a microphone. Never reaches destination. */
+window.XENOS={
+  get voice(){ return {live:HAS_AUDIO, level:+LEVEL.toFixed(3),
+                       bands:Array.from(BAND).map(v=>+v.toFixed(3))}; },
+  get morph(){ return +S.morph.toFixed(3); },
+  get energy(){ return +S.energy.toFixed(3); },
+  shift,
+  /* geometry probe — proves the spectrum reaches the MESH, not just a uniform.
+     Returns mean radius overall and per latitude band, so a low tone must move
+     the low bands and leave the high ones alone. */
+  stats(){
+    if(!pts||!bandOf) return null;
+    const p=pts.geometry.attributes.position.array;
+    const sum=new Float64Array(NB), cnt=new Float64Array(NB); let all=0;
+    for(let i=0,n=0;i<p.length;i+=3,n++){
+      const r=Math.hypot(p[i],p[i+1],p[i+2]);
+      all+=r; sum[bandOf[n]]+=r; cnt[bandOf[n]]++;
     }
-    ao.needsUpdate=true;
+    return { meanR:+(all/(p.length/3)).toFixed(2),
+             byBand:Array.from(sum).map((s,i)=>+(s/Math.max(cnt[i],1)).toFixed(2)) };
+  },
+  async testTone(freq){
+    const c=new AudioContext(); if(c.state==='suspended') await c.resume();
+    const o=c.createOscillator(), g=c.createGain();
+    o.type='sawtooth'; o.frequency.value=freq||160; g.gain.value=.9;
+    o.connect(g); attachAnalyser(g,c); o.start();     // into the analyser ONLY
+    return 'tone '+(freq||160)+'Hz -> analyser';
   }
-  // palm shell AO
-  { const g=palmSkin.geometry, pos=g.attributes.position, ao=g.attributes.aAO;
-    for(let i=0;i<pos.count;i++){
-      Pp.set(pos.getX(i),pos.getY(i),pos.getZ(i));
-      let occ=0;
-      for(const o of all){
-        A.copy(o.p0); B.copy(o.p1); AB.subVectors(B,A); AP.subVectors(Pp,A);
-        let tt=AP.dot(AB)/Math.max(AB.lengthSq(),1e-9); tt=Math.max(0,Math.min(1,tt));
-        const d=Pp.distanceTo(A.addScaledVector(AB,tt));
-        occ += Math.max(0, 1 - d/(o.r*2.0));
-      }
-      ao.setX(i, Math.max(0.25, 1-occ*0.42));
-    }
-    ao.needsUpdate=true;
-  }
-}
-
-/* ══ 15. AUDIO — muted until a gesture, per canon. Never autoplays. ═══════════ */
-let AC=null, master=null, hum=null, audioOn=false;
-const audBtn = document.getElementById('aud');
-function audioInit(){
-  if(AC) return;
-  AC = new (window.AudioContext||window.webkitAudioContext)();
-  master = AC.createGain(); master.gain.value = 0; master.connect(AC.destination);
-  const pan = AC.createPanner(); pan.panningModel='HRTF'; pan.setPosition(0,0,-1); pan.connect(master);
-  const o1=AC.createOscillator(); o1.type='sine'; o1.frequency.value=54;
-  const o2=AC.createOscillator(); o2.type='sawtooth'; o2.frequency.value=27.5;
-  const lp=AC.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=180;
-  const g2=AC.createGain(); g2.gain.value=0.14;
-  o1.connect(lp); o2.connect(g2); g2.connect(lp); lp.connect(pan);
-  o1.start(); o2.start();
-  hum = { pan, lp };
-}
-function audioToggle(){
-  audioInit();
-  if(AC.state==='suspended') AC.resume();
-  audioOn = !audioOn;
-  master.gain.setTargetAtTime(audioOn?0.10:0.0, AC.currentTime, 0.25);
-  audBtn.textContent = audioOn ? 'audio on' : 'audio off';
-}
-if(audBtn) audBtn.onclick = audioToggle;
-function audioCue(s){
-  if(!AC || !audioOn) return;
-  // tendon tension-click on every morph
-  const n = AC.createBufferSource(), len = 1400;
-  const buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0);
-  for(let i=0;i<len;i++) d[i] = (Math.random()*2-1)*Math.pow(1-i/len, 9);
-  n.buffer=buf;
-  const bp=AC.createBiquadFilter(); bp.type='bandpass';
-  bp.frequency.value = s==='orb'?520 : s==='wheels'?880 : 1400; bp.Q.value=4;
-  const g=AC.createGain(); g.gain.value=0.55;
-  n.connect(bp); bp.connect(g); g.connect(master); n.start();
-}
-
-/* ══ 16. LOOP ═════════════════════════════════════════════════════════════════ */
-let t=0, last=performance.now(), fpsAcc=0, fpsN=0, fps=0;
-const camPos = new THREE.Vector3();
-const _tmpQ = new THREE.Quaternion();
-let booted=false;
-
-function resize(){
-  const w=innerWidth, h=innerHeight;
-  camera.aspect=w/h;
-  camera.fov = h>w ? 46 : 38;                 // phone: wider so the hand fits
-  camera.updateProjectionMatrix();
-  renderer.setSize(w,h,false);
-  const pw=Math.max(2,Math.floor(w*DPR)), ph=Math.max(2,Math.floor(h*DPR));
-  makeTargets(pw,ph);
-  compMat.uniforms.uRes.value.set(pw,ph);
-  conMat.uniforms.uPx.value  = DPR*(LOW?0.8:1.0);
-  moteMat.uniforms.uPx.value = DPR;
-  dustMat.uniforms.uPx.value = DPR;
-  IN.distT = h>w ? 6.1 : 4.5;
-}
-addEventListener('resize', resize);
-
-function tick(dt, instant){
-  const P0 = performance.now();
-  t += dt;
-
-  /* ── state weights ease continuously; nothing crossfades, nothing dissolves ─ */
-  const rate = instant ? 1 : Math.min(1, dt*2.6);
-  for(const k in W) W[k] += ((STATE===k?1:0) - W[k]) * rate;
-
-  /* ── pointer with mass: a damped spring, so it lags and overshoots ────────── */
-  const kSpring = 26.0, kDamp = 7.2;
-  IN.vx += (IN.px - IN.tx)*kSpring*dt; IN.vx *= Math.exp(-kDamp*dt); IN.tx += IN.vx*dt;
-  IN.vy += (IN.py - IN.ty)*kSpring*dt; IN.vy *= Math.exp(-kDamp*dt); IN.ty += IN.vy*dt;
-
-  /* ── proximity: how close the pointer is to the entity on screen ──────────── */
-  const pd = Math.hypot(IN.px, IN.py);
-  IN.proxT = Math.max(0, 1 - pd/0.85);
-  IN.prox += (IN.proxT - IN.prox)*Math.min(1, dt*3.4);
-
-  /* ── grasp: click-and-hold contracts ──────────────────────────────────────── */
-  IN.graspT = IN.down ? 1 : 0;
-  IN.grasp += (IN.graspT - IN.grasp)*Math.min(1, dt*(IN.down?4.6:2.6));
-
-  /* ── camera orbit with momentum ───────────────────────────────────────────── */
-  if(!IN.dragging){ IN.orbVYaw*=Math.exp(-1.9*dt); IN.orbVPitch*=Math.exp(-1.9*dt); }
-  else            { IN.orbVYaw*=Math.exp(-9.0*dt); IN.orbVPitch*=Math.exp(-9.0*dt); }
-  IN.orbYaw   += IN.orbVYaw;
-  IN.orbPitch  = Math.max(-0.62, Math.min(0.92, IN.orbPitch + IN.orbVPitch));
-  IN.dist += (IN.distT-IN.dist)*Math.min(1, dt*2.6);
-
-  const idleDrift = Math.sin(t*0.07)*0.055;
-  const oy = IN.orbYaw + idleDrift, op = IN.orbPitch;
-  camPos.set(Math.sin(oy)*Math.cos(op), Math.sin(op)+0.16, Math.cos(oy)*Math.cos(op)).multiplyScalar(IN.dist);
-  camera.position.lerp(camPos, instant?1:Math.min(1,dt*7.5));
-  camera.lookAt(0, -0.06, 0);
-
-  /* ── pose + FK ────────────────────────────────────────────────────────────── */
-  const P = lerpPose(W);
-  // breathing: nothing is ever perfectly still
-  const breath = 1 + Math.sin(t*0.72)*0.0125 + Math.sin(t*0.31+1.4)*0.006;
-  const tremorAmp = 0.55 + W.idle*0.75;
-  solveFK(P, t, tremorAmp, IN.grasp*(1-W.wheels), IN.prox*(0.55+0.45*W.hand)*(1-W.orb));
-  rig.scale.setScalar(breath);
-  rig.position.set(0, -0.20 + Math.sin(t*0.72)*0.012, 0);
-
-  /* ── WHEELS: blend each segment's WORLD transform onto the orbital rings ──── */
-  const ww = W.wheels;
-  for(let i=0;i<SEG.length;i++){
-    const s = SEG[i];
-    if(ww > 0.0008){
-      const R = RINGS[i%3];
-      const idx = Math.floor(i/3), cnt = Math.ceil(SEG.length/3);
-      const a = (idx/cnt)*6.28318 + t*R.sp;
-      _ringP.set(Math.cos(a)*R.r, Math.sin(a)*R.r, 0).applyQuaternion(R.q);
-      _ringT.set(-Math.sin(a), Math.cos(a), 0).applyQuaternion(R.q).normalize();
-      _ringQ.setFromUnitVectors(_UP, _ringT);
-      s.wP.copy(s.fkP).lerp(_ringP, ww);
-      s.wQ.copy(s.fkQ).slerp(_ringQ, ww);
-    } else {
-      s.wP.copy(s.fkP); s.wQ.copy(s.fkQ);
-    }
-    s.bone.position.copy(s.wP); s.bone.quaternion.copy(s.wQ);
-    s.skin.position.copy(s.wP); s.skin.quaternion.copy(s.wQ);
-  }
-
-  /* ── palm shell shrinks to a core hub in WHEELS, tightens in ORB ──────────── */
-  const palmS = (1 - ww*0.62) * (1 - W.orb*0.10);
-  palmSkin.scale.setScalar(palmS);
-  palmSkin.position.set(0,0,0);
-  carpus.visible = ww < 0.86;
-  carpus.scale.setScalar(1 - ww*0.55);
-
-  /* ── webbing between digit bases ──────────────────────────────────────────── */
-  for(const w of WEBS){
-    const A = SEG.find(s=>s.d===w.a && s.s===1), B = SEG.find(s=>s.d===w.b && s.s===1);
-    if(!A||!B) continue;
-    const g=w.mesh.geometry, p=g.attributes.position, n=g.attributes.normal;
-    const a0=A.j0, a1=A.j0.clone().lerp(A.j1,0.42);
-    const b0=B.j0, b1=B.j0.clone().lerp(B.j1,0.42);
-    p.setXYZ(0,a0.x,a0.y,a0.z); p.setXYZ(1,b0.x,b0.y,b0.z);
-    p.setXYZ(2,a1.x,a1.y,a1.z); p.setXYZ(3,b1.x,b1.y,b1.z);
-    p.needsUpdate=true;
-    _v1.subVectors(b0,a0); _v2.subVectors(a1,a0); _v1.cross(_v2).normalize();
-    for(let i=0;i<4;i++) n.setXYZ(i,_v1.x,_v1.y,_v1.z);
-    n.needsUpdate=true;
-    w.mesh.material.uniforms.uOpacity.value = (1-ww)*(1-W.orb*0.55);
-  }
-
-  /* ── conduits follow the blended segment chain ────────────────────────────── */
-  {
-    let k=0;
-    const conAmp = 0.55 + IN.prox*1.15 + IN.grasp*0.55 + W.orb*0.75 + W.wheels*0.40;
-    for(const c of conduits){
-      const segs = c.segIdx;
-      for(let i=0;i<c.n;i++,k++){
-        const u = i/(c.n-1) * (segs.length-0.001);
-        const si = Math.min(segs.length-1, Math.floor(u));
-        const f  = u-si;
-        const s  = SEG[segs[si]];
-        // walk from j0 to j1 of the segment, offset to the palmar side
-        _v1.copy(s.j0).lerp(s.j1, f);
-        _v2.set(0,0,(s.r0+s.r1)*0.5*0.86).applyQuaternion(s.wQ);
-        // when wheels pull the segment away, j0/j1 are stale — use the blended centre
-        if(ww>0.0008){
-          _v1.lerp(s.wP, ww*0.92);
-        }
-        _v1.add(_v2);
-        conPos[k*3]=_v1.x; conPos[k*3+1]=_v1.y; conPos[k*3+2]=_v1.z;
-        conBr[k] = 0.35 + 0.65*Math.sin(t*1.7 + i*0.31 + c.segIdx[0]);
-      }
-    }
-    conGeo.attributes.position.needsUpdate=true;
-    conGeo.attributes.aBr.needsUpdate=true;
-    conMat.uniforms.uT.value = t;
-    conMat.uniforms.uAmp.value = conAmp * (1 - ww*0.45);
-  }
-
-  /* ── feed the conduit brightness back INTO the skin (lit from within) ─────── */
-  {
-    const base = 0.10 + IN.prox*0.42 + IN.grasp*0.30 + W.orb*0.50;
-    for(let i=0;i<SEG.length;i++){
-      const s=SEG[i];
-      const p = base*(0.55+0.45*Math.sin(t*2.1 - i*0.42));
-      const u = s.skin.material.uniforms;
-      u.uPulse.value = p; u.uT.value=t;
-      u.uSSSInt.value = 0.80 + W.orb*0.55 + IN.grasp*0.20;
-      u.uOpacity.value = 1.0;
-    }
-    const pu = palmSkin.material.uniforms;
-    pu.uPulse.value = base*1.25; pu.uT.value=t;
-    pu.uOpacity.value = (1-ww*0.55);
-    for(const w of WEBS){ w.mesh.material.uniforms.uPulse.value=base*1.5; w.mesh.material.uniforms.uT.value=t; }
-  }
-
-  /* ── motes ride their segment; in ORB they re-cluster onto a shell ────────── */
-  {
-    const orbW=W.orb;
-    for(let i=0;i<MOTE_N;i++){
-      const s = SEG[moteSeg[i]];
-      _v1.set(moteOff[i*3],moteOff[i*3+1],moteOff[i*3+2]).applyQuaternion(s.wQ).add(s.wP);
-      if(orbW>0.002){
-        const L=_v1.length()||1e-4;
-        const target = 0.70 + 0.10*Math.sin(motePh[i]*3.1);
-        _v2.copy(_v1).multiplyScalar(target/L);
-        _v1.lerp(_v2, orbW*0.85);
-      }
-      const j = 0.006*Math.sin(t*3.1+motePh[i]);
-      motePos[i*3]=_v1.x+j; motePos[i*3+1]=_v1.y+j*0.7; motePos[i*3+2]=_v1.z-j;
-    }
-    moteGeo.attributes.position.needsUpdate=true;
-    moteMat.uniforms.uT.value=t;
-    moteMat.uniforms.uE.value=0.5+IN.prox*0.6+W.orb*0.7;
-  }
-
-  /* ── orb containment shell ────────────────────────────────────────────────── */
-  orbShell.material.uniforms.uT.value=t;
-  orbShell.material.uniforms.uOp.value=Math.pow(W.orb,1.5)*0.9;
-  orbShell.visible = W.orb>0.01;
-  orbShell.scale.setScalar(0.98+Math.sin(t*0.9)*0.014);
-
-  /* ── occluders drive BOTH the floor penumbra and the dust shafts ──────────── */
-  {
-    const pick = [SEG[1],SEG[5],SEG[9],SEG[13],SEG[17],SEG[3]];
-    occPos[0].set(rig.position.x, rig.position.y, rig.position.z, 0.40*palmS);
-    for(let i=0;i<6;i++){
-      const s = pick[i] || SEG[0];
-      _v1.copy(s.wP).applyQuaternion(rig.quaternion).multiplyScalar(breath).add(rig.position);
-      occPos[i+1].set(_v1.x, _v1.y, _v1.z, (s.r0+s.r1)*1.9);
-    }
-  }
-
-  /* ── active digit tip = DoF focus (index distal) ──────────────────────────── */
-  {
-    const tipSeg = SEG.find(s=>s.id==='index' && s.s===3) || SEG[SEG.length-1];
-    TIP.copy(tipSeg.wP).applyQuaternion(rig.quaternion).multiplyScalar(breath).add(rig.position);
-    const fd = camera.position.distanceTo(TIP);
-    compMat.uniforms.uFocus.value += (fd - compMat.uniforms.uFocus.value)*Math.min(1,dt*3.0);
-  }
-
-  dustMat.uniforms.uT.value=t;
-  key.target.position.set(0,-0.1,0);
-
-  /* ══ RENDER ═════════════════════════════════════════════════════════════════ */
-  renderer.setRenderTarget(rtScene);
-  renderer.clear();
-  renderer.render(scene, camera);
-
-  brightMat.uniforms.tD.value = rtScene.texture;
-  blit(brightMat, rtA0);
-  blurMat.uniforms.tD.value=rtA0.texture; blurMat.uniforms.uTex.value.set(rtA0.width,rtA0.height);
-  blurMat.uniforms.uDir.value.set(1,0); blit(blurMat, rtA1);
-  blurMat.uniforms.tD.value=rtA1.texture; blurMat.uniforms.uDir.value.set(0,1); blit(blurMat, rtA0);
-
-  downMat.uniforms.tD.value=rtA0.texture; downMat.uniforms.uTex.value.set(rtA0.width,rtA0.height);
-  blit(downMat, rtB0);
-  blurMat.uniforms.tD.value=rtB0.texture; blurMat.uniforms.uTex.value.set(rtB0.width,rtB0.height);
-  blurMat.uniforms.uDir.value.set(1,0); blit(blurMat, rtB1);
-  blurMat.uniforms.tD.value=rtB1.texture; blurMat.uniforms.uDir.value.set(0,1); blit(blurMat, rtB0);
-
-  compMat.uniforms.tScene.value  = rtScene.texture;
-  compMat.uniforms.tBloomA.value = rtA0.texture;
-  compMat.uniforms.tBloomB.value = rtB0.texture;
-  compMat.uniforms.tDepth.value  = depthTex;
-  compMat.uniforms.uT.value = t;
-  compMat.uniforms.uAperture.value = 0.9 + W.wheels*0.5;
-  blit(compMat, null);
-
-  /* ── chrome auto-hide ─────────────────────────────────────────────────────── */
-  if(UI && chromeT && performance.now()-chromeT > 3200) { chrome.classList.remove('on'); chromeT=0; }
-
-  const spent = performance.now()-P0;
-  return spent;
-}
-
-function frame(now){
-  requestAnimationFrame(frame);
-  const dt = Math.min(0.05, (now-last)/1000 || 0.016); last=now;
-  try{ tick(dt,false); }catch(e){ fatal(e); throw e; }
-  fpsAcc += 1/Math.max(dt,1e-4); fpsN++;
-  if(fpsN>=30){ fps = fpsAcc/fpsN; fpsAcc=0; fpsN=0; window.XENOS.fps = Math.round(fps*10)/10; }
-  if(!booted){ booted=true; document.getElementById('boot').classList.add('gone');
-    window.XENOS.ready = true; }
-}
-
-/* ══ 17. PUBLIC API — so a machine can verify this without clicking ══════════ */
-window.XENOS = {
-  ready:false, fps:0,
-  get state(){ return STATE; },
-  setState,
-  get weights(){ return {...W}; },
-  renderer: IS_WEBGL2 ? 'webgl2' : 'webgl1',
-  gpu: gpuInfo,
-  toggleAudio: audioToggle,
-  three: THREE.REVISION,
-  segments: SEG.length,
-  counts: { motes:MOTE_N, dust:DUST_N, conduits:CON_N }
 };
 
-/* ── boot ─────────────────────────────────────────────────────────────────── */
-resize();
-solveFK(POSE.idle, 0, 0, 0, 0);          // rest pose so AO bakes against real geometry
-for(const s of SEG){ s.wP.copy(s.fkP); s.wQ.copy(s.fkQ);
-  s.bone.position.copy(s.wP); s.bone.quaternion.copy(s.wQ);
-  s.skin.position.copy(s.wP); s.skin.quaternion.copy(s.wQ); }
-bakeAO();
-const s0 = QS.get('state');
-if(s0 && s0 in W){ STATE=s0; for(const k in W) W[k]=(k===s0?1:0); }
-for(const b of chrome.querySelectorAll('[data-s]')) b.classList.toggle('a', b.dataset.s===STATE);
-if(UI) wake();
-requestAnimationFrame(frame);
+/* ================= LOOP =============================================== */
+const proj=new THREE.Vector3(), foc=new THREE.Vector3(); let t=0, spoke=false;
+function frame(){
+  requestAnimationFrame(frame); t+=.016;
+  readVoice();
+  const e=LEVEL;
+  // TELEPATHY: reacts to sound ONSET, before any transcript exists.
+  // Only a REAL input can trigger it — the self-driven breath must never make
+  // the entity think it heard something.
+  if(HAS_AUDIO){
+    if(e>.55&&!spoke){ spoke=true; stir('HEARD YOU'); if(S.morph<1.5) shift(2); }
+    if(e<.22) spoke=false;
+  }
+  S.energy+=(e-S.energy)*(e>S.energy?.6:.045);
+  S.drift+=.0041;
+  // how much of the ORB we are currently in — 1 at the sphere, 0 at either edge
+  const orbW=Math.max(0,1-Math.abs(S.morph-1));
+
+  // morph between the three bodies
+  if(pts&&base&&T0){
+    const m=S.morph, A=(m<1)?T0:T1, B=(m<1)?T1:T2, k=(m<1)?m:m-1;
+    for(let i=0;i<N*3;i++) base[i]=A[i]+(B[i]-A[i])*k;
+  }
+
+  const jx=S.jitter*(Math.random()-.5)*.09, jy=S.jitter*(Math.random()-.5)*.09;
+  ophanim.rotation.y += ((S.fx*.95+jx)-ophanim.rotation.y)*.09 + S.spin;
+  ophanim.rotation.x += ((-S.fy*.72+jy)-ophanim.rotation.x)*.09;
+  ophanim.rotation.z  = S.rz + Math.sin(S.drift*.9)*(.05+S.energy*.06);
+  ophanim.position.x += ((S.fx*46)-ophanim.position.x)*.08;
+  ophanim.position.y += ((S.fy*38)-ophanim.position.y)*.08;
+  ophanim.scale.setScalar(S.scale);
+
+  // TRUE SPHERICAL ORBIT (qi 2026-08-17 04:28: "Its not really changing sides for me").
+  // Was a ±70/±54 sway at fixed z — a lean, never a circumnavigation. Now az/el place the
+  // camera anywhere on the sphere, and the pointer lean he liked survives as a SMALL offset
+  // added on top rather than as the camera's only motion.
+  _cd += (S.camZ - _cd) * .08;                       // eased radius, keeps the old damping feel
+  const _ce = Math.cos(S.el), _tx = Math.sin(S.az)*_ce*_cd,
+        _ty = Math.sin(S.el)*_cd, _tz = Math.cos(S.az)*_ce*_cd;
+  camera.position.x += ((_tx + S.fx*26) - camera.position.x)*.10;
+  camera.position.y += ((_ty + S.fy*20) - camera.position.y)*.10;
+  camera.position.z += ( _tz            - camera.position.z)*.10;
+  camera.lookAt(0,0,0);
+
+  foc.set(S.fx*300,S.fy*240,120);
+  if(pts){ const u=pts.material.uniforms;
+    u.foc.value.copy(foc); u.t.value=t; u.flare.value=S.flare;
+    const p=pts.geometry.attributes.position.array;
+    /* The legacy focus-pull is DAMPED inside the orb. MEASURED 2026-08-17 with
+       a 70 Hz test tone through the analyser: at S.energy~1.0 this term drove
+       amp to 79 and yanked every node toward `foc`, collapsing mean radius
+       216.6 -> 149.3 (-31%). The orb SHRANK when you spoke to it. Outside the
+       orb (orbW 0) the term is untouched, so wheels and form behave exactly as
+       they always did. */
+    const amp=(9+70*Math.min(S.energy,1.2)+S.flare*26)*(1-.62*orbW);
+    /* ORB_BAND — the spectrum as SHAPE. Each node holds a band by latitude, so
+       a low note swells the bottom of the sphere and a high note beads the
+       crown. Applied as a FRACTIONAL radius change: the first version divided
+       by radius and then scaled by .006, which came out ~0.5% and was invisible
+       against the pull above. */
+    const bandK=orbW*.135, breathK=orbW*(.012+.042*Math.min(S.energy,1.2));
+    for(let i=0,n=0;i<p.length;i+=3,n++){
+      const dx=base[i]-foc.x,dy=base[i+1]-foc.y,dz=base[i+2]-foc.z;
+      const d=Math.sqrt(dx*dx+dy*dy+dz*dz)+1e-4, pull=amp/(1+d*.012), w=Math.sin(S.drift*2.3+d*.021);
+      let x=base[i]-(dx/d)*pull*w, y=base[i+1]-(dy/d)*pull*w, z=base[i+2]-(dz/d)*pull*w*.55;
+      if(bandOf&&bandK>1e-4){
+        const b=bandOf[n];
+        // the ring travels around the sphere so a band reads as motion, not a lump
+        const ring=Math.sin(S.drift*3.1+b*1.27+Math.atan2(z,x)*2.0);
+        const f=1+BAND[b]*bandK*(.55+.45*ring)+breathK;
+        x*=f; y*=f; z*=f;
+      }
+      p[i]=x; p[i+1]=y; p[i+2]=z; }
+    pts.geometry.attributes.position.needsUpdate=true; }
+
+  // shell fades out as it leaves the orb — a body only when it holds one
+  if(shell){ const u=shell.material.uniforms; u.t.value=t; u.e.value=S.energy+S.flare*.5;
+    u.op.value=Math.max(0,1-Math.abs(S.morph-1)*0.85); }
+  if(wisp){ wisp.material.uniforms.t.value=t; wisp.material.uniforms.e.value=S.energy+S.flare*.5; }
+  if(aura){ aura.material.uniforms.t.value=t; aura.material.uniforms.e.value=S.energy+S.flare*.5;
+    aura.material.uniforms.cz.value=camera.position.distanceTo(ophanim.position);
+    aura.rotation.y-=.00055; aura.rotation.z+=.00031; }
+  if(world){ world.material.uniforms.t.value=t; world.material.uniforms.bend.value=S.bend; }
+
+  if(reachLine){ const a=reachLine.geometry.attributes.position.array;
+    a[0]=0;a[1]=0;a[2]=0; a[3]=foc.x;a[4]=foc.y;a[5]=foc.z;
+    reachLine.geometry.attributes.position.needsUpdate=true;
+    reachLine.material.opacity=S.reach*.5; }
+
+  /* MEASURED 2026-08-17 with a full-scale 70 Hz tone: at *.85 the orb clipped to
+     a solid white disc and every filament inside it disappeared. qi's visual
+     language is near-black with ONE blown source and form defined by WHERE THE
+     LIGHT STOPS — a uniform white circle has no "where". Loud input must make it
+     brighter, never featureless, so the audio term is compressed and capped. */
+  bloom.strength=1.02+Math.min(S.energy,1.2)*.30+S.flare*.5;
+
+  for(const L of labels){ if(L.i==null||!pts) continue;
+    const a=pts.geometry.attributes.position.array;
+    proj.set(a[L.i*3],a[L.i*3+1],a[L.i*3+2]).applyMatrix4(ophanim.matrixWorld).project(camera);
+    if(proj.z<1){ L.el.style.left=((proj.x*.5+.5)*innerWidth+16)+'px';
+      L.el.style.top=((-proj.y*.5+.5)*innerHeight)+'px'; L.el.classList.add('on'); }
+    else L.el.classList.remove('on'); }
+  composer.render();
+}
+frame();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight);});
 </script>
 </body>
 </html>
