@@ -1493,7 +1493,21 @@ void main(){
     // ⛔ Never go back to a geometric alpha here. Geometry cannot know if a pixel is
     //    dark, and a dark pixel with opacity is a shadow by definition.
     float lum = dot(col, vec3(0.299, 0.587, 0.114));
-    alphaOut = clamp(lum * pAlphaG, 0.0, pAlphaMax) * (0.62 + 0.38*voice);
+    // ⭐⭐⭐ IDLE IS ZERO, NOT REDUCED — qi 2026-08-26 09:00-09:02, his own four
+    //   lines, confirmed back to him verbatim before a single byte moved:
+    //     1. "render the avatar on-screen but COMPLETELY INVISIBLE when idle"
+    //     2. "the only thing there is being 100% translucent, with its own depth"
+    //     3. "the only ask, baseline: 30% of the avatar would be everywhere at a time"
+    //     4. "that's the whole spec. NOT A PRESET."
+    //   and on the test that preceded it: "one number in it says the shade is GONE
+    //   rather than REDUCED." Gone is the word. This line used to rest at 0.62 —
+    //   62% of the brightness alpha with nobody speaking — which is precisely why
+    //   idle still read as a shade. The voice term moves OUT of here and into the
+    //   single final gate below, so there is exactly ONE place that decides
+    //   idle-vs-active and it cannot disagree with itself.
+    // ⛔ Do not reintroduce a resting constant here. Any non-zero term at this
+    //   point is a shade by construction, and he has now rejected that four times.
+    alphaOut = clamp(lum * pAlphaG, 0.0, pAlphaMax);   // SHAPE only — no idle/active term
   } else {
     // ground glow the sphere casts into the space beneath it
     float g = smoothstep(0.95, 0.0, length(uv - vec2(0.0,-0.55)));
@@ -1510,6 +1524,45 @@ void main(){
   // exactly what is on screen. ⛔ Must come after the tonemap, never before.
   float finalLum = dot(col, vec3(0.299, 0.587, 0.114));
   alphaOut = clamp(finalLum * pAlphaG, 0.0, min(pAlphaMax + 0.02, 1.0)) * alphaOut;
+  // ⭐ THE SINGLE IDLE/ACTIVE GATE. It lives HERE, after the tonemap and after both
+  //   branches have written alphaOut, because the off-sphere branch sets alphaOut=1.0
+  //   and would otherwise leak the ground bounce at idle — "completely invisible"
+  //   has to mean the whole overlay, not just the body of the orb.
+  // ⛔ ACTIVE_CAP is a hard ceiling on the ENTIRE overlay, deliberately NOT a preset
+  //   knob: he said "that's the whole spec, not a preset" in the same breath as the
+  //   number. dense/liquid/glass/crystal/ghost carry alphaMax 0.72-0.90; every one of
+  //   them is now clamped to 0.30 at peak so he can work BEHIND this on the next-phase
+  //   pages. Never raise it to match a preset's alphaMax.
+  // Arithmetic, so it is checkable rather than asserted:
+  //   idle   -> voice = 0            -> alphaOut = 0.00 exactly, both branches
+  //   speaking -> voice -> 1, product clamps to ACTIVE_CAP -> 0.30 exactly
+  // ⭐ VOLUME IS UNTOUCHED, which is the other half of what he asked for: the
+  //   raymarch, refraction, rotation, mirror and rim all still run every frame. This
+  //   is a COMPOSITING weight, not a teardown — "the volume stays constant, the
+  //   appearance becomes zero."
+  // ⛔⛔ THE GATE IS 'apart', NOT 'voice'. I nearly shipped "* voice" here, and it
+  //   would have made his TOUCH REACTION INVISIBLE. 'amp' is fed only by the mic
+  //   analyser (see the gl.uniform1f(uAmp, ...) call); touch arrives on its own
+  //   uniforms (touchUV / touchAge / touchHeld) and never reaches 'amp'. So 'voice'
+  //   alone is silence-blind to a finger on the glass — he could grab it and see
+  //   nothing. 'apart' (declared above) is already exactly the right scalar:
+  // ⛔ NEVER PUT A BACKTICK IN THIS SHADER, NOT EVEN INSIDE A COMMENT. The whole
+  //   fragment source is a JS template literal opened at "const FS = " near the top
+  //   of this file, so one backtick in a GLSL comment ENDS THE STRING and the page
+  //   dies with "Uncaught SyntaxError: Unexpected identifier". MEASURED: I did
+  //   exactly this, the canvas stayed at its default 300x150 with rAF still ticking
+  //   at 60fps, and it looked like a render bug rather than a parse error.
+  //       apart = max(max(held, letgo), sound)
+  //   held/letgo = his finger down or just released, sound = his voice. That IS his
+  //   own definition of the state, given 2026-08-26 08:56: "IDLE EQUALS NEITHER
+  //   VOICE NOR [touch]." Both drivers, one scalar, already smoothstepped so it
+  //   fades in rather than popping.
+  // ⚠️ An earlier revision of this very comment claimed "amp carries BOTH his touch
+  //   and the room sound". That was false — I wrote an assumption in the grammar of
+  //   a measurement. It is corrected here rather than deleted, so the next seat sees
+  //   the trap instead of rediscovering it.
+  const float ACTIVE_CAP = 0.30;
+  alphaOut = min(alphaOut, ACTIVE_CAP) * apart;
   // ⛔ Never let the default page premultiply the orb by its own luminance again.
   // overlayMode < 0.5 = standalone (canvas IS the world) -> fully opaque.
   alphaOut = mix(1.0, alphaOut, overlayMode);
@@ -1540,6 +1593,21 @@ let uZoomF, zoomF = 1.0;
 let uDist, camDist = 2.9, tCamDist = 2.9;   // eased radius, and its target
 function clampDist(v){ return Math.max(1.25, Math.min(7.0, v)); }
 let uOverlay, overlayMode = new URLSearchParams(location.search).has('overlay') ? 1 : 0;
+// ⭐⭐⭐ THE SHADER'S ALPHA IS NOT THE WHOLE STORY — MEASURED 2026-08-26.
+//   `<meta name="color-scheme" content="dark">` (near the top of this file) tells the
+//   browser this document prefers a DARK canvas, and the browser then paints that
+//   canvas with an OPAQUE dark base instead of leaving it transparent. Embedded as an
+//   overlay iframe, the page therefore reads SOLID BLACK over his content even when
+//   every single pixel is at alpha 0.
+// ⛔ THIS IS THE TRAP THAT MAKES THE FIX LOOK BROKEN: I read alpha 0/255 out of the
+//   GL buffer at four sample points — genuinely, correctly zero — and the screenshot
+//   was still black. A correct shader plus an opaque document canvas looks exactly
+//   like a shader that does not work, and sends you off debugging the wrong layer.
+// ✅ NEGATIVE CONTROL, the reason this is a measurement and not a theory: flipping
+//   ONLY this one property (nothing else touched) made the text behind fully legible.
+// ⚠️ Scoped to overlay mode ONLY. Standalone (`overlayMode == 0`) keeps its dark
+//   canvas — that path is his approved look and is deliberately untouched.
+if (overlayMode) document.documentElement.style.colorScheme = 'light';
 let uTravel, travelK = 0;
 let uTouchUV, uTouchAge, uTouchHeld, uRelAge;
 
