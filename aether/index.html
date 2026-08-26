@@ -1895,7 +1895,7 @@ function onOrient(e){
   if(da >  180) da -= 360;                 // the compass wraps; the view must not
   if(da < -180) da += 360;
   look.gYaw = -da * D2R;
-  look.gPit = (b - look.b0) * D2R * 0.9;
+  look.gPit = -(b - look.b0) * D2R * 0.9;   // qi 2026-08-26: gyro was vertically backwards. yaw had the negation (gYaw = -da), pitch never did. Drag is unaffected: dPit is summed separately at clampPit(look.dPit + look.gPit).
   look.gyro = true;
   const n = document.getElementById('envNote');
   if(n && !n.dataset.gyro){ n.dataset.gyro='1'; n.textContent='Move the phone to look around. Drag works at the same time.'; }
