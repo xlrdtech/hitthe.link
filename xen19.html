@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>Xen 19</title>
 <style>
 :root{--bg:#0a0a0e;--fg:#e8e8ee;--dim:#8a8a99;--line:#1e1e26;--card:#101018;--em:#34d17a;--warn:#e8a33d;--bad:#e8555f}
@@ -33,10 +34,10 @@ code{font:11.5px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--em);ove
 .note{border-left:2px solid var(--warn);padding:9px 12px;background:#17130c;
 border-radius:0 8px 8px 0;font-size:13px;color:#d8cdb8;margin:0 0 18px}
 </style>
-<h1>Xen — 19 components</h1>
-<p class="sub">Dictated by qi, 2026-08-27 01:02 EDT · source <code>canon/XEN-ARCHITECTURE-2026-08-27.md</code></p>
+<h1>Xen - 19 components</h1>
+<p class="sub">Dictated by qi, 2026-08-27 01:02 EDT | source <code>canon/XEN-ARCHITECTURE-2026-08-27.md</code></p>
 <div class="note"><b>Every status reads <code>not-assessed</code> on purpose.</b> Nothing on this page
-has been measured against the live machine yet. Under the rule qi set — unseen is false — an invented
+has been measured against the live machine yet. Under the rule qi set - unseen is false - an invented
 green here would be a lie with a nice font. Statuses change only when a probe writes an artifact into
 the evidence field.</div>
 <div class="tally">
@@ -47,137 +48,137 @@ the evidence field.</div>
 <div class="h"><span class="n">01</span><span class="nm">capacity-router</span>
 <span class="b s-not-assessed">not-assessed</span><span class="b v-unverified">unverified</span></div>
 <p class="w">Watches every Claude seat: available, rate-limited, session-exhausted, weekly capacity, currently running. Reassigns unfinished work to an eligible seat WITHOUT creating a new Xen identity or rebuilding context.</p>
-<div class="kv"><b>interface</b><span>in: seat inventory + rate-limit state · out: (goal_id, seat) assignment</span></div>
+<div class="kv"><b>interface</b><span>in: seat inventory + rate-limit state | out: (goal_id, seat) assignment</span></div>
 <div class="kv"><b>verify by</b><span>Kill an active seat mid-goal; another seat resumes the SAME goal_id from the same evidence.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">none — nothing measured yet</span></div>
+<div class="kv"><b>evidence</b><span class="ev">none - nothing measured yet</span></div>
 </div><div class="c" data-s="not-assessed">
 <div class="h"><span class="n">02</span><span class="nm">durable-goal-store</span>
 <span class="b s-not-assessed">not-assessed</span><span class="b v-unverified">unverified</span></div>
 <p class="w">Every objective lives OUTSIDE the Claude session: goal id, objective, done, open, assigned worker, evidence, unmet acceptance criteria.</p>
 <div class="kv"><b>interface</b><span>read/write goal records; survives session death</span></div>
 <div class="kv"><b>verify by</b><span>Destroy the session; the goal record still resolves and another worker resumes it.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">none — nothing measured yet</span></div>
+<div class="kv"><b>evidence</b><span class="ev">none - nothing measured yet</span></div>
 </div><div class="c" data-s="not-assessed">
 <div class="h"><span class="n">03</span><span class="nm">desired-state-manifest</span>
 <span class="b s-not-assessed">not-assessed</span><span class="b v-unverified">unverified</span></div>
 <p class="w">Machine-readable statement of what Xen is ALLOWED to be. Owned by a control mechanism outside Claude.</p>
 <div class="kv"><b>interface</b><span>canon/desired-state.json</span></div>
 <div class="kv"><b>verify by</b><span>Claude edits a rule and self-certifies -&gt; must be REJECTED by the owner mechanism.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">none — nothing measured yet</span></div>
+<div class="kv"><b>evidence</b><span class="ev">none - nothing measured yet</span></div>
 </div><div class="c" data-s="not-assessed">
 <div class="h"><span class="n">04</span><span class="nm">runtime-reconciler</span>
 <span class="b s-not-assessed">not-assessed</span><span class="b v-unverified">unverified</span></div>
 <p class="w">Continuously compares live processes, launchd jobs, routes, God Mode surface, ingress and voice against the manifest. Repairs drift or restores last proven state.</p>
 <div class="kv"><b>interface</b><span>reads manifest + live runtime; emits repair actions</span></div>
 <div class="kv"><b>verify by</b><span>Introduce a drift deliberately; reconciler restores it without being asked.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">none — nothing measured yet</span></div>
+<div class="kv"><b>evidence</b><span class="ev">none - nothing measured yet</span></div>
 </div><div class="c" data-s="not-assessed">
 <div class="h"><span class="n">05</span><span class="nm">claim-broker</span>
 <span class="b s-not-assessed">not-assessed</span><span class="b v-unverified">unverified</span></div>
 <p class="w">Blocks Claude from asserting working/fixed/live/delivered/deployed/healthy/verified on its own word. Requires an independent verifier&#x27;s receipt.</p>
 <div class="kv"><b>interface</b><span>claim -&gt; verifier -&gt; evidence receipt (thing, target, time, expected, observed, freshness)</span></div>
 <div class="kv"><b>verify by</b><span>Submit a claim with no receipt -&gt; refused. With a stale receipt -&gt; refused.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">none — nothing measured yet</span></div>
+<div class="kv"><b>evidence</b><span class="ev">none - nothing measured yet</span></div>
 </div><div class="c" data-s="not-assessed">
 <div class="h"><span class="n">06</span><span class="nm">five-second-voice-governor</span>
 <span class="b s-not-assessed">not-assessed</span><span class="b v-unverified">unverified</span></div>
 <p class="w">Outside Claude&#x27;s turn. Silent. No model. Independent monotonic 5s timer from a real live utterance. At 5s, interrupts the EXACT blocking process/group and verifies it released the foreground.</p>
 <div class="kv"><b>interface</b><span>watches utterance arrival, service state, foreground owner</span></div>
 <div class="kv"><b>verify by</b><span>Block the seat past 5s; confirm the named blocker actually lost foreground, and that Comet/agents/compaction kept running.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">none — nothing measured yet</span></div>
+<div class="kv"><b>evidence</b><span class="ev">none - nothing measured yet</span></div>
 </div><div class="c" data-s="not-assessed">
 <div class="h"><span class="n">07</span><span class="nm">canonical-ingress</span>
 <span class="b s-not-assessed">not-assessed</span><span class="b v-unverified">unverified</span></div>
 <p class="w">All external input enters as STRUCTURED data with source, event id, timestamp, type, payload, provenance. External prose must never become Bash because it went through tmux.</p>
 <div class="kv"><b>interface</b><span>typed event envelope</span></div>
 <div class="kv"><b>verify by</b><span>Feed prose containing shell metacharacters; confirm it lands as data, never executed.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">none — nothing measured yet</span></div>
+<div class="kv"><b>evidence</b><span class="ev">none - nothing measured yet</span></div>
 </div><div class="c" data-s="not-assessed">
 <div class="h"><span class="n">08</span><span class="nm">utterance-resolver</span>
 <span class="b s-not-assessed">not-assessed</span><span class="b v-unverified">unverified</span></div>
 <p class="w">Decides new speech vs delayed second delivery vs historical replay vs summary vs machine output, using ids, timestamps, source identity, fingerprints, provenance.</p>
 <div class="kv"><b>interface</b><span>event -&gt; classification + canonical utterance id</span></div>
 <div class="kv"><b>verify by</b><span>Two genuine &#x27;no&#x27; utterances stay distinct; one utterance arriving twice collapses to one.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">none — nothing measured yet</span></div>
+<div class="kv"><b>evidence</b><span class="ev">none - nothing measured yet</span></div>
 </div><div class="c" data-s="not-assessed">
 <div class="h"><span class="n">09</span><span class="nm">god-mode-tool-plane</span>
 <span class="b s-not-assessed">not-assessed</span><span class="b v-unverified">unverified</span></div>
 <p class="w">One canonical tool plane. Before building any new daemon, inspect it: exists+works -&gt; use; broken -&gt; repair; incomplete -&gt; extend; absent -&gt; only then build.</p>
-<div class="kv"><b>interface</b><span>mcp.xlrd.org/mcp · SELMCP · _god-mode</span></div>
+<div class="kv"><b>interface</b><span>mcp.xlrd.org/mcp | SELMCP | _god-mode</span></div>
 <div class="kv"><b>verify by</b><span>Call a tool through the plane and read the BODY, not the status code.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">none — nothing measured yet</span></div>
+<div class="kv"><b>evidence</b><span class="ev">none - nothing measured yet</span></div>
 </div><div class="c" data-s="not-assessed">
 <div class="h"><span class="n">10</span><span class="nm">deprecated-route-eliminator</span>
 <span class="b s-not-assessed">not-assessed</span><span class="b v-unverified">unverified</span></div>
 <p class="w">Finds every live dependency on Session O and Xen Context and migrates it. History stays in Akashic; production code moves off.</p>
 <div class="kv"><b>interface</b><span>dependency scan + migration</span></div>
 <div class="kv"><b>verify by</b><span>Grep production paths for those routes; count must reach zero with no silent fallback.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">none — nothing measured yet</span></div>
+<div class="kv"><b>evidence</b><span class="ev">none - nothing measured yet</span></div>
 </div><div class="c" data-s="not-assessed">
 <div class="h"><span class="n">11</span><span class="nm">comet-semantic-adapter</span>
 <span class="b s-not-assessed">not-assessed</span><span class="b v-unverified">unverified</span></div>
 <p class="w">Comet is Xen&#x27;s browser body. Adapts God Mode browser primitives rather than starting a second automation stack. Emits connected/disconnected/started/progress/completed/blocked/action-started/action-completed/refusal/error.</p>
 <div class="kv"><b>interface</b><span>durable goal &lt;-&gt; live browser action</span></div>
 <div class="kv"><b>verify by</b><span>Block Comet mid-task; Claude clears it via God Mode/PTY/MCP and Comet resumes the SAME goal id.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">none — nothing measured yet</span></div>
+<div class="kv"><b>evidence</b><span class="ev">none - nothing measured yet</span></div>
 </div><div class="c" data-s="not-assessed">
 <div class="h"><span class="n">12</span><span class="nm">akashic</span>
 <span class="b s-not-assessed">not-assessed</span><span class="b v-unverified">unverified</span></div>
 <p class="w">Permanent record of what actually happened: PTY/tmux, Claude events, Comet actions, browser events, MCP calls, A2A, voice transcripts, files, artifacts, failures, recoveries.</p>
 <div class="kv"><b>interface</b><span>append-only evidence store</span></div>
 <div class="kv"><b>verify by</b><span>Take any summary and expand it back to the raw record it came from.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">none — nothing measured yet</span></div>
+<div class="kv"><b>evidence</b><span class="ev">none - nothing measured yet</span></div>
 </div><div class="c" data-s="not-assessed">
 <div class="h"><span class="n">13</span><span class="nm">nats</span>
 <span class="b s-not-assessed">not-assessed</span><span class="b v-unverified">unverified</span></div>
 <p class="w">Live event transport ONLY. Never the source of truth, never a serial work queue.</p>
 <div class="kv"><b>interface</b><span>publish/subscribe structured events</span></div>
 <div class="kv"><b>verify by</b><span>Stop NATS: Akashic must still answer authoritatively.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">none — nothing measured yet</span></div>
+<div class="kv"><b>evidence</b><span class="ev">none - nothing measured yet</span></div>
 </div><div class="c" data-s="not-assessed">
 <div class="h"><span class="n">14</span><span class="nm">lifenote</span>
 <span class="b s-not-assessed">not-assessed</span><span class="b v-unverified">unverified</span></div>
 <p class="w">Human-readable live projection of Akashic: exact user speech, interpretation, worker, Comet action, shell command, file changes, evidence, failures, recoveries, goal state. Every summary expandable to raw.</p>
 <div class="kv"><b>interface</b><span>read-only projection surface</span></div>
 <div class="kv"><b>verify by</b><span>Click any summarized item and reach its raw evidence.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">none — nothing measured yet</span></div>
+<div class="kv"><b>evidence</b><span class="ev">none - nothing measured yet</span></div>
 </div><div class="c" data-s="not-assessed">
 <div class="h"><span class="n">15</span><span class="nm">memory-layer</span>
 <span class="b s-not-assessed">not-assessed</span><span class="b v-unverified">unverified</span></div>
 <p class="w">Claude Mem, Bastra Recall, Graphiti, Qdrant, Supabase are projections under Akashic, retaining provenance. Fail soft. Must never own the live voice path.</p>
 <div class="kv"><b>interface</b><span>retrieval with source provenance</span></div>
 <div class="kv"><b>verify by</b><span>Kill a memory store; voice keeps working with no added latency.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">none — nothing measured yet</span></div>
+<div class="kv"><b>evidence</b><span class="ev">none - nothing measured yet</span></div>
 </div><div class="c" data-s="not-assessed">
 <div class="h"><span class="n">16</span><span class="nm">vvs-output-ownership</span>
 <span class="b s-not-assessed">not-assessed</span><span class="b v-unverified">unverified</span></div>
 <p class="w">One outward path for voice+SMS+vision. Every segment of one utterance belongs to the same ownership tree; newer speech terminates the whole old tree; detached children must not keep speaking.</p>
 <div class="kv"><b>interface</b><span>xen-reply-vvs -&gt; voice + SMS + vision</span></div>
 <div class="kv"><b>verify by</b><span>Barge mid-utterance; confirm every remaining segment of that tree died, including detached children.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">none — nothing measured yet</span></div>
+<div class="kv"><b>evidence</b><span class="ev">none - nothing measured yet</span></div>
 </div><div class="c" data-s="not-assessed">
 <div class="h"><span class="n">17</span><span class="nm">rvc-voice-path</span>
 <span class="b s-not-assessed">not-assessed</span><span class="b v-unverified">unverified</span></div>
 <p class="w">Independently tracks: process running, model loaded, websocket connected, PCM in, converting, RTF&lt;1, PCM out, playback active, audio actually heard. A green health endpoint alone proves nothing.</p>
 <div class="kv"><b>interface</b><span>staged probes across the whole audio chain</span></div>
 <div class="kv"><b>verify by</b><span>Each stage asserts its own artifact; a green /health with no audio must read as FAILED.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">none — nothing measured yet</span></div>
+<div class="kv"><b>evidence</b><span class="ev">none - nothing measured yet</span></div>
 </div><div class="c" data-s="not-assessed">
 <div class="h"><span class="n">18</span><span class="nm">regression-gate</span>
 <span class="b s-not-assessed">not-assessed</span><span class="b v-unverified">unverified</span></div>
 <p class="w">Every production change is a CANDIDATE. Compare against last proven runtime, confirm nothing known disappeared, run acceptance tests. Only a pass goes active.</p>
 <div class="kv"><b>interface</b><span>candidate -&gt; diff vs proven -&gt; tests -&gt; activate</span></div>
 <div class="kv"><b>verify by</b><span>Ship a change that removes a working behaviour; the gate must refuse it.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">none — nothing measured yet</span></div>
+<div class="kv"><b>evidence</b><span class="ev">none - nothing measured yet</span></div>
 </div><div class="c" data-s="not-assessed">
 <div class="h"><span class="n">19</span><span class="nm">evidence-ledger</span>
 <span class="b s-not-assessed">not-assessed</span><span class="b v-unverified">unverified</span></div>
 <p class="w">Every meaningful change records defect observed, source file/process, patch, test run, exact evidence, status. Statuses: verified end to end, code shipped but unverified, externally blocked, failed.</p>
 <div class="kv"><b>interface</b><span>canon/lifesource/checkpoints/*.jsonl</span></div>
 <div class="kv"><b>verify by</b><span>Every ledger line carries an artifact; a line without one is invalid.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">none — nothing measured yet</span></div>
+<div class="kv"><b>evidence</b><span class="ev">none - nothing measured yet</span></div>
 </div>
-<h2>Desired-state rules — Claude may not edit these and self-certify</h2>
-<ul><li><code>god-mode-is-canonical-tool-plane</code> — God Mode / SELMCP / mcp.xlrd.org/mcp are ONE tool plane, not three systems.</li><li><code>session-o-deprecated</code> — Session O routing is deprecated. No silent fallback into it.</li><li><code>xen-context-routing-deprecated</code> — Xen Context routing is deprecated. No silent fallback into it.</li><li><code>voice-not-blocked-beyond-five-seconds</code> — Voice must not be blocked beyond five seconds.</li><li><code>one-xen-voice</code> — One Xen voice is allowed.</li><li><code>no-naive-dedup-on-common-words</code> — Bee/Omi input must not be deduplicated because two messages share an ordinary word.</li><li><code>raw-akashic-evidence-remains-available</code> — Summaries never replace raw evidence.</li><li><code>lifenote-is-projection-not-source</code> — Lifenote projects Akashic; it is not the source of truth.</li><li><code>no-silent-replacement-of-a-proven-path</code> — No new code may silently replace a proven working path without passing its regression tests.</li><li><code>claude-is-not-the-sole-authority</code> — Claude may work on Xen. Claude may not be the sole authority deciding whether Xen is correct.</li></ul>
+<h2>Desired-state rules - Claude may not edit these and self-certify</h2>
+<ul><li><code>god-mode-is-canonical-tool-plane</code> - God Mode / SELMCP / mcp.xlrd.org/mcp are ONE tool plane, not three systems.</li><li><code>session-o-deprecated</code> - Session O routing is deprecated. No silent fallback into it.</li><li><code>xen-context-routing-deprecated</code> - Xen Context routing is deprecated. No silent fallback into it.</li><li><code>voice-not-blocked-beyond-five-seconds</code> - Voice must not be blocked beyond five seconds.</li><li><code>one-xen-voice</code> - One Xen voice is allowed.</li><li><code>no-naive-dedup-on-common-words</code> - Bee/Omi input must not be deduplicated because two messages share an ordinary word.</li><li><code>raw-akashic-evidence-remains-available</code> - Summaries never replace raw evidence.</li><li><code>lifenote-is-projection-not-source</code> - Lifenote projects Akashic; it is not the source of truth.</li><li><code>no-silent-replacement-of-a-proven-path</code> - No new code may silently replace a proven working path without passing its regression tests.</li><li><code>claude-is-not-the-sole-authority</code> - Claude may work on Xen. Claude may not be the sole authority deciding whether Xen is correct.</li></ul>
 <h2>Claims Claude may not make on its own word</h2>
-<p class="sub" style="margin:0">working, fixed, live, delivered, deployed, healthy, verified — each needs an independent verifier's receipt.</p>
+<p class="sub" style="margin:0">working, fixed, live, delivered, deployed, healthy, verified - each needs an independent verifier's receipt.</p>
