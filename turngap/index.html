@@ -171,7 +171,7 @@
     <h2>Over the 5 second budget</h2>
     <div class="track"><div class="fill" id="b-fill" style="width:0%"></div></div>
     <div class="barcap">
-      <span><b id="b-count">—</b> of <b id="b-total">—</b> of his lines waited longer</span>
+      <span><b id="b-count">—</b> of his <b id="b-total">—</b> paired lines waited longer</span>
       <span><b id="b-pct">—</b></span>
     </div>
   </div>
@@ -233,6 +233,12 @@ function txt(id, v){ var e=$(id); if(e) e.textContent = v; }
    the difference between "nothing waited" and "we have no idea". */
 function has(v){ return v !== null && v !== undefined && v !== ''; }
 function num(v, suf){ return has(v) ? (v + (suf||'')) : 'no record'; }
+
+/* sec1 — always ONE decimal on a seconds value. JSON carries 6.0, JS stringifies
+   that to "6", and "6s" next to "target 5.0s" reads as two different precisions
+   for the same quantity. Same number, same shape, every time. */
+function sec1(v){ return has(v) ? Number(v).toFixed(1) : null; }
+function secTxt(v){ var s = sec1(v); return s === null ? 'no record' : s + 's'; }
 
 function fmtAge(sec){
   if(sec === null) return 'no record';
@@ -310,7 +316,7 @@ function render(d){
 
   var over = (d.passes === false);
   $('h-median').innerHTML = has(d.median_s)
-    ? escapeHtml(String(d.median_s)) + '<span class="u">s</span>'
+    ? escapeHtml(sec1(d.median_s)) + '<span class="u">s</span>'
     : 'no record';
   $('h-median').className = 'big' + (over ? ' fail' : '');
   $('h-pill').textContent = has(d.verdict) ? d.verdict : 'no record';
@@ -328,10 +334,10 @@ function render(d){
   $('b-fill').style.width = pct + '%';
   $('b-fill').className = 'fill' + (pct === 0 ? ' ok' : '');
 
-  txt('s-min', num(d.min_s, 's'));
-  txt('s-med', num(d.median_s, 's'));
-  txt('s-p90', num(d.p90_s, 's'));
-  txt('s-max', num(d.max_s, 's'));
+  txt('s-min', secTxt(d.min_s));
+  txt('s-med', secTxt(d.median_s));
+  txt('s-p90', secTxt(d.p90_s));
+  txt('s-max', secTxt(d.max_s));
 
   var w = Array.isArray(d.worst) ? d.worst : [];
   if(!w.length){
