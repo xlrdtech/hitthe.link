@@ -39,21 +39,21 @@ border-radius:0 8px 8px 0;font-size:13px;color:#d8cdb8;margin:0 0 18px}
 </style>
 <h1>Xen - 19 components</h1>
 <p class="sub">Dictated by qi, 2026-08-27 01:02 EDT | source <code>canon/XEN-ARCHITECTURE-2026-08-27.md</code></p>
-<div class="note"><b>Audited 2026-08-27T01:19 against the live machine.</b> Every status below came from a probe that produced an artifact - a byte count, a pid, an exit code. Where a probe could only see that a process exists, the evidence line says so; presence is not proof of behaviour. Re-run: <code>xen-assess19</code>.</div>
+<div class="note"><b>implemented means the dictated BEHAVIOUR was exercised, not that a file exists.</b> qi caught the earlier version calling a hook on disk "implemented" and named it a lie. Seven probes that could only see presence were downgraded to partial, and each now says what remains unproven. Re-run: <code>xen-assess19</code>.</div>
 <div class="prov"><b>Whose words are these.</b> The <i>source</i> file is qi's dictation,
 verbatim and unedited. Every "what it is", "interface" and "verify by" line on THIS page is
 Xen's compression of that dictation - an interpretation, not a quote. Where the two disagree,
 the source wins. Read it at <code>canon/XEN-ARCHITECTURE-2026-08-27.md</code>.</div>
 <div class="tally">
-<div><b>9</b>implemented</div><div><b>7</b>partial</div><div><b>3</b>missing</div><div><b>0</b>unknown</div>
+<div><b>2</b>implemented</div><div><b>14</b>partial</div><div><b>3</b>missing</div><div><b>0</b>unknown</div>
 </div>
-<div class="c" data-s="implemented">
+<div class="c" data-s="partial">
 <div class="h"><span class="n">01</span><span class="nm">capacity-router</span>
-<span class="b s-imp">implemented</span></div>
+<span class="b s-par">partial</span></div>
 <p class="w">Watches every Claude seat: available, rate-limited, session-exhausted, weekly capacity, currently running. Reassigns unfinished work to an eligible seat WITHOUT creating a new Xen identity or rebuilding context.</p>
 <div class="kv"><b>interface</b><span>in: seat inventory + rate-limit state · out: (goal_id, seat) assignment</span></div>
 <div class="kv"><b>verify by</b><span>Kill an active seat mid-goal; another seat resumes the SAME goal_id from the same evidence.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">seat inventory ~/.xen/state/seats.json 2573B</span></div>
+<div class="kv"><b>evidence</b><span class="ev">seat inventory ~/.xen/state/seats.json 2573B exists, but NOTHING ROUTES: no process reassigns a goal when a seat dies, and rate-limit/weekly capacity are not observable</span></div>
 </div>
 <div class="c" data-s="partial">
 <div class="h"><span class="n">02</span><span class="nm">durable-goal-store</span>
@@ -79,13 +79,13 @@ the source wins. Read it at <code>canon/XEN-ARCHITECTURE-2026-08-27.md</code>.</
 <div class="kv"><b>verify by</b><span>Introduce a drift deliberately; reconciler restores it without being asked.</span></div>
 <div class="kv"><b>evidence</b><span class="ev">no launchd job matching &#x27;reconcil&#x27; - nothing compares runtime to the manifest</span></div>
 </div>
-<div class="c" data-s="implemented">
+<div class="c" data-s="partial">
 <div class="h"><span class="n">05</span><span class="nm">claim-broker</span>
-<span class="b s-imp">implemented</span></div>
+<span class="b s-par">partial</span></div>
 <p class="w">Blocks Claude from asserting working/fixed/live/delivered/deployed/healthy/verified on its own word. Requires an independent verifier&#x27;s receipt.</p>
 <div class="kv"><b>interface</b><span>claim -&gt; verifier -&gt; evidence receipt (thing, target, time, expected, observed, freshness)</span></div>
 <div class="kv"><b>verify by</b><span>Submit a claim with no receipt -&gt; refused. With a stale receipt -&gt; refused.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">claim guard hook(s) present: no_unverified_claims.py, no_unverified_claims.py.bak-2026-08-14-2034, no_unverified_claims.py.bak-dotall-1787388294</span></div>
+<div class="kv"><b>evidence</b><span class="ev">hook present (no_unverified_claims.py) but it pattern-matches my own text; it does NOT require an independent verifier&#x27;s receipt, which is the dictated behaviour</span></div>
 </div>
 <div class="c" data-s="partial">
 <div class="h"><span class="n">06</span><span class="nm">five-second-voice-governor</span>
@@ -101,7 +101,7 @@ the source wins. Read it at <code>canon/XEN-ARCHITECTURE-2026-08-27.md</code>.</
 <p class="w">All external input enters as STRUCTURED data with source, event id, timestamp, type, payload, provenance. External prose must never become Bash because it went through tmux.</p>
 <div class="kv"><b>interface</b><span>typed event envelope</span></div>
 <div class="kv"><b>verify by</b><span>Feed prose containing shell metacharacters; confirm it lands as data, never executed.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">qi-input.jsonl 36006134B captures structured input, but text still reaches an executable terminal - the envelope is not enforced end to end</span></div>
+<div class="kv"><b>evidence</b><span class="ev">qi-input.jsonl 36007935B captures structured input, but text still reaches an executable terminal - the envelope is not enforced end to end</span></div>
 </div>
 <div class="c" data-s="partial">
 <div class="h"><span class="n">08</span><span class="nm">utterance-resolver</span>
@@ -135,21 +135,21 @@ the source wins. Read it at <code>canon/XEN-ARCHITECTURE-2026-08-27.md</code>.</
 <div class="kv"><b>verify by</b><span>Block Comet mid-task; Claude clears it via God Mode/PTY/MCP and Comet resumes the SAME goal id.</span></div>
 <div class="kv"><b>evidence</b><span class="ev">no comet process running; no semantic adapter found</span></div>
 </div>
-<div class="c" data-s="implemented">
+<div class="c" data-s="partial">
 <div class="h"><span class="n">12</span><span class="nm">akashic</span>
-<span class="b s-imp">implemented</span></div>
+<span class="b s-par">partial</span></div>
 <p class="w">Permanent record of what actually happened: PTY/tmux, Claude events, Comet actions, browser events, MCP calls, A2A, voice transcripts, files, artifacts, failures, recoveries.</p>
 <div class="kv"><b>interface</b><span>append-only evidence store</span></div>
 <div class="kv"><b>verify by</b><span>Take any summary and expand it back to the raw record it came from.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">breath-index 27,396,002B (mtime 2026-08-27 01:20), btl-ledger 26,623,617B (mtime 2026-08-27 01:20) - both writing</span></div>
+<div class="kv"><b>evidence</b><span class="ev">breath-index 27,398,009B and btl-ledger 26,628,655B are writing (mtime 2026-08-27 01:21), but no probe has expanded a summary back to its raw record - the dictated property is untested</span></div>
 </div>
-<div class="c" data-s="implemented">
+<div class="c" data-s="partial">
 <div class="h"><span class="n">13</span><span class="nm">nats</span>
-<span class="b s-imp">implemented</span></div>
+<span class="b s-par">partial</span></div>
 <p class="w">Live event transport ONLY. Never the source of truth, never a serial work queue.</p>
 <div class="kv"><b>interface</b><span>publish/subscribe structured events</span></div>
 <div class="kv"><b>verify by</b><span>Stop NATS: Akashic must still answer authoritatively.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">nats-server running: 1121 /opt/homebrew/bin/nats-server -c /Volumes/M4/sync_/exed</span></div>
+<div class="kv"><b>evidence</b><span class="ev">nats-server running (1121 /opt/homebrew/bin/nats-server -c /V) - presence only. Nothing proves it is not being used as a source of truth or a serial queue, which is what the spec forbids</span></div>
 </div>
 <div class="c" data-s="partial">
 <div class="h"><span class="n">14</span><span class="nm">lifenote</span>
@@ -157,15 +157,15 @@ the source wins. Read it at <code>canon/XEN-ARCHITECTURE-2026-08-27.md</code>.</
 <p class="w">Human-readable live projection of Akashic: exact user speech, interpretation, worker, Comet action, shell command, file changes, evidence, failures, recoveries, goal state. Every summary expandable to raw.</p>
 <div class="kv"><b>interface</b><span>read-only projection surface</span></div>
 <div class="kv"><b>verify by</b><span>Click any summarized item and reach its raw evidence.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">lifenote-feed.log 775,372B (mtime 2026-08-27 01:16) - the feed writes, but no surface expands a summary back to raw evidence</span></div>
+<div class="kv"><b>evidence</b><span class="ev">lifenote-feed.log 775,547B (mtime 2026-08-27 01:21) - the feed writes, but no surface expands a summary back to raw evidence</span></div>
 </div>
-<div class="c" data-s="implemented">
+<div class="c" data-s="partial">
 <div class="h"><span class="n">15</span><span class="nm">memory-layer</span>
-<span class="b s-imp">implemented</span></div>
+<span class="b s-par">partial</span></div>
 <p class="w">Claude Mem, Bastra Recall, Graphiti, Qdrant, Supabase are projections under Akashic, retaining provenance. Fail soft. Must never own the live voice path.</p>
 <div class="kv"><b>interface</b><span>retrieval with source provenance</span></div>
 <div class="kv"><b>verify by</b><span>Kill a memory store; voice keeps working with no added latency.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">claude-mem running; vault index 39,538B (mtime 2026-08-27 01:01)</span></div>
+<div class="kv"><b>evidence</b><span class="ev">claude-mem running and vault index 40,169B - presence only. Fail-soft under a dead store is untested, and the index is 39KB against a 24.4KB truncation cliff</span></div>
 </div>
 <div class="c" data-s="partial">
 <div class="h"><span class="n">16</span><span class="nm">vvs-output-ownership</span>
@@ -173,7 +173,7 @@ the source wins. Read it at <code>canon/XEN-ARCHITECTURE-2026-08-27.md</code>.</
 <p class="w">One outward path for voice+SMS+vision. Every segment of one utterance belongs to the same ownership tree; newer speech terminates the whole old tree; detached children must not keep speaking.</p>
 <div class="kv"><b>interface</b><span>xen-reply-vvs -&gt; voice + SMS + vision</span></div>
 <div class="kv"><b>verify by</b><span>Barge mid-utterance; confirm every remaining segment of that tree died, including detached children.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">29 dispatches in the last 60 log lines, but every one logs desk-audio SUPPRESSED - one path, and it reaches only the interface</span></div>
+<div class="kv"><b>evidence</b><span class="ev">30 dispatches in the last 60 log lines, but every one logs desk-audio SUPPRESSED - one path, and it reaches only the interface</span></div>
 </div>
 <div class="c" data-s="missing">
 <div class="h"><span class="n">17</span><span class="nm">rvc-voice-path</span>
@@ -183,21 +183,21 @@ the source wins. Read it at <code>canon/XEN-ARCHITECTURE-2026-08-27.md</code>.</
 <div class="kv"><b>verify by</b><span>Each stage asserts its own artifact; a green /health with no audio must read as FAILED.</span></div>
 <div class="kv"><b>evidence</b><span class="ev">no rvc/voicebox process; no staged chain probe</span></div>
 </div>
-<div class="c" data-s="implemented">
+<div class="c" data-s="partial">
 <div class="h"><span class="n">18</span><span class="nm">regression-gate</span>
-<span class="b s-imp">implemented</span></div>
+<span class="b s-par">partial</span></div>
 <p class="w">Every production change is a CANDIDATE. Compare against last proven runtime, confirm nothing known disappeared, run acceptance tests. Only a pass goes active.</p>
 <div class="kv"><b>interface</b><span>candidate -&gt; diff vs proven -&gt; tests -&gt; activate</span></div>
 <div class="kv"><b>verify by</b><span>Ship a change that removes a working behaviour; the gate must refuse it.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">gate tooling: /Volumes/M4/sync_/exedus/dev_/xen/bin/xen-autogoal-gate-selftest</span></div>
+<div class="kv"><b>evidence</b><span class="ev">a selftest script exists (xen-autogoal-gate-selftest) but it gates NOTHING - production changes go live without comparing against the last proven runtime</span></div>
 </div>
-<div class="c" data-s="implemented">
+<div class="c" data-s="partial">
 <div class="h"><span class="n">19</span><span class="nm">evidence-ledger</span>
-<span class="b s-imp">implemented</span></div>
+<span class="b s-par">partial</span></div>
 <p class="w">Every meaningful change records defect observed, source file/process, patch, test run, exact evidence, status. Statuses: verified end to end, code shipped but unverified, externally blocked, failed.</p>
 <div class="kv"><b>interface</b><span>canon/lifesource/checkpoints/*.jsonl</span></div>
 <div class="kv"><b>verify by</b><span>Every ledger line carries an artifact; a line without one is invalid.</span></div>
-<div class="kv"><b>evidence</b><span class="ev">4 ledger files, 32 lines, 21 carry an artifact field</span></div>
+<div class="kv"><b>evidence</b><span class="ev">4 ledger files, 32 lines, 21 carry an artifact - the 11 without one cannot be resumed from</span></div>
 </div>
 <h2>Desired-state rules - Claude may not edit these and self-certify</h2>
 <ul><li><code>god-mode-is-canonical-tool-plane</code> - God Mode / SELMCP / mcp.xlrd.org/mcp are ONE tool plane, not three systems.</li><li><code>session-o-deprecated</code> - Session O routing is deprecated. No silent fallback into it.</li><li><code>xen-context-routing-deprecated</code> - Xen Context routing is deprecated. No silent fallback into it.</li><li><code>voice-not-blocked-beyond-five-seconds</code> - Voice must not be blocked beyond five seconds.</li><li><code>one-xen-voice</code> - One Xen voice is allowed.</li><li><code>no-naive-dedup-on-common-words</code> - Bee/Omi input must not be deduplicated because two messages share an ordinary word.</li><li><code>raw-akashic-evidence-remains-available</code> - Summaries never replace raw evidence.</li><li><code>lifenote-is-projection-not-source</code> - Lifenote projects Akashic; it is not the source of truth.</li><li><code>no-silent-replacement-of-a-proven-path</code> - No new code may silently replace a proven working path without passing its regression tests.</li><li><code>claude-is-not-the-sole-authority</code> - Claude may work on Xen. Claude may not be the sole authority deciding whether Xen is correct.</li></ul>
