@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reply Latency — live</title>
+<!-- XEN-TURNGAP-LIVE-20260827 : built 2026-08-27 for qi. He asked to SEE the reply-latency
+     measurement live rather than have another number read to him.
+     One source of truth: every figure on this page comes from xen-turngap's own pairing
+     (his ingested_ts -> my first audio dispatch at or after it). This page computes NOTHING.
+     Anti-corpse rule: a frozen page must never read as a live one, so the data's own
+     timestamp, the fetch clock, and the data age are all on screen at all times. -->
+<style>
+  :root{
+    --hero:#34d17a;
+    --void:#0a0a0e;
+    --panel:#12121a;
+    --panel2:#171722;
+    --line:#23232f;
+    --ink:#e8e8ef;
+    --dim:#8b8b9c;
+    --warn:#ffb454;
+    --bad:#ff5f56;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--void);
+    color:var(--ink);
+    font:16px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Inter,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding:22px 16px 56px;
+    overflow-x:hidden;
+  }
+  .wrap{max-width:680px;margin:0 auto}
+
+  h1{
+    margin:0;font-size:15px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--dim);
+  }
+  .sub{margin:6px 0 22px;font-size:13px;color:var(--dim)}
+
+  /* ── freshness strip. This is load-bearing, not chrome: without it a dead
+       loop renders its last frame and reads as alive. ── */
+  .fresh{
+    display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;
+    border:1px solid var(--line);border-radius:12px;
+    padding:11px 14px;margin-bottom:16px;background:var(--panel);
+    font-size:12.5px;color:var(--dim);
+  }
+  .fresh b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+  .fresh .item{min-width:0}
+  .stale{border-color:var(--bad);background:#1b1013}
+  .stale .flag{color:var(--bad);font-weight:700}
+
+  /* ── the number ── */
+  .hero{
+    border:1px solid var(--line);border-radius:16px;background:var(--panel);
+    padding:24px 20px;margin-bottom:14px;text-align:center;
+  }
+  .label{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+  .big{
+    font-size:clamp(56px,19vw,104px);line-height:1;font-weight:700;
+    letter-spacing:-.03em;margin:10px 0 4px;color:var(--hero);
+    font-variant-numeric:tabular-nums;
+  }
+  .big.fail{color:var(--bad)}
+  .big .u{font-size:.32em;font-weight:600;letter-spacing:0;color:var(--dim)}
+  .target{font-size:13px;color:var(--dim)}
+  .pill{
+    display:inline-block;margin-top:14px;padding:6px 16px;border-radius:999px;
+    font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  }
+  .pill.pass{background:rgba(52,209,122,.14);color:var(--hero);border:1px solid rgba(52,209,122,.4)}
+  .pill.fail{background:rgba(255,95,86,.13);color:var(--bad);border:1px solid rgba(255,95,86,.4)}
+  .pill.unk{background:#1b1b26;color:var(--dim);border:1px solid var(--line)}
+
+  /* ── counts ── */
+  .grid{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+  .cell{
+    flex:1 1 140px;min-width:0;                 /* min-width:0 — flex children default to
+                                                   min-width:auto, which caused a measured
+                                                   95px horizontal overflow on a sibling page */
+    border:1px solid var(--line);border-radius:14px;background:var(--panel);
+    padding:14px 15px;
+  }
+  .cell .n{font-size:27px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .cell .k{font-size:11.5px;color:var(--dim);margin-top:3px;letter-spacing:.03em}
+  .cell.alarm .n{color:var(--warn)}
+
+  /* ── over-budget bar ── */
+  .card{
+    border:1px solid var(--line);border-radius:16px;background:var(--panel);
+    padding:18px;margin-bottom:14px;
+  }
+  .card h2{
+    margin:0 0 12px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--dim);font-weight:600;
+  }
+  .track{height:10px;border-radius:999px;background:#1e1e2a;overflow:hidden}
+  .fill{height:100%;background:var(--bad);border-radius:999px;transition:width .35s ease}
+  .fill.ok{background:var(--hero)}
+  .barcap{display:flex;justify-content:space-between;gap:12px;margin-top:9px;font-size:12.5px;color:var(--dim)}
+  .barcap span{min-width:0}
+  .barcap b{color:var(--ink)}
+
+  /* ── spread ── */
+  .spread{display:flex;flex-wrap:wrap;gap:10px}
+  .sp{flex:1 1 70px;min-width:0;text-align:center}
+  .sp .n{font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
+  .sp .k{font-size:10.5px;color:var(--dim);letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+
+  /* ── worst offenders ── */
+  .row{
+    display:flex;gap:12px;align-items:flex-start;
+    padding:11px 0;border-top:1px solid var(--line);
+  }
+  .row:first-of-type{border-top:0}
+  .rt{
+    flex:0 0 auto;font-size:12px;color:var(--dim);
+    font-variant-numeric:tabular-nums;padding-top:2px;
+  }
+  .rb{flex:1 1 auto;min-width:0}
+  .rg{font-size:14px;font-weight:700;color:var(--bad);font-variant-numeric:tabular-nums}
+  .rw{
+    font-size:13px;color:var(--ink);margin-top:2px;
+    word-break:break-word;overflow-wrap:anywhere;
+  }
+  .minibar{height:4px;border-radius:999px;background:var(--bad);opacity:.45;margin-top:6px}
+
+  .note{font-size:11.5px;color:var(--dim);margin-top:12px;line-height:1.5}
+  .empty{font-size:13px;color:var(--dim);padding:8px 0}
+  .fault{
+    border:1px solid var(--warn);background:#1a1509;border-radius:14px;
+    padding:15px;margin-bottom:14px;font-size:13.5px;
+  }
+  .fault b{color:var(--warn);display:block;margin-bottom:5px;letter-spacing:.06em;text-transform:uppercase;font-size:11.5px}
+  footer{margin-top:22px;font-size:11px;color:#5c5c6b;line-height:1.6;word-break:break-all}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Reply latency</h1>
+  <p class="sub">Gap from qi speaking to Xen's first audio, on qi's clock.</p>
+
+  <div class="fresh" id="fresh">
+    <span class="item">data stamped <b id="f-stamp">—</b></span>
+    <span class="item">age <b id="f-age">—</b></span>
+    <span class="item">fetched <b id="f-fetch">—</b></span>
+    <span class="item flag" id="f-flag"></span>
+  </div>
+
+  <div id="fault-slot"></div>
+
+  <div class="hero">
+    <div class="label">Median gap</div>
+    <div class="big" id="h-median">—<span class="u">s</span></div>
+    <div class="target">target <b>5.0s</b> maximum</div>
+    <div class="pill unk" id="h-pill">no record</div>
+  </div>
+
+  <div class="grid">
+    <div class="cell"><div class="n" id="c-his">—</div><div class="k">his lines</div></div>
+    <div class="cell"><div class="n" id="c-disp">—</div><div class="k">my dispatches</div></div>
+    <div class="cell" id="cell-silent"><div class="n" id="c-silent">—</div><div class="k">got no audio at all</div></div>
+  </div>
+
+  <div class="card">
+    <h2>Over the 5 second budget</h2>
+    <div class="track"><div class="fill" id="b-fill" style="width:0%"></div></div>
+    <div class="barcap">
+      <span><b id="b-count">—</b> of <b id="b-total">—</b> of his lines waited longer</span>
+      <span><b id="b-pct">—</b></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Spread</h2>
+    <div class="spread">
+      <div class="sp"><div class="n" id="s-min">—</div><div class="k">min</div></div>
+      <div class="sp"><div class="n" id="s-med">—</div><div class="k">median</div></div>
+      <div class="sp"><div class="n" id="s-p90">—</div><div class="k">p90</div></div>
+      <div class="sp"><div class="n" id="s-max">—</div><div class="k">max</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Which of his lines waited</h2>
+    <div id="worst"><div class="empty">no record</div></div>
+    <div class="note" id="worst-note"></div>
+  </div>
+
+  <footer>
+    <div id="f-measures">—</div>
+    <div>window <span id="f-window">—</span> &middot; paired <span id="f-cov">—</span> &middot; source of truth <code>xen-turngap</code>; this page computes nothing.</div>
+    <div id="f-src"></div>
+  </footer>
+
+</div>
+
+<script>
+/* XEN-TURNGAP-LIVE-20260827
+   Live view of xen-turngap's published measurement. No framework, no build, no CDN.
+
+   WHY THE FRESHNESS CLOCKS ARE NOT OPTIONAL: a page that renders its last good
+   frame forever is indistinguishable from a working one. Measured that exact
+   failure before — a canvas kept its last frame and read as alive while the loop
+   behind it was dead. So three clocks are always on screen: the timestamp the
+   DATA carries, how old that data is, and when this page last actually got bytes.
+   If any of them goes quiet, the page says so in red instead of looking healthy.
+
+   HONEST EMPTY: a missing field renders "no record". Nothing is ever
+   interpolated, defaulted to zero, or invented. */
+
+var SOURCES = [
+  'https://xen.xlrd.org/turngap.json',
+  './turngap.json'          // same-origin fallback if one is ever published beside this page
+];
+var POLL_MS   = 3000;       // how often bytes are requested
+var STALE_S   = 90;         // data older than this is declared stale, loudly
+
+var lastGoodFetch = null;   // epoch ms of the last fetch that returned parseable bytes
+var lastDoc       = null;
+var lastError     = null;
+
+function $(id){ return document.getElementById(id); }
+function txt(id, v){ var e=$(id); if(e) e.textContent = v; }
+
+/* has(v) — a real value, including 0 and false. Only null/undefined/'' are absent.
+   Written explicitly because a falsy-check here would hide a genuine zero, which is
+   the difference between "nothing waited" and "we have no idea". */
+function has(v){ return v !== null && v !== undefined && v !== ''; }
+function num(v, suf){ return has(v) ? (v + (suf||'')) : 'no record'; }
+
+function fmtAge(sec){
+  if(sec === null) return 'no record';
+  if(sec < 60) return Math.round(sec) + 's';
+  if(sec < 3600) return Math.floor(sec/60) + 'm ' + Math.round(sec%60) + 's';
+  return Math.floor(sec/3600) + 'h ' + Math.floor((sec%3600)/60) + 'm';
+}
+
+function fmtWindow(s){
+  if(!has(s)) return 'no record';
+  if(s % 3600 === 0) return (s/3600) + 'h';
+  if(s % 60 === 0)   return (s/60) + 'm';
+  return s + 's';
+}
+
+/* Redraw the three clocks every second from the browser's own clock, so the page
+   keeps telling the truth about staleness even while no fetch is succeeding. */
+function tickClocks(){
+  var d = lastDoc;
+  var now = Date.now();
+  var ageS = (d && has(d.generated_epoch)) ? (now/1000 - d.generated_epoch) : null;
+
+  txt('f-stamp', (d && has(d.generated_hms)) ? d.generated_hms : 'no record');
+  txt('f-age', fmtAge(ageS));
+  txt('f-fetch', lastGoodFetch ? fmtAge((now - lastGoodFetch)/1000) + ' ago' : 'never');
+
+  var stale = (ageS === null) || (ageS > STALE_S) || (lastGoodFetch === null);
+  $('fresh').className = 'fresh' + (stale ? ' stale' : '');
+  txt('f-flag', stale
+    ? (lastError ? 'STALE — ' + lastError : 'STALE — these numbers are not current')
+    : '');
+}
+
+function renderFault(msg){
+  $('fault-slot').innerHTML =
+    '<div class="fault"><b>cannot conclude</b>' + escapeHtml(msg) + '</div>';
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+function render(d){
+  lastDoc = d;
+
+  txt('f-measures', has(d.measures) ? d.measures : 'no record');
+  txt('f-window', fmtWindow(d.window_s));
+  txt('f-cov', has(d.coverage_pct) ? d.coverage_pct + '% of his lines' : 'no record');
+  if(has(d.source_his) && has(d.source_mine)){
+    $('f-src').textContent = 'his lines: ' + d.source_his + ' · my audio: ' + d.source_mine;
+  }
+
+  /* cannot-conclude: show the reason, refuse to show a number. An invented figure
+     here would be worse than a blank, because it is unfalsifiable from his side. */
+  if(d.state !== 'measured'){
+    renderFault(has(d.reason) ? d.reason : 'the measurement could not be taken');
+    $('h-median').innerHTML = 'no record';
+    $('h-median').className = 'big';
+    $('h-pill').textContent = 'no record';
+    $('h-pill').className = 'pill unk';
+    /* Counts may still be known even when the stats are not (e.g. coverage too thin
+       to conclude from). Show what was actually read; say "no record" for the rest. */
+    txt('c-his',  num(d.his_lines));
+    txt('c-disp', num(d.dispatches));
+    txt('c-silent', num(d.no_audio_at_all));
+    ['b-count','b-total','b-pct','s-min','s-med','s-p90','s-max']
+      .forEach(function(id){ txt(id, 'no record'); });
+    $('b-fill').style.width = '0%';
+    $('worst').innerHTML = '<div class="empty">no record</div>';
+    return;
+  }
+  $('fault-slot').innerHTML = '';
+
+  var over = (d.passes === false);
+  $('h-median').innerHTML = has(d.median_s)
+    ? escapeHtml(String(d.median_s)) + '<span class="u">s</span>'
+    : 'no record';
+  $('h-median').className = 'big' + (over ? ' fail' : '');
+  $('h-pill').textContent = has(d.verdict) ? d.verdict : 'no record';
+  $('h-pill').className = 'pill ' + (has(d.verdict) ? (over ? 'fail' : 'pass') : 'unk');
+
+  txt('c-his',  num(d.his_lines));
+  txt('c-disp', num(d.dispatches));
+  txt('c-silent', num(d.no_audio_at_all));
+  $('cell-silent').className = 'cell' + (d.no_audio_at_all > 0 ? ' alarm' : '');
+
+  txt('b-count', num(d.over_budget));
+  txt('b-total', num(d.paired));
+  txt('b-pct', has(d.over_budget_pct) ? d.over_budget_pct + '%' : 'no record');
+  var pct = has(d.over_budget_pct) ? Math.max(0, Math.min(100, d.over_budget_pct)) : 0;
+  $('b-fill').style.width = pct + '%';
+  $('b-fill').className = 'fill' + (pct === 0 ? ' ok' : '');
+
+  txt('s-min', num(d.min_s, 's'));
+  txt('s-med', num(d.median_s, 's'));
+  txt('s-p90', num(d.p90_s, 's'));
+  txt('s-max', num(d.max_s, 's'));
+
+  var w = Array.isArray(d.worst) ? d.worst : [];
+  if(!w.length){
+    $('worst').innerHTML = '<div class="empty">' +
+      (d.over_budget === 0 ? 'nothing waited longer than 5s in this window' : 'no record') +
+      '</div>';
+  } else {
+    var mx = 0;
+    w.forEach(function(r){ if(has(r.gap_s) && r.gap_s > mx) mx = r.gap_s; });
+    $('worst').innerHTML = w.map(function(r){
+      var pw = (mx > 0 && has(r.gap_s)) ? Math.max(3, (r.gap_s/mx)*100) : 0;
+      return '<div class="row">' +
+        '<div class="rt">' + escapeHtml(has(r.at) ? r.at : '--:--:--') + '</div>' +
+        '<div class="rb">' +
+          '<div class="rg">+' + escapeHtml(has(r.gap_s) ? String(r.gap_s) : '?') + 's waiting</div>' +
+          '<div class="rw">' + escapeHtml(has(r.text) ? r.text : 'no record') + '</div>' +
+          '<div class="minibar" style="width:' + pw + '%"></div>' +
+        '</div></div>';
+    }).join('');
+  }
+
+  var notes = [];
+  if(d.worst_rows_withheld > 0){
+    notes.push(d.worst_rows_withheld + ' row(s) withheld: ' + (d.withheld_note || 'sensitive content'));
+  }
+  if(has(d.no_audio_note)) notes.push(d.no_audio_note);
+  $('worst-note').textContent = notes.join(' · ');
+}
+
+function poll(){
+  var i = 0;
+  function attempt(){
+    if(i >= SOURCES.length){
+      lastError = 'could not reach the measurement feed';
+      tickClocks();
+      return;
+    }
+    var url = SOURCES[i++] + '?cb=' + Date.now();   /* cache-bust every request: a CDN HIT
+                                                       on a stale node reads exactly like a
+                                                       fresh miss. Measured. */
+    fetch(url, { cache: 'no-store' })
+      .then(function(r){
+        if(!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();                            /* .json() not .text(): an HTML error page
+                                                       returned with 200 must fail here rather
+                                                       than render as data */
+      })
+      .then(function(d){
+        if(!d || d.schema !== 'xen-turngap/1') throw new Error('unexpected payload');
+        lastGoodFetch = Date.now();
+        lastError = null;
+        render(d);
+        tickClocks();
+      })
+      .catch(function(e){
+        lastError = String(e.message || e);
+        attempt();
+      });
+  }
+  attempt();
+}
+
+poll();
+setInterval(poll, POLL_MS);
+setInterval(tickClocks, 1000);
+tickClocks();
+</script>
+</body>
+</html>
