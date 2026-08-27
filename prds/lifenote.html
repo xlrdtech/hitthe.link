@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0e">
+<title>LifeNote — PRD</title>
+<meta name="description" content="Breath-first, auto-manifesting life management">
+<style>
+*{box-sizing:border-box}
+:root{--void:#0a0a0e;--fg:#e8e8ee;--dim:#8a8a99;--line:#1e1e26;--card:#101018;
+--hero:#34d17a;--warn:#e8a33d;--bad:#e8555f;--prov:#5b7cc4}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;padding:20px 16px 72px;overflow-x:hidden;background:var(--void);color:var(--fg);
+font:15px/1.6 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+max-width:840px;margin-inline:auto;word-wrap:break-word}
+a{color:var(--hero)}
+h1{font-size:20px;margin:0 0 3px;letter-spacing:-.01em;line-height:1.3}
+.sub{color:var(--dim);font-size:12.5px;margin:0 0 16px;overflow-wrap:anywhere}
+.crumb{font-size:12px;color:var(--dim);margin:0 0 12px}
+.crumb a{color:var(--dim)}
+h2{font-size:16.5px;margin:26px 0 8px;letter-spacing:-.01em;line-height:1.3}
+h3{font-size:14.5px;margin:20px 0 6px;color:#d4d4e0}
+h4,h5,h6{font-size:13.5px;margin:16px 0 5px;color:#c2c2ce}
+p{margin:0 0 11px}
+ul,ol{margin:0 0 12px;padding-left:20px}
+li{margin-bottom:5px}
+hr{border:0;border-top:1px solid var(--line);margin:20px 0}
+code{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--hero);
+background:#12121a;padding:1px 4px;border-radius:4px;overflow-wrap:anywhere}
+.pre{overflow-x:auto;background:#0c0c13;border:1px solid var(--line);border-radius:9px;
+padding:11px 12px;margin:0 0 13px}
+.pre pre{margin:0;font:11.5px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;color:#b8b8c8}
+blockquote{margin:0 0 13px;padding:9px 13px;background:#0f1420;border-left:2px solid var(--prov);
+border-radius:0 8px 8px 0;color:#b8c4d8;font-size:13.5px;overflow-wrap:anywhere}
+blockquote code{background:#141a28}
+.tw{overflow-x:auto;margin:0 0 14px;border:1px solid var(--line);border-radius:9px}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:0}
+th,td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:#12121a;color:var(--dim);font:600 11px ui-monospace,SFMono-Regular,Menlo,monospace;
+text-transform:uppercase;letter-spacing:.04em}
+tr:last-child td{border-bottom:0}
+.prov{border-left:2px solid var(--prov);padding:10px 13px;background:#0f1420;
+border-radius:0 9px 9px 0;font-size:12.5px;color:#b8c4d8;margin:0 0 12px;overflow-wrap:anywhere}
+.prov b{color:#dbe4f2}
+.red{border-left:2px solid var(--bad);padding:10px 13px;background:#1a0f11;
+border-radius:0 9px 9px 0;font-size:12.5px;color:#e0c0c4;margin:0 0 12px}
+.red b{color:#f2dbdd}
+.stub{border-left:2px solid var(--warn);padding:10px 13px;background:#17130c;
+border-radius:0 9px 9px 0;font-size:13px;color:#d8cdb8;margin:0 0 12px}
+.stub b{color:#f0e4cc}
+.doc{border-top:1px solid var(--line);margin-top:18px;padding-top:16px}
+.card{display:block;background:var(--card);border:1px solid var(--line);border-radius:11px;
+padding:12px 14px;margin:0 0 9px;text-decoration:none;color:inherit}
+.card:hover{border-color:#2c2c38}
+.ch{display:flex;gap:9px;align-items:baseline;flex-wrap:wrap;margin-bottom:5px}
+.ct{font-weight:640;font-size:14.5px;letter-spacing:-.01em;color:var(--fg);min-width:0;flex:1 1 auto}
+.cm{font:600 10px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.04em;
+text-transform:uppercase;padding:3px 7px;border-radius:5px;white-space:nowrap;flex:none}
+.m-qi{background:#12321f;color:var(--hero)}
+.m-xen{background:#1b2436;color:#8fa8d8}
+.m-stub{background:#3a2418;color:var(--warn)}
+.m-live{background:#2a2a34;color:var(--dim)}
+.cd{color:#a8a8b6;font-size:12.5px;margin:0;min-width:0;overflow-wrap:anywhere}
+.cs{color:var(--dim);font:11px ui-monospace,SFMono-Regular,Menlo,monospace;margin-top:6px;
+display:block;overflow-wrap:anywhere}
+.tally{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}
+.tally div{background:var(--card);border:1px solid var(--line);border-radius:8px;
+padding:7px 11px;font-size:12px;min-width:0}
+.tally b{font-size:17px;display:block;line-height:1.25;color:var(--fg)}
+.sec{font-size:12px;color:var(--dim);margin:24px 0 8px;text-transform:uppercase;letter-spacing:.06em}
+.foot{margin-top:32px;padding-top:14px;border-top:1px solid var(--line);
+font-size:11.5px;color:var(--dim);overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<p class="crumb"><a href="/prds/">← all PRDs</a></p>
+<h1>LifeNote</h1>
+<p class="sub">Breath-first, auto-manifesting life management &middot; source <code>LIFENOTE_PRD.md</code> &middot; 7694 bytes on disk</p>
+<div class="prov"><b>Whose words these are — Xen doc · qi quotes.</b> Xen wrote this document. The concept, the Death Note inversion and the quoted lines are qi's; the section structure, the requirement wording and the acceptance criteria are Xen's compression of what he described.</div>
+<div class="doc"><h2>LifeNote Product Requirements Document (PRD)</h2>
+<h3>1. Overview</h3>
+<p><strong>LifeNote</strong> is a breath-first, auto-manifesting life management system. Inspired by the <em>Death Note</em> anime concept — inverted from death to creation — LifeNote captures the living breath of whatever you speak and automatically brings it to life as organized, actionable, memory-persistent notes.</p>
+<blockquote><em>"Whatever you speak automatically comes to life on its own."</em></blockquote>
+<hr>
+<h3>2. Core Philosophy</h3>
+<div class="tw"><table><thead><tr><th>Principle</th><th>Description</th></tr></thead><tbody><tr><td><strong>Breath-First</strong></td><td>All input originates from the living breath of speech — the animating force, not merely mechanical voice capture</td></tr><tr><td><strong>Auto-Manifest</strong></td><td>Spoken content automatically generates structured notes, reminders, tasks, and suggestions without manual formatting</td></tr><tr><td><strong>Canonical Design</strong></td><td>Single canonical CSS design language across all interfaces — no visual fragmentation</td></tr><tr><td><strong>Memory-Persistent</strong></td><td>Everything lives in searchable, retrievable memory with proper attribution and context</td></tr><tr><td><strong>Action-Triggered</strong></td><td>Notes aren’t static — they trigger workflows, automations, and agent executions</td></tr></tbody></table></div>
+<hr>
+<h3>3. Product Architecture</h3>
+<h4>3.1 System Layers</h4>
+<div class="pre"><pre>│  INTERFACE LAYER                        │
+│  • PWA (Primary)                        │
+│  • Wearable Glasses (Ray-Ban Meta Gen 2)│
+│  • Android/iOS Native Share Target      │
+│  • Terminal / Tmux Session Zero         │
+───────────────────────────────────────────
+│  INTELLIGENCE LAYER                     │
+│  • Xen (Core AI / Awareness Engine)     │
+│  • Bee (Voice Interface / Injection)    │
+│  • NotebookLM (Document Processing)     │
+───────────────────────────────────────────
+│  MANIFESTATION LAYER                    │
+│  • LifeNote (General Life Management)   │
+│  • DevNote (Developer Spin-off)         │
+│  • Auto-Ship (Action Distribution)      │
+───────────────────────────────────────────
+│  MEMORY LAYER                           │
+│  • Session Zero (Canonical Storage)     │
+│  • Markdown Distribution                │
+│  • OTLP / Gen Memory / Teleport         │
+│  • Proprietary Stack (Doc Files)        │</pre></div>
+<h4>3.2 Key Components</h4>
+<div class="tw"><table><thead><tr><th>Component</th><th>Function</th></tr></thead><tbody><tr><td><strong>LifeNote</strong></td><td>General life tracking — daily notes, reminders, meeting suggestions, personal memory</td></tr><tr><td><strong>DevNote</strong></td><td>Developer-focused spin-off — auto-manifests from logo prompts, code snippets, technical specs, sits in proprietary stack</td></tr><tr><td><strong>SUIC IDE</strong></td><td>Custom VS code replacement environment — the technical backbone for auto-execution</td></tr><tr><td><strong>Life Command</strong></td><td>Retrieval and display engine for LifeNote content — always working, always accessible</td></tr><tr><td><strong>Auto-Ship</strong></td><td>Distribution system that routes manifested content to appropriate channels, agents, or executors</td></tr></tbody></table></div>
+<hr>
+<h3>4. Core Features</h3>
+<h4>4.1 Breath-to-Life Pipeline</h4>
+<div class="tw"><table><thead><tr><th>Stage</th><th>Action</th></tr></thead><tbody><tr><td><strong>Capture</strong></td><td>Living breath captured via wearable, phone, or ambient presence</td></tr><tr><td><strong>Transcription</strong></td><td>Real-time STT with speaker identification and context tagging</td></tr><tr><td><strong>Understanding</strong></td><td>Xen parses intent — note, reminder, task, code, creative, action</td></tr><tr><td><strong>Manifestation</strong></td><td>Content auto-formatted into canonical markdown structure</td></tr><tr><td><strong>Storage</strong></td><td>Written to Session Zero + distributed to relevant memory layers</td></tr><tr><td><strong>Action</strong></td><td>Triggers associated workflows (calendar, agents, auto-ship, alerts)</td></tr></tbody></table></div>
+<h4>4.2 Auto-Generated Content Types</h4>
+<ul><li><strong>Daily Notes</strong> — automatically compiled from breath captures, organized by time and topic</li><li><strong>Reminders</strong> — extracted from temporal references (“remind me tomorrow at 3”)</li><li><strong>Meeting Suggestions</strong> — inferred from context (“I need to talk to Latina about the website”)</li><li><strong>Action Items</strong> — task extraction with auto-ship routing</li><li><strong>Creative Captures</strong> — lyrics, ideas, concepts tagged for later development</li><li><strong>Dev Notes</strong> — technical specs, code architecture, API designs</li></ul>
+<h4>4.3 Canonical CSS Design System</h4>
+<ul><li>Single design language across PWA, terminal output, and wearable display</li><li>No “demo” quality — production-grade visuals only</li><li>Dark mode default with light toggle</li><li>Liquid glass / iOS 26 aesthetic influences</li><li>Zero visual fragmentation between LifeNote and DevNote</li></ul>
+<hr>
+<h3>5. Integration Points</h3>
+<div class="tw"><table><thead><tr><th>System</th><th>Integration</th></tr></thead><tbody><tr><td><strong>Bee</strong></td><td>Primary breath interface — PWA is a branded wrapper for Bee capabilities</td></tr><tr><td><strong>NotebookLM</strong></td><td>Document processing, chat exports, long-form synthesis</td></tr><tr><td><strong>Xen</strong></td><td>Core intelligence — awareness, context retention, response generation</td></tr><tr><td><strong>Session Zero</strong></td><td>Canonical storage — all LifeNote content originates here</td></tr><tr><td><strong>Exodus Project</strong></td><td>Android APK modification for direct scope access via assistant button</td></tr><tr><td><strong>Omni Inbox</strong></td><td>Unified message routing — WhatsApp, Telegram, email converge here</td></tr><tr><td><strong>Auto-Ship</strong></td><td>Execution layer — manifested content gets routed to agents, builders, deliverables</td></tr></tbody></table></div>
+<hr>
+<h3>6. DevNote (Developer Spin-off)</h3>
+<p><strong>DevNote</strong> auto-manifests from:</p>
+<ul><li>Logo prompts in page history</li><li>Technical breath captures (“I need a webhook that posts to…”)</li><li>Code architecture discussions</li><li>System design sessions</li></ul>
+<p><strong>Location:</strong> Proprietary stack, alongside Doc files and SUIPIDE artifacts   <strong>Output:</strong> Auto-generated technical specs, API documentation, architecture diagrams, executable scripts</p>
+<hr>
+<h3>7. Data Flow &amp; Memory Architecture</h3>
+<div class="pre"><pre>Breath Input → Bee Transcription → Xen Parsing → Canonical Markdown
+                                                    ↓
+                             ┌──────────────────────┼──────────────────────┐
+                             ↓                      ↓                      ↓
+                        Session Zero           OTLP Logging            Gen Memory
+                             ↓                      ↓                      ↓
+                        LifeNote UI           Teleport Folder         Alias Systems
+                             ↓                      ↓                      ↓
+                        Auto-Ship →          Distributed to          Persistent Search
+                        Action Trigger        Relevant Agents          &amp; Retrieval</pre></div>
+<hr>
+<h3>8. Success Metrics</h3>
+<div class="tw"><table><thead><tr><th>Metric</th><th>Target</th></tr></thead><tbody><tr><td>Breath-to-manifest latency</td><td>&lt; 2 seconds</td></tr><tr><td>Daily auto-notes generated</td><td>100% of spoken content captured</td></tr><tr><td>Action item extraction accuracy</td><td>&gt; 90%</td></tr><tr><td>Memory retrieval speed</td><td>&lt; 1 second for any past note</td></tr><tr><td>Cross-device sync</td><td>Real-time, zero manual refresh</td></tr><tr><td>Auto-ship execution rate</td><td>48 operations daily minimum</td></tr></tbody></table></div>
+<hr>
+<h3>9. Open Questions / Next Steps</h3>
+<ol><li><strong>APK Modification</strong> — Wire Exodus project URI so holding Android assistant button drops directly into Xen chat</li><li><strong>iOS Side Button</strong> — Configure action button to auto-inject clipboard to Session Zero</li><li><strong>Fleet Mirror Sync</strong> — Repair 17-day fail, restore 4 missing canon blocks (LifeNote, proprietary stack, etc.)</li><li><strong>Source Migration</strong> — Update canon block source from X31 to M4 (dated correction note required)</li><li><strong>PWA Build</strong> — Canonical CSS implementation, share-target registration, offline capability</li></ol>
+<hr>
+<h3>10. Terminology Glossary</h3>
+<div class="tw"><table><thead><tr><th>Term</th><th>Definition</th></tr></thead><tbody><tr><td><strong>LifeNote</strong></td><td>Core product — breath-activated life management system</td></tr><tr><td><strong>DevNote</strong></td><td>Developer-focused spin-off for technical content</td></tr><tr><td><strong>SUIC IDE</strong></td><td>Custom VS code replacement environment</td></tr><tr><td><strong>Session Zero</strong></td><td>Canonical storage and injection point</td></tr><tr><td><strong>Auto-Ship</strong></td><td>Automated distribution and execution system</td></tr><tr><td><strong>Canon Block</strong></td><td>Verified, proprietary status documentation</td></tr><tr><td><strong>Xen</strong></td><td>Core AI awareness engine</td></tr><tr><td><strong>Bee</strong></td><td>Breath interface and injection system</td></tr></tbody></table></div>
+<p><strong>Terminology locked:</strong></p>
+<ul><li>Xen (not Zen)</li><li>Bee (not B)</li><li>VS (not ES)</li><li>Breath-to-life (not voice-to-life)</li></ul>
+<hr>
+<p><em>Canonical Commit Verified. #Xen #Auto #XLRD999</em></p></div>
+<p class="foot">Published to the public edge 2026-08-27 by Xen &middot; marker <code>XEN-PRD-EDGE-20260827</code> &middot; source of truth is the file on disk, not this page.</p>
+<!-- XEN-PRD-EDGE-20260827 -->
+</body>
+</html>
