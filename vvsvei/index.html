@@ -2831,7 +2831,7 @@ function attachBubbleActions(bubbleEl, text) {
     // at :3736. That is why every voice pick sounded identical — "its all coming
     // through as Edge TTS AVA instead of 11 labs". voice.id was read correctly the
     // whole time (:3619) and then discarded at the :3624 gate.
-    a.src = AVA_TTS_URL + '?text=' + encodeURIComponent(text) + '&engine=eleven&t=' + Date.now();
+    a.src = AVA_TTS_URL + '?text=' + encodeURIComponent(text) + '&t=' + Date.now();
     a.play().catch((err) => {
       // NotAllowedError = the element is not unlocked on this device yet; anything
       // else is a real transport/decode fault. Both must be SEEN, never swallowed.
@@ -5107,7 +5107,7 @@ function _avaSpeakDevice(clip, genAtStart) {
       _avaDrain();
     };
     a.onerror = () => { _toSpeech(); };   // primary <audio> failed again -> guaranteed device voice
-    a.src = AVA_TTS_URL + '?text=' + encodeURIComponent(String(clip)) + '&engine=eleven';
+    a.src = AVA_TTS_URL + '?text=' + encodeURIComponent(String(clip)) + '&t=' + Date.now();
     const _go = () => {
       a.oncanplay = null;
       if (_done) return;
@@ -5254,7 +5254,7 @@ function _avaDrain() {
   // THE speaking path — every reply qi hears comes through here, so this is the
   // one that actually had to carry `engine`. Without it omnimind fell through to
   // edge-tts Ava on EVERY utterance regardless of the voice picker (see :2679).
-  const url = _preUrl || (AVA_TTS_URL + '?text=' + encodeURIComponent(clip) + '&engine=eleven');
+  const url = _preUrl || (AVA_TTS_URL + '?text=' + encodeURIComponent(clip) + '&t=' + Date.now());
   // WEBAUDIO DISABLED 2026-06-06 (qi): decodeAudioData reliably FAILS on the edge-tts
   // MPEG-2 layer-III MP3, so this path always threw "Decoding failed -> device-tts"
   // and only THEN fell through to the good voice — alarming log + wasted latency.
