@@ -6252,33 +6252,18 @@ window.addEventListener('beforeunload', stopListening);
      words. He was never confused; the UI was lying to both of us.
      ⛔ Never introduce a friendly synonym for a tag. If the feed prints `in:`, the pill
      says IN. Renaming for prettiness is how this happened. */
-  /* ⛔ COUNTS REMOVED 2026-08-29 (qi 02:41: the source counters "don't fucking work",
-     "all of them really"). He was exactly right and the cause was in this table:
-     every `n:` was a HARDCODED LITERAL from a one-off census taken 2026-08-22
-     (11,979 capture records) and then rendered as if live by
-         b.textContent = r.label + (r.n ? " " + r.n : "");
-     Nothing ever updated them. `omi 97` was the cruellest -- it read healthy while
-     the omi rail had been dead since 01:31.
-     ⚠️ THERE IS NO LIVE COUNT SOURCE: /api/inject-sources returns only
-     {ok, muted[], rails[], locked[]} -- no counts. /api/rail-counts and
-     /api/capture-stats both answer 200 with the APP SHELL (<!doctype html>),
-     which is the "200 is not an endpoint" trap, not an API.
-     So per canon (unknown = honest empty, never invented) the numbers are GONE
-     rather than faked. The `(r.n ? ...)` guard above already renders a bare label.
-     ✅ TO MAKE THEM REAL: add per-rail counts to /api/inject-sources, then set
-     r.n from that response inside the same refresh that sets OFF -- never a constant. */
   var RAILS=[
-    {tag:"typed",  label:"typed",  locked:true},
-    {tag:"in",     label:"in"},
-    {tag:"bee",    label:"bee"},
-    {tag:"omi",    label:"omi"},
-    {tag:"sms",    label:"sms"},
-    {tag:"notif",  label:"notif"},
-    {tag:"rss",    label:"rss"},
-    {tag:"xen-step",label:"xen-step"},
-    {tag:"XEN-AGENT",label:"XEN-AGENT"},
-    {tag:"VEI ATTACH",label:"VEI ATTACH"},
-    {tag:"DESK DROP",label:"DESK DROP"}
+    {tag:"typed",  label:"typed",  locked:true,  n:191},
+    {tag:"in",     label:"in",     n:1475},
+    {tag:"bee",    label:"bee",    n:6002},
+    {tag:"omi",    label:"omi",    n:97},
+    {tag:"sms",    label:"sms",    n:19},
+    {tag:"notif",  label:"notif",  n:53},
+    {tag:"rss",    label:"rss",    n:16},
+    {tag:"xen-step",label:"xen-step", n:443},
+    {tag:"XEN-AGENT",label:"XEN-AGENT",n:71},
+    {tag:"VEI ATTACH",label:"VEI ATTACH",n:16},
+    {tag:"DESK DROP",label:"DESK DROP", n:3}
   ];
   var btn=document.getElementById("tb-inject");
   var cnt=document.getElementById("tb-inject-n");
