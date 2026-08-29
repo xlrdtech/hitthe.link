@@ -2339,7 +2339,16 @@ document.addEventListener("click",function(e){
   /* XA P40 — the LIFE|NOTE pill menu, visible again, with qi's two new modes.
      FLOW/GOALS/STEER/LEDGER/GALLERY proxy to lifenote's own nav buttons so the
      canonical behaviour runs; SOURCE and DESK switch the center to the mounts. */
-  var XA_MODES = [{k:"SOURCE",cv:"aether"},{k:"DESK",cv:"desk"}];
+  var XA_MODES = [{k:"NOTE",cv:"lifenote"},{k:"SOURCE",cv:"aether"},{k:"DESK",cv:"desk"}];
+  /* XA 2026-08-29 - qi: "NOTE SOURCE DESK = pills in the nav row ... ADD NOTE as a
+     pill. One tap switches pane."  NOTE is the BOOT pane: cvNow() defaults to
+     "lifenote" and lifenote is already in #m-center before any pill is tapped. The
+     mode handler below mounts on FIRST TAP (P42), so without this flag tapping NOTE
+     would mount a SECOND copy of a pane that is already on screen. Pre-marking it
+     mounted makes NOTE a pure setCenter - a way BACK, which is the point of the pill.
+     Its route /lifenote/ was a 404 until 2026-08-29 03:24 (it existed only inside
+     __EMBED__ behind the patched fetch); shipped as a real page in commit 1a284caa. */
+  try{ window.__xaMounted_lifenote = 1; }catch(_xn){}
   function cvNow(){ return window.__xaCenter||"lifenote"; }
   function lifePills(){
     var pane=document.getElementById("m-center"); if(!pane) return;
