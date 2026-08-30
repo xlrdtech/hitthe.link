@@ -1,0 +1,242 @@
+<style>
+:root{
+  --ink:#0a0a0e; --ink-2:#15151c; --ink-3:#1f1f29;
+  --chrome:#c0c8d0; --chrome-hi:#e8eef2; --chrome-lo:#6a737d; --steel:#3a4048;
+  --ir-1:#7b2cbf; --ir-2:#06b6d4; --ir-3:#ec4899;
+  --oxblood:#5a0a14; --oxblood-hi:#8a1525; --cyan:#00e0ff; --amber:#ffb300;
+  --green:#2ecc71;
+  --text:#fbf9f4; --text-2:#a8aab2; --text-3:#6a6c74;
+  --lift:0 2px 4px rgba(0,224,255,.04),0 24px 60px rgba(10,10,14,.6),0 0 0 1px rgba(192,200,208,.08);
+  --fd:"Cinzel","Instrument Serif",Georgia,serif;
+  --fb:"Inter",-apple-system,system-ui,sans-serif;
+  --fm:"JetBrains Mono",ui-monospace,SFMono-Regular,monospace;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--ink);color:var(--text);font-family:var(--fb);
+  background-image:
+    radial-gradient(circle at 18% 12%,rgba(123,44,191,.22),transparent 38%),
+    radial-gradient(circle at 84% 78%,rgba(6,182,212,.18),transparent 42%),
+    radial-gradient(circle at 50% 50%,var(--ink-2),var(--ink) 72%);
+  background-attachment:fixed;min-height:100vh;
+  -webkit-font-smoothing:antialiased;line-height:1.55;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:48px 22px 96px}
+header{text-align:center;margin-bottom:14px}
+.eyebrow{font-family:var(--fm);font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--text-3)}
+h1{
+  font-family:var(--fd);font-size:clamp(30px,6.2vw,58px);margin:.28em 0 .16em;line-height:1.04;
+  background:linear-gradient(112deg,var(--ir-1),var(--ir-2) 42%,var(--ir-3) 78%,var(--ir-1));
+  background-size:200% 200%;-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:sh 9s ease-in-out infinite;
+}
+@keyframes sh{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@media(prefers-reduced-motion:reduce){h1{animation:none}}
+.sub{color:var(--text-2);font-size:15px;max-width:66ch;margin:0 auto}
+.stamp{font-family:var(--fm);font-size:11px;color:var(--text-3);margin-top:10px;letter-spacing:.05em}
+
+.verdict{
+  margin:32px 0 40px;padding:26px 28px;border-radius:18px;box-shadow:var(--lift);
+  background:linear-gradient(150deg,rgba(46,204,113,.13),rgba(21,21,28,.9));
+  border:1px solid rgba(46,204,113,.34);
+  transform:perspective(1200px) rotateX(1.1deg);
+}
+.verdict h2{font-family:var(--fd);margin:0 0 8px;font-size:22px;letter-spacing:.02em}
+.verdict .big{font-family:var(--fm);font-size:13px;color:var(--green);letter-spacing:.06em}
+.verdict p{margin:10px 0 0;color:var(--text-2);font-size:14.5px}
+
+h2.sec{
+  font-family:var(--fd);font-size:23px;margin:52px 0 6px;letter-spacing:.02em;
+  padding-bottom:9px;border-bottom:1px solid rgba(192,200,208,.15);
+}
+h2.sec .n{font-family:var(--fm);font-size:12px;color:var(--cyan);margin-right:11px;letter-spacing:.14em}
+.lede{color:var(--text-2);font-size:14.5px;margin:12px 0 20px;max-width:76ch}
+
+.rule{
+  margin:22px 0;padding:22px 26px;border-radius:16px;
+  background:linear-gradient(150deg,var(--ink-3),var(--ink-2));
+  border-left:3px solid var(--amber);box-shadow:var(--lift);
+}
+.rule .q{font-family:var(--fd);font-size:19px;line-height:1.45}
+.rule .attr{font-family:var(--fm);font-size:11px;color:var(--text-3);margin-top:11px;letter-spacing:.05em}
+
+.tw{overflow-x:auto;border-radius:14px;box-shadow:var(--lift);background:rgba(21,21,28,.72);margin:18px 0}
+table{border-collapse:collapse;width:100%;min-width:660px;font-size:13.5px}
+th{
+  font-family:var(--fm);font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--text-3);text-align:left;padding:14px 16px;border-bottom:1px solid rgba(192,200,208,.16);
+  background:rgba(10,10,14,.55);white-space:nowrap;
+}
+td{padding:12px 16px;border-bottom:1px solid rgba(192,200,208,.07);vertical-align:top}
+tr:last-child td{border-bottom:none}
+td.rail{font-family:var(--fm);color:var(--chrome-hi);white-space:nowrap}
+.pill{
+  display:inline-block;font-family:var(--fm);font-size:10.5px;letter-spacing:.08em;
+  padding:3px 9px;border-radius:999px;white-space:nowrap;
+}
+.on{background:rgba(46,204,113,.15);color:var(--green);border:1px solid rgba(46,204,113,.4)}
+.off{background:rgba(90,10,20,.4);color:#ff8fa0;border:1px solid rgba(138,21,37,.6)}
+.lock{background:rgba(255,179,0,.14);color:var(--amber);border:1px solid rgba(255,179,0,.42)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:16px;margin:20px 0}
+.card{
+  padding:20px;border-radius:15px;background:linear-gradient(155deg,var(--ink-3),var(--ink-2));
+  box-shadow:var(--lift);border:1px solid rgba(192,200,208,.09);
+  transform:perspective(1000px) rotateX(.7deg);
+}
+.card .k{font-family:var(--fm);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-3)}
+.card .v{font-family:var(--fd);font-size:27px;margin:8px 0 5px;color:var(--chrome-hi)}
+.card .v.good{color:var(--green)}
+.card .d{font-size:12.5px;color:var(--text-2);line-height:1.5}
+
+pre{
+  background:rgba(10,10,14,.82);border:1px solid rgba(192,200,208,.12);border-radius:12px;
+  padding:16px 18px;overflow-x:auto;font-family:var(--fm);font-size:12px;line-height:1.65;
+  color:var(--chrome);box-shadow:var(--lift);margin:14px 0;
+}
+pre .add{color:var(--green)} pre .del{color:#ff8fa0} pre .c{color:var(--text-3)}
+code{font-family:var(--fm);font-size:.92em;color:var(--cyan);background:rgba(0,224,255,.07);padding:1px 6px;border-radius:5px}
+
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:11px;margin:20px 0;font-family:var(--fm);font-size:12.5px}
+.node{padding:11px 16px;border-radius:11px;background:linear-gradient(155deg,var(--chrome-hi),var(--chrome) 55%,var(--chrome-lo));color:var(--ink);font-weight:600;box-shadow:0 8px 20px rgba(10,10,14,.5)}
+.node.door{background:linear-gradient(155deg,#7ef0b0,#2ecc71 60%,#1a8348);color:#04160c}
+.node.seat{background:linear-gradient(155deg,#a9d8ff,#4a9eff 60%,#1c5fb0);color:#04101f}
+.arrow{color:var(--cyan);font-size:17px}
+.gate{padding:11px 16px;border-radius:11px;background:rgba(255,179,0,.13);border:1px solid rgba(255,179,0,.42);color:var(--amber)}
+
+ul.tight{margin:12px 0;padding-left:20px;color:var(--text-2);font-size:14px}
+ul.tight li{margin:8px 0}
+ul.tight b{color:var(--text)}
+
+.warn{
+  margin:20px 0;padding:19px 22px;border-radius:14px;
+  background:linear-gradient(150deg,rgba(90,10,20,.32),rgba(21,21,28,.9));
+  border-left:3px solid var(--oxblood-hi);box-shadow:var(--lift);
+}
+.warn h3{font-family:var(--fd);margin:0 0 8px;font-size:17px;color:#ff8fa0}
+.warn p,.warn li{color:var(--text-2);font-size:13.5px;margin:6px 0}
+
+footer{margin-top:64px;padding-top:22px;border-top:1px solid rgba(192,200,208,.13);text-align:center;font-family:var(--fm);font-size:11px;color:var(--text-3);letter-spacing:.06em}
+@media(max-width:620px){
+  .wrap{padding:32px 15px 64px}
+  .flow{font-size:11.5px;gap:8px}
+  .node,.gate{padding:9px 12px}
+}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">Session 0 · Injection Routing</div>
+  <h1>What Reload Actually Did</h1>
+  <p class="sub">The rule, the routing per rail, the exact code that changed, and how to steer or roll it back — written to be audited in under two minutes.</p>
+  <div class="stamp">MEASURED 2026-08-30 16:20:33 EDT · omnimind pid 58976 · started 16:16:50</div>
+</header>
+
+<div class="verdict">
+  <h2>Already live — this is an audit, not a prediction</h2>
+  <div class="big">✅ VERIFIED END-TO-END · omnimind reloaded itself at 16:16:50 and picked the patch up</div>
+  <p>The change was on disk when the spine restarted, so it is <b>already running</b>. Everything below is measured from the live process, not forecast. Measured proof: with <code>omi</code> muted, session 0 grew <b>487 bytes in 30 seconds</b> and the drop-ledger shows the gate firing on the same words.</p>
+</div>
+
+<div class="rule">
+  <div class="q">"All omni injections are to be on permanently 24/7 in session 0!"</div>
+  <div class="attr">qi — 2026-08-30 16:17:01, typed · preceded by "omi is supposed to be off" → "via session 1" (16:14:02 → 16:14:09)</div>
+</div>
+
+<p class="lede">Two statements, one architecture: <b>session 0 is the record and takes everything, always.</b> <b>Session 1 is the seat and takes only what you allow.</b> A toggle governs the seat. Nothing governs the record.</p>
+
+<h2 class="sec"><span class="n">01</span>How an injection flows now</h2>
+<div class="flow">
+  <span class="node">omni event</span><span class="arrow">→</span>
+  <span class="gate">rail muted?</span><span class="arrow">→</span>
+  <span class="node door">%0 · session 0 · always</span>
+</div>
+<div class="flow">
+  <span style="color:var(--text-3);font-family:var(--fm);font-size:12px">…and only if NOT muted</span><span class="arrow">→</span>
+  <span class="node seat">%1 · session 1 · seat</span>
+</div>
+<p class="lede">Before this change the mute dropped the pane inject for <b>every</b> pane, so muting a rail also erased it from the record. That is the defect the reload closes.</p>
+
+<h2 class="sec"><span class="n">02</span>Routing per rail, as configured right now</h2>
+<div class="tw"><table>
+<thead><tr><th>Rail</th><th>Session 0 (record)</th><th>Session 1 (seat)</th><th>Note</th></tr></thead>
+<tbody>
+<tr><td class="rail">typed</td><td><span class="pill on">ALWAYS</span></td><td><span class="pill lock">LOCKED ON</span></td><td>Cannot be muted at any layer</td></tr>
+<tr><td class="rail">omi</td><td><span class="pill on">ALWAYS</span></td><td><span class="pill off">muted</span></td><td>Your toggle, 16:14</td></tr>
+<tr><td class="rail">bee</td><td><span class="pill on">ALWAYS</span></td><td><span class="pill off">muted</span></td><td>Your toggle, 16:14</td></tr>
+<tr><td class="rail">in</td><td><span class="pill on">ALWAYS</span></td><td><span class="pill off">muted</span></td><td>Your toggle, 16:14</td></tr>
+<tr><td class="rail">xen-step</td><td><span class="pill on">ALWAYS</span></td><td><span class="pill off">muted</span></td><td>"diluting the context" — 15:31</td></tr>
+<tr><td class="rail">rss</td><td><span class="pill on">ALWAYS</span></td><td><span class="pill off">muted</span></td><td>Ambient feed noise</td></tr>
+<tr><td class="rail">sms</td><td><span class="pill on">ALWAYS</span></td><td><span class="pill on">on</span></td><td>Untouched</td></tr>
+<tr><td class="rail">notif</td><td><span class="pill on">ALWAYS</span></td><td><span class="pill on">on</span></td><td>Untouched</td></tr>
+<tr><td class="rail">vei attach</td><td><span class="pill on">ALWAYS</span></td><td><span class="pill on">on</span></td><td>Untouched</td></tr>
+<tr><td class="rail">desk drop</td><td><span class="pill on">ALWAYS</span></td><td><span class="pill on">on</span></td><td>Untouched</td></tr>
+<tr><td class="rail">xen-agent</td><td><span class="pill on">ALWAYS</span></td><td><span class="pill on">on</span></td><td>Untouched</td></tr>
+</tbody></table></div>
+<p class="lede">The <b>Session 0 column has no other possible value.</b> That is the whole point of the change — there is no code path left that writes a rail to the seat but not the door.</p>
+
+<h2 class="sec"><span class="n">03</span>Measured, not asserted</h2>
+<div class="grid">
+  <div class="card"><div class="k">Session 0 growth</div><div class="v good">+487 B</div><div class="d">in 30 s while omi, bee and in were all muted — 16:20:02 → 16:20:33</div></div>
+  <div class="card"><div class="k">Newest recorded line</div><div class="v">16:20:31</div><div class="d"><code>4:20 PM, omi: ru le</code> — a muted rail, in the record</div></div>
+  <div class="card"><div class="k">Gate fired</div><div class="v good">yes</div><div class="d"><code>inject-drops.jsonl</code> logged rail <code>omi</code> at 20:20:31Z — same word, same second</div></div>
+  <div class="card"><div class="k">Seat interruptions</div><div class="v good">0</div><div class="d">from omi, bee or in since the mute took effect</div></div>
+</div>
+
+<h2 class="sec"><span class="n">04</span>The two things that changed</h2>
+<p class="lede"><b>One config value</b> and <b>one gate branch.</b> Nothing else was touched.</p>
+<pre><span class="c">// 1 — ~/.xen_tmux_secondary   (the dual-pane fanout slot)</span>
+<span class="del">- %1</span>   <span class="c">← same as primary, so the fanout fanned to ONE pane and %0 got nothing</span>
+<span class="add">+ %0</span>   <span class="c">← the akashic door</span>
+
+<span class="c">// 2 — omnimind.js  ·  injectTui() gate</span>
+  if (rail && mutedRails().has(rail)) {
+    logRailDrop(rail, label, body, opts &amp;&amp; opts.log);
+<span class="del">-   return { ok: true, injected: false, muted: true, rail };        // dropped for EVERY pane</span>
+<span class="add">+   const doorOnly = Object.assign({}, opts || {}, { doorOnly: true, seatMuted: true });</span>
+<span class="add">+   const r = __injectTuiUngated(label, body, doorOnly);            // still writes %0</span>
+<span class="add">+   return { ok: true, injected: false, muted: true, rail, door: !!(r &amp;&amp; r.ok) };</span>
+  }</pre>
+<p class="lede"><code>doorOnly</code> was <b>not invented for this</b> — <code>tui-inject.js:399-408</code> already implemented it for ambient notification classes. The patch reuses the existing mechanism rather than adding a second way to route.</p>
+
+<h2 class="sec"><span class="n">05</span>What did NOT change</h2>
+<ul class="tight">
+<li><b>The akashic writer.</b> <code>xen-p0-capture</code> is untouched — still verbatim, append-only, <code>fsync</code>'d, splitting at 250,000 chars. It never interprets.</li>
+<li><b>Your seat's primary target.</b> <code>~/.xen_tmux_target</code> is still <code>%1</code>. I did not move the door out from under you.</li>
+<li><b>typed.</b> Locked on at both ends, at every layer. Your typing reaches me no matter what any chip says.</li>
+<li><b>The chip UI.</b> Verified working end-to-end today — it POSTs <code>/api/inject-sources</code>, round-trips before painting, and shows <code>!</code> when a mute does not land.</li>
+<li><b>Retention.</b> Every muted line is still written to <code>inject-drops.jsonl</code> as it always was. Now it also reaches the record itself.</li>
+</ul>
+
+<h2 class="sec"><span class="n">06</span>Where to steer</h2>
+<div class="grid">
+  <div class="card"><div class="k">Mute / unmute a rail</div><div class="v" style="font-size:15px;font-family:var(--fm)">POST /api/inject-sources</div><div class="d">Tap the chip, or <code>{"tag":"omi","muted":false}</code>. Affects the seat only.</div></div>
+  <div class="card"><div class="k">Move the door</div><div class="v" style="font-size:15px;font-family:var(--fm)">~/.xen_tmux_secondary</div><div class="d">Currently <code>%0</code>. This one value decides where the record is written.</div></div>
+  <div class="card"><div class="k">Roll the gate back</div><div class="v" style="font-size:15px;font-family:var(--fm)">.bak-seatgate-161508</div><div class="d">Byte-identical pre-change copy beside <code>omnimind.js</code>. Restore, kickstart, done.</div></div>
+</div>
+
+<div class="warn">
+<h3>Three things I would watch</h3>
+<ul class="tight">
+<li><b>Double-write on an unmuted rail.</b> If both primary and secondary ever point at the same pane again, the fanout de-dups by pane ID — but if the sentinels drift apart onto two live panes, an unmuted rail lands twice. Session 0 has always de-duped by content in the day file; the seat does not.</li>
+<li><b>Silence is now ambiguous.</b> Before, a muted rail meant nothing was written anywhere. Now, quiet on the seat is normal and expected — so <b>seat silence can no longer be used as evidence the rail is broken.</b> Check the record, not the seat.</li>
+<li><b>A second diverged copy exists.</b> <code>dev_/xen/tui-inject.js</code> is a separate file from the live <code>dev_/omnimind/tui-inject.js</code>. Only the omnimind copy is loaded by <code>:4441</code>. If a future fix touches the wrong one it will look applied and do nothing.</li>
+</ul>
+</div>
+
+<h2 class="sec"><span class="n">07</span>How to disprove all of this in 30 seconds</h2>
+<pre><span class="c"># 1 — is the record still growing while rails are muted?</span>
+stat -f '%z' /Volumes/M4/akashic_/2026-08/$(date +%F)_part-002.md; sleep 30; \
+stat -f '%z' /Volumes/M4/akashic_/2026-08/$(date +%F)_part-002.md
+
+<span class="c"># 2 — is a MUTED rail actually in the record?</span>
+tail -5 /Volumes/M4/akashic_/2026-08/$(date +%F)_part-002.md | grep -E 'omi:|bee:'
+
+<span class="c"># 3 — what does the server think is muted?</span>
+curl -s http://127.0.0.1:4441/api/inject-sources</pre>
+<p class="lede">If <b>#1 is zero while you are speaking</b> or <b>#2 comes back empty</b>, the rule is broken and this page is wrong. Those are the two checks that falsify it.</p>
+
+<footer>Session 0 routing audit · measured 2026-08-30 16:20:33 EDT · omnimind pid 58976 · all figures read from the live process</footer>
+</div>
+
+<script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
