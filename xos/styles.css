@@ -1721,23 +1721,7 @@ body {
 .notif {
   position: relative;
   display: grid;
-  /* qi 2026-08-20 00:04 — MEASURED ON THE LIVE PAGE, not reasoned about.
-     This was `44px 1fr auto` (THREE columns) while .notif has FIVE children:
-     ico, body, time, play, dismiss. grid-auto-flow defaults to ROW, so every
-     child past the third WRAPS TO A NEW ROW - it does not create an implicit
-     column, which is what I first assumed and got wrong.
-     Consequences measured with getBoundingClientRect on hitthe.link/xos/:
-       before the play button : card 90px, rows "38px 22px", dismiss 36px wide
-       after  the play button : card 94px, rows "38px 26px", dismiss 367px WIDE
-     That 367px dismiss is the real defect - an invisible near-full-width
-     dismiss target sitting beside the play button, so reaching for play kills
-     the notification instead. The two-row wrap itself PRE-DATES the play
-     button; dismiss was already the 4th child landing on row 2.
-     Declaring 5 columns puts everything on one row: card 58px, rows "38px",
-     dismiss back to 20px. Shorter than the 90px it ever was, and the row
-     height is still driven by .notif-ico (38px), so any control <=38px tall
-     cannot grow the card. */
-  grid-template-columns: 44px 1fr auto auto auto;
+  grid-template-columns: 44px 1fr auto;
   gap: 12px;
   align-items: center;
   padding: 10px 14px 10px 10px;
@@ -3244,15 +3228,6 @@ html, body, #root { height: 100%; width: 100%; margin: 0; padding: 0; background
 /* qi 2026-05-17 8672: notification dismiss + 3D iOS app icons + SSE reconnect surface */
 .notif-dismiss { background: transparent; border: 0; color: var(--text-dim); font: 14px/1 var(--f-mono); cursor: pointer; padding: 4px 6px; margin-left: 6px; border-radius: 4px; transition: 0.12s; }
 .notif-dismiss:hover { color: var(--red); background: rgba(255, 51, 68, 0.1); }
-/* qi 2026-08-19 23:45 tap-to-listen. Box DELIBERATELY mirrors .notif-dismiss:
-   .notif is grid 44px/1fr/auto and the row height is set by .notif-ico (38px),
-   so any control under 38px cannot grow the card. A bigger "nicer" tap target is
-   exactly the change that has shifted his notifications before -- so it does not
-   get one. Green reads as play against dismiss's red; #22d3a4 is already the
-   `beside` source colour in this file, so the palette is unchanged. */
-.notif-play { background: transparent; border: 0; color: var(--text-dim); font: 15px/1 var(--f-mono); cursor: pointer; padding: 8px 10px; margin-left: 2px; border-radius: 4px; transition: 0.12s; }
-.notif-play:hover, .notif-play:focus-visible { color: #22d3a4; background: rgba(34, 211, 164, 0.12); outline: none; }
-.notif-play:active { transform: scale(0.92); }
 
 .web-app .icon.ios3d { position: relative; width: 56px; height: 56px; border-radius: 14px; overflow: hidden; background: linear-gradient(145deg, #1c2420 0%, #0a0e0c 100%); box-shadow: 0 4px 10px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.06) inset, 0 -2px 4px rgba(0,0,0,0.4) inset; display: flex; align-items: center; justify-content: center; }
 .web-app .icon.ios3d .ios3d-img { width: 64%; height: 64%; object-fit: contain; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6)); }

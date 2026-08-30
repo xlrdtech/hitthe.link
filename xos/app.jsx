@@ -3331,26 +3331,6 @@ function NotificationToast({ notif, onDismiss }) {
           _h = (_h % 12) || 12;
           return `${_h}:${_m} ${_ampm}`;
         })()}</div>
-        {/* qi 2026-08-19 23:45: "i need the tts play button enabled on the
-            notifcations so i can tap to listen".
-            Routed through playBubble() ON PURPOSE rather than a fresh Audio():
-            that helper already carries three separately-measured fixes —
-            _vsqClaim() barges Xen's SYSTEM voice (a different process on the Mac,
-            invisible to this tab, which is why silencing only _xosCurAudio let him
-            talk over the replay), _xosStopCurrent() cuts this page's own channel
-            so a double-tap cannot garble itself, and engine=eleven is REQUIRED or
-            omnimind falls through to edge-tts Ava and ignores his voice id.
-            Re-implementing playback here would have re-broken all three at once. */}
-        <button
-          className="notif-play"
-          aria-label="Play this notification aloud"
-          title="Tap to listen"
-          onClick={(e) => {
-            e.stopPropagation();
-            const _who = isOut ? ("you to " + (notif.recipient || "")) : (notif.sender || "");
-            playBubble((_who ? _who + ": " : "") + (notif.body || ""));
-          }}
-        >▶</button>
         {/* qi 2026-05-17 8672: "notifications need to be dismissible" */}
         <button
           className="notif-dismiss"
