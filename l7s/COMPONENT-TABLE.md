@@ -15,26 +15,6 @@ registry still names **Wix.com Ltd.** as registrar of record. See row 1.
 
 ---
 
----
-
-## ⭐ RECEIPT CORRECTION — 2026-08-30, added after this table was written
-
-A real Spaceship receipt (`AA-202608300111759`) was found sitting unread in `sync_/inbox_`
-under an opaque UUID filename. It changes two cells above and is filed in
-[`RECEIPTS.md`](RECEIPTS.md) with the PDF.
-
-- **The transfer-in charge was $9.68, not $9.48.** $9.48 came from qi's account of the
-  checkout screen; the receipt is the artifact.
-- **Spaceship's $10.18 list price is now VERIFIED**, not inferred from comparison sites —
-  it prints on his own receipt as the subtotal, with `You save -$0.50`.
-
-**Why a 20-cent error is worth a banner:** it is the only line in this entire table that had
-a receipt, and it did not match the remembered number. Every remaining `UNVERIFIED — qi-stated`
-figure here — above all the **$576/yr Google Workspace** line, 96.5% of the annual bill — should
-be read as *approximately right and not yet proven*.
-
----
-
 ## STATUS SCALE (qi's 3 values — no fourth)
 
 | Value | Means |
@@ -52,7 +32,7 @@ A vendor confirmation screen is not an artifact; the registry whois is.
 
 | # | Component | Provider (now) | Provider (target) | Cost | Managed at (URL/path) | Status | Verified how |
 |---|---|---|---|---|---|---|---|
-| 1 | **Domain registration — l7sinc.com** | **Wix.com Ltd.** (IANA 3817) — still registrar of record | **Spaceship, Inc.** | $21.35 paid at Wix (1 yr, **qi-stated**) + **$9.68** paid at Spaceship (+1 yr, **RECEIPT ON FILE**) | wix.com/domains → spaceship.com | **code-shipped-unverified** — transfer requested, not landed | `whois l7sinc.com` → `Registrar: Wix.com Ltd.` AND `Domain Status: pendingTransfer`, registry `Updated Date: 2026-08-30T01:11:43Z` (= 21:11:43 EDT). Re-read 21:17 EDT |
+| 1 | **Domain registration — l7sinc.com** | **Wix.com Ltd.** (IANA 3817) — still registrar of record | **Spaceship, Inc.** | $21.35 paid at Wix (1 yr) + $9.48 paid at Spaceship (+1 yr) | wix.com/domains → spaceship.com | **code-shipped-unverified** — transfer requested, not landed | `whois l7sinc.com` → `Registrar: Wix.com Ltd.` AND `Domain Status: pendingTransfer`, registry `Updated Date: 2026-08-30T01:11:43Z` (= 21:11:43 EDT). Re-read 21:17 EDT |
 | 2 | **Registry expiry — l7sinc.com** | Verisign registry | same | — | — | **verified-end-to-end** | `whois` → `Registry Expiry Date: 2027-08-31T05:18:53Z`. Was 2026-08-31. `Creation Date: 2020-08-31T05:18:53Z` |
 | 3 | **Registrar lock — l7sinc.com** | Wix (was on by default) | Spaceship (60-day post-transfer lock is normal) | $0 | Wix domain settings | **verified-end-to-end — CLEARED** | `whois` Domain Status now shows **only** `pendingTransfer`. `clientTransferProhibited` and `clientUpdateProhibited` are both **absent** from the registry record |
 | 4 | **Domain registration — luckie7s.com** | **Spaceship, Inc.** | Spaceship | $9.08 first year · renewal ~$10.18 **UNVERIFIED** | spaceship.com | **verified-end-to-end** | `whois luckie7s.com` → `Registrar: Spaceship, Inc.`, `Creation Date: 2026-08-30T00:34:56Z` (= 20:34:56 EDT tonight), `Registry Expiry 2027-08-30`, `clientTransferProhibited` (normal 60-day new-reg lock) |
@@ -98,7 +78,7 @@ A vendor confirmation screen is not an artifact; the registry whois is.
 | Line item | Provider now | Now ($/yr) | Provider target | Target ($/yr) | Delta | Confidence |
 |---|---|---|---|---|---|---|
 | **Google Workspace mail** | Google | **$576.00** | Google (unchanged) | **$576.00** | $0.00 | ⚠️ **UNVERIFIED — qi-stated** "~$48/month", 3 mailboxes. No invoice seen |
-| l7sinc.com registration | Wix | **$21.35** | Spaceship | **$10.18** | **−$11.17** | Now: **VERIFIED** (charge cleared, expiry moved); the $21.35 amount itself is qi-stated. Target list price **NOW VERIFIED** — receipt `AA-202608300111759` prints `Subtotal $10.18`. The *renewal* price remains UNVERIFIED |
+| l7sinc.com registration | Wix | **$21.35** | Spaceship | **$10.18** | **−$11.17** | Now: **VERIFIED** (charge cleared, expiry moved). Target: **UNVERIFIED** — renewal price from comparison sites, spaceship.com returns 403 |
 | luckie7s.com registration | — (did not exist) | **$0.00** | Spaceship | **$10.18** | **+$10.18** | First year **$9.08 VERIFIED-qi-stated**; renewal figure UNVERIFIED |
 | Spacemail contact@luckie7s.com | — | **$0.00** | Spaceship | **$11.76** | **+$11.76** | ⚠️ UNVERIFIED — qi-stated ~$0.98/mo after 30 free days |
 | Web hosting | GitHub Pages | **$0.00** | Cloudflare Pages | **$0.00** | $0.00 | **VERIFIED** — GitHub server headers; Cloudflare Pages free tier verified in WEB-STACK-RECOMMENDATION.md |
@@ -160,7 +140,7 @@ the entire rest of this table.
 | 20:42, 20:48 | Spacemail "Unbox" wizard hung twice; `dig luckie7s.com MX` returned **EMPTY** both times → transfer blocked | Two reproduced dig runs | (blocker, since cleared) |
 | **~20:50–21:10** | **Spacemail MX came live** — the 20:48 blocker resolved | **`dig +short MX luckie7s.com` at 21:17 → `0 mx1.spacemail.com.` `0 mx2.spacemail.com.`** Re-verified for this document | **verified-end-to-end** |
 | **21:11:43** | **REGISTRAR LOCK CLEARED** — both `client*Prohibited` flags gone | **Registry `Updated Date: 2026-08-30T01:11:43Z`**; whois Domain Status now shows only `pendingTransfer` | **verified-end-to-end** |
-| **21:15** | **TRANSFER REQUESTED AND ACCEPTED.** Wix → Transfer away → code mailed to `contact@luckie7s.com` → arrived in the Spacemail box built 20 min earlier → pasted at Spaceship → *"Code successfully verified"* → **$9.68 = a full extra year**, not a fee | **whois `Domain Status: pendingTransfer https://icann.org/epp#pendingTransfer`** — the ICANN record, not a vendor screen | **verified-end-to-end** |
+| **21:15** | **TRANSFER REQUESTED AND ACCEPTED.** Wix → Transfer away → code mailed to `contact@luckie7s.com` → arrived in the Spacemail box built 20 min earlier → pasted at Spaceship → *"Code successfully verified"* → **$9.48 = a full extra year**, not a fee | **whois `Domain Status: pendingTransfer https://icann.org/epp#pendingTransfer`** — the ICANN record, not a vendor screen | **verified-end-to-end** |
 | 21:16 | qi asked for this table | qi verbatim, quoted at the top | — |
 | **21:17–21:19** | **Everything above independently re-queried** for this document — whois ×2 domains, dig NS/A/MX/TXT/CNAME/DMARC ×2 domains, 7 DKIM selectors, curl headers ×3, TLS ×2, repo ×1, live-page greps ×2 | This file's "Verified how" column | **verified-end-to-end** |
 
@@ -195,7 +175,7 @@ Ordered by what costs the most if ignored.
 | 11 | **CMS not built** — content hardcoded across 6 HTML files | pending | The largest labor item in the plan. Extract **only what changes** (hero headline, services, pricing, testimonials); leave `refund-policy.html` and `tests.html` hardcoded. ⚠️ Never point the CMS at raw HTML — that fails the "easily updated" requirement while appearing to satisfy it |
 | 12 | **Digital store not stood up** | pending | Payhip Free account, upload products, paste the embed into `pricing.html`. Start on Free; move to Plus above $967/mo gross |
 | 13 | **Wix account disposition undecided** | pending | Once the transfer lands and DNS is verified at Spaceship, remove the card from Wix and decide whether the account closes. Do **not** touch it before then |
-| 14 | **Spaceship renewal prices unverified** | UNVERIFIED | `spaceship.com` returned HTTP 403 to automated fetches. Read the real renewal price in the account before the 2027 cycle. The $9.68 transfer-in is now **RECEIPTED** (`AA-202608300111759`, and it corrected the qi-stated $9.48). The $9.08 luckie7s registration is still qi-stated from checkout — get that receipt too |
+| 14 | **Spaceship renewal prices unverified** | UNVERIFIED | `spaceship.com` returned HTTP 403 to automated fetches. Read the real renewal price in the account before the 2027 cycle. The $9.08 / $9.48 charges tonight are qi-stated from checkout |
 | 15 | **E-signature: no provider exists** | pending | Nothing to migrate. If the offer architecture needs signed agreements, this is a net-new decision — no incumbent to work around |
 
 ---

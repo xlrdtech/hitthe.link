@@ -1,0 +1,63 @@
+<!doctype html><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>AETHER — swipe all 49</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:#0a0a0e;color:#e8e8ee;
+font:15px/1.4 -apple-system,system-ui,sans-serif;overflow:hidden;touch-action:none}
+#stage{position:fixed;inset:0 0 66px 0}
+iframe{width:100%;height:100%;border:0;display:block;background:#0a0a0e}
+#bar{position:fixed;left:0;right:0;bottom:0;height:66px;display:flex;align-items:center;gap:8px;
+padding:0 10px;background:rgba(8,8,12,.92);border-top:1px solid #24242e;
+padding-bottom:env(safe-area-inset-bottom)}
+button{background:#14141a;color:#e8e8ee;border:1px solid #2a2a36;border-radius:11px;
+height:44px;min-width:56px;font:600 17px/1 -apple-system,system-ui;flex:0 0 auto}
+button:active{background:#1e1e28}
+#meta{flex:1;min-width:0;text-align:center;line-height:1.25}
+#meta b{color:#34d17a;font-size:16px}#meta span{display:block;color:#7a7a86;font-size:11.5px}
+#jump{background:#14141a;color:#34d17a;border:1px solid #2a2a36;border-radius:11px;height:44px;
+font:600 14px -apple-system,system-ui;padding:0 8px;flex:0 0 auto}
+#hint{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:9;
+background:rgba(0,0,0,.62);color:#9a9aa6;font-size:12px;padding:6px 12px;border-radius:20px;
+pointer-events:none;transition:opacity .5s}
+</style>
+<div id=stage><iframe id=f allow="gyroscope;accelerometer;magnetometer;microphone;camera;fullscreen;xr-spatial-tracking" allowfullscreen></iframe></div>
+<div id=hint>swipe left / right to change build</div>
+<div id=bar>
+  <button id=prev>&#8249;</button>
+  <div id=meta><b id=t>01</b><span id=d></span></div>
+  <select id=jump></select>
+  <button id=next>&#8250;</button>
+</div>
+<script>
+const B=[{"slug": "01", "bytes": 42323, "date": "-", "src": "disk"}, {"slug": "02", "bytes": 44537, "date": "-", "src": "disk"}, {"slug": "03", "bytes": 107944, "date": "-", "src": "disk"}, {"slug": "04", "bytes": 107944, "date": "-", "src": "disk"}, {"slug": "05", "bytes": 108284, "date": "-", "src": "disk"}, {"slug": "06", "bytes": 109085, "date": "-", "src": "disk"}, {"slug": "07", "bytes": 111309, "date": "-", "src": "disk"}, {"slug": "08", "bytes": 113702, "date": "-", "src": "disk"}, {"slug": "09", "bytes": 114132, "date": "-", "src": "disk"}, {"slug": "10", "bytes": 114940, "date": "-", "src": "disk"}, {"slug": "11", "bytes": 116664, "date": "-", "src": "disk"}, {"slug": "12", "bytes": 116686, "date": "-", "src": "disk"}, {"slug": "13", "bytes": 117629, "date": "-", "src": "disk"}, {"slug": "14", "bytes": 119018, "date": "-", "src": "disk"}, {"slug": "15", "bytes": 120326, "date": "-", "src": "disk"}, {"slug": "16", "bytes": 124321, "date": "-", "src": "disk"}, {"slug": "17", "bytes": 125629, "date": "-", "src": "disk"}, {"slug": "18", "bytes": 126674, "date": "-", "src": "disk"}, {"slug": "19", "bytes": 127982, "date": "-", "src": "disk"}, {"slug": "20", "bytes": 128326, "date": "-", "src": "disk"}, {"slug": "21", "bytes": 129069, "date": "-", "src": "disk"}, {"slug": "22", "bytes": 130033, "date": "-", "src": "disk"}, {"slug": "23", "bytes": 130679, "date": "-", "src": "disk"}, {"slug": "24", "bytes": 133607, "date": "-", "src": "disk"}, {"slug": "25", "bytes": 135658, "date": "-", "src": "disk"}, {"slug": "26", "bytes": 136700, "date": "-", "src": "disk"}, {"slug": "27", "bytes": 138547, "date": "-", "src": "disk"}, {"slug": "28", "bytes": 154361, "date": "-", "src": "disk"}, {"slug": "29", "bytes": 155309, "date": "-", "src": "disk"}, {"slug": "30", "bytes": 158523, "date": "-", "src": "disk"}, {"slug": "31", "bytes": 157944, "date": "2026-08-25 19:42:01", "src": "browser cache (never saved)"}, {"slug": "32", "bytes": 158384, "date": "2026-08-25 19:42:01", "src": "browser cache (never saved)"}, {"slug": "33", "bytes": 158404, "date": "2026-08-25 19:42:08", "src": "browser cache (never saved)"}, {"slug": "34", "bytes": 158385, "date": "2026-08-25 19:42:15", "src": "browser cache (never saved)"}, {"slug": "35", "bytes": 158234, "date": "2026-08-25 19:59:04", "src": "browser cache (never saved)"}, {"slug": "36", "bytes": 158704, "date": "2026-08-25 19:59:04", "src": "browser cache (never saved)"}, {"slug": "37", "bytes": 158704, "date": "2026-08-25 19:59:11", "src": "browser cache (never saved)"}, {"slug": "38", "bytes": 158179, "date": "2026-08-26 00:30:36", "src": "browser cache (never saved)"}, {"slug": "39", "bytes": 158635, "date": "2026-08-26 00:30:36", "src": "browser cache (never saved)"}, {"slug": "40", "bytes": 158683, "date": "2026-08-26 00:30:43", "src": "browser cache (never saved)"}, {"slug": "41", "bytes": 158683, "date": "2026-08-26 00:30:50", "src": "browser cache (never saved)"}, {"slug": "42", "bytes": 158683, "date": "2026-08-26 00:31:11", "src": "browser cache (never saved)"}, {"slug": "43", "bytes": 158218, "date": "2026-08-26 00:37:42", "src": "browser cache (never saved)"}, {"slug": "44", "bytes": 158683, "date": "2026-08-26 00:37:42", "src": "browser cache (never saved)"}, {"slug": "45", "bytes": 158683, "date": "2026-08-26 00:37:51", "src": "browser cache (never saved)"}, {"slug": "46", "bytes": 158683, "date": "2026-08-26 00:38:37", "src": "browser cache (never saved)"}, {"slug": "47", "bytes": 113788, "date": "2026-08-26 02:35:07", "src": "disk"}, {"slug": "48", "bytes": 158180, "date": "2026-08-26 05:42:43", "src": "disk"}, {"slug": "49", "bytes": 138203, "date": "2026-08-26 06:12:47", "src": "disk"}];
+let i=0;
+const f=document.getElementById('f'),t=document.getElementById('t'),d=document.getElementById('d'),
+      j=document.getElementById('jump'),hint=document.getElementById('hint');
+B.forEach((b,n)=>{const o=document.createElement('option');o.value=n;
+  o.textContent=b.slug+'  '+b.bytes.toLocaleString()+'B';j.appendChild(o);});
+function go(n){
+  i=(n+B.length)%B.length;
+  const b=B[i];
+  f.src='../'+b.slug+'/';
+  t.textContent=b.slug+' / '+B.length;
+  d.textContent=b.bytes.toLocaleString()+' B  ·  '+b.date+'  ·  '+b.src;
+  j.value=i;
+  try{localStorage.setItem('aeth_i',i)}catch(e){}
+}
+document.getElementById('next').onclick=()=>go(i+1);
+document.getElementById('prev').onclick=()=>go(i-1);
+j.onchange=e=>go(+e.target.value);
+// swipe on the bar and the page edges; the iframe keeps its own touches
+let x0=null,y0=null;
+addEventListener('touchstart',e=>{x0=e.touches[0].clientX;y0=e.touches[0].clientY;},{passive:true});
+addEventListener('touchend',e=>{
+  if(x0===null)return;
+  const dx=e.changedTouches[0].clientX-x0, dy=e.changedTouches[0].clientY-y0;
+  if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.6) go(i+(dx<0?1:-1));
+  x0=null;
+},{passive:true});
+addEventListener('keydown',e=>{if(e.key==='ArrowRight')go(i+1);if(e.key==='ArrowLeft')go(i-1);});
+let s=0; try{s=+(localStorage.getItem('aeth_i')||0)||0}catch(e){}
+go(s);
+setTimeout(()=>{hint.style.opacity=0},4000);
+</script>

@@ -268,5 +268,63 @@
   } catch (e) { /* a diagnostic must never break the surface it is diagnosing */ }
 })();
 </script>
+
+<!-- XA 2026-08-29 - AVATAR IN XOS (qi 03:16: "AVATAR DIRECTLY IN XOS ... use overlay mode,
+     do not iframe it, inline it or mount same-origin"). The swipe glass is not touched.
+     LAZY BY LAW: AETHER's loop is unguarded (rAF x2, cancelAnimationFrame 0, visibilitychange 0),
+     so mounting it at boot burns battery on a view nobody opened - the exact drain killed at 05:30.
+     Nothing loads until show(). CSS is scoped to #xa-av because aether's sheet carries
+     `*` and `html,body` rules that would otherwise restyle this whole surface. -->
+<div id="xa-av" aria-hidden="true"></div>
+<style>
+#xa-av{position:fixed;inset:0;z-index:40;pointer-events:none;display:none}
+#xa-av.on{display:block}
+#xa-av canvas{position:absolute;inset:0;width:100%;height:100%}
+</style>
+<script>
+(function(){
+  var HOST="xa-av", SRC="/vei/avatar/?overlay=1", mounted=false;
+  function scopeCss(css){
+    return css.replace(/(^|\})\s*([^{}@]+)\{/g, function(m,close,sel){
+      if(/^\s*@/.test(sel)) return m;
+      var out=sel.split(",").map(function(s){ s=s.trim(); if(!s) return s;
+        if(/^(html|body|\*|:root)$/i.test(s)) return "#"+HOST;
+        return "#"+HOST+" "+s; }).join(",");
+      return (close||"")+out+"{";
+    });
+  }
+  function mount(){
+    if(mounted) return Promise.resolve(); mounted=true;
+    return fetch(SRC,{cache:"no-store"}).then(function(r){return r.text();}).then(function(html){
+      var doc=new DOMParser().parseFromString(html,"text/html"), host=document.getElementById(HOST);
+      doc.querySelectorAll("style").forEach(function(st){
+        var el=document.createElement("style"); el.textContent=scopeCss(st.textContent||""); document.head.appendChild(el);
+      });
+      host.innerHTML="";
+      Array.prototype.forEach.call(doc.body.children,function(n){
+        if(n.tagName!=="SCRIPT") host.appendChild(document.importNode(n,true));
+      });
+      doc.querySelectorAll("script").forEach(function(s){
+        var el=document.createElement("script");
+        if(s.src) el.src=s.src; else el.textContent=s.textContent;
+        document.body.appendChild(el);
+      });
+    }).catch(function(e){ mounted=false; try{console.warn("[xa-av]",e);}catch(_){} });
+  }
+  document.addEventListener("visibilitychange",function(){
+    var h=document.getElementById(HOST); if(!h) return;
+    if(document.hidden) h.classList.remove("on");
+    else if(window.__xenAvatar && window.__xenAvatar.wanted) h.classList.add("on");
+  });
+  window.__xenAvatar={
+    wanted:false,
+    show:function(){ this.wanted=true;
+      return mount().then(function(){ var h=document.getElementById(HOST); if(h) h.classList.add("on"); }); },
+    hide:function(){ this.wanted=false; var h=document.getElementById(HOST); if(h) h.classList.remove("on"); },
+    get mounted(){ return mounted; }
+  };
+  window.addEventListener("xen-voice",function(){ window.__xenAvatar.show(); });
+})();
+</script>
 </body>
 </html>

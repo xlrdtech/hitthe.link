@@ -1138,7 +1138,7 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
     <div class="transcript-toolbar" id="lifenote-switch" role="group"
          aria-label="LIFE / NOTE switcher">
       <button id="tb-life" data-href="/life/" title="XEN - LIFE Command Dashboard">LIFE</button>
-      <button id="tb-note" data-href="/lifenote/" title="LifeNote">NOTE</button>
+      <button id="tb-note" data-href="/note/" title="LifeNote">NOTE</button>
     </div>
 
     <div class="transcript-toolbar">
@@ -6252,10 +6252,6 @@ window.addEventListener('beforeunload', stopListening);
      words. He was never confused; the UI was lying to both of us.
      ⛔ Never introduce a friendly synonym for a tag. If the feed prints `in:`, the pill
      says IN. Renaming for prettiness is how this happened. */
-  /* ⚠ XA-LIVE-COUNT 2026-08-29: the n: values below are a DEAD SNAPSHOT. They
-     were rendered as if they were live tallies and were not — that was the
-     "lying status counters". They are no longer read by anything; the chip
-     counts come from xaLiveCount() above. Do not wire them back up. */
   var RAILS=[
     {tag:"typed",  label:"typed",  locked:true,  n:191},
     {tag:"in",     label:"in",     n:1475},
@@ -6376,22 +6372,6 @@ window.addEventListener('beforeunload', stopListening);
     if(window.requestAnimationFrame) requestAnimationFrame(run); else setTimeout(run,16);
   }
 
-  /* XA-LIVE-COUNT: the real tally for a rail, read off the rows themselves.
-     Rows carry data-rail from the stamp-at-birth fix, so this is a measurement
-     rather than a claim. Case-insensitive because the server lowercases tags
-     while the table spells "XEN-AGENT" and "VEI ATTACH" in caps. */
-  function xaLiveCount(tag){
-    try{
-      var t=document.getElementById("transcript"); if(!t) return 0;
-      var want=String(tag||"").toLowerCase(), n=0, k=t.children, i, r;
-      for(i=0;i<k.length;i++){
-        r=k[i].getAttribute && k[i].getAttribute("data-rail");
-        if(r && String(r).toLowerCase()===want) n++;
-      }
-      return n;
-    }catch(_){ return 0; }
-  }
-
   function build(){
     wrap.textContent="";
     var off=load();
@@ -6402,12 +6382,7 @@ window.addEventListener('beforeunload', stopListening);
          aria-pressed=false, and the title says so out loud. */
       b.className="inject-chip"+(known&&isOff?" off":"")+(r.locked?" locked":"")+(known?"":" unknown");
       b.type="button";
-      /* XA-LIVE-COUNT 2026-08-29 — r.n is a FROZEN LITERAL from the table below
-         (bee 6002, in 1475 ...). It never described this feed: measured against 51
-         real events the chip said "in 1475" over 37 actual `in` rows. Count what is
-         on screen instead; no rows on a rail means NO number, not a stale one. */
-      var _xn=xaLiveCount(r.tag);
-      b.textContent=r.label+(_xn?" "+_xn:"");
+      b.textContent=r.label+(r.n?" "+r.n:"");
       b.setAttribute("aria-pressed", known?(isOff?"false":"true"):"mixed");
       b.title = r.locked
         ? r.label+" — always on. Your own words are never hidden."
