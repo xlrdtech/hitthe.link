@@ -387,7 +387,7 @@ function inline(src){
     links.push('<a href="'+url+'" target="_blank" rel="noopener"'+dl+'>'+txt+'</a>');
     return "\uE000L"+(links.length-1)+"\uE000";
   });
-  t = t.replace(/\*\*([^*]+)\*\*/g, function(m,inner){
+  t = t.replace(/\*\*([\s\S]{1,800}?)\*\*(?!\*)/g, function(m,inner){
     for(let k=0;k<STATUS.length;k++){
       if(inner.indexOf(STATUS[k][0]) !== -1){
         return '<strong><span class="pill '+STATUS[k][1]+'">'+inner+'</span></strong>';
@@ -519,6 +519,12 @@ function render(md){
       const ordered = /^\s*\d+[.)]\s+/.test(line);
       const items = [];
       while(i < lines.length){
+        if(/^\s*$/.test(lines[i])){
+          let j = i; while(j < lines.length && /^\s*$/.test(lines[j])) j++;
+          const sib = j < lines.length && lines[j].match(/^(\s*)([-*+]|\d+[.)])\s+/);
+          if(sib && sib[1].length <= startIndent + 1){ i = j; continue; }
+          break;
+        }
         const m = lines[i].match(/^(\s*)([-*+]|\d+[.)])\s+([\s\S]*)$/);
         if(m && m[1].length <= startIndent + 1){
           items.push([m[3]]); i++;
