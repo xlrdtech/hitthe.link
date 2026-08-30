@@ -140,7 +140,29 @@ main.pane{flex:1 1 auto; min-width:0; max-width:100%}
   box-shadow:var(--lift);
   overflow:hidden;
 }
-.doc-head{border-bottom:1px solid var(--line); padding-bottom:18px; margin-bottom:26px}
+.doc-head{border-bottom:1px solid var(--line); padding-bottom:18px; margin-bottom:26px;
+  display:flex; align-items:flex-start; gap:18px; flex-wrap:wrap}
+.doc-head .dh-text{flex:1 1 300px; min-width:0}
+.dh-actions{flex:0 0 auto; display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-left:auto}
+.btn{
+  display:inline-flex; align-items:center; gap:7px; cursor:pointer;
+  font:650 11px/1 var(--mono); letter-spacing:.05em; text-transform:uppercase;
+  padding:10px 14px; border-radius:11px; text-decoration:none; white-space:nowrap;
+  color:var(--chrome-hi);
+  border:1px solid var(--line-hi);
+  background:linear-gradient(180deg,#2a2a36,#141420);
+  box-shadow:0 1px 0 rgba(255,255,255,.10) inset, 0 6px 16px -10px rgba(0,0,0,.95);
+  transition:border-color .16s ease, box-shadow .16s ease, transform .1s ease;
+}
+.btn:hover{border-color:rgba(0,224,255,.5); box-shadow:0 1px 0 rgba(255,255,255,.14) inset, 0 0 20px -6px rgba(0,224,255,.55)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{
+  color:#eafcff;
+  border-color:rgba(0,224,255,.42);
+  background:linear-gradient(100deg, rgba(123,44,191,.42), rgba(6,182,212,.30));
+  box-shadow:0 1px 0 rgba(255,255,255,.16) inset, 0 0 22px -8px rgba(0,224,255,.8);
+}
+.btn .arw{font-size:12px; line-height:1}
 .doc-head .eyebrow{font:600 10px/1 var(--mono); letter-spacing:.16em; text-transform:uppercase; color:var(--irid-2)}
 .doc-head h2{margin:9px 0 6px; font-size:26px; font-weight:680; letter-spacing:-.02em; color:#fff}
 .doc-head .fmeta{font:400 11px/1.5 var(--mono); color:var(--dim); word-break:break-all}
@@ -256,6 +278,9 @@ footer.foot{
   nav.side.open{display:block}
   .doc-shell{padding:20px 15px 40px; border-radius:15px}
   .doc-head h2{font-size:21px}
+  .doc-head{gap:12px}
+  .dh-actions{width:100%; margin-left:0}
+  .btn{flex:1 1 auto; justify-content:center; padding:11px 10px; font-size:10.5px}
   .md h1{font-size:20px} .md h2{font-size:17px} .md h3{font-size:14.6px}
   .tw table{font-size:12.3px}
   .tw th,.tw td{padding:9px 10px}
@@ -279,6 +304,7 @@ footer.foot{
       <div class="sub" id="subline">l7sinc.com</div>
     </div>
     <div class="top-meta">
+      <a class="chip" href="https://hitthe.link/l7s-cost-cuts/" style="text-decoration:none">Cost cuts &#8594;</a>
       <span class="chip" id="chipCount">documents</span>
       <span class="chip" id="chipBytes">source</span>
     </div>
@@ -294,9 +320,15 @@ footer.foot{
   <main class="pane">
     <div class="doc-shell">
       <div class="doc-head">
-        <div class="eyebrow" id="dEyebrow">Document</div>
-        <h2 id="dTitle">Loading</h2>
-        <div class="fmeta" id="dMeta"></div>
+        <div class="dh-text">
+          <div class="eyebrow" id="dEyebrow">Document</div>
+          <h2 id="dTitle">Loading</h2>
+          <div class="fmeta" id="dMeta"></div>
+        </div>
+        <div class="dh-actions">
+          <button class="btn" id="dlOne"><span class="arw">&#8595;</span><span id="dlOneLabel">Download .md</span></button>
+          <button class="btn primary" id="dlAll"><span class="arw">&#8595;</span><span id="dlAllLabel">Download all (.zip)</span></button>
+        </div>
       </div>
       <div class="legend">
         <span class="pill ok">verified-end-to-end</span>
@@ -312,7 +344,8 @@ footer.foot{
 <footer class="foot">
   Source of record: <code>sync_/brain_/profiles/luckie-goggins/l7s/</code><br>
   Status scale is qi's three values, no fourth.
-  No phone numbers, addresses, chat IDs or credentials on this page.
+  No phone numbers, addresses, chat IDs or credentials on this page.<br>
+  Cost analysis: <a href="https://hitthe.link/l7s-cost-cuts/" style="color:#00e0ff">hitthe.link/l7s-cost-cuts/</a>
 </footer>
 
 </div>
@@ -569,6 +602,7 @@ function show(slug){
   dMeta.textContent = d.file + "  -  " + fmtBytes(d.bytes) + "  -  " + d.blurb;
   mdBody.innerHTML = r.html;
   document.title = d.title + " - L7S Docs";
+  document.getElementById("dlOneLabel").textContent = "Download " + d.file;
 
   DATA.order.forEach(function(k){
     const el = document.getElementById("nav-"+k);
@@ -592,6 +626,119 @@ function show(slug){
   });
   navEl.classList.remove("open");
 }
+
+
+/* ---------- downloads ---------- */
+/* The .md bytes served here are the SANITIZED copies embedded in this page.
+   They are built from a Blob, never fetched from a raw .md on the host, so a
+   download can never hand back anything the redaction sweep removed. */
+
+function rawBytes(slug){
+  const bin = atob(DATA.docs[slug].b64);
+  const b = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) b[i] = bin.charCodeAt(i);
+  return b;
+}
+
+function saveBlob(blob, name){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+}
+
+function downloadOne(slug){
+  const d = DATA.docs[slug];
+  saveBlob(new Blob([rawBytes(slug)], {type:"text/markdown;charset=utf-8"}), d.file);
+}
+
+/* CRC32 */
+const CRC_TABLE = (function(){
+  const t = new Uint32Array(256);
+  for(let n=0;n<256;n++){
+    let c = n;
+    for(let k=0;k<8;k++){ c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); }
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+function crc32(buf){
+  let c = 0xFFFFFFFF;
+  for(let i=0;i<buf.length;i++){ c = CRC_TABLE[(c ^ buf[i]) & 0xFF] ^ (c >>> 8); }
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+
+/* Minimal ZIP writer, STORE method (no compression) - no library, no bundler. */
+function makeZip(entries){
+  const enc = new TextEncoder();
+  const chunks = [];
+  const central = [];
+  let offset = 0;
+
+  function u16(v){ return [v & 0xFF, (v >>> 8) & 0xFF]; }
+  function u32(v){ return [v & 0xFF, (v >>> 8) & 0xFF, (v >>> 16) & 0xFF, (v >>> 24) & 0xFF]; }
+
+  const now = new Date();
+  const dosTime = ((now.getHours() & 0x1F) << 11) | ((now.getMinutes() & 0x3F) << 5) | ((now.getSeconds() / 2) & 0x1F);
+  const dosDate = (((now.getFullYear() - 1980) & 0x7F) << 9) | (((now.getMonth() + 1) & 0x0F) << 5) | (now.getDate() & 0x1F);
+
+  entries.forEach(function(e){
+    const nameBytes = enc.encode(e.name);
+    const data = e.data;
+    const crc = crc32(data);
+    const local = [].concat(
+      u32(0x04034b50), u16(20), u16(0x0800), u16(0),
+      u16(dosTime), u16(dosDate),
+      u32(crc), u32(data.length), u32(data.length),
+      u16(nameBytes.length), u16(0)
+    );
+    chunks.push(new Uint8Array(local));
+    chunks.push(nameBytes);
+    chunks.push(data);
+    central.push({name:nameBytes, crc:crc, size:data.length, offset:offset});
+    offset += local.length + nameBytes.length + data.length;
+  });
+
+  const cdStart = offset;
+  let cdSize = 0;
+  central.forEach(function(c){
+    const hdr = [].concat(
+      u32(0x02014b50), u16(20), u16(20), u16(0x0800), u16(0),
+      u16(dosTime), u16(dosDate),
+      u32(c.crc), u32(c.size), u32(c.size),
+      u16(c.name.length), u16(0), u16(0), u16(0), u16(0),
+      u32(0), u32(c.offset)
+    );
+    chunks.push(new Uint8Array(hdr));
+    chunks.push(c.name);
+    cdSize += hdr.length + c.name.length;
+  });
+
+  chunks.push(new Uint8Array([].concat(
+    u32(0x06054b50), u16(0), u16(0),
+    u16(central.length), u16(central.length),
+    u32(cdSize), u32(cdStart), u16(0)
+  )));
+
+  return new Blob(chunks, {type:"application/zip"});
+}
+
+function downloadAll(){
+  const entries = DATA.order.map(function(slug){
+    return {name: DATA.docs[slug].file, data: rawBytes(slug)};
+  });
+  saveBlob(makeZip(entries), "l7s-documentation-set.zip");
+}
+
+document.getElementById("dlOne").addEventListener("click", function(){ downloadOne(current); });
+document.getElementById("dlAll").addEventListener("click", downloadAll);
+window.__l7sZip = makeZip;
+window.__l7sEntries = function(){
+  return DATA.order.map(function(slug){ return {name: DATA.docs[slug].file, data: rawBytes(slug)}; });
+};
 
 function route(){
   const raw = decodeURIComponent(location.hash.replace(/^#/,""));
