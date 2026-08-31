@@ -2131,6 +2131,35 @@ function initGL(){
     };
     im.onerror = () => fail('<b>Environment failed to load.</b> ' + envUrl);
     im.src = envUrl;
+
+    // ── LIVE SYNC (qi 2026-08-31 05:35, verbatim: "it needs to be live for real ... it needs
+    // to be live sync, or its kind of pointless").
+    // MEASURED: the ?env= loader fires im.src EXACTLY ONCE. New frames kept landing on the
+    // server every few seconds and the sphere never changed, because nothing ever re-uploaded
+    // the texture. A backdrop that is captured live and displayed once is a screenshot.
+    // So: re-fetch on a short interval, cache-busted, and re-upload into the SAME texture unit.
+    // A failed frame is skipped silently — the last good one stays on the sphere rather than
+    // flashing black, and the interval keeps going.
+    if (!/^data:/.test(envUrl)) {
+      const bust = () => envUrl + (envUrl.indexOf('?') > -1 ? '&' : '?') + 't=' + Date.now();
+      setInterval(() => {
+        const nx = new Image();
+        nx.crossOrigin = 'anonymous';
+        nx.onload = () => {
+          try {
+            gl.activeTexture(gl.TEXTURE2);
+            gl.bindTexture(gl.TEXTURE_2D, envTex);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, nx);
+            envLoaded = true;
+            const ar = nx.naturalWidth / Math.max(nx.naturalHeight, 1);
+            envMode = (ar > 1.88 && ar < 2.18) ? 0 : 1;
+            gl.activeTexture(gl.TEXTURE0);
+          } catch (e) { /* keep the last good frame */ }
+        };
+        nx.src = bust();
+      }, 1000);
+    }
   }
   return true;
 }
