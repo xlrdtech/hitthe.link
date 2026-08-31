@@ -2118,6 +2118,14 @@ function initGL(){
       try{
         gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,im);
         envLoaded = true;
+        // MEASURED 2026-08-31 05:31 — the ?env= loader is the ONE path in this file that never
+        // set envMode, so it inherited 0 (true 360 equirect) and stretched a FLAT screenshot
+        // across the whole sphere: a hard band of dock icons and two thirds of flat green.
+        // The other two loaders (lines ~2446, ~2634) already derive it from aspect; this one
+        // now does the same, so a live mesh frame gets photoWrap (line 634) as it should.
+        // /aether/ is untouched — this correction lives only in SOURCE LIVE.
+        const _ar = im.naturalWidth / Math.max(im.naturalHeight, 1);
+        envMode = (_ar > 1.88 && _ar < 2.18) ? 0 : 1;
       }catch(e){ fail('<b>Environment blocked.</b> ' + e + ' — the panorama host must allow cross-origin reads.'); }
       gl.activeTexture(gl.TEXTURE0);
     };
