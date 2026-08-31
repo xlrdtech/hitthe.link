@@ -52,7 +52,11 @@ self.addEventListener("install", (ev) => {
       )
     )
   );
-  self.skipWaiting();
+  // REMOVED 2026-08-31 (qi 02:58: "I had those open on purpose ... a whole bunch of
+  // cascading tabs"). skipWaiting made every deploy seize his open tabs, wipe their
+  // cache and force a reload — nine duplicate XOS tabs, and a page that blanked every
+  // time I pushed. The new worker now waits for him to close the tab himself.
+  // self.skipWaiting();
 });
 
 self.addEventListener("activate", (ev) => {
@@ -61,7 +65,9 @@ self.addEventListener("activate", (ev) => {
       Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k)))
     )
   );
-  self.clients.claim();
+  // clients.claim() is the other half of the seize — it takes control of pages that
+  // are already open. Same reason, same fix: never take a tab he is using.
+  // self.clients.claim();
 });
 
 self.addEventListener("fetch", (ev) => {
