@@ -1,0 +1,638 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>L7S Brand System — three skins, one component set</title>
+<meta name="description" content="L7S / L7S HERO / L7S UNIVERSITY — palettes, type scale, components, and the same lead magnet rendered in all three skins. Print- and PDF-ready.">
+<!-- L7S-BRAND-SYSTEM-v1 -->
+<style>
+/* ============================================================================
+   L7S VISUAL SHELL SYSTEM  ·  L7S-BRAND-SYSTEM-v1
+   ONE component set. THREE token skins. Nothing but custom properties change.
+   Zero external requests on purpose — these pages become PDFs and e-books and
+   must render offline. (Same rule already stated in l7s-site/index.html.)
+   Light ground is mandatory: East, 2026-08-01 — "L7S websites must default in
+   light mode". There is deliberately NO prefers-color-scheme:dark block.
+   ========================================================================== */
+:root{
+  color-scheme:light;
+  /* --- page chrome (carried verbatim from l7s-site/index.html) --- */
+  --bg:#f6f7f9; --panel:#ffffff; --sunken:#eef1f5; --line:#e3e6eb;
+  --ink:#0a0c10; --muted:#4f5866;
+  /* --- BRAND 1 · L7S (parent) — RED / WHITE / BLACK --- */
+  --l7s-red:#d7263d;        /* UI + text red. 4.96:1 on white — passes AA */
+  --l7s-red-logo:#ef4444;   /* logo-only red, named in l7s-legal-brand-block.md */
+  --l7s-black:#0a0c10; --l7s-white:#ffffff;
+  /* --- BRAND 2 · L7S HERO — BLACK + GOLD --- */
+  --hero-gold:#d4af37;      /* "Gold #D4AF37" — named in the Hero Card logo SVG */
+  --hero-gold-hi:#f7e08a; --hero-gold-lo:#b9932d;
+  --void:#0b0b0e;           /* "Void Black #0B0B0E" — same SVG */
+  --hero-gold-ink:#8a6410;  /* gold-coloured TEXT on light. 5.0:1 — passes AA */
+  /* --- BRAND 3 · L7S UNIVERSITY — PRIMARY COLORS --- */
+  --edu-blue:#1f5cff;       /* existing --brand from l7s-site */
+  --edu-red:#d7263d;        /* shared with the parent, on purpose */
+  --edu-yellow:#ffc233;     /* heroic yellow — fills only, 1.61:1 on white */
+  --edu-yellow-ink:#8a5f00; /* yellow-coloured TEXT on light. 5.3:1 — passes AA */
+  --edu-navy:#10214d;       /* darkened stop of --edu-blue, for bands */
+  /* --- type scale: each step >=1.25x the one below (12·16·20·25·32·50) --- */
+  --fs-1:12px; --fs-2:16px; --fs-3:20px; --fs-4:25px; --fs-5:32px; --fs-6:50px;
+  /* --- spacing scale: 4-based, doubling --- */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px;
+  --sp-6:32px; --sp-7:48px; --sp-8:64px;
+  --radius:16px; --maxw:1080px;
+  --elev:0 1px 2px rgba(10,12,16,.06); --elev-2:0 4px 14px rgba(10,12,16,.10);
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);overflow-x:hidden;
+  font:var(--fs-2)/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+img,svg{max-width:100%}
+a{color:var(--l7s-red)} a:hover{text-decoration:none}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--sp-5)}
+code,.mono{font-family:var(--mono);font-size:var(--fs-1)}
+
+/* ---------- page chrome ---------- */
+header.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.92);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+header.top .bar{border-top:3px solid transparent;
+  border-image:linear-gradient(90deg,var(--l7s-red),#fff,var(--ink),var(--hero-gold),var(--edu-blue)) 1}
+.nav{display:flex;align-items:center;gap:var(--sp-3);min-height:58px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:var(--sp-2);font-weight:800;letter-spacing:.2px}
+.logo .mark{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;
+  background:var(--ink);border-radius:8px;flex:none}
+.nav nav{display:flex;gap:var(--sp-3);flex-wrap:wrap;margin-left:auto;font-size:var(--fs-1)}
+.nav nav a{color:var(--muted);text-decoration:none;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.nav nav a:hover{color:var(--ink)}
+
+.hero{padding:var(--sp-7) 0 var(--sp-6)}
+h1{font-size:clamp(30px,8vw,var(--fs-6));line-height:1.08;letter-spacing:-.025em;margin:0 0 var(--sp-4);font-weight:800}
+.lede{font-size:var(--fs-3);line-height:1.5;color:var(--muted);margin:0 0 var(--sp-5);max-width:60ch}
+.eyebrow{font-size:var(--fs-1);font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 var(--sp-3)}
+.pull{font-size:var(--fs-4);line-height:1.35;font-weight:700;letter-spacing:-.015em;
+  border-left:4px solid var(--l7s-red);padding-left:var(--sp-4);margin:var(--sp-5) 0;max-width:36ch}
+
+section{padding:var(--sp-7) 0;border-top:1px solid var(--line)}
+h2{font-size:var(--fs-5);line-height:1.15;letter-spacing:-.02em;margin:0 0 var(--sp-2);font-weight:800}
+h3{font-size:var(--fs-3);line-height:1.25;margin:0 0 var(--sp-2);font-weight:700}
+.sub{color:var(--muted);margin:0 0 var(--sp-5);max-width:64ch}
+p{margin:0 0 var(--sp-4)}
+
+/* ---------- swatches ---------- */
+.brandcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  overflow:hidden;box-shadow:var(--elev);margin-bottom:var(--sp-5)}
+.brandcard > .cap{padding:var(--sp-5)}
+.stripe{height:8px}
+.sw{display:grid;grid-template-columns:1fr;gap:1px;background:var(--line)}
+.sw div{background:var(--panel);padding:var(--sp-3) var(--sp-4);display:flex;align-items:center;gap:var(--sp-3);
+  font-size:var(--fs-1)}
+.chip{width:38px;height:38px;border-radius:8px;flex:none;border:1px solid rgba(10,12,16,.12)}
+.sw b{display:block;font-size:var(--fs-2);letter-spacing:-.01em}
+.sw .hex{font-family:var(--mono);color:var(--muted)}
+.sw .use{color:var(--muted);display:block;line-height:1.4}
+.tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  padding:2px 6px;border-radius:4px;vertical-align:2px;margin-left:var(--sp-2)}
+.tag.found{background:#e7f6ec;color:#1c6b3a;border:1px solid #bfe3cb}
+.tag.new{background:#fdf0e3;color:#8a4b0a;border:1px solid #f0d5b4}
+
+/* ---------- scale tables ---------- */
+.tbl{width:100%;border-collapse:collapse;font-size:var(--fs-1);background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.tbl th,.tbl td{text-align:left;padding:var(--sp-3) var(--sp-4);border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{background:var(--sunken);font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:11px}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td.m{font-family:var(--mono);white-space:nowrap;color:var(--muted)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.ramp{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:var(--sp-5);margin-bottom:var(--sp-5)}
+.ramp div{margin-bottom:var(--sp-3);line-height:1.15;letter-spacing:-.02em}
+.ramp span{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:0;font-weight:400;margin-left:var(--sp-2)}
+.spacer{background:var(--l7s-red);height:10px;border-radius:2px;display:block;margin-bottom:4px}
+
+/* ============================================================================
+   THE SKIN SYSTEM
+   Every component below reads ONLY --s-* tokens. Swap the wrapper class and the
+   whole component set re-brands. This is the mechanism, not a description of one.
+   ========================================================================== */
+.skin{
+  --s-ground:#ffffff; --s-ink:#0a0c10; --s-muted:#4f5866; --s-line:#e3e6eb;
+  --s-accent:var(--l7s-red); --s-accent-ink:var(--l7s-red); --s-on-accent:#ffffff;
+  --s-accent-soft:rgba(215,38,61,.07);
+  --s-band:var(--l7s-black); --s-band-ink:#ffffff;
+  --s-rule:var(--l7s-red); --s-radius:16px; --s-border:1px;
+  --s-track:-.02em; --s-weight:800; --s-caps:.14em;
+  --s-stripe:linear-gradient(90deg,var(--l7s-red) 0 34%,#ffffff 34% 67%,var(--l7s-black) 67%);
+  --s-bolt:#e6ba3c;         /* gold bolt on the black tile — the shipped l7s-site mark */
+}
+.skin-hero{
+  --s-ground:var(--void); --s-ink:#f4efe6; --s-muted:#9c9382; --s-line:rgba(212,175,55,.26);
+  --s-accent:var(--hero-gold); --s-accent-ink:var(--hero-gold); --s-on-accent:#0b0b0e;
+  --s-accent-soft:rgba(212,175,55,.09);
+  --s-band:#000000; --s-band-ink:var(--hero-gold);
+  --s-rule:var(--hero-gold); --s-radius:3px; --s-border:1px;
+  --s-track:.01em; --s-weight:700; --s-caps:.22em;
+  --s-stripe:linear-gradient(90deg,#0b0b0e 0 50%,var(--hero-gold) 50%);
+  --s-bolt:var(--hero-gold);
+}
+.skin-edu{
+  --s-ground:#ffffff; --s-ink:var(--edu-navy); --s-muted:#4a5470; --s-line:#d8dfef;
+  --s-accent:var(--edu-blue); --s-accent-ink:var(--edu-blue); --s-on-accent:#ffffff;
+  --s-accent-soft:rgba(31,92,255,.06);
+  --s-band:var(--edu-navy); --s-band-ink:#ffffff;
+  --s-rule:var(--edu-yellow); --s-radius:10px; --s-border:2px;
+  --s-track:-.015em; --s-weight:800; --s-caps:.1em;
+  --s-stripe:linear-gradient(90deg,var(--edu-red) 0 34%,#ffffff 34% 67%,var(--edu-blue) 67%);
+  --s-bolt:var(--edu-yellow);
+}
+
+/* ---------- components, token-driven ---------- */
+.skin{background:var(--s-ground);color:var(--s-ink);border:var(--s-border) solid var(--s-line);
+  border-radius:var(--s-radius);overflow:hidden}
+.s-stripe{height:6px;background:var(--s-stripe)}
+.s-body{padding:var(--sp-5)}
+.s-eyebrow{font-size:11px;font-weight:800;letter-spacing:var(--s-caps);text-transform:uppercase;
+  color:var(--s-accent-ink);margin:0 0 var(--sp-2)}
+.s-h{font-size:var(--fs-4);line-height:1.15;letter-spacing:var(--s-track);font-weight:var(--s-weight);
+  margin:0 0 var(--sp-3);color:var(--s-ink)}
+.s-h2{font-size:var(--fs-3);line-height:1.25;letter-spacing:var(--s-track);font-weight:var(--s-weight);
+  margin:0 0 var(--sp-2);color:var(--s-ink)}
+.s-p{color:var(--s-muted);margin:0 0 var(--sp-4);font-size:15px;line-height:1.6}
+.s-rule{height:3px;width:56px;background:var(--s-rule);border-radius:2px;margin:0 0 var(--sp-4)}
+.s-btn{display:inline-block;background:var(--s-accent);color:var(--s-on-accent);text-decoration:none;
+  font-weight:800;font-size:15px;letter-spacing:.01em;padding:13px 22px;border-radius:var(--s-radius);
+  border:0;cursor:pointer;font-family:inherit;line-height:1.2}
+.s-btn.ghost{background:transparent;color:var(--s-accent-ink);border:2px solid var(--s-accent)}
+.s-card{background:var(--s-accent-soft);border:1px solid var(--s-line);border-radius:var(--s-radius);
+  padding:var(--sp-4);margin-bottom:var(--sp-3)}
+.s-call{border-left:4px solid var(--s-rule);background:var(--s-accent-soft);
+  padding:var(--sp-4);border-radius:0 var(--s-radius) var(--s-radius) 0;margin:0 0 var(--sp-4)}
+.s-call b{color:var(--s-ink)}
+.s-band{background:var(--s-band);color:var(--s-band-ink);padding:var(--sp-4) var(--sp-5)}
+.s-band .s-eyebrow{color:var(--s-band-ink);opacity:.72}
+.s-band .s-h2{color:var(--s-band-ink);margin:0}
+.s-steps{list-style:none;counter-reset:st;margin:0 0 var(--sp-4);padding:0}
+.s-steps li{counter-increment:st;position:relative;padding:0 0 var(--sp-3) 42px;
+  border-bottom:1px solid var(--s-line);margin-bottom:var(--sp-3);font-size:15px}
+.s-steps li:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+.s-steps li::before{content:counter(st);position:absolute;left:0;top:0;width:28px;height:28px;
+  border-radius:var(--s-radius);background:var(--s-accent);color:var(--s-on-accent);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;font-family:var(--mono)}
+.s-steps b{display:block;color:var(--s-ink);font-size:16px;letter-spacing:var(--s-track)}
+.s-steps span{color:var(--s-muted);font-size:14px;line-height:1.5}
+.s-foot{border-top:1px solid var(--s-line);padding:var(--sp-4) var(--sp-5);
+  font-size:11px;color:var(--s-muted);line-height:1.5}
+.s-mark{color:var(--s-bolt);width:26px;height:26px;border-radius:var(--s-radius);background:var(--s-band);
+  display:inline-flex;align-items:center;justify-content:center;flex:none}
+.s-brandbar{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-4) var(--sp-5) 0}
+.s-brandname{font-weight:800;letter-spacing:var(--s-caps);font-size:13px;text-transform:uppercase;color:var(--s-ink)}
+.s-kpi{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--s-line);
+  border:1px solid var(--s-line);border-radius:var(--s-radius);overflow:hidden;margin:0 0 var(--sp-4)}
+.s-kpi div{background:var(--s-ground);padding:var(--sp-4)}
+.s-kpi b{display:block;font-size:var(--fs-4);letter-spacing:var(--s-track);color:var(--s-accent-ink);
+  font-weight:var(--s-weight);line-height:1.1}
+.s-kpi span{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--s-muted);font-weight:700}
+
+.demo{margin-bottom:var(--sp-5)}
+.demo > .lbl{font-size:var(--fs-1);font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:var(--sp-2)}
+.grid{display:grid;grid-template-columns:1fr;gap:var(--sp-5)}
+.note{background:var(--sunken);border:1px solid var(--line);border-radius:var(--radius);
+  padding:var(--sp-4);font-size:14px;color:var(--muted);margin-bottom:var(--sp-5)}
+.note b{color:var(--ink)}
+footer.end{padding:var(--sp-7) 0 var(--sp-8);border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+
+/* ---------- one-page infographic pattern ---------- */
+.ig{max-width:820px;margin:0 auto}
+.ig .ig-head{padding:var(--sp-5) var(--sp-5) var(--sp-4)}
+.ig .ig-grid{display:grid;grid-template-columns:1fr;gap:1px;background:var(--s-line);border-top:1px solid var(--s-line);border-bottom:1px solid var(--s-line)}
+.ig .ig-cell{background:var(--s-ground);padding:var(--sp-4) var(--sp-5)}
+.ig .ig-cell .n{font-family:var(--mono);font-size:11px;color:var(--s-accent-ink);font-weight:700;letter-spacing:.1em}
+
+@media (min-width:760px){
+  .wrap{padding:0 var(--sp-6)}
+  .sw{grid-template-columns:1fr 1fr}
+  .grid{grid-template-columns:1fr 1fr}
+  .grid.three{grid-template-columns:1fr 1fr 1fr}
+  .s-kpi{grid-template-columns:repeat(4,1fr)}
+  .ig .ig-grid{grid-template-columns:1fr 1fr}
+  .s-body{padding:var(--sp-6)}
+}
+@media (min-width:1040px){ .sw{grid-template-columns:1fr 1fr 1fr} }
+
+/* ============================================================================
+   PRINT / PDF  —  these pages become PDFs, e-books and one-page handouts.
+   Rule: HERO's void black does NOT print. At the $7,000-$21,000 tier the
+   deliverable is a document someone prints; the skin inverts to ink-on-white
+   with gold hairlines so it survives a laser printer and does not eat toner.
+   ========================================================================== */
+@media print{
+  @page{size:letter;margin:14mm}
+  html,body{background:#fff!important;color:#000!important;font-size:11pt}
+  .noprint,header.top,.nav nav{display:none!important}
+  section{border-top:0;padding:0 0 10mm;break-inside:auto}
+  .wrap{max-width:none;padding:0}
+  h1{font-size:26pt} h2{font-size:17pt} h3{font-size:13pt}
+  .skin{break-inside:avoid;page-break-inside:avoid;box-shadow:none!important;border:1px solid #000}
+  .s-kpi,.s-card,.s-call,.s-steps li,.ig-cell{break-inside:avoid;page-break-inside:avoid}
+  .s-kpi,.ig .ig-grid{background:transparent!important;gap:0;border-color:#bbb}
+  .ig .ig-cell{border-bottom:1px solid #bbb}
+  .s-kpi div{border-right:1px solid #bbb;border-bottom:1px solid #bbb}
+  .lm{break-before:page;page-break-before:always}
+  .lm:first-of-type{break-before:auto;page-break-before:auto}
+  .skin-hero{--s-ground:#ffffff;--s-ink:#000000;--s-muted:#444444;
+    --s-line:#bbbbbb;--s-accent:#8a6410;--s-accent-ink:#8a6410;--s-on-accent:#ffffff;
+    --s-accent-soft:transparent;--s-band:#ffffff;--s-band-ink:#000000}
+  .skin-hero .s-band{border-bottom:2px solid #8a6410}
+  .skin-edu{--s-accent-soft:transparent}
+  .s-card,.s-call{background:transparent!important}
+  .tbl{border:1px solid #000} .tbl th{background:#eee!important}
+  a{color:#000!important;text-decoration:none}
+  a[href^="http"]:not(.s-btn)::after{content:" (" attr(href) ")";font-size:8pt;color:#555}
+  .s-btn{border:1px solid #000}
+  .s-foot,.s-p{color:#333!important}
+}
+</style></head><body>
+
+<header class="top noprint"><div class="bar"></div><div class="wrap"><div class="nav">
+  <div class="logo"><span class="mark"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" fill="#d4af37"/></svg></span> L7S Brand System</div>
+  <nav>
+    <a href="#brands">Skins</a><a href="#type">Type</a><a href="#components">Components</a>
+    <a href="#magnet">Lead magnet</a><a href="#infographic">Infographic</a><a href="#print">Print</a><a href="#provenance">Provenance</a>
+  </nav>
+</div></div></header>
+
+<div class="wrap">
+
+<div class="hero">
+  <p class="eyebrow">L7S, Inc. &middot; visual shell system &middot; v1</p>
+  <h1>One component set.<br>Three brand skins.</h1>
+  <p class="lede">Every lead magnet, deck, e-book, PDF and one-page infographic L7S ships is built from the components below. The markup never changes. Only the tokens do &mdash; so a deliverable carries the right brand automatically.</p>
+  <p class="pull">People don't need another course. They need a system.</p>
+</div>
+
+<section id="brands">
+  <h2>The three skins</h2>
+  <p class="sub">These are three brands, not three moods. They are never merged on one surface. Each colour below is tagged <span class="tag found">In use</span> when it was pulled out of an existing L7S artifact, or <span class="tag new">New</span> when there was no artifact and it had to be chosen.</p>
+
+  <div class="note"><b>Light ground is not a preference.</b> East, 2026-08-01, recorded in <code>l7s-site/index.html</code>: &ldquo;L7S websites must default in light mode.&rdquo; So HERO's black is a <em>band</em> inside a light page, not the page. That is already how the shipped L7S site treats the mark &mdash; a near-black tile behind a gold bolt.</div>
+
+  <div class="brandcard">
+    <div class="stripe" style="background:linear-gradient(90deg,#d7263d 0 34%,#fff 34% 67%,#0a0c10 67%)"></div>
+    <div class="cap"><h3>1 &mdash; L7S &nbsp;<span class="mono" style="color:var(--muted);font-weight:400">Luckie's Seven Solutions, Inc. &middot; the parent</span></h3>
+    <p class="sub" style="margin:0">Red, white, black. The corporate voice: contracts, the offer architecture, anything signed <strong>L7S, INC.</strong> Red is the single accent &mdash; one red per page, used on the rule, the number chip and the button, nowhere else.</p></div>
+    <div class="sw">
+      <div><span class="chip" style="background:#d7263d"></span><span><b>L7S Red <span class="tag found">In use</span></b><span class="hex">#d7263d</span><span class="use">Buttons, rules, counters, link text. 4.96:1 on white &mdash; passes AA for body text.</span></span></div>
+      <div><span class="chip" style="background:#ef4444"></span><span><b>Logo Red <span class="tag found">In use</span></b><span class="hex">#ef4444</span><span class="use">Mark only. Named in <code>_shared/l7s-legal-brand-block.md</code>. 3.76:1 &mdash; never body text.</span></span></div>
+      <div><span class="chip" style="background:#0a0c10"></span><span><b>Brand Black <span class="tag found">In use</span></b><span class="hex">#0a0c10</span><span class="use">All body text, and the dark bands. Not the page ground.</span></span></div>
+      <div><span class="chip" style="background:#ffffff"></span><span><b>White <span class="tag found">In use</span></b><span class="hex">#ffffff</span><span class="use">Card and document ground. The third brand colour, carrying real area.</span></span></div>
+      <div><span class="chip" style="background:#f6f7f9"></span><span><b>Page Ground <span class="tag found">In use</span></b><span class="hex">#f6f7f9</span><span class="use">Near-white behind the cards, so white panels read as raised.</span></span></div>
+      <div><span class="chip" style="background:#4f5866"></span><span><b>Muted Ink <span class="tag found">In use</span></b><span class="hex">#4f5866</span><span class="use">Secondary text. 7.4:1 on the ground.</span></span></div>
+    </div>
+  </div>
+
+  <div class="brandcard">
+    <div class="stripe" style="background:linear-gradient(90deg,#0b0b0e 0 50%,#d4af37 50%)"></div>
+    <div class="cap"><h3>2 &mdash; L7S HERO&trade; &nbsp;<span class="mono" style="color:var(--muted);font-weight:400">the flagship program</span></h3>
+    <p class="sub" style="margin:0">Black and gold, black-and-gold lightning mark. This is the $7,000&ndash;$21,000 done-for-you room. Gold is metal, not yellow: it never sits on white as text &mdash; it sits <em>on</em> black, where it reads 9.4:1. Corners go nearly square (3px) so it reads engraved rather than friendly.</p></div>
+    <div class="sw">
+      <div><span class="chip" style="background:#d4af37"></span><span><b>HERO Gold <span class="tag found">In use</span></b><span class="hex">#d4af37</span><span class="use">Named &ldquo;Gold #D4AF37&rdquo; in the Hero Card logo SVG. Accent, rules, the bolt.</span></span></div>
+      <div><span class="chip" style="background:#0b0b0e"></span><span><b>Void Black <span class="tag found">In use</span></b><span class="hex">#0b0b0e</span><span class="use">Named &ldquo;Void Black #0B0B0E&rdquo; in the same SVG. The HERO ground.</span></span></div>
+      <div><span class="chip" style="background:#f7e08a"></span><span><b>Gold Light <span class="tag found">In use</span></b><span class="hex">#f7e08a</span><span class="use"><code>--gold-secondary</code> from <code>l7shero/index.html</code>. Top stop of the metal gradient.</span></span></div>
+      <div><span class="chip" style="background:#b9932d"></span><span><b>Gold Deep <span class="tag found">In use</span></b><span class="hex">#b9932d</span><span class="use"><code>--gold-dark</code>, same file. Bottom stop, and the hairline on gold fills.</span></span></div>
+      <div><span class="chip" style="background:#8a6410"></span><span><b>Gold Ink <span class="tag found">In use</span></b><span class="hex">#8a6410</span><span class="use">The only gold allowed as TEXT on light. 5.0:1. This is what HERO prints as.</span></span></div>
+      <div><span class="chip" style="background:#f4efe6"></span><span><b>Warm Paper <span class="tag found">In use</span></b><span class="hex">#f4efe6</span><span class="use">Body text on the void. Warm white, never pure #fff &mdash; pure white buzzes on black.</span></span></div>
+    </div>
+  </div>
+
+  <div class="brandcard">
+    <div class="stripe" style="background:linear-gradient(90deg,#d7263d 0 34%,#fff 34% 67%,#1f5cff 67%)"></div>
+    <div class="cap"><h3>3 &mdash; L7S UNIVERSITY &nbsp;<span class="mono" style="color:var(--muted);font-weight:400">the academy &middot; American Hero + Scholastic Hero</span></h3>
+    <p class="sub" style="margin:0">Primary colours: heroic yellow, red, blue. Red-white-blue is the flag rule at the top of every sheet; navy is the lecture band; yellow is the highlight that marks what the student has to <em>do</em>. Blue leads, red punctuates, yellow never carries text.</p></div>
+    <div class="sw">
+      <div><span class="chip" style="background:#1f5cff"></span><span><b>Hero Blue <span class="tag found">In use</span></b><span class="hex">#1f5cff</span><span class="use">Existing <code>--brand</code> in <code>l7s-site</code>. Primary action, links, headings.</span></span></div>
+      <div><span class="chip" style="background:#d7263d"></span><span><b>Hero Red <span class="tag found">In use</span></b><span class="hex">#d7263d</span><span class="use">Shared with the parent on purpose &mdash; the University is visibly L7S.</span></span></div>
+      <div><span class="chip" style="background:#ffc233"></span><span><b>Heroic Yellow <span class="tag new">New</span></b><span class="hex">#ffc233</span><span class="use">No prior artifact. A true primary yellow, deliberately not the HERO gold, so the two sub-brands never blur. Fills and highlights only &mdash; 1.61:1 on white.</span></span></div>
+      <div><span class="chip" style="background:#8a5f00"></span><span><b>Yellow Ink <span class="tag new">New</span></b><span class="hex">#8a5f00</span><span class="use">Darkened yellow for yellow-coloured TEXT. 5.3:1. Same trick the L7S site already uses for gold.</span></span></div>
+      <div><span class="chip" style="background:#10214d"></span><span><b>Scholastic Navy <span class="tag new">New</span></b><span class="hex">#10214d</span><span class="use">Derived by darkening <code>#1f5cff</code>, not a new hue. Body text and the lecture band.</span></span></div>
+      <div><span class="chip" style="background:#ffffff"></span><span><b>White <span class="tag found">In use</span></b><span class="hex">#ffffff</span><span class="use">The middle stripe of the flag rule, and the sheet itself.</span></span></div>
+    </div>
+  </div>
+</section>
+
+<section id="type">
+  <h2>Type &amp; spacing</h2>
+  <p class="sub">One scale for all three skins. Each step is at least 1.25&times; the step below it, so hierarchy survives being shrunk into a slide or blown up into a poster. Carried verbatim from the shipped L7S site &mdash; it was already correct.</p>
+  <div class="ramp">
+    <div style="font-size:50px;font-weight:800;letter-spacing:-.025em">Aa <span>--fs-6 &middot; 50px &middot; h1, cover title</span></div>
+    <div style="font-size:32px;font-weight:800;letter-spacing:-.02em">Aa <span>--fs-5 &middot; 32px &middot; h2, section head</span></div>
+    <div style="font-size:25px;font-weight:700;letter-spacing:-.015em">Aa <span>--fs-4 &middot; 25px &middot; lede, magnet title, KPI</span></div>
+    <div style="font-size:20px;font-weight:700">Aa <span>--fs-3 &middot; 20px &middot; card heading</span></div>
+    <div style="font-size:16px">Aa <span>--fs-2 &middot; 16px &middot; body</span></div>
+    <div style="font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase">Aa <span>--fs-1 &middot; 12px &middot; eyebrow, tag, fine print</span></div>
+  </div>
+  <div class="grid">
+    <div class="scroll"><table class="tbl">
+      <tr><th>Token</th><th>Value</th><th>Used for</th></tr>
+      <tr><td class="m">--sp-1</td><td class="m">4px</td><td>Icon nudge, tag padding</td></tr>
+      <tr><td class="m">--sp-2</td><td class="m">8px</td><td>Label to value</td></tr>
+      <tr><td class="m">--sp-3</td><td class="m">12px</td><td>Inside a list row</td></tr>
+      <tr><td class="m">--sp-4</td><td class="m">16px</td><td>Paragraph gap, card padding</td></tr>
+      <tr><td class="m">--sp-5</td><td class="m">24px</td><td>Component padding, card gap</td></tr>
+      <tr><td class="m">--sp-6</td><td class="m">32px</td><td>Desktop component padding</td></tr>
+      <tr><td class="m">--sp-7</td><td class="m">48px</td><td>Section rhythm</td></tr>
+      <tr><td class="m">--sp-8</td><td class="m">64px</td><td>Page top and tail</td></tr>
+    </table></div>
+    <div>
+      <div class="ramp">
+        <p class="eyebrow" style="margin-bottom:12px">Spacing, to scale</p>
+        <span class="spacer" style="width:4px"></span><span class="spacer" style="width:8px"></span>
+        <span class="spacer" style="width:12px"></span><span class="spacer" style="width:16px"></span>
+        <span class="spacer" style="width:24px"></span><span class="spacer" style="width:32px"></span>
+        <span class="spacer" style="width:48px"></span><span class="spacer" style="width:64px"></span>
+      </div>
+      <div class="note" style="margin:0"><b>Radius is a brand signal.</b> L7S 16px, HERO 3px, UNIVERSITY 10px. It is one token &mdash; <code>--s-radius</code> &mdash; and it changes the personality of every button, chip and card at once without touching a single component rule.</div>
+    </div>
+  </div>
+</section>
+
+<section id="components">
+  <h2>Components, in all three skins</h2>
+  <p class="sub">Identical markup in every column. The only difference between them is the class on the wrapper.</p>
+  <div class="grid three">
+    <div class="demo">
+      <div class="lbl">.skin (base) &mdash; L7S</div>
+      <div class="skin ">
+        <div class="s-stripe"></div>
+        <div class="s-band"><p class="s-eyebrow">Section header</p><p class="s-h2">Strategic Planning Sessions</p></div>
+        <div class="s-body">
+          <p class="s-eyebrow">Eyebrow</p>
+          <h4 class="s-h">Card heading</h4>
+          <div class="s-rule"></div>
+          <p class="s-p">Body copy sits at 15px with a 1.6 line height. Secondary ink, never the accent.</p>
+          <div class="s-card"><b>Card</b><br><span class="s-p" style="margin:0">Tinted with the accent at 6&ndash;9% so it reads as a surface, not a highlight.</span></div>
+          <div class="s-call"><b>Callout.</b> Four-pixel rule on the left in the brand's rule colour. This is where the one thing that must not be missed goes.</div>
+          <p><a class="s-btn" href="#magnet">Primary button</a> <a class="s-btn ghost" href="#magnet">Ghost</a></p>
+        </div>
+        <div class="s-foot">L7S, Inc. &middot; Confidential and Proprietary &mdash; For Internal Use Only</div>
+      </div>
+    </div>
+    <div class="demo">
+      <div class="lbl">.skin &mdash; L7S HERO</div>
+      <div class="skin skin-hero">
+        <div class="s-stripe"></div>
+        <div class="s-band"><p class="s-eyebrow">Section header</p><p class="s-h2">Strategic Planning Sessions</p></div>
+        <div class="s-body">
+          <p class="s-eyebrow">Eyebrow</p>
+          <h4 class="s-h">Card heading</h4>
+          <div class="s-rule"></div>
+          <p class="s-p">Body copy sits at 15px with a 1.6 line height. Secondary ink, never the accent.</p>
+          <div class="s-card"><b>Card</b><br><span class="s-p" style="margin:0">Tinted with the accent at 6&ndash;9% so it reads as a surface, not a highlight.</span></div>
+          <div class="s-call"><b>Callout.</b> Four-pixel rule on the left in the brand's rule colour. This is where the one thing that must not be missed goes.</div>
+          <p><a class="s-btn" href="#magnet">Primary button</a> <a class="s-btn ghost" href="#magnet">Ghost</a></p>
+        </div>
+        <div class="s-foot">L7S, Inc. &middot; Confidential and Proprietary &mdash; For Internal Use Only</div>
+      </div>
+    </div>
+    <div class="demo">
+      <div class="lbl">.skin &mdash; L7S UNIVERSITY</div>
+      <div class="skin skin-edu">
+        <div class="s-stripe"></div>
+        <div class="s-band"><p class="s-eyebrow">Section header</p><p class="s-h2">Strategic Planning Sessions</p></div>
+        <div class="s-body">
+          <p class="s-eyebrow">Eyebrow</p>
+          <h4 class="s-h">Card heading</h4>
+          <div class="s-rule"></div>
+          <p class="s-p">Body copy sits at 15px with a 1.6 line height. Secondary ink, never the accent.</p>
+          <div class="s-card"><b>Card</b><br><span class="s-p" style="margin:0">Tinted with the accent at 6&ndash;9% so it reads as a surface, not a highlight.</span></div>
+          <div class="s-call"><b>Callout.</b> Four-pixel rule on the left in the brand's rule colour. This is where the one thing that must not be missed goes.</div>
+          <p><a class="s-btn" href="#magnet">Primary button</a> <a class="s-btn ghost" href="#magnet">Ghost</a></p>
+        </div>
+        <div class="s-foot">L7S, Inc. &middot; Confidential and Proprietary &mdash; For Internal Use Only</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="magnet">
+  <h2>The same lead magnet, three times</h2>
+  <p class="sub">One page of real L7S content &mdash; the seven C&rsquo;s ladder, the tier ladder, the seven service lines, the real legal footer. Rendered three times below.</p>
+  <div class="note"><b>The proof this is a system and not a description of one.</b> The three articles below are generated from one 41-line template. Exactly <strong>two</strong> of those 41 lines differ between them: the class on the <code>&lt;article&gt;</code>, and the brand name in the header. Every colour, radius, border weight, letter-spacing, stripe and bolt fill is a CSS custom property resolved by the wrapper class. Nothing else was touched.</div>
+  <div class="grid three">
+      <article class="skin lm ">
+        <div class="s-stripe"></div>
+        <div class="s-brandbar">
+          <span class="s-mark"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" fill="currentColor"/></svg></span>
+          <span class="s-brandname">L7S</span>
+        </div>
+        <div class="s-body">
+          <p class="s-eyebrow">Free guide &middot; one page</p>
+          <h4 class="s-h">The Seven C&rsquo;s Ladder</h4>
+          <div class="s-rule"></div>
+          <p class="s-p">Seven gates, in order. Each one is a system you install, not a class you finish. You do not skip a rung &mdash; capital fails on a company that was never structured, and a campaign fails on cash flow that was never fixed.</p>
+          <div class="s-call"><b>People don&rsquo;t need another course. They need a system.</b></div>
+          <ol class="s-steps">
+            <li><b>Credit</b><span>Codename H.O.T. HERO. Three levers: Trustworthiness, Tradelines, Transactions.</span></li>
+            <li><b>Cash Flow</b><span>Money in and out becomes predictable before anything is borrowed against it.</span></li>
+            <li><b>Crypto</b><span>Digital asset position, custody and transaction handling.</span></li>
+            <li><b>Company</b><span>Structuring and staging &mdash; the entity is built to be funded and to be sold.</span></li>
+            <li><b>Capital</b><span>Funding the structured company, on the credit and cash flow now standing behind it.</span></li>
+            <li><b>Campaigns</b><span>Demand, only once there is an operation able to absorb it.</span></li>
+            <li><b>The seventh C</b><span>Not published. This slot is real and reserved; it is left blank here rather than filled with a guess.</span></li>
+          </ol>
+          <p class="s-eyebrow">Where you enter</p>
+          <div class="s-kpi">
+            <div><b>&lt; $777</b><span>DIY, self-serve</span></div>
+            <div><b>$188</b><span>UWE / UCES &middot; +$89/mo</span></div>
+            <div><b>$1,700&ndash;3,500</b><span>BAG</span></div>
+            <div><b>$7,000&ndash;21,000</b><span>DFY flagship</span></div>
+          </div>
+          <p class="s-p">Above BAG sits CC360, premium mentorship. The flagship is not content &mdash; it is done-for-you implementation of the CRM, the project management, the templates and the operating system itself.</p>
+          <p class="s-eyebrow">What L7S runs</p>
+          <div class="s-card"><b>Seven service lines.</b><br><span class="s-p" style="margin:0">Systems &middot; Strategic Planning Sessions &middot; Subscriptions &middot; Support Solutions &middot; Structuring &amp; Staging &middot; Staffing &middot; Strategic Partnerships</span></div>
+          <p><a class="s-btn" href="https://l7sinc.com">Book a Strategic Planning Session</a></p>
+        </div>
+        <div class="s-foot">
+          <strong>L7S, Inc.</strong> (d/b/a L7 Solutions) &middot; Georgia Corporation &middot; Strategic Coordination &amp; Concierge Services<br>
+          hello@l7sinc.com &middot; +1 (770) 765-2217 &middot; l7sinc.com &middot; 760 Old Roswell Rd, Suite 324, Roswell, GA 30076<br><br>
+          L7S, Inc. is a financial guidance and connection platform. It does not directly provide credit repair, legal, or financial advisory services; those are provided by licensed third-party professionals. Not legal, tax or investment advice.<br>
+          &copy; 2026 L7S, Inc. &mdash; All Rights Reserved
+        </div>
+      </article>
+
+      <article class="skin lm skin-hero">
+        <div class="s-stripe"></div>
+        <div class="s-brandbar">
+          <span class="s-mark"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" fill="currentColor"/></svg></span>
+          <span class="s-brandname">L7S HERO</span>
+        </div>
+        <div class="s-body">
+          <p class="s-eyebrow">Free guide &middot; one page</p>
+          <h4 class="s-h">The Seven C&rsquo;s Ladder</h4>
+          <div class="s-rule"></div>
+          <p class="s-p">Seven gates, in order. Each one is a system you install, not a class you finish. You do not skip a rung &mdash; capital fails on a company that was never structured, and a campaign fails on cash flow that was never fixed.</p>
+          <div class="s-call"><b>People don&rsquo;t need another course. They need a system.</b></div>
+          <ol class="s-steps">
+            <li><b>Credit</b><span>Codename H.O.T. HERO. Three levers: Trustworthiness, Tradelines, Transactions.</span></li>
+            <li><b>Cash Flow</b><span>Money in and out becomes predictable before anything is borrowed against it.</span></li>
+            <li><b>Crypto</b><span>Digital asset position, custody and transaction handling.</span></li>
+            <li><b>Company</b><span>Structuring and staging &mdash; the entity is built to be funded and to be sold.</span></li>
+            <li><b>Capital</b><span>Funding the structured company, on the credit and cash flow now standing behind it.</span></li>
+            <li><b>Campaigns</b><span>Demand, only once there is an operation able to absorb it.</span></li>
+            <li><b>The seventh C</b><span>Not published. This slot is real and reserved; it is left blank here rather than filled with a guess.</span></li>
+          </ol>
+          <p class="s-eyebrow">Where you enter</p>
+          <div class="s-kpi">
+            <div><b>&lt; $777</b><span>DIY, self-serve</span></div>
+            <div><b>$188</b><span>UWE / UCES &middot; +$89/mo</span></div>
+            <div><b>$1,700&ndash;3,500</b><span>BAG</span></div>
+            <div><b>$7,000&ndash;21,000</b><span>DFY flagship</span></div>
+          </div>
+          <p class="s-p">Above BAG sits CC360, premium mentorship. The flagship is not content &mdash; it is done-for-you implementation of the CRM, the project management, the templates and the operating system itself.</p>
+          <p class="s-eyebrow">What L7S runs</p>
+          <div class="s-card"><b>Seven service lines.</b><br><span class="s-p" style="margin:0">Systems &middot; Strategic Planning Sessions &middot; Subscriptions &middot; Support Solutions &middot; Structuring &amp; Staging &middot; Staffing &middot; Strategic Partnerships</span></div>
+          <p><a class="s-btn" href="https://l7sinc.com">Book a Strategic Planning Session</a></p>
+        </div>
+        <div class="s-foot">
+          <strong>L7S, Inc.</strong> (d/b/a L7 Solutions) &middot; Georgia Corporation &middot; Strategic Coordination &amp; Concierge Services<br>
+          hello@l7sinc.com &middot; +1 (770) 765-2217 &middot; l7sinc.com &middot; 760 Old Roswell Rd, Suite 324, Roswell, GA 30076<br><br>
+          L7S, Inc. is a financial guidance and connection platform. It does not directly provide credit repair, legal, or financial advisory services; those are provided by licensed third-party professionals. Not legal, tax or investment advice.<br>
+          &copy; 2026 L7S, Inc. &mdash; All Rights Reserved
+        </div>
+      </article>
+
+      <article class="skin lm skin-edu">
+        <div class="s-stripe"></div>
+        <div class="s-brandbar">
+          <span class="s-mark"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" fill="currentColor"/></svg></span>
+          <span class="s-brandname">L7S UNIVERSITY</span>
+        </div>
+        <div class="s-body">
+          <p class="s-eyebrow">Free guide &middot; one page</p>
+          <h4 class="s-h">The Seven C&rsquo;s Ladder</h4>
+          <div class="s-rule"></div>
+          <p class="s-p">Seven gates, in order. Each one is a system you install, not a class you finish. You do not skip a rung &mdash; capital fails on a company that was never structured, and a campaign fails on cash flow that was never fixed.</p>
+          <div class="s-call"><b>People don&rsquo;t need another course. They need a system.</b></div>
+          <ol class="s-steps">
+            <li><b>Credit</b><span>Codename H.O.T. HERO. Three levers: Trustworthiness, Tradelines, Transactions.</span></li>
+            <li><b>Cash Flow</b><span>Money in and out becomes predictable before anything is borrowed against it.</span></li>
+            <li><b>Crypto</b><span>Digital asset position, custody and transaction handling.</span></li>
+            <li><b>Company</b><span>Structuring and staging &mdash; the entity is built to be funded and to be sold.</span></li>
+            <li><b>Capital</b><span>Funding the structured company, on the credit and cash flow now standing behind it.</span></li>
+            <li><b>Campaigns</b><span>Demand, only once there is an operation able to absorb it.</span></li>
+            <li><b>The seventh C</b><span>Not published. This slot is real and reserved; it is left blank here rather than filled with a guess.</span></li>
+          </ol>
+          <p class="s-eyebrow">Where you enter</p>
+          <div class="s-kpi">
+            <div><b>&lt; $777</b><span>DIY, self-serve</span></div>
+            <div><b>$188</b><span>UWE / UCES &middot; +$89/mo</span></div>
+            <div><b>$1,700&ndash;3,500</b><span>BAG</span></div>
+            <div><b>$7,000&ndash;21,000</b><span>DFY flagship</span></div>
+          </div>
+          <p class="s-p">Above BAG sits CC360, premium mentorship. The flagship is not content &mdash; it is done-for-you implementation of the CRM, the project management, the templates and the operating system itself.</p>
+          <p class="s-eyebrow">What L7S runs</p>
+          <div class="s-card"><b>Seven service lines.</b><br><span class="s-p" style="margin:0">Systems &middot; Strategic Planning Sessions &middot; Subscriptions &middot; Support Solutions &middot; Structuring &amp; Staging &middot; Staffing &middot; Strategic Partnerships</span></div>
+          <p><a class="s-btn" href="https://l7sinc.com">Book a Strategic Planning Session</a></p>
+        </div>
+        <div class="s-foot">
+          <strong>L7S, Inc.</strong> (d/b/a L7 Solutions) &middot; Georgia Corporation &middot; Strategic Coordination &amp; Concierge Services<br>
+          hello@l7sinc.com &middot; +1 (770) 765-2217 &middot; l7sinc.com &middot; 760 Old Roswell Rd, Suite 324, Roswell, GA 30076<br><br>
+          L7S, Inc. is a financial guidance and connection platform. It does not directly provide credit repair, legal, or financial advisory services; those are provided by licensed third-party professionals. Not legal, tax or investment advice.<br>
+          &copy; 2026 L7S, Inc. &mdash; All Rights Reserved
+        </div>
+      </article>
+  </div>
+</section>
+
+<section id="infographic">
+  <h2>One-page infographic pattern</h2>
+  <p class="sub">The layout for a single sheet that has to work as a PDF, a phone screenshot and a printed handout at the same time: flag rule, band header, a KPI strip, then a cell grid that reflows from one column on a phone to two on anything wider. No component below is new &mdash; it is the same token set as everything above.</p>
+
+  <article class="skin ig skin-edu">
+    <div class="s-stripe"></div>
+    <div class="s-band"><p class="s-eyebrow">L7S UNIVERSITY</p><p class="s-h2">The L7S Operating Map</p></div>
+    <div class="ig-head">
+      <p class="s-p" style="margin:0 0 16px">Seven service lines. Every engagement L7S runs is one or more of these, at one of four price rungs.</p>
+      <div class="s-kpi">
+        <div><b>7</b><span>Service lines</span></div>
+        <div><b>7</b><span>C&rsquo;s in the ladder</span></div>
+        <div><b>4</b><span>Price rungs</span></div>
+        <div><b>1</b><span>Operating system</span></div>
+      </div>
+    </div>
+    <div class="ig-grid">
+      <div class="ig-cell"><p class="n">01</p><p class="s-h2" style="font-size:17px">Systems</p><p class="s-p" style="margin:0">The operating system itself &mdash; the thing being sold at the flagship tier.</p></div>
+      <div class="ig-cell"><p class="n">02</p><p class="s-h2" style="font-size:17px">Strategic Planning Sessions</p><p class="s-p" style="margin:0">The paid diagnostic. Where the ladder position is established.</p></div>
+      <div class="ig-cell"><p class="n">03</p><p class="s-h2" style="font-size:17px">Subscriptions</p><p class="s-p" style="margin:0">Recurring access &mdash; the $89/mo rung after UWE/UCES onboarding.</p></div>
+      <div class="ig-cell"><p class="n">04</p><p class="s-h2" style="font-size:17px">Support Solutions</p><p class="s-p" style="margin:0">Ongoing coordination against a live plan, not ad-hoc help.</p></div>
+      <div class="ig-cell"><p class="n">05</p><p class="s-h2" style="font-size:17px">Structuring &amp; Staging</p><p class="s-p" style="margin:0">Rung four of the ladder: the entity built to be funded and to be sold.</p></div>
+      <div class="ig-cell"><p class="n">06</p><p class="s-h2" style="font-size:17px">Staffing</p><p class="s-p" style="margin:0">People placed into the operation once the system can hold them.</p></div>
+      <div class="ig-cell"><p class="n">07</p><p class="s-h2" style="font-size:17px">Strategic Partnerships</p><p class="s-p" style="margin:0">Licensed third parties &mdash; the professionals L7S coordinates rather than replaces.</p></div>
+      <div class="ig-cell" style="background:var(--s-accent-soft)"><p class="n">DFY</p><p class="s-h2" style="font-size:17px">$7,000&ndash;$21,000</p><p class="s-p" style="margin:0">Done-for-you implementation of the CRM, the project management, the templates and the operating system.</p></div>
+    </div>
+    <div class="s-body" style="padding-top:24px;padding-bottom:24px">
+      <div class="s-call"><b>People don&rsquo;t need another course. They need a system.</b></div>
+      <p style="margin:0"><a class="s-btn" href="https://l7sinc.com">l7sinc.com</a></p>
+    </div>
+    <div class="s-foot">L7S, Inc. &middot; hello@l7sinc.com &middot; +1 (770) 765-2217 &middot; &copy; 2026 L7S, Inc. &mdash; All Rights Reserved</div>
+  </article>
+
+  <div class="note" style="margin-top:24px"><b>The grid rule.</b> One column below 760px, two above it. Never three &mdash; a three-up infographic cell is unreadable on a phone and unreadable on paper at letter size. Depth comes from the band and the KPI strip, not from more columns.</div>
+</section>
+
+<section id="print">
+  <h2>Print &amp; PDF</h2>
+  <p class="sub">These pages become PDFs, e-books and printed handouts. Print is a first-class target here, not an afterthought &mdash; hit <strong>Cmd&#8209;P</strong> on this page to see the rules below take effect.</p>
+  <div class="grid">
+    <div class="scroll"><table class="tbl">
+      <tr><th>Rule</th><th>Why</th></tr>
+      <tr><td>Page is US Letter, 14mm margins</td><td>Prints correctly in the US without &ldquo;fit to page&rdquo; shrinking the type.</td></tr>
+      <tr><td><b>HERO inverts</b>: void black &rarr; white ground, gold &rarr; <code>#8a6410</code> gold ink</td><td>A black-ground PDF destroys a laser printer&rsquo;s toner and prints muddy. Gold ink is the AA-passing gold, so the sheet stays HERO without staying black.</td></tr>
+      <tr><td>Each lead magnet starts on a fresh page</td><td>One magnet, one sheet. That is the unit being handed to a lead.</td></tr>
+      <tr><td>Cards and callouts lose their tint</td><td>Light tints band and posterise on most office printers. The 4px rule survives; the wash does not.</td></tr>
+      <tr><td>Components never split across a page</td><td><code>break-inside:avoid</code> on <code>.skin</code>.</td></tr>
+      <tr><td>Links print their URL</td><td>A printed page has no hover. <code>a[href^="http"]::after</code>.</td></tr>
+      <tr><td>Navigation is removed</td><td><code>.noprint</code>. Nothing that cannot be clicked on paper is printed.</td></tr>
+      <tr><td>Body drops to 11pt</td><td>16px is a screen size; 11pt is a document size.</td></tr>
+    </table></div>
+    <div>
+      <div class="note" style="margin:0"><b>Slides and decks.</b> The same skins carry into a 16:9 deck without change: the <code>.s-band</code> is the title bar, <code>.s-kpi</code> is the stat row, <code>.s-steps</code> is the agenda, <code>.s-call</code> is the one line per slide that matters. The type scale is already stepped at 1.25&times; minimum, so a 25px card heading becomes a deck headline by moving up two steps rather than by picking a new size.</div>
+      <div class="note" style="margin-top:24px"><b>E-books.</b> Long-form uses the same tokens with one change: the measure is capped at 64 characters, and <code>.s-band</code> becomes the chapter opener. No new components.</div>
+    </div>
+  </div>
+</section>
+
+<section id="provenance">
+  <h2>Provenance</h2>
+  <p class="sub">Where every value came from. &ldquo;In use&rdquo; means it was read out of an existing L7S artifact on disk or live; &ldquo;New&rdquo; means no artifact carried it and it was chosen here.</p>
+  <div class="scroll"><table class="tbl">
+    <tr><th>Value</th><th>Brand</th><th>Status</th><th>Source</th></tr>
+    <tr><td class="m">#d7263d</td><td>L7S · University</td><td>In use</td><td><code>l7s-site/index.html</code> &mdash; <code>--accent</code>, in a block dated &ldquo;Luckie 2026-08-01&rdquo;</td></tr>
+    <tr><td class="m">#ef4444</td><td>L7S</td><td>In use</td><td><code>_shared/l7s-legal-brand-block.md</code> &mdash; &ldquo;Black box wordmark &lsquo;L7S&rsquo; + red accent (#EF4444 / red-500)&rdquo;</td></tr>
+    <tr><td class="m">#0a0c10</td><td>L7S</td><td>In use</td><td><code>l7s-site/index.html</code> &mdash; <code>--ink</code>, commented &ldquo;BRAND BLACK&rdquo;</td></tr>
+    <tr><td class="m">#f6f7f9 · #eef1f5 · #e3e6eb · #4f5866</td><td>all</td><td>In use</td><td><code>l7s-site/index.html</code> &mdash; ground, sunken, line, muted</td></tr>
+    <tr><td class="m">#d4af37</td><td>HERO</td><td>In use</td><td><code>1779403828867-l7s-hero-card-logo-v01.svg</code> &mdash; &lt;desc&gt; &ldquo;Gold #D4AF37&rdquo;. Also 37 occurrences in <code>l7s-operator-hub/index.html</code></td></tr>
+    <tr><td class="m">#0b0b0e</td><td>HERO</td><td>In use</td><td>Same SVG &mdash; &ldquo;Void Black #0B0B0E&rdquo;</td></tr>
+    <tr><td class="m">#f7e08a · #b9932d</td><td>HERO</td><td>In use</td><td><code>l7shero/index.html</code> &mdash; <code>--gold-secondary</code>, <code>--gold-dark</code></td></tr>
+    <tr><td class="m">#8a6410</td><td>HERO</td><td>In use</td><td><code>l7s-site/index.html</code> &mdash; <code>--gold-ink</code>, &ldquo;darkened gold for gold-COLOURED TEXT &mdash; 5.0:1&rdquo;</td></tr>
+    <tr><td class="m">#e6ba3c</td><td>L7S bolt</td><td>In use</td><td><code>l7s-site/index.html</code> &mdash; <code>--brand-2</code>, and the fill on the shipped lightning mark</td></tr>
+    <tr><td class="m">#1f5cff</td><td>University</td><td>In use</td><td><code>l7s-site/index.html</code> &mdash; <code>--brand</code>, &ldquo;blue &mdash; 4.86:1, safe for link text&rdquo;</td></tr>
+    <tr><td class="m">#ffc233</td><td>University</td><td><strong>New</strong></td><td>No artifact carried a scholastic primary yellow. Chosen to be visibly not the HERO gold.</td></tr>
+    <tr><td class="m">#8a5f00</td><td>University</td><td><strong>New</strong></td><td>Derived from #ffc233 by the same method the L7S site used for <code>--gold-ink</code>.</td></tr>
+    <tr><td class="m">#10214d</td><td>University</td><td><strong>New</strong></td><td>Darkened stop of the existing #1f5cff, not a new hue.</td></tr>
+    <tr><td class="m">12·16·20·25·32·50</td><td>all</td><td>In use</td><td><code>l7s-site/index.html</code> &mdash; the stepped scale was already there and already correct</td></tr>
+    <tr><td class="m">M13 2 4 14h6l-1 8 9-12h-6l1-8z</td><td>all</td><td>In use</td><td>The lightning path from the shipped <code>l7s-site</code> mark</td></tr>
+  </table></div>
+
+  <div class="note" style="margin-top:24px"><b>What is not verified, stated plainly.</b>
+    <br>&bull; <strong>The real L7S logo file was not used.</strong> <code>l7s-site/index.html</code> says the real mark lives at <code>l7sinc.com/assets/logo.svg</code> and must be downloaded, not hotlinked. That fetch was not made, so the bolt on this page is the same inline placeholder the shipped site uses. Replace it in one place &mdash; the <code>.s-mark</code> SVG &mdash; and all three skins pick it up.
+    <br>&bull; <strong>No L7S UNIVERSITY / ACADEMY artifact exists on disk.</strong> A search across the L7S project tree and the hitthe.link repo returned no university or academy brand file. Its three &ldquo;New&rdquo; values above are judgement, anchored to the two primaries the parent brand already owns.
+    <br>&bull; <strong>The seventh C is blank because it is genuinely unnamed.</strong> It is rendered as an explicit reserved slot rather than filled in.
+    <br>&bull; <strong>Rendering was verified at 390px in a headless browser</strong>, not on the handset. Anything gated on <code>env(safe-area-inset-*)</code> cannot be observed from here &mdash; nothing on this page uses it.</div>
+</section>
+
+<footer class="end">
+  <p><strong>L7S Brand System v1</strong> &middot; built 2026-08-31 &middot; one HTML file, zero external requests, renders offline.</p>
+  <p style="margin:0">Do not merge the skins. One brand per surface. The parent signs contracts, HERO signs the flagship, the University signs the classroom.</p>
+</footer>
+
+</div>
+</body></html>
