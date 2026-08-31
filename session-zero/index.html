@@ -1,0 +1,132 @@
+<!doctype html><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Session Zero — the mandate</title>
+<style>
+/* qi 00:00: "not enough contrast ... medium mode instead of a dark mode" +
+   "the glass can be more hyper realistic". True black ground; glass gets a hard
+   top specular, a bottom bounce, and a refraction layer so it reads as thickness. */
+:root{--bg:#000205;--accent:#00dc82;--accent-2:#00ffa8;
+  --rim:rgba(0,220,130,.30);--rim-hot:rgba(0,255,168,.72);
+  --tx:#e8f0e0;--tx-dim:#7d8a78;--tx-mute:#3a423a;--amber:#ffc04a;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:'Inter','SF Pro Text',-apple-system,system-ui,sans-serif;--r:24px;--pill:999px}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px}
+body{padding:26px 14px 60px;-webkit-font-smoothing:antialiased;min-height:100vh;
+  background-image:radial-gradient(ellipse 70% 40% at 22% -6%,rgba(0,220,130,.055),transparent 62%),
+    radial-gradient(ellipse 60% 38% at 88% 104%,rgba(0,255,168,.035),transparent 62%);
+  background-attachment:fixed}
+.wrap{max-width:1040px;margin:0 auto}
+h1{margin:0 0 4px;font-size:22px;letter-spacing:-.02em;font-weight:600}
+.sub{color:var(--tx-dim);font-size:12.5px;margin:0 0 20px;font-family:var(--mono)}
+.glass{position:relative;border-radius:var(--r);
+  background:linear-gradient(157deg,rgba(24,38,31,.70) 0%,rgba(11,18,15,.56) 42%,rgba(5,9,8,.66) 100%);
+  backdrop-filter:blur(30px) saturate(190%) brightness(1.04);
+  -webkit-backdrop-filter:blur(30px) saturate(190%) brightness(1.04);
+  border:1px solid var(--rim);
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.30),inset 0 -1px 0 rgba(0,255,168,.16),
+    inset 0 -26px 40px rgba(0,0,0,.55),0 24px 60px rgba(0,0,0,.80),0 0 46px rgba(0,220,130,.09);
+  overflow:hidden}
+.glass::before{content:'';position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(152deg,rgba(255,255,255,.17),transparent 26%,transparent 66%,rgba(0,220,130,.12))}
+.glass::after{content:'';position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(180deg,rgba(255,255,255,.10) 0,rgba(255,255,255,0) 14%),
+    radial-gradient(120% 60% at 50% -14%,rgba(255,255,255,.09),transparent 60%);mix-blend-mode:screen}
+.searchwrap{position:sticky;top:10px;z-index:20;margin-bottom:16px}
+.search{display:flex;align-items:center;gap:12px;padding:0 22px;height:60px;border-radius:var(--pill)}
+.search input{flex:1;background:none;border:0;outline:0;color:var(--tx);font-size:16px;min-width:0}
+.search input::placeholder{color:var(--tx-mute)}
+.mag{width:16px;height:16px;border:1.8px solid var(--accent);border-radius:50%;flex:none;position:relative;opacity:.85}
+.mag::after{content:'';position:absolute;right:-6px;bottom:-6px;width:8px;height:1.8px;background:var(--accent);transform:rotate(45deg);border-radius:2px}
+.count{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.08em;flex:none}
+.pills{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:18px}
+.pill{border-radius:var(--pill);padding:9px 17px;cursor:pointer;user-select:none;
+  font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--tx-dim)}
+.pill.on{color:var(--accent);border-color:var(--rim-hot);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.26),0 0 26px rgba(0,220,130,.22)}
+.list{display:grid;gap:11px}
+.card{padding:17px 21px;border-radius:var(--r)}
+.top{display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;margin-bottom:7px}
+.thing{font-family:var(--mono);font-size:13.5px;color:var(--accent);font-weight:600;flex:1;min-width:0;word-break:break-word}
+.kind,.date{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;padding:4px 11px;border-radius:var(--pill);
+  border:1px solid var(--rim);color:var(--tx-dim);background:rgba(0,0,0,.3);flex:none}
+.reason{color:var(--tx);line-height:1.6;font-size:13px}
+.quote{margin-top:9px;padding:10px 15px;border-left:2px solid var(--rim-hot);border-radius:0 12px 12px 0;
+  background:rgba(0,220,130,.05);color:var(--accent-2);font-size:12.5px;font-style:italic;line-height:1.55}
+.meta{margin-top:9px;font-family:var(--mono);font-size:10.5px;color:var(--tx-mute);line-height:1.7;word-break:break-word}
+.meta b{color:var(--tx-dim);font-weight:500}
+.empty{padding:40px;text-align:center;color:var(--tx-mute);font-family:var(--mono);font-size:12px}
+.foot{margin-top:24px;color:var(--tx-mute);font-family:var(--mono);font-size:10.5px;text-align:center;line-height:1.8}
+</style>
+<style>
+.rule{padding:20px 24px;border-radius:var(--r);margin-bottom:12px}
+.rule h2{margin:0 0 8px;font-size:14px;font-family:var(--mono);color:var(--accent);
+  letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.rule p{margin:0 0 8px;line-height:1.65;font-size:13.5px}
+.rule p:last-child{margin:0}
+.no{color:#ff6b7f;font-weight:600}
+.yes{color:var(--accent);font-weight:600}
+.q{padding:14px 19px;border-radius:var(--r);margin-bottom:9px}
+.qt{color:var(--accent-2);font-size:13.5px;font-style:italic;line-height:1.6}
+.qm{margin-top:7px;font-family:var(--mono);font-size:10px;color:var(--tx-mute);letter-spacing:.08em}
+table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px}
+td{padding:9px 12px;border-bottom:1px solid rgba(0,220,130,.08)}
+tr:last-child td{border:0}
+td.r{color:var(--tx)} td.n{text-align:right;width:70px} td.s{text-align:right;width:90px;color:var(--tx-dim)}
+.n.ok{color:var(--accent)} .n.zero{color:#ff6b7f}
+h2.sec{font-size:12px;font-family:var(--mono);color:var(--tx-dim);letter-spacing:.14em;
+  text-transform:uppercase;margin:28px 0 12px;font-weight:500}
+</style>
+<div class=wrap>
+  <h1>Session Zero</h1>
+  <p class=sub>the mandate, in his words &middot; measured live 2026-08-31 00:27 EDT</p>
+
+  <div class="glass rule">
+    <h2>The rule</h2>
+    <p><span class=no>Session Zero does NOT run Claude.</span> It is not a seat, not an agent,
+    and it consumes <span class=yes>zero tokens</span>. Pane <code>%0</code> looking like a bare
+    <code>bash</code> prompt is what a <em>healthy</em> door looks like &mdash; not an empty seat.</p>
+    <p><span class=yes>Session Zero catches every omni-injection and writes it to the akashic.</span>
+    <code>xen-p0-keeper</code> &rarr; <code>xen-p0-capture</code>, appending verbatim to
+    <code>/Volumes/M4/akashic_/YYYY-MM/</code>. The keeper deliberately does not <code>exec</code>,
+    so the pane survives even if the keeper is killed: a pane that dies is worse than a pane
+    briefly holding a shell.</p>
+    <p><span class=yes>The injections are him.</span> Every <code>omi</code>, <code>bee</code>,
+    <code>typed</code>, <code>vei</code> line arriving mid-turn is qi speaking through a rail.</p>
+  </div>
+
+  <div class="glass rule">
+    <h2>What almost went wrong &mdash; 2026-08-31 00:22</h2>
+    <p>Xen read <code>%0 bash</code> beside <code>%1 2.1.251</code>, called %0 an empty seat, and
+    proposed making it &ldquo;a real second seat.&rdquo; That would have killed the capture writer
+    and taken every rail&rsquo;s record with it. He caught it before anything was touched:
+    <em>&ldquo;why did you just almost regress.&rdquo;</em></p>
+    <p>The defect was inferring from the shape of the pane instead of reading what ran inside it.
+    This page exists so no seat has to be told twice.</p>
+  </div>
+
+  <h2 class=sec>His words</h2>
+  <div class="glass q"><div class=qt>12:27 AM, omi: Do you have everything that I mandated possession zero written down</div><div class=qm>2026-08-31 04:27:06 &middot; typed</div></div><div class="glass q"><div class=qt>12:23 AM, omi: You do not run Claude in session 0 session 0 just catches all other</div><div class=qm>2026-08-31 04:23:20 &middot; typed</div></div><div class="glass q"><div class=qt>11:47 PM, omi: No session 0</div><div class=qm>2026-08-31 03:47:28 &middot; typed</div></div><div class="glass q"><div class=qt>11:44 PM, omi: And Im not sure if best session 0</div><div class=qm>2026-08-31 03:44:06 &middot; typed</div></div><div class="glass q"><div class=qt>akashic sessisession 0 fixed?</div><div class=qm>2026-08-31 03:33:07 &middot; typed</div></div><div class="glass q"><div class=qt>11:25:57 PM, bee: Okay, we need session one and session zero.</div><div class=qm>2026-08-31 03:27:28 &middot; rail</div></div><div class="glass q"><div class=qt>8:47:45 PM, bee: What does no target mean in session zero?</div><div class=qm>2026-08-31 00:47:45 &middot; rail</div></div><div class="glass q"><div class=qt>8:47 PM, omi: me an and session zero.</div><div class=qm>2026-08-31 00:47:21 &middot; rail</div></div><div class="glass q"><div class=qt>It writes for beta A. No. Session Zero does not have an agent.</div><div class=qm>2026-08-31 00:25:54 &middot; rail</div></div><div class="glass q"><div class=qt>And the causic and the akashic in here.</div><div class=qm>2026-08-31 00:25:32 &middot; rail</div></div><div class="glass q"><div class=qt>Section zero is where all of my army injections and everything hits the akashic.</div><div class=qm>2026-08-31 00:25:14 &middot; rail</div></div><div class="glass q"><div class=qt>Session Zero just catches all other omni-injection.</div><div class=qm>2026-08-31 00:23:34 &middot; rail</div></div><div class="glass q"><div class=qt>You do not run Claude in Session Zero.</div><div class=qm>2026-08-31 00:23:33 &middot; rail</div></div><div class="glass q"><div class=qt>Session Zero.</div><div class=qm>2026-08-31 00:23:24 &middot; rail</div></div>
+
+  <h2 class=sec>What actually reached the akashic &mdash; today</h2>
+  <div class="glass rule">
+    <p style="font-family:var(--mono);font-size:11.5px;color:var(--tx-dim);margin-bottom:12px">
+      2026-08-31_seat-001.md &middot; 65,615 bytes &middot; last write 94s ago</p>
+    <table><tr><td class=r style="color:var(--tx-mute)">rail</td>
+      <td class=n style="color:var(--tx-mute)">lines</td>
+      <td class=s style="color:var(--tx-mute)">state</td></tr><tr><td class=r>vei attach</td><td class="n zero">0</td><td class=s>live</td></tr><tr><td class=r>desk drop</td><td class="n zero">0</td><td class=s>live</td></tr><tr><td class=r>xen-agent</td><td class="n zero">0</td><td class=s>muted</td></tr><tr><td class=r>xen-step</td><td class="n zero">0</td><td class=s>muted</td></tr><tr><td class=r>notif</td><td class="n zero">0</td><td class=s>muted</td></tr><tr><td class=r>typed</td><td class="n ok">11</td><td class=s>locked</td></tr><tr><td class=r>bee</td><td class="n ok">395</td><td class=s>muted</td></tr><tr><td class=r>omi</td><td class="n ok">700</td><td class=s>live</td></tr><tr><td class=r>sms</td><td class="n zero">0</td><td class=s>live</td></tr><tr><td class=r>rss</td><td class="n zero">0</td><td class=s>muted</td></tr><tr><td class=r>in</td><td class="n zero">0</td><td class=s>muted</td></tr></table>
+  </div>
+
+  <div class="glass rule">
+    <h2>The hole this exposed, and the fix</h2>
+    <p><code>sms</code> read <span class=no>0</span> while listed LIVE. It was never a dead leg &mdash;
+    <code>omnimind.js:6962</code> stamped every inbound SMS with the tag <code>in:</code>, and
+    <code>in</code> is muted. Nothing ever wrote the tag the rail was named after.</p>
+    <p>Fixed 2026-08-31 00:27: the producer now stamps <code>sms:</code>. <span class=yes>A rail
+    reading zero while &ldquo;live&rdquo; is never proof the rail is dead</span> &mdash; check what tag
+    the producer actually writes before believing the rail name.</p>
+  </div>
+
+  <div class=foot>Every quote is verbatim from qi&rsquo;s own capture log, never reconstructed.
+  Counts are read from the live akashic file at page build time.</div>
+</div>
+<script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
