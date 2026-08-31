@@ -1,0 +1,104 @@
+# WFWorkflowInputContentItemClasses for "Send to Xen 3".
+# Goal: the share sheet offers Xen for EVERY item type it can hand to an ActionExtension.
+# Universe = 98 WF*ContentItem classes extracted from the OS dyld shared cache
+#   grep -aoE 'WF[A-Za-z]{2,30}ContentItem' /System/Volumes/Preboot/Cryptexes/OS/System/Library/dyld/dyld_shared_cache_arm64e
+# Excluded from that universe: internal converters/plumbing that are not shareable item
+# types (WFConvertObjectTo, WFChooseFromListArray, WFCustomIntentOutput, WFLinkCodableValue,
+# WFLinkEntity, WFLinkEnumeration, WFRemoteApp*, WFRemote, WFLogCategory, WFShouldRediscover,
+# WFTableTemplate, WFREPB, WFFolderChangeset, WFWindow, WFGenerated) and dead third-party
+# app classes (WFTrello*, WFUlyssesSheet, WFEvernote, WFDropboxItem, WFGiphy).
+# NOTE: the only Maps class the OS defines is WFDCMapsLinkContentItem.
+#       "WFMapsLinkContentItem" does not exist - do not add it.
+
+# --- generic catch-alls: these are what make arbitrary files land ---
+WFGenericFileContentItem
+WFNSItemProviderContentItem
+WFNSExtensionItemContentItem
+WFFolderContentItem
+WFDiskContentItem
+WFFileSizeContentItem
+
+# --- media ---
+WFImageContentItem
+WFAVAssetContentItem
+WFPDFContentItem
+WFPhotoMediaContentItem
+WFPhotoItemProviderContentItem
+WFMPMediaContentItem
+WFMediaCollectionContentItem
+WFRichContentItem
+WFShazamMediaContentItem
+WFPosterContentItem
+
+# --- text + links ---
+WFStringContentItem
+WFRichTextContentItem
+WFURLContentItem
+WFSafariWebPageContentItem
+WFArticleContentItem
+WFLinkContentItem
+WFMachineReadableCodeContentItem
+WFINSpeakableStringContentItem
+
+# --- people + comms ---
+WFContactContentItem
+WFEmailAddressContentItem
+WFPhoneNumberContentItem
+WFEmailContentItem
+WFMessageContentItem
+WFVCardContentItem
+WFPersonNameComponentsContentItem
+WFEKParticipantContentItem
+
+# --- time ---
+WFDateContentItem
+WFCalendarEventContentItem
+WFVCalendarContentItem
+WFReminderContentItem
+WFDateIntervalContentItem
+WFDurationContentItem
+WFTimeIntervalContentItem
+WFRecurrenceRuleContentItem
+
+# --- place ---
+WFLocationContentItem
+WFDCMapsLinkContentItem
+WFMKMapItemContentItem
+WFPlaceDescriptorContentItem
+WFParkedCarContentItem
+
+# --- store / apps / media products ---
+WFAppStoreAppContentItem
+WFAppContentItem
+WFiTunesProductContentItem
+WFiTunesArtistContentItem
+WFiTunesObjectContentItem
+WFPodcastEpisodeContentItem
+WFPodcastShowContentItem
+WFWorkflowContentItem
+
+# --- data primitives ---
+WFNumberContentItem
+WFBooleanContentItem
+WFDictionaryContentItem
+WFListContentItem
+WFMeasurementContentItem
+WFCurrencyAmountContentItem
+
+# --- health ---
+WFHKSampleContentItem
+WFHKWorkoutContentItem
+WFHKCorrelationContentItem
+
+# --- system / misc ---
+WFDeviceDetailsContentItem
+WFFocusModeContentItem
+WFDisplayContentItem
+WFAppearanceSettingContentItem
+WFWalletTransactionContentItem
+WFPaymentMethodContentItem
+WFWeatherDataContentItem
+WFWeatherAirQualityPollutantContentItem
+WFTripInfoContentItem
+WFRideStatusContentItem
+WFFTPDirectoryListingContentItem
