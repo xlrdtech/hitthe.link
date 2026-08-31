@@ -1,0 +1,95 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Panoramic Landing Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#f2f6f9; --dim:#a9b8c4; --mute:#6d7e8b; --edge:rgba(180,205,225,.18);
+  --glass:rgba(10,16,22,.56); --accent:#8fd0ff;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:"Inter",-apple-system,system-ui,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+/* The environment paints the ground. Body stays transparent-over-dark so the sphere shows. */
+body{background:#05070a;color:var(--ink);font:400 15px/1.6 var(--sans);
+  -webkit-font-smoothing:antialiased}
+
+main{position:relative;z-index:1;max-width:780px;margin:0 auto;
+  padding:22vh 22px 40vh;display:flex;flex-direction:column;gap:34px}
+
+section{background:var(--glass);backdrop-filter:blur(14px) saturate(1.3);
+  -webkit-backdrop-filter:blur(14px) saturate(1.3);
+  border:1px solid var(--edge);border-radius:20px;padding:26px 26px 28px}
+
+h1{margin:0 0 10px;font:700 clamp(30px,6vw,52px)/1.03 var(--sans);
+  letter-spacing:-.035em;text-wrap:balance}
+h2{margin:0 0 12px;font:600 12px/1 var(--mono);letter-spacing:.2em;
+  text-transform:uppercase;color:var(--accent)}
+p{margin:0 0 12px;color:var(--dim);max-width:60ch}
+p:last-child{margin-bottom:0}
+code{font:500 12.5px/1.5 var(--mono);color:var(--ink)}
+pre{margin:14px 0 0;padding:15px 16px;background:rgba(0,0,0,.42);
+  border:1px solid var(--edge);border-radius:12px;overflow-x:auto;
+  font:400 12.5px/1.65 var(--mono);color:#cfe6f7}
+ul{margin:10px 0 0;padding-left:18px;color:var(--dim)}
+li{margin:6px 0}
+.brands{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.brands span{font:500 11px/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;
+  padding:8px 12px;border:1px solid var(--edge);border-radius:999px;color:var(--ink)}
+</style>
+
+<main>
+  <section>
+    <h1>Every landing page is a place you move through.</h1>
+    <p>The upload becomes the world. Video or still, it wraps to the inside of a sphere so you
+    stand in it rather than look at it — and scrolling is travel, not paging. Keep scrolling and
+    the world keeps turning; there is no bottom to hit.</p>
+    <div class="brands"><span>XLRD Tech</span><span>CTO East</span><span>East Allen</span><span>Self Exec</span></div>
+  </section>
+
+  <section>
+    <h2>Two files</h2>
+    <p><code>pano.js</code> builds the environment from an upload. <code>x3d.js</code> takes the
+    content sitting in front of it and poses that in space too, so nothing on the page is flat.</p>
+<pre>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"&gt;&lt;/script&gt;
+&lt;script src="https://hitthe.link/x3d/pano.js" data-src="/media/your-upload.mp4" defer&gt;&lt;/script&gt;
+&lt;script src="https://hitthe.link/x3d/x3d.js" defer&gt;&lt;/script&gt;</pre>
+    <p>That is the whole integration. <code>data-src</code> takes an mp4, webm, jpg or png.</p>
+  </section>
+
+  <section>
+    <h2>How the upload is read</h2>
+    <ul>
+      <li>A <strong>2:1</strong> upload is treated as a true 360° equirectangular panorama.</li>
+      <li>Any other aspect is <strong>mirror-wrapped</strong>, so it still covers the full turn
+      instead of leaving a dead arc behind you.</li>
+      <li>Video is muted and <code>playsinline</code> — without both, autoplay is refused and the
+      sphere renders black with no error at all.</li>
+      <li>A cross-origin asset needs CORS headers or WebGL silently refuses the texture. Same-origin
+      is the safe path.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Endless scroll</h2>
+    <p>Scroll distance is accumulated rather than read as a position, so reaching the end of the
+    document does not end the journey — the page wraps and the yaw keeps going. Tune it per page
+    with <code>data-speed</code>, <code>data-dolly</code> and <code>data-dim</code>.</p>
+    <p>Reduced motion keeps the pose and drops the drift. It is never an instruction to go flat.</p>
+  </section>
+
+  <section>
+    <h2>Running now</h2>
+    <p>The environment behind this page is <code>/diamond-cut/execute-desktop.mp4</code> — an
+    existing asset, not a stock placeholder. Swap it live with
+    <code>pano.swap('/path/to/other.mp4')</code>, or remove the poses entirely with
+    <code>x3d.off()</code> to see what the page looks like without any of it.</p>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="/x3d/pano.js" data-src="/diamond-cut/execute-desktop.mp4" data-dim="0.6" defer></script>
+<script src="/x3d/x3d.js" data-x3d="main > section" data-x3d-yaw="11" data-x3d-push="70" defer></script>
