@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>L7S — Pricing &amp; Quota Table</title>
+<meta name="description" content="What L7S overhead actually is, what the funnel must produce to clear it, and the derived price for the paid self-serve checkout. Every figure traced to an artifact or marked UNKNOWN.">
+<style>
+:root{
+  --black:#07070a; --black-2:#0e0e13; --black-3:#15151c; --black-4:#1c1c25;
+  --gold:#D2AC47; --gold-hi:#f7e08a; --gold-lo:#b9932d;
+  --text:#f6f3ea; --muted:#9a97a2; --dim:#6a6873;
+  --ok:#2ee6a8; --warn:#ffb300; --bad:#ff5d6e;
+  --line:rgba(210,172,71,.16); --line-hi:rgba(210,172,71,.34);
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,"JetBrains Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Helvetica,Arial,sans-serif;
+  --lift:0 1px 0 rgba(255,255,255,.045) inset, 0 16px 40px -20px rgba(0,0,0,.95), 0 0 0 1px var(--line);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--black); color:var(--text);
+  font-family:var(--sans); font-size:15px; line-height:1.6;
+  overflow-x:hidden; -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(60vw 40vh at 12% -6%, rgba(210,172,71,.16), transparent 62%),
+    radial-gradient(52vw 36vh at 92% 4%, rgba(247,224,138,.09), transparent 60%),
+    radial-gradient(80vw 60vh at 50% 108%, rgba(185,147,45,.10), transparent 68%),
+    radial-gradient(90vw 90vh at 50% 40%, #101016, #07070a 78%);
+}
+.wrap{position:relative; z-index:1; max-width:1000px; margin:0 auto; padding:20px 16px 72px}
+
+/* header */
+.top{display:flex; align-items:center; gap:12px; margin-bottom:26px; flex-wrap:wrap}
+.mark{
+  width:38px;height:38px;flex:0 0 38px;border-radius:11px;position:relative;
+  background:conic-gradient(from 200deg,var(--gold-lo),var(--gold-hi),var(--gold),var(--gold-lo));
+  box-shadow:0 0 22px -6px rgba(210,172,71,.6), 0 1px 0 rgba(255,255,255,.22) inset;
+}
+.mark span{position:absolute;inset:2px;border-radius:9px;background:linear-gradient(155deg,#1d1c22,#0a0a0e);
+  display:grid;place-items:center;font:700 12px/1 var(--mono);color:var(--gold-hi)}
+.who{font:650 9.5px/1.5 var(--mono);letter-spacing:.17em;text-transform:uppercase;color:var(--dim)}
+.whn{font-size:13.5px;font-weight:600;color:var(--gold)}
+.backlink{margin-left:auto;font:650 10px/1 var(--mono);letter-spacing:.05em;text-transform:uppercase;
+  color:var(--gold-hi);text-decoration:none;padding:9px 12px;border-radius:10px;
+  border:1px solid var(--line-hi);background:linear-gradient(180deg,#241f14,#12100b)}
+
+h1{margin:0 0 8px;font-size:clamp(28px,8.4vw,42px);line-height:1.08;font-weight:700;letter-spacing:-.028em;
+  background:linear-gradient(96deg,#fff 0%,var(--gold-hi) 30%,#fff 50%,var(--gold) 74%,#fff 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.dek{font-size:15px;color:var(--muted);margin:0 0 12px;max-width:64ch}
+.stamp{font:600 10.5px/1.6 var(--mono);color:var(--dim);letter-spacing:.03em;margin:0 0 30px}
+
+h2{font-size:11px;font-family:var(--mono);letter-spacing:.19em;text-transform:uppercase;
+  color:var(--gold);margin:44px 0 6px;font-weight:650}
+h2 .n{color:var(--dim);margin-right:8px}
+.sub{font-size:14.5px;color:var(--muted);margin:0 0 18px;max-width:66ch}
+
+/* cards */
+.card{border-radius:16px;padding:20px 18px;background:linear-gradient(160deg,var(--black-3),var(--black-2) 70%);
+  box-shadow:var(--lift);margin:0 0 16px}
+.hero{text-align:center;padding:28px 18px 24px;
+  background:linear-gradient(150deg,rgba(210,172,71,.16),rgba(185,147,45,.06) 48%,rgba(12,12,17,.94))}
+.hero .lbl{font:650 10px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--gold-hi);margin-bottom:12px}
+.hero .big{font:700 clamp(42px,13vw,76px)/1 var(--sans);letter-spacing:-.035em;color:#fff;
+  text-shadow:0 0 40px rgba(210,172,71,.42)}
+.hero .big .per{font-size:.28em;letter-spacing:0;color:var(--muted);font-weight:600}
+.hero .cap{margin-top:12px;font-size:13.5px;color:var(--gold);max-width:52ch;margin-left:auto;margin-right:auto}
+
+/* scope grid */
+.scopes{display:grid;gap:12px;grid-template-columns:1fr;margin:0 0 16px}
+@media(min-width:700px){.scopes{grid-template-columns:repeat(3,1fr)}}
+.scope{border-radius:14px;padding:16px 14px;background:linear-gradient(165deg,var(--black-3),var(--black-2));
+  box-shadow:var(--lift)}
+.scope .t{font:650 9.5px/1.4 var(--mono);letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-bottom:9px}
+.scope .v{font-size:29px;font-weight:700;letter-spacing:-.03em;color:var(--gold-hi);line-height:1.05}
+.scope .v small{font-size:13px;color:var(--muted);font-weight:600;letter-spacing:0}
+.scope .d{font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.5}
+
+/* chips */
+.chip{display:inline-block;font:650 9px/1.5 var(--mono);letter-spacing:.09em;text-transform:uppercase;
+  padding:2px 7px;border-radius:6px;vertical-align:middle;white-space:nowrap}
+.c-ok{background:rgba(46,230,168,.13);color:var(--ok);border:1px solid rgba(46,230,168,.3)}
+.c-warn{background:rgba(255,179,0,.13);color:var(--warn);border:1px solid rgba(255,179,0,.3)}
+.c-bad{background:rgba(255,93,110,.13);color:var(--bad);border:1px solid rgba(255,93,110,.32)}
+.c-gold{background:rgba(210,172,71,.14);color:var(--gold-hi);border:1px solid var(--line-hi)}
+
+/* bars */
+.bars{margin:4px 0 0}
+.bar{margin:0 0 13px}
+.bar .lab{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;margin-bottom:5px;align-items:baseline}
+.bar .lab b{font-weight:600;color:var(--text)}
+.bar .lab span{font-family:var(--mono);font-size:11.5px;color:var(--gold);white-space:nowrap}
+.track{height:9px;border-radius:5px;background:rgba(255,255,255,.05);overflow:hidden}
+.fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--gold-lo),var(--gold-hi))}
+.fill.mut{background:linear-gradient(90deg,#3a3a46,#5a5a68)}
+
+/* tables */
+.scroller{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:14px;
+  box-shadow:var(--lift);background:linear-gradient(160deg,var(--black-3),var(--black-2) 70%)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:13px}
+thead th{position:sticky;top:0;text-align:left;font:650 9.5px/1.4 var(--mono);letter-spacing:.13em;
+  text-transform:uppercase;color:var(--gold);padding:13px 12px;background:#14131a;
+  border-bottom:1px solid var(--line-hi);white-space:nowrap}
+td{padding:12px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:top;color:var(--text)}
+tbody tr:last-child td{border-bottom:none}
+td.num{font-family:var(--mono);white-space:nowrap;text-align:right;font-size:12.5px}
+td.gold{color:var(--gold-hi);font-weight:600}
+tr.hi td{background:rgba(210,172,71,.075)}
+.tnote{font-size:11.5px;color:var(--dim);margin:9px 2px 0;line-height:1.55}
+
+/* math block */
+.math{font-family:var(--mono);font-size:12.5px;line-height:1.95;color:var(--gold-hi);
+  background:#0b0b10;border:1px solid var(--line);border-radius:12px;padding:15px 14px;
+  overflow-x:auto;white-space:pre;margin:0 0 14px}
+.math .c{color:var(--dim)}
+.math .r{color:#fff;font-weight:700}
+
+/* callout */
+.call{border-radius:14px;padding:16px 16px;margin:0 0 14px;
+  background:linear-gradient(160deg,rgba(210,172,71,.1),rgba(12,12,17,.9));
+  border-left:3px solid var(--gold);box-shadow:var(--lift)}
+.call.red{background:linear-gradient(160deg,rgba(255,93,110,.09),rgba(12,12,17,.9));border-left-color:var(--bad)}
+.call .h{font:650 10px/1.4 var(--mono);letter-spacing:.15em;text-transform:uppercase;color:var(--gold-hi);margin-bottom:7px}
+.call.red .h{color:var(--bad)}
+.call p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.62}
+.call p+p{margin-top:9px}
+.call b{color:var(--text);font-weight:600}
+
+/* rec */
+.rec{text-align:center;padding:26px 16px;border-radius:18px;margin:0 0 16px;
+  background:linear-gradient(150deg,rgba(210,172,71,.2),rgba(185,147,45,.07) 50%,rgba(10,10,15,.95));
+  box-shadow:var(--lift)}
+.rec .lbl{font:650 10px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--gold-hi);margin-bottom:10px}
+.rec .big{font:700 clamp(46px,15vw,80px)/1 var(--sans);letter-spacing:-.035em;color:#fff;
+  text-shadow:0 0 42px rgba(210,172,71,.5)}
+.rec .alt{margin-top:10px;font-size:14px;color:var(--gold)}
+.rec .alt b{color:#fff}
+
+ul.list{margin:0;padding-left:19px;font-size:13.5px;color:var(--muted);line-height:1.68}
+ul.list li{margin-bottom:8px}
+ul.list b{color:var(--text);font-weight:600}
+ul.list code{font-family:var(--mono);font-size:12px;color:var(--gold-hi)}
+
+.src{font-family:var(--mono);font-size:11px;color:var(--dim);line-height:1.6}
+a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(210,172,71,.3)}
+
+footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);
+  font:600 10.5px/1.75 var(--mono);color:var(--dim);letter-spacing:.03em}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div class="mark"><span>L7</span></div>
+    <div>
+      <div class="who">L7S / l7sinc.com</div>
+      <div class="whn">Pricing &amp; quota</div>
+    </div>
+    <a class="backlink" href="/l7s-cost-cuts/">Cost cuts &#8594;</a>
+  </div>
+
+  <h1>What we must charge, and how many we must sell.</h1>
+  <p class="dek">Overhead is the input. Price is the output. This page turns the measured tech-stack
+  bill into a break-even number, a per-tier quota, and one recommended price for the paid self-serve
+  checkout &mdash; with the arithmetic left open so it can be checked line by line.</p>
+  <p class="stamp">Built 2026-08-31 &middot; Source: TECH-STACK-BUDGET.csv (121 rows, updated 2026-08-29 23:08)
+  &middot; every figure is traced to an artifact or marked UNKNOWN</p>
+
+  <!-- ================= 1. OVERHEAD ================= -->
+  <h2><span class="n">01</span>Overhead &mdash; what it actually costs to keep the lights on</h2>
+  <p class="sub">There is no single "overhead" number, because there are two different books: the
+  <b>L7S entity bill</b> (what l7sinc.com itself is charged) and the <b>full operating stack</b> (every
+  tool the work actually runs on). Pricing off the small one is how you underprice.</p>
+
+  <div class="hero card">
+    <div class="lbl">Full measured operating stack</div>
+    <div class="big">$459.56<span class="per">/mo</span></div>
+    <div class="cap">$5,514.72/yr. This is the honest number to price against &mdash; every line below is
+    read off a real artifact. It is <b>9.2&times;</b> the L7S entity-only bill.</div>
+  </div>
+
+  <div class="scopes">
+    <div class="scope">
+      <div class="t">A &middot; L7S entity only</div>
+      <div class="v">$49.78 <small>/mo</small></div>
+      <div class="d">$597.35/yr. Just the l7sinc.com lines: Workspace mail + the domain.
+      <span class="chip c-warn">96.5% is one line</span></div>
+    </div>
+    <div class="scope">
+      <div class="t">B &middot; Full stack today</div>
+      <div class="v">$459.56 <small>/mo</small></div>
+      <div class="d">$5,514.72/yr. Subscription tracker ($387.00) + Workspace, ElevenLabs, Spacemail, Carrd.
+      <span class="chip c-gold">price against this</span></div>
+    </div>
+    <div class="scope">
+      <div class="t">C &middot; After identified cuts</div>
+      <div class="v">$399.44 <small>/mo</small></div>
+      <div class="d">$4,793.28/yr. Mail migration &minus;$45.12/mo, Wispr Flow &minus;$15.00/mo.
+      <span class="chip c-ok">&minus;$721.44/yr</span></div>
+    </div>
+  </div>
+
+  <div class="call">
+    <div class="h">&#9733; The finding that reframes the L7S bill</div>
+    <p><b>Google Workspace is 96.5% of the entire L7S annual bill</b> &mdash; $576.00 of $597.35.
+    Replacement mail at $2.88/mo saves <b>$541.44/yr</b> on the same three mailboxes, same domain,
+    with nothing else in the stack changing.</p>
+    <p>But it is also <b>the least verified number on the board.</b> It is qi-stated; no invoice has
+    ever been opened. The one line that <i>did</i> get a receipt &mdash; Spaceship
+    <code style="font-family:var(--mono);color:var(--gold-hi)">AA-202608300111759</code> &mdash; corrected
+    $9.48 to $9.68. That drift was twenty cents on a small line. This one is 2,880&times; larger.</p>
+  </div>
+
+  <h2><span class="n">01b</span>The top cost lines, largest first</h2>
+  <p class="sub">Read off qi's own subscription tracker plus the vendor audit. The widely-repeated claim
+  that Workspace is "the big one" is only true inside the L7S entity book &mdash; across the whole stack
+  it is third.</p>
+
+  <div class="card">
+    <div class="bars">
+      <div class="bar"><div class="lab"><b>Anthropic / Claude</b><span>$168.00/mo &middot; $2,016/yr</span></div>
+        <div class="track"><div class="fill" style="width:100%"></div></div></div>
+      <div class="bar"><div class="lab"><b>Google Workspace</b><span>$48.00/mo &middot; $576/yr</span></div>
+        <div class="track"><div class="fill" style="width:28.6%"></div></div></div>
+      <div class="bar"><div class="lab"><b>Suno Studio</b><span>$30.00/mo &middot; $360/yr</span></div>
+        <div class="track"><div class="fill" style="width:17.9%"></div></div></div>
+      <div class="bar"><div class="lab"><b>SuperGrok</b><span>$30.00/mo &middot; $360/yr</span></div>
+        <div class="track"><div class="fill" style="width:17.9%"></div></div></div>
+      <div class="bar"><div class="lab"><b>Genspark</b><span>$25.00/mo &middot; $300/yr</span></div>
+        <div class="track"><div class="fill" style="width:14.9%"></div></div></div>
+      <div class="bar"><div class="lab"><b>ElevenLabs</b><span>$22.00/mo &middot; $264/yr</span></div>
+        <div class="track"><div class="fill mut" style="width:13.1%"></div></div></div>
+      <div class="bar"><div class="lab"><b>Beside &middot; AI Receptionist</b><span>$20.00/mo &middot; $240/yr</span></div>
+        <div class="track"><div class="fill" style="width:11.9%"></div></div></div>
+      <div class="bar"><div class="lab"><b>Twitter / X</b><span>$20.00/mo &middot; $240/yr</span></div>
+        <div class="track"><div class="fill" style="width:11.9%"></div></div></div>
+      <div class="bar"><div class="lab"><b>ChatGPT</b><span>$20.00/mo &middot; $240/yr</span></div>
+        <div class="track"><div class="fill" style="width:11.9%"></div></div></div>
+      <div class="bar"><div class="lab"><b>Monarch &middot; Setapp &middot; Wispr Flow</b><span>$15.00/mo each &middot; $540/yr</span></div>
+        <div class="track"><div class="fill" style="width:8.9%"></div></div></div>
+      <div class="bar"><div class="lab"><b>Photoroom &middot; iCloud+</b><span>$10.00/mo each &middot; $240/yr</span></div>
+        <div class="track"><div class="fill" style="width:6.0%"></div></div></div>
+      <div class="bar"><div class="lab"><b>Todoist</b><span>$5.00/mo &middot; $60/yr</span></div>
+        <div class="track"><div class="fill" style="width:3.0%"></div></div></div>
+      <div class="bar"><div class="lab"><b>TextNow &middot; Evermusic &middot; Lock Launcher</b><span>$4.00/mo combined &middot; $48/yr</span></div>
+        <div class="track"><div class="fill" style="width:2.4%"></div></div></div>
+      <div class="bar"><div class="lab"><b>Spacemail &middot; Carrd</b><span>$2.56/mo combined &middot; $30.76/yr</span></div>
+        <div class="track"><div class="fill mut" style="width:1.5%"></div></div></div>
+    </div>
+    <p class="tnote">Bars scale to the largest line. Grey bars = price is a vendor list price with no
+    invoice behind it. Claude is <b>3.5&times;</b> Google Workspace and is the single largest line on
+    the entire board &mdash; and it is the one tool canon names as sanctioned, so it is not a cut candidate.</p>
+  </div>
+
+  <h2><span class="n">01c</span>Identified savings</h2>
+  <div class="scroller">
+    <table>
+      <thead><tr><th>Line</th><th>Now</th><th>Replacement</th><th>Saves /yr</th><th>Confidence</th></tr></thead>
+      <tbody>
+        <tr class="hi"><td>Google Workspace mail<br><span class="src">3 mailboxes @ l7sinc.com</span></td>
+          <td class="num">$576.00</td><td class="num">$34.56</td><td class="num gold">$541.44</td>
+          <td><span class="chip c-warn">qi-stated</span><br><span class="src">both sides qi-stated;<br>no invoice opened</span></td></tr>
+        <tr><td>Wispr Flow<br><span class="src">voice dictation</span></td>
+          <td class="num">$180.00</td><td class="num">$0.00</td><td class="num gold">$180.00</td>
+          <td><span class="chip c-ok">verified</span><br><span class="src">free browser recognizer<br>already ships at api.xlrd.org/ear</span></td></tr>
+        <tr><td>l7sinc.com registration<br><span class="src">Wix &rarr; Spaceship</span></td>
+          <td class="num">$21.35</td><td class="num">$10.18</td><td class="num gold">$11.17</td>
+          <td><span class="chip c-ok">receipt</span><br><span class="src">AA-202608300111759</span></td></tr>
+        <tr><td>Setapp<br><span class="src">9-app bundle</span></td>
+          <td class="num">$180.00</td><td class="num">UNKNOWN</td><td class="num">up to $180.00</td>
+          <td><span class="chip c-bad">conditional</span><br><span class="src">only if all 9 apps are<br>replaceable; Paste is wired<br>into the MCP hub</span></td></tr>
+        <tr><td>ElevenLabs<br><span class="src">TTS</span></td>
+          <td class="num">$264.00</td><td class="num">usage</td><td class="num">up to $264.00</td>
+          <td><span class="chip c-bad">conditional</span><br><span class="src">Inworld already in stack at<br>$1.02 lifetime spend</span></td></tr>
+        <tr><td><b>Firm total &mdash; applies to the stack</b><br><span class="src">Workspace + Wispr Flow</span></td><td class="num">&mdash;</td><td class="num">&mdash;</td><td class="num gold"><b>$721.44</b></td><td><span class="chip c-gold">$60.12/mo</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="tnote">The firm total counts only the two cuts that land against the <b>full stack</b> (Scope B): Workspace and Wispr Flow. The $11.17 domain saving is real but sits in the <b>entity book</b> (Scope A), which does not carry the domain line &mdash; counting it in both would double-book it. The two conditional lines would add $444.00/yr more, but neither has been decided, so neither is in Scope C.</p>
+
+  <!-- ================= 2. BREAK-EVEN ================= -->
+  <h2><span class="n">02</span>Break-even &mdash; the arithmetic, in the open</h2>
+  <p class="sub">Stripe is the live payment rail on the l7sinc.com page today, and it takes
+  <b>2.9% + $0.30</b> per charge. Gross price is not what lands. Every quota below is computed on net.</p>
+
+  <div class="math"><span class="c">// what actually lands from a sale of price p</span>
+net(p)   = p &times; (1 &minus; 0.029) &minus; $0.30
+
+<span class="c">// how many of that unit clear one month of overhead</span>
+units    = overhead &divide; net(p),  rounded UP to a whole sale
+
+<span class="c">// the overhead figure being cleared</span>
+overhead = <span class="r">$459.56 / mo</span>   <span class="c">(full stack today)</span>
+         = $399.44 / mo   <span class="c">(after the firm cuts land)</span>
+
+<span class="c">// worked example, self-serve at $333</span>
+net(333) = 333 &times; 0.971 &minus; 0.30 = <span class="r">$323.04</span>
+units    = 459.56 &divide; 323.04 = 1.42  &rarr;  <span class="r">2 sales / month</span>
+</div>
+
+  <div class="call">
+    <div class="h">The list gives the conversion bar a denominator</div>
+    <p>Luckie confirmed a <b>reactivation campaign against 3,000 existing leads</b>, targeting Q4
+    (September&ndash;October 2026). That turns every quota into a required conversion rate:</p>
+    <p><b>2 sales at $333</b> from 3,000 leads is <b>0.067%</b>.
+    <b>One</b> DFY flagship at $7,000 is <b>0.033%</b>.
+    <b>5 subscribers</b> at $111/mo is <b>0.167%</b>.
+    The overhead bar is low against a list that size &mdash; the risk in this business is not
+    break-even, it is delivery cost, which nothing on this page can measure.</p>
+  </div>
+
+  <!-- ================= 3. QUOTA ================= -->
+  <h2><span class="n">03</span>Quota table &mdash; units per month to clear overhead</h2>
+  <p class="sub">Against the full stack at $459.56/mo. The right-hand column is the one that matters:
+  how long a <i>single</i> sale keeps the lights on.</p>
+
+  <div class="scroller">
+    <table>
+      <thead><tr><th>Tier</th><th>Gross</th><th>Net after Stripe</th><th>Units / mo</th><th>1 sale covers</th></tr></thead>
+      <tbody>
+        <tr><td>$111 unit anchor<br><span class="src">DCZ-001 verified unit price</span></td>
+          <td class="num">$111</td><td class="num">$107.48</td><td class="num gold">5</td><td class="num">0.23 mo</td></tr>
+        <tr><td>UCESPP monthly<br><span class="src">UWE/UCES member fee</span></td>
+          <td class="num">$89/mo</td><td class="num">$86.12</td><td class="num gold">6</td><td class="num">0.19 mo</td></tr>
+        <tr><td>UCESPP one-time<br><span class="src">$188 (normally $300)</span></td>
+          <td class="num">$188</td><td class="num">$182.25</td><td class="num gold">3</td><td class="num">0.40 mo</td></tr>
+        <tr><td>Self-serve DIY</td>
+          <td class="num">$222</td><td class="num">$215.26</td><td class="num gold">3</td><td class="num">0.47 mo</td></tr>
+        <tr class="hi"><td><b>Self-serve DIY &mdash; recommended</b></td>
+          <td class="num">$333</td><td class="num">$323.04</td><td class="num gold"><b>2</b></td><td class="num">0.70 mo</td></tr>
+        <tr><td>Self-serve DIY<br><span class="src">collides with the DCZ retainer number</span></td>
+          <td class="num">$444</td><td class="num">$430.82</td><td class="num gold">2</td><td class="num">0.94 mo</td></tr>
+        <tr><td>DCZ retainer<br><span class="src">live at hitthe.link/dcz/retainer &mdash; 4 &times; $111</span></td>
+          <td class="num">$444/mo</td><td class="num">$430.82</td><td class="num gold">2</td><td class="num">0.94 mo</td></tr>
+        <tr><td>Self-serve DIY</td>
+          <td class="num">$666</td><td class="num">$646.39</td><td class="num gold">1</td><td class="num">1.41 mo</td></tr>
+        <tr><td>DIY ceiling<br><span class="src">LEVEL 1 must stay under $777</span></td>
+          <td class="num">$777</td><td class="num">$754.17</td><td class="num gold">1</td><td class="num">1.64 mo</td></tr>
+        <tr><td>BAG fast-pass &mdash; floor<br><span class="src">1&ndash;3 months</span></td>
+          <td class="num">$1,700</td><td class="num">$1,650.40</td><td class="num gold">1</td><td class="num">3.59 mo</td></tr>
+        <tr><td>BAG fast-pass &mdash; ceiling</td>
+          <td class="num">$3,500</td><td class="num">$3,398.20</td><td class="num gold">1</td><td class="num">7.39 mo</td></tr>
+        <tr class="hi"><td><b>DFY flagship &mdash; floor</b><br><span class="src">Creative Pay financed</span></td>
+          <td class="num">$7,000</td><td class="num">$6,796.70</td><td class="num gold"><b>1</b></td><td class="num gold"><b>14.79 mo</b></td></tr>
+        <tr><td>DFY flagship &mdash; mid</td>
+          <td class="num">$14,000</td><td class="num">$13,593.70</td><td class="num gold">1</td><td class="num">29.58 mo</td></tr>
+        <tr><td>DFY flagship &mdash; ceiling</td>
+          <td class="num">$21,000</td><td class="num">$20,390.70</td><td class="num gold">1</td><td class="num">44.37 mo</td></tr>
+        <tr><td>CC360 premium mentorship</td>
+          <td class="num">UNKNOWN</td><td class="num">&mdash;</td><td class="num">&mdash;</td><td class="num">&mdash;</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="call">
+    <div class="h">The shape of it, in one sentence</div>
+    <p><b>One</b> DFY flagship at $7,000 carries the entire operating stack for <b>14.8 months</b>.
+    It takes <b>5 sales at $111</b>, or <b>6 subscribers at $89/mo</b>, to carry it for one.
+    One $7,000 sale nets what <b>63 sales at $111</b> net ($6,796.70 &divide; $107.48) &mdash; which is the whole argument for putting real effort behind the flagship rather than behind volume at the bottom.</p>
+    <p>The flagship figures are <b>gross</b>. Creative Pay's cut is not in them, because the contract is
+    not signed and the terms are UNKNOWN.</p>
+  </div>
+
+  <!-- ================= 4. RECOMMENDED PRICE ================= -->
+  <h2><span class="n">04</span>Recommended price &mdash; the paid self-serve checkout (Funnel B)</h2>
+  <p class="sub">Derived from four constraints, not asserted. Each step is checkable.</p>
+
+  <div class="rec">
+    <div class="lbl">Funnel B &mdash; self-serve checkout</div>
+    <div class="big">$333</div>
+    <div class="alt">one-time &nbsp;&middot;&nbsp; or <b>$111/mo</b> recurring</div>
+  </div>
+
+  <div class="card">
+    <ul class="list">
+      <li><b>Constraint 1 &mdash; the ceiling.</b> LEVEL 1 DIY self-serve is defined as
+      <b>under $777</b>. So <code>p &lt; 777</code>.</li>
+      <li><b>Constraint 2 &mdash; the lattice.</b> qi's verified unit price is <b>$111</b>
+      (invoice DCZ-001: $111 intro site + $111 social setup, $111 deposit received 2026-06-17), and the
+      live DCZ retainer at <code>hitthe.link/dcz/retainer</code> is <b>4 &times; $111 = $444</b>. His pricing
+      language is already built in $111 multiples &mdash; and the $777 ceiling is itself
+      <b>7 &times; $111</b>. So the candidate set is <code>$111n</code> for <code>n = 1&hellip;6</code>.</li>
+      <li><b>Constraint 3 &mdash; clear overhead on low volume.</b> At $333, <b>2 sales/month</b> clear the
+      full $459.56 stack (1.42 &rarr; 2). After the firm cuts land it is 1.24 &rarr; still 2, so the
+      answer is stable whether or not the mail migration happens &mdash; that robustness is why $333 wins
+      over $222, which needs 3 in both cases.</li>
+      <li><b>Constraint 4 &mdash; do not crowd the tiers on either side.</b> $333 sits <b>5.1&times; below</b>
+      the BAG fast-pass floor of $1,700, so it cannot cannibalize the fast-pass. It sits
+      <b>1.8&times; above</b> the UCESPP $188 entry, so it does not undercut the partner product.
+      $222 is only $34 above UCESPP &mdash; too close to a thing L7S also sells.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div style="font:650 10px/1.4 var(--mono);letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:11px">Why not the other rungs</div>
+    <div class="scroller" style="box-shadow:none;background:none">
+      <table style="min-width:460px">
+        <thead><tr><th>Rung</th><th>Units/mo</th><th>Why not</th></tr></thead>
+        <tbody>
+          <tr><td class="num gold">$111</td><td class="num">5</td><td>Volume dependency. 5 sales every month, forever, just to stand still.</td></tr>
+          <tr><td class="num gold">$222</td><td class="num">3</td><td>Only $34 above the UCESPP $188 entry &mdash; crowds a partner product L7S also routes to.</td></tr>
+          <tr class="hi"><td class="num gold"><b>$333</b></td><td class="num"><b>2</b></td><td><b>Clears overhead at 2/mo, stable after cuts, clean separation on both sides.</b></td></tr>
+          <tr><td class="num gold">$444</td><td class="num">2</td><td>Same quota as $333 but collides with the live DCZ $444 retainer, which already means something else in his pricing language.</td></tr>
+          <tr><td class="num gold">$555</td><td class="num">1</td><td>No artifact supports demand here for an <i>unattended</i> checkout. Judgment, not measurement.</td></tr>
+          <tr><td class="num gold">$666</td><td class="num">1</td><td>Same &mdash; and close enough to the $777 ceiling that the DIY tier stops reading as self-serve.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="tnote">Rows 5 and 6 turn on conversion, and <b>there is no conversion data in any artifact.</b>
+    That part of the reasoning is judgment and is labelled as such. Everything in rows 1&ndash;4 is arithmetic.</p>
+  </div>
+
+  <div class="call">
+    <div class="h">The recurring alternative is stronger, if the offer can carry it</div>
+    <p><b>$111/mo</b> needs <b>5 active subscribers</b> to clear the full stack, or <b>4</b> after the
+    firm cuts. That is a higher bar in month one and a far lower one in month six, because subscribers
+    accumulate and one-time sales reset to zero every month. It also reuses the $111 unit exactly.</p>
+    <p>Same lattice, same anchor, different risk profile. $333 one-time is the recommendation for
+    launch; $111/mo is the recommendation for the second iteration once there is retention data.</p>
+  </div>
+
+  <!-- ================= 5. UNKNOWNS ================= -->
+  <h2><span class="n">05</span>What is unknown &mdash; and what it blocks</h2>
+  <p class="sub">Ranked by how much each one moves the price. An invented number here would be worse
+  than the gap.</p>
+
+  <div class="scroller">
+    <table>
+      <thead><tr><th>#</th><th>Unknown</th><th>What it blocks</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr class="hi"><td class="num">1</td>
+          <td><b>Cost of delivery per client</b><br><span class="src">labour, contractor, fulfilment hours</span></td>
+          <td>Everything. The CSV prices <i>tooling only</i>. A price that clears tooling overhead can
+          still lose money on every unit delivered. This is the single largest hole on the page.</td>
+          <td><span class="chip c-bad">no artifact anywhere</span></td></tr>
+        <tr class="hi"><td class="num">2</td>
+          <td><b>Creative Pay terms</b><br><span class="src">contract NOT signed</span></td>
+          <td>Every DFY figure. L7S is paid in full up front and the client finances against their credit
+          score &mdash; but the fee or discount L7S gives up for that is unknown, so $7,000&ndash;$21,000
+          are <b>gross, not net</b>.</td>
+          <td><span class="chip c-bad">blocker</span></td></tr>
+        <tr><td class="num">3</td>
+          <td><b>Google Workspace $576.00/yr</b></td>
+          <td>96.5% of the L7S entity bill and the entire savings case. qi-stated; <b>no invoice has ever
+          been opened.</b> The one line that got a receipt moved $9.48 &rarr; $9.68.</td>
+          <td><span class="chip c-warn">qi-stated</span></td></tr>
+        <tr><td class="num">4</td>
+          <td><b>CC360 price</b></td>
+          <td>The premium high-mentorship rung. Cannot be placed in the quota table or positioned against
+          BAG and DFY.</td>
+          <td><span class="chip c-bad">UNKNOWN</span></td></tr>
+        <tr><td class="num">5</td>
+          <td><b>30 of 54 vendors carry no price</b></td>
+          <td>Overhead is a <b>floor, not a ceiling</b>. MacStadium and RingCentral are flagged
+          high-priority: neither has a free tier, so if either account is live it is a real recurring
+          charge nobody has counted. Also open: AWS, Twilio, Plivo, Asana, Perplexity, Skool, Dropbox,
+          Hetzner, Slack, Obsidian.</td>
+          <td><span class="chip c-bad">UNKNOWN &times;30</span></td></tr>
+        <tr><td class="num">6</td>
+          <td><b>UWE/UCES revenue split</b></td>
+          <td>What L7S actually keeps of the $188 one-time and $89/mo. The UCESPP rows in the quota table
+          assume L7S keeps 100%, which is almost certainly wrong.</td>
+          <td><span class="chip c-bad">UNKNOWN</span></td></tr>
+        <tr><td class="num">7</td>
+          <td><b>Conversion rate</b></td>
+          <td>Turns a quota into a forecast. The 3,000-lead reactivation list is Luckie-stated
+          (2026-08-31); there is no analytics artifact behind any conversion assumption.</td>
+          <td><span class="chip c-warn">no analytics</span></td></tr>
+        <tr><td class="num">8</td>
+          <td><b>active_app_subscriptions.csv</b><br><span class="src">Luckie, WhatsApp, 2026-08-30 20:48</span></td>
+          <td>May confirm or contradict the $387.00/mo tracker total. The file exists in the thread at
+          454 bytes but was <b>never downloaded to disk</b> &mdash; only 33 attachments are cached
+          locally, and it is not among them.</td>
+          <td><span class="chip c-bad">unresolved</span></td></tr>
+        <tr><td class="num">9</td>
+          <td><b>ElevenLabs $22/mo &middot; Carrd $19/yr</b></td>
+          <td>$283/yr of the stack total. Both are vendor list prices with no invoice; the ElevenLabs
+          <i>plan</i> is API-confirmed active, the <i>price</i> is not.</td>
+          <td><span class="chip c-warn">list price</span></td></tr>
+        <tr><td class="num">10</td>
+          <td><b>Obsidian $6/mo</b><br><span class="src">Luckie-stated 2026-08-31</span></td>
+          <td>$72/yr not yet in any total. The CSV carries Obsidian as UNKNOWN; Luckie named $6/mo on the
+          BAG call. Neither is an invoice, so it is left out rather than guessed in.</td>
+          <td><span class="chip c-warn">conflicting</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="call red">
+    <div class="h">&#9888; Do not price off /costs/</div>
+    <p>The older <a href="/costs/">Cost Breakdown Dashboard</a> conflicts with the verified CSV on
+    several lines: it carries <b>Claude at $100</b> (verified: $168), <b>Beeper at $10</b>
+    (verified: $0.00, free tier), and <b>Skool at $9</b> (CSV: UNKNOWN, zero evidence on the machine).
+    It is a scenario model built before the audit, not a measurement. This page and
+    <a href="/tech-stack-budget/">tech-stack-budget</a> are the current sources.</p>
+  </div>
+
+  <h2><span class="n">06</span>Provenance</h2>
+  <div class="card">
+    <ul class="list">
+      <li><b>TECH-STACK-BUDGET.csv</b> &mdash; 121 rows, updated 2026-08-29 23:08. The vendor audit,
+      the subscription-tracker read, and the Spaceship domain table. Published at
+      <a href="/tech-stack-budget/">/tech-stack-budget/</a>.</li>
+      <li><b>/l7s-cost-cuts/</b> &mdash; the $597.35/yr L7S entity bill, the 96.5% Workspace finding, and
+      the $541.44/yr mail saving.</li>
+      <li><b>Stripe 2.9% + $0.30</b> &mdash; recorded in the CSV as the live payment rail; the l7sinc.com
+      page loads js.stripe.com.</li>
+      <li><b>$111 unit price</b> &mdash; invoice DCZ-001, $111 intro site + $111 social setup, $111 deposit
+      received 2026-06-17. Retainer live at <code>hitthe.link/dcz/retainer</code> as 4 &times; $111.</li>
+      <li><b>Tier prices and the 3,000-lead list</b> &mdash; Luckie, WhatsApp, 2026-08-30 and 2026-08-31
+      (BAG $1,700&ndash;$3,500 1&ndash;3 months; UCESPP $188 + $89/mo, 6&ndash;12 months, McCarthy Law Firm,
+      all 50 states; DFY $7K&ndash;$21K via Creative Pay; Q4 reactivation against 3,000 existing leads).</li>
+      <li><b>Not used:</b> <code>active_app_subscriptions.csv</code> (unresolved) and
+      <code>/costs/</code> (superseded).</li>
+    </ul>
+  </div>
+
+  <footer>
+    L7S &middot; PRICING &amp; QUOTA &middot; BUILT 2026-08-31<br>
+    EVERY FIGURE TRACED TO AN ARTIFACT OR MARKED UNKNOWN &middot; NO ESTIMATES DRESSED AS FACTS<br>
+    L7S-PRICING-V1-BUILD-20260831
+  </footer>
+
+</div>
+</body>
+</html>
