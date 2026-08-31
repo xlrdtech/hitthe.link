@@ -1073,7 +1073,7 @@ window.__EMBED__={"/lifenote/": "<!doctype html>\n<html lang=\"en\">\n<head>\n<m
      backdrop. Inert by construction: pointer-events:none, z-index 0, aria-hidden. ?nomesh off. -->
 <style>
 #meshbg{position:fixed;inset:0;width:100vw;height:100vh;border:0;z-index:0;
-  pointer-events:none;opacity:.5;filter:saturate(.85);background:#06080A}
+  pointer-events:none;opacity:.82;filter:saturate(.9);background:#06080A}
 </style>
 <script>
 (function(){
@@ -1091,8 +1091,10 @@ window.__EMBED__={"/lifenote/": "<!doctype html>\n<html lang=\"en\">\n<head>\n<m
   }
   function boot(){
     attach();
-    // Re-mounts happen well after load on this page, so watch rather than fire once.
-    new MutationObserver(attach).observe(document.body, {childList:true});
+    // MEASURED 04:32: the observer alone left hasMesh:false on the live page — this page can
+    // replace <body> outright at mount, which kills an observer bound to the old node. A 1s
+    // interval cannot be orphaned that way and costs nothing.
+    setInterval(attach, 1000);
   }
   if (document.readyState === 'complete' || document.readyState === 'interactive') setTimeout(boot, 400);
   else document.addEventListener('DOMContentLoaded', function(){ setTimeout(boot, 400) });
