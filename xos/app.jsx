@@ -1,13 +1,15 @@
-// Live corner clock — ticks every second so the surface always shows WHEN, not what
-// device it is. Local time, 24h date, no dependency.
-function useLiveClock() {
+// Live corner clock. MUST NOT be a hook: it renders inside `{tab.kind === "phone" && …}`,
+// and a hook called in a conditional branch throws "Rendered fewer hooks than expected"
+// and blanks the entire app — measured 2026-08-31 01:19, qi: "what's up with this blank
+// home screen." A self-contained component owns its own state, so the conditional is safe.
+function LiveClock() {
   const [t, setT] = React.useState(() => new Date());
   React.useEffect(() => {
     const id = setInterval(() => setT(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
   const p = (n) => String(n).padStart(2, "0");
-  return `${p(t.getMonth() + 1)}/${p(t.getDate())} ${p(t.getHours())}:${p(t.getMinutes())}:${p(t.getSeconds())}`;
+  return <span>{`${p(t.getMonth() + 1)}/${p(t.getDate())} ${p(t.getHours())}:${p(t.getMinutes())}:${p(t.getSeconds())}`}</span>;
 }
 
 /* global React, ReactDOM, IOSDevice */
@@ -1490,7 +1492,7 @@ function TabCard({ tab, onClose, onOpen }) {
               {/* qi 2026-08-31 00:59: "it says GV Phone ... it needs to be replaced
                   with the time and date." A static device label in the corner told him
                   nothing; the clock places every line on screen in a real moment. */}
-              <span>{useLiveClock()}</span>
+              <LiveClock />
             </div>
             <div className="mini-thread-row">
               <span>thread</span>
