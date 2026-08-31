@@ -1,158 +1,567 @@
+<!-- L7S-FUNNEL-SPEC-2026-08-31-FIREWALL -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>L7S Two-Funnel Architecture</title>
+<meta name="description" content="Two funnels separated by a legal firewall. Free lead magnet, paid self-serve checkout, one CRM.">
 <style>
 :root{
-  --ink:#0a0a0e;--ink-2:#15151c;--ink-3:#1f1f29;
-  --chrome:#c0c8d0;--chrome-hi:#e8eef2;--chrome-lo:#6a737d;
-  --ir-1:#7b2cbf;--ir-2:#06b6d4;--ir-3:#ec4899;
-  --oxblood:#5a0a14;--oxblood-hi:#8a1525;--cyan:#00e0ff;--amber:#ffb300;--green:#2ecc71;
-  --text:#fbf9f4;--text-2:#a8aab2;--text-3:#6a6c74;
-  --lift:0 2px 4px rgba(0,224,255,.04),0 24px 60px rgba(10,10,14,.6),0 0 0 1px rgba(192,200,208,.08);
-  --fd:"Cinzel","Instrument Serif",Georgia,serif;
-  --fb:"Inter",-apple-system,system-ui,sans-serif;
-  --fm:"JetBrains Mono",ui-monospace,monospace;
+  --obsidian:#08080a;--coal:#0f0f13;--slate:#15151b;--slate-2:#1c1c24;
+  --gold:#c9a24a;--gold-hi:#f0dca0;--gold-deep:#7d5f23;--gold-leaf:#e3c372;
+  --bone:#f3eee1;--muted:#9a9384;--faint:#635c50;
+  --line:rgba(227,195,114,.16);--line-soft:rgba(255,255,255,.06);
+  --red:#e0524a;--red-deep:#7a1d18;--green:#5fd08a;--amber:#ffb347;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+  --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --lift:0 1px 0 rgba(255,255,255,.04) inset,0 18px 44px rgba(0,0,0,.55);
 }
-*{box-sizing:border-box}
-body{margin:0;background:var(--ink);color:var(--text);font-family:var(--fb);line-height:1.55;
- background-image:radial-gradient(circle at 16% 10%,rgba(123,44,191,.22),transparent 38%),
- radial-gradient(circle at 86% 76%,rgba(6,182,212,.18),transparent 42%),
- radial-gradient(circle at 50% 50%,var(--ink-2),var(--ink) 72%);
- background-attachment:fixed;min-height:100vh;-webkit-font-smoothing:antialiased}
-.wrap{max-width:1120px;margin:0 auto;padding:48px 22px 96px}
-header{text-align:center;margin-bottom:18px}
-.eyebrow{font-family:var(--fm);font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--text-3)}
-h1{font-family:var(--fd);font-size:clamp(30px,6.4vw,60px);margin:.26em 0 .14em;line-height:1.04;
- background:linear-gradient(112deg,var(--ir-1),var(--ir-2) 42%,var(--ir-3) 78%,var(--ir-1));
- background-size:200% 200%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sh 9s ease-in-out infinite}
-@keyframes sh{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-@media(prefers-reduced-motion:reduce){h1{animation:none}}
-.sub{color:var(--text-2);font-size:15px;max-width:70ch;margin:0 auto}
-.stamp{font-family:var(--fm);font-size:11px;color:var(--text-3);margin-top:10px;letter-spacing:.05em}
-h2.sec{font-family:var(--fd);font-size:23px;margin:52px 0 6px;padding-bottom:9px;border-bottom:1px solid rgba(192,200,208,.15)}
-h2.sec .n{font-family:var(--fm);font-size:12px;color:var(--cyan);margin-right:11px;letter-spacing:.14em}
-.lede{color:var(--text-2);font-size:14.5px;margin:12px 0 20px;max-width:78ch}
-.src{margin:26px 0;padding:20px 24px;border-radius:15px;background:linear-gradient(150deg,var(--ink-3),var(--ink-2));border-left:3px solid var(--amber);box-shadow:var(--lift)}
-.src .q{font-family:var(--fd);font-size:17px;line-height:1.5}
-.src .attr{font-family:var(--fm);font-size:11px;color:var(--text-3);margin-top:10px}
-.stage{display:flex;flex-wrap:wrap;align-items:stretch;gap:12px;margin:22px 0}
-.st{flex:1 1 178px;padding:18px;border-radius:14px;background:linear-gradient(155deg,var(--ink-3),var(--ink-2));box-shadow:var(--lift);border:1px solid rgba(192,200,208,.09);transform:perspective(1000px) rotateX(.7deg)}
-.st .num{font-family:var(--fm);font-size:10.5px;letter-spacing:.16em;color:var(--cyan)}
-.st .t{font-family:var(--fd);font-size:17px;margin:7px 0 6px}
-.st .d{font-size:12.5px;color:var(--text-2);line-height:1.5}
-.st .tool{font-family:var(--fm);font-size:10.5px;color:var(--text-3);margin-top:9px;display:block}
-.tw{overflow-x:auto;border-radius:14px;box-shadow:var(--lift);background:rgba(21,21,28,.72);margin:18px 0}
-table{border-collapse:collapse;width:100%;min-width:640px;font-size:13.5px}
-th{font-family:var(--fm);font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-3);
- text-align:left;padding:14px 16px;border-bottom:1px solid rgba(192,200,208,.16);background:rgba(10,10,14,.55);white-space:nowrap}
-td{padding:12px 16px;border-bottom:1px solid rgba(192,200,208,.07);vertical-align:top}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--obsidian);color:var(--bone);font-family:var(--sans);
+  font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(900px 560px at 50% -10%,rgba(201,162,74,.13),transparent 62%);
+  background-attachment:fixed;padding:0 0 72px;overflow-x:hidden;
+}
+.wrap{max-width:760px;margin:0 auto;padding:0 18px}
+
+/* ---------- header ---------- */
+header{padding:44px 0 26px;text-align:center}
+.kick{font-family:var(--mono);font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold-deep)}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(30px,8.4vw,50px);line-height:1.04;margin:.3em 0 .28em;
+  background:linear-gradient(168deg,var(--gold-hi),var(--gold) 46%,var(--gold-deep));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.dek{color:var(--muted);font-size:15px;max-width:52ch;margin:0 auto}
+.dek b{color:var(--bone);font-weight:600}
+.stamp{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.06em;margin-top:16px}
+
+/* ---------- the one rule ---------- */
+.axiom{
+  margin:30px 0 8px;padding:22px 20px;border-radius:14px;
+  background:linear-gradient(160deg,rgba(122,29,24,.34),rgba(15,15,19,.94));
+  border:1px solid rgba(224,82,74,.34);border-left:3px solid var(--red);box-shadow:var(--lift)}
+.axiom .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--red);display:block;margin-bottom:9px}
+.axiom .q{font-family:var(--serif);font-size:19px;line-height:1.45;color:var(--bone)}
+.axiom .attr{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:11px;line-height:1.5}
+.axiom .why{font-size:13.5px;color:var(--muted);margin-top:13px;padding-top:13px;border-top:1px solid rgba(224,82,74,.2)}
+.axiom .why b{color:#ffb3ad;font-weight:600}
+
+/* ---------- sections ---------- */
+section{margin:46px 0 0}
+h2{font-family:var(--serif);font-size:24px;font-weight:600;line-height:1.2;
+  padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:6px}
+h2 .n{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--gold-deep);margin-right:10px;vertical-align:2px}
+.lede{color:var(--muted);font-size:14px;margin:12px 0 18px}
+h3{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin:26px 0 10px}
+
+/* ---------- diagram frame ---------- */
+.fig{margin:20px 0 8px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.fig svg{display:block;width:100%;height:auto;min-width:300px}
+.cap{font-family:var(--mono);font-size:10.5px;color:var(--faint);text-align:center;margin:6px 0 0;line-height:1.6}
+
+/* ---------- cards ---------- */
+.cards{display:grid;gap:14px;margin:18px 0}
+@media(min-width:640px){.cards.two{grid-template-columns:1fr 1fr}}
+.card{padding:18px;border-radius:13px;background:linear-gradient(160deg,var(--slate-2),var(--coal));
+  border:1px solid var(--line-soft);box-shadow:var(--lift)}
+.card.a{border-top:2px solid var(--green)}
+.card.b{border-top:2px solid var(--gold)}
+.card .tag{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+.card h4{font-family:var(--serif);font-size:19px;font-weight:600;margin:6px 0 4px}
+.card .sub{font-size:13px;color:var(--muted);margin-bottom:12px}
+.card ul{list-style:none;font-size:13.5px}
+.card li{padding:5px 0 5px 17px;position:relative;color:var(--muted);line-height:1.5}
+.card li b{color:var(--bone);font-weight:600}
+.card li::before{content:"";position:absolute;left:0;top:12px;width:6px;height:6px;border-radius:50%;background:var(--gold-deep)}
+.card.a li::before{background:var(--green)}
+li.no{color:#e8a8a3}
+li.no::before{background:var(--red)!important;border-radius:1px;transform:rotate(45deg)}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:16px 0;border-radius:13px;
+  border:1px solid var(--line-soft);background:rgba(15,15,19,.7)}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:13px}
+th{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);
+  text-align:left;padding:12px 13px;border-bottom:1px solid var(--line);background:rgba(8,8,10,.6);white-space:nowrap}
+td{padding:11px 13px;border-bottom:1px solid var(--line-soft);vertical-align:top;color:var(--muted);line-height:1.5}
 tr:last-child td{border-bottom:none}
-td.p{font-family:var(--fm);color:var(--chrome-hi);white-space:nowrap}
-.tier{display:inline-block;font-family:var(--fm);font-size:10.5px;letter-spacing:.08em;padding:3px 9px;border-radius:999px;white-space:nowrap}
-.low{background:rgba(6,182,212,.14);color:var(--ir-2);border:1px solid rgba(6,182,212,.42)}
-.mid{background:rgba(255,179,0,.14);color:var(--amber);border:1px solid rgba(255,179,0,.42)}
-.high{background:rgba(236,72,153,.14);color:var(--ir-3);border:1px solid rgba(236,72,153,.42)}
-.grid{display:flex;flex-wrap:wrap;justify-content:center;gap:16px;margin:20px 0}
-.card{flex:1 1 240px;max-width:340px;padding:20px;border-radius:15px;background:linear-gradient(155deg,var(--ink-3),var(--ink-2));box-shadow:var(--lift);border:1px solid rgba(192,200,208,.09)}
-.card .k{font-family:var(--fm);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-3)}
-.card .v{font-family:var(--fd);font-size:26px;margin:8px 0 5px;color:var(--chrome-hi)}
-.card .d{font-size:12.5px;color:var(--text-2);line-height:1.5}
-ul.tight{margin:12px 0;padding-left:20px;color:var(--text-2);font-size:14px}
-ul.tight li{margin:8px 0}
-ul.tight b{color:var(--text)}
-code{font-family:var(--fm);font-size:.92em;color:var(--cyan);background:rgba(0,224,255,.07);padding:1px 6px;border-radius:5px}
-.warn{margin:20px 0;padding:19px 22px;border-radius:14px;background:linear-gradient(150deg,rgba(90,10,20,.32),rgba(21,21,28,.9));border-left:3px solid var(--oxblood-hi);box-shadow:var(--lift)}
-.warn h3{font-family:var(--fd);margin:0 0 8px;font-size:17px;color:#ff8fa0}
-.warn p,.warn li{color:var(--text-2);font-size:13.5px;margin:6px 0}
-.gap{margin:20px 0;padding:19px 22px;border-radius:14px;background:linear-gradient(150deg,rgba(255,179,0,.12),rgba(21,21,28,.9));border-left:3px solid var(--amber);box-shadow:var(--lift)}
-.gap h3{font-family:var(--fd);margin:0 0 8px;font-size:17px;color:var(--amber)}
-.gap li{color:var(--text-2);font-size:13.5px;margin:6px 0}
-footer{margin-top:64px;padding-top:22px;border-top:1px solid rgba(192,200,208,.13);text-align:center;font-family:var(--fm);font-size:11px;color:var(--text-3)}
-@media(max-width:620px){.wrap{padding:32px 15px 64px}}
+td b,td strong{color:var(--bone);font-weight:600}
+td.p{font-family:var(--mono);color:var(--gold-hi);white-space:nowrap;font-size:12.5px}
+.yes{color:var(--green);font-weight:600}
+.nope{color:var(--red);font-weight:600}
+
+/* ---------- pills ---------- */
+.pill{display:inline-block;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;
+  padding:3px 8px;border-radius:999px;white-space:nowrap;text-transform:uppercase}
+.p-built{background:rgba(95,208,138,.13);color:var(--green);border:1px solid rgba(95,208,138,.4)}
+.p-miss{background:rgba(255,179,71,.13);color:var(--amber);border:1px solid rgba(255,179,71,.4)}
+.p-block{background:rgba(224,82,74,.13);color:var(--red);border:1px solid rgba(224,82,74,.4)}
+.p-unk{background:rgba(154,147,132,.12);color:var(--muted);border:1px solid rgba(154,147,132,.34)}
+
+/* ---------- ladder ---------- */
+.rung{padding:16px 18px;border-radius:12px;margin:11px 0;background:linear-gradient(160deg,var(--slate-2),var(--coal));
+  border:1px solid var(--line-soft);border-left:3px solid var(--gold-deep);box-shadow:var(--lift)}
+.rung.flag{border-left-color:var(--red)}
+.rung .top{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;justify-content:space-between}
+.rung .nm{font-family:var(--serif);font-size:17px;font-weight:600;color:var(--bone)}
+.rung .pr{font-family:var(--mono);font-size:13px;color:var(--gold-hi);white-space:nowrap}
+.rung .meta{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.06em;margin-top:5px;text-transform:uppercase}
+.rung .d{font-size:13.5px;color:var(--muted);margin-top:9px;line-height:1.55}
+.rung .d b{color:var(--bone);font-weight:600}
+
+/* ---------- notes ---------- */
+.note{margin:18px 0;padding:16px 18px;border-radius:12px;font-size:13.5px;color:var(--muted);line-height:1.6;box-shadow:var(--lift)}
+.note h5{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px}
+.note b{color:var(--bone);font-weight:600}
+.note.warn{background:linear-gradient(160deg,rgba(122,29,24,.26),rgba(15,15,19,.94));border:1px solid rgba(224,82,74,.28)}
+.note.warn h5{color:var(--red)}
+.note.amb{background:linear-gradient(160deg,rgba(255,179,71,.11),rgba(15,15,19,.94));border:1px solid rgba(255,179,71,.26)}
+.note.amb h5{color:var(--amber)}
+.note.gold{background:linear-gradient(160deg,rgba(201,162,74,.1),rgba(15,15,19,.94));border:1px solid var(--line)}
+.note.gold h5{color:var(--gold)}
+.note ul{list-style:none;margin-top:8px}
+.note li{padding:5px 0 5px 15px;position:relative}
+.note li::before{content:"\2013";position:absolute;left:0;color:var(--faint)}
+
+code{font-family:var(--mono);font-size:.88em;color:var(--gold-hi);background:rgba(201,162,74,.09);padding:1px 5px;border-radius:4px;word-break:break-word}
+a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(201,162,74,.3)}
+
+/* ---------- track chain ---------- */
+.chain{display:flex;flex-wrap:wrap;gap:7px;margin:16px 0}
+.trk{flex:1 1 148px;padding:11px 12px;border-radius:10px;background:linear-gradient(160deg,var(--slate-2),var(--coal));
+  border:1px solid var(--line-soft)}
+.trk .i{font-family:var(--mono);font-size:9.5px;color:var(--gold-deep);letter-spacing:.14em}
+.trk .t{font-family:var(--serif);font-size:15px;font-weight:600;margin:3px 0 2px}
+.trk .s{font-size:11.5px;color:var(--muted);line-height:1.45}
+.trk.one{border-color:rgba(201,162,74,.42);background:linear-gradient(160deg,rgba(201,162,74,.13),var(--coal))}
+
+footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:10.5px;color:var(--faint);line-height:1.8;text-align:center}
+@media(max-width:430px){
+  body{font-size:14.5px}
+  .wrap{padding:0 14px}
+  header{padding:34px 0 20px}
+  .axiom{padding:18px 16px}.axiom .q{font-size:17px}
+  .card,.rung{padding:15px}
+}
 </style>
 
 <div class="wrap">
+
 <header>
-  <div class="eyebrow">L7S · Priority 1 · Funnel Architecture</div>
-  <h1>The Funnel Build</h1>
-  <p class="sub">Every price, tier and partner on this page is transcribed from Luckie's own vendor menu and recap. Nothing is estimated, modelled, or invented — where a number does not exist yet, it says so.</p>
-  <div class="stamp">SOURCED 2026-08-29 19:24 &amp; 2026-08-30 16:46 EDT · Luckie Goggins · chat 672</div>
+  <div class="kick">L7S &middot; Launch Blocker 2 of 3</div>
+  <h1>The Two-Funnel Architecture</h1>
+  <p class="dek">Two funnels, not one funnel with tiers. What separates them is a <b>legal firewall</b>, not a conversion step.</p>
+  <div class="stamp">SPEC 2026-08-31 &middot; SOURCE: qi, 18:16&ndash;18:24 EDT, verbatim capture &middot; TARGET: Q4 2026 (Sep&ndash;Oct)</div>
 </header>
 
-<div class="src">
-  <div class="q">"Primary L7S priorities: 1. Build the funnels, including checkout and payment processing. 2. Finish the visual system for PDFs, slide decks, digital products, and brand colors. 3. Define the financial model: pricing, operating costs, revenue operations, and target numbers."</div>
-  <div class="attr">Luckie Goggins — 2026-08-30 16:46, after reconnecting with Candace / AI Preneurs post Jason Wojo WTCC webinar</div>
+<div class="axiom">
+  <span class="lbl">&#9888; The constraint that shapes everything below</span>
+  <div class="q">&ldquo;That way the radio show leads doesn&rsquo;t have a legal conflict.&rdquo;</div>
+  <div class="attr">qi &mdash; 2026-08-31 18:16:28 EDT, verbatim<br>&ldquo;We can have a free lead magnet and then we&rsquo;ll have a low-ticket lead magnet.&rdquo; &mdash; 18:16:18</div>
+  <div class="why"><b>L7S does not provide direct credit repair.</b> It sells education, membership, mentorship and systems, and outsources fulfillment to vendors. A broadcast or public-media lead must therefore <b>never land on a paid credit-fulfillment checkout</b>. The free lead magnet is the separation layer that sits between them. Any design that lets a radio listener click straight through to paid credit fulfillment defeats the entire purpose of the split.</div>
 </div>
 
-<h2 class="sec"><span class="n">01</span>The funnel, stage by stage</h2>
-<p class="lede">The AI Preneurs model Candace runs — <b>lead magnets → GoHighLevel → WebinarJam/Zoom → paid traffic</b> — mapped onto L7S's existing commitment ladder. Each stage names the tool that owns it, per Luckie's "map each tool to a workflow and sales-cycle stage."</p>
+<section>
+<h2><span class="n">01</span>The firewall</h2>
+<p class="lede">Read this diagram first. Everything else on the page is an elaboration of it.</p>
 
-<div class="stage">
-  <div class="st"><div class="num">STAGE 01</div><div class="t">Lead Magnet</div><div class="d">Free entry into the L7S HERO S.O.S ecosystem. Captures into the LDE community layer.</div><span class="tool">OWNS: GoHighLevel forms</span></div>
-  <div class="st"><div class="num">STAGE 02</div><div class="t">Community</div><div class="d">LDE Learning Development Environments + BD communities — Skool, WhatsApp, Telegram, FB, Discord, Slack.</div><span class="tool">OWNS: Skool + Beeper rails</span></div>
-  <div class="st"><div class="num">STAGE 03</div><div class="t">Webinar</div><div class="d">The conversion event. Paid traffic drives here; this is where the offer is made.</div><span class="tool">OWNS: WebinarJam / Zoom</span></div>
-  <div class="st"><div class="num">STAGE 04</div><div class="t">Checkout</div><div class="d">Payment processing. <b>This is the piece that does not exist yet</b> — see the gap below.</div><span class="tool">OWNS: unassigned</span></div>
-  <div class="st"><div class="num">STAGE 05</div><div class="t">Delivery</div><div class="d">DWY or DFY inside L7S HERO S.O.S.²™, coordinated BPO-style across the vendor network.</div><span class="tool">OWNS: L7S HERO S.O.S</span></div>
-  <div class="st"><div class="num">STAGE 06</div><div class="t">Upsell Vertical</div><div class="d">Vendor menu ascension — low entry to high ticket across the partner list.</div><span class="tool">OWNS: strategic partners</span></div>
+<div class="fig">
+<svg viewBox="0 0 374 700" role="img" aria-label="Two funnels separated by a legal firewall, both landing in one CRM">
+  <defs>
+    <pattern id="hatch" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+      <rect width="8" height="8" fill="rgba(122,29,24,.30)"/>
+      <line x1="0" y1="0" x2="0" y2="8" stroke="#e0524a" stroke-width="2.4" opacity=".55"/>
+    </pattern>
+    <linearGradient id="gA" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#16241b"/><stop offset="1" stop-color="#0f0f13"/>
+    </linearGradient>
+    <linearGradient id="gB" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#231d10"/><stop offset="1" stop-color="#0f0f13"/>
+    </linearGradient>
+    <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#c9a24a"/>
+    </marker>
+    <marker id="arR" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#e0524a"/>
+    </marker>
+  </defs>
+
+  <!-- entry sources -->
+  <rect x="16" y="8" width="250" height="54" rx="10" fill="#15151b" stroke="rgba(255,255,255,.09)"/>
+  <text x="30" y="28" font-family="ui-monospace,monospace" font-size="9" fill="#635c50" letter-spacing="1.6">PUBLIC / BROADCAST ENTRY</text>
+  <text x="30" y="44" font-family="Georgia,serif" font-size="13.5" fill="#f3eee1">Radio show &middot; Social &middot; Public content</text>
+  <text x="30" y="56" font-family="ui-monospace,monospace" font-size="8.5" fill="#9a9384">unqualified, unknown, no relationship</text>
+
+  <!-- allowed arrow down -->
+  <line x1="90" y1="62" x2="90" y2="90" stroke="#c9a24a" stroke-width="2" marker-end="url(#ar)"/>
+
+  <!-- FUNNEL A -->
+  <rect x="16" y="92" width="328" height="150" rx="12" fill="url(#gA)" stroke="#5fd08a" stroke-width="1.3"/>
+  <text x="30" y="114" font-family="ui-monospace,monospace" font-size="9" fill="#5fd08a" letter-spacing="1.8">FUNNEL A</text>
+  <text x="30" y="134" font-family="Georgia,serif" font-size="17" fill="#f3eee1" font-weight="600">Free lead magnet</text>
+  <text x="30" y="152" font-family="ui-monospace,monospace" font-size="9" fill="#9a9384">NO PAYMENT &middot; NO FULFILLMENT &middot; NO SCOPE</text>
+  <line x1="30" y1="162" x2="330" y2="162" stroke="rgba(255,255,255,.08)"/>
+  <text x="30" y="180" font-family="-apple-system,sans-serif" font-size="11.5" fill="#f3eee1">1. Value asset, given away</text>
+  <text x="30" y="197" font-family="-apple-system,sans-serif" font-size="11.5" fill="#f3eee1">2. Contact capture (name, email, phone)</text>
+  <text x="30" y="214" font-family="-apple-system,sans-serif" font-size="11.5" fill="#f3eee1">3. Assessment / quiz &mdash; conditional logic</text>
+  <text x="30" y="231" font-family="-apple-system,sans-serif" font-size="11.5" fill="#f3eee1">4. Book: Hero Care or Rescue Me call</text>
+
+  <!-- THE WALL -->
+  <rect x="16" y="256" width="328" height="52" rx="8" fill="url(#hatch)" stroke="#e0524a" stroke-width="1.6"/>
+  <text x="180" y="278" text-anchor="middle" font-family="ui-monospace,monospace" font-size="10.5" fill="#ffb3ad" letter-spacing="2.4">THE LEGAL FIREWALL</text>
+  <text x="180" y="296" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="10.5" fill="#e8a8a3">A human conversation, a qualification, or a self-chosen click</text>
+
+  <!-- blocked bypass -->
+  <path d="M278 35 C348 35 356 35 356 150 C356 250 356 262 356 282" fill="none" stroke="#e0524a" stroke-width="1.6" stroke-dasharray="4 4" opacity=".8"/>
+  <path d="M356 282 L356 340" fill="none" stroke="#e0524a" stroke-width="1.6" stroke-dasharray="4 4" opacity=".35"/>
+  <circle cx="356" cy="282" r="11" fill="#0f0f13" stroke="#e0524a" stroke-width="1.8"/>
+  <line x1="350" y1="276" x2="362" y2="288" stroke="#e0524a" stroke-width="2.2"/>
+  <line x1="362" y1="276" x2="350" y2="288" stroke="#e0524a" stroke-width="2.2"/>
+
+  <line x1="90" y1="308" x2="90" y2="336" stroke="#c9a24a" stroke-width="2" marker-end="url(#ar)"/>
+
+  <!-- FUNNEL B -->
+  <rect x="16" y="338" width="328" height="150" rx="12" fill="url(#gB)" stroke="#c9a24a" stroke-width="1.3"/>
+  <text x="30" y="360" font-family="ui-monospace,monospace" font-size="9" fill="#c9a24a" letter-spacing="1.8">FUNNEL B</text>
+  <text x="30" y="380" font-family="Georgia,serif" font-size="17" fill="#f3eee1" font-weight="600">Paid self-serve checkout</text>
+  <text x="30" y="398" font-family="ui-monospace,monospace" font-size="9" fill="#9a9384">SELF-PUBLISHING &middot; LOW-TICKET DIGITAL</text>
+  <line x1="30" y1="408" x2="330" y2="408" stroke="rgba(255,255,255,.08)"/>
+  <text x="30" y="426" font-family="-apple-system,sans-serif" font-size="11.5" fill="#f3eee1">1. Pricing / offer page</text>
+  <text x="30" y="443" font-family="-apple-system,sans-serif" font-size="11.5" fill="#f3eee1">2. Self-serve checkout (processor TBD)</text>
+  <text x="30" y="460" font-family="-apple-system,sans-serif" font-size="11.5" fill="#f3eee1">3. Instant digital delivery &mdash; day-one artifact</text>
+  <text x="30" y="477" font-family="-apple-system,sans-serif" font-size="11.5" fill="#f3eee1">4. Ascend into the gated track ladder</text>
+
+  <!-- both to CRM -->
+  <path d="M90 242 L90 250 M90 250 L8 250 L8 520 L86 520" fill="none" stroke="#5fd08a" stroke-width="1.6" opacity=".65"/>
+  <line x1="86" y1="520" x2="104" y2="520" stroke="#5fd08a" stroke-width="1.6" marker-end="url(#ar)" opacity=".65"/>
+  <line x1="180" y1="488" x2="180" y2="516" stroke="#c9a24a" stroke-width="2" marker-end="url(#ar)"/>
+
+  <!-- CRM -->
+  <rect x="16" y="528" width="328" height="86" rx="12" fill="#15151b" stroke="#c9a24a" stroke-width="1.1" stroke-dasharray="6 3"/>
+  <text x="30" y="550" font-family="ui-monospace,monospace" font-size="9" fill="#c9a24a" letter-spacing="1.8">BOTH FUNNELS LAND HERE</text>
+  <text x="30" y="570" font-family="Georgia,serif" font-size="16" fill="#f3eee1" font-weight="600">L7S HERO CRM</text>
+  <text x="30" y="587" font-family="-apple-system,sans-serif" font-size="11" fill="#9a9384">GoHighLevel sub-account &mdash; tagged by funnel of origin</text>
+  <text x="30" y="604" font-family="ui-monospace,monospace" font-size="9" fill="#ffb347">INTERIM &middot; must lift to a proprietary CRM off that brand</text>
+
+  <!-- ladder -->
+  <line x1="180" y1="614" x2="180" y2="642" stroke="#c9a24a" stroke-width="2" marker-end="url(#ar)"/>
+  <rect x="16" y="644" width="328" height="48" rx="10" fill="#15151b" stroke="rgba(255,255,255,.09)"/>
+  <text x="30" y="664" font-family="Georgia,serif" font-size="14" fill="#f3eee1">The gated track ladder &rarr; DFY flagship</text>
+  <text x="30" y="680" font-family="ui-monospace,monospace" font-size="9" fill="#9a9384">Credit first — it is what makes the flagship financeable</text>
+</svg>
+</div>
+<p class="cap">The dashed red path is the one the architecture exists to forbid:<br>public media &rarr; paid credit fulfillment, with nothing in between.</p>
+
+<div class="note warn">
+  <h5>Why the wall is real, not cosmetic</h5>
+  Under <b>15 U.S.C. &sect;1679a(3)(A)(ii)</b> a business becomes a &ldquo;credit repair organization&rdquo; for giving <b>advice or assistance</b> about improving a credit record &mdash; not only for performing disputes. <b>&sect;1679b(b)</b> forbids taking payment before services are fully performed. In Georgia, <b>O.C.G.A. &sect;16-9-59</b> makes operating one a misdemeanor. So the exposure is not created by <i>doing</i> credit repair; it is created by <b>the marketing claim attached to the money</b>. A broadcast audience arriving directly at a paid credit offer is precisely that claim. Source already on file: <code>l7s/OFFER-ARCHITECTURE.md</code>, 2026-08-29.
+</div>
+</section>
+
+<section>
+<h2><span class="n">02</span>What each funnel may and may not touch</h2>
+<p class="lede">The funnel is a <b>container</b>. It holds the pricing/checkout page, the lead magnets, hero calculator links, hitthe.link pages, the PDFs and the roadmap &mdash; qi, 18:11:17 and 18:16:48.</p>
+
+<div class="cards two">
+  <div class="card a">
+    <div class="tag">Funnel A &middot; free</div>
+    <h4>The lead magnet</h4>
+    <div class="sub">Fed by radio, social, public content. Its only job is to convert a stranger into a known contact with a stated reason.</div>
+    <ul>
+      <li><b>May</b> give away real value &mdash; PDF, e-book, one-page infographic, calculator</li>
+      <li><b>May</b> capture name, email, phone into the CRM</li>
+      <li><b>May</b> run the assessment / quiz and book a call</li>
+      <li><b>May</b> teach how the credit system works, generally</li>
+      <li class="no"><b>May not</b> take payment of any kind</li>
+      <li class="no"><b>May not</b> promise, imply or price a score outcome</li>
+      <li class="no"><b>May not</b> link directly to paid credit fulfillment</li>
+      <li class="no"><b>May not</b> scope, assess or dispute an individual file</li>
+    </ul>
+  </div>
+  <div class="card b">
+    <div class="tag">Funnel B &middot; paid</div>
+    <h4>Self-serve checkout</h4>
+    <div class="sub">Low-ticket digital products, self-publishing. Entered by choice, not by broadcast referral.</div>
+    <ul>
+      <li><b>May</b> sell completed digital goods, delivered at download</li>
+      <li><b>May</b> sell membership, education and systems</li>
+      <li><b>May</b> ascend a buyer into the gated ladder</li>
+      <li><b>May</b> carry the pricing table and the roadmap</li>
+      <li class="no"><b>May not</b> be the first thing a broadcast lead sees</li>
+      <li class="no"><b>May not</b> collect fees in advance of a regulated service</li>
+      <li class="no"><b>May not</b> market L7S as performing credit repair</li>
+      <li class="no"><b>May not</b> bundle regulated work into a financed package</li>
+    </ul>
+  </div>
 </div>
 
-<h2 class="sec"><span class="n">02</span>The commitment ladder — his three levels</h2>
-<p class="lede">Stated on the 2026-08-30 call: <b>"three levels of commitment — low ticket, mid ticket, high ticket."</b> The Apple analogy he used: iPhone → iPad → MacBook, one ecosystem, three depths.</p>
+<div class="tw">
+<table>
+<tr><th>What moves across the wall</th><th>Allowed</th><th>Condition</th></tr>
+<tr><td>A contact record (name, email, phone)</td><td class="yes">YES</td><td>Tagged with funnel of origin, always</td></tr>
+<tr><td>Quiz answers and stated intent</td><td class="yes">YES</td><td>Self-reported only, never an assessment of their file</td></tr>
+<tr><td>A person who booked and attended a call</td><td class="yes">YES</td><td>After a human qualification conversation</td></tr>
+<tr><td>A person who self-selects a paid product</td><td class="yes">YES</td><td>Their own click, from inside the nurture, not from the broadcast</td></tr>
+<tr><td>A direct link, broadcast &rarr; paid credit checkout</td><td class="nope">NEVER</td><td>This is the whole reason the split exists</td></tr>
+<tr><td>Advance fees for regulated credit work</td><td class="nope">NEVER</td><td>CROA &sect;1679b(b) &mdash; performed first, billed after</td></tr>
+<tr><td>An outcome or score guarantee, anywhere</td><td class="nope">NEVER</td><td>Governs every page in both funnels</td></tr>
+</table>
+</div>
+</section>
 
-<div class="tw"><table>
-<thead><tr><th>Tier</th><th>Offer</th><th>Price (his numbers)</th><th>Funnel stage</th></tr></thead>
-<tbody>
-<tr><td><span class="tier low">LOW</span></td><td>UWE | UCES — team enrollment / UCESPP services</td><td class="p">$300 – $1,000</td><td>Stage 01 → 03</td></tr>
-<tr><td><span class="tier low">LOW</span></td><td>Digital products — templates, lead magnets, courses</td><td class="p">not yet priced</td><td>Stage 01 → 04</td></tr>
-<tr><td><span class="tier mid">MID</span></td><td>DWY — Done With You</td><td class="p">$1,277 – $3,777</td><td>Stage 03 → 05</td></tr>
-<tr><td><span class="tier mid">MID</span></td><td>NLCF · CRJ</td><td class="p">$777 – $1,777</td><td>Stage 06</td></tr>
-<tr><td><span class="tier high">HIGH</span></td><td>DFY — Done For You</td><td class="p">$3,777 – $7,777</td><td>Stage 03 → 05</td></tr>
-<tr><td><span class="tier high">HIGH</span></td><td>Alert Group · ADGA · BAG · BKS/CRW · B&amp;P</td><td class="p">$1,777 – $3,777</td><td>Stage 06</td></tr>
-<tr><td><span class="tier high">HIGH</span></td><td>Tina Talks Cred · Credit Coach Q · Coach Keem</td><td class="p">$1,777 – $3,777</td><td>Stage 06</td></tr>
-<tr><td><span class="tier high">HIGH</span></td><td>McCarthy Law Firm (ATL, GA)</td><td class="p">$1,777 – $3,777</td><td>Stage 06</td></tr>
-</tbody></table></div>
-
-<h2 class="sec"><span class="n">03</span>What the funnel has to carry</h2>
-<div class="grid">
-  <div class="card"><div class="k">Cycle length</div><div class="v">12–24 mo</div><div class="d">Average full cycle. 1 round ≈ 45 business days; 6 rounds ≈ 12 months. The funnel must nurture across that, not just convert once.</div></div>
-  <div class="card"><div class="k">First progress window</div><div class="v">45–90 days</div><div class="d">Starter range, low→mid ticket. This is the promise the checkout page has to set expectations against.</div></div>
-  <div class="card"><div class="k">Revenue lines</div><div class="v">5</div><div class="d">OS playbooks · membership subs · digital funnels &amp; upsells · IT+accounting staffing · AI agency automation.</div></div>
-  <div class="card"><div class="k">Ticket spread</div><div class="v">$300 → $7,777</div><div class="d">Lowest named entry to highest named delivery. A 26× spread — one funnel cannot serve both ends.</div></div>
+<section>
+<h2><span class="n">03</span>The intake &mdash; how a call arrives structured</h2>
+<div class="axiom" style="border-left-color:var(--gold);border-color:var(--line);background:linear-gradient(160deg,rgba(201,162,74,.1),rgba(15,15,19,.94))">
+  <span class="lbl" style="color:var(--gold)">Verbatim, 18:19:37 &amp; 18:19:58</span>
+  <div class="q">&ldquo;We&rsquo;re going to have an assessment or quiz, and then we&rsquo;re going to make different contact forms with drop-down menus for the initial hero care call to the rescue me call of a hero campaign where people book calls for the first time or with follow-up calls. They&rsquo;ll be able to put a drop-down and select multiple choice for conditional logic, what they&rsquo;re coming on the call for, and answer quick, key, frequently asked questions so we can streamline the call so it&rsquo;s a structured meeting.&rdquo;</div>
 </div>
 
-<div class="gap">
-<h3>The four things that block a build today</h3>
-<ul class="tight">
-<li><b>No payment processor named.</b> Priority 1 says "including checkout and payment processing" but no processor is chosen. Stripe, GoHighLevel native, or the existing merchant account — this decision gates the entire checkout stage.</li>
-<li><b>Digital products are unpriced.</b> The vendor menu prices partners and DWY/DFY, but templates, courses and lead magnets have no numbers. The low-ticket rung of the ladder is empty.</li>
-<li><b>No target numbers.</b> Priority 3 asks for "target numbers" — none exist yet, so conversion rates, traffic spend and break-even cannot be computed.</li>
-<li><b>Compliance copy is fixed and must ride every page.</b> L7S is <b>not</b> a CRO, lender, broker, law firm or tax advisor; no outcome or score guarantees; regulated services performed by licensed third parties. This is not optional footer text — it governs what the funnel is allowed to claim.</li>
-</ul>
+<div class="fig">
+<svg viewBox="0 0 360 560" role="img" aria-label="Conditional-logic intake routing to Hero Care Call or Rescue Me Call">
+  <defs>
+    <marker id="ar2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#c9a24a"/>
+    </marker>
+  </defs>
+
+  <rect x="60" y="6" width="240" height="46" rx="10" fill="#15151b" stroke="#c9a24a" stroke-width="1.2"/>
+  <text x="180" y="26" text-anchor="middle" font-family="Georgia,serif" font-size="14.5" fill="#f3eee1">Assessment / quiz</text>
+  <text x="180" y="43" text-anchor="middle" font-family="ui-monospace,monospace" font-size="9" fill="#9a9384">drop-downs + multiple choice</text>
+
+  <line x1="180" y1="52" x2="180" y2="76" stroke="#c9a24a" stroke-width="1.8" marker-end="url(#ar2)"/>
+
+  <!-- Q1 -->
+  <rect x="30" y="78" width="300" height="40" rx="9" fill="#0f0f13" stroke="rgba(255,255,255,.1)"/>
+  <text x="46" y="95" font-family="ui-monospace,monospace" font-size="9" fill="#635c50" letter-spacing="1.4">GATE 1</text>
+  <text x="46" y="110" font-family="-apple-system,sans-serif" font-size="12" fill="#f3eee1">Have you worked with L7S before?</text>
+
+  <line x1="105" y1="118" x2="105" y2="142" stroke="#5fd08a" stroke-width="1.6" marker-end="url(#ar2)"/>
+  <line x1="255" y1="118" x2="255" y2="142" stroke="#ffb347" stroke-width="1.6" marker-end="url(#ar2)"/>
+  <text x="112" y="134" font-family="ui-monospace,monospace" font-size="9" fill="#5fd08a">NO</text>
+  <text x="262" y="134" font-family="ui-monospace,monospace" font-size="9" fill="#ffb347">YES</text>
+
+  <!-- branch A -->
+  <rect x="16" y="144" width="164" height="128" rx="10" fill="#16241b" stroke="#5fd08a" stroke-width="1.2"/>
+  <text x="30" y="164" font-family="ui-monospace,monospace" font-size="9" fill="#5fd08a" letter-spacing="1.4">FIRST-TIME</text>
+  <text x="30" y="182" font-family="Georgia,serif" font-size="15" fill="#f3eee1" font-weight="600">HERO CARE</text>
+  <text x="30" y="197" font-family="Georgia,serif" font-size="15" fill="#f3eee1" font-weight="600">CALL</text>
+  <text x="30" y="216" font-family="-apple-system,sans-serif" font-size="10.5" fill="#9a9384">Orientation + track 1</text>
+  <text x="30" y="230" font-family="-apple-system,sans-serif" font-size="10.5" fill="#9a9384">placement. Establish</text>
+  <text x="30" y="244" font-family="-apple-system,sans-serif" font-size="10.5" fill="#9a9384">where they start on</text>
+  <text x="30" y="258" font-family="-apple-system,sans-serif" font-size="10.5" fill="#9a9384">the seven tracks.</text>
+
+  <!-- branch B -->
+  <rect x="188" y="144" width="156" height="128" rx="10" fill="#231d10" stroke="#ffb347" stroke-width="1.2"/>
+  <text x="202" y="164" font-family="ui-monospace,monospace" font-size="9" fill="#ffb347" letter-spacing="1.4">FOLLOW-UP</text>
+  <text x="202" y="182" font-family="Georgia,serif" font-size="15" fill="#f3eee1" font-weight="600">RESCUE ME</text>
+  <text x="202" y="197" font-family="Georgia,serif" font-size="15" fill="#f3eee1" font-weight="600">CALL</text>
+  <text x="202" y="216" font-family="-apple-system,sans-serif" font-size="10.5" fill="#9a9384">Stalled, confused, or</text>
+  <text x="202" y="230" font-family="-apple-system,sans-serif" font-size="10.5" fill="#9a9384">blocked inside a hero</text>
+  <text x="202" y="244" font-family="-apple-system,sans-serif" font-size="10.5" fill="#9a9384">campaign. Unblock,</text>
+  <text x="202" y="258" font-family="-apple-system,sans-serif" font-size="10.5" fill="#9a9384">re-engage, re-scope.</text>
+
+  <line x1="180" y1="272" x2="180" y2="296" stroke="#c9a24a" stroke-width="1.8" marker-end="url(#ar2)"/>
+
+  <!-- Q2 -->
+  <rect x="16" y="298" width="328" height="112" rx="10" fill="#0f0f13" stroke="rgba(255,255,255,.1)"/>
+  <text x="32" y="316" font-family="ui-monospace,monospace" font-size="9" fill="#635c50" letter-spacing="1.4">GATE 2 &mdash; WHAT ARE YOU COMING FOR?</text>
+  <text x="32" y="336" font-family="-apple-system,sans-serif" font-size="11.5" fill="#f3eee1">&#9642; Budget under $777 &rarr; Level 1 DIY, UWE portal</text>
+  <text x="32" y="354" font-family="-apple-system,sans-serif" font-size="11.5" fill="#f3eee1">&#9642; Wants slowest / lowest cost &rarr; UWE&middot;UCES</text>
+  <text x="32" y="372" font-family="-apple-system,sans-serif" font-size="11.5" fill="#f3eee1">&#9642; Needs speed, has budget &rarr; BAG fast-pass</text>
+  <text x="32" y="390" font-family="-apple-system,sans-serif" font-size="11.5" fill="#f3eee1">&#9642; Wants it done for them &rarr; DFY webinar invite</text>
+
+  <line x1="180" y1="410" x2="180" y2="434" stroke="#c9a24a" stroke-width="1.8" marker-end="url(#ar2)"/>
+
+  <!-- Q3 -->
+  <rect x="16" y="436" width="328" height="66" rx="10" fill="#0f0f13" stroke="rgba(255,255,255,.1)"/>
+  <text x="32" y="454" font-family="ui-monospace,monospace" font-size="9" fill="#635c50" letter-spacing="1.4">GATE 3 &mdash; PRE-ANSWERED FAQ BLOCK</text>
+  <text x="32" y="472" font-family="-apple-system,sans-serif" font-size="11" fill="#9a9384">Timeline expectations &middot; what L7S does and does not do</text>
+  <text x="32" y="489" font-family="-apple-system,sans-serif" font-size="11" fill="#9a9384">&middot; who performs regulated work &middot; no-guarantee notice</text>
+
+  <line x1="180" y1="502" x2="180" y2="524" stroke="#c9a24a" stroke-width="1.8" marker-end="url(#ar2)"/>
+  <rect x="52" y="526" width="256" height="30" rx="8" fill="#15151b" stroke="#c9a24a" stroke-width="1.1"/>
+  <text x="180" y="546" text-anchor="middle" font-family="Georgia,serif" font-size="13" fill="#f3eee1">A structured call, on the calendar</text>
+</svg>
 </div>
 
-<h2 class="sec"><span class="n">04</span>Tech stack, mapped to the funnel</h2>
-<p class="lede">Luckie: <b>"Reduce overlapping subscriptions and map each tool to a business workflow and sales-cycle stage."</b> The current budget carries 121 vendors with cost and status columns — but <b>no workflow or sales-stage column</b>. That mapping is the missing piece, and it is what turns a cost sheet into a decision tool.</p>
-<div class="grid">
-  <div class="card"><div class="k">True annual run-rate</div><div class="v">$7,573.02</div><div class="d">$360.00/mo recurring + $3,253.02/yr in annual charges. Measured 2026-08-29 23:08.</div></div>
-  <div class="card"><div class="k">Paid vs free</div><div class="v">9 / 121</div><div class="d">Only 9 of 121 vendors carry a cost. 112 are free or $0 — the stack is already far leaner than it looks.</div></div>
-  <div class="card"><div class="k">Identified savings</div><div class="v">$652.01</div><div class="d">Per year. Genspark $300 (connector dead), Setapp $180, Wispr Flow $180.</div></div>
+<div class="note amb">
+  <h5>Provenance &mdash; read before treating this routing as settled</h5>
+  qi specified the <b>mechanism</b> exactly (assessment/quiz, drop-downs, multiple choice, conditional logic, first-time vs follow-up, pre-answered FAQs). He did <b>not</b> enumerate which specific answers map to which call. <b>Gates 1&ndash;3 above are proposed, not transcribed</b> &mdash; built from the one distinction he did state, that Hero Care is the <i>initial</i> call and Rescue Me is the <i>follow-up</i> call inside a hero campaign. This is the single item on this page that needs his sign-off before it is built.
 </div>
-<p class="lede">Full detail: <code>hitthe.link/tech-stack-budget/</code> · <code>hitthe.link/l7s-cost-cuts/</code> · <code>hitthe.link/costs/</code></p>
+</section>
 
-<h2 class="sec"><span class="n">05</span>The BPO model the funnel sells into</h2>
-<p class="lede">Luckie's framing, verbatim: <b>"We still do it our way via our BPO MODEL — Business Professional Outsourcing to our Exclusive Network of Regulated Industry Experts and Specialists."</b> The funnel does not sell a service; it sells coordinated access to a vetted network.</p>
-<ul class="tight">
-<li><b>L7S HERO S.O.S (OS)</b> — strategic planning playbooks and systems solutions</li>
-<li><b>Membership subscriptions</b> — LDE learning environments + BD communities</li>
-<li><b>Digital product funnels and upsell verticals</b></li>
-<li><b>IT and accounting staffing</b> — fractional CTOs (devs, techs, engineers) and CFOs (CPAs, CFPs, FP&amp;A agencies, controllers, treasurers)</li>
-<li><b>AI agency automation</b> — CRMs, PMPs, ERPs for founders, freelancers, facilitators, financial literacy educators</li>
-</ul>
-<p class="lede">Agent compensation runs on <b>A.I.R — Actions, Introduce, Refer</b>: send people to the mentorship for a 3-way, they get helped, the agent gets paid. Partnered with McCarthy Law Firm, Rocket Lawyer, and L7S, Inc.</p>
+<section>
+<h2><span class="n">04</span>The ladder it feeds</h2>
+<p class="lede">Self-feeding by design: <b>credit is track one because credit is what makes the prospect financeable for the flagship.</b></p>
 
-<div class="warn">
-<h3>Two operational realities this build must respect</h3>
-<p><b>Availability is not continuous.</b> Luckie's own words on why the system exists: <i>"How I'm helping clients while having the ability to compensate for my unavailability due to my Dialysis Schedule."</i> The funnel has to run without him present — that is its actual job, not a nice-to-have.</p>
-<p><b>Timelines cannot be promised.</b> "We aim to expedite where possible, but timelines and outcomes depend on external parties and cannot be guaranteed." Every page in this funnel inherits that constraint.</p>
+<div class="rung">
+  <div class="top"><span class="nm">Level 1 &middot; DIY self-serve</span><span class="pr">under $777</span></div>
+  <div class="meta">Portal via UWE partnership</div>
+  <div class="d">&ldquo;If someone has less than $777 to get started, they can start with the level one tier, the DIY self-serving tier, and we&rsquo;ll get them a portal and stuff through UWE partnership.&rdquo; &mdash; qi, 18:18:28. Entry rung; feeds directly from Funnel B.</div>
 </div>
 
-<footer>L7S funnel architecture · sourced from Luckie Goggins, 2026-08-29 19:24 and 2026-08-30 16:46 EDT · every figure transcribed, none estimated</footer>
-<script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
+<div class="rung">
+  <div class="top"><span class="nm">UWE / UCES &middot; UCESPP</span><span class="pr">$188 OTP + $89/mo</span></div>
+  <div class="meta">6&ndash;12 months &middot; slowest path &middot; McCarthy Law Firm &middot; all 50 states</div>
+  <div class="d">$188 one-time (normally $300) plus $89/month, <b>waived if they refer 5 people</b>. The referral waiver is a growth mechanism, not a discount &mdash; it turns the slowest tier into the acquisition engine for the tiers above it.</div>
+</div>
+
+<div class="rung">
+  <div class="top"><span class="nm">BAG fast-pass</span><span class="pr">$1,700 &ndash; $3,500</span></div>
+  <div class="meta">1&ndash;3 months &middot; BrightPath Ascend Group &middot; Raphael Rodriguez</div>
+  <div class="d">The speed tier. Same destination as UWE, roughly a quarter of the time, for roughly ten times the price &mdash; which is exactly the trade the Gate&nbsp;2 drop-down is built to surface.</div>
+</div>
+
+<div class="rung">
+  <div class="top"><span class="nm">CC360</span><span class="pr">UNKNOWN</span></div>
+  <div class="meta">Premium high mentorship</div>
+  <div class="d">&ldquo;If they got the premium high mentorship, they&rsquo;ll go to CC360.&rdquo; &mdash; qi, 18:22:17. <b>No price has been stated.</b> Not estimated here.</div>
+</div>
+
+<div class="rung flag">
+  <div class="top"><span class="nm">DFY flagship</span><span class="pr">$7,000 &ndash; $21,000</span></div>
+  <div class="meta">Financed by Creative Pay &middot; <span class="pill p-block">contract not signed</span></div>
+  <div class="d">&ldquo;Our true flagship ticket products will be <b>done-for-you implementations of CRMs, project management, templates, and the operating system itself</b>.&rdquo; (18:22:48) &mdash; because &ldquo;even though people don&rsquo;t really need another course, they need a system.&rdquo; (18:22:37)<br><br><b>The Creative Pay mechanism:</b> &ldquo;we get paid the whole&hellip; ticket up front while the client or the prospect is able to do a financing plan based on their credit score.&rdquo; (18:23:47) L7S is paid in full at close; the client finances against their own score. <b>That is the reason credit is track one.</b> A prospect who cleared the credit track is a prospect who can be financed &mdash; the ladder pays for its own top rung.</div>
+</div>
+
+<div class="note amb">
+  <h5>Price reconciliation &mdash; two sources disagree, both preserved</h5>
+  Luckie&rsquo;s vendor menu of 2026-08-30 priced <b>DFY at $3,777&ndash;$7,777</b> and <b>UWE&nbsp;|&nbsp;UCES at $300&ndash;$1,000</b>. The 08-31 figures above come from qi and the Raphael Rodriguez call the following morning. They are <b>not</b> reconciled, and nothing here is averaged or split. The earlier page is preserved verbatim at <a href="/l7s-funnels/v1-vendor-menu.html">l7s-funnels/v1-vendor-menu.html</a>. One of the two needs to be retired by decision, not by overwrite.
+</div>
+</section>
+
+<section>
+<h2><span class="n">05</span>The gated track ladder &mdash; the seven C&rsquo;s</h2>
+<p class="lede">Gated: you only advance if you clear the prior track. Codename for track one is <b>H.O.T. HERO</b> &mdash; Trustworthiness, Tradelines, Transactions.</p>
+
+<div class="chain">
+  <div class="trk one"><div class="i">TRACK 1 &middot; H.O.T. HERO</div><div class="t">Credit</div><div class="s">Trustworthiness, Tradelines, Transactions. The financeability gate.</div></div>
+  <div class="trk"><div class="i">TRACK 2</div><div class="t">Cash Flow</div><div class="s">Control of money in and out.</div></div>
+  <div class="trk"><div class="i">TRACK 3</div><div class="t">Crypto</div><div class="s">Digital assets, self-custody.</div></div>
+  <div class="trk"><div class="i">TRACK 4</div><div class="t">Currency</div><div class="s">&ldquo;Currency hero, which is a broker account in Forex.&rdquo;</div></div>
+  <div class="trk"><div class="i">TRACK 5</div><div class="t">Company</div><div class="s">Setting up the business entity.</div></div>
+  <div class="trk"><div class="i">TRACK 6</div><div class="t">Capital</div><div class="s">Capital consulting, getting funded.</div></div>
+  <div class="trk"><div class="i">TRACK 7</div><div class="t">Campaign Hero</div><div class="s">Back-end systems, GoHighLevel, PM tools, campaigns &mdash; personal, business or hybrid.</div></div>
+</div>
+
+<div class="note gold">
+  <h5>Correction to the brief this page was built from</h5>
+  The working brief listed six named tracks and marked the seventh <b>TBD</b>. <b>It is not TBD.</b> qi named all seven in sequence at 18:18:37&ndash;18:19:18, and the missing one is <b>Currency &mdash; a Forex broker account</b>, sitting between Crypto and Company. This is independently corroborated by <code>l7s/OFFER-ARCHITECTURE.md</code> (2026-08-29), whose 7&times;4 matrix carries &ldquo;4 &middot; Currency / forex&rdquo; as its own row. Two independent sources, one week apart, agree.
+  <br><br>That same document notes the risk shape of the ladder: <b>rows 2, 3, 5 and 7 are ordinary commercial services; rows 1 and 6 are regulated to the point of criminal exposure in Georgia &mdash; and they are the two rows customers arrive for.</b> That asymmetry is the firewall&rsquo;s reason for existing, restated in track form.
+</div>
+</section>
+
+<section>
+<h2><span class="n">06</span>Where both funnels land</h2>
+<div class="note gold">
+  <h5>Verbatim, 18:17:37</h5>
+  &ldquo;The funnel will lead to the L7S Hero CRM, which is the GoHighLevel&hellip; Hero sub-account, <b>until we get our own, until we get a proprietary CRM that&rsquo;s not under that brand</b>.&rdquo;
+</div>
+<p class="lede">Treat GoHighLevel as <b>interim infrastructure with a stated exit</b>. Three design rules follow from that, and they cost nothing now but are near-impossible to retrofit later:</p>
+<div class="cards">
+  <div class="card b">
+    <ul>
+      <li><b>Own the schema, not their objects.</b> Define the contact/lead/opportunity fields as an L7S schema that GHL happens to store. Never let a GHL-only field become load-bearing.</li>
+      <li><b>Tag funnel-of-origin on every record, permanently.</b> It is the audit trail proving the firewall held. A lead that cannot prove which funnel it came from cannot prove it was not a broadcast lead sold directly.</li>
+      <li><b>Scheduled export off the platform.</b> Portability that is not exercised is portability that does not exist &mdash; the migration must be a re-import, never an extraction project.</li>
+    </ul>
+  </div>
+</div>
+<h3>The CAPS framework, in his words &mdash; 18:18:08</h3>
+<p class="lede">&ldquo;We&rsquo;ll use the CAPS framework to <b>capture</b> information, <b>archive</b> it into Notion and Asana, <b>present</b> it using Gamma or Canva or both, and then <b>summarize</b> it into scorecards and dashboards, snapshots for the three different audiences&hellip;&rdquo; The first audience is <b>internal leadership</b>. The other two were cut off mid-sentence in the capture and are <span class="pill p-unk">unknown</span> &mdash; not reconstructed here.</p>
+</section>
+
+<section>
+<h2><span class="n">07</span>The high-ticket motion</h2>
+<p class="lede">Modeled explicitly on Jason Wojo / Wojo Media &mdash; qi, 18:23:18.</p>
+<div class="tw">
+<table>
+<tr><th>Step</th><th>What happens</th><th>Status</th></tr>
+<tr><td><b>1 &middot; One-to-many event</b></td><td>DFY special-event webinar, web event, or Zoom call event</td><td><span class="pill p-miss">missing</span></td></tr>
+<tr><td><b>2 &middot; Link drop</b></td><td>Checkout link dropped live, in the event</td><td><span class="pill p-miss">missing</span></td></tr>
+<tr><td><b>3 &middot; Checkout page</b></td><td>High-ticket offer, $7,000&ndash;$21,000</td><td><span class="pill p-miss">missing</span></td></tr>
+<tr><td><b>4 &middot; Financed close</b></td><td>Creative Pay finances the client; L7S paid in full up front</td><td><span class="pill p-block">blocked</span></td></tr>
+</table>
+</div>
+<h3>The prerequisite workflow</h3>
+<p class="lede">Getting started &rarr; fulfillment &rarr; handoff &rarr; progress tracking via portals, apps and back-end systems. In his words at 18:20:17: <b>&ldquo;that&rsquo;ll be the fully fleshed-out system we need to go fully launch the market and do a reactivation campaign of our list of 3,000 leads.&rdquo;</b> The 3,000-lead reactivation is the launch event &mdash; and it is downstream of this workflow, not parallel to it.</p>
+</section>
+
+<section>
+<h2><span class="n">08</span>Built &middot; missing &middot; blocked</h2>
+<p class="lede">Every row verified against the live site at build time, asserting on the response body &mdash; not on the status code.</p>
+
+<h3>Built &mdash; verified live</h3>
+<div class="tw">
+<table>
+<tr><th>Surface</th><th>What it actually is</th></tr>
+<tr><td class="p">/l7s/funnels/</td><td>The L7S Funnel Standard &mdash; a reusable 5-stage skeleton (capture attention &rarr; convert to leads &rarr; nurture &rarr; convert to cash &rarr; ascend &amp; retain). <b>This is the template layer both funnels should instantiate.</b></td></tr>
+<tr><td class="p">/l7s-funnels/v1-vendor-menu.html</td><td>The 08-30 architecture built from Luckie&rsquo;s vendor menu. Preserved verbatim, not overwritten.</td></tr>
+<tr><td class="p">/l7s-site/</td><td>index, how-it-works, onboarding &mdash; public-facing pages</td></tr>
+<tr><td class="p">/l7s-hero/ &middot; /l7s-docs/ &middot; /l7s-gap/</td><td>Hero page, docs (218&nbsp;KB), gap analysis</td></tr>
+<tr><td class="p">/l7s-client-info/ &middot; /l7s-operator-hub/</td><td>Client intake info, operator hub</td></tr>
+<tr><td class="p">/tech-stack-budget/ &middot; /l7s-cost-cuts/ &middot; /costs/</td><td>The budget layer &mdash; blocker 3 of 3</td></tr>
+<tr><td class="p">l7s/OFFER-ARCHITECTURE.md</td><td>7&times;4 = 28-cell offer matrix with statutory citations and a day-one-artifact rule. <b>The most load-bearing document already on disk.</b></td></tr>
+<tr><td class="p">l7s/intake/ &middot; l7s/stripe/</td><td>Present on disk. Live behavior not asserted &mdash; treat as scaffolding until verified.</td></tr>
+</table>
+</div>
+
+<h3>Missing &mdash; verified absent</h3>
+<div class="tw">
+<table>
+<tr><th>Gap</th><th>Evidence</th></tr>
+<tr><td><b>An L7S pricing / checkout page</b></td><td><code>/l7s-pricing/</code> returns <b>404</b>. <code>/pricing/</code> returns 200 but the body is <i>XLRD &middot; Executive Leverage</i> &mdash; a different brand, not L7S.</td></tr>
+<tr><td><b>The hero calculator</b></td><td><code>/calculator/</code> and <code>/hero-calculator/</code> both <b>404</b>. Loose files <code>_audit_calc01.html</code>, <code>_calc09_tmp.html</code> and a <code>calculators/</code> directory exist unlinked in the repo root.</td></tr>
+<tr><td><b>The free lead magnet itself</b></td><td><code>/lead-magnet/</code> <b>404</b>. Funnel A has no asset to give away &mdash; and Funnel A is the firewall.</td></tr>
+<tr><td><b>The L7S roadmap</b></td><td><code>/l7s-roadmap/</code> <b>404</b>. <code>/roadmap/</code> is 200 but its body is <i>XEN &middot; 48-Hour Roadmap</i> &mdash; unrelated.</td></tr>
+<tr><td><b>The assessment / quiz</b></td><td>No quiz or assessment surface found anywhere in the repo.</td></tr>
+<tr><td><b>A named payment processor</b></td><td>Still unchosen as of 08-30. <code>l7s/stripe/</code> exists on disk but no decision is recorded.</td></tr>
+<tr><td><b>The DFY webinar/event rail</b></td><td>No event, registration or replay surface exists.</td></tr>
+</table>
+</div>
+
+<h3>Blocked</h3>
+<div class="note warn">
+  <h5>&#9679; Creative Pay contract &mdash; not signed</h5>
+  &ldquo;<b>Once we get the contract for Creative Pay</b>&hellip;&rdquo; (18:23:08). Until it is signed, the entire $7,000&ndash;$21,000 financed close is unavailable, which means step 4 of the high-ticket motion cannot run &mdash; and steps 1 through 3 have no economics without it. <b>This is the top of the critical path.</b> Everything else on this page can be built while it is pending; nothing above $3,500 can be sold until it lands.
+</div>
+<div class="note warn">
+  <h5>&#9679; Counsel sign-off on tracks 1 and 6</h5>
+  <code>OFFER-ARCHITECTURE.md</code> flags the credit-coordination cell as &ldquo;the tightest cell in the entire grid&rdquo; and states plainly that <b>counsel must sign off on this cell specifically</b>. The firewall is the structural mitigation; it is not a substitute for that review. No paid credit-adjacent offer should go live in either funnel before it.
+</div>
+<div class="note amb">
+  <h5>&#9679; Unverified from here &mdash; stated, not proven</h5>
+  <ul>
+    <li>The <b>GoHighLevel Hero sub-account</b> &mdash; existence and configuration not verified; no access from this seat.</li>
+    <li>The <b>3,000-lead list</b> &mdash; stated by qi; the list itself was not located or counted.</li>
+    <li>The <b>UWE / BAG / CC360 terms</b> &mdash; sourced from the Raphael Rodriguez call of 08-31. No document carrying these terms was found on disk; they are recorded here as reported, not as verified.</li>
+    <li>The <b>LimeWire / Gemini NotebookLM 12-minute critique</b> &mdash; qi names it as the origin of the legal-conflict finding (&ldquo;which you&rsquo;ll hear inside the Lime Wire&rdquo;). Not listened to from this seat.</li>
+  </ul>
+</div>
+</section>
+
+<section>
+<h2><span class="n">09</span>Build order</h2>
+<p class="lede">Sequenced by what unblocks the most, not by what is easiest.</p>
+<div class="tw">
+<table>
+<tr><th>#</th><th>Build</th><th>Why it is in this position</th></tr>
+<tr><td class="p">1</td><td><b>The free lead magnet asset</b></td><td>Funnel A is the firewall, and it currently has nothing to give away. Every broadcast lead is unroutable until this exists.</td></tr>
+<tr><td class="p">2</td><td><b>The assessment / quiz + routing forms</b></td><td>Turns Funnel A from a capture page into a qualifier. Needs qi&rsquo;s sign-off on the Gate 1&ndash;3 logic in section 03.</td></tr>
+<tr><td class="p">3</td><td><b>Payment processor decision</b></td><td>One decision; blocks all of Funnel B. Not a build task.</td></tr>
+<tr><td class="p">4</td><td><b>L7S pricing + self-serve checkout</b></td><td>Funnel B's spine. Depends on 3 and on the blocker-3 budget work.</td></tr>
+<tr><td class="p">5</td><td><b>Funnel-of-origin tagging in the CRM</b></td><td>Cheap now, unrecoverable later. It is the evidence the firewall held.</td></tr>
+<tr><td class="p">6</td><td><b>DFY webinar rail</b></td><td>Runs in parallel; cannot close until Creative Pay signs.</td></tr>
+</table>
+</div>
+</section>
+
+<footer>
+  L7S TWO-FUNNEL ARCHITECTURE &middot; SPEC 2026-08-31<br>
+  SOURCE: qi verbatim capture 18:05&ndash;18:24 EDT &middot; l7s/OFFER-ARCHITECTURE.md 2026-08-29 &middot; Luckie Goggins vendor menu 2026-08-30<br>
+  Every price transcribed. Nothing estimated, modelled or invented. Unverified items say so.<br>
+  Not legal advice. L7S is not a CRO, lender, broker, law firm or tax advisor.<br>
+  <span style="color:#3c372f">L7S-FUNNEL-SPEC-2026-08-31-FIREWALL</span>
+</footer>
+
 </div>
