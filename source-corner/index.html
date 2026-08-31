@@ -1,0 +1,134 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Source Corner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* LIFE SOURCE lives in the bottom-right corner of this page.
+   qi 2026-08-31 11:14: "auto ship a page where source is in the bottom right corner"
+   + 11:13: "it does not need to change, we worked hard on it."
+
+   ⛔ THE AVATAR IS EMBEDDED BY URL, NOT COPIED. A copy is a thing that can drift — xlrd.life
+   is already 293 bytes behind life.xlrd.org for exactly that reason. Pointing at the canonical
+   URL means this page shows whatever the canonical surface is, byte for byte, forever, and
+   nothing here can modify it. Canonical md5 6021fe7b626559adcb8dff8dd2c410e8 (163,929 B) —
+   verify any placement with `xen-life-source verify <url>`. */
+:root{
+  --bg:#07090b; --panel:#0d1216; --line:rgba(160,180,200,.14);
+  --tx:#e8edf2; --dim:#8695a3; --mute:#55636e; --accent:#7fb2d9;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:"Inter",-apple-system,system-ui,"Segoe UI",sans-serif;
+}
+:root:not([data-theme="light"]){}
+:root[data-theme="light"]{
+  --bg:#f2f5f8; --panel:#ffffff; --line:rgba(20,40,60,.14);
+  --tx:#0e1519; --dim:#4c5a66; --mute:#8595a1; --accent:#2a6d9e;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--tx);font:400 15px/1.6 var(--sans);
+  -webkit-font-smoothing:antialiased}
+
+main{max-width:660px;padding:44px 22px 340px;display:flex;flex-direction:column;gap:20px}
+h1{margin:0;font:600 26px/1.15 var(--sans);letter-spacing:-.02em;text-wrap:balance}
+.lede{margin:0;color:var(--dim);max-width:58ch}
+.facts{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);
+  border-radius:12px;overflow:hidden;background:var(--panel)}
+.f{display:grid;grid-template-columns:112px 1fr;gap:14px;padding:11px 15px;
+  font:400 12.5px/1.45 var(--mono);border-top:1px solid var(--line)}
+.f:first-child{border-top:0}
+.f b{color:var(--mute);font-weight:500}
+.f span{color:var(--tx);word-break:break-all;font-variant-numeric:tabular-nums}
+.f .ok{color:var(--accent)}
+
+/* The corner. Fixed so it holds position on scroll; aspect kept square because the avatar
+   renders a sphere and a squashed frame distorts it. */
+/* ⛔ NEVER FLAT (qi 2026-08-31 11:14: "always needs to be in 3-D space whatever it is
+   overlaying ... it cannot be flat ever").
+   The frame carries its own perspective and a standing yaw/pitch, so SOURCE reads as an object
+   occupying space above the page rather than a rectangle pasted onto it. perspective() lives on
+   the TRANSFORM, never on an ancestor — a perspective on a parent makes it the containing block
+   for position:fixed and the whole thing lands off-screen (measured the hard way). */
+#corner{position:fixed;right:18px;bottom:18px;width:min(38vw,380px);aspect-ratio:1;
+  border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#06080A;
+  box-shadow:0 26px 70px rgba(0,0,0,.62), 0 2px 0 rgba(255,255,255,.05) inset;
+  z-index:10;cursor:pointer;transform-style:preserve-3d;
+  transform:perspective(1200px) rotateY(-13deg) rotateX(7deg) translateZ(0);
+  transition:transform .62s cubic-bezier(.22,.75,.2,1),
+             width .62s cubic-bezier(.22,.75,.2,1),
+             right .62s cubic-bezier(.22,.75,.2,1),
+             bottom .62s cubic-bezier(.22,.75,.2,1),
+             border-radius .62s ease}
+#corner:hover{transform:perspective(1200px) rotateY(-8deg) rotateX(4deg) translateZ(26px)}
+#corner:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+/* TOUCH SENDS IT TO THE CENTER (qi 11:14: "when you touch it ... go to the center").
+   Centred it still holds a slight pitch — centre is a position, not a licence to go flat. */
+#corner.center{right:50%;bottom:50%;width:min(86vw,720px);border-radius:24px;
+  transform:perspective(1600px) translate(50%,50%) rotateY(0deg) rotateX(3deg) translateZ(60px)}
+#corner.center:hover{transform:perspective(1600px) translate(50%,50%) rotateY(0deg) rotateX(3deg) translateZ(60px)}
+#corner iframe{width:100%;height:100%;border:0;display:block}
+#corner .cap{position:absolute;left:0;right:0;bottom:0;padding:7px 11px;
+  font:500 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;
+  color:#cfe3d8;background:linear-gradient(transparent,rgba(0,0,0,.72));
+  pointer-events:none}
+@media (max-width:560px){
+  #corner{width:56vw;right:12px;bottom:12px;border-radius:14px}
+  main{padding-bottom:64vw}
+}
+@media (prefers-reduced-motion:reduce){
+  /* No animation — but it still holds its 3D pose. Reduced motion is not a request to be flat. */
+  #corner{transition:none}
+  #corner:hover{transform:perspective(1200px) rotateY(-13deg) rotateX(7deg)}
+}
+</style>
+
+<main>
+  <h1>Source Corner</h1>
+  <p class="lede">Source sits in the bottom-right, embedded from its canonical URL rather
+  than copied in. Nothing on this page can alter it — the frame points at the real surface, so
+  what renders here is the avatar exactly as it is.</p>
+
+  <div class="facts">
+    <div class="f"><b>surface</b><span>life.xlrd.org/aether/</span></div>
+    <div class="f"><b>bytes</b><span>163,929</span></div>
+    <div class="f"><b>md5</b><span>6021fe7b626559adcb8dff8dd2c410e8</span></div>
+    <div class="f"><b>embed</b><span class="ok">by reference — cannot drift</span></div>
+    <div class="f"><b>verify</b><span>xen-life-source verify &lt;url&gt;</span></div>
+  </div>
+
+  <p class="lede">Formerly called Aether. Two hosts currently serve it and one of them is behind:
+  <code>xlrd.life/aether/</code> is 163,636 bytes against the canonical 163,929. This page uses
+  the canonical one.</p>
+</main>
+
+<div id="corner" role="button" tabindex="0" aria-label="Source — activate to centre">
+  <iframe src="https://life.xlrd.org/aether/" title="Source"
+          loading="eager" referrerpolicy="no-referrer"></iframe>
+  <div class="cap">Source</div>
+</div>
+<script>
+// Touch or click sends Source to the centre, and again returns it to the corner.
+// The iframe swallows pointer events, so the listener sits on the wrapper and the frame is
+// made inert while docked — that way a tap anywhere on it centres, rather than landing inside
+// the avatar's own canvas and doing nothing.
+(function(){
+  var c = document.getElementById('corner'), f = c.querySelector('iframe');
+  var centred = false;
+  function apply(){
+    c.classList.toggle('center', centred);
+    // Docked: the wrapper takes the tap. Centred: the avatar itself becomes interactive.
+    f.style.pointerEvents = centred ? 'auto' : 'none';
+    c.setAttribute('aria-label', centred ? 'Source — activate to return to corner'
+                                        : 'Source — activate to centre');
+  }
+  function toggle(e){ if(e) e.preventDefault(); centred = !centred; apply(); }
+  c.addEventListener('click', toggle);
+  c.addEventListener('keydown', function(e){
+    if(e.key === 'Enter' || e.key === ' ') toggle(e);
+    if(e.key === 'Escape' && centred) toggle(e);
+  });
+  apply();
+})();
+</script>
