@@ -87,7 +87,7 @@
       overflow-x: hidden;
       scroll-behavior: smooth;
       -webkit-overflow-scrolling: touch;
-      padding-top: 154px; /* Space for fixed search bar (64) + nav (90) */
+      padding-top: 96px; padding-bottom: 110px; /* nav on top; search bar now fixed at the BOTTOM (qi 00:51) */
       padding-bottom: 100px;
     }
 
@@ -335,12 +335,10 @@
     }
 
 /* ===== SEARCH BAR — added 2026-08-30 for qi ===== */
-#search-wrap{position:fixed;top:0;left:0;right:0;z-index:60;padding:14px 20px 10px;
+#search-wrap{position:fixed;bottom:0;left:0;right:0;z-index:60;padding:10px 20px calc(14px + env(safe-area-inset-bottom));
   background:linear-gradient(180deg,rgba(6,8,12,.96) 0%,rgba(6,8,12,.86) 62%,rgba(6,8,12,0) 100%);
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
-#search-box{position:relative;max-width:720px;margin:0 auto;display:flex;align-items:center;gap:10px;
-  border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:11px 14px;
-  background:rgba(255,255,255,.045);transition:border-color .18s,box-shadow .18s,background .18s}
+#search-box{position:relative;max-width:720px;margin:0 auto;display:flex;align-items:center;gap:12px;height:58px;padding:0 22px;border-radius:999px;background:rgba(20,24,32,.72);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(140,200,255,.22);box-shadow:0 10px 34px rgba(0,0,0,.5)}
 #search-box:focus-within{border-color:rgba(140,200,255,.55);background:rgba(255,255,255,.075);
   box-shadow:0 0 0 3px rgba(120,180,255,.12),0 8px 30px rgba(0,0,0,.45)}
 #search-box svg{flex:0 0 auto;opacity:.5}
