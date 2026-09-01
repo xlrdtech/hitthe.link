@@ -192,6 +192,28 @@
     ITEMS.sort(function(a,b){return a.at-b.at;});
   })();
 
+  /* ---- LIVE FEED (qi 2026-09-01 00:49 "sync that with life and todoist") ----
+     canon 41: Todoist in sync with Xen and life/steer — the baked snapshot above
+     is now only the offline fallback. canvas.xlrd.org/day.json is written every
+     3 minutes by xen-day-sync from the real Todoist board. */
+  function liveSync(){
+    fetch("https://canvas.xlrd.org/day.json",{cache:"no-store"})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        var t=(d.tasks||[]).filter(function(x){return x.due && String(x.due).indexOf("T")>0;});
+        if(!t.length && d.next && d.next.due) t=[d.next];
+        if(!t.length) return;
+        ITEMS.length=0;
+        t.forEach(function(x){
+          var dd=parseNaive(String(x.due).replace("Z","").slice(0,19));
+          if(dd) ITEMS.push({slug:String(x.id||""), what:String(x.content||""), at:dd, travel:0});
+        });
+        ITEMS.sort(function(a,b){return a.at-b.at;});
+        if(elSnap) elSnap.textContent="Next commitment \u00b7 LIVE \u00b7 Todoist";
+      }).catch(function(){ /* fallback stays: the baked ledger */ });
+  }
+  liveSync(); setInterval(liveSync, 120000);
+
   function fmt12(d){
     var h=d.getHours(), m=d.getMinutes();
     var mer=h<12?"AM":"PM";
