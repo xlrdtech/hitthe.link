@@ -202,6 +202,14 @@
       .then(function(d){
         var t=(d.tasks||[]).filter(function(x){return x.due && String(x.due).indexOf("T")>0;});
         if(!t.length && d.next && d.next.due) t=[d.next];
+        // every timed task in the past? show TODAY's top task at end-of-day so
+        // the panel is never a lie of emptiness (qi 01:04 "still looks the same")
+        var now=new Date(), fut=t.filter(function(x){var dd=parseNaive(String(x.due).replace("Z","").slice(0,19));return dd&&dd>now;});
+        if(!fut.length && (d.tasks||[]).length){
+          var top=d.tasks[0];
+          var eod=new Date(); eod.setHours(23,59,0,0);
+          t=[{id:top.id, content:"TODAY: "+top.content, due:eod.getFullYear()+"-"+String(eod.getMonth()+1).padStart(2,"0")+"-"+String(eod.getDate()).padStart(2,"0")+"T23:59:00"}];
+        } else if(fut.length){ t=fut; }
         if(!t.length) return;
         ITEMS.length=0;
         t.forEach(function(x){
