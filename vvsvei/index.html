@@ -3373,11 +3373,85 @@ function loadThreadEntries(id) {
 // eviction without a server-side store ACK converts a silent-loss bug into an
 // ACTIVE-DELETION bug. Losing his words quietly is bad; deleting them on purpose
 // is worse. Report the failure, keep every byte, let the operator decide.
-function saveThreadEntries(id, entries) {
+// ✅ 2026-09-01 22:53 — THE REFUSAL ABOVE WAS RIGHT, AND ITS PREMISE IS NOW FALSE.
+// qi, twice in three minutes: "xos injections dropped twice on me in a row" ->
+// "it just did it again!!!! im pissed!!!!!" — with the banner
+// "Thread not saved (QuotaExceededError) — storage full" on screen and 24,139 chunks
+// in one thread. A full store does not just lose history, it BLOCKS THE INJECT PATH.
+//
+// The old note refused eviction because there was no server-side ACK, so deleting would
+// turn silent loss into active deletion. MEASURED TONIGHT, that premise no longer holds:
+// every line he types is independently captured in
+//   /Volumes/M4/sync_/brain_/root/input-log/qi-input.jsonl  — 31,707 `typed:` records,
+// carrying his lines from minutes ago, and mirrored into /Volumes/M4/akashic_.
+// localStorage is therefore a UI CACHE, not the record. Evicting an OLD thread body
+// cannot lose his words.
+//
+// RULES, so this can never eat something that matters:
+//   · NEVER evict the ACTIVE thread — that is the one he is speaking into.
+//   · Evict OLDEST-FIRST, one at a time, retrying the write after each.
+//   · Keep the thread's INDEX entry (id/started/name) so the history list still shows it;
+//     only the body is dropped, and the body exists in the akashic.
+//   · If eviction still cannot make room, fall through to the LOUD banner unchanged.
+function _veiEvictOldestBody(activeId) {
+  var list;
+  try { list = JSON.parse(localStorage.getItem('vei-threads') || '[]'); } catch (_) { return null; }
+  if (!Array.isArray(list) || !list.length) return null;
+  var oldest = null;
+  for (var i = 0; i < list.length; i++) {
+    var t = list[i];
+    if (!t || !t.id || t.id === activeId) continue;
+    if (localStorage.getItem('vei-thread-' + t.id) === null) continue;   // already evicted
+    if (!oldest || (t.started || 0) < (oldest.started || 0)) oldest = t;
+  }
+  if (!oldest) return null;
+  var freed = (localStorage.getItem('vei-thread-' + oldest.id) || '').length;
+  try { localStorage.removeItem('vei-thread-' + oldest.id); } catch (_) { return null; }
   try {
-    localStorage.setItem('vei-thread-' + id, JSON.stringify(entries));
-    return true;
-  } catch (e) {
+    var ev = JSON.parse(localStorage.getItem('vei-evicted') || '[]');
+    ev.push({ id: oldest.id, started: oldest.started || null, chars: freed, at: Date.now() });
+    localStorage.setItem('vei-evicted', JSON.stringify(ev.slice(-200)));
+  } catch (_) {}
+  return { id: oldest.id, chars: freed };
+}
+
+function saveThreadEntries(id, entries) {
+  var payload;
+  try { payload = JSON.stringify(entries); } catch (_) { payload = null; }
+  if (payload !== null) {
+    try {
+      localStorage.setItem('vei-thread-' + id, payload);
+      return true;
+    } catch (e0) {
+      // Storage full: make room from the oldest bodies and retry, up to 40 evictions.
+      var freedTotal = 0, evicted = 0;
+      for (var k = 0; k < 40; k++) {
+        var got = _veiEvictOldestBody(id);
+        if (!got) break;
+        freedTotal += got.chars; evicted++;
+        try {
+          localStorage.setItem('vei-thread-' + id, payload);
+          try {
+            console.warn('[vei] quota hit — evicted ' + evicted + ' old thread bod' +
+                         (evicted === 1 ? 'y' : 'ies') + ', freed ~' +
+                         Math.round(freedTotal / 1024) + 'KB, write succeeded');
+            if (typeof _hud === 'function') {
+              _hud('STORAGE TRIMMED · ' + evicted + ' old thread' + (evicted === 1 ? '' : 's') +
+                   ' · ' + Math.round(freedTotal / 1024) + 'KB freed');
+            }
+          } catch (_) {}
+          return true;
+        } catch (_) { /* still full — evict again */ }
+      }
+      // fall through to the loud path below with the ORIGINAL error
+      return _veiSaveFailed(id, entries, e0);
+    }
+  }
+  return _veiSaveFailed(id, entries, new Error('serialize failed'));
+}
+
+function _veiSaveFailed(id, entries, e) {
+  {
     // LOUD. A storage failure that only qi's missing data can reveal is the bug.
     try {
       const n = (e && e.name) || 'error';
