@@ -649,16 +649,26 @@ body.drop-active::after {
 .tui-live.sealed { opacity:.82; border-color:rgba(255,255,255,0.09); }
 .tui-live.sealed .tui-live-caret { display:none; }
 .tui-live.sealed .tui-live-head { opacity:.6; }
-/* THE SCREEN ITSELF — verbatim, so `white-space:pre` (NOT pre-wrap): wrapping a
-   115-column TUI reflows every box-drawing rule into garbage. It therefore
-   overflows horizontally BY DESIGN, and that overflow scrolls INSIDE this box —
-   `overscroll-behavior-x:contain` stops the swipe from chaining out to the page,
-   so the body never scrolls sideways. */
+/* THE SCREEN ITSELF.
+   ⛔ WAS `white-space:pre` on the reasoning below — CHANGED TO WRAP 2026-09-02 00:53 BY qi,
+   who asked twice: "I recently requested that you make it WRAP so it stays inside the line so
+   I can see everything" -> "I need the canvas or whatever is showing my terminal in XOS to wrap
+   the text so I DON'T HAVE TO SLIDE IT OVER to see everything."
+   The old note was: "verbatim, so pre (NOT pre-wrap): wrapping a 115-column TUI reflows every
+   box-drawing rule into garbage. It overflows horizontally BY DESIGN."
+   THAT COST IS REAL AND HE ACCEPTED IT. On a phone, a line he cannot read without dragging
+   sideways is worse than a box-drawing rule that reflows — he reads this one-handed, in motion,
+   and a horizontal scroll inside a vertical feed is a two-axis gesture he should never have to
+   make. Readability beats fidelity here.
+   `overflow-wrap:anywhere` (not break-word) so an unbroken 200-char path still wraps instead of
+   forcing the box wide again and silently restoring the old behaviour. */
 .tui-live .tui-live-body {
   margin:0;
   font-family:var(--mono); font-size:9.5px; line-height:1.35;
-  white-space:pre;
-  overflow-x:auto; overflow-y:hidden;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  word-break:normal;
+  overflow-x:hidden; overflow-y:hidden;
   overscroll-behavior-x:contain;
   -webkit-overflow-scrolling:touch;
   color:rgba(255,255,255,.78);
