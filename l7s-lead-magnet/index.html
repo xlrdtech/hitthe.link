@@ -1,0 +1,313 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>L7S Hero — Track Readiness Assessment</title>
+<meta name="description" content="Free readiness assessment from Luckie's Seven Solutions, Inc. Find which Hero Track you start on, and walk into a structured Hero Care Call already qualified.">
+<style>
+:root{
+  --void:#080909; --panel:#0e0f12; --sunken:#0a0b0e;
+  --gold:#d4af37; --gold-hi:#f7e08a; --gold-lo:#b9932d; --bolt:#e6ba3c; --gold-ink:#8a6410;
+  --ink:#f4efe6; --muted:#9c9382; --line:#23242a; --line-hi:#3a352a;
+  --black:#0a0c10; --ok:#39ff14;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--void);color:var(--ink);
+  font:16px/1.62 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Inter,system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.w{max-width:760px;margin:0 auto;padding:34px 18px 72px}
+a{color:var(--gold-hi)}
+.bolt{display:inline-block;width:22px;height:22px;vertical-align:-4px;margin-right:8px}
+.eyebrow{font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);
+  font-weight:700;margin:0 0 10px}
+h1{font-size:clamp(27px,7.4vw,44px);line-height:1.08;letter-spacing:-.022em;margin:0 0 12px;font-weight:800;
+  background:linear-gradient(147deg,var(--gold-hi) 0%,var(--gold) 46%,var(--gold-lo) 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.lede{color:#cfc7b6;font-size:17px;margin:0 0 8px}
+.free{display:inline-flex;align-items:center;justify-content:center;flex-wrap:wrap;
+  gap:4px 7px;border:1px solid var(--line-hi);
+  background:linear-gradient(180deg,#15130d,#0d0c09);border-radius:13px;
+  padding:9px 15px;font-size:12px;line-height:1.5;letter-spacing:.06em;text-transform:uppercase;
+  text-align:center;color:var(--gold);font-weight:700;margin:14px 0 0}
+.free b{color:var(--gold-hi)}
+h2{font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);
+  font-weight:700;margin:44px 0 14px;padding-bottom:9px;border-bottom:1px solid var(--line)}
+.card{border:1px solid var(--line);background:linear-gradient(180deg,var(--panel),var(--sunken));
+  border-radius:15px;padding:19px 20px;margin:0 0 14px}
+.q{font-weight:650;margin:0 0 12px;font-size:16.5px}
+.opts{display:flex;flex-wrap:wrap;gap:9px}
+button.o{appearance:none;cursor:pointer;font:inherit;font-size:14px;
+  border:1px solid var(--line-hi);background:#121116;color:#ded6c6;
+  border-radius:10px;padding:10px 15px;transition:background .15s,border-color .15s,color .15s}
+button.o:hover{border-color:var(--gold-lo);color:var(--gold-hi)}
+button.o[aria-pressed="true"]{background:linear-gradient(180deg,var(--gold),var(--gold-lo));
+  border-color:var(--gold-hi);color:#17130a;font-weight:750}
+.step{font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--gold-ink);
+  font-weight:700;margin:0 0 9px}
+.tracks{display:flex;flex-direction:column;gap:0;margin:0;padding:0;list-style:none;counter-reset:t}
+.tracks li{position:relative;padding:15px 0 15px 52px;border-bottom:1px solid var(--line)}
+.tracks li:last-child{border-bottom:0}
+.tracks li::before{counter-increment:t;content:counter(t);position:absolute;left:0;top:14px;
+  width:33px;height:33px;border-radius:9px;display:grid;place-items:center;
+  border:1px solid var(--line-hi);background:#121116;color:var(--gold);
+  font-size:13px;font-weight:750;font-variant-numeric:tabular-nums}
+.tracks b{display:block;font-size:16.5px;letter-spacing:-.01em;margin-bottom:2px}
+.tracks span{color:var(--muted);font-size:14.5px}
+.gate{border-left:2px solid var(--gold-lo);padding-left:14px;margin:16px 0;color:#cfc7b6;font-size:15px}
+.res{border:1px solid var(--gold-lo);background:linear-gradient(180deg,#16130c,#0c0b08);
+  border-radius:15px;padding:20px;margin:16px 0 0}
+.res .rt{font-size:11.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);font-weight:700;margin:0 0 8px}
+.res h3{margin:0 0 8px;font-size:21px;letter-spacing:-.015em;color:var(--gold-hi)}
+.res p{margin:0 0 10px;color:#cfc7b6;font-size:15px}
+pre.brief{white-space:pre-wrap;word-break:break-word;background:#08090b;border:1px solid var(--line);
+  border-radius:11px;padding:14px;font:12.5px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;
+  color:#cbc4b5;margin:12px 0 0;overflow-x:auto}
+label.f{display:block;margin:0 0 15px}
+label.f>span{display:block;font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--muted);font-weight:650;margin:0 0 6px}
+select,input,textarea{width:100%;font:inherit;font-size:15px;color:var(--ink);
+  background:#121116;border:1px solid var(--line-hi);border-radius:10px;padding:11px 12px}
+select:focus,input:focus,textarea:focus{outline:none;border-color:var(--gold)}
+textarea{min-height:78px;resize:vertical}
+.cta{appearance:none;cursor:pointer;font:inherit;font-weight:750;font-size:16px;width:100%;
+  border:0;border-radius:12px;padding:15px 18px;color:#17130a;
+  background:linear-gradient(180deg,var(--gold-hi),var(--gold) 55%,var(--gold-lo));
+  box-shadow:0 1px 0 rgba(255,255,255,.28) inset,0 8px 22px -12px rgba(212,175,55,.55)}
+.cta.sec{background:#121116;color:var(--gold-hi);border:1px solid var(--line-hi);box-shadow:none;font-weight:650}
+.faq dt{font-weight:650;margin:16px 0 4px;font-size:15.5px}
+.faq dd{margin:0;color:var(--muted);font-size:14.5px}
+.sells{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0;padding:0;list-style:none}
+.sells li{border:1px solid var(--line);background:#101116;border-radius:999px;
+  padding:7px 13px;font-size:13.5px;color:#cfc7b6}
+.pain{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.pain li{padding-left:20px;position:relative;color:#cfc7b6;font-size:14.5px}
+.pain li::before{content:"";position:absolute;left:4px;top:9px;width:5px;height:5px;
+  border-radius:50%;background:var(--gold-lo)}
+.small{color:var(--muted);font-size:13px}
+footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:#6e6a60;font-size:12.5px}
+footer b{color:var(--muted)}
+.hide{display:none}
+@media (max-width:420px){.w{padding:26px 15px 60px}.opts{gap:7px}button.o{padding:9px 12px;font-size:13.5px}}
+</style></head><body><div class="w">
+
+<p class="eyebrow">
+<svg class="bolt" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M13.5 2 4 14h6l-1.5 8L20 9h-6.5l0-7Z" fill="#e6ba3c" stroke="#f7e08a" stroke-width="1.1" stroke-linejoin="round"/></svg>
+Luckie&rsquo;s Seven Solutions, Inc. &middot; L7S Hero</p>
+
+<h1>Which Hero Track do you start on?</h1>
+<p class="lede">The Hero Tracks run in sequence. You do not pick one &mdash; you qualify into the
+earliest one you are not clear on yet, and you move up as each gate closes behind you.</p>
+<p class="lede">Answer six questions. You will get your starting track and a structured brief to
+bring to your Hero Care Call, so the call starts at the work instead of the intake.</p>
+<span class="free">Free &middot; <b>no card, no credit pull</b></span>
+
+<h2>The assessment</h2>
+<div id="quiz"></div>
+<div id="result" class="hide"></div>
+
+<h2>The track ladder</h2>
+<ol class="tracks">
+<li><b>HOT Hero</b><span>Credit worthiness and trustworthiness &mdash; Trustworthiness, Tradelines,
+Transactions. The first track everyone runs, to see where their credit worthiness sits.</span></li>
+<li><b>Cash flow</b><span>Run once HOT Hero is clear.</span></li>
+<li><b>Crypto</b><span>Run once cash flow is clear.</span></li>
+<li><b>Setting up the business</b><span>Structure and staging, once the money side is stable.</span></li>
+<li><b>Capital consulting</b><span>Working the data points to get funding.</span></li>
+<li><b>Campaigns</b><span>Personal brand, business brand, or a hybrid &mdash; built last, on top of
+everything the earlier tracks proved.</span></li>
+</ol>
+<p class="gate">The ladder is a gate, not a menu. &ldquo;If they&rsquo;re good on that, they go to the
+next track.&rdquo; Skipping a track is how people pay for advice they cannot act on yet.</p>
+
+<h2>Where L7S starts you</h2>
+<div class="card">
+<p class="step">Entry tier</p>
+<p style="margin:0 0 8px">If you have <b>less than $777</b> to get started, you begin on the
+<b>level-one DIY self-serving tier</b> and get a portal set up through the UWE partnership. You run
+the first track from there and ascend as each gate closes.</p>
+<p class="small" style="margin:0">L7S sells education, membership and mentorship. Fulfillment on
+credit-adjacent work is outsourced to vetted vendor partners &mdash; L7S is not the fulfillment house.</p>
+</div>
+
+<h2>What L7S sells</h2>
+<ul class="sells">
+<li>Systems</li><li>Strategic Planning Sessions</li><li>Subscriptions</li>
+<li>Support Solutions</li><li>Structuring &amp; Staging Solutions</li>
+<li>Staffing Solutions</li><li>Strategic Partnerships Services</li>
+</ul>
+
+<h2>Book the Hero Care Call</h2>
+<div class="card">
+<p class="small" style="margin:0 0 16px">Pick why you are coming. The questions change to match, so
+nothing gets asked twice on the call.</p>
+
+<label class="f"><span>What are you coming on the call for</span>
+<select id="reason">
+<option value="">Select one</option>
+<option>Hero Care Call &mdash; first time, general direction</option>
+<option>Rescue Me Call &mdash; something is on fire right now</option>
+<option>Follow-up &mdash; I am already working a track</option>
+<option>Strategic Partnership &mdash; vendor, affiliate or BPO</option>
+</select></label>
+
+<div id="cond"></div>
+
+<label class="f"><span>First name</span><input id="fn" autocomplete="given-name" placeholder="First name"></label>
+<label class="f"><span>Best email</span><input id="em" type="email" autocomplete="email" placeholder="you@example.com"></label>
+<label class="f"><span>Anything the call should start with</span>
+<textarea id="notes" placeholder="One or two lines is plenty."></textarea></label>
+
+<button class="cta" id="build">Build my call brief</button>
+<div id="briefout"></div>
+</div>
+
+<h2>Answered before the call</h2>
+<dl class="faq">
+<dt>Is this credit repair?</dt>
+<dd>No. L7S sells education, membership and mentorship. Credit-adjacent fulfillment is routed to
+vetted vendor partners, and that separation is deliberate.</dd>
+<dt>Does the assessment pull my credit?</dt>
+<dd>No. Nothing here touches your credit file. It runs entirely in your browser.</dd>
+<dt>Can I start with less than $777?</dt>
+<dd>Yes &mdash; that is exactly what the level-one DIY self-serving tier is for.</dd>
+<dt>Do I have to run the tracks in order?</dt>
+<dd>Yes. Each track is a gate for the one above it.</dd>
+<dt>What happens on the Hero Care Call?</dt>
+<dd>Your brief is already on the table, so the call opens on the work: which track, which gate is
+open, and what the next artifact is.</dd>
+</dl>
+
+<h2>The problems this ladder was built against</h2>
+<ul class="pain">
+<li>Legal documents for engagement events</li>
+<li>Internal partnerships</li>
+<li>External pricing for RevOps</li>
+<li>KPI metrics and calendar system</li>
+<li>Time audit</li>
+<li>Social media congruency</li>
+<li>Affiliate partnership program infrastructure</li>
+<li>Secured triage uploader and vendor vetting list for strategic partnerships and BPO</li>
+<li>Self-publishing and self-serving checkout funnels for low-ticket digital products</li>
+</ul>
+
+<footer>
+<b>L7S &middot; Luckie&rsquo;s Seven Solutions, Inc.</b> &mdash; League of 7 Superheroes.<br>
+T.H.E B.E.S.T H.E.R.O Strategic Planning Systems &amp; Solutions. Atlanta, GA.<br><br>
+Educational content only. L7S is not a credit repair organization, lender, broker, law firm or tax
+advisor, and nothing here is legal, credit or tax advice. Credit-adjacent fulfillment is performed
+by independent vendor partners under their own agreements. Your answers stay in your browser.
+</footer>
+</div>
+
+<script>
+var GATES=[
+ {t:"HOT Hero",q:"Do you know your current credit worthiness — tradelines, transactions, and what a lender sees today?",
+  no:"You start on HOT Hero. Trustworthiness, Tradelines, Transactions — the first track everyone runs, because every track above it is priced off what a lender sees."},
+ {t:"Cash flow",q:"Is your monthly cash flow steady and known — money in, money out, without guessing?",
+  no:"You start on Cash flow. HOT Hero is clear, so the next gate is knowing what the month actually does before anything gets built on top of it."},
+ {t:"Crypto",q:"Do you have a deliberate position on crypto — held, sized, and understood rather than accidental?",
+  no:"You start on Crypto. Credit and cash flow are clear, so this is the next gate in the sequence."},
+ {t:"Setting up the business",q:"Is the business itself structured and staged — entity, roles, and the paperwork that survives scrutiny?",
+  no:"You start on Setting up the business. The money side holds, so structure and staging is the next gate."},
+ {t:"Capital consulting",q:"Are your data points in order for funding — the file a capital consultant would actually work from?",
+  no:"You start on Capital consulting. Everything under it holds, so the next gate is working the data points to get funded."},
+ {t:"Campaigns",q:"Are your campaigns running — personal brand, business brand, or a hybrid, built and live?",
+  no:"You start on Campaigns. Every gate below is closed, which is exactly the position campaigns are supposed to be built from."}
+];
+var ans=[];
+function drawQuiz(){
+  var h="";
+  for(var i=0;i<GATES.length;i++){
+    h+='<div class="card"><p class="step">Gate '+(i+1)+' · '+GATES[i].t+'</p>'+
+       '<p class="q">'+GATES[i].q+'</p><div class="opts">'+
+       '<button class="o" type="button" data-i="'+i+'" data-v="1" aria-pressed="'+(ans[i]===1)+'">Yes, that is solid</button>'+
+       '<button class="o" type="button" data-i="'+i+'" data-v="0" aria-pressed="'+(ans[i]===0)+'">Not yet</button>'+
+       '</div></div>';
+  }
+  document.getElementById('quiz').innerHTML=h;
+}
+document.addEventListener('click',function(e){
+  var b=e.target.closest('button.o'); if(!b) return;
+  ans[+b.dataset.i]=+b.dataset.v; drawQuiz(); score();
+});
+function score(){
+  var done=0; for(var i=0;i<GATES.length;i++){ if(ans[i]===0||ans[i]===1) done++; }
+  var r=document.getElementById('result');
+  if(done<GATES.length){ r.className='hide'; return; }
+  var start=-1;
+  for(var j=0;j<GATES.length;j++){ if(ans[j]===0){ start=j; break; } }
+  var html='<div class="res"><p class="rt">Your result</p>';
+  if(start<0){
+    html+='<h3>Every gate is closed</h3><p>All six tracks read clear, which puts you past the '+
+      'ladder and into partnership territory rather than a track. Bring that to the call — pick '+
+      '<b>Strategic Partnership</b> below.</p>';
+    window.__track='All six gates closed — partnership lane';
+  }else{
+    html+='<h3>Start on '+GATES[start].t+'</h3><p>'+GATES[start].no+'</p>';
+    var open=[]; for(var k=start;k<GATES.length;k++){ if(ans[k]===0) open.push(GATES[k].t); }
+    html+='<p class="small" style="margin:0">Gates still open above it: '+
+      (open.length>1?open.slice(1).join(' · '):'none — '+GATES[start].t+' is the only one')+'</p>';
+    window.__track=GATES[start].t;
+  }
+  html+='</div>';
+  r.innerHTML=html; r.className='';
+}
+var COND={
+ "Hero Care Call — first time, general direction":[
+   ["horizon","What are you trying to have true 90 days from now",["More approvals / better credit position","Predictable monthly cash flow","A structured business, on paper","Funding in hand","Campaigns running"]],
+   ["budget","What can you put toward getting started",["Under $777 — DIY self-serving tier","$777 to $3,500","Above $3,500","Not sure yet"]]],
+ "Rescue Me Call — something is on fire right now":[
+   ["fire","What is on fire",["A denial or an adverse decision","A payment or cash-flow gap","A deadline on a document","A partner or vendor problem"]],
+   ["when","How long until it hurts",["Already hurting","Days","A couple of weeks"]]],
+ "Follow-up — I am already working a track":[
+   ["cur","Which track are you on",["HOT Hero","Cash flow","Crypto","Setting up the business","Capital consulting","Campaigns"]],
+   ["stuck","What is holding",["Waiting on a vendor","Waiting on a document","Unclear on the next step","Nothing — progress check"]]],
+ "Strategic Partnership — vendor, affiliate or BPO":[
+   ["kind","Which lane",["Vendor / fulfillment partner","Affiliate partner","BPO / staffing","Referral only"]],
+   ["ready","What is already in place",["Signed agreements and process","Process, no agreements","Interest only"]]]
+};
+document.getElementById('reason').addEventListener('change',function(){
+  var set=COND[this.value]||[],h="";
+  for(var i=0;i<set.length;i++){
+    h+='<label class="f"><span>'+set[i][1]+'</span><select data-k="'+set[i][0]+'" data-q="'+set[i][1]+'">'+
+       '<option value="">Select one</option>';
+    for(var j=0;j<set[i][2].length;j++){ h+='<option>'+set[i][2][j]+'</option>'; }
+    h+='</select></label>';
+  }
+  document.getElementById('cond').innerHTML=h;
+});
+document.getElementById('build').addEventListener('click',function(){
+  var L=[];
+  L.push("L7S HERO — CALL BRIEF");
+  var fn=document.getElementById('fn').value.trim();
+  var em=document.getElementById('em').value.trim();
+  if(fn) L.push("Name: "+fn);
+  if(em) L.push("Email: "+em);
+  var rs=document.getElementById('reason').value;
+  L.push("Call type: "+(rs||"not selected"));
+  L.push("Starting track: "+(window.__track||"assessment not finished"));
+  var sels=document.querySelectorAll('#cond select');
+  for(var i=0;i<sels.length;i++){ if(sels[i].value) L.push(sels[i].dataset.q+": "+sels[i].value); }
+  var gs=[];
+  for(var j=0;j<GATES.length;j++){
+    if(ans[j]===0||ans[j]===1) gs.push(GATES[j].t+"="+(ans[j]===1?"clear":"open"));
+  }
+  if(gs.length) L.push("Gates: "+gs.join(" · "));
+  var nt=document.getElementById('notes').value.trim();
+  if(nt) L.push("Start the call with: "+nt);
+  var txt=L.join("\n");
+  var o=document.getElementById('briefout');
+  o.innerHTML='<pre class="brief" id="bt">'+txt.replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];})+
+    '</pre><button class="cta sec" id="cp" type="button" style="margin-top:10px">Copy brief</button>'+
+    '<p class="small" style="margin:10px 0 0">Send this to L7S with your call request and the call opens on the work.</p>';
+  document.getElementById('cp').addEventListener('click',function(){
+    var b=this;
+    function done(){ b.textContent='Copied'; setTimeout(function(){b.textContent='Copy brief';},1800); }
+    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done,sel); } else { sel(); }
+    function sel(){ var r=document.createRange(); r.selectNodeContents(document.getElementById('bt'));
+      var s=getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent='Selected — copy it'; }
+  });
+});
+drawQuiz();
+</script>
+<script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
+</body></html>
