@@ -665,8 +665,14 @@ body.drop-active::after {
 .tui-live .tui-live-body {
   margin:0;
   font-family:var(--mono); font-size:9.5px; line-height:1.35;
+  /* ⚠️ `overflow-wrap:anywhere` WAS WRONG — measured on his iPhone 2026-09-02 03:04.
+     It breaks MID-RUN, so each ~115-char `────` divider wrapped into several lines and filled
+     the pane, pushing the real scrollback out of view: he saw only rules and one prompt.
+     `normal` wraps at SPACES ONLY — prose reflows (which is what he asked for: "so I don't
+     have to slide it over"), while unbroken box-drawing runs stay on one line and clip.
+     That keeps the readability win without turning the TUI frame into garbage. */
   white-space:pre-wrap;
-  overflow-wrap:anywhere;
+  overflow-wrap:normal;
   word-break:normal;
   overflow-x:hidden; overflow-y:hidden;
   overscroll-behavior-x:contain;
