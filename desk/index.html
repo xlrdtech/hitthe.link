@@ -706,7 +706,8 @@
 <script>
   // ──────────────────────────────────────────────────────────────────────────
   //  ENDPOINTS — change here only. Wired separately on the backend.
-  const DESK_UPLOAD_URL = "https://xen.xlrd.org/api/desk-drop"; // base64 POST target
+  const DESK_UPLOAD_URL = "https://xen.xlrd.org/api/desk-drop"; // base64 POST target (fallback)
+  const DESK_UPLOAD_RAW = "https://xen.xlrd.org/api/desk-drop-raw"; // raw-bytes stream, no size ceiling
   const DESK_LIST_URL   = "https://xen.xlrd.org/api/desk-list"; // GET { files:[{name,size,ts}] }
   // ──────────────────────────────────────────────────────────────────────────
 
@@ -798,9 +799,33 @@
       else { s.innerHTML='<span class="spinner"></span><span class="t">'+(msg||'Uploading…')+'</span>'; }
     }
 
-    function uploadFile(file,row,objId){
+    // qi 2026-09-02: send the file's OWN BYTES, never base64. Base64 inflates by 4/3, and that
+    // inflation alone is what pushed a 227MB screen recording past the old 120MB server cap — the
+    // socket was then destroyed, which the phone reported as the useless "Network error". Raw
+    // streaming also skips FileReader entirely, so a large file no longer has to fit in memory
+    // twice on the handset before it can leave.
+    function sendRaw(file,row,bar){
+      return new Promise(function(resolve,reject){
+        var xhr=new XMLHttpRequest();
+        xhr.open('POST',DESK_UPLOAD_RAW,true);
+        xhr.setRequestHeader('Content-Type',file.type||'application/octet-stream');
+        xhr.setRequestHeader('X-Desk-Filename',encodeURIComponent(file.name||'file'));
+        var capTxt=(noteField.value||'').trim(); if(capTxt) xhr.setRequestHeader('X-Desk-Caption',encodeURIComponent(capTxt));
+        xhr.upload.onprogress=function(e){ if(e.lengthComputable){ var p=Math.round(e.loaded/e.total*100);
+          bar.style.width=p+'%'; toastState(row,'progress','Uploading '+p+'%'); } };
+        xhr.onload=function(){
+          if(xhr.status>=200&&xhr.status<300){ bar.style.width='100%'; resolve(); }
+          else if(xhr.status===404){ reject(new Error('__NO_RAW__')); }  // server predates this route
+          else { var m='Server '+xhr.status; try{ var j=JSON.parse(xhr.responseText||'{}'); if(j.error) m=j.error; }catch(_){}
+                 reject(new Error(m)); }  // ⭐ surface the SERVER'S reason, never a generic failure
+        };
+        xhr.onerror=function(){ reject(new Error('Network error')); };
+        xhr.send(file);
+      });
+    }
+
+    function sendB64(file,row,bar){
       toastState(row,'progress','Reading…');
-      var bar=row.querySelector('.bar');
       return readAsBase64(file).then(function(b64){
         return new Promise(function(resolve,reject){
           var xhr=new XMLHttpRequest();
@@ -808,14 +833,28 @@
           xhr.setRequestHeader('Content-Type','application/json');
           xhr.upload.onprogress=function(e){ if(e.lengthComputable){ var p=Math.round(e.loaded/e.total*100);
             bar.style.width=p+'%'; toastState(row,'progress','Uploading '+p+'%'); } };
-          xhr.onload=function(){ if(xhr.status>=200&&xhr.status<300){ bar.style.width='100%'; resolve(); } else reject(new Error('Server '+xhr.status)); };
+          xhr.onload=function(){ if(xhr.status>=200&&xhr.status<300){ bar.style.width='100%'; resolve(); }
+            else { var m='Server '+xhr.status; try{ var j=JSON.parse(xhr.responseText||'{}'); if(j.error) m=j.error; }catch(_){} reject(new Error(m)); } };
           xhr.onerror=function(){ reject(new Error('Network error')); };
           xhr.send(JSON.stringify({
             filename:file.name||'file', contentType:file.type||'application/octet-stream',
             size:file.size, caption:(noteField.value||'').trim(), b64:b64
           }));
         });
-      }).then(function(){ toastState(row,'ok'); deskStatus(objId,'ok'); refreshCount(); })
+      });
+    }
+
+    function uploadFile(file,row,objId){
+      toastState(row,'progress','Uploading…');
+      var bar=row.querySelector('.bar');
+      return sendRaw(file,row,bar)
+        .catch(function(err){
+          // Only fall back for a server that does not have the raw route yet. Any other failure is
+          // reported as itself — a silent retry down a worse path is how the real cause got hidden.
+          if(err&&err.message==='__NO_RAW__') return sendB64(file,row,bar);
+          throw err;
+        })
+        .then(function(){ toastState(row,'ok'); deskStatus(objId,'ok'); refreshCount(); })
       .catch(function(err){
         toastState(row,'err',(err&&err.message)||'Failed'); deskStatus(objId,'err');
         row.querySelector('.retry').addEventListener('click',function(){ uploadFile(file,row,objId); },{once:true});
