@@ -521,6 +521,11 @@ window.directoryData.forEach((sec, i) => {
         }).join('') +
         '</div>';
       container.appendChild(section);
+
+      // The search index + footer counter were built before this fetch resolved.
+      // Rebuild them so the count is honest and the appended cards are searchable.
+      window.__xenAutoAppended = true;
+      if (typeof window.__xenReindexLinks === 'function') window.__xenReindexLinks();
     })
     .catch(function(){ /* feed unreachable: curated list already rendered above */ });
 })();
@@ -800,21 +805,39 @@ window.addEventListener('resize', () => {
   empty.textContent = 'no links match';
   cont.appendChild(empty);
 
-  // index once: card -> haystack, and its section
-  const sections = Array.from(cont.querySelectorAll('section'));
-  const pills    = Array.from(nav ? nav.querySelectorAll('.nav-pill') : []);
-  const index = [];
-  sections.forEach((sec, si) => {
-    const cat = (sec.querySelector('h2') ? sec.querySelector('h2').childNodes[0].textContent : '').trim();
-    sec.querySelectorAll('.link-card').forEach(card => {
-      const path  = (card.querySelector('.link-text')||{}).textContent || '';
-      const title = card.getAttribute('title') || '';
-      index.push({card, si, hay: (path+' '+title+' '+cat).toLowerCase()});
+  // index card -> haystack, and its section.
+  // ⚠️ REBUILDABLE, not once. 2026-09-01: this ran ONCE at load, before the async
+  // sites.json append had resolved, so it captured only the 326 curated cards. The
+  // footer read "326 LINKS" while 710 were on the page, and the 384 appended cards
+  // were UNSEARCHABLE — a stale count is cosmetic, a stale search index is not.
+  // qi caught the counter from his phone: "fix the footer counter".
+  let sections = [];
+  let pills    = [];
+  let index    = [];
+  let totalTxt = '';
+
+  function reindex(){
+    sections = Array.from(cont.querySelectorAll('section'));
+    pills    = Array.from(nav ? nav.querySelectorAll('.nav-pill') : []);
+    index    = [];
+    sections.forEach((sec, si) => {
+      const cat = (sec.querySelector('h2') ? sec.querySelector('h2').childNodes[0].textContent : '').trim();
+      sec.querySelectorAll('.link-card').forEach(card => {
+        const path  = (card.querySelector('.link-text')||{}).textContent || '';
+        const title = card.getAttribute('title') || '';
+        index.push({card, si, hay: (path+' '+title+' '+cat).toLowerCase()});
+      });
     });
-  });
-  const total = index.length;
-  const totalTxt = total + ' LINKS';
-  count.textContent = totalTxt;
+    totalTxt = index.length + ' LINKS';
+    count.textContent = totalTxt;
+    return index.length;
+  }
+
+  reindex();
+  // The append may land before or after this block runs; both orders are covered —
+  // autoPopulate calls this if it exists, and sets a flag if it does not yet.
+  window.__xenReindexLinks = reindex;
+  if (window.__xenAutoAppended) reindex();
 
   function apply(q){
     q = q.trim().toLowerCase();
