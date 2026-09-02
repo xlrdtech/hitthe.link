@@ -36,10 +36,35 @@ function categorize(slug, title) {
 const skip = (n) => n.startsWith('.') || n.startsWith('_') || DENY.has(n);
 
 const entries = [];
-for (const name of readdirSync(ROOT)) {
+
+// NESTED PAGES — added 2026-09-01 after qi: "make sure all my links auto populate in all
+// my directories". MEASURED: the repo holds 379 top-level dirs with an index.html and 370
+// MORE nested ones (750 total), and this loop was a single-level readdirSync, so every
+// nested page was invisible to the root index forever. /pane-of-pain/ (top level) listed;
+// /dcz/receipt/, /dcz/retainer/ and /dcz/retainer/receipt/ did NOT, though all three are live.
+// Depth 3 covers his actual nesting (client/scope/page) without walking asset trees.
+const MAX_DEPTH = 3;
+function walk(rel, depth) {
+  const out = [];
+  let names = [];
+  try { names = readdirSync(join(ROOT, rel) || ROOT); } catch { return out; }
+  for (const name of names) {
+    // skip() carries the DENY list + dot/underscore rule; only apply DENY at the top level
+    // so a nested dir that happens to share a denied name is not silently dropped.
+    if (name.startsWith('.') || name.startsWith('_')) continue;
+    if (depth === 0 && skip(name)) continue;
+    const relPath = rel ? rel + '/' + name : name;
+    const dir = join(ROOT, relPath);
+    try { if (!statSync(dir).isDirectory()) continue; } catch { continue; }
+    if (existsSync(join(dir, 'index.html'))) out.push(relPath);
+    if (depth + 1 < MAX_DEPTH) out.push(...walk(relPath, depth + 1));
+  }
+  return out;
+}
+
+for (const name of walk('', 0)) {
   try {
     const dir = join(ROOT, name);
-    if (!statSync(dir).isDirectory() || skip(name)) continue;
     const idx = join(dir, 'index.html');
     if (!existsSync(idx)) continue;
     const html = readFileSync(idx, 'utf8');

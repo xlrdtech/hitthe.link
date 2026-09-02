@@ -449,6 +449,82 @@ window.directoryData.forEach((sec, i) => {
   container.appendChild(section);
 });
 
+// --- AUTO-POPULATE FROM sites.json ---------------------------------------
+// qi 2026-09-01: "run the feds on all my links, make sure they auto populate in all my
+// directories." MEASURED that night: sites.json was fresh (CI regenerates it on every push)
+// and this page NEVER READ IT — the curated array above was last touched AUG 19, so two weeks
+// of live ships were invisible here. Separately the generator only scanned TOP-LEVEL dirs, so
+// 335 nested pages (/dcz/receipt/, /dcz/retainer/, /dcz/retainer/receipt/ ...) were missing
+// from sites.json itself. Both are fixed; this is the read half.
+//
+// ⛔ HIS CURATION IS CANONICAL (cmd 9b) — the categories above are NEVER reordered, renamed or
+// dropped. This ONLY appends pages that appear in sites.json and nowhere in that array, into
+// one clearly-labelled section at the end. Fails silent: if the fetch dies the page is already
+// fully rendered above, so a dead feed degrades to today's behaviour, never to a blank page.
+(function autoPopulate(){
+  var known = new Set();
+  window.directoryData.forEach(function(sec){
+    sec.links.forEach(function(l){
+      known.add(String(l.p || '').replace(/\/+$/, '').toLowerCase());
+    });
+  });
+
+  fetch('/sites.json?t=' + Date.now())
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      if (!d || !Array.isArray(d.sites)) return;
+      var fresh = d.sites.filter(function(site){
+        var u = String(site.url || '').replace(/\/+$/, '').toLowerCase();
+        return u && !known.has(u);
+      });
+      if (!fresh.length) return;
+
+      fresh.sort(function(a, b){ return String(b.updated||'').localeCompare(String(a.updated||'')); });
+
+      var MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+      function stamp(iso){
+        if (!iso) return '';
+        var t = new Date(iso);
+        return isNaN(t) ? '' : MON[t.getMonth()] + ' ' + String(t.getDate()).padStart(2,'0');
+      }
+
+      var safeId = 'cat-auto';
+      var pill = document.createElement('a');
+      pill.href = '#' + safeId;
+      pill.className = 'nav-pill';
+      pill.dataset.target = safeId;
+      pill.textContent = 'Auto \u00b7 Newly Shipped';
+      pill.addEventListener('click', function(e){
+        e.preventDefault();
+        document.getElementById(safeId).scrollIntoView({ behavior: 'smooth' });
+      });
+      topNav.appendChild(pill);
+
+      var section = document.createElement('section');
+      section.id = safeId;
+      section.innerHTML =
+        '<h2>Auto \u00b7 Newly Shipped <span class="badge">' +
+        String(fresh.length).padStart(2,'0') + ' ENTRIES</span></h2>' +
+        '<div class="card-grid">' +
+        fresh.map(function(site){
+          var title = String(site.title || '').replace(/"/g,'&quot;');
+          return '<a href="' + site.url + '" title="' + title + '" class="link-card fresh">' +
+                   '<div class="left">' +
+                     '<div class="status-dot"></div>' +
+                     '<span class="link-text">' + site.url.replace(/\/$/,'') + '</span>' +
+                   '</div>' +
+                   '<div class="right">' +
+                     '<span class="meta-hash">' + stamp(site.updated) + '</span>' +
+                     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' +
+                   '</div>' +
+                 '</a>';
+        }).join('') +
+        '</div>';
+      container.appendChild(section);
+    })
+    .catch(function(){ /* feed unreachable: curated list already rendered above */ });
+})();
+
 // --- SCROLL SPY (Active Nav State) ---
 const observerOptions = {
   root: document.getElementById('ui-layer'),
