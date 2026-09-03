@@ -1117,7 +1117,7 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
            WHAT IT DOES: the shell already owns a working resync - #syncBtn forces connect(true),
            refetches /doc and repaints. That chrome is clipped to 1px and aria-hidden, so the
            function existed with no reachable door. This is the door. -->
-      <button id="tb-sync" type="button" title="Resync this surface with the live document">&#10227; Sync</button>
+      <button id="tb-sync" type="button" class="pill-split" title="Resync this surface with the live document"><span class="door">life</span><span class="mark">sync</span></button>
     </div>
     <div id="voice-pills" role="radiogroup" aria-label="Xen reader voice"></div>
     <!-- ESCALATE PILL — qi asked five times on 2026-08-24 and spelled it out letter by
@@ -6041,7 +6041,47 @@ window.addEventListener('beforeunload', stopListening);
   if (!document.getElementById('voice-pills-css')) {
     const st = document.createElement('style');
     st.id = 'voice-pills-css';
-    st.textContent = '#pill-row::-webkit-scrollbar{display:none}' +
+    st.textContent = '#pill-row::-webkit-scrollbar{display:none}
+
+/* ═══ DIAGONAL-SPLIT PILLS — the slash IS the seam ═══════════════════════════════
+   qi 2026-09-02 20:43:47: "if its safe and wont cause syntax errors change the |s to /s"
+   qi 2026-09-02 20:45:27: "and that would reflect in the pill design via diagonal splitting"
+
+   LIFE/CTRL is not two words with punctuation between them. It is ONE pill CUT DIAGONALLY -
+   the door on one side of the seam, the mark on the other. The slash's own lean is the cut
+   angle, which is why the glyph can then be dropped: the geometry already says it.
+
+   ONE ELEMENT, ONE GRADIENT. Not two half-elements: a two-element build drifts out of
+   alignment the moment the font size changes, and this row scrolls horizontally at several
+   sizes. A single background-image cannot misalign with itself.
+   105deg leans the same way as the glyph. The hairline is canonical green rgb(57,255,20). */
+.pill-split{
+  position:relative; display:inline-flex; align-items:center; gap:0;
+  padding:0; overflow:hidden; isolation:isolate;
+  background-image:linear-gradient(105deg,
+      rgba(255,255,255,.045) 0 calc(50% - 0.6px),
+      rgba(57,255,20,.42)    calc(50% - 0.6px) calc(50% + 0.6px),
+      rgba(57,255,20,.10)    calc(50% + 0.6px) 100%);
+}
+.pill-split > .door,
+.pill-split > .mark{
+  display:inline-block; padding:5px 11px; line-height:1;
+  font-size:11px; letter-spacing:.14em; text-transform:uppercase; white-space:nowrap;
+}
+/* the door is the quieter half - it is context, the mark is the thing */
+.pill-split > .door{ color:#8a938c; padding-right:14px; }
+.pill-split > .mark{ color:rgb(57,255,20); padding-left:14px; font-weight:600; }
+/* active state brightens the MARK side only, so the seam stays legible */
+.pill-split[aria-pressed="true"]{
+  background-image:linear-gradient(105deg,
+      rgba(255,255,255,.06) 0 calc(50% - 0.6px),
+      rgba(57,255,20,.75)   calc(50% - 0.6px) calc(50% + 0.6px),
+      rgba(57,255,20,.20)   calc(50% + 0.6px) 100%);
+}
+@media (prefers-reduced-motion:no-preference){
+  .pill-split{ transition:background-image .18s ease; }
+}
+' +
       // The toolbar ships its own `padding:0 4px 8px`; inside the shared row that
       // bottom padding drops its pills off the voice pill's baseline. Flatten it.
       '#pill-row .transcript-toolbar{padding:0;gap:6px;flex:0 0 auto}' +
@@ -7145,9 +7185,13 @@ window.addEventListener('beforeunload', stopListening);
              && window.parent.document.getElementById('syncBtn');
       if (sb) { sb.click(); ok = true; }
     } catch (_) { ok = false; }
-    var t = b.textContent;
-    b.textContent = ok ? '\u27F3 Synced' : '\u27F3 no shell';
-    setTimeout(function () { b.textContent = t; }, 1400);
+    /* the pill is TWO SPANS now - writing textContent would collapse the diagonal split
+       into a single text node and the seam would vanish on first tap. Touch only the mark. */
+    var mk = b.querySelector('.mark');
+    if (!mk) return;
+    var t = mk.textContent;
+    mk.textContent = ok ? 'synced' : 'no shell';
+    setTimeout(function () { mk.textContent = t; }, 1400);
   });
 })();
 </script>
