@@ -113,7 +113,16 @@ body.lit .bg-overlay {
      (qi 2026-08-15 02:19). Two hardcoded 20s in two rules is how a "0px" quietly
      becomes a 4px later; one variable read by both cannot drift. */
   --wrap-px:20px;
-  padding:env(safe-area-inset-top, 18px) var(--wrap-px) env(safe-area-inset-bottom, 16px);
+  /* 🔴 BOTTOM INSET MOVED OFF THIS CONTAINER, 2026-09-02 03:12. qi: "the bottom".
+     The composer was already fixed to `bottom:0` on 08-13 for his complaint "it should not be
+     any space" — but THIS rule kept `padding-bottom: env(safe-area-inset-bottom, 16px)`, and an
+     absolutely-positioned child anchors to the PADDING BOX, not the element edge. So bottom:0
+     resolved ~34px up on his handset and the identical band of dead glass survived the fix.
+     The child was corrected; the parent was not. Same bug, one level out.
+     The inset still has to be honoured or content hides under the home indicator — so it moves
+     to the SCROLL REGION's padding (below), where it pads content instead of displacing chrome. */
+  padding:env(safe-area-inset-top, 18px) var(--wrap-px) 0;
+  --safe-bottom:env(safe-area-inset-bottom, 16px);
   position:relative;
 }
 
@@ -1100,6 +1109,15 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
          pill styling — reusing the class beats hand-rolling CSS for one button. -->
     <div class="transcript-toolbar">
       <button id="tb-newthread" title="Start new thread">＋ New</button>
+      <!-- SYNC - qi 2026-09-02 20:06: "you need to add the sync function as glass in the
+           horizontal pill row above the type glass."
+           Inside .transcript-toolbar deliberately, for the same reason + New is: reusing the
+           class gives it the identical glass pill styling instead of hand-rolling CSS for one
+           button.
+           WHAT IT DOES: the shell already owns a working resync - #syncBtn forces connect(true),
+           refetches /doc and repaints. That chrome is clipped to 1px and aria-hidden, so the
+           function existed with no reachable door. This is the door. -->
+      <button id="tb-sync" type="button" title="Resync this surface with the live document">&#10227; Sync</button>
     </div>
     <div id="voice-pills" role="radiogroup" aria-label="Xen reader voice"></div>
     <!-- ESCALATE PILL — qi asked five times on 2026-08-24 and spelled it out letter by
@@ -1178,14 +1196,14 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
   </div>
   <!-- Single unified pill: paperclip · field (waveform behind, textarea overlay) · send. -->
   <div class="composer-bar">
-    <button class="icon-btn" id="tb-attach" title="Send attachment">
+    <button type="button" class="icon-btn" id="tb-attach" title="Send attachment">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
       </svg>
     </button>
     <div class="field" id="waveform">
       <canvas id="waveform-canvas"></canvas>
-      <textarea id="fb-text" rows="1" placeholder="Type, dictate, or paste — voice stays on independently"
+      <textarea id="fb-text" rows="1"
         autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
     </div>
     <button class="icon-btn send" id="fb-send" title="Send">
@@ -1194,8 +1212,14 @@ button:disabled { opacity:.35; cursor:not-allowed; transform:none; }
         <polygon points="22 2 15 22 11 13 2 9 22 2"/>
       </svg>
     </button>
+    <!-- qi 2026-09-02 17:58: "the attachment fuction fails on xos full" / "it reloads instead
+         of injecting". This input used to sit OUTSIDE .composer-bar. XOS Full's relocateComposer()
+         appendChild's the composer into the dock and listeners travel with the node - but a SIBLING
+         does not. So getElementById('file-input') returned null there, fileInput.click() threw, and
+         #tb-attach (a bare <button>, therefore type=submit by default) fell through to a native
+         submit = the page navigation he saw as a reload. Inside the bar, it moves with it. -->
+    <input type="file" id="file-input" hidden multiple>
   </div>
-  <input type="file" id="file-input" hidden multiple>
   <button class="start" id="start-btn" hidden>Start</button>
   <button class="stop" id="stop-btn" hidden disabled>Stop</button>
   <div class="fallback" id="fallback" hidden></div>
@@ -3186,7 +3210,12 @@ document.getElementById('tb-share').addEventListener('click', async () => {
 // qi 2026-05-25 08:30 PT: "drag and drop files onto the page... ideally on
 // the text field but anywhere on the page is fine, makes it more seamless".
 const fileInput = document.getElementById('file-input');
-document.getElementById('tb-attach').addEventListener('click', () => fileInput.click());
+document.getElementById('tb-attach').addEventListener('click', (e) => {
+  e.preventDefault();            // belt AND braces: never let a default action navigate the shell
+  const fi = fileInput || document.getElementById('file-input');
+  if (!fi) { appendError('attach unavailable: no file input in this document'); return; }
+  fi.click();
+});
 
 async function uploadAttachments(files) {
   for (const f of files) {
@@ -7099,6 +7128,27 @@ window.addEventListener('beforeunload', stopListening);
     ws = null; ready = false; pending = []; node = null; ctx = null; stream = null;
     hud('stopped');
   };
+})();
+
+/* SYNC pill -> the shell's own resync. qi 2026-09-02 20:06.
+   NOT a page reload. He has said it twice - "me having to reload defeats the purpose of the
+   flow" and "it can't update without reloading". A reload costs him his place; the shell's
+   syncBtn rebuilds the stream and repaints in place, which is the whole point of having it. */
+(function () {
+  var b = document.getElementById('tb-sync');
+  if (!b) return;
+  b.addEventListener('click', function (e) {
+    e.preventDefault();
+    var ok = false;
+    try {
+      var sb = window.parent && window.parent !== window
+             && window.parent.document.getElementById('syncBtn');
+      if (sb) { sb.click(); ok = true; }
+    } catch (_) { ok = false; }
+    var t = b.textContent;
+    b.textContent = ok ? '\u27F3 Synced' : '\u27F3 no shell';
+    setTimeout(function () { b.textContent = t; }, 1400);
+  });
 })();
 </script>
 
