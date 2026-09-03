@@ -396,6 +396,51 @@ body.drop-active::after {
    else in the background feed stays left (.firehose default). */
 .firehose-right { align-self:flex-end; }
 
+/* ── RAIL TAGS, COLOUR-CODED — qi 2026-09-03 12:33 ────────────────────────────
+   "properly tagged ... so he can scan and tell rails apart" is the whole reason the
+   tag exists, and every .src rendered in the SAME accent green, which made the tag
+   present but useless at a glance. Colour is keyed off data-rail-tag, set by
+   _veiRailKey(); a tag it cannot classify simply inherits the accent and still shows
+   its literal text, so an unknown rail is never invisible and never mislabelled.
+   Hues chosen apart on a dark ground and kept inside his palette's temperature. */
+[data-rail-tag="bee"]    .src { color:#ffb347; }   /* amber  — human rail  */
+[data-rail-tag="omi"]    .src { color:#7ac7ff; }   /* blue   — human rail  */
+[data-rail-tag="sms"]    .src { color:#39ff14; }   /* green  — his own line */
+[data-rail-tag="rss"]    .src { color:#c792ea; }   /* violet — feeds       */
+[data-rail-tag="notif"]  .src { color:#ff8a7a; }   /* coral  — notif/mail  */
+[data-rail-tag="attach"] .src { color:#4ecdc4; }   /* teal   — bracket rails */
+[data-rail-tag="agent"]  .src { color:#ffd93d; }   /* yellow — XEN-AGENT   */
+[data-rail-tag="in"]     .src { color:#f0ead6; }   /* cream  — his input   */
+[data-rail-tag="typed"]  .src { color:#f0ead6; }
+[data-rail-tag="step"]   .src { color:rgba(255,255,255,.42); }  /* de-emphasised on purpose */
+[data-rail-tag="xen"]    .src { color:var(--accent); }
+
+/* ── THE AMBIENT LANE ─────────────────────────────────────────────────────────
+   bee / omi / rss / notif / mail / sparkdesktop. These were invisible before today
+   (_hud-only). They are shown now because qi asked to see everything — and they are
+   dimmed because the ORIGINAL complaint (2026-06-24, restated 2026-08-16) was that
+   they read as conversation. Tagged + dated + dimmed answers both at once: present
+   and scannable, never mistakable for a message from a person.
+   Left-aligned like the rest of the background lane, narrower than a conversation
+   bubble so the eye can skip the whole column. */
+.firehose.amb {
+  opacity:.52;
+  max-width:72%;
+  background:rgba(255,255,255,.025);
+  border-color:rgba(255,255,255,.06);
+  border-left:2px solid rgba(255,255,255,.10);
+}
+.firehose.amb .bubble-ts { opacity:.5; }
+.firehose.amb:hover { opacity:.88; }
+/* The stamp inside a background bubble is a reference, not a headline — it sits on
+   its own line above the tag (it ships display:block) but must never out-shout the
+   message body it dates. */
+.firehose .bubble-ts { font-size:9px; opacity:.5; margin-bottom:3px; }
+
+/* Rail-tag colours must also reach the Operator·Firehose rail rows, which build the
+   same .src span through appendEventItem(). */
+#events-rail .er-item[data-rail-tag] .src { font-weight:600; }
+
 /* ── COLLAPSED OBSIDIAN GLASS — THE TUI STREAM BUBBLE ────────────────────────
    qi 2026-08-14 23:30: "collapsed obsidian glass tui stream chat bubbles"
    qi 2026-08-14 23:31: "it should write on real time like how the ticker animates"
@@ -1501,13 +1546,115 @@ function setStatus(state, label) {
   }
 }
 
+/* ── DATE **AND** TIME ON EVERY BUBBLE — qi 2026-09-03 12:33, verbatim: ───────
+   "I expect to see everything ... show up properly tagged and with the time and date
+    in the background chat bubbles"
+
+   MEASURED BEFORE THIS CHANGE, in this file:
+     · .firehose bubbles (the BACKGROUND lane — the ones he named) carried a .src tag
+       and NO TIMESTAMP AT ALL. Not a bare clock — nothing.
+     · .final / .xen-reply carried h:mm:ss AM/PM with NO DATE.
+     · _veiEntryBubble() — every bubble restored on reload and every bubble reached by
+       scrolling back — was `div.textContent = e.text`: no stamp, no tag, nothing.
+   A bare clock time is ambiguous the moment he crosses midnight, and he works across
+   days. One formatter now owns the answer so the four render paths cannot drift apart
+   again — which is exactly how they drifted in the first place. */
+function _veiStampMs(raw) {
+  /* d.ts arrives in SECONDS from some rails and MILLISECONDS from others. This test
+     already existed inside _fmtTs but its knowledge lived only there; a seconds value
+     read as ms dates a bubble to January 1970. Normalize at ONE boundary. */
+  const n = Number(raw) || 0;
+  if (!n) return Date.now();
+  return n > 9999999999 ? n : n * 1000;
+}
+const _VEI_MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+function _veiStamp(raw) {
+  const d = new Date(_veiStampMs(raw));
+  let h = d.getHours();
+  const m = ('0' + d.getMinutes()).slice(-2);
+  const sec = ('0' + d.getSeconds()).slice(-2);
+  const ap = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return _VEI_MON[d.getMonth()] + ' ' + d.getDate() + ' ' + d.getFullYear() +
+         ' · ' + h + ':' + m + ':' + sec + ' ' + ap;   // seconds kept — he measures latency with them
+}
+/* Maps a rendered source label onto ONE rail key, used only to pick the tag COLOUR.
+   ⛔ It never renames anything. The visible text stays whatever the feed printed —
+   the 08-22 note above RAILS is explicit: "Never introduce a friendly synonym for a
+   tag. If the feed prints `in:`, the pill says IN." This returns a CSS key, not a
+   label, so a tag this cannot classify still renders verbatim, just uncoloured. */
+function _veiRailKey(label) {
+  const l = String(label || '').toLowerCase().replace(/[:\[\]]/g, '').trim();
+  if (!l) return '';
+  if (l.indexOf('bee') === 0) return 'bee';
+  if (l.indexOf('omi') === 0) return 'omi';
+  if (l.indexOf('sms') === 0 || l.indexOf('beside') === 0) return 'sms';
+  if (l.indexOf('rss') === 0) return 'rss';
+  if (l.indexOf('notif') === 0 || l.indexOf('mail') === 0 || l.indexOf('spark') === 0) return 'notif';
+  if (l.indexOf('xen-step') === 0 || l === 'step' || l.indexOf('otlp') === 0) return 'step';
+  if (l.indexOf('xen-agent') === 0) return 'agent';
+  if (l.indexOf('vei attach') === 0 || l.indexOf('desk drop') === 0 ||
+      l.indexOf('inbox-autodetect') === 0 || l.indexOf('omi-web') === 0 ||
+      l.indexOf('tui-url') === 0) return 'attach';
+  if (l === 'typed') return 'typed';
+  if (l === 'in') return 'in';
+  if (l.indexOf('xen') === 0) return 'xen';
+  return 'other';
+}
 function _nowStamp() {
-  // h:mm AM/PM — timestamp on qi's OWN input bubbles too (qi 2026-05-30:
-  // "I only see timestamps on your output, not my inputs").
-  const d = new Date();
-  let h = d.getHours(); const m = ('0' + d.getMinutes()).slice(-2); const s = ('0' + d.getSeconds()).slice(-2);
-  const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
-  return h + ':' + m + ':' + s + ' ' + ap;   // seconds so qi can measure latency
+  // Was h:mm:ss AM/PM only. Now delegates so his own input bubbles carry the DATE too.
+  return _veiStamp(Date.now());
+}
+/* ── THE AMBIENT BUBBLE — qi 2026-09-03 12:33, "I expect to see EVERYTHING" ────
+   Renders a rail that used to be _hud()-only (bee / omi / rss / notif / mail /
+   sparkdesktop) as a real, visible bubble in the background lane.
+
+   THREE PROPERTIES, and all three are the point:
+   (a) TAGGED with the rail's LITERAL name — the same string the rails print, so he
+       can cross-reference. No friendly synonyms (see the RAILS note near the pills).
+   (b) STAMPED with full DATE + TIME via the one shared formatter.
+   (c) DE-EMPHASISED — .amb dims it below a conversation bubble, which is what keeps
+       the 2026-06-24 / 08-16 complaint ("masquerading as conversation") fixed rather
+       than merely reversed.
+
+   ⛔ IT IS NOT A GATE AND CANNOT BECOME ONE. It runs at render time in the browser,
+   after delivery has already happened, wrapped in try/catch at every call site. If
+   this function threw on every call, not one injection would be delayed or lost.
+
+   Light dedup only: the SAME rail + SAME text inside 10s renders once. That collapses
+   an SSE backlog replaying the same line, and nothing else — it is keyed on content,
+   never on rail, so two rails reporting the same event both still show. */
+var _veiAmbSeen = new Map();
+function _veiAmbBubble(railTag, text, rawTs) {
+  var body = String(text == null ? '' : text)
+               .replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  if (!body) return;
+  var ms = _veiStampMs(rawTs);
+  var key = railTag + '|' + body.slice(0, 120) + '|' + Math.round(ms / 10000);
+  if (_veiAmbSeen.has(key)) return;
+  _veiAmbSeen.set(key, ms);
+  if (_veiAmbSeen.size > 400) {                 /* bounded — never a leak */
+    var it = _veiAmbSeen.keys();
+    for (var i = 0; i < 200; i++) { var k = it.next(); if (k.done) break; _veiAmbSeen.delete(k.value); }
+  }
+  var el = document.createElement('div');
+  el.className = 'firehose amb';
+  el.dataset.t = String(ms);                    /* rail contract — feeds the hour timeline */
+  el.setAttribute('data-rail-tag', _veiRailKey(railTag));
+  var ts = document.createElement('span'); ts.className = 'bubble-ts'; ts.textContent = _veiStamp(ms);
+  var sc = document.createElement('span'); sc.className = 'src'; sc.textContent = railTag;
+  var tx = document.createElement('span'); tx.className = 'bubble-txt'; tx.textContent = body.slice(0, 4000);
+  el.appendChild(ts); el.appendChild(sc); el.appendChild(tx);
+  /* Stick to the bottom ONLY if he is already there — qi 2026-08-13 21:49, "the auto
+     scroll is good but it shouldnt fight me when Im scrolling." Ambient traffic is the
+     highest-volume lane in the feed, so an unconditional scroll here would make reading
+     anything older impossible by construction. Measured BEFORE the append, because
+     afterwards scrollHeight has already grown and the question is unanswerable. */
+  var stick = (transcript.scrollTop + transcript.clientHeight) >= (transcript.scrollHeight - 40);
+  transcript.appendChild(el);
+  try { if (typeof _pruneBacklogDom === 'function') _pruneBacklogDom(); } catch (_) {}
+  try { if (typeof attachBubbleActions === 'function') attachBubbleActions(el, body); } catch (_) {}
+  if (stick) transcript.scrollTop = transcript.scrollHeight;
 }
 function appendFinal(text, postedFlag) {
   const div = document.createElement('div');
@@ -3149,9 +3296,17 @@ function collectTranscriptText() {
       el.classList.contains('interim') ? 'YOU?' :
       'YOU';
     const t = el.cloneNode(true);
-    t.querySelectorAll('.bubble-actions, .posted, .src').forEach(n => n.remove());
+    /* .bubble-ts joined this removal list 2026-09-03: now that EVERY bubble carries a
+       stamp (firehose and restored history included, which had none), leaving it in
+       the clone fused "SEP 3 2026 · 12:35:07 PM" onto the front of the message text in
+       every copy and export. Pull it out as a field and print it as one — the stamp is
+       kept, and per qi's "everything needs to be timestamped" it now reaches the export
+       for the background lane too, which it never did before. */
+    const tsTxt = ((el.querySelector('.bubble-ts') || {}).textContent || '').trim();
+    const srcTxt = ((el.querySelector('.src') || {}).textContent || '').trim();
+    t.querySelectorAll('.bubble-actions, .posted, .src, .bubble-ts').forEach(n => n.remove());
     const txt = t.textContent.trim();
-    if (txt) out.push(`${role}: ${txt}`);
+    if (txt) out.push(`${tsTxt ? '[' + tsTxt + '] ' : ''}${role}${srcTxt ? '/' + srcTxt : ''}: ${txt}`);
   });
   return out.join('\n');
 }
@@ -3698,7 +3853,28 @@ try { _veiRecoverOrphanThreads(); } catch (_) {}
 function _veiEntryBubble(e) {
   const div = document.createElement('div');
   div.className = e.role === 'xen' ? 'xen-reply' : 'final';
-  div.textContent = e.text;
+  /* ── qi 2026-09-03 12:33 — RESTORED BUBBLES CARRIED NEITHER STAMP NOR TAG ─────
+     This is the renderer for EVERY bubble that comes back on reload and every bubble
+     reached by scrolling back through older threads. It was one `textContent` assign,
+     so the moment he reloaded, the timestamps he could see a second earlier were gone
+     from his whole history — which is the worst case for "date, not just time",
+     because scroll-back is exactly where a day boundary gets crossed.
+     Built with the same .bubble-ts / .bubble-txt spans the live path uses so
+     attachBubbleActions' COPY/SHARE (which query .bubble-txt) get cleaner text than
+     they did before, not dirtier. */
+  const _ts = document.createElement('span');
+  _ts.className = 'bubble-ts';
+  _ts.textContent = _veiStamp(e.ts);
+  const _tag = document.createElement('span');
+  _tag.className = 'src';
+  _tag.textContent = e.role === 'xen' ? 'xen' : 'you';
+  const _tx = document.createElement('span');
+  _tx.className = 'bubble-txt';
+  _tx.textContent = e.text;
+  div.setAttribute('data-rail-tag', e.role === 'xen' ? 'xen' : 'typed');
+  div.appendChild(_ts);
+  div.appendChild(_tag);
+  div.appendChild(_tx);
   // THE RAIL CONTRACT. _tlHours() does `if (!t) continue` on dataset.t, so a bubble
   // without it is INVISIBLE to the timeline. Before this line, dataset.t was written
   // in exactly ONE place in the whole file (appendFinal, live bubbles only) — so
@@ -4285,6 +4461,19 @@ function renderEvent(d) {
   var _amb = (d.source || d.sender || d.event || d.kind || '').toString().toLowerCase().replace(/:$/, '').trim();
   if (_amb === 'bee' || _amb === 'omi' || _amb === 'bee-ambient' || _amb === 'omi-ambient' || _amb === 'com.xen.bee-ambient') {
     try { _hud((_amb.indexOf('omi') >= 0 ? 'omi · ' : 'bee · ') + txt.slice(0, 60)); } catch (_) {}
+    /* ── qi 2026-09-03 12:33: "I expect to see EVERYTHING show up" ─────────────
+       These rails were _hud()-only and then `return` — bee 11,736 + omi 6,742
+       injections that never became a bubble. The HUD is a 60-char single-line ticker
+       that overwrites itself, so "still visible in the dim telemetry lane" was true
+       for one line at a time and false for everything before it.
+       ✅ WHY IT IS SAFE TO SHOW THEM NOW. The 06-24 decree put them here because they
+       were "masquerading as conversation" — untagged and undated, indistinguishable
+       from a real message. That is the exact condition qi just ordered fixed. They
+       come back as .amb bubbles: literal rail tag, full date + time, visually
+       de-emphasised, and rendered through a path that does NOT reach the reply
+       router, the dedup registry, or the speech gate. Ambient stays ambient.
+       ⛔ NOT A GATE. This renders and returns; it cannot delay or drop delivery. */
+    try { _veiAmbBubble(_amb.indexOf('omi') >= 0 ? 'omi' : 'bee', txt, d.ts); } catch (_) {}
     return;
   }
   // qi 2026-08-16: "my interface displaying the wring thing through black chat bubbles".
@@ -4301,9 +4490,22 @@ function renderEvent(d) {
   // bubble is a self-echo; it is already spoken and already on the SSE lane.
   // ⚠️ This is a CONTENT filter only. The bubble styling is qi's own design — measured
   // readable (cream #F0EAD6 on dark glass) and deliberately NOT touched here.
-  if (_amb === 'rss' || _amb === 'notif' || _amb === 'mail' || _amb === 'xen-speak'
-      || _amb === 'xen-out' || _amb === 'sparkdesktop') {
+  if (_amb === 'xen-speak' || _amb === 'xen-out') {
+    /* ⛔ STILL HUD-ONLY, DELIBERATELY, AND THIS IS NOT AN OMISSION. These two are XEN'S
+       OWN VOICE arriving back as an inbound event. The reply path above (isXenOut)
+       already rendered that reply as a .xen-reply bubble with its own stamp. Showing
+       it again here would put every one of Xen's own lines on screen TWICE. This is a
+       self-echo filter, not a hidden rail — the content is on screen, once. */
     try { _hud(_amb + ' · ' + txt.slice(0, 60)); } catch (_) {}
+    return;
+  }
+  if (_amb === 'rss' || _amb === 'notif' || _amb === 'mail' || _amb === 'sparkdesktop') {
+    /* qi 2026-09-03 12:33 — rss 16,738 + notif 609 (508 of them Spark mail) were
+       _hud()-only and invisible, for the same "masquerading as conversation" reason
+       recorded on 2026-08-16. Same resolution as bee/omi directly above: shown, but
+       unmistakably tagged and dated, in the de-emphasised ambient style. */
+    try { _hud(_amb + ' · ' + txt.slice(0, 60)); } catch (_) {}
+    try { _veiAmbBubble(_amb, txt, d.ts); } catch (_) {}
     return;
   }
   const tag = (d.event || d.kind || '').toString().toLowerCase();
@@ -4325,15 +4527,9 @@ function renderEvent(d) {
     _renderedKeys.add(dk);
   }
   // qi 2026-05-25 timestamp canon — every bubble shows h:mm AM/PM.
-  const _fmtTs = (raw) => {
-    const _t = raw ? new Date(raw > 9999999999 ? raw : raw * 1000) : new Date();
-    let _h = _t.getHours();
-    const _m = String(_t.getMinutes()).padStart(2,'0');
-    const _s = String(_t.getSeconds()).padStart(2,'0');
-    const _ampm = _h >= 12 ? 'PM' : 'AM';
-    _h = (_h % 12) || 12;
-    return `${_h}:${_m}:${_s} ${_ampm}`;
-  };
+  // qi 2026-09-03 12:33 — was time-only. Delegates to the ONE formatter so the SSE
+  // path and the local path cannot print different stamps for the same instant.
+  const _fmtTs = (raw) => _veiStamp(raw);
   const _stamp = _fmtTs(d.ts);
   // ONE normalized millisecond timestamp for this event, computed once and used for
   // BOTH the rail contract (dataset.t) and what gets persisted.
@@ -4462,6 +4658,17 @@ function renderEvent(d) {
        what he asked for; wiring the real TUI stream into it is the open work. */
     const _isTuiStream = false;
     fdiv.className = (_isNitroTool ? 'firehose firehose-right' : 'firehose') + (_isTuiStream ? ' tui' : '');
+    /* ── qi 2026-09-03 12:33 — THE BACKGROUND BUBBLES HAD NO TIMESTAMP AT ALL ──────
+       Not "time but no date" — this branch built .src + .bubble-txt and nothing else,
+       so every inbound event in his background lane rendered undated and unclocked
+       since the lane was built. It also never set dataset.t, which is the RAIL
+       CONTRACT (_tlHours does `if (!t) continue`) — so firehose bubbles contributed
+       ZERO timeline stations and could not be scrolled to by hour either. Both fixed
+       here, at the one place his background bubbles are actually made. */
+    try { fdiv.dataset.t = String(_tsMs); } catch (_) {}
+    try { fdiv.setAttribute('data-rail-tag', _veiRailKey(labelSrc)); } catch (_) {}
+    const fts = document.createElement('span'); fts.className = 'bubble-ts'; fts.textContent = _stamp;
+    fdiv.appendChild(fts);
     const fsrc = document.createElement('span'); fsrc.className = 'src'; fsrc.textContent = labelSrc;
     const fbody = document.createElement('span'); fbody.className = 'bubble-txt';
     if (_isTuiStream) {
@@ -4628,8 +4835,10 @@ function appendEventItem(srcLabel, body, ts) {
   div.appendChild(document.createTextNode(body));
   const tsSpan = document.createElement('span');
   tsSpan.className = 'ts';
-  const d = new Date(ts || Date.now());
-  tsSpan.textContent = d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  // qi 2026-09-03 12:33 — was time-only here too. This rail is where xen-step and the
+  // raw egress lane live, so it crosses midnight more than the conversation does.
+  tsSpan.textContent = _veiStamp(ts || Date.now());
+  try { div.setAttribute('data-rail-tag', _veiRailKey(srcLabel)); } catch (_) {}
   div.appendChild(tsSpan);
   _eventsList.appendChild(div);
   // Cap to last 200 entries
