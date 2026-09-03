@@ -392,6 +392,17 @@ body.drop-active::after {
   font-size:9.5px; letter-spacing:.10em; text-transform:uppercase;
   color:var(--accent);
 }
+/* The tag now appears on CONVERSATION bubbles as well (.final / .xen-reply), which
+   previously had no .src at all. Without this rule it inherited the body font and
+   rendered as a full-size word sitting in front of his message — a tag has to read as
+   a label or it is just noise in the sentence. Same metrics as the firehose tag so the
+   whole feed carries ONE tag treatment. */
+.final .src, .xen-reply .src {
+  display:inline-block; margin-right:6px;
+  font-family:var(--mono); font-size:9.5px; letter-spacing:.10em;
+  text-transform:uppercase; opacity:.75;
+  color:var(--accent);
+}
 /* qi 2026-07-02: nitro-tool bubbles sit on the right like xen-reply, everything
    else in the background feed stays left (.firehose default). */
 .firehose-right { align-self:flex-end; }
@@ -1659,7 +1670,12 @@ function _veiAmbBubble(railTag, text, rawTs) {
 function appendFinal(text, postedFlag) {
   const div = document.createElement('div');
   div.className = 'final';
-  div.innerHTML = '<span class="bubble-ts">' + _nowStamp() + '</span><span class="bubble-txt">' +
+  // qi 2026-09-03 12:33 — his own typed bubbles get the `typed` rail tag, matching the
+  // literal name the rails use, so every bubble in the feed is tagged without exception.
+  div.setAttribute('data-rail-tag', 'typed');
+  div.innerHTML = '<span class="bubble-ts">' + _nowStamp() + '</span>' +
+                  '<span class="src">typed</span>' +
+                  '<span class="bubble-txt">' +
                   escapeHtml(text) + '</span>' + (postedFlag ? ' <span class="posted">✓ posted</span>' : '');
   div.dataset.t = String(Date.now());   // the rail reads this; nothing else does
   // STICK TO BOTTOM ONLY IF HE IS ALREADY THERE.
@@ -4554,10 +4570,22 @@ function renderEvent(d) {
     const tsEl = document.createElement('span');
     tsEl.className = 'bubble-ts';
     tsEl.textContent = _stamp;
+    /* qi 2026-09-03 12:33 — FOUND BY LOOKING AT THE RENDERED PAGE, not by reading this
+       code: the RESTORED bubble path (_veiEntryBubble) tagged its bubbles while this
+       LIVE path did not, so a reply showed a tag after a reload and no tag when it
+       first arrived. Same bubble, two renderers, two answers — which is the exact
+       drift the shared stamp formatter was introduced to stop. dataset.t likewise:
+       without it a live reply contributed no station to the hour timeline. */
+    const tagEl = document.createElement('span');
+    tagEl.className = 'src';
+    tagEl.textContent = 'xen';
+    div.setAttribute('data-rail-tag', 'xen');
+    try { div.dataset.t = String(_tsMs); } catch (_) {}
     const txtEl = document.createElement('span');
     txtEl.className = 'bubble-txt';
     linkifyTo(txtEl, txt);
     div.appendChild(tsEl);
+    div.appendChild(tagEl);
     div.appendChild(txtEl);
     transcript.appendChild(div);
     attachBubbleActions(div, txt);
@@ -4605,10 +4633,19 @@ function renderEvent(d) {
     const tsEl = document.createElement('span');
     tsEl.className = 'bubble-ts';
     tsEl.textContent = _stamp;
+    /* Same gap as the xen-reply branch directly above — his own dictated line arrived
+       untagged and only grew a tag after a reload. `in` is the literal rail name the
+       feed prints for dictated input; it is not a friendly synonym. */
+    const tagEl = document.createElement('span');
+    tagEl.className = 'src';
+    tagEl.textContent = 'in';
+    div.setAttribute('data-rail-tag', 'in');
+    try { div.dataset.t = String(_tsMs); } catch (_) {}
     const txtEl = document.createElement('span');
     txtEl.className = 'bubble-txt';
     linkifyTo(txtEl, txt);
     div.appendChild(tsEl);
+    div.appendChild(tagEl);
     div.appendChild(txtEl);
     transcript.appendChild(div);
     attachBubbleActions(div, txt);
