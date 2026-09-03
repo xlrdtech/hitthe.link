@@ -1,7 +1,16 @@
 // VVSVEI service worker (wf 2026-05-31) — cache-first shell so reopen is instant.
 // Scope: /vvsvei/ ONLY. Never caches /events SSE, /api/*, or cross-origin xen.xlrd.org.
 // qi: "having to reload vvsvei is a bottleneck. it should open and work instantly."
-const VVSVEI_CACHE = 'vvsvei-shell-v30';  // v30 2026-08-15 — STEP-BUBBLE SIDE DELIVERY: `.tui-step` was
+const VVSVEI_CACHE = 'vvsvei-shell-v31';  // v31 2026-09-03 — TAG + DATE ON EVERY BUBBLE: qi 12:33
+// "I expect to see everything ... show up properly tagged and with the time and date in the background
+// chat bubbles". Firehose bubbles had NO timestamp at all, .final/.xen-reply had time with NO date,
+// restored-history bubbles had neither stamp nor tag, and bee/omi/rss/notif were _hud()-only so they
+// never became bubbles. All four fixed in index.html; this bump is what DELIVERS it to his installed
+// PWA. ⚠️ MEASURED TODAY, exactly as the v30 note below warns: with the CDN already serving the new
+// bytes (md5-matched), a live DOM read of the SW-CONTROLLED page reported the fix ABSENT, while the
+// same page loaded with a cache-busting query string reported it present and rendered 6/6 bubbles
+// tagged and dated. Pushing is not delivering. The bump is the delivery.
+// v30 2026-08-15 — STEP-BUBBLE SIDE DELIVERY: `.tui-step` was
 // moved to align-self:flex-end (Xen's side) — qi 05:01 "the terminal stream is on the my side, current is
 // supposed to be your side" — but that shipped WITHOUT a cache bump, so his installed shell stayed on the
 // v29 bytes and the fix never reached him. MEASURED 2026-08-15 05:22 via a live DOM read of
