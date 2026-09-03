@@ -6043,6 +6043,56 @@ window.addEventListener('beforeunload', stopListening);
     st.id = 'voice-pills-css';
     st.textContent = '#pill-row::-webkit-scrollbar{display:none}
 
+/* ═══ THE ACTIVE VIEW GLOWS — biochemical green, taken from hitthe.link/life ═══════
+   qi 2026-09-02 20:47:48: "the active view selected in the can[vas] have the internal xlrd
+   life canonical biochemical green glow"
+   qi 2026-09-02 20:48:52: "via hitthe.link/life progress bars"
+
+   ⭐ NOT AN APPROXIMATION. These are lifted verbatim from life/index.html's .fill rule:
+       background:linear-gradient(90deg,var(--ng-deep),var(--ng),var(--ng-hi));
+       box-shadow:0 0 14px rgba(57,255,20,.7), inset 0 1px 0 rgba(255,255,255,.3);
+   and its full ramp, so this surface and the progress bars are the SAME green, not two
+   greens that look alike until they sit side by side. */
+:root{
+  --ng-deep:#1a7308; --ng:#39FF14; --ng-leaf:#5eff30; --ng-hi:#a8ff7a;
+  --ng-faint:rgba(57,255,20,.12); --ng-glow:rgba(57,255,20,.45); --ng-line:rgba(57,255,20,.18);
+}
+
+/* ACTIVE = selected. The mark half carries the fill's own gradient and its own glow, so the
+   selection reads as a progress bar that has arrived rather than as a highlighted button. */
+.pill-split[aria-pressed="true"] > .mark,
+.pill-split.is-active > .mark{
+  background:linear-gradient(90deg,var(--ng-deep),var(--ng),var(--ng-hi));
+  color:#04140a; font-weight:700;
+  box-shadow:0 0 14px rgba(57,255,20,.7), inset 0 1px 0 rgba(255,255,255,.3);
+  -webkit-background-clip:border-box; background-clip:border-box;
+}
+/* the INTERNAL glow he asked for - inset, so it lights the pill from inside rather than
+   haloing it from outside. .track's own inset shadow is the reference for that inward read. */
+.pill-split[aria-pressed="true"],
+.pill-split.is-active{
+  box-shadow:inset 0 0 18px rgba(57,255,20,.20),
+             inset 0 1px 3px rgba(0,0,0,.9),
+             0 0 14px rgba(57,255,20,.35);
+  border-color:var(--ng-line);
+}
+.pill-split[aria-pressed="true"] > .door,
+.pill-split.is-active > .door{ color:var(--ng-leaf); }
+
+/* the same treatment for a selected app tile in the drawer, so "active view" means one thing
+   everywhere it appears */
+.web-app[aria-selected="true"] .icon,
+.web-app.is-active .icon,
+.app.is-active{
+  box-shadow:inset 0 0 18px rgba(57,255,20,.20), 0 0 14px rgba(57,255,20,.45);
+  outline:1px solid var(--ng-line); outline-offset:-1px;
+}
+@media (prefers-reduced-motion:no-preference){
+  .pill-split[aria-pressed="true"] > .mark,
+  .pill-split.is-active > .mark{ transition:box-shadow .22s ease, background .22s ease; }
+}
+
+
 /* ═══ DIAGONAL-SPLIT PILLS — the slash IS the seam ═══════════════════════════════
    qi 2026-09-02 20:43:47: "if its safe and wont cause syntax errors change the |s to /s"
    qi 2026-09-02 20:45:27: "and that would reflect in the pill design via diagonal splitting"
