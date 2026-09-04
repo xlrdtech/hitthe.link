@@ -1,0 +1,80 @@
+<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>HITL</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--bg:#08080a;--card:#111114;--line:rgba(227,195,114,.18);--gold:#c9a24a;--hi:#f0dca0;--deep:#7d5f23;--ink:#f3eee1;--mut:#8c857a}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+padding:22px 12px 40px;background-image:radial-gradient(800px 500px at 50% -12%,rgba(201,162,74,.13),transparent 62%);
+background-attachment:fixed;min-height:100vh;overflow-x:hidden}
+.wrap{max-width:560px;margin:0 auto}
+.kick{font:10px/1 ui-monospace,Menlo,monospace;letter-spacing:.32em;text-transform:uppercase;color:var(--deep);text-align:center}
+h1{font:600 clamp(30px,10vw,46px)/1 "Iowan Old Style",Palatino,Georgia,serif;text-align:center;letter-spacing:.14em;margin:.24em 0 .1em;
+background:linear-gradient(168deg,var(--hi),var(--gold) 48%,var(--deep));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{text-align:center;color:var(--mut);font-size:12.5px;margin-bottom:22px}
+.rack{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:18px}
+.pill{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;position:relative}
+.pill .ltr{font:700 11px/1 ui-monospace,Menlo,monospace;color:var(--gold);text-align:center;padding:9px 0 5px;letter-spacing:.2em;
+border-bottom:1px solid rgba(255,255,255,.05)}
+.roll{height:180px;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.roll::-webkit-scrollbar{display:none}
+.roll .pad{height:70px}
+.opt{scroll-snap-align:center;height:40px;display:flex;align-items:center;justify-content:center;text-align:center;
+font-size:12.5px;color:#5d5850;padding:0 4px;transition:color .18s,transform .18s;line-height:1.15}
+.opt.on{color:var(--hi);font-weight:600;transform:scale(1.09)}
+.band{position:absolute;left:0;right:0;top:calc(50% + 11px);height:40px;transform:translateY(-50%);pointer-events:none;
+border-top:1px solid rgba(227,195,114,.22);border-bottom:1px solid rgba(227,195,114,.22);
+background:linear-gradient(90deg,rgba(201,162,74,.07),rgba(201,162,74,.02))}
+.out{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 16px;text-align:center;margin-bottom:12px}
+.out .phrase{font:600 clamp(17px,5.2vw,25px)/1.25 "Iowan Old Style",Palatino,Georgia,serif;color:var(--hi)}
+.out .acr{font:11px/1 ui-monospace,Menlo,monospace;letter-spacing:.3em;color:var(--deep);margin-top:9px}
+.hint{text-align:center;color:#5d5850;font:11px/1.6 ui-monospace,Menlo,monospace}
+.note{color:var(--mut);font-size:12px;text-align:center;margin-top:18px;line-height:1.6}
+</style></head><body><div class="wrap">
+<div class="kick">not settled</div>
+<h1>H I T L</h1>
+<div class="sub">roll each one &middot; the human is not in the loop</div>
+<div class="rack" id="rack"></div>
+<div class="out"><div class="phrase" id="phrase">&nbsp;</div><div class="acr" id="acr"></div></div>
+<div class="hint">swipe each column</div>
+<p class="note">Industry reads HITL as human <em>in</em> the loop.<br>This is the inversion.</p>
+</div>
+<script>
+const COLS=[
+ {l:"H",o:["Headless","Humanless","Hands-off","Hands-free","Human-free","Hushed"]},
+ {l:"I",o:["Intuition","Intent","Independent","Intelligent","Instant","Inference","In"]},
+ {l:"T",o:["Triggerless","Through","Task","Total","Tacit","Thoughtless","Then","The"]},
+ {l:"L",o:["Loop","Launch","Ledger","Live","Leave","Lifecycle","Layer"]}
+];
+const rack=document.getElementById("rack");
+const sel=[0,0,0,0];
+COLS.forEach((c,ci)=>{
+  const p=document.createElement("div");p.className="pill";
+  p.innerHTML='<div class="ltr">'+c.l+'</div><div class="band"></div><div class="roll" id="r'+ci+'"><div class="pad"></div></div>';
+  rack.appendChild(p);
+  const r=p.querySelector(".roll");
+  c.o.forEach((w,i)=>{const d=document.createElement("div");d.className="opt";d.textContent=w;d.dataset.i=i;r.appendChild(d);});
+  const pad=document.createElement("div");pad.className="pad";r.appendChild(pad);
+  let t;
+  r.addEventListener("scroll",()=>{clearTimeout(t);t=setTimeout(()=>mark(ci,r),60);},{passive:true});
+  setTimeout(()=>mark(ci,r),40);
+});
+function mark(ci,r){
+  const mid=r.scrollTop+r.clientHeight/2;
+  let best=0,bd=1e9;
+  r.querySelectorAll(".opt").forEach(o=>{
+    const c=o.offsetTop+o.offsetHeight/2, d=Math.abs(c-mid);
+    if(d<bd){bd=d;best=+o.dataset.i;}
+  });
+  r.querySelectorAll(".opt").forEach(o=>o.classList.toggle("on",+o.dataset.i===best));
+  sel[ci]=best; render();
+}
+function render(){
+  const w=COLS.map((c,i)=>c.o[sel[i]]);
+  document.getElementById("phrase").textContent=w.join(" ");
+  document.getElementById("acr").textContent=w.map(x=>x[0].toUpperCase()).join(" · ");
+}
+</script>
+<script src="https://hitthe.link/lib/grid-autofix.js" defer></script>
+<!--rev:hitl-roller-1-->
+</body></html>
