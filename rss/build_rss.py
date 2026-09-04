@@ -18,6 +18,59 @@ SITE="https://hitthe.link"
 OMNI=os.environ.get("OMNI_EVENT_URL","http://127.0.0.1:4441/api/omni/event")
 UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
 
+# ─── qi's RSS CONTROL (2026-09-03) ────────────────────────────────────────────
+# He asked three times how he controls his rss feed. `~/bin/xen-rss` is the CLI;
+# THIS is the half that makes it real. Without an enforcement point here the CLI
+# would be a write-only rail -- a UI that writes a file nothing reads, which is a
+# measured failure in this system, not a theory.
+#
+#   polling:false  -> the feed is NOT FETCHED. Nothing new can enter the record
+#                     from it, because nothing is retrieved. Honest, not hidden.
+#   quiet:true     -> the item STILL LANDS IN SESSION ZERO via `xen-door rss`,
+#                     it just does not reach his seat. Muting governs ATTENTION,
+#                     never the RECORD (canon cmd 54).
+#
+# ⛔ THERE IS NO OFF SWITCH FOR THE RECORD. `quiet` may never reduce what session
+#    zero holds; if it ever does, that is a defect of the highest order.
+# ✅ FAILS OPEN. Missing file, bad JSON, unreadable disk -> EVERYTHING ON. A control
+#    that fails closed can silence a feed silently, which is the exact shape of
+#    every silent failure this system has paid for.
+import re as _re, subprocess as _sp
+CTL=os.path.join(os.path.expanduser("~"),".xen","state","rss-control.json")
+DOORBIN=os.path.join(os.path.expanduser("~"),"bin","xen-door")
+
+def load_ctl():
+    try:
+        d=json.load(open(CTL,encoding="utf-8"))
+        if isinstance(d,dict) and isinstance(d.get("feeds"),dict): return d["feeds"]
+    except Exception: pass
+    return {}                      # fail OPEN -- everything on
+
+CTLF=load_ctl()
+
+def feed_id_ext(f):
+    s=(f.get("category") or f.get("name") or f.get("url") or "").strip().lower()
+    return _re.sub(r"[^a-z0-9]+","-",s).strip("-")
+
+def polling_on(fid):
+    e=CTLF.get(fid)
+    return True if not isinstance(e,dict) or e.get("polling") is None else bool(e["polling"])
+
+def is_quiet(fid):
+    e=CTLF.get(fid)
+    return False if not isinstance(e,dict) or e.get("quiet") is None else bool(e["quiet"])
+
+def door_only(text):
+    """A quiet feed's record leg. Session zero keeps it; the seat does not see it.
+    Fails open and silent -- recording never delays or blocks the build."""
+    try:
+        _sp.run([DOORBIN,"rss","XEN RSS "+text],timeout=6,
+                stdout=_sp.DEVNULL,stderr=_sp.DEVNULL)
+        return True
+    except Exception:
+        return False
+# ──────────────────────────────────────────────────────────────────────────────
+
 def iso(dt):
     try: return dt.astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     except Exception: return ""
@@ -38,9 +91,14 @@ def rfc822(ts):
 def flatten_live(d):
     items=[]
     for cap in d.get("by_capability",[]):
+        fid=(cap.get("tag") or "event").strip()
+        # RSS CONTROL: a capability he switched off is not read at all.
+        if not polling_on(fid):
+            print("  live SKIP %s (polling off per xen-rss)"%fid); continue
         for r in cap.get("recent",[]):
             items.append({"ts":r.get("ts",""),"text":r.get("text","") or "","cat":cap.get("tag","event"),
-                          "catName":cap.get("name",cap.get("tag","Event")),"persona":r.get("persona","XEN"),"proof":r.get("proof"),"ext":False})
+                          "catName":cap.get("name",cap.get("tag","Event")),"persona":r.get("persona","XEN"),"proof":r.get("proof"),"ext":False,
+                          "fid":fid})
     return items
 
 def fetch_external():
@@ -51,6 +109,11 @@ def fetch_external():
     for f in feeds:
         url=f.get("url"); name=f.get("name") or url; cat=f.get("category") or "feed"
         if not url: continue
+        fid=feed_id_ext(f)
+        # RSS CONTROL: polling off means the URL is NEVER FETCHED. Not hidden after
+        # the fact -- no request leaves this machine for it.
+        if not polling_on(fid):
+            print("  feed SKIP %s (polling off per xen-rss)"%fid); continue
         try:
             req=urllib.request.Request(url,headers={"User-Agent":UA,"Accept":"application/rss+xml,application/atom+xml,application/xml,text/xml,*/*"})
             data=urllib.request.urlopen(req,timeout=12).read()
@@ -72,7 +135,7 @@ def fetch_external():
             else: continue
             title=strip_html(title)
             if not title: continue
-            out.append({"ts":parse_ts(pub),"text":title,"cat":cat,"catName":name,"persona":name,"proof":(link or None),"ext":True})
+            out.append({"ts":parse_ts(pub),"text":title,"cat":cat,"catName":name,"persona":name,"proof":(link or None),"ext":True,"fid":fid})
             n+=1
             if n>=20: break
     out.sort(key=lambda x:x["ts"],reverse=True)
@@ -104,10 +167,23 @@ seen=set()
 if os.path.exists(SEEN):
     try: seen=set(json.load(open(SEEN)))
     except: pass
-key=lambda i:(i["ts"]+i["text"])[:80]
+# ⛔ THE DEDUPE KEY WAS THE VOLUME. It was (ts + text)[:80], and live.json
+# REGENERATES ts every build -- so the same 32 items counted as NEW on every
+# 600 s cycle, forever. MEASURED 2026-09-03: 184 unique texts occupying 3,137
+# lines of session zero in one day, and the builder log reading
+# "injected->omni:32/32" on every single cycle. The record built to hold his
+# voice was 98% Xen repeating itself.
+# The key is now the TEXT alone, which is what dedupe meant all along.
+key=lambda i:i["text"][:80]
 new=[i for i in allitems if key(i) not in seen]
-sent=0
+sent=0; quiet_sent=0
 for i in reversed(new[:40]):
+    # RSS CONTROL: a quiet feed skips omni (seat + feed) and goes STRAIGHT TO THE
+    # DOOR, so session zero keeps every line while his seat stays clear. The
+    # record is never the thing being reduced.
+    if is_quiet(i.get("fid","")):
+        if door_only("["+i["catName"]+"] "+i["text"]): quiet_sent+=1
+        continue
     payload={"event":"omni:rss","source":"rss","src":"rss","kind":"rss","from":"XEN RSS","sender":i["catName"],"name":i["catName"],
              "text":i["text"],"body":i["text"],"preview":("["+i["catName"]+"] "+i["text"])[:140],"category":i["cat"],"persona":i["persona"],"ts":i["ts"],"url":i.get("proof")}
     try:
@@ -115,4 +191,4 @@ for i in reversed(new[:40]):
     except Exception: pass
 for i in allitems: seen.add(key(i))
 json.dump(sorted(list(seen))[-3000:],open(SEEN,"w"))
-print("xen:%d ext:%d total:%d | injected->omni:%d/%d"%(len(xen),len(ext),len(allitems),sent,len(new)))
+print("xen:%d ext:%d total:%d | injected->omni:%d/%d | door-only(quiet):%d"%(len(xen),len(ext),len(allitems),sent,len(new),quiet_sent))

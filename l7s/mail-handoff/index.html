@@ -1,0 +1,404 @@
+<title>L7S Mail Routing Handoff</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Karla:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+  :root{
+    --paper:#f6f4ef;
+    --panel:#fffefb;
+    --ink:#191d24;
+    --ink-2:#4a5260;
+    --ink-3:#79808c;
+    --rule:#ddd8cd;
+    --rule-2:#ebe6dc;
+    --alert:#a8501e;
+    --alert-bg:#f6e9de;
+    --good:#1f6152;
+    --good-bg:#e3eeea;
+    --mono-bg:#f0ece3;
+    --shadow:0 1px 2px rgba(25,29,36,.05),0 8px 24px -16px rgba(25,29,36,.18);
+  }
+  :root:not([data-theme="light"]){
+    @media (prefers-color-scheme: dark){
+      --paper:#12151a;
+      --panel:#181c22;
+      --ink:#e8e6e1;
+      --ink-2:#a8aeb8;
+      --ink-3:#767d88;
+      --rule:#2b313a;
+      --rule-2:#232830;
+      --alert:#e08a4e;
+      --alert-bg:#2c1f16;
+      --good:#5aab95;
+      --good-bg:#152722;
+      --mono-bg:#1e232b;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px -16px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#12151a;
+    --panel:#181c22;
+    --ink:#e8e6e1;
+    --ink-2:#a8aeb8;
+    --ink-3:#767d88;
+    --rule:#2b313a;
+    --rule-2:#232830;
+    --alert:#e08a4e;
+    --alert-bg:#2c1f16;
+    --good:#5aab95;
+    --good-bg:#152722;
+    --mono-bg:#1e232b;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px -16px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Karla","Helvetica Neue",Arial,sans-serif;
+    font-size:16.5px;
+    line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:820px;margin:0 auto;padding:56px 26px 100px}
+
+  /* ---- masthead ---- */
+  .eyebrow{
+    font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink-3);font-weight:700;
+  }
+  h1{
+    font-family:"Newsreader",Georgia,serif;
+    font-weight:500;font-size:clamp(34px,5.4vw,50px);
+    line-height:1.08;letter-spacing:-.015em;
+    margin:.28em 0 .3em;text-wrap:balance;
+  }
+  .deck{
+    font-family:"Newsreader",Georgia,serif;
+    font-size:20px;font-style:italic;color:var(--ink-2);
+    line-height:1.45;max-width:60ch;margin:0;
+  }
+  .meta{
+    display:flex;flex-wrap:wrap;gap:8px 28px;
+    margin-top:26px;padding-top:18px;border-top:1px solid var(--rule);
+    font-size:13px;color:var(--ink-3);
+  }
+  .meta b{color:var(--ink-2);font-weight:700}
+
+  /* ---- verdict banner ---- */
+  .verdict{
+    margin:38px 0 0;padding:22px 24px;
+    background:var(--alert-bg);
+    border-left:3px solid var(--alert);
+    border-radius:2px;
+  }
+  .verdict .tag{
+    font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    font-weight:700;color:var(--alert);
+  }
+  .verdict p{
+    margin:.5em 0 0;font-family:"Newsreader",Georgia,serif;
+    font-size:21px;line-height:1.4;color:var(--ink);
+  }
+  .verdict .caveat{
+    font-family:"Karla",sans-serif;font-size:14.5px;
+    color:var(--ink-2);margin-top:.85em;line-height:1.55;
+  }
+
+  /* ---- sections ---- */
+  section{margin-top:52px}
+  h2{
+    font-family:"Newsreader",Georgia,serif;
+    font-weight:600;font-size:26px;letter-spacing:-.01em;
+    margin:0 0 4px;display:flex;align-items:baseline;gap:12px;
+  }
+  h2 .n{
+    font-family:"JetBrains Mono",monospace;font-size:12px;
+    color:var(--ink-3);font-weight:700;letter-spacing:.06em;
+  }
+  h3{
+    font-family:"Karla",sans-serif;font-weight:700;font-size:14px;
+    letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);
+    margin:30px 0 10px;
+  }
+  p{max-width:66ch}
+  p+p{margin-top:1em}
+  strong{font-weight:700}
+  a{color:var(--alert);text-decoration-thickness:1px;text-underline-offset:2px}
+
+  /* ---- the routing table: priority is the story ---- */
+  .routing{
+    margin-top:22px;border:1px solid var(--rule);border-radius:3px;
+    background:var(--panel);overflow:hidden;box-shadow:var(--shadow);
+  }
+  .routing .hd{
+    display:grid;grid-template-columns:76px 1fr auto;
+    gap:16px;padding:11px 20px;
+    border-bottom:1px solid var(--rule);
+    font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-3);font-weight:700;
+  }
+  .mx{
+    display:grid;grid-template-columns:76px 1fr auto;
+    gap:16px;align-items:center;padding:15px 20px;
+    border-bottom:1px solid var(--rule-2);
+  }
+  .mx:last-child{border-bottom:0}
+  .pri{
+    font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums;
+    font-size:30px;font-weight:700;line-height:1;text-align:right;
+  }
+  .mx.wins .pri{color:var(--alert)}
+  .mx.loses .pri{color:var(--ink-3);opacity:.55}
+  .host{
+    font-family:"JetBrains Mono",monospace;font-size:14px;
+    word-break:break-all;
+  }
+  .mx.loses .host{color:var(--ink-3)}
+  .fate{
+    font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    font-weight:700;white-space:nowrap;
+  }
+  .mx.wins .fate{color:var(--alert)}
+  .mx.loses .fate{color:var(--ink-3)}
+  .rule-note{
+    padding:13px 20px;background:var(--mono-bg);
+    font-size:13.5px;color:var(--ink-2);border-top:1px solid var(--rule);
+  }
+
+  /* ---- record block ---- */
+  pre{
+    font-family:"JetBrains Mono",monospace;font-size:13px;line-height:1.75;
+    background:var(--mono-bg);border:1px solid var(--rule-2);
+    padding:16px 18px;border-radius:3px;overflow-x:auto;margin:16px 0;
+    color:var(--ink-2);
+  }
+  pre b{color:var(--ink);font-weight:700}
+  code{
+    font-family:"JetBrains Mono",monospace;font-size:.88em;
+    background:var(--mono-bg);padding:1px 5px;border-radius:2px;
+  }
+
+  /* ---- mailbox list ---- */
+  .boxes{display:flex;flex-direction:column;gap:0;margin-top:18px;
+    border-top:1px solid var(--rule-2)}
+  .box{
+    display:flex;justify-content:space-between;align-items:baseline;
+    gap:16px;padding:12px 2px;border-bottom:1px solid var(--rule-2);
+  }
+  .box .addr{font-family:"JetBrains Mono",monospace;font-size:14px}
+  .box .dest{font-size:12.5px;color:var(--alert);font-weight:700;
+    letter-spacing:.04em}
+
+  /* ---- options ---- */
+  .options{display:grid;gap:18px;margin-top:22px}
+  @media(min-width:680px){.options{grid-template-columns:1fr 1fr}}
+  .opt{
+    background:var(--panel);border:1px solid var(--rule);
+    border-radius:3px;padding:22px;display:flex;flex-direction:column;
+  }
+  .opt.pick{border-color:var(--good);background:var(--good-bg)}
+  .opt .lbl{
+    font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    font-weight:700;color:var(--ink-3);
+  }
+  .opt.pick .lbl{color:var(--good)}
+  .opt h4{
+    font-family:"Newsreader",Georgia,serif;font-weight:600;
+    font-size:21px;margin:.35em 0 .5em;
+  }
+  .opt p{font-size:14.5px;color:var(--ink-2);margin:0;flex:1}
+  .price{
+    font-family:"JetBrains Mono",monospace;font-size:23px;font-weight:700;
+    margin-top:16px;padding-top:14px;border-top:1px solid var(--rule-2);
+  }
+  .opt.pick .price{color:var(--good);border-top-color:rgba(90,171,149,.3)}
+  .price small{font-size:12px;font-weight:400;color:var(--ink-3);
+    font-family:"Karla",sans-serif}
+
+  /* ---- checklist ---- */
+  ol.steps{margin:16px 0 0;padding:0;list-style:none;counter-reset:s}
+  ol.steps li{
+    counter-increment:s;position:relative;padding:9px 0 9px 38px;
+    border-bottom:1px solid var(--rule-2);font-size:15px;
+  }
+  ol.steps li::before{
+    content:counter(s);position:absolute;left:0;top:11px;
+    font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;
+    color:var(--ink-3);border:1px solid var(--rule);border-radius:50%;
+    width:22px;height:22px;display:grid;place-items:center;
+  }
+  ul.todo{margin:14px 0 0;padding:0;list-style:none}
+  ul.todo li{
+    padding:8px 0 8px 30px;position:relative;font-size:15px;
+    border-bottom:1px solid var(--rule-2);color:var(--ink-2);
+  }
+  ul.todo li::before{
+    content:"";position:absolute;left:2px;top:14px;
+    width:12px;height:12px;border:1.5px solid var(--rule);border-radius:2px;
+  }
+
+  .callout{
+    margin-top:20px;padding:16px 20px;border-left:2px solid var(--rule);
+    font-size:14.5px;color:var(--ink-2);
+  }
+  .askbox{
+    margin-top:22px;padding:24px;background:var(--panel);
+    border:1px solid var(--rule);border-radius:3px;box-shadow:var(--shadow);
+  }
+  footer{
+    margin-top:64px;padding-top:26px;border-top:1px solid var(--rule);
+    font-size:13.5px;color:var(--ink-3);
+  }
+  footer h3{margin-top:0}
+  footer p{max-width:64ch;margin-bottom:.9em}
+  @media(prefers-reduced-motion:no-preference){
+    .verdict{animation:rise .5s ease-out both}
+    @keyframes rise{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}
+  }
+</style>
+
+<div class="wrap">
+
+  <div class="eyebrow">L7S, Inc. &middot; Engineering Handoff</div>
+  <h1>Where l7sinc.com mail is actually going</h1>
+  <p class="deck">The domain transfer to Spaceship replaced the Google Workspace mail records. Inbound mail is being delivered somewhere nobody is reading it.</p>
+
+  <div class="meta">
+    <span><b>For</b> Luckie Goggins</span>
+    <span><b>Domain</b> l7sinc.com</span>
+    <span><b>Measured</b> Sep 3, 2026 &middot; 9:32 PM EDT</span>
+    <span><b>Source</b> launch2.spaceship.net (authoritative)</span>
+  </div>
+
+  <div class="verdict">
+    <div class="tag">Current state</div>
+    <p>All mail to <b>admin@</b>, <b>hero@</b> and <b>luckieg@</b> is routing to Spacemail, not to Google.</p>
+    <p class="caveat">This is a verified routing fact, checked against the authoritative nameserver and confirmed by an independent public resolver. What is <em>not</em> yet verified is the outcome &mdash; whether those messages are sitting in a Spacemail inbox or bouncing. That check is outstanding and is listed below rather than guessed at.</p>
+  </div>
+
+  <section>
+    <h2><span class="n">01</span> What happened</h2>
+    <p><code>l7sinc.com</code> was transferred to <strong>Spaceship</strong> as registrar. Spaceship applies its own <strong>Spacemail preset</strong> to a domain on transfer, and that preset writes its own mail records into the zone &mdash; displacing the Google Workspace records that had been routing the three mailboxes.</p>
+    <p>Nobody chose this. It is the registrar's default behaviour on transfer, and it happens silently.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">02</span> The zone right now</h2>
+    <p>Mail exchange records carry a priority number, and <strong>the lowest number wins</strong>. Everything follows from that one rule:</p>
+
+    <div class="routing">
+      <div class="hd"><span style="text-align:right">Priority</span><span>Mail server</span><span>Outcome</span></div>
+      <div class="mx wins"><div class="pri">0</div><div class="host">mx1.spacemail.com</div><div class="fate">Receives mail</div></div>
+      <div class="mx wins"><div class="pri">0</div><div class="host">mx2.spacemail.com</div><div class="fate">Receives mail</div></div>
+      <div class="mx loses"><div class="pri">50</div><div class="host">alt4.aspmx.l.google.com</div><div class="fate">Never reached</div></div>
+      <div class="rule-note">Google is only consulted if <em>both</em> Spacemail servers are unreachable. In practice that never happens, so Google sees nothing.</div>
+    </div>
+
+    <h3>Supporting records</h3>
+<pre>SPF     <b>v=spf1 include:spf.spacemail.com ~all</b>   &larr; Google not authorised to send
+DMARC   <b>(none)</b>
+DKIM    google._domainkey &mdash; <b>(none)</b>
+        spacemail._domainkey &mdash; present</pre>
+    <p>The original Google Workspace configuration used <strong>five</strong> mail records. Four were lost in the transfer; one survived, at the priority that guarantees it is never used.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">02b</span> The website is down too</h2>
+    <p>Measured 10:05 PM. The transfer did not only take the mail records &mdash; <strong>it left the website records behind as well.</strong></p>
+<pre>A record for l7sinc.com, from three independent public resolvers:
+  8.8.8.8   <b>EMPTY</b>      1.1.1.1   <b>EMPTY</b>      9.9.9.9   <b>EMPTY</b>
+
+Spaceship's own nameservers (launch1 / launch2):
+  status: NOERROR, <b>ANSWER: 0</b>   &larr; the zone exists, the record does not</pre>
+    <p>A browser returns <code>ERR_NAME_NOT_RESOLVED</code> because there is genuinely no address to find.</p>
+    <h3>Everything is recoverable &mdash; the old zone still answers</h3>
+<pre>@ns2.wixdns.net  (the previous nameservers, still live)
+  A     &rarr; <b>185.199.108.153  185.199.109.153  185.199.110.153  185.199.111.153</b>
+  CNAME &rarr; www <b>l7shub.github.io.</b>
+  MX    &rarr; <b>10</b> aspmx.l.google.com   <b>20</b> alt1   <b>30</b> alt2   <b>40</b> alt3   <b>50</b> alt4
+  TXT   &rarr; <b>v=spf1 include:_spf.google.com ~all</b>
+  TXT   &rarr; google-site-verification=<b>c7PXWWuzdF3DdOtHoPmQBcCUvQSiOyxtmWElMmx-kEM</b></pre>
+    <p>Every website record and all five mail records, intact at their correct priorities. Nothing has to be reconstructed &mdash; it has to be copied across <strong>before the old delegation lapses</strong>. That verification TXT is what proves domain ownership to Google Workspace; without it the account can eventually be deprovisioned.</p>
+    <div class="callout">This was predicted. The L7S scope page, written 2026-08-29, already said: <em>&ldquo;DNS zone not yet rebuilt at Spaceship. Do not cut nameservers until it is verified &mdash; every @l7sinc.com mailbox depends on those 5 MX records.&rdquo;</em></div>
+  </section>
+
+  <section>
+    <h2><span class="n">03</span> The mailboxes</h2>
+    <div class="boxes">
+      <div class="box"><span class="addr">admin@l7sinc.com</span><span class="dest">&rarr; Spacemail</span></div>
+      <div class="box"><span class="addr">hero@l7sinc.com</span><span class="dest">&rarr; Spacemail</span></div>
+      <div class="box"><span class="addr">luckieg@l7sinc.com</span><span class="dest">&rarr; Spacemail</span></div>
+    </div>
+    <div class="callout">Credentials for all three are held in 1Password and are deliberately not recorded in this document. They should never be written into a shared file, a ticket, or any page that can be linked.</div>
+  </section>
+
+  <section>
+    <h2><span class="n">04</span> The blocker</h2>
+    <p>The two Spacemail records <strong>cannot be deleted from the Advanced DNS page</strong>. They sit in a preset-owned record group with no delete control &mdash; unlike the Google record, which sits in the editable default group.</p>
+    <p>The route through is the domain's <strong>mail-service selector</strong>, not the record list. Releasing the preset returns the zone to manual control.</p>
+    <div class="callout"><strong>One trap worth naming.</strong> Adding a mail record while a conflicting one exists raises an <em>&ldquo;Add conflicting MX record?&rdquo;</em> dialog. The record is not saved until its confirm button is pressed &mdash; so a save that appears to do nothing is usually this dialog waiting off-screen.</div>
+  </section>
+
+  <section>
+    <h2><span class="n">05</span> The decision</h2>
+    <p>Two coherent end states. Both are legitimate; they differ in cost and in how much work sits behind them.</p>
+
+    <div class="options">
+      <div class="opt">
+        <div class="lbl">Option A</div>
+        <h4>Restore Google Workspace</h4>
+        <p>Mail returns to the inboxes already in use. Nothing changes for anyone's daily habits, and every existing Google login keeps working untouched.</p>
+        <div class="price">~$40<small> / month</small></div>
+      </div>
+      <div class="opt pick">
+        <div class="lbl">Option B &middot; lower cost</div>
+        <h4>Commit to Spacemail</h4>
+        <p>Spacemail is already the live route, so mail is arriving there now. The work is in the logins that hang off the Workspace accounts, not in the mail itself.</p>
+        <div class="price">&lt;$3<small> / month &middot; first month free</small></div>
+      </div>
+    </div>
+
+    <h3>The login question</h3>
+    <p>This is the part worth being precise about. <strong>A Google Workspace account is also a Google login.</strong> Anything signed in with an <code>@l7sinc.com</code> address &mdash; Drive files, a YouTube channel, an Ads account, any third-party service using &ldquo;Sign in with Google&rdquo; &mdash; is attached to that Google account, not to the mailbox. Moving mail does not move those.</p>
+    <p>The recovery path is straightforward where a service does not accept the Google login afterwards: <strong>a password reset to the mailbox restores access</strong>, because the reset email goes to the address, and the address still works. What it does not recover is anything living <em>inside</em> Google &mdash; Drive contents, channel ownership &mdash; which has to be transferred deliberately before the Workspace account is closed.</p>
+
+    <h3>Recommended sequence</h3>
+    <ol class="steps">
+      <li>Restore Google first, so mail is unambiguously flowing again.</li>
+      <li>Inventory what actually signs in with an <code>@l7sinc.com</code> Google account.</li>
+      <li>Move or re-key those, one at a time, with mail working throughout.</li>
+      <li>Migrate to Spacemail on a schedule, and close Workspace last.</li>
+    </ol>
+    <p>Doing both at once means a mail outage and a login audit happening in the same window, which is how something quietly gets lost.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">06</span> What I need from you</h2>
+    <div class="askbox">
+      <ul class="todo">
+        <li><strong>Which option</strong> &mdash; restore Google, or commit to Spacemail.</li>
+        <li><strong>Whether anything has gone missing</strong> since the transfer &mdash; expected mail that never arrived.</li>
+        <li><strong>Access to the mail-service selector</strong> in the Spaceship account, so the preset can be released.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">07</span> What I owe you</h2>
+    <ul class="todo">
+      <li>Confirm whether mail is landing in Spacemail or bouncing</li>
+      <li>Release the Spacemail preset and restore the four missing Google records</li>
+      <li>Restore SPF and DKIM for Google</li>
+      <li>Add a DMARC record &mdash; the domain has none, independent of this incident</li>
+      <li>Re-verify from the authoritative nameserver, not a cached lookup</li>
+      <li>Send a real test message to each mailbox and confirm arrival by eye</li>
+    </ul>
+  </section>
+
+  <footer>
+    <h3>Why this took a day</h3>
+    <p>Two things are worth stating rather than letting pass quietly.</p>
+    <p><strong>Mail was reported as working when it was not.</strong> That reading came from a cached DNS lookup. The authoritative server said something different the whole time. A cached answer is not the truth of a zone that has just changed hands.</p>
+    <p><strong>The DNS settings were not captured before the transfer.</strong> A pre-transfer snapshot would have made restoring the four lost records a two-minute job instead of a reconstruction. A snapshot has been taken now and is held with the client file.</p>
+  </footer>
+
+</div>
