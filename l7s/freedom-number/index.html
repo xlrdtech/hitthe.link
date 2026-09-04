@@ -1,0 +1,326 @@
+<title>L7S Freedom Number</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800;900&family=Roboto+Mono:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --ink:#0d0d0f;
+    --paper:#ffffff;
+    --panel:#f7f7f8;
+    --line:#e2e2e5;
+    --line-2:#eeeef0;
+    --muted:#6b6b73;
+    --faint:#95959e;
+    --red:#d21f28;
+    --red-deep:#a4151d;
+    --red-wash:#fdf0f0;
+    --good:#1a7a52;
+  }
+  :root:not([data-theme="light"]){
+    @media (prefers-color-scheme: dark){
+      --ink:#f2f2f4;
+      --paper:#0d0d0f;
+      --panel:#161619;
+      --line:#2a2a30;
+      --line-2:#202024;
+      --muted:#9d9da8;
+      --faint:#6e6e78;
+      --red:#f04a52;
+      --red-deep:#ff6a70;
+      --red-wash:#241214;
+      --good:#4dbd8e;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#f2f2f4; --paper:#0d0d0f; --panel:#161619; --line:#2a2a30;
+    --line-2:#202024; --muted:#9d9da8; --faint:#6e6e78; --red:#f04a52;
+    --red-deep:#ff6a70; --red-wash:#241214; --good:#4dbd8e;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:"Archivo","Helvetica Neue",Arial,sans-serif;
+    font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:44px 22px 90px}
+
+  /* masthead */
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:30px}
+  .brandmark{
+    width:34px;height:34px;background:var(--red);border-radius:3px;
+    display:grid;place-items:center;color:#fff;font-weight:900;
+    font-size:14px;letter-spacing:-.02em;flex:none;
+  }
+  .brandname{font-weight:800;font-size:15px;letter-spacing:.02em}
+  .brandname span{color:var(--red)}
+  h1{
+    font-weight:900;font-size:clamp(32px,5.2vw,52px);line-height:1.02;
+    letter-spacing:-.03em;margin:0 0 12px;text-wrap:balance;
+  }
+  h1 em{font-style:normal;color:var(--red)}
+  .deck{font-size:18px;color:var(--muted);max-width:56ch;margin:0 0 8px;line-height:1.5}
+
+  /* the working surface */
+  .rig{display:grid;gap:22px;margin-top:34px}
+  @media(min-width:860px){.rig{grid-template-columns:1fr 400px;align-items:start}}
+
+  .inputs{border:1px solid var(--line);border-radius:4px;background:var(--panel);overflow:hidden}
+  .grp{border-bottom:1px solid var(--line)}
+  .grp:last-child{border-bottom:0}
+  .grp > h2{
+    margin:0;padding:13px 20px;font-size:11px;font-weight:800;
+    letter-spacing:.13em;text-transform:uppercase;color:var(--faint);
+    background:var(--paper);border-bottom:1px solid var(--line-2);
+    display:flex;justify-content:space-between;align-items:baseline;
+  }
+  .grp > h2 .sub{
+    font-family:"Roboto Mono",monospace;font-size:12px;font-weight:500;
+    letter-spacing:0;color:var(--ink);text-transform:none;
+    font-variant-numeric:tabular-nums;
+  }
+  .row{
+    display:flex;align-items:center;gap:14px;padding:10px 20px;
+    border-bottom:1px solid var(--line-2);
+  }
+  .row:last-child{border-bottom:0}
+  .row label{flex:1;font-size:14.5px}
+  .row .hint{display:block;font-size:12px;color:var(--faint);margin-top:1px}
+  .money{position:relative;flex:none}
+  .money::before{
+    content:"$";position:absolute;left:9px;top:50%;transform:translateY(-50%);
+    color:var(--faint);font-family:"Roboto Mono",monospace;font-size:13px;
+  }
+  input[type=number]{
+    width:122px;padding:7px 9px 7px 21px;border:1px solid var(--line);
+    border-radius:3px;background:var(--paper);color:var(--ink);
+    font-family:"Roboto Mono",monospace;font-size:14px;text-align:right;
+    font-variant-numeric:tabular-nums;
+  }
+  input[type=number]:focus{outline:2px solid var(--red);outline-offset:1px;border-color:transparent}
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  input[type=number]{-moz-appearance:textfield}
+  .pct{width:74px;padding-left:9px;text-align:right}
+  .pct-wrap::before{content:none}
+  .pct-wrap::after{
+    content:"%";position:absolute;right:-16px;top:50%;transform:translateY(-50%);
+    color:var(--faint);font-family:"Roboto Mono",monospace;font-size:13px;
+  }
+  .pct-wrap{position:relative;margin-right:16px}
+
+  /* result */
+  .result{position:sticky;top:22px}
+  .bignum{
+    border:1px solid var(--ink);border-radius:4px;overflow:hidden;background:var(--paper);
+  }
+  .bignum .cap{
+    background:var(--ink);color:var(--paper);padding:11px 20px;
+    font-size:11px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;
+  }
+  .bignum .val{
+    padding:24px 20px 20px;font-family:"Roboto Mono",monospace;
+    font-size:clamp(38px,6.4vw,52px);font-weight:700;line-height:1;
+    letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:var(--red);
+  }
+  .bignum .per{
+    font-family:"Archivo",sans-serif;font-size:14px;font-weight:600;
+    color:var(--muted);letter-spacing:0;
+  }
+  .bignum .strip{
+    display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line);
+  }
+  .bignum .strip div{padding:13px 20px;border-right:1px solid var(--line)}
+  .bignum .strip div:last-child{border-right:0}
+  .bignum .strip .k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:700}
+  .bignum .strip .v{font-family:"Roboto Mono",monospace;font-size:19px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums}
+
+  /* tiers */
+  .tiers{margin-top:20px;border:1px solid var(--line);border-radius:4px;overflow:hidden;background:var(--panel)}
+  .tiers h3{
+    margin:0;padding:12px 18px;font-size:11px;font-weight:800;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--faint);background:var(--paper);
+    border-bottom:1px solid var(--line);
+  }
+  .tier{display:flex;align-items:baseline;gap:12px;padding:11px 18px;border-bottom:1px solid var(--line-2)}
+  .tier:last-child{border-bottom:0}
+  .tier .n{flex:1}
+  .tier .name{font-weight:700;font-size:14px}
+  .tier .price{font-family:"Roboto Mono",monospace;font-size:12px;color:var(--faint);display:block;margin-top:1px}
+  .tier .cnt{
+    font-family:"Roboto Mono",monospace;font-size:20px;font-weight:700;
+    color:var(--red);font-variant-numeric:tabular-nums;
+  }
+  .tier .unit{font-family:"Archivo",sans-serif;font-size:11px;color:var(--faint);font-weight:600;display:block;text-align:right}
+
+  .note{
+    margin-top:18px;padding:14px 18px;background:var(--red-wash);
+    border-left:3px solid var(--red);border-radius:2px;font-size:14px;color:var(--ink);
+  }
+  .foot{
+    margin-top:48px;padding-top:22px;border-top:1px solid var(--line);
+    font-size:13px;color:var(--faint);max-width:64ch;
+  }
+  .cta{
+    margin-top:26px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;
+  }
+  .btn{
+    display:inline-block;background:var(--red);color:#fff;text-decoration:none;
+    font-weight:800;font-size:15px;padding:13px 26px;border-radius:3px;
+    letter-spacing:.01em;border:0;cursor:pointer;font-family:"Archivo",sans-serif;
+  }
+  .btn:hover{background:var(--red-deep)}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+</style>
+
+<div class="wrap">
+
+  <div class="brand">
+    <div class="brandmark">L7</div>
+    <div class="brandname">L7S<span>,</span> INC.</div>
+  </div>
+
+  <h1>What does freedom actually <em>cost</em> you?</h1>
+  <p class="deck">Most owners price backwards — they guess a number, then hope it covers the life they want. This runs it forward: your life, your business, your margin, and the revenue that has to exist for all three to work.</p>
+
+  <div class="rig">
+
+    <div class="inputs">
+      <div class="grp">
+        <h2>1 &middot; Baseline lifestyle <span class="sub" id="s-life">$0</span></h2>
+        <div class="row"><label>Housing<span class="hint">Rent or mortgage, taxes, insurance</span></label>
+          <span class="money"><input type="number" id="i-house" value="2800" min="0" step="50"></span></div>
+        <div class="row"><label>Transport<span class="hint">Payments, fuel, insurance, upkeep</span></label>
+          <span class="money"><input type="number" id="i-car" value="700" min="0" step="25"></span></div>
+        <div class="row"><label>Food &amp; household</label>
+          <span class="money"><input type="number" id="i-food" value="1200" min="0" step="25"></span></div>
+        <div class="row"><label>Healthcare<span class="hint">Premiums, out of pocket</span></label>
+          <span class="money"><input type="number" id="i-health" value="650" min="0" step="25"></span></div>
+        <div class="row"><label>Debt payments<span class="hint">Personal, outside the business</span></label>
+          <span class="money"><input type="number" id="i-debt" value="450" min="0" step="25"></span></div>
+        <div class="row"><label>Everything else<span class="hint">Family, savings, the life you actually want</span></label>
+          <span class="money"><input type="number" id="i-life" value="1400" min="0" step="50"></span></div>
+      </div>
+
+      <div class="grp">
+        <h2>2 &middot; Business operating cost <span class="sub" id="s-biz">$0</span></h2>
+        <div class="row"><label>Team &amp; contractors</label>
+          <span class="money"><input type="number" id="b-team" value="4500" min="0" step="100"></span></div>
+        <div class="row"><label>Software &amp; tools</label>
+          <span class="money"><input type="number" id="b-soft" value="600" min="0" step="25"></span></div>
+        <div class="row"><label>Marketing &amp; ad spend</label>
+          <span class="money"><input type="number" id="b-ads" value="2000" min="0" step="100"></span></div>
+        <div class="row"><label>Rent, insurance, admin</label>
+          <span class="money"><input type="number" id="b-admin" value="900" min="0" step="50"></span></div>
+        <div class="row"><label>Fulfillment cost<span class="hint">What it costs to deliver the work</span></label>
+          <span class="money"><input type="number" id="b-cogs" value="1500" min="0" step="100"></span></div>
+      </div>
+
+      <div class="grp">
+        <h2>3 &middot; Margin &amp; tax</h2>
+        <div class="row"><label>Target profit margin<span class="hint">Retained in the business, above your pay</span></label>
+          <span class="pct-wrap"><input type="number" class="pct" id="m-margin" value="20" min="0" max="90" step="1"></span></div>
+        <div class="row"><label>Effective tax rate<span class="hint">Blended personal + business</span></label>
+          <span class="pct-wrap"><input type="number" class="pct" id="m-tax" value="28" min="0" max="60" step="1"></span></div>
+      </div>
+    </div>
+
+    <div class="result">
+      <div class="bignum">
+        <div class="cap">Your freedom number</div>
+        <div class="val" id="r-month">$0<span class="per"> / month</span></div>
+        <div class="strip">
+          <div><div class="k">Per year</div><div class="v" id="r-year">$0</div></div>
+          <div><div class="k">Per working day</div><div class="v" id="r-day">$0</div></div>
+        </div>
+        <div class="strip">
+          <div><div class="k">Life</div><div class="v" id="r-life">$0</div></div>
+          <div><div class="k">Business</div><div class="v" id="r-biz">$0</div></div>
+        </div>
+      </div>
+
+      <div class="tiers">
+        <h3>What that means in clients</h3>
+        <div class="tier"><div class="n"><div class="name">DIY</div><span class="price">$11 &ndash; $111 &middot; templates, calculators</span></div>
+          <div><div class="cnt" id="t-diy">0</div><span class="unit">sales / mo</span></div></div>
+        <div class="tier"><div class="n"><div class="name">Done&#8209;with&#8209;you</div><span class="price">$1,111 &ndash; $3,333 &middot; sprints, group</span></div>
+          <div><div class="cnt" id="t-dwy">0</div><span class="unit">clients / mo</span></div></div>
+        <div class="tier"><div class="n"><div class="name">Done&#8209;for&#8209;you</div><span class="price">$5,000 &ndash; $15,000 &middot; full build</span></div>
+          <div><div class="cnt" id="t-dfy">0</div><span class="unit">clients / mo</span></div></div>
+        <div class="tier"><div class="n"><div class="name">Enterprise JV</div><span class="price">Revenue share partnership</span></div>
+          <div><div class="cnt" id="t-jv">0</div><span class="unit">at $25k / mo</span></div></div>
+      </div>
+
+      <div class="note" id="verdict">Adjust the inputs and the number moves with you.</div>
+
+      <div class="cta">
+        <a class="btn" href="mailto:hero@l7sinc.com?subject=Freedom%20Number%20%E2%80%94%20strategy%20call">Book a strategy call</a>
+        <button class="btn ghost" id="copy">Copy my numbers</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="foot">
+    <strong>How this is calculated.</strong> Life and business costs are summed, then grossed up for
+    the effective tax rate, then divided by <em>(1 &minus; target margin)</em> so the margin survives
+    rather than being absorbed. Working days assume 21 per month. Client counts use the midpoint of
+    each tier. This is a planning model, not tax or financial advice.
+  </div>
+</div>
+
+<script>
+(function(){
+  var LIFE = ["i-house","i-car","i-food","i-health","i-debt","i-life"];
+  var BIZ  = ["b-team","b-soft","b-ads","b-admin","b-cogs"];
+  function n(id){ var e=document.getElementById(id); var v=parseFloat(e && e.value); return isFinite(v)&&v>0?v:0; }
+  function sum(a){ var t=0; for(var i=0;i<a.length;i++) t+=n(a[i]); return t; }
+  function money(v){ return "$"+Math.round(v).toLocaleString("en-US"); }
+
+  function calc(){
+    var life = sum(LIFE), biz = sum(BIZ);
+    var margin = Math.min(Math.max(n("m-margin"),0),90)/100;
+    var tax    = Math.min(Math.max(n("m-tax"),0),60)/100;
+
+    var costs   = life + biz;
+    var grossed = tax < 1 ? costs/(1-tax) : costs;      // survive tax
+    var needed  = margin < 1 ? grossed/(1-margin) : grossed; // margin survives too
+
+    document.getElementById("s-life").textContent = money(life);
+    document.getElementById("s-biz").textContent  = money(biz);
+    document.getElementById("r-life").textContent = money(life);
+    document.getElementById("r-biz").textContent  = money(biz);
+    document.getElementById("r-month").innerHTML  = money(needed)+'<span class="per"> / month</span>';
+    document.getElementById("r-year").textContent = money(needed*12);
+    document.getElementById("r-day").textContent  = money(needed/21);
+
+    document.getElementById("t-diy").textContent = Math.ceil(needed/61);
+    document.getElementById("t-dwy").textContent = Math.ceil(needed/2222);
+    document.getElementById("t-dfy").textContent = Math.ceil(needed/10000);
+    document.getElementById("t-jv").textContent  = Math.ceil(needed/25000);
+
+    var dfy = Math.ceil(needed/10000), v = document.getElementById("verdict");
+    if (dfy <= 1)      v.innerHTML = "<strong>One done-for-you client a month covers everything.</strong> At this number the constraint is delivery quality, not volume.";
+    else if (dfy <= 3) v.innerHTML = "<strong>"+dfy+" done-for-you clients a month.</strong> Reachable on referral and one working funnel &mdash; you do not need scale yet.";
+    else if (dfy <= 8) v.innerHTML = "<strong>"+dfy+" done-for-you clients a month.</strong> That needs a real pipeline: paid acquisition plus a booked-call engine, not word of mouth.";
+    else               v.innerHTML = "<strong>"+dfy+" done-for-you clients a month is a team problem, not a sales problem.</strong> At this level the answer is usually enterprise or revenue share, not more clients.";
+  }
+
+  LIFE.concat(BIZ,["m-margin","m-tax"]).forEach(function(id){
+    var e=document.getElementById(id);
+    if(e){ e.addEventListener("input",calc); e.addEventListener("change",calc); }
+  });
+
+  document.getElementById("copy").addEventListener("click",function(){
+    var t = "L7S Freedom Number\n"
+      + "Life: "+document.getElementById("r-life").textContent+" / mo\n"
+      + "Business: "+document.getElementById("r-biz").textContent+" / mo\n"
+      + "Required revenue: "+document.getElementById("r-month").textContent.replace(" / month","")+" / mo\n"
+      + "Per year: "+document.getElementById("r-year").textContent+"\n"
+      + "Done-for-you clients needed: "+document.getElementById("t-dfy").textContent+" / mo";
+    var done = function(){ var b=document.getElementById("copy"); var o=b.textContent; b.textContent="Copied"; setTimeout(function(){b.textContent=o;},1600); };
+    try { navigator.clipboard.writeText(t).then(done, done); } catch(e){ done(); }
+  });
+
+  calc();
+})();
+</script>
