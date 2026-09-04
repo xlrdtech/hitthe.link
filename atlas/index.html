@@ -1,0 +1,253 @@
+<title>LIFE Atlas</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chivo:wght@400;600;800;900&family=Roboto+Mono:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --void:#07080a;
+    --ground:#0d0f12;
+    --panel:#14171c;
+    --line:#232830;
+    --ink:#e9ecf1;
+    --dim:#8b93a1;
+    --faint:#5a6272;
+    --green:#39ff14;
+    --green-dim:#1f8f0c;
+    --glass:#080909;
+  }
+  *{box-sizing:border-box}
+  body{
+    background:var(--void); color:var(--ink);
+    font-family:"Chivo","Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:52px 20px 90px}
+
+  .eyebrow{
+    font-family:"Roboto Mono",monospace;font-size:11px;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--faint);
+  }
+  h1{
+    font-weight:900;font-size:clamp(30px,5vw,46px);line-height:1;
+    letter-spacing:-.03em;margin:.3em 0 .35em;
+  }
+  h1 .slash{color:var(--green)}
+  .deck{color:var(--dim);font-size:16.5px;max-width:56ch;line-height:1.55;margin:0}
+
+  /* ---- THE THREE DOORS ---- */
+  .doors{
+    display:flex;justify-content:center;gap:clamp(14px,5vw,54px);
+    flex-wrap:wrap;margin:52px 0 8px;
+  }
+  .door{
+    font-family:"Roboto Mono",monospace;font-weight:700;
+    font-size:clamp(19px,3.6vw,28px);letter-spacing:.13em;
+    padding:15px 26px;border:1px solid var(--line);border-radius:4px;
+    background:var(--panel);color:var(--ink);position:relative;
+  }
+  .door.center{
+    border-color:var(--green);color:var(--green);
+    box-shadow:0 0 0 1px rgba(57,255,20,.14), 0 8px 40px -18px rgba(57,255,20,.5);
+  }
+  .doors-cap{
+    text-align:center;font-family:"Roboto Mono",monospace;font-size:10.5px;
+    letter-spacing:.2em;text-transform:uppercase;color:var(--faint);
+    margin-bottom:30px;
+  }
+
+  /* ---- the marks under LIFE ---- */
+  .under{
+    position:relative;border:1px solid var(--line);border-radius:6px;
+    background:linear-gradient(180deg,var(--panel),var(--ground));
+    padding:26px 20px 22px;
+  }
+  .under::before{
+    content:"UNDER LIFE — ALPHABETICAL";
+    position:absolute;top:-8px;left:22px;background:var(--void);
+    padding:0 9px;font-family:"Roboto Mono",monospace;font-size:9.5px;
+    letter-spacing:.19em;color:var(--faint);
+  }
+  .grid{
+    display:grid;grid-template-columns:repeat(3,1fr);
+    gap:11px;max-width:640px;margin:0 auto;
+  }
+
+  /* ---- THE DIAGONAL-SPLIT PILL ---- */
+  .pill{
+    position:relative;display:flex;align-items:stretch;
+    border:1px solid var(--line);border-radius:5px;overflow:hidden;
+    background:var(--ground);text-decoration:none;color:inherit;
+    min-height:46px;transition:border-color .16s, transform .16s;
+  }
+  .pill:hover,.pill:focus-visible{
+    border-color:var(--green-dim);transform:translateY(-1px);outline:none;
+  }
+  .pill:focus-visible{box-shadow:0 0 0 2px rgba(57,255,20,.4)}
+  /* the door half — clipped on the diagonal, the slash's own lean IS the cut */
+  .pill .door-half{
+    position:absolute;inset:0 auto 0 0;width:56%;
+    background:rgba(57,255,20,.07);
+    clip-path:polygon(0 0, 100% 0, calc(100% - 20px) 100%, 0 100%);
+    border-right:0;
+  }
+  .pill .lbl{
+    position:relative;display:flex;align-items:center;width:100%;
+    padding:0 12px;gap:0;
+  }
+  .pill .d{
+    font-family:"Roboto Mono",monospace;font-size:11px;font-weight:700;
+    letter-spacing:.13em;color:var(--green-dim);flex:none;
+  }
+  .pill .m{
+    font-family:"Roboto Mono",monospace;font-size:15px;font-weight:700;
+    letter-spacing:.1em;color:var(--ink);margin-left:auto;
+  }
+  .pill.live .m{color:var(--green)}
+  .pill .dot{
+    position:absolute;top:6px;right:7px;width:5px;height:5px;border-radius:50%;
+    background:var(--faint);
+  }
+  .pill.live .dot{background:var(--green);box-shadow:0 0 7px var(--green)}
+
+  .legend{
+    display:flex;gap:20px;justify-content:center;flex-wrap:wrap;
+    margin-top:18px;font-family:"Roboto Mono",monospace;
+    font-size:10.5px;letter-spacing:.1em;color:var(--faint);
+  }
+  .legend i{
+    display:inline-block;width:5px;height:5px;border-radius:50%;
+    margin-right:6px;vertical-align:middle;background:var(--faint);
+  }
+  .legend .on i{background:var(--green);box-shadow:0 0 7px var(--green)}
+
+  /* rules */
+  .rules{margin-top:52px;display:grid;gap:0;border-top:1px solid var(--line)}
+  .rule{padding:17px 2px;border-bottom:1px solid var(--line);display:grid;gap:5px}
+  @media(min-width:720px){.rule{grid-template-columns:184px 1fr;gap:26px;align-items:baseline}}
+  .rule .k{
+    font-family:"Roboto Mono",monospace;font-size:10.5px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--green-dim);font-weight:700;
+  }
+  .rule .v{color:var(--dim);font-size:15px;line-height:1.55}
+  .rule .v strong{color:var(--ink);font-weight:600}
+  .rule .v em{color:var(--ink);font-style:normal;border-bottom:1px solid var(--green-dim)}
+
+  .open{
+    margin-top:34px;padding:18px 20px;border:1px solid var(--line);
+    border-left:2px solid var(--green-dim);border-radius:4px;background:var(--panel);
+  }
+  .open h3{
+    margin:0 0 8px;font-family:"Roboto Mono",monospace;font-size:11px;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--green);
+  }
+  .open p{margin:0 0 9px;color:var(--dim);font-size:14.5px;line-height:1.55}
+  .open p:last-child{margin-bottom:0}
+  .open strong{color:var(--ink)}
+  code{
+    font-family:"Roboto Mono",monospace;font-size:.88em;
+    background:var(--ground);padding:1px 5px;border-radius:3px;color:var(--ink);
+  }
+  footer{
+    margin-top:44px;font-family:"Roboto Mono",monospace;font-size:11px;
+    color:var(--faint);letter-spacing:.05em;
+  }
+  @media(max-width:520px){ .grid{grid-template-columns:repeat(2,1fr)} }
+</style>
+
+<div class="wrap">
+
+  <div class="eyebrow">Naming canon · four letters</div>
+  <h1>LIFE<span class="slash">/</span>ATLAS</h1>
+  <p class="deck">Four-letter abbreviations, for cohesiveness. Every sibling is the same width, so the family lines up in a nav, a directory, a tab bar and a URL.</p>
+
+  <div class="doors">
+    <div class="door">OMNI</div>
+    <div class="door center">LIFE</div>
+    <div class="door">PHNE</div>
+  </div>
+  <div class="doors-cap">three doors &middot; no fixed order</div>
+
+  <div class="under">
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="legend">
+    <span class="on"><i></i>built or live</span>
+    <span><i></i>named, not built</span>
+  </div>
+
+  <div class="rules">
+    <div class="rule">
+      <div class="k">The mechanic</div>
+      <div class="v">Squeeze the vowels out of the middle, keep the consonant skeleton — <code>SouRCE&rarr;SRCE</code>, <code>PHoNE&rarr;PHNE</code>, <code>CaNVaS&rarr;CNVS</code>, <code>BRoWSer&rarr;BRWS</code>. <strong>Never truncate</strong> (<code>SOUR</code>, <code>PHON</code>) and never abbreviate to initials.</div>
+    </div>
+    <div class="rule">
+      <div class="k">Order</div>
+      <div class="v">Everything under LIFE is <strong>alphabetical, always</strong>. A new mark is inserted in place &mdash; never appended to the end.</div>
+    </div>
+    <div class="rule">
+      <div class="k">The slash is the seam</div>
+      <div class="v">Not two words with punctuation between them &mdash; <strong>one pill cut diagonally</strong>. The slash's own lean is the cut angle, so the glyph and the geometry say the same thing, and the glyph can then be dropped entirely.</div>
+    </div>
+    <div class="rule">
+      <div class="k">APPS is the escape hatch</div>
+      <div class="v">The fifteen are what ships out the box. Anything not defaulted is added under APPS &mdash; which is what makes the list finite but complete. The bar for a default is not <em>is it needed</em>, it is <em>is it the first thing you reach for</em>.</div>
+    </div>
+    <div class="rule">
+      <div class="k">Settings is not a mark</div>
+      <div class="v">It exists, it is never listed. No <code>SETS</code>, no <code>PREF</code>, no <code>CONF</code>. Chrome, not a destination &mdash; reachable from anywhere, a door of nowhere.</div>
+    </div>
+    <div class="rule">
+      <div class="k">TIME is both</div>
+      <div class="v"><strong>One axis, both directions.</strong> The recorded past and the scheduled future on the same line &mdash; scrub back to last year, scroll forward to the appointment. Micro and macro. Timers are a feature of it, not the point of it.</div>
+    </div>
+    <div class="rule">
+      <div class="k">Recognizable on sight</div>
+      <div class="v">A name that has to be unpacked has already failed, however good the unpacking is. This killed <code>ARES</code> &mdash; a reader lands on the war god before they reach Akashic Record Stream, and that beat of confusion is what the test catches.</div>
+    </div>
+  </div>
+
+  <div class="open">
+    <h3>Open &middot; the name of the whole</h3>
+    <p>The <code>LIFE/XXXX</code> family names the <strong>surfaces</strong>. The four-letter mark that sits over <em>all</em> of it is still unsettled. <code>ALLN</code> (All In One &middot; Allen, vowel-squeezed) and <code>ARES</code> (Akashic Record Stream) were both self-sourced and both died &mdash; ALLN on the ear, ARES on the sight test.</p>
+    <p><strong>The tension is structural:</strong> recognizable-on-sight and clever-in-four-letters pull against each other. Every candidate that passes the sight test is a plain word, and the plain ones &mdash; <code>FEED</code>, <code>STRM</code> &mdash; were rejected for the whole while <code>STRM</code> survives as a door. A mark can be right for one slot and wrong for the system.</p>
+    <p><strong>One recorded absence:</strong> the ALLN discussion <code>SLXN</code> refers back to is not in the capture log. The name is canon; the referent it points to is pending confirmation. Recorded as missing rather than reconstructed.</p>
+  </div>
+
+  <footer>Rendered from naming-four-letter.md &middot; three doors, fifteen marks, alphabetical</footer>
+</div>
+
+<script>
+(function(){
+  // marks under LIFE — alphabetical, always. `live` = a surface exists today.
+  var MARKS = [
+    {m:"APPS", live:false},
+    {m:"BRWS", live:true },
+    {m:"CNVS", live:true },
+    {m:"CTRL", live:true },
+    {m:"GOAL", live:false},
+    {m:"LINE", live:false},
+    {m:"LINK", live:true },
+    {m:"LIST", live:false},
+    {m:"LOOP", live:false},
+    {m:"MESH", live:true },
+    {m:"NOTE", live:true },
+    {m:"SHOP", live:false},
+    {m:"SLXN", live:false},
+    {m:"SRCE", live:true },
+    {m:"TIME", live:false}
+  ];
+  MARKS.sort(function(a,b){ return a.m < b.m ? -1 : a.m > b.m ? 1 : 0; }); // alphabetical, enforced
+
+  var g = document.getElementById("grid");
+  MARKS.forEach(function(x){
+    var a = document.createElement("a");
+    a.className = "pill" + (x.live ? " live" : "");
+    a.href = "#" + x.m.toLowerCase();
+    a.setAttribute("aria-label", "LIFE slash " + x.m.split("").join(" "));
+    a.innerHTML =
+      '<span class="door-half"></span>' +
+      '<span class="lbl"><span class="d">LIFE</span><span class="m">' + x.m + '</span></span>' +
+      '<span class="dot"></span>';
+    g.appendChild(a);
+  });
+})();
+</script>
