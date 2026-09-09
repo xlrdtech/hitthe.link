@@ -944,7 +944,7 @@ async function loadReceipts(){
     document.getElementById('counterTasks').textContent = fmtCount(d.tasks_total);
     document.getElementById('counterToday').textContent = fmtCount(d.tasks_today);
     document.getElementById('scopeCount').textContent   = fmtCount(d.scope_count);
-    document.getElementById('costStat').textContent     = '$' + (d.cost_monthly || 0);
+    document.getElementById('costStat').textContent     = (d.cost_monthly == null ? '—' : '$' + d.cost_monthly);
     if (d.scope_summary) document.getElementById('scopeSub').textContent = d.scope_summary;
     if (d.cost_subline)  document.getElementById('costSub').textContent  = d.cost_subline;
 
@@ -952,7 +952,7 @@ async function loadReceipts(){
     document.getElementById('net-tasks').textContent = fmtCount(d.tasks_total);
     document.getElementById('g-today').textContent   = fmtCount(d.tasks_today);
     document.getElementById('g-scope').textContent   = fmtCount(d.scope_count);
-    document.getElementById('g-cost').textContent    = '$' + (d.cost_monthly || 0);
+    document.getElementById('g-cost').textContent    = (d.cost_monthly == null ? '—' : '$' + d.cost_monthly);
     document.getElementById('net-sub').innerHTML =
       '<span class="pulse"></span>' + fmtCount(d.tasks_total) + ' tasks · ' +
       fmtCount(d.tasks_today) + ' today · ' + fmtCount(d.scope_count) + ' live surfaces · re-reads every 15s';
