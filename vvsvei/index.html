@@ -7178,6 +7178,24 @@ window.addEventListener('beforeunload', stopListening);
   const RATE = 16000, FRAME = 1600;   // 1600 samples = 3200 bytes = 100 ms
 
   let ws = null, ready = false, ctx = null, node = null, stream = null;
+  /* 🔴 SYNCHRONOUS re-entry guard (2026-09-09). `if (ws) return` below is checked BEFORE an
+     `await`, so it does NOT hold across it: two concurrent omiSttStart() calls both saw
+     ws === null, both awaited the token, and both assigned `ws`. The FIRST socket's onopen
+     then fired while `ws` already pointed at the SECOND, still-CONNECTING socket — MEASURED
+     on the live page as `InvalidStateError: Failed to execute 'send' on 'WebSocket': Still
+     in CONNECTING state` at ws.onopen. That throw IS the auth frame, so omi never
+     authenticates and the rail goes deaf while every status still looks fine. */
+  let _omiStarting = false;
+  /* Audio frames that never reached the socket. Every drop site below was a bare
+     `catch(_){}` or a silent `pending.shift()`. Counted and reported on a STATE CHANGE. */
+  let _omiDropped = 0, _omiDropReported = 0;
+  function _omiNoteDrop(n, why) {
+    _omiDropped += n;
+    if (_omiDropped - _omiDropReported < 25) return;
+    _omiDropReported = _omiDropped;
+    try { console.error('[omi] ' + _omiDropped + ' audio frames never reached the socket (' + why + ')'); } catch(_){}
+    try { hud('DROPPED ' + _omiDropped + ' audio frames (' + why + ')'); } catch(_){}
+  }
   let _omiLiveFrom = 0;   // when THIS socket connected — RE-STAMPED on every open
   let _omiLastFrame = 0;  // last frame of any kind off the socket — liveness stamp
   let _omiCursor = 0;     // resume position: newest segment ts ever ACCEPTED
@@ -7212,6 +7230,9 @@ window.addEventListener('beforeunload', stopListening);
 
   window.omiSttStart = async function(){
     if (ws) { hud('already open'); return; }
+    if (_omiStarting) { hud('start already in flight - ignoring duplicate'); return; }
+    _omiStarting = true;
+    try {
     /* ⚠️ TEAR DOWN THE OLD AUDIO GRAPH BEFORE BUILDING A NEW ONE.
        With the 3-reconnect cap removed (see below), a long session can revive the
        socket many times. Every start used to allocate a fresh getUserMedia stream
@@ -7225,10 +7246,19 @@ window.addEventListener('beforeunload', stopListening);
     hud('getting token');
     const [tok, devh] = await Promise.all([getToken(), deviceIdHash()]);
 
-    ws = new WebSocket(WS_URL);
-    ws.binaryType = 'arraybuffer';
+    /* Bind to THIS socket, not the shared `ws`. Reading the outer variable is what let an
+       old handler write into a newer socket. `sock` is a const per connection. */
+    const sock = new WebSocket(WS_URL);
+    ws = sock;
+    sock.binaryType = 'arraybuffer';
 
-    ws.onopen = () => {
+    sock.onopen = () => {
+      if (sock.readyState !== WebSocket.OPEN) {
+        hud('OPEN fired but socket is ' + sock.readyState + ' - auth NOT sent, reconnecting');
+        try { console.error('[omi] onopen with readyState ' + sock.readyState + ' - stale handler'); } catch(_){}
+        try { sock.close(); } catch(_){}
+        return;
+      }
       /* ⭐ THE CONNECT WINDOW IS RE-ARMED HERE, ON EVERY OPEN — this is the bug fix.
          The old code stamped _omiLiveFrom exactly once, via `if (!_omiLiveFrom)`.
          From the SECOND socket onward `Date.now() - _omiLiveFrom` was minutes, so
@@ -7239,10 +7269,10 @@ window.addEventListener('beforeunload', stopListening);
       _omiLastFrame = Date.now();
       hud('socket open — sending auth (resume cursor '
           + (_omiCursor ? new Date(_omiCursor).toLocaleTimeString() : 'none') + ')');
-      ws.send(JSON.stringify({ type:'auth', token: tok, device_id_hash: devh }));
+      sock.send(JSON.stringify({ type:'auth', token: tok, device_id_hash: devh }));
     };
 
-    ws.onmessage = (ev) => {
+    sock.onmessage = (ev) => {
       let d = null;
       try { d = JSON.parse(typeof ev.data === 'string' ? ev.data : '{}'); } catch(_){ return; }
 
@@ -7264,7 +7294,10 @@ window.addEventListener('beforeunload', stopListening);
         if (!ready) {
           ready = true;
           hud('streaming — status=' + (st || 'ready') + ' — flushing ' + pending.length + ' frames');
-          for (const f of pending) { try { ws.send(f); } catch(_){} }
+          for (const f of pending) {
+            if (sock.readyState !== WebSocket.OPEN) { _omiNoteDrop(1, 'socket not open on flush'); continue; }
+            try { sock.send(f); } catch (e) { _omiNoteDrop(1, (e && e.name) || 'send threw'); }
+          }
           pending = [];
         }
         return;
@@ -7377,8 +7410,10 @@ window.addEventListener('beforeunload', stopListening);
       } catch(_){}
     };
 
-    ws.onerror = () => hud('SOCKET ERROR — if this is a 403 it is the Origin header the probe suppressed');
-    ws.onclose = (e) => { hud('closed code=' + e.code + ' reason=' + (e.reason||'-')); ws = null; ready = false;
+    sock.onerror = () => hud('SOCKET ERROR — if this is a 403 it is the Origin header the probe suppressed');
+    sock.onclose = (e) => { hud('closed code=' + e.code + ' reason=' + (e.reason||'-'));
+      if (ws === sock) { ws = null; ready = false; }   // never null out a NEWER socket
+
       try { if (window._omiOnClose) window._omiOnClose(); } catch(_){} };
 
     // Mic -> raw PCM16. No MediaRecorder, no container, no upload: a continuous
@@ -7401,13 +7436,20 @@ window.addEventListener('beforeunload', stopListening);
           pcm[i] = v < 0 ? v * 0x8000 : v * 0x7FFF;
         }
         const buf = pcm.buffer;
-        if (ready && ws && ws.readyState === 1) { try { ws.send(buf); } catch(_){} }
+        if (ready && sock.readyState === WebSocket.OPEN) {
+          try { sock.send(buf); } catch (e) { _omiNoteDrop(1, (e && e.name) || 'send threw'); }
+        }
         else if (pending.length < 200) pending.push(buf);   // ~20 s ceiling, then drop oldest
-        else { pending.shift(); pending.push(buf); }
+        else { pending.shift(); pending.push(buf); _omiNoteDrop(1, 'buffer full, oldest overwritten'); }
       }
     };
     src.connect(node); node.connect(ctx.destination);
     hud('mic capturing at ' + ctx.sampleRate + ' Hz');
+    } finally {
+      /* Released on EVERY exit path. If left set, omiSttStart refuses forever and the rail
+         is silently dead - worse than the race it prevents. */
+      _omiStarting = false;
+    }
   };
 
   /* ── AUTO-START. HE MUST NEVER HAVE TO TRIGGER IT. (cmd 4) ─────────────────
