@@ -3554,7 +3554,38 @@ function loadThreads() {
   try { return JSON.parse(localStorage.getItem('vei-threads') || '[]'); } catch (_) { return []; }
 }
 function saveThreads(arr) {
-  try { localStorage.setItem('vei-threads', JSON.stringify(arr)); } catch (_) {}
+  /* The INDEX is what makes every body REACHABLE. A bare `catch (_) {}` here
+     recreates the exact orphan class fixed on 08-13 ("the threads were missing
+     when I tapped threads"): bodies keep accumulating under keys nothing points
+     at, which to him is identical to deleted. Prune-and-retry, then be LOUD. */
+  var payload;
+  try { payload = JSON.stringify(arr); } catch (_) { payload = null; }
+  if (payload === null) {
+    try { console.error('[vei] thread INDEX serialize failed — list not saved'); } catch (_) {}
+    return false;
+  }
+  try { localStorage.setItem('vei-threads', payload); return true; } catch (e0) {
+    for (var k = 0; k < 40; k++) {
+      var got = null;
+      try { got = _veiEvictOldestBody(localStorage.getItem('vei-active') || ''); } catch (_) { got = null; }
+      if (!got) break;
+      try {
+        localStorage.setItem('vei-threads', payload);
+        try { console.warn('[vei] index write needed room — evicted ' + (k + 1) +
+              ' old thread bod' + (k === 0 ? 'y' : 'ies') + ', write succeeded'); } catch (_) {}
+        return true;
+      } catch (_) { /* still full — evict again */ }
+    }
+    try {
+      var nm = (e0 && e0.name) || 'error';
+      console.error('[vei] thread INDEX write FAILED (' + nm + ') — history list is incomplete');
+      if (typeof _hud === 'function') _hud('THREAD LIST NOT SAVED (' + nm + ')');
+      if (typeof appendError === 'function') appendError('Thread list not saved (' + nm + ') — storage full.');
+      localStorage.setItem('vei-degraded', String(Date.now()));
+    } catch (_) {}
+    try { _veiLedger('index-write-failed', { name: (e0 && e0.name) || 'error' }); } catch (_) {}
+    return false;
+  }
 }
 function getActiveId() {
   let id = localStorage.getItem('vei-active');
@@ -3631,9 +3662,55 @@ function _veiEvictOldestBody(activeId) {
   return { id: oldest.id, chars: freed };
 }
 
+/* ── EXPLICIT STORAGE CAP (2026-09-09) — qi: "clear and CAP it". ────────────
+   The eviction path below only runs AFTER a write has already thrown, and it can
+   only free OTHER threads' bodies. So it can never help the case that actually
+   silenced him: ONE active thread bigger than the origin quota (measured 08-13:
+   24,139 chunks in a single thread, banner "Thread not saved (QuotaExceededError)
+   — storage full" on screen, and a full store BLOCKS THE INJECT PATH).
+   The active body now has a hard byte ceiling and behaves as a ring buffer:
+   oldest entries leave first, before any write is attempted, so the quota error
+   is prevented rather than caught.
+   SAFE FOR THE SAME REASON EVICTION IS: localStorage here is a UI cache, not the
+   record. Every line is independently captured in
+   /Volumes/M4/sync_/brain_/root/input-log/qi-input.jsonl and mirrored to the
+   akashic, so trimming the cache cannot lose his words.
+   AND IT IS NEVER QUIET: every trim writes console.error + the HUD + a durable
+   ledger record + a `vei-trimmed` receipt naming the count and both byte sizes.
+   A silent trim would be the same fail-quiet shape this whole block exists to
+   kill (cmd 40b: retain a copy, never hold the original; never drop in silence). */
+var _VEI_THREAD_MAX_BYTES = 524288;   // 512 KB per thread body; origin quota is ~5 MB
+function _veiCapEntries(id, entries) {
+  var payload = null;
+  try { payload = JSON.stringify(entries); } catch (_) { return null; }
+  if (!Array.isArray(entries) || payload.length <= _VEI_THREAD_MAX_BYTES) return payload;
+  var before = payload.length, trimmed = 0, head = null;
+  try { head = entries[0]; } catch (_) {}
+  while (payload.length > _VEI_THREAD_MAX_BYTES && entries.length > 1) {
+    var cut = Math.max(1, Math.ceil(entries.length * 0.1));
+    entries.splice(0, cut);          // mutate in place so memory matches storage
+    trimmed += cut;
+    try { payload = JSON.stringify(entries); } catch (_) { return null; }
+  }
+  try { console.error('[vei] THREAD CAP — trimmed ' + trimmed + ' oldest entr' +
+        (trimmed === 1 ? 'y' : 'ies') + ' from ' + id + ': ' + before + 'B -> ' +
+        payload.length + 'B (cap ' + _VEI_THREAD_MAX_BYTES + 'B)'); } catch (_) {}
+  try { if (typeof _hud === 'function') _hud('THREAD TRIMMED · ' + trimmed + ' oldest · ' +
+        Math.round((before - payload.length) / 1024) + 'KB'); } catch (_) {}
+  try {
+    var tl = JSON.parse(localStorage.getItem('vei-trimmed') || '[]');
+    tl.push({ id: id, trimmed: trimmed, fromBytes: before, toBytes: payload.length,
+              oldestTs: (head && head.ts) || null, at: Date.now() });
+    localStorage.setItem('vei-trimmed', JSON.stringify(tl.slice(-200)));
+  } catch (_) {}
+  try { _veiLedger('thread-cap-trim', { thread: id, trimmed: trimmed,
+        fromBytes: before, toBytes: payload.length }); } catch (_) {}
+  return payload;
+}
+
 function saveThreadEntries(id, entries) {
   var payload;
-  try { payload = JSON.stringify(entries); } catch (_) { payload = null; }
+  try { payload = _veiCapEntries(id, entries); } catch (_) { payload = null; }
   if (payload !== null) {
     try {
       localStorage.setItem('vei-thread-' + id, payload);
@@ -4619,7 +4696,29 @@ function renderEvent(d) {
           setTimeout(again, 1500);
         })(txt, 20);
       }
-      else { _avaPending.push(txt); if (_avaPending.length > 12) _avaPending = _avaPending.slice(-12); }   // park: iOS unarmed play() would emit a doomed play()+telemetry storm — speak on first tap (H2)
+      else {
+        /* PARK, BOUNDED AND LOUD (fixed 2026-09-09). This line was
+             if (_avaPending.length > 12) _avaPending = _avaPending.slice(-12);
+           which SILENTLY discarded the oldest unarmed reply the moment a 13th
+           arrived — under a comment block three lines up that says "PARK, NEVER
+           DROP ... cmd 27b: nothing drops". Measured on the live page at
+           hitthe.link/vvsvei line 4622. The park still needs a ceiling (an
+           unbounded array on a tab left open for days is its own failure), so
+           the cap is now EXPLICIT, 40x larger, and nothing leaves without a
+           record naming what left: an 800-char clip x 500 is bounded memory. */
+        _avaPending.push(txt);
+        if (_avaPending.length > _AVA_PARK_MAX) {
+          var _dropN = _avaPending.length - _AVA_PARK_MAX;
+          var _dropped = _avaPending.slice(0, _dropN);
+          _avaPending = _avaPending.slice(-_AVA_PARK_MAX);
+          try { console.error('[vei] PARK OVERFLOW — discarded ' + _dropN + ' unarmed repl' +
+                (_dropN === 1 ? 'y' : 'ies') + ' (cap ' + _AVA_PARK_MAX + '); oldest began: ' +
+                String(_dropped[0] || '').slice(0, 120)); } catch (_) {}
+          try { if (typeof _hud === 'function') _hud('PARK OVERFLOW · ' + _dropN + ' dropped'); } catch (_) {}
+          try { _veiLedger('park-overflow', { dropped: _dropN, cap: _AVA_PARK_MAX,
+                oldestHead: String(_dropped[0] || '').slice(0, 160) }); } catch (_) {}
+        }
+      }   // park: iOS unarmed play() would emit a doomed play()+telemetry storm — speak on first tap (H2)
     } else { try { _avaTelemetry("speak-gate live=F armed="+_avaAudioUnlocked+" ctx="+!!_avaCtx); } catch(_){} }   // sentinel-gated: only live replies speak
   } else if (isUserDictate) {
     // Skip the SSE echo of qi's OWN dictation already rendered locally (Web
@@ -5493,6 +5592,7 @@ function _avaSpeakDevice(clip, genAtStart) {
 // played. Now every reply enqueues + plays in order — one voice, zero drops.
 let _avaQueue = [], _avaPlaying = false, _drainStarted = 0, _wdLastT = -1;
 let _avaPending = [];   // replies that arrived live-but-unarmed; flushed on first tap (H2)
+const _AVA_PARK_MAX = 500;   // explicit park ceiling (was an unlabelled 12 that dropped silently — 2026-09-09)
 // DRAIN WATCHDOG (qi 2026-06-09, H4): iOS emits stalled/suspend (not error) on a
 // hung TTS fetch, so onended/onerror never fire and _avaPlaying sticks true — the
 // queue wedges and spoke lags rx until qi speaks. This timer force-releases a
@@ -5737,14 +5837,22 @@ function _avaDrain() {
       // BOTH network hosts failed — device replay, then real speechSynthesis.
       _avaStatus = label.startsWith('play blocked') ? 'blocked:'+label.slice(13) : 'audio-err';
       _avaTelemetry(label + ' -> device-tts');
+      /* Every network host is exhausted: this clip did NOT play from the audio
+         leg. Recorded as a per-utterance FAILURE so the outcome is durable even
+         when the device-tts fallback then succeeds (2026-09-09). */
+      try { _veiLedger('failed', { label: String(label).slice(0, 160), hosts: _hosts.length,
+            retries: _retries, head: String(clip).slice(0, 80) }); } catch (_) {}
       _renderAvaPill();
       if (!_avaSpeakDevice(clip, _genAtStart)) {
         // _avaSpeakDevice returned false (sync throw / barge) — last resort: on-device speech.
         try { _ssSpeakClip(clip, _genAtStart); } catch (_) { _avaPlaying = false; _avaDrain(); }
       }
     };
-    a.onplaying = () => { _avaStatus = 'playing'; _hudSpoke++; _renderAvaPill(); try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; } catch (_) {} };
-    a.onended   = () => { _avaPlaying = false; _avaStatus = _avaQueue.length ? ('queued '+_avaQueue.length) : 'idle'; _renderAvaPill(); try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; } catch (_) {} _avaDrain(); };
+    /* PLAY LEDGER (2026-09-09): the element's OWN `playing` / `ended` events are
+       the only page-side proof that audio actually ran — `dur` is the decoded
+       duration, `played` is how far it got. Recorded, never asserted from rc=0. */
+    a.onplaying = () => { _avaStatus = 'playing'; _hudSpoke++; _renderAvaPill(); try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; } catch (_) {} try { _veiLedger('started', { dur: (isFinite(a.duration) ? Math.round(a.duration * 1000) / 1000 : null), rs: a.readyState, head: String(clip).slice(0, 80) }); } catch (_) {} };
+    a.onended   = () => { try { _veiLedger('ended', { played: (isFinite(a.currentTime) ? Math.round(a.currentTime * 1000) / 1000 : null), dur: (isFinite(a.duration) ? Math.round(a.duration * 1000) / 1000 : null), head: String(clip).slice(0, 80) }); } catch (_) {} _avaPlaying = false; _avaStatus = _avaQueue.length ? ('queued '+_avaQueue.length) : 'idle'; _renderAvaPill(); try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; } catch (_) {} _avaDrain(); };
     a.onerror   = () => _fallback('audio-err fallback');
     a.src = url;
     // Gate play() on canplay — prevents AbortError on Orion/iOS where calling
@@ -5772,6 +5880,35 @@ function _avaDrain() {
     // Safety: if canplay never fires within 3s (already-cached src), play anyway
     setTimeout(() => { if (a.oncanplay === _doPlay) _doPlay(); }, 3000);
   }
+}
+/* ── PER-UTTERANCE PLAY LEDGER (2026-09-09) ────────────────────────────────
+   qi named the gap: "there is no watcher proving audio ACTUALLY PLAYED".
+   `vvs rc=0` is a RETURN CODE, and _avaStatus lives only in this tab's memory,
+   so nothing durable ever recorded whether a clip reached his ear. This posts a
+   per-utterance outcome — requested / started / ended / failed / trimmed — to
+   omnimind's /api/vvsvei-play sink, which appends JSONL a watcher can read.
+   Fire-and-forget and fully fail-soft: a logging call must never delay or gate
+   speech (cmd 40b), so every path here is wrapped and nothing is awaited.
+   The honest signals are the ones the browser actually gives us:
+     · started = the element's own `playing` event, plus decoded `dur`
+     · ended   = the element's own `ended` event, plus `played` seconds
+   Byte counts are NOT invented here — the <audio> element never exposes them.
+   /api/tts records its own Content-Length server-side; the page reports the
+   decoded duration, which is the page-side proof that media arrived. */
+var _VEI_UTT_SEQ = 0;
+function _veiUttId() { _VEI_UTT_SEQ++; return 'u' + Date.now().toString(36) + '-' + _VEI_UTT_SEQ; }
+function _veiLedger(phase, extra) {
+  try {
+    var rec = { phase: String(phase || '?'), page: 'vvsvei', armed: !!_avaAudioUnlocked,
+                on: !!_avaOn, status: String(_avaStatus || ''), qlen: (_avaQueue || []).length,
+                park: (_avaPending || []).length, at: Date.now() };
+    if (extra) { for (var k in extra) { if (Object.prototype.hasOwnProperty.call(extra, k)) rec[k] = extra[k]; } }
+    try { console.warn('[vei-play]', JSON.stringify(rec)); } catch (_) {}
+    fetch('https://xen.xlrd.org/api/vvsvei-play', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(rec), keepalive: true
+    }).catch(function () {});
+  } catch (_) {}
 }
 // Page → omnimind telemetry so XEN AUTO-NOTICES failures without qi reading the
 // HUD aloud (qi 2026-05-30: "why don't you automatically notice"). Errors only.
@@ -5828,6 +5965,7 @@ function speakAva(text) {
   _avaMarkSpoken(spoken);
   _avaQueue.push(spoken.slice(0, 800));
   if (_avaQueue.length > 40) _avaQueue = _avaQueue.slice(-40);   // higher cap (qi nothing-drops); 800-char clips x40 is bounded memory
+  try { _veiLedger('requested', { chars: spoken.length, head: spoken.slice(0, 80) }); } catch (_) {}   // play-ledger (2026-09-09)
   // qi 2026-07-23: an inject must SPEAK IMMEDIATELY, never wait on a drain. If the
   // mutex is held but the <audio> element is NOT advancing (a wedged/hung fetch —
   // the "I see it but don't hear it" state), self-heal the stale mutex RIGHT NOW so
