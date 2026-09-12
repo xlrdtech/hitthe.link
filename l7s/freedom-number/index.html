@@ -280,15 +280,15 @@
       <div class="capture">
         <h3>Send me this breakdown</h3>
         <div class="body">
-          <p class="why">Your number and the client math, emailed to you, plus the L7S pricing sheet the tiers come from.</p>
+          <p class="why">Send us your number and we will come back to you with the client math behind it and the L7S pricing sheet the tiers come from.</p>
           <div class="fields">
             <input type="text"  id="c-name"  placeholder="Your name" autocomplete="name">
             <input type="email" id="c-email" placeholder="you@company.com" autocomplete="email" required>
             <input type="text"  id="c-co"    placeholder="Company (optional)" autocomplete="organization">
           </div>
-          <button id="c-send">Email me my freedom number</button>
+          <button id="c-send">Send me the breakdown</button>
           <div class="msg" id="c-msg"></div>
-          <p class="fine">We send your breakdown and L7S follow&#8209;up. No list rental, unsubscribe any time.</p>
+          <p class="fine">Used only to send your breakdown and L7S follow&#8209;up. No list rental, unsubscribe any time.</p>
         </div>
       </div>
 
@@ -416,7 +416,7 @@
       .then(function(r){ return r.json().catch(function(){ return {ok:false,error:"server sent a bad response"}; }); })
       .then(function(j){
         if (j && j.ok) {
-          say("Saved. Your breakdown is on its way to " + email + ".", true);
+          say("Got it. Your number is saved against " + email + " and L7S will come back to you with the breakdown.", true);
           btn.textContent = "Sent";
         } else {
           btn.disabled = false;
