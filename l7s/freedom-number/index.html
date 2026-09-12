@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L7S Freedom Number</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800;900&family=Roboto+Mono:wght@400;500;700&display=swap">
 <style>
@@ -170,6 +172,28 @@
   .btn:hover{background:var(--red-deep)}
   .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
   .btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+  /* lead capture */
+  .capture{margin-top:20px;border:1px solid var(--line);border-radius:4px;background:var(--panel);overflow:hidden}
+  .capture h3{margin:0;padding:12px 18px;font-size:11px;font-weight:800;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--faint);background:var(--paper);border-bottom:1px solid var(--line)}
+  .capture .body{padding:15px 18px}
+  .capture p.why{margin:0 0 12px;font-size:13.5px;color:var(--muted);line-height:1.45}
+  .capture .fields{display:grid;gap:8px}
+  .capture input[type=text],.capture input[type=email]{
+    width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:3px;
+    background:var(--paper);color:var(--ink);font-family:"Archivo",sans-serif;font-size:15px}
+  .capture input:focus{outline:2px solid var(--red);outline-offset:1px;border-color:transparent}
+  .capture button{width:100%;margin-top:10px;padding:12px 14px;border:0;border-radius:3px;
+    background:var(--red);color:#fff;font-family:"Archivo",sans-serif;font-weight:800;font-size:15px;
+    letter-spacing:.01em;cursor:pointer}
+  .capture button:hover{background:var(--red-deep)}
+  .capture button[disabled]{opacity:.55;cursor:default}
+  .capture .msg{margin-top:10px;font-size:13px;line-height:1.45;display:none}
+  .capture .msg.on{display:block}
+  .capture .msg.ok{color:var(--good)}
+  .capture .msg.bad{color:var(--red)}
+  .capture .fine{margin:9px 0 0;font-size:11.5px;color:var(--faint);line-height:1.4}
 </style>
 
 <div class="wrap">
@@ -180,7 +204,7 @@
   </div>
 
   <h1>What does freedom actually <em>cost</em> you?</h1>
-  <p class="deck">Most owners price backwards — they guess a number, then hope it covers the life they want. This runs it forward: your life, your business, your margin, and the revenue that has to exist for all three to work.</p>
+  <p class="deck">Most owners price backwards. They guess a number, then hope it covers the life they want. This runs it forward: your life, your business, your margin, and the revenue that has to exist for all three to work.</p>
 
   <div class="rig">
 
@@ -252,6 +276,22 @@
 
       <div class="note" id="verdict">Adjust the inputs and the number moves with you.</div>
 
+
+      <div class="capture">
+        <h3>Send me this breakdown</h3>
+        <div class="body">
+          <p class="why">Send us your number and we will come back to you with the client math behind it and the L7S pricing sheet the tiers come from.</p>
+          <div class="fields">
+            <input type="text"  id="c-name"  placeholder="Your name" autocomplete="name">
+            <input type="email" id="c-email" placeholder="you@company.com" autocomplete="email" required>
+            <input type="text"  id="c-co"    placeholder="Company (optional)" autocomplete="organization">
+          </div>
+          <button id="c-send">Send me the breakdown</button>
+          <div class="msg" id="c-msg"></div>
+          <p class="fine">Used only to send your breakdown and L7S follow&#8209;up. No list rental, unsubscribe any time.</p>
+        </div>
+      </div>
+
       <div class="cta">
         <a class="btn" href="mailto:hero@l7sinc.com?subject=Freedom%20Number%20%E2%80%94%20strategy%20call">Book a strategy call</a>
         <button class="btn ghost" id="copy">Copy my numbers</button>
@@ -300,7 +340,7 @@
 
     var dfy = Math.ceil(needed/10000), v = document.getElementById("verdict");
     if (dfy <= 1)      v.innerHTML = "<strong>One done-for-you client a month covers everything.</strong> At this number the constraint is delivery quality, not volume.";
-    else if (dfy <= 3) v.innerHTML = "<strong>"+dfy+" done-for-you clients a month.</strong> Reachable on referral and one working funnel &mdash; you do not need scale yet.";
+    else if (dfy <= 3) v.innerHTML = "<strong>"+dfy+" done-for-you clients a month.</strong> Reachable on referral and one working funnel. You do not need scale yet.";
     else if (dfy <= 8) v.innerHTML = "<strong>"+dfy+" done-for-you clients a month.</strong> That needs a real pipeline: paid acquisition plus a booked-call engine, not word of mouth.";
     else               v.innerHTML = "<strong>"+dfy+" done-for-you clients a month is a team problem, not a sales problem.</strong> At this level the answer is usually enterprise or revenue share, not more clients.";
   }
@@ -322,5 +362,71 @@
   });
 
   calc();
+})();
+</script>
+
+<script>
+/* L7S lead capture - PRD scope 1: calculator -> email capture, with UTM attribution. */
+(function(){
+  var API = "https://l7s-lead-api.lord-1e4.workers.dev/lead";
+  var KEYS = ["utm_source","utm_medium","utm_campaign","utm_term","utm_content"];
+
+  function attribution(){
+    var q = new URLSearchParams(location.search), a = {}, fresh = false;
+    KEYS.forEach(function(k){ var v = q.get(k); if(v){ a[k] = v; fresh = true; } });
+    try {
+      if (fresh) sessionStorage.setItem("l7s_attr", JSON.stringify(a));
+      else { var p = sessionStorage.getItem("l7s_attr"); if(p) a = JSON.parse(p); }
+    } catch(e){}
+    KEYS.forEach(function(k){ a[k] = a[k] || ""; });
+    a.referrer = document.referrer || "";
+    a.landing  = location.href;
+    return a;
+  }
+
+  function num(id){ return Number((document.getElementById(id).textContent||"").replace(/[^0-9.]/g,"")) || 0; }
+  function val(id){ var e=document.getElementById(id); return e ? (parseFloat(e.value)||0) : 0; }
+
+  var btn = document.getElementById("c-send"), msg = document.getElementById("c-msg");
+  function say(text, good){ msg.textContent = text; msg.className = "msg on " + (good ? "ok" : "bad"); }
+
+  btn.addEventListener("click", function(){
+    var email = (document.getElementById("c-email").value||"").trim();
+    if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email)) { say("That email address does not look right.", false); return; }
+
+    btn.disabled = true; say("Sending...", true);
+    var a = attribution();
+    var payload = {
+      email: email,
+      name: (document.getElementById("c-name").value||"").trim(),
+      company: (document.getElementById("c-co").value||"").trim(),
+      source: "freedom-number",
+      freedom_number: num("r-month"),
+      life_cost: num("r-life"),
+      biz_cost: num("r-biz"),
+      margin_pct: val("m-margin"),
+      tax_pct: val("m-tax"),
+      dfy_clients: num("t-dfy"),
+      utm_source: a.utm_source, utm_medium: a.utm_medium, utm_campaign: a.utm_campaign,
+      utm_term: a.utm_term, utm_content: a.utm_content,
+      referrer: a.referrer, landing: a.landing
+    };
+
+    fetch(API, { method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify(payload) })
+      .then(function(r){ return r.json().catch(function(){ return {ok:false,error:"server sent a bad response"}; }); })
+      .then(function(j){
+        if (j && j.ok) {
+          say("Got it. Your number is saved against " + email + " and L7S will come back to you with the breakdown.", true);
+          btn.textContent = "Sent";
+        } else {
+          btn.disabled = false;
+          say("Could not save that: " + ((j && j.error) || "unknown error") + ". Email hero@l7sinc.com and we will send it by hand.", false);
+        }
+      })
+      .catch(function(){
+        btn.disabled = false;
+        say("Network problem, nothing was saved. Email hero@l7sinc.com and we will send it by hand.", false);
+      });
+  });
 })();
 </script>
