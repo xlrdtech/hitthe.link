@@ -5487,6 +5487,18 @@ let _avaCurrentSource = null;  // track the active AudioBufferSourceNode for bar
 // the gen has advanced — closes the window where qi spoke while audio was still
 // fetching/decoding (no _avaCurrentSource yet) and Ava spoke anyway after.
 let _avaGen = 0;
+/* DRAIN OWNERSHIP TOKEN - THE BURST FIX. 2026-09-18.
+   MEASURED: two replies fired in the same second BOTH failed, while single replies played
+   clean. Cause: the retry path below schedules setTimeout(..., 400 * _retries) and that
+   callback reassigns a.src / a.onerror / a.oncanplay on the ONE SHARED <audio> element.
+   Its only guard was _genAtStart !== _avaGen, and _avaGen only moves when QI BARGES IN -
+   never when the next clip starts draining. So clip one's stale retry woke up 400-800 ms
+   later and overwrote clip two mid-load, and clip two died with the same code=4.
+   Every drain now takes a token; any callback that outlives its drain returns instead of
+   touching the element. Fails toward silence for the STALE clip only - the live clip is
+   untouched, which is the whole point.
+   Authored by Xen 2026-09-18 (cmd 66). */
+let _avaDrainSeq = 0;
 function _avaBargeIn() {
   _avaGen++;  // invalidate any in-flight decode that started before this barge-in
   // Stop the Web Audio source node (the actual playing node) + clear queue.
@@ -5740,6 +5752,7 @@ function _avaDrain() {
   if (!clip && !_preUrl) { _avaPlaying = false; return; }
   _avaPlaying = true; _drainStarted = Date.now(); _wdLastT = -1;
   const _genAtStart = _avaGen;  // capture gen — if qi barges in mid-fetch/decode, this goes stale
+  const _myDrain = ++_avaDrainSeq;   // this drain owns the shared element until the next one starts
   // MP3 via <audio> — the path that WORKED (qi confirmed hearing on 2026-05-30).
   // speechSynthesis blocks on iOS when fired from background SSE events.
   // <audio>.play() works once the element was armed in the tap gesture.
@@ -5839,6 +5852,8 @@ function _avaDrain() {
     let _hostIdx = 0;
     let _retries = 0;
     const _fallback = (label) => {
+      /* A stale drain's onerror must never push the LIVE clip to the device voice. */
+      if (_myDrain !== _avaDrainSeq) return;
       if (_aErr) return; _aErr = true;
       a.oncanplay = null;
       if (_genAtStart !== _avaGen) { _avaPlaying = false; _avaStatus = 'you spoke'; _renderAvaPill(); return; }
@@ -5851,7 +5866,7 @@ function _avaDrain() {
         a.onerror = () => _fallback('audio-err fallback');
         a.src = _hosts[_hostIdx] + '?text=' + encodeURIComponent(clip);
         a.oncanplay = _doPlay;
-        setTimeout(() => { if (a.oncanplay === _doPlay) _doPlay(); }, AVA_CANPLAY_MS);
+        setTimeout(() => { if (_myDrain !== _avaDrainSeq) return; if (a.oncanplay === _doPlay) _doPlay(); }, AVA_CANPLAY_MS);
         return;
       }
       if (_retries < _MAX_RETRY) {
@@ -5865,11 +5880,12 @@ function _avaDrain() {
         _renderAvaPill();
         try { a.pause(); } catch (_) {}
         setTimeout(() => {
+          if (_myDrain !== _avaDrainSeq) return;   // a newer clip owns the element now - do not touch it
           if (_genAtStart !== _avaGen) { _avaPlaying = false; _avaStatus = 'you spoke'; _renderAvaPill(); return; }
           a.onerror = () => _fallback('audio-err fallback');
           a.src = url + (url.indexOf('?') === -1 ? '?' : '&') + '_r=' + _retries + '_' + _genAtStart;
           a.oncanplay = _doPlay;
-          setTimeout(() => { if (a.oncanplay === _doPlay) _doPlay(); }, AVA_CANPLAY_MS);
+          setTimeout(() => { if (_myDrain !== _avaDrainSeq) return; if (a.oncanplay === _doPlay) _doPlay(); }, AVA_CANPLAY_MS);
         }, 400 * _retries);
         return;
       }
@@ -5921,7 +5937,7 @@ function _avaDrain() {
     };
     a.oncanplay = _doPlay;
     // Safety: if canplay never fires within 3s (already-cached src), play anyway
-    setTimeout(() => { if (a.oncanplay === _doPlay) _doPlay(); }, AVA_CANPLAY_MS);
+    setTimeout(() => { if (_myDrain !== _avaDrainSeq) return; if (a.oncanplay === _doPlay) _doPlay(); }, AVA_CANPLAY_MS);
   }
 }
 /* ── PER-UTTERANCE PLAY LEDGER (2026-09-09) ────────────────────────────────
