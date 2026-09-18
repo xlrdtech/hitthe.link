@@ -5375,7 +5375,23 @@ function _ensureAvaAudio() {
   _avaAudio = new Audio();
   _avaAudio.preload = 'auto';
   _avaAudio.setAttribute('playsinline', '');
-  // crossOrigin removed — caused audio-err on Orion iOS (CORS preflight blocks audio element)
+  /* crossOrigin RESTORED 2026-09-18 08:3x, on evidence the original removal did not have.
+     WHY IT WAS REMOVED: "caused audio-err on Orion iOS (CORS preflight blocks audio element)".
+     WHY IT GOES BACK: qi's page now reports the REAL MediaError, added the same morning -
+     "audio-err fallback code=4 net=3 ready=0 -> device-tts". code 4 is
+     MEDIA_ERR_SRC_NOT_SUPPORTED and networkState 3 is NETWORK_NO_SOURCE: Firefox rejected
+     the source outright. It fails ONLY when armed=true, which is exactly when
+     _unlockAvaAudio() has started the AudioContext and _attachAvaGain() has wrapped this
+     element in createMediaElementSource - and a CROSS-ORIGIN media element with no CORS
+     approval cannot feed a MediaElementAudioSourceNode.
+     MEASURED NOW, which is what changed: the real 200 response carries
+     `access-control-allow-origin: *` (content-type audio/mpeg, content-length 33178), so an
+     anonymous CORS media fetch succeeds today. There is no preflight - a media GET with no
+     custom headers never sends one - so the Orion failure mode has no trigger left.
+     ⚠️ IF ORION iOS REGRESSES, THIS LINE IS THE FIRST SUSPECT. Revert it, do not hunt.
+     Authored by Xen 2026-09-18; fourth hypothesis on this bug and the first backed by a
+     captured MediaError rather than a timing correlation (cmd 66). */
+  _avaAudio.crossOrigin = 'anonymous';
   _attachAvaGain();   // no-op unless the context is already running
   return _avaAudio;
 }
