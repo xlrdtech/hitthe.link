@@ -5654,7 +5654,7 @@ setInterval(function() {
     // Not advancing across two ~1s ticks -> mutex is WEDGED. Release immediately so
     // voice is never held hostage by a hung fetch. No 16s stall, no force-release log spam.
     if (waited > 1800) {
-      try { if (a) { a.pause(); a.src = ''; } } catch (_) {}
+      try { if (a) { a.pause(); a.removeAttribute('src'); a.load(); } } catch (_) {}   // never src='' — see the drain note
       _avaPlaying = false; _drainStarted = 0; _wdLastT = -1; _avaStatus = 'idle'; _renderAvaPill(); _avaDrain();
     }
   } catch (_) {}
@@ -5803,7 +5803,15 @@ function _avaDrain() {
     // onerror from firing when this drain aborts it by changing a.src.
     a.onerror = null; a.oncanplay = null;
     try { a.pause(); } catch(_) {}
-    a.src = '';   // abort any in-flight load cleanly
+    /* NEVER a.src = '' ON A MEDIA ELEMENT. An empty src attribute resolves against the
+       DOCUMENT BASE URL, so this told the player to load https://hitthe.link/vvsvei/ - an
+       HTML page - as audio. That is exactly MEDIA_ERR_SRC_NOT_SUPPORTED with
+       NETWORK_NO_SOURCE and readyState 0, which is the error his device reported 18 times
+       today, unchanged: "audio-err fallback code=4 net=3 ready=0 -> device-tts".
+       removeAttribute + load() is the spec-correct abort and leaves the element empty
+       instead of pointed at a document. Same intent, working mechanism.
+       Authored by Xen 2026-09-18 (cmd 66). */
+    try { a.removeAttribute('src'); a.load(); } catch (_) {}   // abort any in-flight load cleanly
     // Per-drain dedup: both onerror and play AbortError fire for the same
     // underlying failure — only the first triggers fallback.
     let _aErr = false;
@@ -5980,7 +5988,26 @@ function _avaSpokenAlready(t) {
   const k = _avaLedgerKey(t);
   if (!k) return false;
   const at = _avaSpokenLedger.get(k);
-  return !!(at && (Date.now() - at) < 15000);
+  if (at && (Date.now() - at) < 15000) return true;
+  /* PREFIX MATCH - THE REASON HE HEARD ONE SENTENCE IN AVA AND THE REST IN THE PHONE'S VOICE.
+     MEASURED 2026-09-18: TWO independent legs enqueue a clip for the SAME reply.
+       xen:audio (pre-rendered)  -> 71 chars  "Third real test, ... in it."
+       speakAva  (xen-out)       -> 261 chars  the whole reply
+     The server renders only the FIRST SENTENCE for the pre-rendered leg, so the two keys
+     never match on exact equality and the guard this file calls "EXACTLY ONE UTTERANCE"
+     never fired. Two clips then drained through the SINGLE shared <audio> element, and the
+     second drain blanked it mid-flight (see the src reset below) - so sentence one played
+     as Ava and everything after it fell to the device voice.
+     One key being a PREFIX of the other is the signature of exactly that pairing. The 24
+     char floor keeps short utterances ("ok", "yes") from colliding with each other.
+     Fails toward SPEAKING: a missed match just enqueues, which is today's behaviour.
+     Authored by Xen 2026-09-18 (cmd 66). */
+  const now = Date.now();
+  for (const [pk, pat] of _avaSpokenLedger) {
+    if ((now - pat) >= 15000) continue;
+    if (pk.length >= 24 && k.length >= 24 && (k.indexOf(pk) === 0 || pk.indexOf(k) === 0)) return true;
+  }
+  return false;
 }
 function _avaMarkSpoken(t) {
   const k = _avaLedgerKey(t);
@@ -6011,7 +6038,7 @@ function speakAva(text) {
     var _a = _avaAudio;
     var _live = !!(_a && !_a.paused && !_a.ended && _a.readyState >= 2);
     if (!_live && (Date.now() - _drainStarted) > 900) {
-      try { if (_a) { _a.pause(); _a.src = ''; } } catch (_) {}
+      try { if (_a) { _a.pause(); _a.removeAttribute('src'); _a.load(); } } catch (_) {}   // never src='' — see the drain note
       _avaPlaying = false; _drainStarted = 0; _wdLastT = -1;
     }
   }
