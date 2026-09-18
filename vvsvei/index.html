@@ -5276,7 +5276,22 @@ function pickAvaVoice() {
 // speechSynthesis, which iOS blocks from background SSE events (that was the
 // silence). qi 2026-05-30: "your voice in, my voice out, same page, no taps".
 // Ava = en-US-AvaMultilingualNeural ("edge tts Ava neural English").
-const AVA_TTS_URL = 'https://api.xlrd.org/api/tts';  // sole TTS origin, no network fallback (qi 2026-06-09: api.xlrd.org primary; xen.xlrd.org freed for repurpose)
+const AVA_TTS_URL = 'https://api.xlrd.org/api/tts';
+  /* THE 3-SECOND RACE THAT MADE HIM HEAR THE WRONG VOICE. Raised 3000 -> 8000,
+     2026-09-18 08:1x. qi 08:04: "Its speaking with one voice, but its wrong voice right now."
+     MEASURED from his own play ledger (vvsvei-play-ledger.jsonl, 9 entries today): every
+     failure declared total defeat in 3.0-3.6 s - the same window the successes started in.
+     Three attempts plus 400/800 ms backoffs cannot fit inside 3.1 s of real network error;
+     they fit only a fixed 3-second clock. And cold TTS generation straddles it exactly:
+     87-char reply 2.933 s, 270-char reply 4.033 s, 10-char probe 1.68 s.
+     THE 10-CHAR PROBE IS WHY THIS HID - every short test passed and proved nothing, because
+     only a REAL-LENGTH reply is slow enough to lose the race. When the timer wins it calls
+     _doPlay() against an element holding no data and NULLS a.oncanplay, so the real canplay
+     can never re-arm it: the clip dies and the device voice covers.
+     8000 clears the measured 4.033 s worst case with 2x margin and keeps the cached-src
+     safety net this timer exists for.
+     Authored by Xen 2026-09-18 in service of the decree quoted above (cmd 66). */
+  const AVA_CANPLAY_MS = 8000;  // sole TTS origin, no network fallback (qi 2026-06-09: api.xlrd.org primary; xen.xlrd.org freed for repurpose)
 // MEASURED 2026-08-13 01:57: a HEAD probe used to live here against
 // AVA_TTS_URL + '?text=.' purely to read x-xen-node. api.xlrd.org implements
 // GET only — HEAD answered 404 (verified: HEAD -> 404 application/json,
@@ -5812,7 +5827,7 @@ function _avaDrain() {
         a.onerror = () => _fallback('audio-err fallback');
         a.src = _hosts[_hostIdx] + '?text=' + encodeURIComponent(clip);
         a.oncanplay = _doPlay;
-        setTimeout(() => { if (a.oncanplay === _doPlay) _doPlay(); }, 3000);
+        setTimeout(() => { if (a.oncanplay === _doPlay) _doPlay(); }, AVA_CANPLAY_MS);
         return;
       }
       if (_retries < _MAX_RETRY) {
@@ -5830,13 +5845,17 @@ function _avaDrain() {
           a.onerror = () => _fallback('audio-err fallback');
           a.src = url + (url.indexOf('?') === -1 ? '?' : '&') + '_r=' + _retries + '_' + _genAtStart;
           a.oncanplay = _doPlay;
-          setTimeout(() => { if (a.oncanplay === _doPlay) _doPlay(); }, 3000);
+          setTimeout(() => { if (a.oncanplay === _doPlay) _doPlay(); }, AVA_CANPLAY_MS);
         }, 400 * _retries);
         return;
       }
       // BOTH network hosts failed — device replay, then real speechSynthesis.
       _avaStatus = label.startsWith('play blocked') ? 'blocked:'+label.slice(13) : 'audio-err';
-      _avaTelemetry(label + ' -> device-tts');
+      /* Capture the ACTUAL MediaError. This page's own fault log calls its existing label
+         "content-free legacy label - no MediaError available", which is exactly why the
+         3-second race above had to be inferred from timing instead of read off an artifact. */
+      var _me = ''; try { _me = ' code=' + ((a.error && a.error.code) || '-') + ' net=' + a.networkState + ' ready=' + a.readyState; } catch (_) {}
+      _avaTelemetry(label + _me + ' -> device-tts');
       /* Every network host is exhausted: this clip did NOT play from the audio
          leg. Recorded as a per-utterance FAILURE so the outcome is durable even
          when the device-tts fallback then succeeds (2026-09-09). */
@@ -5878,7 +5897,7 @@ function _avaDrain() {
     };
     a.oncanplay = _doPlay;
     // Safety: if canplay never fires within 3s (already-cached src), play anyway
-    setTimeout(() => { if (a.oncanplay === _doPlay) _doPlay(); }, 3000);
+    setTimeout(() => { if (a.oncanplay === _doPlay) _doPlay(); }, AVA_CANPLAY_MS);
   }
 }
 /* ── PER-UTTERANCE PLAY LEDGER (2026-09-09) ────────────────────────────────
