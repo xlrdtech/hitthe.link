@@ -4664,10 +4664,23 @@ function renderEvent(d) {
     div.appendChild(tsEl);
     div.appendChild(tagEl);
     div.appendChild(txtEl);
+    /* 🔴 STICK ONLY IF HE IS ALREADY AT THE BOTTOM. qi 2026-09-19 05:38: "when I
+       scroll up, it doesnt need to be auto-scrolling" - and he had already said it once,
+       2026-08-13 21:49: "the auto scroll is good but it shouldnt fight me when Im
+       scrolling." That first decree WAS implemented - four append paths carry this exact
+       guard. MEASURED 2026-09-19: of twelve scroll-to-bottom sites, only four were guarded
+       and these live-message paths were not, so every reply yanked him off whatever he was
+       reading. Same shape as the voice bug tonight: the fix existed and was applied to some
+       branches and not the siblings.
+       Measured BEFORE the append on purpose - afterwards scrollHeight has already grown and
+       the question cannot be answered. 40px of slack because "at the bottom" is an intent,
+       and fractional scroll values on a zoomed viewport never land exactly.
+       Authored by Xen 2026-09-19 (cmd 66). */
+    var _stk = (transcript.scrollTop + transcript.clientHeight) >= (transcript.scrollHeight - 40);
     transcript.appendChild(div);
     attachBubbleActions(div, txt);
     _pruneBacklogDom();   // cap DOM during backlog replay so reopen paints instantly
-    transcript.scrollTop = transcript.scrollHeight;
+    if (_stk) transcript.scrollTop = transcript.scrollHeight;
     saveHistory({ role: 'xen', text: txt, ts: d.ts || Date.now() });
     // Speak ONLY live replies — skip the SSE backlog replay (old ts) so the queue
     // never clogs with history. 10s grace covers the load→connect gap.
@@ -4746,10 +4759,23 @@ function renderEvent(d) {
     div.appendChild(tsEl);
     div.appendChild(tagEl);
     div.appendChild(txtEl);
+    /* 🔴 STICK ONLY IF HE IS ALREADY AT THE BOTTOM. qi 2026-09-19 05:38: "when I
+       scroll up, it doesnt need to be auto-scrolling" - and he had already said it once,
+       2026-08-13 21:49: "the auto scroll is good but it shouldnt fight me when Im
+       scrolling." That first decree WAS implemented - four append paths carry this exact
+       guard. MEASURED 2026-09-19: of twelve scroll-to-bottom sites, only four were guarded
+       and these live-message paths were not, so every reply yanked him off whatever he was
+       reading. Same shape as the voice bug tonight: the fix existed and was applied to some
+       branches and not the siblings.
+       Measured BEFORE the append on purpose - afterwards scrollHeight has already grown and
+       the question cannot be answered. 40px of slack because "at the bottom" is an intent,
+       and fractional scroll values on a zoomed viewport never land exactly.
+       Authored by Xen 2026-09-19 (cmd 66). */
+    var _stk = (transcript.scrollTop + transcript.clientHeight) >= (transcript.scrollHeight - 40);
     transcript.appendChild(div);
     attachBubbleActions(div, txt);
     _pruneBacklogDom();   // cap DOM during backlog replay so reopen paints instantly
-    transcript.scrollTop = transcript.scrollHeight;
+    if (_stk) transcript.scrollTop = transcript.scrollHeight;
     saveHistory({ role: 'you', text: txt, ts: d.ts || Date.now() });
   } else {
     // qi 2026-05-30: events render IN the chat, not a separate panel —
@@ -4839,9 +4865,22 @@ function renderEvent(d) {
     const _routeSrc = (_rd.source || d.source || _rd.sender || d.sender || tag || '');
     const _routeChat = (_rd.chatId || _rd.chatID || _rd.recipient || d.chatId || d.chatID || d.recipient || '');
     try { attachReplyAction(fdiv, { source: _routeSrc, chatId: _routeChat, label: labelSrc }); } catch (_) {}
+    /* 🔴 STICK ONLY IF HE IS ALREADY AT THE BOTTOM. qi 2026-09-19 05:38: "when I
+       scroll up, it doesnt need to be auto-scrolling" - and he had already said it once,
+       2026-08-13 21:49: "the auto scroll is good but it shouldnt fight me when Im
+       scrolling." That first decree WAS implemented - four append paths carry this exact
+       guard. MEASURED 2026-09-19: of twelve scroll-to-bottom sites, only four were guarded
+       and these live-message paths were not, so every reply yanked him off whatever he was
+       reading. Same shape as the voice bug tonight: the fix existed and was applied to some
+       branches and not the siblings.
+       Measured BEFORE the append on purpose - afterwards scrollHeight has already grown and
+       the question cannot be answered. 40px of slack because "at the bottom" is an intent,
+       and fractional scroll values on a zoomed viewport never land exactly.
+       Authored by Xen 2026-09-19 (cmd 66). */
+    var _stk = (transcript.scrollTop + transcript.clientHeight) >= (transcript.scrollHeight - 40);
     transcript.appendChild(fdiv);
     _pruneBacklogDom();   // cap DOM during backlog replay so reopen paints instantly
-    transcript.scrollTop = transcript.scrollHeight;
+    if (_stk) transcript.scrollTop = transcript.scrollHeight;
   }
 }
 
