@@ -5291,7 +5291,37 @@ const AVA_TTS_URL = 'https://api.xlrd.org/api/tts';
      8000 clears the measured 4.033 s worst case with 2x margin and keeps the cached-src
      safety net this timer exists for.
      Authored by Xen 2026-09-18 in service of the decree quoted above (cmd 66). */
-  const AVA_CANPLAY_MS = 8000;  // sole TTS origin, no network fallback (qi 2026-06-09: api.xlrd.org primary; xen.xlrd.org freed for repurpose)
+  const AVA_CANPLAY_MS = 8000;      // poll step, NOT a deadline - see _avaCanplayNet
+  const AVA_CANPLAY_CEILING_MS = 45000;
+  /* 🔴 THE SAFETY NET MUST NOT BECOME A DEADLINE. Rewritten 2026-09-19.
+     This timer exists for ONE case, stated in its own original comment: an ALREADY-CACHED src,
+     where canplay may never re-fire, so we play anyway. A cached load is ~50 ms.
+     But it was implemented as a blind clock: after N ms it called _doPlay() whether or not the
+     element held any data - and _doPlay() nulls a.oncanplay, so the REAL canplay could never
+     re-arm it. Any render slower than N died.
+     MEASURED 2026-09-19, uncached, same endpoint: 120 chars 3.25 s - 250 chars 5.00 s -
+     350 chars 3.37 s - cached 0.05 s; and an A-to-Z audit caught a normal reply at 8.005 s
+     against a timer of exactly 8.000. Render time is not bounded, so NO constant is safe:
+     3000 was wrong, 8000 was wrong by five milliseconds, and 20000 would be wrong under load.
+     ⭐ SO IT NOW WAITS ON EVIDENCE INSTEAD OF A CLOCK. It only blind-plays when the element
+     actually HAS data (readyState >= 2 = HAVE_CURRENT_DATA), which is exactly the cached case
+     this net was built for. While the element is still empty it keeps waiting, because that is
+     a fetch in flight and canplay will fire on its own. A genuine failure is caught by
+     a.onerror, which is what that handler is for - not by this timer.
+     The ceiling exists only so nothing can hang forever (cmd 72: finish, die, or scream). */
+  function _avaCanplayNet(a, doPlay, stale) {
+    const t0 = Date.now();
+    const tick = () => {
+      try {
+        if (stale && stale()) return;              // a newer drain owns the element
+        if (a.oncanplay !== doPlay) return;        // canplay already fired and armed it
+        if (a.readyState >= 2) { doPlay(); return; }   // cached/ready - the case this net exists for
+        if (Date.now() - t0 >= AVA_CANPLAY_CEILING_MS) { doPlay(); return; }  // never hang
+        setTimeout(tick, AVA_CANPLAY_MS);
+      } catch (_) { /* never let the net break the voice */ }
+    };
+    setTimeout(tick, AVA_CANPLAY_MS);
+  }  // sole TTS origin, no network fallback (qi 2026-06-09: api.xlrd.org primary; xen.xlrd.org freed for repurpose)
 // MEASURED 2026-08-13 01:57: a HEAD probe used to live here against
 // AVA_TTS_URL + '?text=.' purely to read x-xen-node. api.xlrd.org implements
 // GET only — HEAD answered 404 (verified: HEAD -> 404 application/json,
@@ -5866,7 +5896,7 @@ function _avaDrain() {
         a.onerror = () => _fallback('audio-err fallback');
         a.src = _hosts[_hostIdx] + '?text=' + encodeURIComponent(clip);
         a.oncanplay = _doPlay;
-        setTimeout(() => { if (_myDrain !== _avaDrainSeq) return; if (a.oncanplay === _doPlay) _doPlay(); }, AVA_CANPLAY_MS);
+        _avaCanplayNet(a, _doPlay, () => _myDrain !== _avaDrainSeq);
         return;
       }
       if (_retries < _MAX_RETRY) {
@@ -5885,7 +5915,7 @@ function _avaDrain() {
           a.onerror = () => _fallback('audio-err fallback');
           a.src = url + (url.indexOf('?') === -1 ? '?' : '&') + '_r=' + _retries + '_' + _genAtStart;
           a.oncanplay = _doPlay;
-          setTimeout(() => { if (_myDrain !== _avaDrainSeq) return; if (a.oncanplay === _doPlay) _doPlay(); }, AVA_CANPLAY_MS);
+          _avaCanplayNet(a, _doPlay, () => _myDrain !== _avaDrainSeq);
         }, 400 * _retries);
         return;
       }
@@ -5937,7 +5967,7 @@ function _avaDrain() {
     };
     a.oncanplay = _doPlay;
     // Safety: if canplay never fires within 3s (already-cached src), play anyway
-    setTimeout(() => { if (_myDrain !== _avaDrainSeq) return; if (a.oncanplay === _doPlay) _doPlay(); }, AVA_CANPLAY_MS);
+    _avaCanplayNet(a, _doPlay, () => _myDrain !== _avaDrainSeq);
   }
 }
 /* ── PER-UTTERANCE PLAY LEDGER (2026-09-09) ────────────────────────────────
