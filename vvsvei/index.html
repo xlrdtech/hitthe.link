@@ -4715,7 +4715,33 @@ function renderEvent(d) {
     if (!_avaLive) { try { if (window._avaSetLoad) window._avaSetLoad('Loading history…', _hudRx + ' messages', Math.min(99, Math.round(_hudRx / 50))); } catch (_) {} }
     if (_avaLive) {
       try { _avaTelemetry("speak-gate live=T armed="+_avaAudioUnlocked+" ctx="+!!_avaCtx); } catch(_){}
-      if (_avaAudioUnlocked && _vsqMaySpeak()) { speakAva(txt); }
+      /* ⚠️ ONE OWNER FOR THE AUDIBLE LEG — DEFER, NEVER DROP (Xen 2026-09-21, cmd 66).
+         MEASURED: one xen-reply-vvs call dispatches TWO audible legs for the same
+         sentence — `xen:audio` (pre-rendered server-side, arrives SEGMENTED) and this
+         `xen-out` (text only, synthesised here by speakAva). omnimind :4441 /health on
+         2026-09-21: xen-out 458 / xen:audio 600 since 06:58:56Z, two independent
+         producers; the emits land 46–374 ms apart. _avaSpokenAlready was meant to
+         collapse them, but the winner is a RACE: when speakAva wins it marks the FULL
+         text, and every xen:audio segment AFTER the first is not a prefix of it, so the
+         tail is spoken a second time. 16 same-text `started` records in the play ledger
+         today, 22 identical-byte edge-tts renders inside 180 s. His words: "the same
+         thing being said twice."
+         xen-reply-vvs now stamps this frame `mute:true` ONLY on the branch where the
+         pre-rendered leg was definitely dispatched. That is a hint about WHO SPEAKS,
+         never about what he sees — the bubble, the transcript and the history above are
+         untouched.
+         ⛔ IT DEFERS, IT DOES NOT SKIP. A skip would mean silence any time the
+         pre-rendered leg failed after dispatch (edge-tts error, unarmed tab, a 4xx) —
+         and silence is the one outcome canon forbids outright (P0, F7). After 1.5s
+         speakAva runs normally; _avaSpokenAlready returns true if the xen:audio leg
+         already enqueued this line, so it is a no-op in the healthy case, and it SPEAKS
+         if nothing took it. Fails toward voice, exactly like the VSQ park below. */
+      if (_avaAudioUnlocked && _vsqMaySpeak()) {
+        if (d && d.mute === true) {
+          try { _avaTelemetry('speak-gate mute-hint defer 1.5s "' + txt.slice(0, 24) + '"'); } catch (_) {}
+          setTimeout(function () { speakAva(txt); }, 1500);
+        } else { speakAva(txt); }
+      }
       else if (_avaAudioUnlocked) {
         try { _avaTelemetry('speak-gate vsq-park owner=' + _vsqOwner + ' self=' + VSQ_SELF); } catch (_) {}
         /* ⚠️ PARK, NEVER DROP (cmd 40b: a gate may CLASSIFY, never HOLD — and it must
