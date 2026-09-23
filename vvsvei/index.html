@@ -5756,6 +5756,8 @@ function _avaSpeakDevice(clip, genAtStart) {
 // played. Now every reply enqueues + plays in order — one voice, zero drops.
 let _avaQueue = [], _avaPlaying = false, _drainStarted = 0, _wdLastT = -1;
 let _avaPending = [];   // replies that arrived live-but-unarmed; flushed on first tap (H2)
+let _avaWd = null;      // {seq, head, started} for the drain the watchdog is guarding (2026-09-23)
+const AVA_WD_FETCH_GRACE_MS = 12000;   // a clip still being FETCHED is not wedged - see the watchdog
 const _AVA_PARK_MAX = 500;   // explicit park ceiling (was an unlabelled 12 that dropped silently — 2026-09-09)
 // DRAIN WATCHDOG (qi 2026-06-09, H4): iOS emits stalled/suspend (not error) on a
 // hung TTS fetch, so onended/onerror never fire and _avaPlaying sticks true — the
@@ -5784,9 +5786,22 @@ setInterval(function() {
     var advancing = !!(a && !a.paused && !a.ended && a.currentTime !== _wdLastT && a.readyState >= 2);
     if (a) _wdLastT = a.currentTime;
     if (advancing) return;                 // healthy playback in progress — never touch it
+    /* FETCH GRACE (2026-09-23). MEASURED 04:41-04:51Z: four lines reached the ARMED phone
+       page, logged `requested`, and then neither `started` nor `failed`. /api/tts took
+       1.97-3.43 s to render each of them; the lines that played took 1.18-2.03 s. This
+       watchdog released at >1.8 s whenever the element was "not advancing" - and an element
+       still WAITING FOR ITS BYTES is not advancing - so it aborted the load mid-fetch. The
+       clip was already shifted off the queue, so it vanished: no error, no fallback, no row.
+       ~11% of renders in the log take over 1.8 s. A load the network is still serving is
+       left alone for up to 12 s (p99 render 3.8 s); a truly hung fetch still releases.
+       Authored by Xen 2026-09-23 (cmd 66: mine, dated; serves F7 + P0 voice). */
+    var fetching = !!(a && !a.error && a.networkState === 2 && a.readyState < 3 && a.hasAttribute('src'));
+    if (fetching && waited < AVA_WD_FETCH_GRACE_MS) return;
     // Not advancing across two ~1s ticks -> mutex is WEDGED. Release immediately so
     // voice is never held hostage by a hung fetch. No 16s stall, no force-release log spam.
     if (waited > 1800) {
+      // A release that drops a clip before it ever played is a FAILED line - say so (F7).
+      try { if (_avaWd && _avaWd.seq === _avaDrainSeq && !_avaWd.started) _veiLedger('failed', { label: 'drain-watchdog released before playback', waited: waited, net: a ? a.networkState : -1, ready: a ? a.readyState : -1, head: _avaWd.head }); } catch (_) {}
       try { if (a) { a.pause(); a.removeAttribute('src'); a.load(); } } catch (_) {}   // never src='' — see the drain note
       _avaPlaying = false; _drainStarted = 0; _wdLastT = -1; _avaStatus = 'idle'; _renderAvaPill(); _avaDrain();
     }
@@ -5874,6 +5889,7 @@ function _avaDrain() {
   _avaPlaying = true; _drainStarted = Date.now(); _wdLastT = -1;
   const _genAtStart = _avaGen;  // capture gen — if qi barges in mid-fetch/decode, this goes stale
   const _myDrain = ++_avaDrainSeq;   // this drain owns the shared element until the next one starts
+  try { _avaWd = { seq: _myDrain, head: String(clip || '').slice(0, 80), started: false }; } catch (_) {}
   // MP3 via <audio> — the path that WORKED (qi confirmed hearing on 2026-05-30).
   // speechSynthesis blocks on iOS when fired from background SSE events.
   // <audio>.play() works once the element was armed in the tap gesture.
@@ -6031,7 +6047,7 @@ function _avaDrain() {
     /* PLAY LEDGER (2026-09-09): the element's OWN `playing` / `ended` events are
        the only page-side proof that audio actually ran — `dur` is the decoded
        duration, `played` is how far it got. Recorded, never asserted from rc=0. */
-    a.onplaying = () => { _avaStatus = 'playing'; _hudSpoke++; _renderAvaPill(); try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; } catch (_) {} try { _veiLedger('started', { dur: (isFinite(a.duration) ? Math.round(a.duration * 1000) / 1000 : null), rs: a.readyState, head: String(clip).slice(0, 80) }); } catch (_) {} };
+    a.onplaying = () => { try { if (_avaWd && _avaWd.seq === _myDrain) _avaWd.started = true; } catch (_) {} _avaStatus = 'playing'; _hudSpoke++; _renderAvaPill(); try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; } catch (_) {} try { _veiLedger('started', { dur: (isFinite(a.duration) ? Math.round(a.duration * 1000) / 1000 : null), rs: a.readyState, head: String(clip).slice(0, 80) }); } catch (_) {} };
     a.onended   = () => { try { _veiLedger('ended', { played: (isFinite(a.currentTime) ? Math.round(a.currentTime * 1000) / 1000 : null), dur: (isFinite(a.duration) ? Math.round(a.duration * 1000) / 1000 : null), head: String(clip).slice(0, 80) }); } catch (_) {} _avaPlaying = false; _avaStatus = _avaQueue.length ? ('queued '+_avaQueue.length) : 'idle'; _renderAvaPill(); try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; } catch (_) {} _avaDrain(); };
     a.onerror   = () => _fallback('audio-err fallback');
     a.src = url;
@@ -6174,7 +6190,13 @@ function speakAva(text) {
   if (_avaPlaying && _drainStarted) {
     var _a = _avaAudio;
     var _live = !!(_a && !_a.paused && !_a.ended && _a.readyState >= 2);
+    // A clip still being FETCHED is not stale (2026-09-23, same defect as the drain
+    // watchdog's FETCH GRACE): aborting it here dropped the earlier line silently and
+    // played only the newer one. Leave it; this line plays after it via onended.
+    var _fetching = !!(_a && !_a.error && _a.networkState === 2 && _a.readyState < 3 && _a.hasAttribute('src'));
+    if (_fetching && (Date.now() - _drainStarted) < AVA_WD_FETCH_GRACE_MS) _live = true;
     if (!_live && (Date.now() - _drainStarted) > 900) {
+      try { if (_avaWd && _avaWd.seq === _avaDrainSeq && !_avaWd.started) _veiLedger('failed', { label: 'stale mutex released before playback', waited: Date.now() - _drainStarted, net: _a ? _a.networkState : -1, ready: _a ? _a.readyState : -1, head: _avaWd.head }); } catch (_) {}
       try { if (_a) { _a.pause(); _a.removeAttribute('src'); _a.load(); } } catch (_) {}   // never src='' — see the drain note
       _avaPlaying = false; _drainStarted = 0; _wdLastT = -1;
     }
