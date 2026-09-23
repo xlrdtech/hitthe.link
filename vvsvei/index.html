@@ -5550,9 +5550,11 @@ function _startAvaKeepAlive() {
     });
   } catch (_) {}
 }
-function _unlockAvaAudio() {
+function _unlockAvaAudio(_auto) {
   if (_avaAudioUnlocked) return;
   // Unlock Web Audio API context in the gesture — stays unlocked forever after.
+  // _auto === true: the zero-tap arm in avaUnlock() below — same unlock, but it does NOT
+  // claim the voice channel (only a real tap elects the speaker). Event args are never === true.
   try {
     _avaCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (_avaCtx.state === 'suspended') _avaCtx.resume();
@@ -5596,7 +5598,7 @@ function _unlockAvaAudio() {
   // THE SURFACE qi JUST TOUCHED WINS. Arming is a deliberate human act — it is the
   // election. Claiming here means the escape hatches can never strand him in
   // silence: whatever he taps becomes the speaker within one round trip.
-  _vsqOwner = VSQ_SELF; _vsqSeenAt = Date.now(); _vsqClaim(VSQ_SELF);
+  if (_auto !== true) { _vsqOwner = VSQ_SELF; _vsqSeenAt = Date.now(); _vsqClaim(VSQ_SELF); }
   try { localStorage.setItem('vei-was-armed','1'); } catch (_) {}   // returning-user hint for a cheap 1-tap resume next reload (H2)
   // Flush replies that arrived live-but-unarmed so the first tap speaks them (never dropped).
   try { if (_avaPending.length) { const _p = _avaPending; _avaPending = []; _p.forEach(function(t){ speakAva(t); }); } } catch (_) {}
@@ -6298,16 +6300,16 @@ function _renderAvaPill() {
     if (bw && b && pct != null) { bw.style.display = 'block'; b.style.width = Math.max(0, Math.min(100, pct)) + '%'; }
   };
   window._avaDismissOverlay = function() { if (overlay) { overlay.remove(); overlay = null; } };
-  const unlock = () => {
+  const unlock = (_ev, _auto) => {
     if (_avaUnlocked) return;          // already armed; loader handles dismissal
     _avaUnlocked = true;
     try { localStorage.setItem('vei-was-armed', '1'); } catch (_) {}   // returning-user hint (H2): next reload reads as a cheap 1-tap resume
-    _hud('ARMED by tap');
+    _hud(_auto === true ? 'ARMED with no tap (browser allows audio)' : 'ARMED by tap');
     _avaVoice = pickAvaVoice();
     // CRITICAL: create + resume AudioContext synchronously in this gesture.
     // _unlockAvaAudio() was never being called from unlock(), so _avaCtx was null
     // and _avaDrain fell through to the blocked <audio>.play() path every time.
-    _unlockAvaAudio();
+    _unlockAvaAudio(_auto === true);
     // Web Audio API is the sole voice path now — no speechSynthesis in the page.
     // Removed speechSynthesis warm-up to eliminate the multiple-voices issue.
     _avaAudioUnlocked = true;
@@ -6324,6 +6326,33 @@ function _renderAvaPill() {
   }
   if (!_avaVoice) { _avaVoice = pickAvaVoice(); _renderAvaPill(); }
   makeOverlay();
+  // ZERO-TAP ARM (Xen 2026-09-23, cmd 66: mine, dated). qi 18:41: "I'm only doing voice
+  // injections, but I don't like that I even have to tap that" -> "my friction threshold all
+  // the way up to 99%". MEASURED on his phone (Chrome 153, CNVS installed as a home-screen
+  // app): a fresh AudioContext created with NO gesture starts 'running' - Chrome allows sound
+  // for home-screen apps (developer.chrome.com/blog/autoplay). So the tap was this page's own
+  // gate, not the browser's. Arm without it WHEN the browser genuinely allows audio.
+  // PHONE ONLY: a desk tab arming would be desktop audio (F27) and a second voice.
+  // Refused -> nothing changes: the pill stays and one tap arms exactly as before.
+  setTimeout(function _avaAutoArm() {
+    try {
+      if (_avaUnlocked) return;
+      if (!/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent || '')) return;
+      const C = window.AudioContext || window.webkitAudioContext;
+      if (!C) return;
+      const probe = new C();
+      setTimeout(function () {
+        const st = probe.state;
+        try { probe.close(); } catch (_) {}
+        if (st === 'running') {
+          unlock(null, true);
+          try { _avaTelemetry('auto-arm ok (no tap)'); } catch (_) {}
+        } else {
+          try { _avaTelemetry('auto-arm refused state=' + st); } catch (_) {}
+        }
+      }, 300);
+    } catch (_) {}
+  }, 1200);
 })();
 
 fbSend.addEventListener('click', sendFallback);
