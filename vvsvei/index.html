@@ -3828,6 +3828,20 @@ function _vsqMaySpeak() {
   if (Date.now() - _vsqSeenAt > VSQ_LEASE_MS) return true;  // stale claim, reopen
   return false;
 }
+// VSQ HEARTBEAT (Xen 2026-09-24, cmd 66: mine). Claims were only ever made by a tap, so every
+// lease expired 60 s later and from then on EVERY armed page spoke every line (double voice).
+// Every 20 s the VISIBLE armed page renews its claim if it holds the channel or nobody does;
+// a hidden page never claims, so the page he is looking at is the one that speaks.
+function _vsqHeartbeat() {
+  try {
+    if (!_avaAudioUnlocked || document.visibilityState !== 'visible') return;
+    if (_vsqOwner === VSQ_SELF || !_vsqOwner || Date.now() - _vsqSeenAt > VSQ_LEASE_MS) {
+      _vsqOwner = VSQ_SELF; _vsqSeenAt = Date.now(); _vsqClaim(VSQ_SELF);
+    }
+  } catch (_) {}
+}
+setInterval(_vsqHeartbeat, 20000);
+try { document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') setTimeout(_vsqHeartbeat, 500); }); } catch (_) {}
 function _vsqClaim(owner) {
   try {
     fetch('https://xen.xlrd.org/api/voice/claim', {
@@ -4472,8 +4486,10 @@ function renderEvent(d) {
   // has two other pre-guard handlers ('caught-up', '__reload__') proving the
   // pattern was understood — voice-claim was simply never added to it.
   if (String(d.event || d.kind || '').toLowerCase() === 'xen:voice-claim') {
+    const _vsqPrev = _vsqOwner;
     _vsqOwner = (d.data && d.data.owner) || null;
     _vsqSeenAt = Date.now();
+    if (_vsqPrev === _vsqOwner) return;   // a heartbeat renewal: lease refreshed, nothing to report
     // NOTE — deliberately NOT calling _avaBargeIn() here, departing from the plan:
     // it clears _avaQueue AND _avaPending, so a foreign claim would DISCARD queued
     // replies. That trades a double voice for dropped words, which is the worse
@@ -4752,14 +4768,20 @@ function renderEvent(d) {
            the lines unrecoverable, nothing but a debug line to show it happened.
            Now the reply waits for the channel and is spoken LATE rather than never;
            if the holder never yields we speak anyway rather than lose his words. */
+        /* ONE PAGE PLAYS EACH LINE (Xen 2026-09-24, cmd 66: mine). MEASURED 02:0x-02:3xZ: 8 of 13
+           lines played TWICE - the owner at +3 s and this parked copy at +28..+43 s, because the
+           park spoke anyway after 30 s while the owner's lease was still fresh. The owner got the
+           same line and spoke it. So: wait while the owner's lease is fresh (the owner renews it
+           every 20 s while visible - see _vsqHeartbeat); speak only if the lease goes stale (owner
+           gone = never drop); if it stays fresh, the owner spoke it - yield, and say so. */
         (function (t, tries) {
           var again = function () {
             if (_vsqMaySpeak()) { speakAva(t); }
             else if (--tries > 0) { setTimeout(again, 1500); }
-            else { speakAva(t); }          // lease outlived its holder — never drop
+            else { try { _veiLedger('yielded', { owner: String(_vsqOwner || ''), head: String(t).slice(0, 80) }); } catch (_) {} }
           };
           setTimeout(again, 1500);
-        })(txt, 20);
+        })(txt, 50);
       }
       else {
         /* PARK, BOUNDED AND LOUD (fixed 2026-09-09). This line was
@@ -6058,6 +6080,13 @@ function _avaDrain() {
     const _doPlay = () => {
       a.oncanplay = null;
       if (_genAtStart !== _avaGen) { _avaPlaying = false; _avaStatus = 'you spoke'; _renderAvaPill(); return; }
+      // SILENT "PLAYING" (Xen 2026-09-24, cmd 66: mine). _avaHardStop() SUSPENDS _avaCtx to cut
+      // sound, and this element is routed through that context for gain - so play() RESOLVED,
+      // 'playing' fired and the ledger said `started` while the graph output silence and the
+      // clip never advanced. MEASURED on his phone 02:31Z: MediaElementAudioSourceNode.context
+      // .state = 'suspended', currentTime frozen at 0; resumed -> he heard the next line.
+      // The old resume ran only when play() REJECTED, which a routed element never does.
+      try { if (_avaCtx && _avaCtx.state === 'suspended') _avaCtx.resume(); } catch (_) {}
       const p = a.play();
       if (p && p.then) p.then(() => {
         if (_genAtStart !== _avaGen) { try { a.pause(); a.currentTime = 0; } catch (_) {} _avaPlaying = false; _avaStatus = 'you spoke'; _renderAvaPill(); }
@@ -6099,7 +6128,8 @@ function _veiLedger(phase, extra) {
   try {
     var rec = { phase: String(phase || '?'), page: 'vvsvei', armed: !!_avaAudioUnlocked,
                 on: !!_avaOn, status: String(_avaStatus || ''), qlen: (_avaQueue || []).length,
-                park: (_avaPending || []).length, at: Date.now() };
+                park: (_avaPending || []).length, at: Date.now(),
+                vsq: (typeof VSQ_SELF !== 'undefined' ? VSQ_SELF : ''), vis: document.visibilityState };
     if (extra) { for (var k in extra) { if (Object.prototype.hasOwnProperty.call(extra, k)) rec[k] = extra[k]; } }
     try { console.warn('[vei-play]', JSON.stringify(rec)); } catch (_) {}
     fetch('https://xen.xlrd.org/api/vvsvei-play', {
