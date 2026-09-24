@@ -4489,6 +4489,33 @@ function renderEvent(d) {
     const _vsqPrev = _vsqOwner;
     _vsqOwner = (d.data && d.data.owner) || null;
     _vsqSeenAt = Date.now();
+    // ── EXCEPT WHEN THE CLAIM IS HIM (Xen 2026-09-24, playback goal; cmd 66: mine) ──
+    // The yield below is right for a PAGE claiming the lease, and wrong for qi talking
+    // over me. xen-bargein-cut claims as `qi-bargein:<source>` the moment bee / VEI hears
+    // him mid-line, and this handler let "the current utterance finish its tail" - so the
+    // cut never cut. MEASURED against vvsvei-play-ledger.jsonl 09-24: every bee-qi cut that
+    // landed on a sounding clip (00:13:46, 00:22:17, 00:25:03, 00:27:05, 04:25:43) was
+    // followed by `ended` with played == dur - the whole line, every time.
+    // A qi-bargein claim is his voice, not a lease handoff: stop the sound NOW, at full
+    // amplitude. _avaGen++ kills a clip still fetching; _avaPending (unarmed lines) is
+    // left alone - that is parked text, not sound.
+    if (_vsqOwner && /^qi-bargein:/.test(_vsqOwner)) {
+      const _wasSounding = !!_avaPlaying;
+      try { _avaGen++; } catch (_) {}
+      try { if (typeof window._avaHardStop === 'function') window._avaHardStop('qi-bargein'); } catch (_) {}
+      try { _avaStatus = 'you spoke'; _renderAvaPill(); } catch (_) {}
+      if (_wasSounding) { try { _veiLedger('cut', { why: 'qi-bargein', owner: _vsqOwner }); } catch (_) {} }
+      // A CUT IS NOT A LEASE. Left as owner, `qi-bargein:*` held the channel for 60 s and every
+      // line after it parked - and my ANSWER to what he just said is exactly the next line.
+      // Measured: 5 replies ended `yielded` right after cuts (00:08:12 ... 00:16:13, see
+      // xen-bargein-listen header). Release it; the visible armed page re-takes it at once.
+      _vsqOwner = null; _vsqSeenAt = 0;
+      try { setTimeout(_vsqHeartbeat, 300); } catch (_) {}
+      try { _avaTelemetry('vsq cut by ' + (d.data && d.data.owner) + ' self=' + VSQ_SELF + ' sounding=' + _wasSounding); } catch (_) {}
+      return;
+    }
+    // (Sits ABOVE the renewal return: his second cut arrives as qi-bargein -> qi-bargein,
+    //  which reads as a renewal and would otherwise let the next line play through him.)
     if (_vsqPrev === _vsqOwner) return;   // a heartbeat renewal: lease refreshed, nothing to report
     // NOTE — deliberately NOT calling _avaBargeIn() here, departing from the plan:
     // it clears _avaQueue AND _avaPending, so a foreign claim would DISCARD queued
@@ -6262,7 +6289,15 @@ function _renderAvaPill() {
       if (!_avaAudioUnlocked) { _unlockAvaAudio(); _avaOn = true; }   // first tap = arm + enable
       else {
         _avaOn = !_avaOn;                                            // later taps = mute toggle
-        if (!_avaOn) { try { if (_avaAudio) _avaAudio.pause(); } catch (_) {} try { window.speechSynthesis.cancel(); } catch (_) {} }
+        // MUTE MUST SILENCE THE PLAYER THAT IS ACTUALLY PLAYING (Xen 2026-09-24, playback goal;
+        // cmd 66: mine). This used to pause only <audio> + speechSynthesis, but on his handset
+        // the Ava MP3 rides _avaCurrentSource (an AudioBufferSourceNode), so the tap left the
+        // line running and the queue went on. _avaHardStop stops that node, clears the queue and
+        // suspends the ctx; the play path resumes the ctx before the next line (see SILENT "PLAYING").
+        if (!_avaOn) {
+          if (typeof window._avaHardStop === 'function') { try { window._avaHardStop('speaker-tap'); } catch (_) {} }
+          else { try { if (_avaAudio) _avaAudio.pause(); } catch (_) {} try { window.speechSynthesis.cancel(); } catch (_) {} }
+        }
       }
       _renderAvaPill();
     });
