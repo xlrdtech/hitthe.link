@@ -5637,7 +5637,20 @@ function _unlockAvaAudio(_auto) {
         album: 'VVS',
       });
       navigator.mediaSession.setActionHandler('play', function() {});
-      navigator.mediaSession.setActionHandler('pause', function() {});
+      // HIS PAUSE PRESS IS A CUT (Xen 2026-09-25, playback goal play-pause-control-works).
+      // The empty handler kept iOS treating this page as a player, but it also SWALLOWED his
+      // pause: the line played on. While a line sounds, a press stops it exactly like his
+      // voice does (the qi-bargein branch above); with nothing sounding it stays a no-op.
+      navigator.mediaSession.setActionHandler('pause', function() {
+        try {
+          if (!_avaPlaying) return;
+          try { _avaGen++; } catch (_) {}
+          try { if (typeof window._avaHardStop === 'function') window._avaHardStop('qi-pause'); } catch (_) {}   // nested in subscribeXenReplies: bare name is a ReferenceError here
+          try { _avaStatus = 'paused'; _renderAvaPill(); } catch (_) {}
+          try { _veiLedger('cut', { why: 'qi-pause', owner: 'qi-pause:media-session-' + VSQ_SELF, via: 'media-session' }); } catch (_) {}
+          try { navigator.mediaSession.playbackState = 'paused'; } catch (_) {}
+        } catch (_) {}
+      });
     } catch (_) {}
   }
   // Also arm the <audio> element as a backup path.
