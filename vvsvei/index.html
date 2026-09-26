@@ -3044,29 +3044,29 @@ function attachBubbleActions(bubbleEl, text) {
     //     cached clip — making a working picker look broken.
     // Long text is NOT the problem: measured 1,680 chars -> 200 + 483,204 B MPEG.
     // It is just slow to synthesize, which is why there is a pending state.
-    try { _avaBargeIn(); } catch (_) {}
-    const a = window._veiPlayAudio || (window._veiPlayAudio = new Audio());
-    a.setAttribute('playsinline', '');
-    _avaGen++;                       // this tap owns the channel now
-    try { a.pause(); a.currentTime = 0; } catch (_) {}
+    // VQ-FIFO-20260926 — ONE QUEUE (qi 2026-09-26 13:59: "All the playback buttons in my chat bubble
+    // should go through the same queue"). This button used to barge everything and play on its OWN
+    // <audio>, never claiming the lease and never writing the ledger: a second mouth. Now:
+    //   phone shell live -> /api/voice/replay; the shell queues it behind whatever is sounding.
+    //   no shell         -> this page's own queue (_avaQueue): VSQ claim, ledger rows, barge-in.
     const reset = () => { playBtn.textContent = '▶ PLAY'; };
-    playBtn.textContent = '··· ';
-    a.onplaying = () => { playBtn.textContent = '❙❙ PLAYING'; };
-    a.onended = reset;
-    a.onerror = () => { playBtn.textContent = '⚠ AUDIO'; setTimeout(reset, 2400); };
-    // engine=eleven REQUIRED (qi 2026-08-17). omnimind.js:3491-3497 reads the
-    // `engine` param on GET only and sets wantVoicebox/wantEleven from it; with no
-    // param BOTH are false and the handler falls through to the edge-tts Ava block
-    // at :3736. That is why every voice pick sounded identical — "its all coming
-    // through as Edge TTS AVA instead of 11 labs". voice.id was read correctly the
-    // whole time (:3619) and then discarded at the :3624 gate.
-    a.src = AVA_TTS_URL + '?text=' + encodeURIComponent(text) + '&engine=eleven&t=' + Date.now();
-    a.play().catch((err) => {
-      // NotAllowedError = the element is not unlocked on this device yet; anything
-      // else is a real transport/decode fault. Both must be SEEN, never swallowed.
-      playBtn.textContent = (err && err.name === 'NotAllowedError') ? '⚠ TAP AGAIN' : '⚠ AUDIO';
-      setTimeout(reset, 2400);
-    });
+    const spoken = String(text).replace(/^\s*(Xen|Lyn|Eli)\s*:\s*/i, '').slice(0, 800);
+    if (_vsqShellLive()) {
+      playBtn.textContent = '→ PHONE';
+      try { _veiLedger('replay-forwarded', { head: spoken.slice(0, 80), shell: String(_vsqShellId || '') }); } catch (_) {}
+      fetch('https://xen.xlrd.org/api/voice/replay', { method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ text: spoken, from: VSQ_SELF }) })
+        .then((r) => r.json()).then((j) => { playBtn.textContent = (j && j.ok) ? '→ QUEUED' : '⚠ AUDIO'; setTimeout(reset, 2400); })
+        .catch(() => { playBtn.textContent = '⚠ AUDIO'; setTimeout(reset, 2400); });
+      return;
+    }
+    try { if (!_avaAudioUnlocked) _unlockAvaAudio(); } catch (_) {}   // inside his tap: the lawful moment to arm
+    _vsqOwner = VSQ_SELF; _vsqSeenAt = Date.now(); _vsqClaim(VSQ_SELF);
+    _avaQueue.push(spoken);
+    try { _veiLedger('requested', { chars: spoken.length, head: spoken.slice(0, 80), via: 'play-button' }); } catch (_) {}
+    playBtn.textContent = _avaPlaying ? '··· QUEUED' : '···';
+    setTimeout(reset, 2400);
+    _avaDrain();
   };
   row.appendChild(playBtn);
   // CALL button — only on Xen-reply bubbles. Triggers a voice call so qi can
@@ -3822,7 +3822,18 @@ const VSQ_SELF = 'vvsvei-' + Math.random().toString(36).slice(2, 8);
 let _vsqOwner = null;
 let _vsqSeenAt = 0;
 const VSQ_LEASE_MS = 60000;
+/* VQ-FIFO-20260926 — THE PHONE IS THE ONE MOUTH (Xen 2026-09-26, P0; qi 13:57-14:00 "get everything
+   going through the same queue" / "everything should speak through [the phone] ... barge-in enabled").
+   MEASURED 17:57:16.965Z and 18:05:53.5Z: this page and the phone shell sounded at once. Both times the
+   server had already sent stop:<this tab> and this page never read data.stop. Now: while the server
+   names a live shell (every xen:voice-claim carries `shell`), this page never speaks, never claims,
+   honours data.stop, and never replays parked lines after a barge-in or once they are 60 s old. */
+let _vsqShellAt = 0, _vsqShellId = null, _vsqParkGen = 0;
+const VSQ_SHELL_MS = 120000, VSQ_PARK_MAX_AGE = 60000;
+const _avaPendingAt = new Map();
+function _vsqShellLive() { return !!_vsqShellId && (Date.now() - _vsqShellAt) < VSQ_SHELL_MS; }
 function _vsqMaySpeak() {
+  if (_vsqShellLive()) return false;                        // the phone shell speaks, this page yields
   if (!_vsqOwner) return true;                              // nobody claimed
   if (_vsqOwner === VSQ_SELF) return true;                  // I hold it
   if (Date.now() - _vsqSeenAt > VSQ_LEASE_MS) return true;  // stale claim, reopen
@@ -3835,6 +3846,7 @@ function _vsqMaySpeak() {
 function _vsqHeartbeat() {
   try {
     if (!_avaAudioUnlocked || document.visibilityState !== 'visible') return;
+    if (_vsqShellLive()) return;                            // VQ-FIFO: never claim over the phone
     if (_vsqOwner === VSQ_SELF || !_vsqOwner || Date.now() - _vsqSeenAt > VSQ_LEASE_MS) {
       _vsqOwner = VSQ_SELF; _vsqSeenAt = Date.now(); _vsqClaim(VSQ_SELF);
     }
@@ -4487,6 +4499,9 @@ function renderEvent(d) {
   // pattern was understood — voice-claim was simply never added to it.
   if (String(d.event || d.kind || '').toLowerCase() === 'xen:voice-claim') {
     const _vsqPrev = _vsqOwner;
+    const _vqd = d.data || {};
+    try { [_vqd.shell, _vqd.owner, _vqd.restore].forEach(function (v) {
+      if (typeof v === 'string' && /^cnvs-/.test(v)) { _vsqShellAt = Date.now(); _vsqShellId = v; } }); } catch (_) {}
     _vsqOwner = (d.data && d.data.owner) || null;
     _vsqSeenAt = Date.now();
     // ── EXCEPT WHEN THE CLAIM IS HIM (Xen 2026-09-24, playback goal; cmd 66: mine) ──
@@ -4509,13 +4524,29 @@ function renderEvent(d) {
       // line after it parked - and my ANSWER to what he just said is exactly the next line.
       // Measured: 5 replies ended `yielded` right after cuts (00:08:12 ... 00:16:13, see
       // xen-bargein-listen header). Release it; the visible armed page re-takes it at once.
-      _vsqOwner = null; _vsqSeenAt = 0;
+      // VQ-FIFO: a cut is NOT "nobody holds voice". Nulling the owner here is what unparked three
+      // stale lines at 17:57:15 and played them over the phone. Parked lines are abandoned (their
+      // retry loops see the new generation) and the lease goes to the shell / the server's restore.
+      _vsqParkGen++;
+      if (_vsqShellLive()) { _vsqOwner = _vsqShellId; _vsqSeenAt = Date.now(); }
+      else if (_vqd.restore) { _vsqOwner = String(_vqd.restore); _vsqSeenAt = Date.now(); }
+      else { _vsqOwner = null; _vsqSeenAt = 0; }
       try { setTimeout(_vsqHeartbeat, 300); } catch (_) {}
       try { _avaTelemetry('vsq cut by ' + (d.data && d.data.owner) + ' self=' + VSQ_SELF + ' sounding=' + _wasSounding); } catch (_) {}
       return;
     }
     // (Sits ABOVE the renewal return: his second cut arrives as qi-bargein -> qi-bargein,
     //  which reads as a renewal and would otherwise let the next line play through him.)
+    // VQ-FIFO: THE SERVER NAMED THIS TAB — stop now (fifo-busy / shell-live / dup-line / shell-wins).
+    if (_vqd.stop && _vqd.stop === VSQ_SELF) {
+      const _wasS = !!_avaPlaying;
+      try { _avaGen++; _vsqParkGen++; } catch (_) {}
+      try { if (typeof window._avaHardStop === 'function') window._avaHardStop('vsq-stop'); } catch (_) {}
+      try { _avaQueue = []; _avaPlaying = false; } catch (_) {}
+      if (_wasS) { try { _veiLedger('cut', { why: 'vsq-stop:' + (_vqd.why || '?'), owner: String(_vsqOwner || '') }); } catch (_) {} }
+      try { _avaTelemetry('vsq stop by server why=' + (_vqd.why || '?') + ' self=' + VSQ_SELF + ' sounding=' + _wasS); } catch (_) {}
+      return;
+    }
     if (_vsqPrev === _vsqOwner) return;   // a heartbeat renewal: lease refreshed, nothing to report
     // NOTE — deliberately NOT calling _avaBargeIn() here, departing from the plan:
     // it clears _avaQueue AND _avaPending, so a foreign claim would DISCARD queued
@@ -4801,14 +4832,18 @@ function renderEvent(d) {
            same line and spoke it. So: wait while the owner's lease is fresh (the owner renews it
            every 20 s while visible - see _vsqHeartbeat); speak only if the lease goes stale (owner
            gone = never drop); if it stays fresh, the owner spoke it - yield, and say so. */
-        (function (t, tries) {
+        (function (t, tries, g0, t0) {
           var again = function () {
+            if (g0 !== _vsqParkGen || Date.now() - t0 > VSQ_PARK_MAX_AGE) {   // VQ-FIFO: never replay stale / post-cut
+              try { _veiLedger('yielded', { why: g0 !== _vsqParkGen ? 'after-cut' : 'stale', owner: String(_vsqOwner || ''), head: String(t).slice(0, 80) }); } catch (_) {}
+              return;
+            }
             if (_vsqMaySpeak()) { speakAva(t); }
             else if (--tries > 0) { setTimeout(again, 1500); }
             else { try { _veiLedger('yielded', { owner: String(_vsqOwner || ''), head: String(t).slice(0, 80) }); } catch (_) {} }
           };
           setTimeout(again, 1500);
-        })(txt, 50);
+        })(txt, 50, _vsqParkGen, Date.now());
       }
       else {
         /* PARK, BOUNDED AND LOUD (fixed 2026-09-09). This line was
@@ -4821,6 +4856,7 @@ function renderEvent(d) {
            the cap is now EXPLICIT, 40x larger, and nothing leaves without a
            record naming what left: an 800-char clip x 500 is bounded memory. */
         _avaPending.push(txt);
+        try { _avaPendingAt.set(txt, Date.now()); if (_avaPendingAt.size > 600) _avaPendingAt.delete(_avaPendingAt.keys().next().value); } catch (_) {}
         if (_avaPending.length > _AVA_PARK_MAX) {
           var _dropN = _avaPending.length - _AVA_PARK_MAX;
           var _dropped = _avaPending.slice(0, _dropN);
@@ -5660,10 +5696,13 @@ function _unlockAvaAudio(_auto) {
   // THE SURFACE qi JUST TOUCHED WINS. Arming is a deliberate human act — it is the
   // election. Claiming here means the escape hatches can never strand him in
   // silence: whatever he taps becomes the speaker within one round trip.
-  if (_auto !== true) { _vsqOwner = VSQ_SELF; _vsqSeenAt = Date.now(); _vsqClaim(VSQ_SELF); }
+  if (_auto !== true && !_vsqShellLive()) { _vsqOwner = VSQ_SELF; _vsqSeenAt = Date.now(); _vsqClaim(VSQ_SELF); }
   try { localStorage.setItem('vei-was-armed','1'); } catch (_) {}   // returning-user hint for a cheap 1-tap resume next reload (H2)
   // Flush replies that arrived live-but-unarmed so the first tap speaks them (never dropped).
-  try { if (_avaPending.length) { const _p = _avaPending; _avaPending = []; _p.forEach(function(t){ speakAva(t); }); } } catch (_) {}
+  try { if (_avaPending.length) { const _p = _avaPending; _avaPending = []; _p.forEach(function(t){
+    const _at = _avaPendingAt.get(t) || 0;   // VQ-FIFO: a line parked over 60 s is history, not speech
+    if (!_at || Date.now() - _at > VSQ_PARK_MAX_AGE) { try { _veiLedger('yielded', { why: 'stale-park', head: String(t).slice(0, 80) }); } catch (_) {} return; }
+    speakAva(t); }); _avaPendingAt.clear(); } } catch (_) {}
 }
 // Barge-in: the instant qi's mic catches speech, cut my voice (qi 2026-05-30).
 let _avaCurrentSource = null;  // track the active AudioBufferSourceNode for barge-in
@@ -6245,6 +6284,10 @@ function _avaMarkSpoken(t) {
 }
 function speakAva(text) {
   if (!_avaOn || !text) return;
+  if (_vsqShellLive()) {   // VQ-FIFO: every path (park flush, mute-hint defer, retries) ends here
+    try { _veiLedger('yielded', { why: 'shell-live', owner: String(_vsqShellId || ''), head: String(text).slice(0, 80) }); } catch (_) {}
+    return;
+  }
   // Strip a leading persona tag — Xen never speaks "Xen:" aloud (one-Xen canon,
   // qi heard it as "Zantac"). Lyn/Eli tags also stripped from the spoken leg.
   const spoken = String(text).replace(/^\s*(Xen|Lyn|Eli)\s*:\s*/i, '');
