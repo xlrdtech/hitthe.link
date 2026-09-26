@@ -4500,7 +4500,9 @@ function renderEvent(d) {
   if (String(d.event || d.kind || '').toLowerCase() === 'xen:voice-claim') {
     const _vsqPrev = _vsqOwner;
     const _vqd = d.data || {};
-    try { [_vqd.shell, _vqd.owner, _vqd.restore].forEach(function (v) {
+    // The server sends `shell` ONLY while ~/.xen/state/voice-mouth names the phone shell (qi 14:15: this
+    // vvsvei route is the canonical one). A shell merely claiming the lease is not the mouth.
+    try { [_vqd.shell].forEach(function (v) {
       if (typeof v === 'string' && /^cnvs-/.test(v)) { _vsqShellAt = Date.now(); _vsqShellId = v; } }); } catch (_) {}
     _vsqOwner = (d.data && d.data.owner) || null;
     _vsqSeenAt = Date.now();
