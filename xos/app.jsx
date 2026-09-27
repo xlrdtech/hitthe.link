@@ -1590,6 +1590,15 @@ function urlParts(url) {
 }
 
 function OpenedAppPage({ app }) {
+  /* qi 2026-09-27 PIVOT: the AI chat tab renders the REAL vvsvei chat in-document
+     (shared DOM, same as VvsveiPane) — never a placeholder, never an iframe. */
+  if (app.isChat) {
+    return (
+      <div className="opened-app opened-app-chat">
+        <VvsveiPane />
+      </div>
+    );
+  }
   const p = urlParts(app.url);
   return (
     <div className="opened-app">
@@ -3431,8 +3440,13 @@ function App() {
   /* qi 2026-05-17 8672: tabs are real web apps/links from app drawer, not threads.
      Threads open in the main browser pane only when a link is clicked.
      Tab strip appears only when 2+ tabs are open. */
-  const [openTabs, setOpenTabs] = useState([]);
-  const [activeTabId, setActiveTabId] = useState(null);
+  const [openTabs, setOpenTabs] = useState([
+    /* qi 2026-09-27 PIVOT: BRWS is the default app in Life, opened to the AI chat.
+       The browser is the home. LifeNote stays the NOTE app; the default landing
+       is the browser with the AI. */
+    { id: "aichat", url: "/vvsvei/", name: "AI Chat", host: "vvsvei", glyph: "✦", isChat: true },
+  ]);
+  const [activeTabId, setActiveTabId] = useState("aichat"); /* pivot: BRWS home = AI chat */
   const [notif, setNotif] = useState(null);
   const [liveEvents, setLiveEvents] = useState([]);
   const notifTimer = useRef(null);
@@ -3589,7 +3603,9 @@ function App() {
                 this (absolute, stopping above the glass dock). Closing the last
                 tab reveals VVSVEI again — nothing is destroyed either way. */}
             <div className="pane pane-vei">
-              <VvsveiPane />
+              {/* qi 2026-09-27 PIVOT: VvsveiPane moved INSIDE Brws as the AI chat tab.
+                  BRWS is the default app — the browser is the home, opened to the AI chat.
+                  The standalone center voice home is gone; the chat tab renders VvsveiPane. */}
               {/* ShipInChat REMOVED from the chat centre — qi 2026-08-19 09:28,
                   with a screenshot: the cards rendered as tall empty black boxes
                   ("TIMELINE loading…", "XENOS // hitthe.link" + TALLER/OPEN FULL)

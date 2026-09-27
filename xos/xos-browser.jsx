@@ -73,6 +73,22 @@
   function IframeHost({ url, onDegrade }) {
     const [loaded, setLoaded] = useState(false);
     useEffect(() => { const t = setTimeout(() => { if (!loaded) onDegrade('framing blocked or slow'); }, 5000); return () => clearTimeout(t); }, [loaded, onDegrade]);
+    /* qi 2026-09-27: framing-blocked sites (craft.do: XFO DENY + frame-ancestors 'none')
+       fire onLoad for the BLOCKED error document, which cancelled the degrade timer and
+       left the browser stuck on a broken page forever. Fix: listen for the
+       securitypolicyviolation event — Chrome fires it on the parent document when a
+       frame-ancestors policy blocks the frame — and degrade IMMEDIATELY. The 5s timer
+       stays as fallback for XFO-only sites. The browser never sits on a dead page. */
+    useEffect(() => {
+      const onV = (e) => {
+        try {
+          var d = (e.violatedDirective || '').toLowerCase();
+          if (d.indexOf('frame-ancestors') >= 0) onDegrade('site forbids framing (frame-ancestors)');
+        } catch (_) {}
+      };
+      document.addEventListener('securitypolicyviolation', onV);
+      return () => document.removeEventListener('securitypolicyviolation', onV);
+    }, [url, onDegrade]);
     return React.createElement('div', { className: 'xos-browser-stage' },
       React.createElement('iframe', { className: 'xos-browser-frame', src: url, onLoad: () => setLoaded(true),
         sandbox: 'allow-scripts allow-forms allow-same-origin allow-popups allow-modals allow-downloads', allow: 'microphone; camera; clipboard-read; clipboard-write; autoplay' }),
@@ -99,7 +115,7 @@
       React.createElement('div', { className: 'xos-browser-bar' },
         React.createElement('span', { className: 'xos-dot on' }),
         React.createElement('span', { className: 'xos-browser-title' }, tab.mode === 'iframe' ? 'nested' : 'mirror'),
-        React.createElement('button', { className: 'xos-browser-ext', onClick: breakout, title: 'open externally' }, '↗'),
+        React.createElement('button', { className: 'xos-browser-ext xos-browser-ext-main', onClick: breakout, title: 'open in floating window' }, '↗ floating window'),
         React.createElement('button', { className: 'xos-browser-close', onClick: close, 'aria-label': 'close' }, '×')),
       tab.mode === 'iframe'
         ? React.createElement(IframeHost, { url: tab.url, onDegrade: degrade })

@@ -3101,6 +3101,11 @@ body {
   animation: appLoad .35s cubic-bezier(.2,.85,.28,1);
 }
 .opened-app::-webkit-scrollbar { display: none; }
+/* qi 2026-09-27 PIVOT: BRWS is the home — the AI chat tab hosts the real vvsvei
+   in-document. No placeholder padding; the chat owns its layout. */
+.opened-app-chat{padding:0;overflow:hidden;background:#000}
+.opened-app-chat .xos-vei-wrap{position:absolute;inset:0}
+
 @keyframes appLoad {
   from { opacity: 0; transform: translateY(8px) scale(0.99); filter: blur(6px); }
   to   { opacity: 1; transform: translateY(0)   scale(1);    filter: blur(0); }
@@ -4435,3 +4440,10 @@ html, body { overscroll-behavior-y: none; }
 /* XOS browser kernel — Tier-1 iframe host + breakout button */
 .xos-browser-frame{width:100%;height:100%;border:0;display:block;background:#000}
 .xos-browser-ext{all:unset;cursor:pointer;font-size:16px;line-height:1;color:#9fb3a4;padding:4px 6px}
+/* qi 2026-09-27: the floating window button is "an extremely good feature — keep it,
+   make it central". Bigger, labeled, unmissable in the browser bar. */
+.xos-browser-ext-main{font-size:13px !important;font-weight:700;color:#2ecc71 !important;
+  border:1px solid rgba(46,204,113,.5);border-radius:999px;padding:6px 14px !important;
+  background:rgba(46,204,113,.1);letter-spacing:.03em}
+.xos-browser-ext-main:hover{background:rgba(46,204,113,.2)}
+
