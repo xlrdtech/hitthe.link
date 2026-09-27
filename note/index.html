@@ -400,6 +400,24 @@ a.navbtn{ text-decoration:none; }
 @media (prefers-reduced-motion:reduce){
   .livedot,.toast i,.epill .d{animation:none}
 }
+
+/* BSync document view */
+.bssearch{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(0,255,127,.2);
+  border-radius:10px;color:#fff;padding:10px 12px;font-size:14px;outline:none}
+.bssearch:focus{border-color:rgba(0,255,127,.5)}
+.bsrow{cursor:pointer}
+.bsrow:hover{border-color:rgba(0,255,127,.35)}
+.bsrow .t1{font-weight:600;font-size:14px;color:#fff;margin-bottom:4px}
+.bsrow .t2{font-size:12px;color:rgba(255,255,255,.5);line-height:1.5}
+.bsdoc{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;padding:16px;margin-top:8px;max-height:70vh;overflow-y:auto}
+.bsh{color:#fff;margin:14px 0 6px;font-size:15px}
+.bsh:first-child{margin-top:0}
+.bsp{color:rgba(255,255,255,.75);font-size:13.5px;line-height:1.65;margin:6px 0}
+.bsul{margin:6px 0 6px 18px;color:rgba(255,255,255,.75);font-size:13.5px;line-height:1.65}
+.bsul li{margin:3px 0}
+.bsdoc strong{color:#fff}
+.bsdoc code{background:rgba(0,255,127,.12);padding:1px 5px;border-radius:4px;font-size:12px}
 </style>
 </head>
 <body>
@@ -555,7 +573,7 @@ a.navbtn{ text-decoration:none; }
 (function(){
 "use strict";
 var $=function(i){return document.getElementById(i);};
-var FEED="lifenote.json";
+var FEED="/lifenote/lifenote.json";
 var POLL=20000;
 
 /* ------------------------------------------------------------------ *
@@ -791,6 +809,7 @@ function navItems(){
   // silent cost on a function called from renderAll().
   return [
     {k:"Flow",    count:blocks().length},
+    {k:"BSync",   count:null},
     {k:"Goals",   count:null, href:"/goals/"},
     {k:"Steer",   count:null, href:"/steer/"},
     {k:"Ledger",  count:null, href:"/ledger/", dead:true},
@@ -1006,7 +1025,155 @@ function renderMentorsView(){
    'This pane stays empty rather than inventing a voice.</div>';
 }
 
+
+/* ---------------- BSync document view ----------------
+ * BSync = bee-sync: EVERYTHING HE SAID, the cause of records.
+ * Pulls /lifenote/bsync.json (built from the bee-vault: 1320 conversations,
+ * 68 daily summaries, facts.md, todos.md) and renders the document view.
+ * qi 2026-09-27: "When BSync runs, everything in the BSync folder, when it
+ * syncs, needs to all be in LifeNote." Nothing left behind.
+ */
+var BSYNC_FEED="/lifenote/bsync.json";
+var BSync=null, bsyncTab="conv", bsyncQ="", bsyncSel=null, bsyncErr="";
+
+function bsyncLoad(){
+  if(BSync||bsyncErr) return;
+  var x=new XMLHttpRequest();
+  x.open("GET",BSYNC_FEED+"?t="+Date.now(),true);
+  x.onreadystatechange=function(){
+    if(x.readyState!==4) return;
+    if(x.status===200){
+      try{ BSync=JSON.parse(x.responseText); }
+      catch(e){ bsyncErr="BSync feed unreadable."; }
+    } else {
+      bsyncErr="BSync feed OFFLINE (HTTP "+(x.status||"0")+").";
+    }
+    if(view==="BSync") applyView();
+  };
+  x.send();
+}
+
+/* minimal markdown -> html for the BSync documents */
+function bsyncMd(t){
+  if(!t) return "";
+  var lines=t.split("\n"), h="", i=0, inList=false;
+  function inline(s){
+    s=esc(s);
+    s=s.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>");
+    s=s.replace(/\*(.+?)\*/g,"<em>$1</em>");
+    s=s.replace(/`(.+?)`/g,"<code>$1</code>");
+    return s;
+  }
+  for(;i<lines.length;i++){
+    var L=lines[i];
+    if(/^#{1,4}\s/.test(L)){
+      if(inList){ h+="</ul>"; inList=false; }
+      var lvl=L.match(/^#+/)[0].length, tx=L.replace(/^#+\s*/,"");
+      h+="<h"+(lvl+2)+" class=\"bsh\">"+inline(tx)+"</h"+(lvl+2)+">";
+    } else if(/^\s*[-*]\s+/.test(L)){
+      if(!inList){ h+="<ul class=\"bsul\">"; inList=true; }
+      h+="<li>"+inline(L.replace(/^\s*[-*]\s+/,""))+"</li>";
+    } else if(/^\s*$/.test(L)){
+      if(inList){ h+="</ul>"; inList=false; }
+    } else {
+      if(inList){ h+="</ul>"; inList=false; }
+      h+="<p class=\"bsp\">"+inline(L)+"</p>";
+    }
+  }
+  if(inList) h+="</ul>";
+  return h;
+}
+
+function bsyncDocs(){
+  if(!BSync) return [];
+  var q=bsyncQ.trim().toLowerCase(), out=[];
+  function hit(s){ return !q || (s||"").toLowerCase().indexOf(q)>=0; }
+  var i, c;
+  if(bsyncTab==="conv"){
+    var cs=BSync.conversations||[];
+    for(i=0;i<cs.length;i++){ c=cs[i];
+      if(hit(c.title+" "+c.date+" "+c.body)) out.push({kind:"conv",id:c.id,date:c.date,title:c.title,body:c.body});
+    }
+    out.sort(function(a,b){ return a.date<b.date?1:-1; });
+  } else if(bsyncTab==="daily"){
+    var ds=BSync.daily||[];
+    for(i=0;i<ds.length;i++){ c=ds[i];
+      if(hit(c.title+" "+c.date+" "+c.body)) out.push({kind:"daily",id:c.date,date:c.date,title:c.title,body:c.body});
+    }
+    out.sort(function(a,b){ return a.date<b.date?1:-1; });
+  } else if(bsyncTab==="facts"){
+    if(hit(BSync.facts)) out.push({kind:"facts",id:"facts",date:"",title:"Facts — everything known",body:BSync.facts||""});
+  } else if(bsyncTab==="todos"){
+    if(hit(BSync.todos)) out.push({kind:"todos",id:"todos",date:"",title:"Todos",body:BSync.todos||""});
+  }
+  return out;
+}
+
+function renderBSync(){
+  bsyncLoad();
+  var h='<div class="secthead">BSYNC &middot; EVERYTHING HE SAID</div>';
+  h+='<p class="lede">The cause of records. Every dictated word Bee captured, synced into the record. Nothing left behind.</p>';
+  if(bsyncErr && !BSync){
+    return h+'<div class="empty">'+esc(bsyncErr)+'</div>';
+  }
+  if(!BSync){
+    return h+'<div class="empty">Pulling the BSync record&hellip;</div>';
+  }
+  var nc=(BSync.conversations||[]).length, nd=(BSync.daily||[]).length;
+  /* reader */
+  if(bsyncSel){
+    var docs=bsyncDocs(), doc=null, i;
+    for(i=0;i<docs.length;i++) if(docs[i].kind+":"+docs[i].id===bsyncSel){ doc=docs[i]; break; }
+    if(!doc){
+      var all=[];
+      var cs=BSync.conversations||[];
+      for(i=0;i<cs.length;i++) all.push({kind:"conv",id:cs[i].id,date:cs[i].date,title:cs[i].title,body:cs[i].body});
+      var ds=BSync.daily||[];
+      for(i=0;i<ds.length;i++) all.push({kind:"daily",id:ds[i].date,date:ds[i].date,title:ds[i].title,body:ds[i].body});
+      all.push({kind:"facts",id:"facts",date:"",title:"Facts",body:BSync.facts||""});
+      all.push({kind:"todos",id:"todos",date:"",title:"Todos",body:BSync.todos||""});
+      for(i=0;i<all.length;i++) if(all[i].kind+":"+all[i].id===bsyncSel){ doc=all[i]; break; }
+    }
+    if(doc){
+      h+='<button class="chip" data-bs="back">&larr; back to documents</button>';
+      h+='<div class="secthead" style="margin-top:12px">'+esc(doc.title)+'</div>';
+      if(doc.date) h+='<p class="lede">'+esc(doc.date)+'</p>';
+      h+='<div class="bsdoc">'+bsyncMd(doc.body)+'</div>';
+      return h;
+    }
+    bsyncSel=null;
+  }
+  /* tabs */
+  var tabs=[["conv","Conversations",nc],["daily","Daily",nd],["facts","Facts",null],["todos","Todos",null]];
+  h+='<div class="chips" style="margin-bottom:10px">';
+  for(var t=0;t<tabs.length;t++){
+    var k=tabs[t][0];
+    h+='<button class="chip'+(bsyncTab===k?" on":"")+'" data-bs="tab" data-k="'+k+'">'+tabs[t][1]+
+       (tabs[t][2]!=null?'<span class="n">'+num(tabs[t][2])+'</span>':"")+'</button>';
+  }
+  h+='</div>';
+  h+='<div style="margin-bottom:12px"><input id="bsq" class="bssearch" placeholder="Search everything he said&hellip;" value="'+esc(bsyncQ)+'" autocomplete="off" spellcheck="false"></div>';
+  var docs=bsyncDocs();
+  if(!docs.length){
+    h+='<div class="empty">Nothing in the BSync record matches &ldquo;'+esc(bsyncQ)+'&rdquo;.</div>';
+  } else {
+    var cap=200;
+    for(var d=0;d<docs.length && d<cap;d++){
+      var doc=docs[d];
+      var pv=(doc.body||"").replace(/\s+/g," ").slice(0,140);
+      h+='<div class="card bsrow" data-bs="open" data-k="'+doc.kind+':'+esc(doc.id)+'">'+
+         '<div class="t1">'+esc(doc.title)+'</div>'+
+         '<div class="t2">'+(doc.date?esc(doc.date)+" &middot; ":"")+esc(pv)+'&hellip;</div></div>';
+    }
+    if(docs.length>cap) h+='<div class="lede">'+num(docs.length-cap)+' more documents in the record.</div>';
+  }
+  h+='<p class="lede" style="margin-top:14px">Synced '+(BSync.generated_at?esc(BSync.generated_at.slice(0,10)):"")+
+     ' &middot; '+num(nc)+' conversations &middot; '+num(nd)+' daily summaries.</p>';
+  return h;
+}
+
 /* ---------------- view switch ---------------- */
+
 function applyView(){
   var isJ=(view==="Flow");   /* Archive is gone from the menu; Flow is the record list */
   $("filterwrap").className="filters"+(isJ?"":" hide");
@@ -1017,7 +1184,7 @@ function applyView(){
     if(!pane){ pane=document.createElement("section"); pane.id="pane"; pane.className="list";
       $("editorwrap").parentNode.insertBefore(pane,$("editorwrap").nextSibling); }
     pane.className="list";
-    pane.innerHTML=(view==="Insights")?renderInsights():renderMentorsView();
+    pane.innerHTML=(view==="Insights")?renderInsights():(view==="BSync")?renderBSync():renderMentorsView();
   } else if(pane){ pane.className="list hide"; pane.innerHTML=""; }
 }
 
@@ -1063,10 +1230,23 @@ function renderPalette(){
 }
 
 /* ---------------- events (delegated: one listener, survives re-render) ---- */
+document.addEventListener("input",function(ev){
+  var t=ev.target;
+  if(t&&t.id==="bsq"){ bsyncQ=t.value; var pos=t.selectionStart;
+    applyView(); var nq=document.getElementById("bsq");
+    if(nq){ nq.focus(); try{ nq.setSelectionRange(pos,pos); }catch(e){} } }
+});
 document.addEventListener("click",function(ev){
   var t=ev.target;
   var nb=t.closest?t.closest(".navbtn,.mnav button"):null;
-  if(nb&&nb.getAttribute("data-k")){ view=nb.getAttribute("data-k"); renderAll(); return; }
+  if(nb&&nb.getAttribute("data-k")){ view=nb.getAttribute("data-k"); bsyncSel=null; renderAll(); return; }
+  var bs=t.closest?t.closest("[data-bs]"):null;
+  if(bs){
+    var ba=bs.getAttribute("data-bs");
+    if(ba==="tab"){ bsyncTab=bs.getAttribute("data-k"); bsyncSel=null; applyView(); return; }
+    if(ba==="open"){ bsyncSel=bs.getAttribute("data-k"); applyView(); return; }
+    if(ba==="back"){ bsyncSel=null; applyView(); return; }
+  }
   var ch=t.closest?t.closest("#chips .chip"):null;
   if(ch&&ch.hasAttribute("data-c")){ var c=ch.getAttribute("data-c"); chip=c||null; sel=null; renderAll(); return; }
   var cd=t.closest?t.closest(".card"):null;
