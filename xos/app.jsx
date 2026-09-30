@@ -1823,9 +1823,9 @@ function _lifeTrackerStyles() {
     ".life-tracker .gal-card{display:flex;flex-direction:column;border:1px solid var(--ng-line);border-radius:14px;overflow:hidden;background:rgba(255,255,255,.015);text-decoration:none;transition:border-color .2s,transform .2s,box-shadow .2s}",
     ".life-tracker .gal-card:hover{border-color:var(--ng);transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.5),0 0 20px rgba(57,255,20,.14)}",
     ".life-tracker .gal-shot{position:relative;aspect-ratio:16/10;background:linear-gradient(155deg,#0c1610,#080909);display:flex;align-items:center;justify-content:center;overflow:hidden}",
-    ".life-tracker .gal-img{width:100%;height:100%;object-fit:cover;display:block;animation:ltFade .5s ease}",
-    "@keyframes ltFade{from{opacity:0}to{opacity:1}}",
-    ".life-tracker .gal-ph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;text-align:center}",
+    ".life-tracker .gal-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .55s ease}",
+    ".life-tracker .gal-img.on{opacity:1}",
+    ".life-tracker .gal-ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;text-align:center;transition:opacity .4s ease}",
     ".life-tracker .gal-ph .g{font-size:1.9rem;line-height:1;color:var(--ng-deep);filter:drop-shadow(0 0 10px rgba(57,255,20,.35))}",
     ".life-tracker .gal-ph .l{font-family:var(--mono);font-size:.52rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
     ".life-tracker .gal-meta{padding:12px 14px 14px}",
@@ -2091,21 +2091,28 @@ function _ltRenderGallery(root, sites, generated) {
   if (cap) cap.textContent = ordered.length + " surfaces · newest first · reading cover art…";
 }
 
-/* Fill one tile's cover shot with the real image the probe found. Idempotent (the
-   data-loaded guard means a 45s re-scan never reloads a settled image), and honest:
-   a broken image URL leaves the branded placeholder in place rather than a dead box. */
+/* Fill one tile's cover shot with the real image the probe found. The <img> is
+   attached to the DOM BEFORE its src is set — the only reliable way to make it load
+   (a detached new Image() gets starved under the tracker's 45s全-surface re-scan).
+   It overlays the branded placeholder and fades in on load; on a broken URL it removes
+   itself so the honest placeholder stays. Idempotent — the data-loaded guard means a
+   re-scan never reloads a settled tile. */
 function _ltPaintGalleryShot(root, url, imgUrl) {
   if (!imgUrl) return;
   const cards = root.querySelectorAll(".gal-card[data-lt-url]");
   for (const card of cards) {
     if (card.getAttribute("data-lt-url") !== url) continue;
     const shot = card.querySelector("[data-shot]");
-    if (!shot || shot.getAttribute("data-loaded") === "1") return;
+    if (!shot || shot.getAttribute("data-loaded")) return;
     shot.setAttribute("data-loaded", "1");
-    const im = new Image();
-    im.loading = "lazy"; im.decoding = "async"; im.alt = ""; im.className = "gal-img";
-    im.onload = () => { shot.innerHTML = ""; shot.appendChild(im); };
-    im.onerror = () => { shot.removeAttribute("data-loaded"); };
+    const im = document.createElement("img");
+    im.className = "gal-img"; im.alt = ""; im.decoding = "async"; im.loading = "lazy";
+    im.addEventListener("load", () => {
+      im.classList.add("on");
+      const ph = shot.querySelector(".gal-ph"); if (ph) ph.style.opacity = "0";
+    });
+    im.addEventListener("error", () => { im.remove(); shot.removeAttribute("data-loaded"); });
+    shot.appendChild(im);
     im.src = imgUrl;
     return;
   }
