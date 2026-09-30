@@ -1429,11 +1429,12 @@ const TAB_CARDS = [
 ];
 
 function TabCard({ tab, onClose, onOpen }) {
-  /* canon-iframes-banned: click opens via window.open(url, namedTarget) */
+  /* qi 2026-09-30 "make a browser": open the thread as a real browser tab (was a
+     named target + "noopener", which broke login in the standalone PWA). */
   const handleOpen = (e) => {
     if (!tab.url) return;
     e.preventDefault();
-    window.open(tab.url, "xen-thread-" + tab.id, "noopener");
+    window.open(tab.url, "_blank");
   };
   return (
     <div className={"tab-card " + tab.kind} onClick={tab.url ? handleOpen : undefined} style={tab.url ? { cursor: "pointer" } : null}>
@@ -2713,7 +2714,7 @@ function BrowserPane({ openTabs, activeTabId, setActiveTabId, onCloseTab, onClos
                 inputMode="url"
               />
             </form>
-            <div className="wv-action" onClick={() => { if (activeTab && activeTab.url) window.open(activeTab.url, "xen-app-" + activeTabId, "noopener"); }} aria-label="Reopen">↻</div>
+            <div className="wv-action" onClick={() => { if (activeTab && activeTab.url) window.open(activeTab.url, "_blank"); }} aria-label="Reopen">↻</div>
           </div>
         )}
 
@@ -3528,9 +3529,14 @@ function App() {
   const addApp = (app) => setApps((prev) => [...prev, app]);
   const tabKey = (a) => (a && (a.id || a.url || a.host || a.name)) || "";
   const openApp = (app) => {
-    /* canon-iframes-banned: external apps open in named window so repeat clicks reuse it */
+    /* qi 2026-09-30 "make a browser": open external destinations as a REAL top-level
+       browser tab so login actually works. The old call used a named target + "noopener";
+       in a standalone PWA that opened a dead/blank context with window.opener severed,
+       so Muse/Google sign-in never completed. "_blank" reliably breaks out to the real
+       browser where qi's session cookies live. Still canon-iframes-banned — no iframe
+       here. The in-app preview tab below is unchanged. */
     if (app && app.url) {
-      window.open(app.url, "xen-app-" + tabKey(app), "noopener");
+      window.open(app.url, "_blank");
     }
     const k = tabKey(app);
     setOpenTabs((prev) => prev.some((t) => tabKey(t) === k) ? prev : [...prev, app]);
