@@ -1590,6 +1590,471 @@ function urlParts(url) {
   }
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   LIFE TRACKER — qi's biochemical life-tracker bars, brought HOME into xos.
+
+   qi 2026-09-30: "we need my biochemical life tracker bars that I already have
+   designed. I've been asking for those back for days ... it's on hitthe.link/life
+   ... progress tracker bars with the percentage bars and goals and I had a scope
+   page ... life became life note ... but we don't need to be leaving behind the
+   most beneficial pieces ... everything can remain live and update on real time
+   non-stop 24/7 non-static ... static is not tolerated ever."
+
+   This is the EXACT surface from hitthe.link/life, ported native into the xos
+   architecture as a first-class app (isTracker), NOT an iframe (canon-iframes-
+   banned) and NOT a script-stripped ship mount (which would render an empty
+   shell — /life builds itself entirely in JS). React owns the chrome + view
+   tabs; the heavy goal grid is built imperatively and painted by the ORIGINAL
+   live-probe logic (scoreHtml/analyze/pool/trackAll) so there is zero drift from
+   the design and zero React reconciliation cost across 700+ live cards.
+
+   LIVENESS: GOALS re-probes every surface every 45s (his design cadence). SCOPES
+   reads /scopes/scopes.json. FLOW reads /xen/live.json and is HONEST when that
+   feed is stale/unreachable — dashes, never fabricated numbers (cmd 3, real data
+   only). Every fetch is same-origin against the live edge; a cross-origin or
+   blocked probe degrades to an honest gap, never a fake fill. */
+
+const LT_CAT_ORDER = ["Business & L7S", "Client Sites", "Music & Studio", "Tools & Calculators", "Builds & Apps", "Xen / Voice OS"];
+const LT_CHECKS = [
+  { k: "live",   w: 34, label: "shipped & reachable" },
+  { k: "meta",   w: 16, label: "title + description" },
+  { k: "social", w: 14, label: "social card (og:image)" },
+  { k: "clean",  w: 14, label: "no placeholders" },
+  { k: "brand",  w: 10, label: "logo / favicon" },
+  { k: "mobile", w: 8,  label: "mobile viewport" },
+  { k: "depth",  w: 4,  label: "substantial content" }
+];
+const _ltEsc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function _ltScoreHtml(html) {
+  const has = {
+    live: true,
+    meta: /<title>[^<]{3,}<\/title>/i.test(html) && /name=["']description["']/i.test(html),
+    social: /property=["']og:image["']/i.test(html) || /name=["']twitter:image["']/i.test(html),
+    clean: !(/\{\{[a-z0-9_]/i.test(html) || /lorem ipsum/i.test(html) || /______/.test(html) || />\s*sample\s*</i.test(html)),
+    brand: /logo|favicon|rel=["']icon|apple-touch-icon/i.test(html),
+    mobile: /name=["']viewport["']/i.test(html),
+    depth: html.length > 4000
+  };
+  let pct = 0; const gaps = [];
+  LT_CHECKS.forEach((c) => { if (has[c.k]) pct += c.w; else if (c.k !== "live") gaps.push(c.label); });
+  return { pct, gaps };
+}
+async function _ltAnalyze(url) {
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return { pct: 0, gaps: ["unreachable (" + res.status + ")"], state: "down" };
+    const html = await res.text();
+    const { pct, gaps } = _ltScoreHtml(html);
+    return { pct, gaps, state: pct >= 100 ? "up" : (pct >= 70 ? "warn" : "down") };
+  } catch (e) { return { pct: 0, gaps: ["offline / blocked"], state: "down" }; }
+}
+async function _ltPool(items, n, fn) {
+  let i = 0;
+  const run = async () => { while (i < items.length) { const idx = i++; await fn(items[idx], idx); } };
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, run));
+}
+function _ltRenderGap(g) {
+  if (g.pct >= 100) return '<span class="complete">✓ complete · 100%</span>';
+  if (g.gaps && g.gaps.length) {
+    const top = g.gaps.slice(0, 3).map((x) => '<span class="miss">' + _ltEsc(x) + "</span>").join('<span class="lbl"> · </span>');
+    return '<span class="lbl">gap → </span>' + top;
+  }
+  return '<span class="pend">scanning…</span>';
+}
+function _ltPaint(el, g) {
+  el.classList.remove("up", "warn", "down");
+  el.classList.add(g.state || "warn");
+  el.querySelector(".fill").style.width = (g.pct || 0) + "%";
+  el.querySelector(".pct").textContent = (g.pct || 0) + "%";
+  const pri = g.pct >= 100 ? { c: "p3", t: "P3 · stable" } : (g.pct >= 70 ? { c: "p2", t: "P2 · active" } : { c: "p1", t: "P1 · priority" });
+  const pill = el.querySelector(".pill"); pill.className = "pill " + pri.c; pill.textContent = pri.t;
+  el.querySelector(".gap").className = "gap" + (g.pct >= 100 ? " complete" : "");
+  el.querySelector(".gap").innerHTML = _ltRenderGap(g);
+}
+
+/* One block, one id-guard — same discipline as _xosShipStyles. Fonts carried in
+   via <link> inside the shadow-less head so the surface looks like itself
+   (Fraunces/Spline/JetBrains Mono), not a cheap imitation. All rules scoped under
+   .life-tracker; the design tokens live ON .life-tracker so they never leak into
+   the rest of xos. */
+function _lifeTrackerStyles() {
+  if (document.getElementById("xos-tracker-styles")) return;
+  if (!document.getElementById("xos-tracker-fonts")) {
+    const l = document.createElement("link");
+    l.id = "xos-tracker-fonts"; l.rel = "stylesheet";
+    l.href = "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Spline+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;500;700&display=swap";
+    document.head.appendChild(l);
+  }
+  const s = document.createElement("style");
+  s.id = "xos-tracker-styles";
+  s.textContent = [
+    /* tokens + shell (scoped) */
+    ".life-tracker{--obsidian:#050507;--ng:#39FF14;--ng-hi:#a8ff7a;--ng-deep:#1a7308;--ng-leaf:#5eff30;",
+    "--ng-glow:rgba(57,255,20,.45);--ng-faint:rgba(57,255,20,.12);--ng-line:rgba(57,255,20,.18);",
+    "--bone:#f0ede6;--muted:#7a7870;--faint:#3e3c37;--amber:#ffc24a;--ox:#c25b4a;",
+    "--mono:'JetBrains Mono',ui-monospace,monospace;--disp:'Fraunces',Georgia,serif;--body:'Spline Sans',system-ui,sans-serif;",
+    "height:100%;overflow:auto;-webkit-overflow-scrolling:touch;font-family:var(--body);color:var(--bone);",
+    "background:radial-gradient(120% 80% at 50% -10%,#0c1610 0%,#050507 60%);}",
+    ".life-tracker *{box-sizing:border-box}",
+    /* view tabs */
+    ".lt-nav{position:sticky;top:0;z-index:5;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:14px 12px;",
+    "background:rgba(5,5,7,.86);backdrop-filter:blur(8px);border-bottom:1px solid var(--ng-line)}",
+    ".lt-tab{cursor:pointer;font-family:var(--mono);font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;",
+    "color:var(--muted);background:transparent;border:1px solid var(--faint);padding:7px 14px;border-radius:999px;transition:.18s}",
+    ".lt-tab:hover{color:var(--ng-hi);border-color:var(--ng-line)}",
+    ".lt-tab.on{color:#050507;background:linear-gradient(180deg,var(--ng-hi),var(--ng) 55%,var(--ng-deep));",
+    "border-color:var(--ng);font-weight:700;box-shadow:0 0 14px var(--ng-glow)}",
+    ".lt-view{display:none;padding:26px 16px 70px;max-width:1000px;margin:0 auto}",
+    ".lt-view.on{display:block}",
+    ".lt-sechead{text-align:center;margin-bottom:28px}",
+    ".lt-sechead .ix{font-family:var(--mono);font-size:.64rem;letter-spacing:.4em;color:var(--ng);opacity:.75;text-transform:uppercase}",
+    ".lt-sechead h2{font-family:var(--disp);font-weight:500;font-size:1.7rem;margin:8px 0 12px;font-style:italic;color:var(--bone)}",
+    ".lt-sechead .rule{width:100px;height:1px;margin:0 auto;background:linear-gradient(90deg,transparent,var(--ng-leaf),transparent);box-shadow:0 0 10px rgba(57,255,20,.3)}",
+    ".lt-sechead .note{font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-top:12px;letter-spacing:.05em}",
+    /* liquid track — the biochemical fill */
+    ".life-tracker .track{height:10px;border-radius:99px;background:rgba(0,0,0,.7);box-shadow:inset 0 1px 3px rgba(0,0,0,.9);overflow:hidden;position:relative}",
+    ".life-tracker .track .fill{height:100%;border-radius:99px;width:0;transition:width 1.1s cubic-bezier(.2,.8,.2,1);",
+    "background:linear-gradient(90deg,var(--ng-deep),var(--ng),var(--ng-hi));",
+    "box-shadow:0 0 14px rgba(57,255,20,.7),inset 0 1px 0 rgba(255,255,255,.3)}",
+    ".life-tracker .track .fill::after{content:'';position:absolute;inset:0;",
+    "background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);",
+    "background-size:200% 100%;animation:ltShimmer 2.4s linear infinite;opacity:.5}",
+    "@keyframes ltShimmer{to{background-position:-200% 0}}",
+    ".life-tracker .pulse{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--ng);box-shadow:0 0 8px var(--ng);margin-right:7px;animation:ltPl 1.6s ease-in-out infinite}",
+    "@keyframes ltPl{0%,100%{opacity:1}50%{opacity:.2}}",
+    /* health panel */
+    ".life-tracker .health{max-width:520px;margin:0 auto 8px;padding:22px 26px;border-radius:16px;",
+    "background:linear-gradient(165deg,#0e0f12,#080909);border:1px solid var(--ng-line);",
+    "box-shadow:inset 0 1px 0 rgba(57,255,20,.08),0 0 40px rgba(57,255,20,.06),0 20px 48px rgba(0,0,0,.6)}",
+    ".life-tracker .health .top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}",
+    ".life-tracker .health .lab{font-family:var(--mono);font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}",
+    ".life-tracker .health .big{font-family:var(--disp);font-weight:600;font-size:2.4rem;line-height:1;",
+    "background:linear-gradient(180deg,var(--ng-hi),var(--ng) 55%,var(--ng-deep));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 8px rgba(57,255,20,.5))}",
+    ".life-tracker .health .sub{font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-top:10px;letter-spacing:.04em}",
+    /* gauges */
+    ".life-tracker .gauges{display:flex;justify-content:center;flex-wrap:wrap;gap:14px;margin:22px 0 8px}",
+    ".life-tracker .gauge{width:150px;padding:18px 14px 16px;border-radius:12px;text-align:center;position:relative;",
+    "background:linear-gradient(165deg,#0e0f12,#080909);border:1px solid var(--ng-line);",
+    "box-shadow:inset 0 1px 0 rgba(57,255,20,.07),0 0 20px rgba(57,255,20,.04),0 14px 32px rgba(0,0,0,.5)}",
+    ".life-tracker .gauge::before{content:'';position:absolute;top:0;left:16px;right:16px;height:1px;background:linear-gradient(90deg,transparent,var(--ng-leaf),transparent);opacity:.5}",
+    ".life-tracker .gauge .v{font-family:var(--disp);font-weight:600;font-size:2rem;line-height:1;",
+    "background:linear-gradient(180deg,var(--ng-hi),var(--ng) 55%,var(--ng-deep));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 6px rgba(57,255,20,.4))}",
+    ".life-tracker .gauge .k{font-family:var(--mono);font-size:.54rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:9px}",
+    /* goal grid */
+    ".life-tracker .cat{margin-bottom:40px}",
+    ".life-tracker .cat-h{text-align:center;font-family:var(--mono);font-size:.66rem;letter-spacing:.28em;text-transform:uppercase;color:var(--ng-leaf);margin-bottom:18px;display:flex;align-items:center;justify-content:center;gap:14px}",
+    ".life-tracker .cat-h::before,.life-tracker .cat-h::after{content:'';width:44px;height:1px;background:linear-gradient(90deg,transparent,var(--ng-deep))}",
+    ".life-tracker .cat-h::after{transform:scaleX(-1)}",
+    ".life-tracker .cat-h .avg{color:var(--ng);opacity:.65}",
+    ".life-tracker .grid{display:flex;flex-wrap:wrap;justify-content:center;gap:14px}",
+    ".life-tracker .goal{flex:1 1 280px;max-width:380px;position:relative;padding:18px 20px 16px;border-radius:12px;text-decoration:none;color:inherit;display:block;",
+    "background:linear-gradient(165deg,#0d0e10,#090a0b);border:1px solid var(--ng-line);overflow:hidden;",
+    "box-shadow:inset 0 1px 0 rgba(57,255,20,.05),0 8px 24px rgba(0,0,0,.45);",
+    "transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s,border-color .28s;overflow-wrap:break-word;word-break:normal;hyphens:none}",
+    ".life-tracker .goal:hover{transform:translateY(-4px);border-color:rgba(57,255,20,.38);box-shadow:0 0 28px rgba(57,255,20,.1),0 22px 48px rgba(0,0,0,.6)}",
+    ".life-tracker .goal .gh{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}",
+    ".life-tracker .goal .ct{font-family:var(--disp);font-weight:600;font-size:1rem;line-height:1.2;display:flex;align-items:center;gap:8px}",
+    ".life-tracker .goal .lit{width:6px;height:6px;border-radius:50%;flex:none;background:var(--faint);transition:background .4s,box-shadow .4s}",
+    ".life-tracker .goal.up .lit{background:var(--ng);box-shadow:0 0 10px var(--ng),0 0 20px rgba(57,255,20,.4)}",
+    ".life-tracker .goal.warn .lit{background:var(--amber);box-shadow:0 0 8px var(--amber)}",
+    ".life-tracker .goal.down .lit{background:var(--ox);box-shadow:0 0 8px var(--ox)}",
+    ".life-tracker .goal .pct{font-family:var(--mono);font-weight:700;font-size:.95rem;color:var(--ng-leaf);flex:none}",
+    ".life-tracker .goal .meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none}",
+    ".life-tracker .pill{font-family:var(--mono);font-size:.52rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;transition:color .3s,border-color .3s,background .3s}",
+    ".life-tracker .pill::before{content:'';width:4px;height:4px;border-radius:50%;background:currentColor;box-shadow:0 0 5px currentColor}",
+    ".life-tracker .pill.p1{color:var(--ox);border-color:rgba(194,91,74,.45);background:rgba(194,91,74,.10)}",
+    ".life-tracker .pill.p2{color:var(--amber);border-color:rgba(255,194,74,.38);background:rgba(255,194,74,.08)}",
+    ".life-tracker .pill.p3{color:var(--ng-leaf);border-color:rgba(57,255,20,.3);background:rgba(57,255,20,.07)}",
+    ".life-tracker .goal .cu{font-family:var(--mono);font-size:.58rem;color:rgba(57,255,20,.35);margin:4px 0 10px;letter-spacing:.02em;word-break:break-all}",
+    ".life-tracker .goal .gap{font-family:var(--mono);font-size:.59rem;line-height:1.6;letter-spacing:.02em;min-height:1.1em;margin-top:8px}",
+    ".life-tracker .goal .gap.complete{color:var(--ng)}",
+    ".life-tracker .goal .gap .lbl{color:var(--faint)}",
+    ".life-tracker .goal .gap .miss{color:var(--amber)}",
+    ".life-tracker .goal .gap .pend{color:var(--muted);font-style:italic}",
+    ".life-tracker .loading{text-align:center;color:var(--muted);font-family:var(--mono);font-size:.82rem;padding:28px}",
+    /* flow cards */
+    ".life-tracker .flow-row{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin:8px 0 0}",
+    ".life-tracker .fcard{flex:1 1 200px;max-width:260px;padding:16px 18px;border-radius:12px;",
+    "background:linear-gradient(165deg,#0e0f12,#080909);border:1px solid var(--ng-line);box-shadow:inset 0 1px 0 rgba(57,255,20,.06),0 10px 26px rgba(0,0,0,.4)}",
+    ".life-tracker .fcard .flabel{font-family:var(--mono);font-size:.56rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}",
+    ".life-tracker .fcard .fval{font-family:var(--disp);font-weight:600;font-size:1.7rem;line-height:1;",
+    "background:linear-gradient(180deg,var(--ng-hi),var(--ng));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 6px rgba(57,255,20,.4))}",
+    ".life-tracker .fcard .fsub{font-family:var(--mono);font-size:.58rem;color:var(--muted);margin-top:6px;line-height:1.5;word-break:break-word}",
+    ".life-tracker .scope-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}",
+    ".life-tracker .scope-tag{font-family:var(--mono);font-size:.52rem;letter-spacing:.06em;padding:2px 8px;border-radius:999px;background:rgba(57,255,20,.07);border:1px solid rgba(57,255,20,.2);color:var(--ng-leaf);word-break:break-word}",
+    ".life-tracker .lt-note{background:#13110a;border:1px solid #3a3115;border-radius:10px;padding:12px 14px;margin:16px auto;max-width:640px;color:var(--amber);font-size:12px;line-height:1.6;font-family:var(--mono)}",
+    /* scope distribution bars (renamed track2/fill2 so they never collide with the liquid goal bars) */
+    ".life-tracker .bars{margin:14px 0}",
+    ".life-tracker .bar{display:flex;align-items:center;gap:10px;margin:5px 0;font-size:12px;font-family:var(--mono)}",
+    ".life-tracker .bar .lab{flex:0 0 170px;color:var(--bone);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
+    ".life-tracker .bar .track2{flex:1;height:14px;background:#0a0f0b;border:1px solid var(--ng-line);border-radius:7px;overflow:hidden}",
+    ".life-tracker .bar .fill2{height:100%;background:linear-gradient(90deg,var(--ng-deep),var(--ng));box-shadow:0 0 10px rgba(57,255,20,.4);transition:width .9s cubic-bezier(.2,.8,.2,1)}",
+    ".life-tracker .bar .n{flex:0 0 44px;color:var(--amber);font-size:11px}",
+    ".life-tracker .lt-stats{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 20px;justify-content:center}",
+    ".life-tracker .lt-stat{flex:1 1 150px;max-width:220px;background:linear-gradient(165deg,#0e0f12,#080909);border:1px solid var(--ng-line);border-radius:14px;padding:16px 18px;text-align:center}",
+    ".life-tracker .lt-stat .v{font-size:32px;color:var(--ng);font-weight:700;line-height:1;font-family:var(--disp)}",
+    ".life-tracker .lt-stat.total .v{color:var(--amber)}",
+    ".life-tracker .lt-stat .k{color:var(--muted);font-size:11px;letter-spacing:.16em;text-transform:uppercase;margin-top:8px;font-family:var(--mono)}",
+    ".life-tracker h3.lt-h{font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--ng);border-left:3px solid var(--ng-deep);padding-left:10px;margin:28px 0 6px;font-family:var(--mono)}",
+    /* gallery */
+    ".life-tracker .gal-cap{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 18px;text-align:center}",
+    ".life-tracker .gal-card{display:block;padding:14px 15px;border:1px solid var(--ng-line);border-radius:12px;background:rgba(255,255,255,.015);text-decoration:none;transition:border-color .2s,background .2s}",
+    ".life-tracker .gal-card:hover{border-color:var(--ng);background:rgba(57,255,20,.05)}",
+    ".life-tracker .gal-t{font-family:var(--disp);font-size:.95rem;color:var(--bone);line-height:1.3;margin-bottom:6px}",
+    ".life-tracker .gal-u{font-family:var(--mono);font-size:.6rem;color:var(--ng-leaf);opacity:.75;margin-bottom:10px;word-break:break-all}",
+    ".life-tracker .gal-m{display:flex;justify-content:space-between;align-items:center;gap:8px;font-family:var(--mono);font-size:.55rem;letter-spacing:.1em;text-transform:uppercase}",
+    ".life-tracker .gal-cat{color:var(--muted)}",
+    ".life-tracker .gal-age{color:var(--ng);opacity:.85;white-space:nowrap}"
+  ].join("");
+  document.head.appendChild(s);
+}
+
+function LifeTracker() {
+  const [view, setView] = useState("goals");
+  const rootRef = useRef(null);
+  const timerRef = useRef(null);
+  const goalsRef = useRef([]);
+
+  useEffect(() => { _lifeTrackerStyles(); }, []);
+
+  /* GOALS — build the grid imperatively (original createElement loop) then live-
+     probe every surface, painting each card as its score lands. Re-scan every 45s.
+     Cleanup clears the interval so a tab switch never leaves a probe loop running. */
+  useEffect(() => {
+    const root = rootRef.current; if (!root) return;
+    let alive = true;
+    const q = (sel) => root.querySelector(sel);
+    const setTxt = (sel, v) => { const e = q(sel); if (e) e.textContent = v; };
+
+    async function trackAll() {
+      const GOALS = goalsRef.current;
+      await _ltPool(GOALS, 6, async (goal) => {
+        if (!alive) return;
+        const r = await _ltAnalyze(goal.url); goal.result = r;
+        if (alive && goal.el) _ltPaint(goal.el, r);
+      });
+      if (!alive) return;
+      const scored = GOALS.filter((g) => g.result);
+      const avg = scored.length ? Math.round(scored.reduce((a, g) => a + g.result.pct, 0) / scored.length) : 0;
+      const live = scored.filter((g) => g.result.pct >= 100).length;
+      const gap = scored.filter((g) => g.result.pct < 100).length;
+      setTxt(".lt-net-pct", avg + "%");
+      const nf = q(".lt-net-fill"); if (nf) nf.style.width = avg + "%";
+      setTxt(".lt-g-live", live);
+      setTxt(".lt-g-gap", gap);
+      const ns = q(".lt-net-sub");
+      if (ns) ns.innerHTML = '<span class="pulse"></span>' + scored.length + " goals tracked · " + live + " at 100% · " + gap + " with open gaps · live re-scan every 45s";
+    }
+
+    fetch("/sites.json", { cache: "no-store" }).then((r) => r.json()).then((d) => {
+      if (!alive) return;
+      const sites = Array.isArray(d) ? d : (d.sites || d.builds || []);
+      setTxt(".lt-g-total", sites.length);
+      const groups = {};
+      sites.forEach((s) => { (groups[s.category || "Other"] || (groups[s.category || "Other"] = [])).push(s); });
+      const cats = Object.keys(groups).sort((a, b) => {
+        const ia = LT_CAT_ORDER.indexOf(a), ib = LT_CAT_ORDER.indexOf(b);
+        return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+      });
+      const body = q(".lt-goals-body"); if (!body) return;
+      body.innerHTML = "";
+      const GOALS = [];
+      cats.forEach((cat) => {
+        const w = document.createElement("div"); w.className = "cat";
+        const h = document.createElement("div"); h.className = "cat-h";
+        h.innerHTML = _ltEsc(cat) + ' <span class="avg">· ' + groups[cat].length + "</span>"; w.appendChild(h);
+        const g = document.createElement("div"); g.className = "grid";
+        groups[cat].forEach((s) => {
+          const a = document.createElement("a"); a.className = "goal"; a.href = s.url; a.target = "_blank"; a.rel = "noopener";
+          a.innerHTML = '<div class="gh"><div class="ct"><span class="lit"></span>' + _ltEsc(s.title || s.slug) + '</div><div class="meta"><span class="pill p2">P2 · queued</span><span class="pct">··%</span></div></div>' +
+            '<div class="cu">hitthe.link' + _ltEsc(s.url) + "</div>" +
+            '<div class="track"><div class="fill"></div></div>' +
+            '<div class="gap"><span class="pend">queued…</span></div>';
+          g.appendChild(a); GOALS.push({ url: s.url, el: a, result: null });
+        });
+        w.appendChild(g); body.appendChild(w);
+      });
+      goalsRef.current = GOALS;
+      _ltRenderGallery(root, sites, d.generated);
+      trackAll();
+      timerRef.current = setInterval(trackAll, 45000);
+    }).catch((e) => {
+      if (!alive) return;
+      const body = q(".lt-goals-body");
+      if (body) body.innerHTML = '<div class="loading">sites.json unavailable — ' + _ltEsc(String(e)) + "</div>";
+    });
+
+    return () => { alive = false; if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } };
+  }, []);
+
+  /* SCOPES — distribution bars off /scopes/scopes.json */
+  useEffect(() => {
+    const root = rootRef.current; if (!root) return;
+    let alive = true;
+    const q = (sel) => root.querySelector(sel);
+    const setTxt = (sel, v) => { const e = q(sel); if (e != null) e.textContent = v; };
+    const bars = (el, obj) => {
+      if (!el) return;
+      const entries = Object.entries(obj).sort((a, b) => b[1] - a[1]);
+      const top = Math.max(1, ...entries.map((e) => e[1]));
+      el.innerHTML = entries.map(([k, v]) => '<div class="bar"><div class="lab">' + _ltEsc(k) + '</div><div class="track2"><div class="fill2" style="width:' + Math.round(v / top * 100) + '%"></div></div><div class="n">' + v + "</div></div>").join("");
+    };
+    const dist = (arr, k) => { const m = {}; (arr || []).forEach((x) => { const v = x[k] || "—"; m[v] = (m[v] || 0) + 1; }); return m; };
+
+    fetch("/scopes/scopes.json?_=" + Date.now(), { cache: "no-store" }).then((r) => r.json()).then((d) => {
+      if (!alive) return;
+      const cur = (d.curated || []).length, ful = (d.fulfillment || []).length, con = (d.conversational || []).length;
+      setTxt(".lt-s-cur", cur); setTxt(".lt-s-ful", ful); setTxt(".lt-s-con", con); setTxt(".lt-s-tot", cur + ful + con);
+      bars(q(".lt-bar-cat"), dist(d.fulfillment, "category"));
+      bars(q(".lt-bar-surf"), dist(d.conversational, "surface"));
+      bars(q(".lt-bar-type"), dist(d.conversational, "type"));
+    }).catch((e) => {
+      if (!alive) return;
+      const cap = q(".lt-scope-cap"); if (cap) cap.textContent = "scopes.json not reachable — " + String(e);
+    });
+    return () => { alive = false; };
+  }, []);
+
+  /* FLOW — xen/live.json. HONEST when stale/unreachable: dashes + a dated note,
+     never a fabricated number (cmd 3 / real-data-only). */
+  useEffect(() => {
+    const root = rootRef.current; if (!root) return;
+    let alive = true;
+    const q = (sel) => root.querySelector(sel);
+    const setTxt = (sel, v) => { const e = q(sel); if (e) e.textContent = v; };
+    fetch("/xen/live.json", { cache: "no-store" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); }).then((d) => {
+      if (!alive) return;
+      setTxt(".lt-fs-tasks", d.tasks_total != null ? d.tasks_total : "—");
+      setTxt(".lt-fs-today", d.tasks_today != null ? d.tasks_today : "—");
+      setTxt(".lt-fs-cost", d.cost_monthly ? "$" + d.cost_monthly : "—");
+      setTxt(".lt-fs-cost-sub", d.cost_subline || "vs $1500/seat industry avg");
+      const scope = d.scope || [];
+      const scEl = q(".lt-fs-scope");
+      if (scEl) scEl.innerHTML = scope.length ? scope.map((s) => '<span class="scope-tag">' + _ltEsc(s) + "</span>").join("") : '<span style="color:var(--faint);font-size:11px">—</span>';
+      const upd = q(".lt-flow-updated");
+      if (upd && d.updated) {
+        const ts = new Date(d.updated);
+        const ageMs = Date.now() - ts.getTime();
+        const days = Math.floor(ageMs / 86400000);
+        upd.textContent = "xen/live.json · last updated " + ts.toLocaleString() + (days >= 1 ? " (stale — " + days + "d old, flow numbers frozen until the feed refreshes)" : "");
+      }
+    }).catch((e) => {
+      if (!alive) return;
+      const upd = q(".lt-flow-updated");
+      if (upd) upd.textContent = "xen/live.json not reachable — flow numbers unavailable (showing dashes, never fabricated)";
+    });
+    return () => { alive = false; };
+  }, []);
+
+  const tab = (id, label) => (
+    <button className={"lt-tab" + (view === id ? " on" : "")} onClick={() => setView(id)} type="button">{label}</button>
+  );
+
+  return (
+    <div className="life-tracker" ref={rootRef}>
+      <div className="lt-nav">
+        {tab("goals", "Goals")}
+        {tab("scopes", "Scopes")}
+        {tab("flow", "Flow")}
+        {tab("gallery", "Gallery")}
+      </div>
+
+      <section className={"lt-view" + (view === "goals" ? " on" : "")}>
+        <div className="lt-sechead">
+          <div className="ix">Biochemical Life Tracker</div>
+          <h2>the estate, scanned live</h2>
+          <div className="rule"></div>
+          <div className="note">every surface probed against the live edge · re-scan every 45s · real completion, never a placeholder</div>
+        </div>
+        <div className="health">
+          <div className="top"><span className="lab">Network Completion</span><span className="big lt-net-pct">··%</span></div>
+          <div className="track"><div className="fill lt-net-fill"></div></div>
+          <div className="sub"><span className="lt-net-sub"><span className="pulse"></span>scanning…</span></div>
+        </div>
+        <div className="gauges">
+          <div className="gauge"><div className="v lt-g-total">—</div><div className="k">Active Goals</div></div>
+          <div className="gauge"><div className="v lt-g-live">—</div><div className="k">Live · 100%</div></div>
+          <div className="gauge"><div className="v lt-g-gap">—</div><div className="k">With Gaps</div></div>
+        </div>
+        <div className="lt-goals-body"><div className="loading">▸ scanning the estate…</div></div>
+      </section>
+
+      <section className={"lt-view" + (view === "scopes" ? " on" : "")}>
+        <div className="lt-sechead">
+          <div className="ix">Scope Universe</div>
+          <h2>what Xen actually covers</h2>
+          <div className="rule"></div>
+          <div className="note lt-scope-cap">enumerated proof from the live registry</div>
+        </div>
+        <div className="lt-stats">
+          <div className="lt-stat"><div className="v lt-s-cur">—</div><div className="k">Curated</div></div>
+          <div className="lt-stat"><div className="v lt-s-ful">—</div><div className="k">Fulfillment</div></div>
+          <div className="lt-stat"><div className="v lt-s-con">—</div><div className="k">Conversational</div></div>
+          <div className="lt-stat total"><div className="v lt-s-tot">—</div><div className="k">Total Scopes</div></div>
+        </div>
+        <h3 className="lt-h">Fulfillment · by category</h3>
+        <div className="bars lt-bar-cat"></div>
+        <h3 className="lt-h">Conversational · by surface</h3>
+        <div className="bars lt-bar-surf"></div>
+        <h3 className="lt-h">Conversational · by type</h3>
+        <div className="bars lt-bar-type"></div>
+      </section>
+
+      <section className={"lt-view" + (view === "flow" ? " on" : "")}>
+        <div className="lt-sechead">
+          <div className="ix">Live Flow</div>
+          <h2>the working stack, right now</h2>
+          <div className="rule"></div>
+        </div>
+        <div className="lt-note lt-flow-updated">reading xen/live.json…</div>
+        <div className="flow-row">
+          <div className="fcard"><div className="flabel">Tasks Total</div><div className="fval lt-fs-tasks">—</div><div className="fsub">tracked in xen/live.json</div></div>
+          <div className="fcard"><div className="flabel">Tasks Today</div><div className="fval lt-fs-today">—</div><div className="fsub">closed / touched today</div></div>
+          <div className="fcard"><div className="flabel">Stack Cost</div><div className="fval lt-fs-cost">—</div><div className="fsub lt-fs-cost-sub">vs $1500/seat industry avg</div></div>
+          <div className="fcard"><div className="flabel">Live Scope</div><div className="fsub" style={{ marginTop: 0 }}>active capabilities</div><div className="scope-list lt-fs-scope"></div></div>
+        </div>
+      </section>
+
+      <section className={"lt-view" + (view === "gallery" ? " on" : "")}>
+        <div className="lt-sechead">
+          <div className="ix">Gallery</div>
+          <h2>everything shipped, newest first</h2>
+          <div className="rule"></div>
+        </div>
+        <div className="gal-cap lt-gal-cap">reading sites.json…</div>
+        <div className="lt-gallery-body" style={{ display: "grid", gap: "14px", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))" }}></div>
+      </section>
+    </div>
+  );
+}
+
+/* Gallery: same corpus as Goals, different question — "what shipped, how recently".
+   Honest-empty when the record carries nothing; recency cards, never fake tiles. */
+function _ltRenderGallery(root, sites, generated) {
+  const host = root.querySelector(".lt-gallery-body");
+  const cap = root.querySelector(".lt-gal-cap");
+  if (!host) return;
+  if (!sites || !sites.length) { host.innerHTML = ""; if (cap) cap.textContent = "sites.json carried 0 records — nothing to show"; return; }
+  const now = Date.now();
+  const age = (iso) => {
+    const t = Date.parse(iso || ""); if (isNaN(t)) return "undated";
+    const d = Math.floor((now - t) / 86400000);
+    if (d <= 0) return "today"; if (d === 1) return "1 day ago"; if (d < 30) return d + " days ago";
+    const m = Math.floor(d / 30); return m === 1 ? "1 mo ago" : m + " mo ago";
+  };
+  const DEENT = document.createElement("textarea");
+  const deent = (v) => { DEENT.innerHTML = String(v == null ? "" : v); return DEENT.value; };
+  const ordered = sites.slice().sort((a, b) => String(b.updated || "").localeCompare(String(a.updated || "")));
+  host.innerHTML = ordered.map((x) =>
+    '<a class="gal-card" href="' + _ltEsc(x.url) + '" target="_blank" rel="noopener">' +
+    '<div class="gal-t">' + _ltEsc(deent(x.title || x.slug)) + "</div>" +
+    '<div class="gal-u">hitthe.link' + _ltEsc(x.url) + "</div>" +
+    '<div class="gal-m"><span class="gal-cat">' + _ltEsc(x.category || "Other") + '</span><span class="gal-age">' + _ltEsc(age(x.updated)) + "</span></div></a>"
+  ).join("");
+  if (cap) cap.textContent = ordered.length + " surfaces · newest first · index generated " + (generated || "unknown");
+}
+
 function OpenedAppPage({ app }) {
   /* qi 2026-09-27 PIVOT: the AI chat tab renders the REAL vvsvei chat in-document
      (shared DOM, same as VvsveiPane) — never a placeholder, never an iframe. */
@@ -1597,6 +2062,15 @@ function OpenedAppPage({ app }) {
     return (
       <div className="opened-app opened-app-chat">
         <VvsveiPane />
+      </div>
+    );
+  }
+  /* qi 2026-09-30: his biochemical life tracker, native in-document — goal bars,
+     scope bars, live flow, gallery. Not an iframe, not a placeholder. */
+  if (app.isTracker) {
+    return (
+      <div className="opened-app">
+        <LifeTracker />
       </div>
     );
   }
@@ -3130,6 +3604,8 @@ const _app = (id, url, name) => ({
 
 const DEFAULT_APPS = [
   // qi's own properties first — the drawer opens on his own work
+  // qi's biochemical life tracker — native surface (isTracker), no external URL
+  { id: "tracker", name: "Life Tracker", glyph: "\u2b22", isTracker: true },
   _app("vvsvei",   "https://hitthe.link/vvsvei/",        "VVSVEI"),
   _app("xlrd",     "https://xlrd.org",                   "XLRD"),
   _app("hitthe",   "https://hitthe.link",                "Hitthe.link"),
@@ -3446,8 +3922,10 @@ function App() {
        The browser is the home. LifeNote stays the NOTE app; the default landing
        is the browser with the AI. */
     { id: "aichat", url: "/vvsvei/", name: "AI Chat", host: "vvsvei", glyph: "✦", isChat: true },
+    /* qi 2026-09-30: the life tracker comes home and lands in front of him (cmd 75). */
+    { id: "tracker", name: "Life Tracker", glyph: "⬢", isTracker: true },
   ]);
-  const [activeTabId, setActiveTabId] = useState("aichat"); /* pivot: BRWS home = AI chat */
+  const [activeTabId, setActiveTabId] = useState("tracker"); /* qi 2026-09-30: tracker is the landing surface */
   const [notif, setNotif] = useState(null);
   const [liveEvents, setLiveEvents] = useState([]);
   const notifTimer = useRef(null);
