@@ -2106,7 +2106,7 @@ function _ltPaintGalleryShot(root, url, imgUrl) {
     if (!shot || shot.getAttribute("data-loaded")) return;
     shot.setAttribute("data-loaded", "1");
     const im = document.createElement("img");
-    im.className = "gal-img"; im.alt = ""; im.decoding = "async"; im.loading = "lazy";
+    im.className = "gal-img"; im.alt = ""; im.decoding = "async";
     im.addEventListener("load", () => {
       im.classList.add("on");
       const ph = shot.querySelector(".gal-ph"); if (ph) ph.style.opacity = "0";
