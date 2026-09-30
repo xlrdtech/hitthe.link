@@ -1865,9 +1865,7 @@ function LifeTracker() {
       });
       if (!alive) return;
       const scored = GOALS.filter((g) => g.result);
-      const withArt = scored.filter((g) => g.result.img).length;
-      const gcap = q(".lt-gal-cap");
-      if (gcap) gcap.textContent = scored.length + " surfaces · " + withArt + " with live cover art · newest first";
+      _ltGalCap(root);
       const avg = scored.length ? Math.round(scored.reduce((a, g) => a + g.result.pct, 0) / scored.length) : 0;
       const live = scored.filter((g) => g.result.pct >= 100).length;
       const gap = scored.filter((g) => g.result.pct < 100).length;
@@ -2097,6 +2095,17 @@ function _ltRenderGallery(root, sites, generated) {
    It overlays the branded placeholder and fades in on load; on a broken URL it removes
    itself so the honest placeholder stays. Idempotent — the data-loaded guard means a
    re-scan never reloads a settled tile. */
+/* Caption counts what actually RENDERED, not what was extracted. Many surfaces
+   advertise an og:image whose URL 404s or is hotlink-blocked; those revert to the
+   placeholder via onerror, so the honest number is the count of images that loaded
+   (.gal-img.on), read straight from the DOM. */
+function _ltGalCap(root) {
+  const cap = root.querySelector(".lt-gal-cap"); if (!cap) return;
+  const surfaces = root.querySelectorAll(".gal-card").length;
+  const art = root.querySelectorAll(".gal-img.on").length;
+  cap.textContent = surfaces + " surfaces · " + art + " with live cover art · newest first";
+}
+
 function _ltPaintGalleryShot(root, url, imgUrl) {
   if (!imgUrl) return;
   const cards = root.querySelectorAll(".gal-card[data-lt-url]");
@@ -2110,6 +2119,7 @@ function _ltPaintGalleryShot(root, url, imgUrl) {
     im.addEventListener("load", () => {
       im.classList.add("on");
       const ph = shot.querySelector(".gal-ph"); if (ph) ph.style.opacity = "0";
+      _ltGalCap(root);
     });
     im.addEventListener("error", () => { im.remove(); shot.removeAttribute("data-loaded"); });
     shot.appendChild(im);
