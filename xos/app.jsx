@@ -1640,14 +1640,34 @@ function _ltScoreHtml(html) {
   LT_CHECKS.forEach((c) => { if (has[c.k]) pct += c.w; else if (c.k !== "live") gaps.push(c.label); });
   return { pct, gaps };
 }
+/* Pull the FIRST REAL image the surface already declares — no fabrication, only what
+   is in the bytes we fetched. Priority: social card (og/twitter) → link image_src →
+   apple-touch-icon → link rel=icon → first real body <img>. Relative refs resolve
+   against the surface's own final URL. Returns "" when the page carries no image at
+   all — the gallery then shows an honest branded placeholder, never a fake tile. */
+function _ltExtractImg(html, base) {
+  const cont = (t) => { const m = t.match(/content=["']([^"']+)["']/i); return m ? m[1].trim() : ""; };
+  const href = (t) => { const m = t.match(/href=["']([^"']+)["']/i); return m ? m[1].trim() : ""; };
+  const abs = (u) => { if (!u) return ""; try { return new URL(u, base).href; } catch (e) { return u; } };
+  const metas = html.match(/<meta[^>]*>/gi) || [];
+  for (const t of metas) if (/(?:property|name)=["'](?:og:image(?::url)?|twitter:image(?::src)?)["']/i.test(t)) { const c = cont(t); if (c) return abs(c); }
+  const links = html.match(/<link[^>]*>/gi) || [];
+  for (const t of links) if (/rel=["'][^"']*image_src[^"']*["']/i.test(t)) { const h = href(t); if (h) return abs(h); }
+  for (const t of links) if (/rel=["'][^"']*apple-touch-icon[^"']*["']/i.test(t)) { const h = href(t); if (h) return abs(h); }
+  for (const t of links) if (/rel=["'][^"']*(?:^|\s)icon(?:\s|["'])[^"']*["']/i.test(t) || /rel=["'](?:shortcut )?icon["']/i.test(t)) { const h = href(t); if (h) return abs(h); }
+  const imgs = html.match(/<img[^>]*>/gi) || [];
+  for (const t of imgs) { const m = t.match(/\ssrc=["']([^"']+)["']/i); if (!m) continue; const s = m[1].trim(); if (!s || s.startsWith("data:") || /(?:1x1|pixel|spacer|blank|tracking)/i.test(s)) continue; return abs(s); }
+  return "";
+}
 async function _ltAnalyze(url) {
   try {
     const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) return { pct: 0, gaps: ["unreachable (" + res.status + ")"], state: "down" };
+    if (!res.ok) return { pct: 0, gaps: ["unreachable (" + res.status + ")"], state: "down", img: "" };
     const html = await res.text();
     const { pct, gaps } = _ltScoreHtml(html);
-    return { pct, gaps, state: pct >= 100 ? "up" : (pct >= 70 ? "warn" : "down") };
-  } catch (e) { return { pct: 0, gaps: ["offline / blocked"], state: "down" }; }
+    const img = _ltExtractImg(html, res.url || url);
+    return { pct, gaps, state: pct >= 100 ? "up" : (pct >= 70 ? "warn" : "down"), img };
+  } catch (e) { return { pct: 0, gaps: ["offline / blocked"], state: "down", img: "" }; }
 }
 async function _ltPool(items, n, fn) {
   let i = 0;
@@ -1797,14 +1817,21 @@ function _lifeTrackerStyles() {
     ".life-tracker .lt-stat.total .v{color:var(--amber)}",
     ".life-tracker .lt-stat .k{color:var(--muted);font-size:11px;letter-spacing:.16em;text-transform:uppercase;margin-top:8px;font-family:var(--mono)}",
     ".life-tracker h3.lt-h{font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--ng);border-left:3px solid var(--ng-deep);padding-left:10px;margin:28px 0 6px;font-family:var(--mono)}",
-    /* gallery */
+    /* gallery — Google-Photos-style tiles, each a real cover shot when the surface
+       declares one, an honest branded placeholder when it does not */
     ".life-tracker .gal-cap{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 18px;text-align:center}",
-    ".life-tracker .gal-card{display:block;padding:14px 15px;border:1px solid var(--ng-line);border-radius:12px;background:rgba(255,255,255,.015);text-decoration:none;transition:border-color .2s,background .2s}",
-    ".life-tracker .gal-card:hover{border-color:var(--ng);background:rgba(57,255,20,.05)}",
-    ".life-tracker .gal-t{font-family:var(--disp);font-size:.95rem;color:var(--bone);line-height:1.3;margin-bottom:6px}",
-    ".life-tracker .gal-u{font-family:var(--mono);font-size:.6rem;color:var(--ng-leaf);opacity:.75;margin-bottom:10px;word-break:break-all}",
-    ".life-tracker .gal-m{display:flex;justify-content:space-between;align-items:center;gap:8px;font-family:var(--mono);font-size:.55rem;letter-spacing:.1em;text-transform:uppercase}",
-    ".life-tracker .gal-cat{color:var(--muted)}",
+    ".life-tracker .gal-card{display:flex;flex-direction:column;border:1px solid var(--ng-line);border-radius:14px;overflow:hidden;background:rgba(255,255,255,.015);text-decoration:none;transition:border-color .2s,transform .2s,box-shadow .2s}",
+    ".life-tracker .gal-card:hover{border-color:var(--ng);transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.5),0 0 20px rgba(57,255,20,.14)}",
+    ".life-tracker .gal-shot{position:relative;aspect-ratio:16/10;background:linear-gradient(155deg,#0c1610,#080909);display:flex;align-items:center;justify-content:center;overflow:hidden}",
+    ".life-tracker .gal-img{width:100%;height:100%;object-fit:cover;display:block;animation:ltFade .5s ease}",
+    "@keyframes ltFade{from{opacity:0}to{opacity:1}}",
+    ".life-tracker .gal-ph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;text-align:center}",
+    ".life-tracker .gal-ph .g{font-size:1.9rem;line-height:1;color:var(--ng-deep);filter:drop-shadow(0 0 10px rgba(57,255,20,.35))}",
+    ".life-tracker .gal-ph .l{font-family:var(--mono);font-size:.52rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
+    ".life-tracker .gal-meta{padding:12px 14px 14px}",
+    ".life-tracker .gal-t{font-family:var(--disp);font-size:.92rem;color:var(--bone);line-height:1.3;margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
+    ".life-tracker .gal-m{display:flex;justify-content:space-between;align-items:center;gap:8px;font-family:var(--mono);font-size:.52rem;letter-spacing:.1em;text-transform:uppercase}",
+    ".life-tracker .gal-cat{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
     ".life-tracker .gal-age{color:var(--ng);opacity:.85;white-space:nowrap}"
   ].join("");
   document.head.appendChild(s);
@@ -1832,10 +1859,15 @@ function LifeTracker() {
       await _ltPool(GOALS, 6, async (goal) => {
         if (!alive) return;
         const r = await _ltAnalyze(goal.url); goal.result = r;
-        if (alive && goal.el) _ltPaint(goal.el, r);
+        if (!alive) return;
+        if (goal.el) _ltPaint(goal.el, r);
+        if (r && r.img) _ltPaintGalleryShot(root, goal.url, r.img);
       });
       if (!alive) return;
       const scored = GOALS.filter((g) => g.result);
+      const withArt = scored.filter((g) => g.result.img).length;
+      const gcap = q(".lt-gal-cap");
+      if (gcap) gcap.textContent = scored.length + " surfaces · " + withArt + " with live cover art · newest first";
       const avg = scored.length ? Math.round(scored.reduce((a, g) => a + g.result.pct, 0) / scored.length) : 0;
       const live = scored.filter((g) => g.result.pct >= 100).length;
       const gap = scored.filter((g) => g.result.pct < 100).length;
@@ -2029,8 +2061,11 @@ function LifeTracker() {
   );
 }
 
-/* Gallery: same corpus as Goals, different question — "what shipped, how recently".
-   Honest-empty when the record carries nothing; recency cards, never fake tiles. */
+/* Gallery: same corpus as Goals, rendered as a Google-Photos wall — one tile per
+   surface, newest first. The cover shot is a REAL image the surface declares (filled
+   in live by _ltPaintGalleryShot as each probe lands); until then, and for surfaces
+   that carry no image at all, the tile shows an honest branded placeholder — never a
+   fabricated picture. Keyed by data-lt-url so the async painter can find its tile. */
 function _ltRenderGallery(root, sites, generated) {
   const host = root.querySelector(".lt-gallery-body");
   const cap = root.querySelector(".lt-gal-cap");
@@ -2046,13 +2081,34 @@ function _ltRenderGallery(root, sites, generated) {
   const DEENT = document.createElement("textarea");
   const deent = (v) => { DEENT.innerHTML = String(v == null ? "" : v); return DEENT.value; };
   const ordered = sites.slice().sort((a, b) => String(b.updated || "").localeCompare(String(a.updated || "")));
-  host.innerHTML = ordered.map((x) =>
-    '<a class="gal-card" href="' + _ltEsc(x.url) + '" target="_blank" rel="noopener">' +
-    '<div class="gal-t">' + _ltEsc(deent(x.title || x.slug)) + "</div>" +
-    '<div class="gal-u">hitthe.link' + _ltEsc(x.url) + "</div>" +
-    '<div class="gal-m"><span class="gal-cat">' + _ltEsc(x.category || "Other") + '</span><span class="gal-age">' + _ltEsc(age(x.updated)) + "</span></div></a>"
-  ).join("");
-  if (cap) cap.textContent = ordered.length + " surfaces · newest first · index generated " + (generated || "unknown");
+  host.innerHTML = ordered.map((x) => {
+    const title = _ltEsc(deent(x.title || x.slug));
+    return '<a class="gal-card" data-lt-url="' + _ltEsc(x.url) + '" href="' + _ltEsc(x.url) + '" target="_blank" rel="noopener">' +
+      '<div class="gal-shot" data-shot><div class="gal-ph"><span class="g">⬡</span><span class="l">' + title + "</span></div></div>" +
+      '<div class="gal-meta"><div class="gal-t">' + title + "</div>" +
+      '<div class="gal-m"><span class="gal-cat">' + _ltEsc(x.category || "Other") + '</span><span class="gal-age">' + _ltEsc(age(x.updated)) + "</span></div></div></a>";
+  }).join("");
+  if (cap) cap.textContent = ordered.length + " surfaces · newest first · reading cover art…";
+}
+
+/* Fill one tile's cover shot with the real image the probe found. Idempotent (the
+   data-loaded guard means a 45s re-scan never reloads a settled image), and honest:
+   a broken image URL leaves the branded placeholder in place rather than a dead box. */
+function _ltPaintGalleryShot(root, url, imgUrl) {
+  if (!imgUrl) return;
+  const cards = root.querySelectorAll(".gal-card[data-lt-url]");
+  for (const card of cards) {
+    if (card.getAttribute("data-lt-url") !== url) continue;
+    const shot = card.querySelector("[data-shot]");
+    if (!shot || shot.getAttribute("data-loaded") === "1") return;
+    shot.setAttribute("data-loaded", "1");
+    const im = new Image();
+    im.loading = "lazy"; im.decoding = "async"; im.alt = ""; im.className = "gal-img";
+    im.onload = () => { shot.innerHTML = ""; shot.appendChild(im); };
+    im.onerror = () => { shot.removeAttribute("data-loaded"); };
+    im.src = imgUrl;
+    return;
+  }
 }
 
 function OpenedAppPage({ app }) {
