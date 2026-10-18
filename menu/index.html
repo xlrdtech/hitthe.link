@@ -250,12 +250,13 @@
     <div class="cart-list" id="cartList"></div>
     <div class="ccard-foot">
       <div class="ctot"><span class="lbl">Total</span><span class="amt" id="cartTotal">$0</span></div>
-      <a class="checkout disabled" id="checkoutBtn" href="#"><i class="ph ph-paper-plane-tilt"></i> Send my order</a>
+      <a class="checkout disabled" id="checkoutBtn" href="#"><i class="ph ph-paypal-logo"></i> Pay with PayPal</a>
       <div class="alt">
         <a href="tel:+17709999934"><i class="ph ph-phone"></i> Call</a>
+        <a id="emailBtn" href="#" style="display:none"><i class="ph ph-envelope-simple"></i> Email my order</a>
         <a id="rushBtn" href="#" onclick="return false"><i class="ph ph-lightning"></i> Add rush note</a>
       </div>
-      <div class="note">Subscriptions (Care Plan, monthly retainer) via PayPal — coming online shortly. Rush premiums move your order to the front.</div>
+      <div class="note">Secure checkout via PayPal — card or PayPal balance, no account required. Subscriptions (Care Plan, monthly retainer) are invoiced separately. Rush premiums move your order to the front.</div>
     </div>
   </div>
 </div>
@@ -443,15 +444,28 @@
     document.getElementById('cartTotal').textContent = '$' + t.toLocaleString();
     // checkout
     const co = document.getElementById('checkoutBtn');
+    const em = document.getElementById('emailBtn');
     if(c){
       co.classList.remove('disabled');
+      const summary = ids.map(id => `${cart[id]}x ${NAMES[id]||id}`).join(', ');
+      const itemName = ('XLRD TECH order ' + c + ' unit' + (c>1?'s':'') + ': ' + summary).slice(0,127);
+      co.href = 'https://www.paypal.com/cgi-bin/webscr?cmd=_xclick'
+        + '&business=' + encodeURIComponent('xlrdtech@gmail.com')
+        + '&item_name=' + encodeURIComponent(itemName)
+        + '&amount=' + t.toFixed(2) + '&currency_code=USD&no_shipping=1'
+        + '&return=' + encodeURIComponent('https://hitl.ink/menu/?paid=1')
+        + '&cancel_return=' + encodeURIComponent('https://hitl.ink/menu/');
+      co.target = '_blank'; co.rel = 'noopener';
+      co.innerHTML = '<i class="ph ph-paypal-logo"></i> Pay with PayPal · $' + t.toLocaleString();
+      // secondary: email the order instead of paying now
       const lines = ids.map(id => `• ${cart[id]}× ${NAMES[id]||id} (${id}) — $${(cart[id]*PRICE).toLocaleString()}`).join('\n');
       const body = `My XLRD TECH order (${c} unit${c>1?'s':''}, total $${t.toLocaleString()}):\n\n${lines}\n\nWhat I need / context:\n`;
-      co.href = 'mailto:east@xlrd.org?subject=' + encodeURIComponent('Order · '+c+' unit'+(c>1?'s':'')+' ($'+t.toLocaleString()+')') + '&body=' + encodeURIComponent(body);
-      co.innerHTML = '<i class="ph ph-paper-plane-tilt"></i> Send my order · $' + t.toLocaleString();
+      em.href = 'mailto:east@xlrd.org?subject=' + encodeURIComponent('Order · '+c+' unit'+(c>1?'s':'')+' ($'+t.toLocaleString()+')') + '&body=' + encodeURIComponent(body);
+      em.style.display = '';
     } else {
-      co.classList.add('disabled'); co.removeAttribute('href');
-      co.innerHTML = '<i class="ph ph-paper-plane-tilt"></i> Send my order';
+      co.classList.add('disabled'); co.removeAttribute('href'); co.removeAttribute('target');
+      co.innerHTML = '<i class="ph ph-paypal-logo"></i> Pay with PayPal';
+      em.removeAttribute('href'); em.style.display = 'none';
     }
   }
 
@@ -467,8 +481,13 @@
   window.closeCart = () => document.getElementById('cart-modal').classList.remove('open');
   document.getElementById('rushBtn').addEventListener('click', () => {
     const co = document.getElementById('checkoutBtn'); if(co.classList.contains('disabled')) return;
-    const u = new URL(co.href); u.searchParams.set('subject', u.searchParams.get('subject')+' · RUSH');
-    co.href = u.toString(); document.getElementById('rushBtn').innerHTML = '<i class="ph ph-check"></i> Rush added';
+    const u = new URL(co.href);
+    const nm = u.searchParams.get('item_name') || '';
+    if(!/ RUSH$/.test(nm)) u.searchParams.set('item_name', (nm + ' RUSH').slice(0,127));
+    co.href = u.toString();
+    const em = document.getElementById('emailBtn');
+    if(em && em.getAttribute('href')){ try{ const eu = new URL(em.href); eu.searchParams.set('subject', (eu.searchParams.get('subject')||'')+' · RUSH'); em.href = eu.toString(); }catch(e){} }
+    document.getElementById('rushBtn').innerHTML = '<i class="ph ph-check"></i> Rush added';
   });
 
   // ---------- NAV / SHEET ----------
