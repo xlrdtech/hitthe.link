@@ -186,7 +186,10 @@
     <div class="card" style="margin-top:18px">
       <div class="spread" style="margin-bottom:6px">
         <h2>Subscriber roster</h2>
-        <span class="mono muted" style="font-size:12px" id="rosterCountTag"></span>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="mono muted" style="font-size:12px" id="rosterCountTag"></span>
+          <button class="btn sm gold" id="newUserBtn">+ New user</button>
+        </div>
       </div>
       <div id="rosterList"></div>
     </div>
@@ -285,6 +288,29 @@
       <span class="spacer"></span>
       <button class="btn ghost" id="editCancel" type="button">Cancel</button>
       <button class="btn gold" id="editSave" type="button">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="userScrim">
+  <div class="modal">
+    <div class="mhead">
+      <h3>New user</h3>
+      <button class="iconbtn" id="userClose" type="button" aria-label="Close">&#10005;</button>
+    </div>
+    <form class="mbody" id="userForm" autocomplete="off">
+      <div><label for="u-name">Full name</label><input id="u-name" required></div>
+      <div class="mrow2">
+        <div><label for="u-username">Username (they sign in with this)</label><input id="u-username" autocapitalize="off" spellcheck="false" placeholder="e.g. rosslyn"></div>
+        <div><label for="u-password">Password (blank = generate one)</label><input id="u-password" type="text" autocomplete="new-password" spellcheck="false"></div>
+      </div>
+      <p class="note" style="margin:0">Creates a subscriber under your master login. They appear in the roster right away and can be assigned leads.</p>
+    </form>
+    <div id="userMsg" class="note hidden" style="margin:6px 22px 0"></div>
+    <div class="mfoot">
+      <span class="spacer"></span>
+      <button class="btn ghost" id="userCancel" type="button">Close</button>
+      <button class="btn gold" id="userSave" type="button">Create user</button>
     </div>
   </div>
 </div>
@@ -773,6 +799,49 @@
       try{ await sb.from('lead_grants').delete().eq('lead_id', id); }catch(e){}
       SELECTED.delete(id); closeEditModal(); await load();
     } catch(err){ showEditMsg('Remove error: ' + esc((err&&err.message)||String(err)), 'err'); resetRemove(); }
+  });
+
+  // ---------- new user modal (service-role work happens in the create-user edge function) ----------
+  function showUserMsg(t,k){ var m=$('#userMsg'); m.className='note'+(k?' '+k:''); m.innerHTML=t; m.classList.remove('hidden'); }
+  function openUserModal(){
+    ['u-name','u-username','u-password'].forEach(function(id){ $('#'+id).value=''; });
+    $('#u-username').dataset.touched=''; $('#userMsg').classList.add('hidden'); $('#userSave').disabled=false; $('#userScrim').classList.add('on');
+  }
+  function closeUserModal(){ $('#userScrim').classList.remove('on'); $('#u-password').value=''; $('#userMsg').innerHTML=''; }
+  $('#newUserBtn').addEventListener('click', openUserModal);
+  $('#userClose').addEventListener('click', closeUserModal);
+  $('#userCancel').addEventListener('click', closeUserModal);
+  $('#userScrim').addEventListener('click', function(e){ if(e.target === this) closeUserModal(); });
+  $('#u-name').addEventListener('input', function(){
+    // suggest a username from the first name until the master types their own
+    var u = $('#u-username'); if(u.dataset.touched) return;
+    u.value = this.value.trim().split(/\s+/)[0].toLowerCase().replace(/[^a-z0-9._-]/g,'');
+  });
+  $('#u-username').addEventListener('input', function(){ this.dataset.touched = this.value ? '1' : ''; });
+  $('#userSave').addEventListener('click', async function(){
+    var full_name = $('#u-name').value.trim(), username = $('#u-username').value.trim().toLowerCase(), password = $('#u-password').value;
+    if(!full_name){ showUserMsg('Full name is required.', 'err'); return; }
+    if(!/^[a-z0-9][a-z0-9._-]{1,31}$/.test(username)){ showUserMsg('Username: 2-32 characters, letters, digits, . _ - only.', 'err'); return; }
+    if(password && password.length < 8){ showUserMsg('Password must be at least 8 characters, or leave it blank.', 'err'); return; }
+    this.disabled=true; var orig=this.textContent; this.textContent='Creating...';
+    try{
+      var sessRes = await sb.auth.getSession();
+      var session = sessRes && sessRes.data && sessRes.data.session;
+      if(!session){ toLogin(); return; }
+      var res = await fetch(cfg.WORKER_API_BASE + '/create-user', {
+        method:'POST',
+        headers:{ 'Authorization':'Bearer ' + session.access_token, 'Content-Type':'application/json' },
+        body: JSON.stringify(password ? { full_name: full_name, username: username, password: password } : { full_name: full_name, username: username })
+      });
+      var json = await res.json().catch(function(){ return {}; });
+      if(!res.ok || !json.user){ showUserMsg('Could not create user: ' + esc(json.error || ('HTTP ' + res.status)), 'err'); this.disabled=false; return; }
+      var line = 'Created <b>' + esc(json.user.full_name) + '</b>. Sign-in username: <span class="mono">' + esc(username) + '</span>';
+      if(json.password){ line += '<br>Password (shown once, copy it now): <span class="mono">' + esc(json.password) + '</span>'; }
+      showUserMsg(line, 'ok');
+      // keep the modal open so the master can copy the password; the roster refreshes underneath
+      await load();
+    } catch(err){ showUserMsg('Create error: ' + esc((err&&err.message)||String(err)), 'err'); this.disabled=false; }
+    finally{ this.textContent=orig; }
   });
 
   async function load(){
